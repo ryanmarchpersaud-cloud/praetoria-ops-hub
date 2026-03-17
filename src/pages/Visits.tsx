@@ -156,7 +156,7 @@ export default function Visits() {
                 <TableCell className="text-sm">
                   {v.jobs ? <Link to={`/jobs/${v.jobs.id || ''}`} className="text-primary hover:underline">{v.jobs.job_number}</Link> : '—'}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{v.properties?.property_name || '—'}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{v.properties ? <Link to={`/properties/${v.properties.id}`} className="text-primary hover:underline">{v.properties.property_name}</Link> : '—'}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{v.service_date ? format(new Date(v.service_date), 'MMM d, yyyy') : '—'}</TableCell>
                 <TableCell className="text-sm">{v.visit_type}</TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{v.weather_notes || '—'}</TableCell>
