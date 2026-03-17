@@ -39,6 +39,7 @@ import PortalAccount from "./pages/portal/PortalAccount";
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
 import WorkerHome from "./pages/worker/WorkerHome";
+import WorkerSchedule from "./pages/worker/WorkerSchedule";
 import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
 
 const queryClient = new QueryClient();
@@ -119,7 +120,7 @@ function AppRoutes() {
 
       {/* Worker routes */}
       <Route path="/worker" element={<WorkerRoute><WorkerLayout><WorkerHome /></WorkerLayout></WorkerRoute>} />
-      <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Schedule" /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerSchedule /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/timesheet" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Timesheet" /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/search" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Search" /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="More" /></WorkerLayout></WorkerRoute>} />
