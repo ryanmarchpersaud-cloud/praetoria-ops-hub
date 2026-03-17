@@ -161,7 +161,7 @@ export default function WorkerSchedule() {
                 ) : (
                   <div className="ml-4 border-l-2 border-border pl-3 space-y-2">
                     {dayVisits.map(visit => (
-                      <Link key={visit.id} to={`/visits/${visit.id}`}>
+                      <Link key={visit.id} to={`/worker/visit/${visit.id}`}>
                         <Card className={cn(
                           'active:shadow-sm transition-all',
                           visit.visit_status === 'In Progress' && 'ring-2 ring-primary/30 bg-primary/5',
