@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { SERVICE_PROMOS } from '@/lib/servicePromos';
-import praetoriaCrest from '@/assets/praetoria-crest.png';
+import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import {
   Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
