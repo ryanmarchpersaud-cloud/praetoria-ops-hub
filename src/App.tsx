@@ -36,6 +36,11 @@ import PortalPhotos from "./pages/portal/PortalPhotos";
 import PortalRequests from "./pages/portal/PortalRequests";
 import PortalAccount from "./pages/portal/PortalAccount";
 
+// Worker pages
+import { WorkerLayout } from "./components/worker/WorkerLayout";
+import WorkerHome from "./pages/worker/WorkerHome";
+import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
+
 const queryClient = new QueryClient();
 
 function StaffRoute({ children }: { children: React.ReactNode }) {
@@ -45,6 +50,15 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
   if (!user) return <Navigate to="/login" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
   return <AppLayout>{children}</AppLayout>;
+}
+
+function WorkerRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { isCustomer, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (isCustomer) return <Navigate to="/portal/properties" replace />;
+  return <>{children}</>;
 }
 
 function PortalRoute({ children }: { children: React.ReactNode }) {
@@ -102,6 +116,13 @@ function AppRoutes() {
       <Route path="/portal/photos" element={<PortalRoute><PortalPhotos /></PortalRoute>} />
       <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
       <Route path="/portal/account" element={<PortalRoute><PortalAccount /></PortalRoute>} />
+
+      {/* Worker routes */}
+      <Route path="/worker" element={<WorkerRoute><WorkerLayout><WorkerHome /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Schedule" /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/timesheet" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Timesheet" /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/search" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Search" /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="More" /></WorkerLayout></WorkerRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
