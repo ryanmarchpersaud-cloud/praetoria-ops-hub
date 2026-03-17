@@ -6,6 +6,7 @@ import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimeshee
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WorkerFAB } from '@/components/worker/WorkerFAB';
+import { WorkerLocationCard } from '@/components/worker/WorkerLocationCard';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
@@ -312,14 +313,8 @@ export default function WorkerHome() {
         </div>
       )}
 
-      {/* Location context */}
-      <Card className="bg-muted/30 border-dashed">
-        <CardContent className="py-6 text-center space-y-1">
-          <MapPin className="h-6 w-6 mx-auto text-muted-foreground/50" />
-          <p className="text-xs text-muted-foreground">Location services</p>
-          <p className="text-[10px] text-muted-foreground">Map and routing coming soon</p>
-        </CardContent>
-      </Card>
+      {/* Location */}
+      <WorkerLocationCard />
 
       <WorkerFAB />
     </div>

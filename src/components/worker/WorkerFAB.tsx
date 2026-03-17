@@ -8,12 +8,12 @@ import {
 import { cn } from '@/lib/utils';
 
 const workerActions = [
-  { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: '/worker' },
-  { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: '/worker' },
-  { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: '/worker' },
-  { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: '/worker' },
-  { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: '/worker' },
-  { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: '/worker' },
+  { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: '/worker/schedule' },
+  { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: '/worker/schedule' },
+  { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: '/worker/schedule' },
+  { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: '/worker/schedule' },
+  { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: '/worker/schedule' },
+  { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: '/worker/timesheet' },
 ];
 
 const adminActions = [
