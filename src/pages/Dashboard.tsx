@@ -116,7 +116,10 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="pb-2 px-3 md:px-6">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Clock className={`h-4 w-4 ${followUps.length > 0 ? 'text-destructive' : 'text-muted-foreground'}`} /> Follow-ups Due
+              <span className={cn('w-6 h-6 rounded-lg flex items-center justify-center', followUps.length > 0 ? 'bg-rose-50 dark:bg-rose-950/30' : 'bg-muted')}>
+                <Clock className={cn('h-3.5 w-3.5', followUps.length > 0 ? 'text-rose-600' : 'text-muted-foreground')} />
+              </span>
+              Follow-ups Due
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 md:px-6">
