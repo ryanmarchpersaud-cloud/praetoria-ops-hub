@@ -83,6 +83,8 @@ import SubcontractorPayments from "./pages/subcontractor/SubcontractorPayments";
 import SubcontractorSupport from "./pages/subcontractor/SubcontractorSupport";
 import SubcontractorSettings from "./pages/subcontractor/SubcontractorSettings";
 import SubcontractorVisitExec from "./pages/subcontractor/SubcontractorVisitExec";
+import SubcontractorPropertyDetail from "./pages/subcontractor/SubcontractorPropertyDetail";
+import SubcontractorInvoiceDetail from "./pages/subcontractor/SubcontractorInvoiceDetail";
 
 const queryClient = new QueryClient();
 
@@ -240,6 +242,8 @@ function AppRoutes() {
       <Route path="/subcontractor/support" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSupport /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/settings" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSettings /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/visit/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorVisitExec /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/property/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorPropertyDetail /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/invoices/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorInvoiceDetail /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

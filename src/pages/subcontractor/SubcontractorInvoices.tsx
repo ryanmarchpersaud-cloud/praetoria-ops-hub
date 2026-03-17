@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Receipt } from 'lucide-react';
 import { format } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -54,23 +55,26 @@ export default function SubcontractorInvoices() {
       ) : (
         <div className="space-y-2">
           {invoices.map((inv: any) => (
-            <Card key={inv.id}>
-              <CardContent className="p-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{inv.invoice_number}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(inv.invoice_date), 'MMM d, yyyy')} · ${Number(inv.amount).toFixed(2)}
-                  </p>
-                  {inv.service_period_start && inv.service_period_end && (
-                    <p className="text-[10px] text-muted-foreground/70">
-                      Period: {format(new Date(inv.service_period_start), 'MMM d')} – {format(new Date(inv.service_period_end), 'MMM d')}
+            <Link key={inv.id} to={`/subcontractor/invoices/${inv.id}`} className="block">
+              <Card className="hover:bg-muted/30 transition-colors">
+                <CardContent className="p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{inv.invoice_number}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(inv.invoice_date), 'MMM d, yyyy')} · ${Number(inv.amount).toFixed(2)}
                     </p>
-                  )}
-                </div>
-                <StatusChip status={inv.status} />
-              </CardContent>
-            </Card>
+                    {inv.service_period_start && inv.service_period_end && (
+                      <p className="text-[10px] text-muted-foreground/70">
+                        Period: {format(new Date(inv.service_period_start), 'MMM d')} – {format(new Date(inv.service_period_end), 'MMM d')}
+                      </p>
+                    )}
+                  </div>
+                  <StatusChip status={inv.status} />
+                </CardContent>
+              </Card>
+            </Link>
           ))}
+
         </div>
       )}
     </div>

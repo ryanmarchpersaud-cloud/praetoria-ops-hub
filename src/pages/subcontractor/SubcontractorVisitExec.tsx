@@ -43,7 +43,9 @@ export default function SubcontractorVisitExec() {
       {prop && (
         <Card>
           <CardContent className="p-4 space-y-2">
-            <p className="text-sm font-semibold text-foreground">{prop.property_name}</p>
+            <Link to={`/subcontractor/property/${visit.property_id}`} className="text-sm font-semibold text-foreground hover:underline">
+              {prop.property_name}
+            </Link>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <MapPin className="h-3 w-3" />{prop.address_line_1}{prop.city ? `, ${prop.city}` : ''}
             </p>
