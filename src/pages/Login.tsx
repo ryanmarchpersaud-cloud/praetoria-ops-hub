@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LoginPromoPanel } from '@/components/LoginPromoPanel';
+import { DevTestPanel } from '@/components/DevTestPanel';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
