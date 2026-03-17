@@ -316,6 +316,7 @@ export type Database = {
           service_category: Database["public"]["Enums"]["service_category"]
           subtotal: number | null
           tax: number | null
+          tax_rate: number
           total: number | null
           updated_at: string
         }
@@ -337,6 +338,7 @@ export type Database = {
           service_category?: Database["public"]["Enums"]["service_category"]
           subtotal?: number | null
           tax?: number | null
+          tax_rate?: number
           total?: number | null
           updated_at?: string
         }
@@ -358,6 +360,7 @@ export type Database = {
           service_category?: Database["public"]["Enums"]["service_category"]
           subtotal?: number | null
           tax?: number | null
+          tax_rate?: number
           total?: number | null
           updated_at?: string
         }
