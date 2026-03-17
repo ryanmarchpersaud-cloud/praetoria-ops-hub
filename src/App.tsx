@@ -155,8 +155,9 @@ function AppRoutes() {
       <Route path="/activity" element={<AdminRoute><ActivityPage /></AdminRoute>} />
       <Route path="/requests" element={<AdminRoute><Requests /></AdminRoute>} />
 
+      {/* Admin-only settings */}
+      <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
       {/* Staff routes (admin + worker) */}
-      <Route path="/settings" element={<StaffRoute><SettingsPage /></StaffRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
