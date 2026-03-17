@@ -3,6 +3,8 @@ import { useQuotes } from '@/hooks/useQuotes';
 import { useActivities } from '@/hooks/useActivities';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WeatherCard } from '@/components/WeatherCard';
+import { ServicePromoCard } from '@/components/ServicePromoCard';
+import { SERVICE_PROMOS } from '@/lib/servicePromos';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Clock, CheckCircle, AlertCircle, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -175,6 +177,16 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Service Promo — Cross-sell awareness */}
+      <div>
+        <h2 className="text-sm font-semibold text-foreground mb-3">Praetoria Services</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {SERVICE_PROMOS.slice(0, 4).map((promo) => (
+            <ServicePromoCard key={promo.id} promo={promo} variant="compact" />
+          ))}
+        </div>
       </div>
     </div>
   );
