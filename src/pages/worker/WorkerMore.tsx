@@ -19,7 +19,7 @@ export default function WorkerMore() {
       { icon: Monitor, label: 'Admin Dashboard', to: '/', description: 'Switch to desktop admin view' },
       { icon: Eye, label: 'Customer Portal Preview', to: '/portal/properties', description: 'Preview the customer experience' },
     ] : []),
-    { icon: Settings, label: 'Settings', to: '/settings', description: 'Account & app settings' },
+    { icon: Settings, label: 'Settings', to: isAdmin ? '/settings' : '/worker/settings', description: 'Account & app settings' },
   ];
 
   return (
