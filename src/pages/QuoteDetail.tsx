@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, Printer } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
@@ -167,8 +167,9 @@ export default function QuoteDetail() {
         <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
           <Save className="h-4 w-4 mr-2" /> Save Quote
         </Button>
-        <Button variant="outline" className="h-11 shrink-0" onClick={() => navigate(`/quotes/${id}/print`)}>
-          <Printer className="h-4 w-4" />
+        <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => navigate(`/quotes/${id}/print`)}>
+          <FileText className="h-4 w-4" />
+          <span className="hidden sm:inline">Export PDF</span>
         </Button>
       </div>
 
