@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useVisitPhotos, useUploadVisitPhoto, useDeleteVisitPhoto, PHOTO_TAGS, PhotoTag } from '@/hooks/useVisitPhotos';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Upload, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Tag } from 'lucide-react';
+import { Camera, ImagePlus, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Upload, Loader2 } from 'lucide-react';
 
 const TAG_COLORS: Record<string, string> = {
   Before: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -15,10 +15,58 @@ const TAG_COLORS: Record<string, string> = {
   Issue: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 };
 
+interface StagedFile {
+  file: File;
+  preview: string;
+  tag: PhotoTag;
+  caption: string;
+}
+
 interface VisitPhotoGalleryProps {
   visitId: string;
   propertyId?: string | null;
   customerId?: string | null;
+}
+
+// Compress image client-side for performance while keeping proof quality
+async function compressImage(file: File, maxWidth = 1920, quality = 0.82): Promise<File> {
+  // Skip non-image or already small files
+  if (!file.type.startsWith('image/') || file.size < 200_000) return file;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      // Don't upscale
+      if (img.width <= maxWidth && file.size < 1_500_000) {
+        resolve(file);
+        return;
+      }
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            resolve(file); // compression didn't help
+          } else {
+            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+          }
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
 }
 
 export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhotoGalleryProps) {
@@ -27,53 +75,99 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
   const deletePhoto = useDeleteVisitPhoto();
   const { toast } = useToast();
 
+  const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
-  const [selectedTag, setSelectedTag] = useState<PhotoTag>('After');
-  const [caption, setCaption] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filterTag, setFilterTag] = useState<string>('all');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const existingCount = (photos as any[]).length;
+  const remainingSlots = 10 - existingCount;
 
   const filteredPhotos = filterTag === 'all'
     ? photos
     : (photos as any[]).filter((p: any) => p.photo_tag === filterTag);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const totalPhotos = (photos as any[]).length + files.length;
-    if (totalPhotos > 10) {
+  const addFiles = useCallback((files: File[]) => {
+    const available = remainingSlots - stagedFiles.length;
+    if (available <= 0) {
       toast({ title: 'Limit reached', description: 'Maximum 10 photos per visit', variant: 'destructive' });
       return;
     }
-    setSelectedFiles(files);
-    if (files.length > 0) setUploadOpen(true);
+    const toAdd = files.slice(0, available);
+    if (files.length > available) {
+      toast({ title: `Only ${available} slot${available > 1 ? 's' : ''} remaining`, description: `Added ${toAdd.length} of ${files.length} selected photos.` });
+    }
+    const newStaged: StagedFile[] = toAdd.map(f => ({
+      file: f,
+      preview: URL.createObjectURL(f),
+      tag: 'After' as PhotoTag,
+      caption: '',
+    }));
+    setStagedFiles(prev => [...prev, ...newStaged]);
+    if (!uploadOpen) setUploadOpen(true);
+  }, [remainingSlots, stagedFiles.length, uploadOpen, toast]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) addFiles(files);
+    e.target.value = ''; // reset so same file can be re-selected
+  };
+
+  const removeStagedFile = (index: number) => {
+    setStagedFiles(prev => {
+      const removed = prev[index];
+      URL.revokeObjectURL(removed.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const updateStagedTag = (index: number, tag: PhotoTag) => {
+    setStagedFiles(prev => prev.map((f, i) => i === index ? { ...f, tag } : f));
+  };
+
+  const updateStagedCaption = (index: number, caption: string) => {
+    setStagedFiles(prev => prev.map((f, i) => i === index ? { ...f, caption } : f));
   };
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0) return;
+    if (stagedFiles.length === 0) return;
+    setUploading(true);
+    setUploadProgress(0);
+    let uploaded = 0;
     try {
-      for (const file of selectedFiles) {
+      for (const staged of stagedFiles) {
+        const compressed = await compressImage(staged.file);
         await uploadPhoto.mutateAsync({
-          file,
+          file: compressed,
           visitId,
           propertyId,
           customerId,
-          photoTag: selectedTag,
-          caption: caption || undefined,
+          photoTag: staged.tag,
+          caption: staged.caption || undefined,
         });
+        uploaded++;
+        setUploadProgress(Math.round((uploaded / stagedFiles.length) * 100));
       }
-      toast({ title: `${selectedFiles.length} photo${selectedFiles.length > 1 ? 's' : ''} uploaded` });
+      toast({ title: `${uploaded} photo${uploaded > 1 ? 's' : ''} uploaded` });
+      // Clean up previews
+      stagedFiles.forEach(f => URL.revokeObjectURL(f.preview));
+      setStagedFiles([]);
       setUploadOpen(false);
-      setSelectedFiles([]);
-      setCaption('');
     } catch (err: any) {
-      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+      toast({ title: 'Upload failed', description: `${uploaded}/${stagedFiles.length} uploaded. ${err.message}`, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
     }
   };
 
-  const handleDelete = async (photo: any) => {
+  const handleDeleteExisting = async (photo: any) => {
     try {
       await deletePhoto.mutateAsync({ id: photo.id, fileUrl: photo.file_url, visitId });
       toast({ title: 'Photo deleted' });
@@ -86,11 +180,7 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
     }
   };
 
-  const openViewer = (index: number) => {
-    setViewerIndex(index);
-    setViewerOpen(true);
-  };
-
+  const openViewer = (index: number) => { setViewerIndex(index); setViewerOpen(true); };
   const navigateViewer = (dir: 'prev' | 'next') => {
     if (dir === 'prev') setViewerIndex(Math.max(0, viewerIndex - 1));
     else setViewerIndex(Math.min(filteredPhotos.length - 1, viewerIndex + 1));
@@ -98,28 +188,49 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
 
   const currentPhoto = filteredPhotos[viewerIndex] as any;
 
+  const handleCloseUpload = (open: boolean) => {
+    if (!open && !uploading) {
+      stagedFiles.forEach(f => URL.revokeObjectURL(f.preview));
+      setStagedFiles([]);
+    }
+    if (!uploading) setUploadOpen(open);
+  };
+
   return (
     <>
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-1.5">
-              <Camera className="h-4 w-4" /> Photos ({(photos as any[]).length}/10)
+              <Camera className="h-4 w-4" /> Photos ({existingCount}/10)
             </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              disabled={(photos as any[]).length >= 10}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Upload className="h-3 w-3 mr-1" /> Add
-            </Button>
+            {remainingSlots > 0 && (
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 text-xs gap-1.5"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Camera</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 text-xs gap-1.5"
+                  onClick={() => galleryInputRef.current?.click()}
+                >
+                  <ImagePlus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Gallery</span>
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Tag filter */}
-          {(photos as any[]).length > 0 && (
+          {existingCount > 0 && (
             <div className="flex gap-1 flex-wrap">
               <button
                 onClick={() => setFilterTag('all')}
@@ -146,12 +257,17 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
             <div className="text-center py-6 border-2 border-dashed rounded-lg">
               <ImageIcon className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
               <p className="text-xs text-muted-foreground">
-                {(photos as any[]).length === 0 ? 'No photos yet' : 'No photos with this tag'}
+                {existingCount === 0 ? 'No photos yet' : 'No photos with this tag'}
               </p>
-              {(photos as any[]).length === 0 && (
-                <Button variant="ghost" size="sm" className="mt-2 text-xs h-7" onClick={() => fileInputRef.current?.click()}>
-                  <Camera className="h-3 w-3 mr-1" /> Take or upload photo
-                </Button>
+              {existingCount === 0 && (
+                <div className="flex justify-center gap-2 mt-3">
+                  <Button variant="ghost" size="sm" className="text-xs h-9 gap-1.5" onClick={() => cameraInputRef.current?.click()}>
+                    <Camera className="h-3.5 w-3.5" /> Take photo
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-xs h-9 gap-1.5" onClick={() => galleryInputRef.current?.click()}>
+                    <ImagePlus className="h-3.5 w-3.5" /> From gallery
+                  </Button>
+                </div>
               )}
             </div>
           ) : (
@@ -178,71 +294,122 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
         </CardContent>
       </Card>
 
-      {/* Hidden file input */}
+      {/* Hidden file inputs — camera vs gallery */}
       <input
-        ref={fileInputRef}
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleInputChange}
+      />
+      <input
+        ref={galleryInputRef}
         type="file"
         accept="image/*"
         multiple
         className="hidden"
-        onChange={handleFileSelect}
+        onChange={handleInputChange}
       />
 
-      {/* Upload dialog */}
-      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
-        <DialogContent className="max-w-sm mx-3">
-          <DialogHeader>
-            <DialogTitle className="text-base">Upload Photo{selectedFiles.length > 1 ? 's' : ''}</DialogTitle>
+      {/* Upload staging dialog */}
+      <Dialog open={uploadOpen} onOpenChange={handleCloseUpload}>
+        <DialogContent className="max-w-md mx-3 max-h-[85vh] flex flex-col">
+          <DialogHeader className="shrink-0">
+            <DialogTitle className="text-base">
+              Review Photos ({stagedFiles.length})
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
-            {/* Preview thumbnails */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {selectedFiles.map((f, i) => (
-                <div key={i} className="relative shrink-0 w-16 h-16 rounded-md overflow-hidden border">
-                  <img src={URL.createObjectURL(f)} alt="" className="w-full h-full object-cover" />
+          <div className="flex-1 overflow-y-auto space-y-3 min-h-0 pr-1">
+            {stagedFiles.map((staged, i) => (
+              <div key={i} className="flex gap-3 p-2 rounded-lg border bg-muted/30">
+                {/* Preview */}
+                <div className="relative shrink-0 w-20 h-20 rounded-md overflow-hidden border">
+                  <img src={staged.preview} alt="" className="w-full h-full object-cover" />
                   <button
-                    onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}
-                    className="absolute top-0.5 right-0.5 bg-background/80 rounded-full p-0.5"
+                    onClick={() => removeStagedFile(i)}
+                    className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow-sm"
                   >
-                    <X className="h-2.5 w-2.5" />
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
-              ))}
-            </div>
-
-            <div>
-              <Label className="text-xs flex items-center gap-1"><Tag className="h-3 w-3" /> Tag</Label>
-              <div className="flex gap-1.5 mt-1">
-                {PHOTO_TAGS.map(tag => (
-                  <button
-                    key={tag}
-                    onClick={() => setSelectedTag(tag)}
-                    className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${selectedTag === tag
-                      ? TAG_COLORS[tag]
-                      : 'border-input hover:bg-muted'
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
+                {/* Tag + caption */}
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="flex gap-1 flex-wrap">
+                    {PHOTO_TAGS.map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() => updateStagedTag(i, tag)}
+                        className={`text-[10px] px-2 py-1 rounded-md border transition-colors font-medium ${
+                          staged.tag === tag ? TAG_COLORS[tag] : 'border-input hover:bg-muted'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    value={staged.caption}
+                    onChange={e => updateStagedCaption(i, e.target.value)}
+                    placeholder="Caption (optional)"
+                    className="h-8 text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {staged.file.name} · {(staged.file.size / 1024).toFixed(0)}KB
+                  </p>
+                </div>
               </div>
-            </div>
+            ))}
 
-            <div>
-              <Label className="text-xs">Caption (optional)</Label>
-              <Input
-                value={caption}
-                onChange={e => setCaption(e.target.value)}
-                placeholder="e.g. Driveway cleared and salted"
-              />
-            </div>
+            {/* Add more button */}
+            {stagedFiles.length > 0 && stagedFiles.length < remainingSlots && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-9 text-xs gap-1.5"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="h-3.5 w-3.5" /> Take more
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-9 text-xs gap-1.5"
+                  onClick={() => galleryInputRef.current?.click()}
+                >
+                  <ImagePlus className="h-3.5 w-3.5" /> Add more
+                </Button>
+              </div>
+            )}
+          </div>
 
+          {/* Upload button with progress */}
+          <div className="shrink-0 pt-2 border-t">
+            {uploading && (
+              <div className="w-full bg-muted rounded-full h-1.5 mb-2 overflow-hidden">
+                <div
+                  className="bg-primary h-full rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            )}
             <Button
               onClick={handleUpload}
-              className="w-full h-10"
-              disabled={uploadPhoto.isPending || selectedFiles.length === 0}
+              className="w-full h-11 text-sm gap-2"
+              disabled={uploading || stagedFiles.length === 0}
             >
-              {uploadPhoto.isPending ? 'Uploading...' : `Upload ${selectedFiles.length} Photo${selectedFiles.length > 1 ? 's' : ''}`}
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Uploading {uploadProgress}%
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  Upload {stagedFiles.length} Photo{stagedFiles.length > 1 ? 's' : ''}
+                </>
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -253,7 +420,6 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
         <DialogContent className="max-w-3xl p-0 overflow-hidden mx-2 bg-black/95">
           {currentPhoto && (
             <div className="relative">
-              {/* Image */}
               <div className="flex items-center justify-center min-h-[300px] max-h-[70vh]">
                 <img
                   src={currentPhoto.file_url}
@@ -261,28 +427,24 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
                   className="max-w-full max-h-[70vh] object-contain"
                 />
               </div>
-
-              {/* Navigation arrows */}
               {filteredPhotos.length > 1 && (
                 <>
                   <button
                     onClick={() => navigateViewer('prev')}
                     disabled={viewerIndex === 0}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-1.5 disabled:opacity-20 hover:bg-background transition-colors"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 disabled:opacity-20 hover:bg-background transition-colors"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
                   <button
                     onClick={() => navigateViewer('next')}
                     disabled={viewerIndex === filteredPhotos.length - 1}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-1.5 disabled:opacity-20 hover:bg-background transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 rounded-full p-2 disabled:opacity-20 hover:bg-background transition-colors"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
                 </>
               )}
-
-              {/* Info bar */}
               <div className="bg-background p-3 space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
@@ -295,10 +457,10 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
-                    onClick={() => handleDelete(currentPhoto)}
+                    className="h-8 w-8 text-destructive hover:text-destructive shrink-0"
+                    onClick={() => handleDeleteExisting(currentPhoto)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
                 {currentPhoto.caption && (
