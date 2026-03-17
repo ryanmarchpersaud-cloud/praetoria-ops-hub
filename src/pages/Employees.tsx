@@ -26,6 +26,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function Employees() {
+  const navigate = useNavigate();
   const { data: employees = [], isLoading } = useEmployees();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
