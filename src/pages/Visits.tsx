@@ -146,6 +146,7 @@ export default function Visits() {
               <TableHead>Property</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Type</TableHead>
+              <TableHead>Photos</TableHead>
               <TableHead>Weather</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
