@@ -41,6 +41,15 @@ export default function WorkerHome() {
   const { data: active } = useActiveTimesheet();
   const clockInMut = useClockIn();
   const clockOutMut = useClockOut();
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!active) { setElapsed(0); return; }
+    const calcElapsed = () => Math.floor((Date.now() - new Date(active.clock_in).getTime()) / 1000);
+    setElapsed(calcElapsed());
+    const interval = setInterval(() => setElapsed(calcElapsed()), 1000);
+    return () => clearInterval(interval);
+  }, [active]);
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -73,6 +82,14 @@ export default function WorkerHome() {
   };
 
   const clockedIn = !!active;
+
+  // Build notifications from today's visits
+  const notifications = todayVisits.map(v => ({
+    id: v.id,
+    title: `${v.visit_number} — ${v.visit_status}`,
+    description: `${(v.properties as any)?.property_name || 'Unknown property'}${(v.customers as any) ? ` • ${(v.customers as any).first_name} ${(v.customers as any).last_name}` : ''}`,
+    status: v.visit_status,
+  }));
 
   return (
     <div className="space-y-4 px-4 pt-3 pb-4">
