@@ -14,7 +14,370 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          action_name: string
+          approved_by: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          needs_approval: boolean | null
+          payload_summary: Json | null
+          record_id: string | null
+          record_type: string | null
+          status: string | null
+          user_id: string | null
+          workflow_name: string | null
+        }
+        Insert: {
+          action_name: string
+          approved_by?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          needs_approval?: boolean | null
+          payload_summary?: Json | null
+          record_id?: string | null
+          record_type?: string | null
+          status?: string | null
+          user_id?: string | null
+          workflow_name?: string | null
+        }
+        Update: {
+          action_name?: string
+          approved_by?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          needs_approval?: boolean | null
+          payload_summary?: Json | null
+          record_id?: string | null
+          record_type?: string | null
+          status?: string | null
+          user_id?: string | null
+          workflow_name?: string | null
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          address_line_1: string | null
+          city: string | null
+          company_name: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          notes: string | null
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_line_1?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_line_1?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          record_id: string | null
+          record_type: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          record_id?: string | null
+          record_type?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          record_id?: string | null
+          record_type?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          address_line_1: string | null
+          assigned_to: string | null
+          city: string | null
+          company_name: string | null
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          email: string | null
+          estimated_value_range: string | null
+          first_name: string
+          id: string
+          internal_notes: string | null
+          last_name: string
+          lead_source: string | null
+          phone: string | null
+          postal_code: string | null
+          preferred_contact_method: string | null
+          province: string | null
+          service_type: Database["public"]["Enums"]["service_category"]
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          urgency: string | null
+        }
+        Insert: {
+          address_line_1?: string | null
+          assigned_to?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          email?: string | null
+          estimated_value_range?: string | null
+          first_name: string
+          id?: string
+          internal_notes?: string | null
+          last_name: string
+          lead_source?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          preferred_contact_method?: string | null
+          province?: string | null
+          service_type?: Database["public"]["Enums"]["service_category"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          urgency?: string | null
+        }
+        Update: {
+          address_line_1?: string | null
+          assigned_to?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          email?: string | null
+          estimated_value_range?: string | null
+          first_name?: string
+          id?: string
+          internal_notes?: string | null
+          last_name?: string
+          lead_source?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          preferred_contact_method?: string | null
+          province?: string | null
+          service_type?: Database["public"]["Enums"]["service_category"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          urgency?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quote_line_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          item_name: string
+          line_total: number | null
+          quantity: number | null
+          quote_id: string
+          sort_order: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_name: string
+          line_total?: number | null
+          quantity?: number | null
+          quote_id: string
+          sort_order?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_name?: string
+          line_total?: number | null
+          quantity?: number | null
+          quote_id?: string
+          sort_order?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_line_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          agent_summary: string | null
+          approval_status: Database["public"]["Enums"]["quote_approval_status"]
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          follow_up_due_at: string | null
+          id: string
+          internal_notes: string | null
+          lead_id: string
+          quote_number: string
+          scope_of_work: string | null
+          sent_at: string | null
+          sent_status: string | null
+          service_category: Database["public"]["Enums"]["service_category"]
+          subtotal: number | null
+          tax: number | null
+          total: number | null
+          updated_at: string
+        }
+        Insert: {
+          agent_summary?: string | null
+          approval_status?: Database["public"]["Enums"]["quote_approval_status"]
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          follow_up_due_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          lead_id: string
+          quote_number: string
+          scope_of_work?: string | null
+          sent_at?: string | null
+          sent_status?: string | null
+          service_category?: Database["public"]["Enums"]["service_category"]
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          agent_summary?: string | null
+          approval_status?: Database["public"]["Enums"]["quote_approval_status"]
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          follow_up_due_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          lead_id?: string
+          quote_number?: string
+          scope_of_work?: string | null
+          sent_at?: string | null
+          sent_status?: string | null
+          service_category?: Database["public"]["Enums"]["service_category"]
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +386,29 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      lead_status:
+        | "New"
+        | "Reviewing"
+        | "Awaiting info"
+        | "Quote drafting"
+        | "Quote ready"
+        | "Quote sent"
+        | "Won"
+        | "Lost"
+        | "Archived"
+      quote_approval_status:
+        | "Draft"
+        | "Needs review"
+        | "Approved"
+        | "Sent"
+        | "Declined"
+      service_category:
+        | "Snow & Ice"
+        | "Landscaping & Grounds"
+        | "Junk Removal"
+        | "Property Care & Maintenance"
+        | "Power Washing"
+        | "Other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +535,33 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      lead_status: [
+        "New",
+        "Reviewing",
+        "Awaiting info",
+        "Quote drafting",
+        "Quote ready",
+        "Quote sent",
+        "Won",
+        "Lost",
+        "Archived",
+      ],
+      quote_approval_status: [
+        "Draft",
+        "Needs review",
+        "Approved",
+        "Sent",
+        "Declined",
+      ],
+      service_category: [
+        "Snow & Ice",
+        "Landscaping & Grounds",
+        "Junk Removal",
+        "Property Care & Maintenance",
+        "Power Washing",
+        "Other",
+      ],
+    },
   },
 } as const
