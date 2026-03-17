@@ -11,6 +11,7 @@ import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake } from 'lucide-rea
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
+// Visit statuses now include: Planned, Scheduled, En Route, In Progress, Completed, Skipped, Rescheduled, Missed, Cancelled
 
 export default function VisitDetail() {
   const { id } = useParams();

@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Shield,
-  MapPin, Briefcase, ClipboardCheck,
+  MapPin, Briefcase, ClipboardCheck, CalendarDays,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -18,6 +18,7 @@ const navItems = [
   { title: 'Properties', url: '/properties', icon: MapPin },
   { title: 'Jobs', url: '/jobs', icon: Briefcase },
   { title: 'Visits', url: '/visits', icon: ClipboardCheck },
+  { title: 'Schedule', url: '/schedule', icon: CalendarDays },
   { title: 'Activity', url: '/activity', icon: Activity },
   { title: 'Settings', url: '/settings', icon: Settings },
 ];

@@ -41,15 +41,16 @@ export const PROPERTY_STATUSES = ['Active', 'Inactive', 'Seasonal', 'Pending'] a
 export const PROPERTY_TYPES = ['Residential', 'Commercial', 'Industrial', 'Municipal', 'Strata', 'Other'] as const;
 export const JOB_STATUSES = ['Draft', 'Scheduled', 'In Progress', 'Completed', 'Cancelled', 'On Hold'] as const;
 export const JOB_PRIORITIES = ['Low', 'Normal', 'High', 'Urgent'] as const;
-export const VISIT_STATUSES = ['Scheduled', 'En Route', 'In Progress', 'Completed', 'Missed', 'Cancelled'] as const;
+export const VISIT_STATUSES = ['Planned', 'Scheduled', 'En Route', 'In Progress', 'Completed', 'Skipped', 'Rescheduled', 'Missed', 'Cancelled'] as const;
 export const VISIT_TYPES = ['Routine', 'One-time', 'Emergency', 'Inspection', 'Follow-up'] as const;
+export const SERVICE_FREQUENCIES = ['one-time', 'weekly', 'biweekly', 'monthly', 'on-snowfall', 'custom-seasonal'] as const;
 
 export function getStatusClass(status: string): string {
   const s = status.toLowerCase();
   if (s === 'new' || s === 'scheduled') return 'status-new';
-  if (['reviewing', 'awaiting info', 'quote drafting', 'needs review', 'en route', 'on hold', 'pending'].includes(s)) return 'status-reviewing';
+  if (['reviewing', 'awaiting info', 'quote drafting', 'needs review', 'en route', 'on hold', 'pending', 'planned', 'rescheduled'].includes(s)) return 'status-reviewing';
   if (['won', 'approved', 'quote ready', 'completed', 'active'].includes(s)) return 'status-approved';
-  if (['lost', 'declined', 'cancelled', 'missed', 'inactive'].includes(s)) return 'status-declined';
+  if (['lost', 'declined', 'cancelled', 'missed', 'skipped', 'inactive'].includes(s)) return 'status-declined';
   if (['quote sent', 'sent', 'in progress'].includes(s)) return 'status-sent';
   if (['archived', 'seasonal'].includes(s)) return 'status-archived';
   return 'status-draft';
