@@ -1154,6 +1154,162 @@ export type Database = {
           },
         ]
       }
+      worker_certifications: {
+        Row: {
+          cert_name: string
+          created_at: string
+          expiry_date: string | null
+          id: string
+          issue_date: string | null
+          issuer: string | null
+          notes: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cert_name: string
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          notes?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cert_name?: string
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          notes?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      worker_documents: {
+        Row: {
+          created_at: string
+          document_name: string
+          document_type: string
+          file_name: string
+          file_url: string
+          id: string
+          notes: string | null
+          uploaded_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_name: string
+          document_type?: string
+          file_name: string
+          file_url: string
+          id?: string
+          notes?: string | null
+          uploaded_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          notes?: string | null
+          uploaded_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      worker_profiles: {
+        Row: {
+          benefits_effective_date: string | null
+          benefits_plan_summary: string | null
+          benefits_provider: string | null
+          benefits_status: string | null
+          branch_location: string | null
+          created_at: string
+          driver_license_class: string | null
+          driver_license_expiry: string | null
+          employee_id: string | null
+          employment_status: string
+          employment_type: string | null
+          equipment_permissions: string[] | null
+          full_name: string | null
+          hire_date: string | null
+          id: string
+          license_verified: boolean | null
+          pay_type: string | null
+          phone: string | null
+          primary_service_category: string | null
+          role_title: string | null
+          supervisor_name: string | null
+          team: string | null
+          updated_at: string
+          user_id: string
+          work_email: string | null
+        }
+        Insert: {
+          benefits_effective_date?: string | null
+          benefits_plan_summary?: string | null
+          benefits_provider?: string | null
+          benefits_status?: string | null
+          branch_location?: string | null
+          created_at?: string
+          driver_license_class?: string | null
+          driver_license_expiry?: string | null
+          employee_id?: string | null
+          employment_status?: string
+          employment_type?: string | null
+          equipment_permissions?: string[] | null
+          full_name?: string | null
+          hire_date?: string | null
+          id?: string
+          license_verified?: boolean | null
+          pay_type?: string | null
+          phone?: string | null
+          primary_service_category?: string | null
+          role_title?: string | null
+          supervisor_name?: string | null
+          team?: string | null
+          updated_at?: string
+          user_id: string
+          work_email?: string | null
+        }
+        Update: {
+          benefits_effective_date?: string | null
+          benefits_plan_summary?: string | null
+          benefits_provider?: string | null
+          benefits_status?: string | null
+          branch_location?: string | null
+          created_at?: string
+          driver_license_class?: string | null
+          driver_license_expiry?: string | null
+          employee_id?: string | null
+          employment_status?: string
+          employment_type?: string | null
+          equipment_permissions?: string[] | null
+          full_name?: string | null
+          hire_date?: string | null
+          id?: string
+          license_verified?: boolean | null
+          pay_type?: string | null
+          phone?: string | null
+          primary_service_category?: string | null
+          role_title?: string | null
+          supervisor_name?: string | null
+          team?: string | null
+          updated_at?: string
+          user_id?: string
+          work_email?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
