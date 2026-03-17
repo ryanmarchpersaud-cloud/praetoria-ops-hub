@@ -35,14 +35,21 @@ export default function PortalProperties() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {properties.map((p: any) => (
-            <Card key={p.id} className="hover:shadow-md transition-shadow">
+            <Card
+              key={p.id}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => navigate(`/portal/properties/${p.id}`)}
+            >
               <CardContent className="pt-4 space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary shrink-0" />
                     <span className="font-medium text-sm">{p.property_name}</span>
                   </div>
-                  <StatusBadge status={p.status} />
+                  <div className="flex items-center gap-1.5">
+                    <StatusBadge status={p.status} />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
                 {p.address_line_1 && (
                   <p className="text-xs text-muted-foreground pl-6">
