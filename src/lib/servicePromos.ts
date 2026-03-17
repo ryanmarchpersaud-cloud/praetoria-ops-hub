@@ -35,7 +35,7 @@ export const SERVICE_PROMOS: ServicePromo[] = [
     id: 'landscaping',
     title: 'Landscaping & Grounds',
     subtitle: 'Professional Lawn Care Services',
-    audience: 'Residential · Commercial · Municipal · Right-of-Way',
+    audience: 'Residential · Commercial · Municipal · Government · Right-of-Way',
     highlights: [
       'Mowing, trimming, cleanups & weed control',
       'Fertilization, aeration & seeding',
