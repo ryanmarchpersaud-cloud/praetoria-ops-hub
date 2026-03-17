@@ -119,6 +119,7 @@ function AppRoutes() {
       <Route path="/schedule" element={<StaffRoute><Schedule /></StaffRoute>} />
       <Route path="/activity" element={<StaffRoute><ActivityPage /></StaffRoute>} />
       <Route path="/settings" element={<StaffRoute><SettingsPage /></StaffRoute>} />
+      <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
       <Route path="/portal/properties" element={<PortalRoute><PortalProperties /></PortalRoute>} />
