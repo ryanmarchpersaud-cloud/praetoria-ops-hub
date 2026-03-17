@@ -78,6 +78,33 @@ export function DraggableItem({ id, type, data, isDragDisabled }: DraggableItemP
   );
 }
 
+/** Compact chip for month grid cells — draggable */
+export function MonthDraggableChip({ id, type, data }: { id: string; type: 'visit' | 'job'; data: any }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `${type}-${id}`,
+    data: { type, id, item: data },
+  });
+
+  const style = transform
+    ? { transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.3 : 1 }
+    : undefined;
+
+  const label = type === 'visit' ? data.visit_number : data.job_number;
+  const isVisit = type === 'visit';
+
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}
+      className={`block text-[9px] leading-tight truncate px-1 py-0.5 rounded mb-0.5 cursor-grab active:cursor-grabbing touch-none ${
+        isVisit
+          ? 'bg-primary/10 text-primary hover:bg-primary/20'
+          : 'bg-accent/50 text-accent-foreground hover:bg-accent'
+      }`}
+    >
+      {label}
+    </div>
+  );
+}
+
 /** Compact render for DragOverlay — no link behavior, just visual */
 export function DragOverlayItem({ type, data }: { type: 'visit' | 'job'; data: any }) {
   const Icon = type === 'job' ? Briefcase : ClipboardCheck;
