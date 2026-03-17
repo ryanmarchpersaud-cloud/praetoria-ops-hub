@@ -56,8 +56,8 @@ export default function Login() {
     }
   };
 
-  const currentPromo = SERVICE_PROMOS[promoIndex];
-  const PromoIcon = currentPromo.icon;
+
+
 
   return (
     <div className="min-h-screen flex bg-background">
