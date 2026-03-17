@@ -1,11 +1,10 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
-  MessageSquarePlus, ShieldCheck,
+  MessageSquarePlus, Eye,
 } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
-import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -28,14 +27,16 @@ const opsItems = [
 
 const systemItems = [
   { title: 'Settings', url: '/settings', icon: Settings },
-  { title: 'Field Mode', url: '/worker', icon: Smartphone },
-  { title: 'Portal Preview', url: '/portal/properties', icon: ShieldCheck },
+];
+
+const viewAsItems = [
+  { title: 'Field Mode', url: '/worker', icon: Smartphone, badge: 'Worker view' },
+  { title: 'Portal Preview', url: '/portal/properties', icon: Eye, badge: 'Customer view' },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const location = useLocation();
   const { signOut, user } = useAuth();
 
   return (
@@ -49,6 +50,15 @@ export function AppSidebar() {
             )}
           </div>
         </SidebarGroup>
+
+        {/* Current mode badge */}
+        {!collapsed && (
+          <div className="px-4 pb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">
+              🛡️ Internal Ops
+            </span>
+          </div>
+        )}
 
         <SidebarGroup>
           <SidebarGroupLabel>Internal Ops</SidebarGroupLabel>
@@ -65,6 +75,35 @@ export function AppSidebar() {
                     >
                       <item.icon className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>View As</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {viewAsItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {!collapsed && (
+                        <span className="flex items-center gap-2">
+                          {item.title}
+                          <span className="text-[9px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {item.badge}
+                          </span>
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
