@@ -47,6 +47,7 @@ import PortalPhotos from "./pages/portal/PortalPhotos";
 import PortalRequests from "./pages/portal/PortalRequests";
 import PortalBilling from "./pages/portal/PortalBilling";
 import PortalAccount from "./pages/portal/PortalAccount";
+import PortalPropertyDetail from "./pages/portal/PortalPropertyDetail";
 
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
@@ -221,6 +222,7 @@ function AppRoutes() {
       {/* Customer portal routes */}
       <Route path="/portal" element={<PortalRoute><PortalDashboard /></PortalRoute>} />
       <Route path="/portal/properties" element={<PortalRoute><PortalProperties /></PortalRoute>} />
+      <Route path="/portal/properties/:id" element={<PortalRoute><PortalPropertyDetail /></PortalRoute>} />
       <Route path="/portal/quotes" element={<PortalRoute><PortalQuotes /></PortalRoute>} />
       <Route path="/portal/plan" element={<PortalRoute><PortalPlan /></PortalRoute>} />
       <Route path="/portal/visits" element={<PortalRoute><PortalVisits /></PortalRoute>} />
