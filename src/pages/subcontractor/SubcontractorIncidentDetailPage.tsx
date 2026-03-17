@@ -59,7 +59,7 @@ export default function SubcontractorIncidentDetailPage() {
         </Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-lg font-bold truncate">{report.incident_type}</h1>
-          <p className="text-xs text-muted-foreground font-mono">{report.id.slice(0, 8).toUpperCase()}</p>
+          <p className="text-xs text-muted-foreground font-mono">{(report as any).report_number || report.id.slice(0, 8).toUpperCase()}</p>
         </div>
         <Badge variant="outline" className={`shrink-0 ${statusColors[report.follow_up_status] ?? ''}`}>
           {report.follow_up_status}

@@ -76,7 +76,10 @@ export default function SubcontractorIncidentsPage() {
                 <CardContent className="p-4 flex items-center gap-3">
                   <span className="text-lg">{severityIcon[r.incident_type] || '📋'}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{r.incident_type}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium">{r.incident_type}</p>
+                      {r.report_number && <span className="text-[10px] font-mono text-muted-foreground">{r.report_number}</span>}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(r.date_time), 'MMM d, yyyy · h:mm a')}
                     </p>

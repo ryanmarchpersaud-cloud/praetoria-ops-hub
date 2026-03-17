@@ -16,6 +16,13 @@ const statusColors: Record<string, string> = {
   closed: 'bg-muted text-muted-foreground',
 };
 
+const severityColors: Record<string, string> = {
+  low: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
+  medium: 'bg-amber-500/10 text-amber-700 border-amber-200',
+  high: 'bg-orange-500/10 text-orange-700 border-orange-200',
+  critical: 'bg-destructive/10 text-destructive border-destructive/30',
+};
+
 export default function AdminIncidentsPage() {
   const [search, setSearch] = useState('');
   const { data: reports = [], isLoading } = useQuery({
@@ -35,7 +42,8 @@ export default function AdminIncidentsPage() {
         r.incident_type.toLowerCase().includes(search.toLowerCase()) ||
         r.description?.toLowerCase().includes(search.toLowerCase()) ||
         r.location?.toLowerCase().includes(search.toLowerCase()) ||
-        r.reporter_type.toLowerCase().includes(search.toLowerCase())
+        r.reporter_type.toLowerCase().includes(search.toLowerCase()) ||
+        r.report_number?.toLowerCase().includes(search.toLowerCase())
       )
     : reports;
 
@@ -61,53 +69,20 @@ export default function AdminIncidentsPage() {
         </div>
       </div>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">{reports.length}</p>
-            <p className="text-xs text-muted-foreground">Total</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-amber-600">{openCount}</p>
-            <p className="text-xs text-muted-foreground">Open</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{investigatingCount}</p>
-            <p className="text-xs text-muted-foreground">Investigating</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-emerald-600">{reports.length - openCount - investigatingCount}</p>
-            <p className="text-xs text-muted-foreground">Resolved/Closed</p>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-foreground">{reports.length}</p><p className="text-xs text-muted-foreground">Total</p></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-amber-600">{openCount}</p><p className="text-xs text-muted-foreground">Open</p></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-blue-600">{investigatingCount}</p><p className="text-xs text-muted-foreground">Investigating</p></CardContent></Card>
+        <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-emerald-600">{reports.length - openCount - investigatingCount}</p><p className="text-xs text-muted-foreground">Resolved/Closed</p></CardContent></Card>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search incidents…"
-          className="pl-9"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <Input placeholder="Search by type, location, report number…" className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {/* List */}
       {filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <ShieldAlert className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">No incident reports found.</p>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="py-12 text-center"><ShieldAlert className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" /><p className="text-sm text-muted-foreground">No incident reports found.</p></CardContent></Card>
       ) : (
         <div className="space-y-2">
           {filtered.map((r: any) => (
@@ -116,6 +91,7 @@ export default function AdminIncidentsPage() {
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-mono text-muted-foreground">{r.report_number}</span>
                       <p className="text-sm font-medium">{r.incident_type}</p>
                       <Badge variant="outline" className="text-[10px] capitalize">{r.reporter_type}</Badge>
                     </div>
@@ -128,6 +104,9 @@ export default function AdminIncidentsPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant="outline" className={`text-[10px] ${severityColors[r.severity] ?? ''}`}>
+                      {r.severity}
+                    </Badge>
                     <Badge variant="outline" className={`text-[10px] ${statusColors[r.follow_up_status] ?? ''}`}>
                       {r.follow_up_status}
                     </Badge>

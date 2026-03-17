@@ -29,7 +29,7 @@ export default function SubcontractorNewIncidentPage() {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<{ id: string; report_number: string } | null>(null);
 
   const handleSubmit = async () => {
     if (!description.trim() || !user) {
@@ -46,10 +46,20 @@ export default function SubcontractorNewIncidentPage() {
         date_time: dateTime || new Date().toISOString(),
         location: location.trim() || null,
         description: description.trim(),
-      }]).select('id').single();
+      }]).select('id, report_number').single();
       if (error) throw error;
+
+      // Log to activity feed
+      await supabase.from('activities').insert({
+        action_name: `Incident report ${(data as any).report_number} submitted by subcontractor`,
+        record_type: 'incident_report',
+        record_id: data.id,
+        user_id: user.id,
+        status: 'completed',
+      });
+
       qc.invalidateQueries({ queryKey: ['incident_reports_sub'] });
-      setSubmitted(data.id);
+      setSubmitted({ id: data.id, report_number: (data as any).report_number });
     } catch (e: any) {
       toast({ title: 'Failed to submit', description: e.message, variant: 'destructive' });
     } finally {
@@ -67,15 +77,15 @@ export default function SubcontractorNewIncidentPage() {
         </div>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Report ID</p>
-            <p className="text-sm font-mono font-medium mt-1">{submitted.slice(0, 8).toUpperCase()}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Report Number</p>
+            <p className="text-lg font-mono font-bold mt-1">{submitted.report_number}</p>
           </CardContent>
         </Card>
         <div className="flex gap-2 justify-center">
           <Link to="/subcontractor/incidents">
             <Button variant="outline">View All Reports</Button>
           </Link>
-          <Link to={`/subcontractor/incidents/${submitted}`}>
+          <Link to={`/subcontractor/incidents/${submitted.id}`}>
             <Button>View Report</Button>
           </Link>
         </div>
@@ -87,9 +97,7 @@ export default function SubcontractorNewIncidentPage() {
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
       <div className="flex items-center gap-2">
         <Link to="/subcontractor/incidents">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div className="flex items-center gap-2">
           <ShieldAlert className="h-5 w-5 text-destructive" />
@@ -126,12 +134,7 @@ export default function SubcontractorNewIncidentPage() {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</p>
           <div>
             <Label>Description *</Label>
-            <Textarea
-              placeholder="Describe what happened…"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={4}
-            />
+            <Textarea placeholder="Describe what happened…" value={description} onChange={e => setDescription(e.target.value)} rows={4} />
           </div>
         </CardContent>
       </Card>
@@ -143,12 +146,7 @@ export default function SubcontractorNewIncidentPage() {
         </CardContent>
       </Card>
 
-      <Button
-        className="w-full"
-        variant="destructive"
-        onClick={handleSubmit}
-        disabled={submitting || !description.trim()}
-      >
+      <Button className="w-full" variant="destructive" onClick={handleSubmit} disabled={submitting || !description.trim()}>
         {submitting ? 'Submitting…' : 'Submit Incident Report'}
       </Button>
     </div>
