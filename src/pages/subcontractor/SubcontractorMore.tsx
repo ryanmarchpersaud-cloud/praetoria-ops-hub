@@ -18,7 +18,7 @@ export default function SubcontractorMore() {
     { icon: User, label: 'My Profile', to: '/subcontractor/profile', description: 'Contact info & details' },
     { icon: Building2, label: 'Company Details', to: '/subcontractor/company', description: 'Business information' },
     { icon: ShieldCheck, label: 'Compliance', to: '/subcontractor/compliance', description: 'Insurance, WCB & docs' },
-    { icon: ShieldAlert, label: 'Incidents & Damage', to: '/subcontractor/safety', description: 'Report site incidents' },
+    { icon: ShieldAlert, label: 'Incidents & Damage', to: '/subcontractor/incidents', description: 'Report site incidents' },
     { icon: DollarSign, label: 'Payments', to: '/subcontractor/payments', description: 'Payment history & status' },
     { icon: Receipt, label: 'Tax & Payment Docs', to: '/subcontractor/tax-documents', description: 'T4A, T5018 & payout history' },
     { icon: HelpCircle, label: 'Support', to: '/subcontractor/support', description: 'Contact admin' },
