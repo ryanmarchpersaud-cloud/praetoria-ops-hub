@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ServicePromoCard } from '@/components/ServicePromoCard';
 import { SERVICE_PROMOS } from '@/lib/servicePromos';
+import praetoriaCrest from '@/assets/praetoria-crest.png';
 import {
-  Shield, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight as ChevronRightIcon,
+  Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 
 export default function Login() {
