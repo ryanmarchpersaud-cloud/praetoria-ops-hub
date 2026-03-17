@@ -7,7 +7,7 @@ import { useJobs, useUpdateJob } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval, isToday, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
-import { DraggableItem, DragOverlayItem } from '@/components/schedule/DraggableItem';
+import { DraggableItem, DragOverlayItem, MonthDraggableChip } from '@/components/schedule/DraggableItem';
 import { DroppableDay } from '@/components/schedule/DroppableDay';
 import { Link } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
