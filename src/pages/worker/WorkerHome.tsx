@@ -95,11 +95,16 @@ export default function WorkerHome() {
   }));
 
   // Next visit location for the map card
-  const nextVisitLocation = (highlightVisit || nextVisit)
+  const mapVisit = highlightVisit || nextVisit;
+  const nextVisitLocation = mapVisit
     ? {
-        propertyName: ((highlightVisit || nextVisit)!.properties as any)?.property_name,
-        address: ((highlightVisit || nextVisit)!.properties as any)?.address_line_1,
-        city: ((highlightVisit || nextVisit)!.properties as any)?.city,
+        propertyName: (mapVisit.properties as any)?.property_name,
+        address: (mapVisit.properties as any)?.address_line_1,
+        city: (mapVisit.properties as any)?.city,
+        customerName: (mapVisit.customers as any) ? `${(mapVisit.customers as any).first_name} ${(mapVisit.customers as any).last_name}` : undefined,
+        serviceType: mapVisit.visit_type,
+        visitStatus: mapVisit.visit_status,
+        customerPhone: (mapVisit.customers as any)?.phone,
       }
     : null;
 
