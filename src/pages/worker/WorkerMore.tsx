@@ -1,10 +1,12 @@
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
-import { Monitor, Settings, LogOut, User, ChevronRight, HardHat, Users, Eye } from 'lucide-react';
+import { Monitor, Settings, LogOut, User, ChevronRight, HardHat, Eye } from 'lucide-react';
 
 export default function WorkerMore() {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -13,8 +15,10 @@ export default function WorkerMore() {
   };
 
   const menuItems = [
-    { icon: Monitor, label: 'Admin Dashboard', to: '/', description: 'Switch to desktop admin view' },
-    { icon: Eye, label: 'Customer Portal Preview', to: '/portal/properties', description: 'Preview the customer experience' },
+    ...(isAdmin ? [
+      { icon: Monitor, label: 'Admin Dashboard', to: '/', description: 'Switch to desktop admin view' },
+      { icon: Eye, label: 'Customer Portal Preview', to: '/portal/properties', description: 'Preview the customer experience' },
+    ] : []),
     { icon: Settings, label: 'Settings', to: '/settings', description: 'Account & app settings' },
   ];
 

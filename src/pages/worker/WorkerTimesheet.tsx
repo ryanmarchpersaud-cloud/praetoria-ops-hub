@@ -215,7 +215,6 @@ export default function WorkerTimesheet() {
         </div>
       )}
 
-      <WorkerFAB />
     </div>
   );
 }
