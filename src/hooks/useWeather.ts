@@ -80,13 +80,6 @@ export function useWeather(city = 'toronto') {
     setLoading(true);
     setError(null);
     try {
-      const { data: result, error: fnError } = await supabase.functions.invoke('weather', {
-        body: null,
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      // supabase.functions.invoke doesn't support query params well, so we use fetch
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const url = `https://${projectId}.supabase.co/functions/v1/weather?city=${encodeURIComponent(city)}`;
