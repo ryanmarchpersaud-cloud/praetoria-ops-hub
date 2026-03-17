@@ -55,7 +55,7 @@ export default function WorkerSearch() {
         id: p.id,
         title: p.property_name,
         subtitle: [p.address_line_1, p.city, p.customers ? `${p.customers.first_name} ${p.customers.last_name}` : null].filter(Boolean).join(', '),
-        link: `/worker/schedule`,
+        link: `/worker/property/${p.id}`,
       }));
 
       // Search customers
