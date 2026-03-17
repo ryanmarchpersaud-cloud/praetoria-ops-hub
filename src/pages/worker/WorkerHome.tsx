@@ -157,11 +157,11 @@ export default function WorkerHome() {
           )}
           <div className="text-left">
             <p className={cn('text-sm font-bold', clockedIn ? 'text-emerald-700 dark:text-emerald-300' : '')}>
-              {clockedIn ? 'Clock Out' : 'Clock In'}
+            {clockedIn ? 'Clock Out' : 'Clock In'}
             </p>
             {clockedIn && active && (
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-                Since {new Date(active.clock_in).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
+                {formatElapsed(elapsed)}
               </p>
             )}
             {!clockedIn && (
