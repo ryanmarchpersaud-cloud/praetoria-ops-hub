@@ -45,6 +45,7 @@ import PortalVisits from "./pages/portal/PortalVisits";
 import PortalPlan from "./pages/portal/PortalPlan";
 import PortalPhotos from "./pages/portal/PortalPhotos";
 import PortalRequests from "./pages/portal/PortalRequests";
+import PortalRequestWizard from "./pages/portal/PortalRequestWizard";
 import PortalBilling from "./pages/portal/PortalBilling";
 import PortalAccount from "./pages/portal/PortalAccount";
 import PortalPropertyDetail from "./pages/portal/PortalPropertyDetail";
@@ -229,6 +230,7 @@ function AppRoutes() {
       <Route path="/portal/photos" element={<PortalRoute><PortalPhotos /></PortalRoute>} />
       <Route path="/portal/billing" element={<PortalRoute><PortalBilling /></PortalRoute>} />
       <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
+      <Route path="/portal/requests/new" element={<PortalRoute><PortalRequestWizard /></PortalRoute>} />
       <Route path="/portal/account" element={<PortalRoute><PortalAccount /></PortalRoute>} />
 
       {/* Worker routes */}

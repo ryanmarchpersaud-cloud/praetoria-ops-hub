@@ -1140,13 +1140,19 @@ export type Database = {
       }
       service_requests: {
         Row: {
+          access_notes: string | null
+          area_of_property: string | null
+          attachments: string[] | null
           created_at: string
           customer_id: string
           description: string | null
           id: string
           internal_notes: string | null
+          preferred_contact_method: string | null
           property_id: string | null
+          requested_timing: string | null
           service_type: string
+          specific_request_type: string | null
           status: string
           subject: string
           updated_at: string
@@ -1154,13 +1160,19 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          access_notes?: string | null
+          area_of_property?: string | null
+          attachments?: string[] | null
           created_at?: string
           customer_id: string
           description?: string | null
           id?: string
           internal_notes?: string | null
+          preferred_contact_method?: string | null
           property_id?: string | null
+          requested_timing?: string | null
           service_type?: string
+          specific_request_type?: string | null
           status?: string
           subject: string
           updated_at?: string
@@ -1168,13 +1180,19 @@ export type Database = {
           user_id: string
         }
         Update: {
+          access_notes?: string | null
+          area_of_property?: string | null
+          attachments?: string[] | null
           created_at?: string
           customer_id?: string
           description?: string | null
           id?: string
           internal_notes?: string | null
+          preferred_contact_method?: string | null
           property_id?: string | null
+          requested_timing?: string | null
           service_type?: string
+          specific_request_type?: string | null
           status?: string
           subject?: string
           updated_at?: string
