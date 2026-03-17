@@ -78,7 +78,7 @@ export default function Login() {
           {/* Brand */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-2">
-              <img src={praetoriaCrest} alt="Praetoria Group" className="w-11 h-11 object-contain" />
+              <img src={praetoriaLogo} alt="Praetoria Group" className="w-11 h-11 object-contain dark:invert-0 invert" />
               <span className="text-xl font-bold text-foreground tracking-tight">Praetoria Ops</span>
             </div>
             <p className="text-muted-foreground text-sm mt-1">
