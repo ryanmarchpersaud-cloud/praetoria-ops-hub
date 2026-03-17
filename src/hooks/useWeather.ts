@@ -63,7 +63,7 @@ function setCachedWeather(city: string, data: WeatherData) {
   } catch { /* storage full */ }
 }
 
-export function useWeather(city = 'toronto') {
+export function useWeather(city = 'regina') {
   const [data, setData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
