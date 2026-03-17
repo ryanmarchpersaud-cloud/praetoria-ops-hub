@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,107 +12,18 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
-  ArrowLeft, ArrowRight, Check, ChevronRight, MapPin, Snowflake, Trees, Trash2,
+  ArrowLeft, ArrowRight, Check, MapPin, Snowflake, Trees, Trash2,
   Wrench, Sparkles, Droplets, ClipboardCheck, Scale, Clock, Camera, Send,
-  Building2, AlertTriangle,
+  Building2, AlertTriangle, X, Upload, RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-/* ── Service catalog ─────────────────────────────────────────────── */
+/* ── Constants ─────────────────────────────────────────────── */
 
-const SERVICE_CATALOG = {
-  'Snow & Ice': {
-    icon: Snowflake,
-    color: 'bg-sky-500',
-    items: [
-      'Snow clearing — driveway', 'Snow clearing — front walk', 'Snow clearing — public sidewalk',
-      'Snow clearing — steps / stairs', 'Snow clearing — deck / patio', 'Snow clearing — side entrance',
-      'Snow clearing — back alley / garbage access', 'Snow clearing — garage pad / apron',
-      'Snow clearing — around basement window / window well', 'Snow clearing — around generator / utility access',
-      'Snow pile relocation', 'Snow haul-away', 'De-icing application', 'Sanding / traction control',
-      'Ice chop / hardpack removal', 'Roof snow removal request', 'Ice dam / roof-edge concern',
-      'Emergency storm cleanup', 'Sidewalk compliance help',
-    ],
-  },
-  'Landscaping & Grounds': {
-    icon: Trees,
-    color: 'bg-green-500',
-    items: [
-      'Lawn mowing', 'Spring cleanup', 'Fall cleanup', 'Aeration', 'Dethatching',
-      'Hedge / shrub trimming', 'Weed cleanup', 'Garden bed cleanup', 'Mulch refresh',
-      'Yard debris removal', 'Leaf cleanup', 'Seasonal property check',
-    ],
-  },
-  'Junk Removal': {
-    icon: Trash2,
-    color: 'bg-amber-500',
-    items: [
-      'Household junk pickup', 'Furniture removal', 'Appliance removal', 'Mattress removal',
-      'Garage cleanout', 'Basement cleanout', 'Yard waste removal', 'Construction debris removal',
-      'Move-out cleanup', 'Curbside pickup request',
-    ],
-  },
-  'Property Care & Maintenance': {
-    icon: Wrench,
-    color: 'bg-orange-500',
-    items: [
-      'General repair request', 'Fence / gate issue', 'Deck / stair concern', 'Door / lock issue',
-      'Window issue', 'Caulking / sealing', 'Minor drywall / patch repair', 'Minor exterior repair',
-      'Handyman visit', 'Safety / hazard correction',
-    ],
-  },
-  'Cleaning Services': {
-    icon: Sparkles,
-    color: 'bg-pink-500',
-    items: [
-      'One-time cleaning', 'Move-in / move-out cleaning', 'Post-construction cleaning',
-      'Common-area cleaning', 'Deep cleaning', 'Turnover cleaning', 'Garbage area cleanup',
-    ],
-  },
-  'Power Washing': {
-    icon: Droplets,
-    color: 'bg-blue-600',
-    items: [
-      'Driveway washing', 'Sidewalk washing', 'Deck washing', 'Fence washing',
-      'Exterior wall washing', 'Garage floor washing', 'Dumpster pad / garbage area washing',
-    ],
-  },
-  'Property Inspection': {
-    icon: ClipboardCheck,
-    color: 'bg-indigo-500',
-    items: [
-      'Property inspection request', 'Pre-season inspection', 'Post-storm inspection',
-      'Insurance photo request', 'Site condition update', 'Access change notice',
-      'Restricted-area update', 'Damage concern', 'Service review request',
-    ],
-  },
-  'Bylaw / Compliance': {
-    icon: Scale,
-    color: 'bg-red-500',
-    items: [
-      'Sidewalk snow clearing compliance', 'Ice control / slippery sidewalk',
-      'Snow ridge / blocked access concern', 'Overgrown grass / yard cleanup',
-      'Untidy property cleanup', 'Seasonal inspection request',
-    ],
-  },
-} as const;
-
-type CatalogKey = keyof typeof SERVICE_CATALOG;
-
-const PRIORITY_OPTIONS = [
-  { value: 'Routine', label: 'Routine', desc: 'Within normal schedule', icon: Clock, color: 'border-muted-foreground/30' },
-  { value: 'Soon', label: 'Soon', desc: 'Within 1–3 days', icon: Clock, color: 'border-amber-500' },
-  { value: 'Urgent', label: 'Urgent', desc: 'Same-day / emergency', icon: AlertTriangle, color: 'border-destructive' },
-];
-
-const SPECIAL_ISSUE_TYPES = [
-  'Possible property damage', 'Access hazard', 'Update site notes',
-  'Restricted / no-access area', 'Fragile surface warning', 'Narrow passage / clearance issue',
-  'Hot tub / fence / deck caution area', 'Request pre-season inspection',
-  'Request insurance / condition photos',
-];
-
-const CONTACT_METHODS = ['Email', 'Phone', 'Text / SMS'];
+import {
+  SERVICE_CATALOG, CatalogKey, PRIORITY_OPTIONS, SPECIAL_ISSUE_TYPES,
+  CONTACT_METHODS, SERVICE_WINDOW_OPTIONS, PAYMENT_PREF_OPTIONS, RECURRING_UPSELL_OPTIONS,
+} from '@/lib/requestWizardConstants';
 
 /* ── Wizard component ─────────────────────────────────────────────── */
 
@@ -122,6 +33,7 @@ export default function PortalRequestWizard() {
   const { data: customer } = useCustomerProfile();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
@@ -134,7 +46,12 @@ export default function PortalRequestWizard() {
     customer_notes: '',
     preferred_contact_method: 'Email',
     special_issues: [] as string[],
+    preferred_service_window: 'No preference',
+    payment_preference: 'Ask me before charging',
+    recurring_interest: '' as string,
   });
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   // Fetch customer properties
   const { data: properties = [] } = useQuery({
@@ -159,14 +76,52 @@ export default function PortalRequestWizard() {
 
   const catalogEntry = form.service_category ? SERVICE_CATALOG[form.service_category] : null;
 
+  /* ── Photo handling ─────────────────────────────────────────────── */
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = 5 - photos.length;
+    const toAdd = files.slice(0, remaining);
+    const newPhotos = toAdd.map(file => ({ file, preview: URL.createObjectURL(file) }));
+    setPhotos(prev => [...prev, ...newPhotos]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(prev => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const uploadPhotos = async (): Promise<string[]> => {
+    if (photos.length === 0 || !user) return [];
+    setUploading(true);
+    const urls: string[] = [];
+    for (const { file } of photos) {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('request-attachments').upload(path, file);
+      if (!error) {
+        const { data: urlData } = supabase.storage.from('request-attachments').getPublicUrl(path);
+        urls.push(urlData.publicUrl);
+      }
+    }
+    setUploading(false);
+    return urls;
+  };
+
   /* ── Submit mutation ─────────────────────────────────────────────── */
   const submitRequest = useMutation({
     mutationFn: async () => {
       if (!customer || !user) throw new Error('Not authenticated');
+      const attachmentUrls = await uploadPhotos();
       const subject = form.specific_request_type || `${form.service_category} request`;
       const descParts = [
         form.customer_notes,
         form.special_issues.length > 0 ? `Special notes: ${form.special_issues.join(', ')}` : '',
+        form.preferred_service_window !== 'No preference' ? `Preferred window: ${form.preferred_service_window}` : '',
+        form.payment_preference ? `Payment preference: ${form.payment_preference}` : '',
+        form.recurring_interest ? `Recurring interest: ${form.recurring_interest}` : '',
       ].filter(Boolean).join('\n\n');
 
       const { error } = await supabase.from('service_requests').insert({
@@ -182,6 +137,7 @@ export default function PortalRequestWizard() {
         area_of_property: form.area_of_property || null,
         access_notes: form.access_notes || null,
         preferred_contact_method: form.preferred_contact_method,
+        attachments: attachmentUrls.length > 0 ? attachmentUrls : [],
       } as any);
       if (error) throw error;
     },
@@ -220,16 +176,11 @@ export default function PortalRequestWizard() {
               onClick={() => setForm(f => ({ ...f, property_id: p.id }))}
               className={cn(
                 'w-full text-left rounded-xl border-2 p-3 transition-all',
-                form.property_id === p.id
-                  ? 'border-primary bg-primary/5 shadow-sm'
-                  : 'border-border hover:border-primary/40',
+                form.property_id === p.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40',
               )}
             >
               <div className="flex items-center gap-3">
-                <div className={cn(
-                  'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
-                  form.property_id === p.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
-                )}>
+                <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center shrink-0', form.property_id === p.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
                   <Building2 className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
@@ -259,9 +210,7 @@ export default function PortalRequestWizard() {
               onClick={() => setForm(f => ({ ...f, service_category: key, specific_request_type: '' }))}
               className={cn(
                 'flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-all text-center',
-                selected
-                  ? 'border-primary bg-primary/5 shadow-sm'
-                  : 'border-border hover:border-primary/40',
+                selected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40',
               )}
             >
               <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-white', cat.color)}>
@@ -287,9 +236,7 @@ export default function PortalRequestWizard() {
               onClick={() => setForm(f => ({ ...f, specific_request_type: item }))}
               className={cn(
                 'w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-all flex items-center gap-2',
-                form.specific_request_type === item
-                  ? 'border-primary bg-primary/5 font-medium'
-                  : 'border-border hover:border-primary/40',
+                form.specific_request_type === item ? 'border-primary bg-primary/5 font-medium' : 'border-border hover:border-primary/40',
               )}
             >
               {form.specific_request_type === item && <Check className="h-4 w-4 text-primary shrink-0" />}
@@ -314,13 +261,10 @@ export default function PortalRequestWizard() {
               onClick={() => setForm(f => ({ ...f, requested_timing: opt.value }))}
               className={cn(
                 'w-full text-left rounded-xl border-2 p-4 transition-all flex items-center gap-3',
-                selected ? 'border-primary bg-primary/5 shadow-sm' : `border-border hover:border-primary/40`,
+                selected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40',
               )}
             >
-              <div className={cn(
-                'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
-                selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
-              )}>
+              <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center shrink-0', selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
                 <Icon className="h-5 w-5" />
               </div>
               <div>
@@ -339,73 +283,118 @@ export default function PortalRequestWizard() {
     <div className="space-y-4">
       <div>
         <Label className="text-xs font-medium">Area of Property</Label>
-        <Input
-          value={form.area_of_property}
-          onChange={e => setForm(f => ({ ...f, area_of_property: e.target.value }))}
-          placeholder="e.g. Front driveway, backyard, north side..."
-          className="mt-1"
-        />
+        <Input value={form.area_of_property} onChange={e => setForm(f => ({ ...f, area_of_property: e.target.value }))} placeholder="e.g. Front driveway, backyard, north side..." className="mt-1" />
       </div>
       <div>
         <Label className="text-xs font-medium">Access Notes</Label>
-        <Input
-          value={form.access_notes}
-          onChange={e => setForm(f => ({ ...f, access_notes: e.target.value }))}
-          placeholder="e.g. Gate code 1234, dog in backyard..."
-          className="mt-1"
-        />
+        <Input value={form.access_notes} onChange={e => setForm(f => ({ ...f, access_notes: e.target.value }))} placeholder="e.g. Gate code 1234, dog in backyard..." className="mt-1" />
       </div>
       <div>
         <Label className="text-xs font-medium">Additional Notes</Label>
-        <Textarea
-          value={form.customer_notes}
-          onChange={e => setForm(f => ({ ...f, customer_notes: e.target.value }))}
-          rows={3}
-          placeholder="Any other details we should know..."
-          className="mt-1"
-        />
+        <Textarea value={form.customer_notes} onChange={e => setForm(f => ({ ...f, customer_notes: e.target.value }))} rows={3} placeholder="Any other details we should know..." className="mt-1" />
       </div>
+
+      {/* Photo Upload */}
+      <div>
+        <Label className="text-xs font-medium flex items-center gap-1.5">
+          <Camera className="h-3.5 w-3.5" /> Photos (optional, up to 5)
+        </Label>
+        <div className="flex flex-wrap gap-2 mt-1.5">
+          {photos.map((p, i) => (
+            <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted border border-border">
+              <img src={p.preview} alt="" className="w-full h-full object-cover" />
+              <button onClick={() => removePhoto(i)} className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          {photos.length < 5 && (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-16 h-16 rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-0.5 text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Upload className="h-4 w-4" />
+              <span className="text-[9px]">Add</span>
+            </button>
+          )}
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handlePhotoSelect} />
+      </div>
+
+      {/* Preferred Service Window */}
+      <div>
+        <Label className="text-xs font-medium">Preferred Service Window</Label>
+        <div className="flex flex-wrap gap-1.5 mt-1.5">
+          {SERVICE_WINDOW_OPTIONS.map(opt => {
+            const active = form.preferred_service_window === opt;
+            return (
+              <button key={opt} onClick={() => setForm(f => ({ ...f, preferred_service_window: opt }))}
+                className={cn('text-[11px] px-2.5 py-1 rounded-full border transition-all', active ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border text-muted-foreground hover:border-primary/40')}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-1">Service windows are a preference, not a guarantee unless confirmed by our team.</p>
+      </div>
+
+      {/* Payment Preference */}
+      <div>
+        <Label className="text-xs font-medium">Payment Preference</Label>
+        <div className="flex flex-wrap gap-1.5 mt-1.5">
+          {PAYMENT_PREF_OPTIONS.map(opt => {
+            const active = form.payment_preference === opt;
+            return (
+              <button key={opt} onClick={() => setForm(f => ({ ...f, payment_preference: opt }))}
+                className={cn('text-[11px] px-2.5 py-1 rounded-full border transition-all', active ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border text-muted-foreground hover:border-primary/40')}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recurring Upsell */}
+      <div>
+        <Label className="text-xs font-medium flex items-center gap-1.5">
+          <RefreshCw className="h-3.5 w-3.5" /> Interested in a recurring plan?
+        </Label>
+        <div className="flex flex-wrap gap-1.5 mt-1.5">
+          {RECURRING_UPSELL_OPTIONS.map(opt => {
+            const active = form.recurring_interest === opt;
+            return (
+              <button key={opt} onClick={() => setForm(f => ({ ...f, recurring_interest: active ? '' : opt }))}
+                className={cn('text-[11px] px-2.5 py-1 rounded-full border transition-all', active ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border text-muted-foreground hover:border-primary/40')}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Special Concerns */}
       <div>
         <Label className="text-xs font-medium">Special Concerns (optional)</Label>
         <div className="flex flex-wrap gap-1.5 mt-1.5">
           {SPECIAL_ISSUE_TYPES.map(issue => {
             const active = form.special_issues.includes(issue);
             return (
-              <button
-                key={issue}
-                onClick={() => setForm(f => ({
-                  ...f,
-                  special_issues: active
-                    ? f.special_issues.filter(i => i !== issue)
-                    : [...f.special_issues, issue],
-                }))}
-                className={cn(
-                  'text-[11px] px-2.5 py-1 rounded-full border transition-all',
-                  active
-                    ? 'border-primary bg-primary/10 text-primary font-medium'
-                    : 'border-border text-muted-foreground hover:border-primary/40',
-                )}
-              >
+              <button key={issue} onClick={() => setForm(f => ({ ...f, special_issues: active ? f.special_issues.filter(i => i !== issue) : [...f.special_issues, issue] }))}
+                className={cn('text-[11px] px-2.5 py-1 rounded-full border transition-all', active ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border text-muted-foreground hover:border-primary/40')}>
                 {issue}
               </button>
             );
           })}
         </div>
       </div>
+
+      {/* Contact Method */}
       <div>
         <Label className="text-xs font-medium">Preferred Contact Method</Label>
         <div className="flex gap-2 mt-1.5">
           {CONTACT_METHODS.map(m => (
-            <button
-              key={m}
-              onClick={() => setForm(f => ({ ...f, preferred_contact_method: m }))}
-              className={cn(
-                'text-xs px-3 py-1.5 rounded-full border transition-all',
-                form.preferred_contact_method === m
-                  ? 'border-primary bg-primary/10 text-primary font-medium'
-                  : 'border-border text-muted-foreground hover:border-primary/40',
-              )}
-            >
+            <button key={m} onClick={() => setForm(f => ({ ...f, preferred_contact_method: m }))}
+              className={cn('text-xs px-3 py-1.5 rounded-full border transition-all', form.preferred_contact_method === m ? 'border-primary bg-primary/10 text-primary font-medium' : 'border-border text-muted-foreground hover:border-primary/40')}>
               {m}
             </button>
           ))}
@@ -423,9 +412,13 @@ export default function PortalRequestWizard() {
           <Row label="Service" value={form.service_category || '—'} />
           <Row label="Request" value={form.specific_request_type || '—'} />
           <Row label="Timing" value={form.requested_timing} />
+          <Row label="Service Window" value={form.preferred_service_window} />
+          <Row label="Payment" value={form.payment_preference} />
+          {form.recurring_interest && <Row label="Recurring" value={form.recurring_interest} />}
           {form.area_of_property && <Row label="Area" value={form.area_of_property} />}
           {form.access_notes && <Row label="Access" value={form.access_notes} />}
           {form.customer_notes && <Row label="Notes" value={form.customer_notes} />}
+          {photos.length > 0 && <Row label="Photos" value={`${photos.length} attached`} />}
           {form.special_issues.length > 0 && (
             <div>
               <span className="text-xs text-muted-foreground">Special Concerns</span>
@@ -459,14 +452,8 @@ export default function PortalRequestWizard() {
 
       {/* Progress bar */}
       <div className="flex gap-1">
-        {steps.map((s, i) => (
-          <div
-            key={i}
-            className={cn(
-              'h-1 flex-1 rounded-full transition-colors',
-              i <= step ? 'bg-primary' : 'bg-muted',
-            )}
-          />
+        {steps.map((_, i) => (
+          <div key={i} className={cn('h-1 flex-1 rounded-full transition-colors', i <= step ? 'bg-primary' : 'bg-muted')} />
         ))}
       </div>
 
@@ -488,8 +475,8 @@ export default function PortalRequestWizard() {
               Next <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button className="flex-1" disabled={submitRequest.isPending} onClick={() => submitRequest.mutate()}>
-              {submitRequest.isPending ? 'Submitting...' : (
+            <Button className="flex-1" disabled={submitRequest.isPending || uploading} onClick={() => submitRequest.mutate()}>
+              {submitRequest.isPending || uploading ? 'Submitting...' : (
                 <>Submit Request <Send className="h-4 w-4 ml-1" /></>
               )}
             </Button>
