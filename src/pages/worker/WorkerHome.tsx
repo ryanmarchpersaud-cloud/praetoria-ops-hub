@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
+import { useWorkerCertifications } from '@/hooks/useWorkerProfile';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WorkerFAB } from '@/components/worker/WorkerFAB';
@@ -13,10 +14,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
   ChevronRight, Calendar, Zap, AlertCircle, Navigation,
-  CalendarDays, Camera, CloudSun, FileText,
+  CalendarDays, Camera, CloudSun, FileText, ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { differenceInDays } from 'date-fns';
 
 function formatElapsed(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -46,6 +48,13 @@ export default function WorkerHome() {
   const clockInMut = useClockIn();
   const clockOutMut = useClockOut();
   const [elapsed, setElapsed] = useState(0);
+  const { data: certs = [] } = useWorkerCertifications();
+
+  const expiringCerts = certs.filter(c => {
+    if (!c.expiry_date || c.status === 'expired') return false;
+    const days = differenceInDays(new Date(c.expiry_date), new Date());
+    return days >= 0 && days <= 60;
+  });
 
   useEffect(() => {
     if (!active) { setElapsed(0); return; }
@@ -159,6 +168,29 @@ export default function WorkerHome() {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Expiring Certifications Alert */}
+      {expiringCerts.length > 0 && (
+        <Link to="/worker/training">
+          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 active:shadow-sm transition-shadow">
+            <CardContent className="p-3 flex items-start gap-3">
+              <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  {expiringCerts.length} certification{expiringCerts.length > 1 ? 's' : ''} expiring soon
+                </p>
+                <p className="text-[11px] text-amber-700/80 dark:text-amber-400/70 mt-0.5">
+                  {expiringCerts.map(c => {
+                    const days = differenceInDays(new Date(c.expiry_date!), new Date());
+                    return `${c.cert_name} (${days}d)`;
+                  }).join(' · ')}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
+            </CardContent>
+          </Card>
+        </Link>
+      )}
 
       {/* Clock In/Out */}
       <button
