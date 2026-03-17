@@ -12,7 +12,7 @@ export function ServicePromoCard({ promo, variant = 'full', className }: Service
 
   if (variant === 'compact') {
     return (
-      <div className={cn('rounded-lg border border-border bg-card p-4 hover:shadow-sm transition-shadow', className)}>
+      <div className={cn('rounded-lg border border-border/60 p-4 hover:shadow-sm transition-shadow', promo.accentClass, className)}>
         <div className="flex items-start gap-3">
           <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', promo.accentClass)}>
             <Icon className={cn('w-4.5 h-4.5', promo.iconColorClass)} />
@@ -35,7 +35,7 @@ export function ServicePromoCard({ promo, variant = 'full', className }: Service
   }
 
   return (
-    <div className={cn('rounded-xl border border-border bg-card p-5 hover:shadow-md transition-shadow', className)}>
+    <div className={cn('rounded-xl border border-border/60 p-5 hover:shadow-md transition-shadow', promo.accentClass, className)}>
       <div className="flex items-center gap-3 mb-3">
         <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', promo.accentClass)}>
           <Icon className={cn('w-5 h-5', promo.iconColorClass)} />
