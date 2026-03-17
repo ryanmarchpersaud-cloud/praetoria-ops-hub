@@ -4,15 +4,39 @@ import { useQuotes, useCreateQuote } from '@/hooks/useQuotes';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, FileText, Plus, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Phone, Mail, MapPin, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES, LEAD_STATUSES, LEAD_SOURCES, URGENCY_LEVELS, PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+
+function CollapsibleSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <Card>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="pb-3 cursor-pointer active:bg-muted/30 transition-colors">
+            <CardTitle className="text-sm flex items-center justify-between">
+              {title}
+              {open ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-0 space-y-3">
+            {children}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
+  );
+}
 
 export default function LeadDetail() {
   const { id } = useParams();
@@ -73,103 +97,159 @@ export default function LeadDetail() {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-muted-foreground">Loading...</div>;
-  if (!lead) return <div className="p-8 text-muted-foreground">Lead not found</div>;
+  if (isLoading) return <div className="p-8 text-muted-foreground text-sm">Loading...</div>;
+  if (!lead) return <div className="p-8 text-muted-foreground text-sm">Lead not found</div>;
 
   const set = (key: string, value: any) => setForm((p: any) => ({ ...p, [key]: value }));
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/leads')}>
+    <div className="space-y-4 animate-fade-in max-w-4xl">
+      {/* ── Header ── */}
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => navigate('/leads')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">{form.first_name} {form.last_name}</h1>
-          <p className="text-sm text-muted-foreground">{form.company_name || 'No company'}</p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg md:text-xl font-bold truncate">{form.first_name} {form.last_name}</h1>
+            <StatusBadge status={form.status || 'New'} />
+          </div>
+          <p className="text-xs text-muted-foreground truncate">{form.company_name || 'No company'} · {form.service_type}</p>
         </div>
-        <StatusBadge status={form.status || 'New'} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Contact Info</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>First Name</Label><Input value={form.first_name || ''} onChange={e => set('first_name', e.target.value)} /></div>
-                <div><Label>Last Name</Label><Input value={form.last_name || ''} onChange={e => set('last_name', e.target.value)} /></div>
-              </div>
-              <div><Label>Company</Label><Input value={form.company_name || ''} onChange={e => set('company_name', e.target.value)} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Email</Label><Input value={form.email || ''} onChange={e => set('email', e.target.value)} /></div>
-                <div><Label>Phone</Label><Input value={form.phone || ''} onChange={e => set('phone', e.target.value)} /></div>
-              </div>
-              <div><Label>Address</Label><Input value={form.address_line_1 || ''} onChange={e => set('address_line_1', e.target.value)} /></div>
-              <div className="grid grid-cols-3 gap-3">
-                <div><Label>City</Label><Input value={form.city || ''} onChange={e => set('city', e.target.value)} /></div>
-                <div>
-                  <Label>Province</Label>
-                  <select value={form.province || ''} onChange={e => set('province', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="">—</option>
-                    {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
-                </div>
-                <div><Label>Postal Code</Label><Input value={form.postal_code || ''} onChange={e => set('postal_code', e.target.value)} /></div>
-              </div>
-            </CardContent>
-          </Card>
+      {/* ── Quick Info Summary — always visible, scannable ── */}
+      <Card>
+        <CardContent className="py-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            {form.phone && (
+              <a href={`tel:${form.phone}`} className="flex items-center gap-1.5 text-primary active:opacity-70 min-h-[44px] items-center">
+                <Phone className="h-3.5 w-3.5" />
+                <span>{form.phone}</span>
+              </a>
+            )}
+            {form.email && (
+              <a href={`mailto:${form.email}`} className="flex items-center gap-1.5 text-primary active:opacity-70 min-h-[44px] items-center">
+                <Mail className="h-3.5 w-3.5" />
+                <span className="truncate max-w-[180px]">{form.email}</span>
+              </a>
+            )}
+            {form.city && (
+              <span className="flex items-center gap-1.5 text-muted-foreground min-h-[44px] items-center">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>{form.city}{form.province ? `, ${form.province}` : ''}</span>
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
+            <span>Source: {form.lead_source || '—'}</span>
+            <span className="text-border">·</span>
+            <span>Urgency: <span className={['High', 'Urgent'].includes(form.urgency) ? 'text-warning font-medium' : ''}>{form.urgency || 'Normal'}</span></span>
+            <span className="text-border">·</span>
+            <span>{form.estimated_value_range || 'No estimate'}</span>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* ── Action Bar ── */}
+      <div className="flex gap-2">
+        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateLead.isPending}>
+          <Save className="h-4 w-4 mr-2" /> Save
+        </Button>
+        <Button variant="outline" onClick={handleCreateQuote} className="h-11">
+          <Plus className="h-4 w-4 mr-1" /> Quote
+        </Button>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-3">
+          {/* ── Status & Service (always open) ── */}
           <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Lead Details</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="pt-4 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Service</Label>
-                  <select value={form.service_type || ''} onChange={e => set('service_type', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    {SERVICE_CATEGORIES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <select value={form.status || ''} onChange={e => set('status', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <Label className="text-xs">Status</Label>
+                  <select value={form.status || ''} onChange={e => set('status', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
                     {LEAD_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
+                <div>
+                  <Label className="text-xs">Service</Label>
+                  <select value={form.service_type || ''} onChange={e => set('service_type', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
+                    {SERVICE_CATEGORIES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Source</Label>
-                  <select value={form.lead_source || ''} onChange={e => set('lead_source', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <Label className="text-xs">Source</Label>
+                  <select value={form.lead_source || ''} onChange={e => set('lead_source', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
                     <option value="">—</option>
                     {LEAD_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
-                  <Label>Urgency</Label>
-                  <select value={form.urgency || ''} onChange={e => set('urgency', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <Label className="text-xs">Urgency</Label>
+                  <select value={form.urgency || ''} onChange={e => set('urgency', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
                     {URGENCY_LEVELS.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                 </div>
               </div>
-              <div><Label>Estimated Value</Label><Input value={form.estimated_value_range || ''} onChange={e => set('estimated_value_range', e.target.value)} placeholder="e.g. $1,000 - $5,000" /></div>
-              <div><Label>Description</Label><Textarea value={form.description || ''} onChange={e => set('description', e.target.value)} /></div>
-              <div><Label>Internal Notes</Label><Textarea value={form.internal_notes || ''} onChange={e => set('internal_notes', e.target.value)} /></div>
             </CardContent>
           </Card>
+
+          {/* ── Description (always open) ── */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Description</CardTitle></CardHeader>
+            <CardContent className="pt-0">
+              <Textarea value={form.description || ''} onChange={e => set('description', e.target.value)} rows={3} placeholder="What does the client need?" />
+            </CardContent>
+          </Card>
+
+          {/* ── Contact Info (collapsible) ── */}
+          <CollapsibleSection title="Contact Details">
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">First Name</Label><Input value={form.first_name || ''} onChange={e => set('first_name', e.target.value)} className="h-10" /></div>
+              <div><Label className="text-xs">Last Name</Label><Input value={form.last_name || ''} onChange={e => set('last_name', e.target.value)} className="h-10" /></div>
+            </div>
+            <div><Label className="text-xs">Company</Label><Input value={form.company_name || ''} onChange={e => set('company_name', e.target.value)} className="h-10" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="text-xs">Email</Label><Input type="email" inputMode="email" value={form.email || ''} onChange={e => set('email', e.target.value)} className="h-10" /></div>
+              <div><Label className="text-xs">Phone</Label><Input type="tel" inputMode="tel" value={form.phone || ''} onChange={e => set('phone', e.target.value)} className="h-10" /></div>
+            </div>
+          </CollapsibleSection>
+
+          {/* ── Address (collapsible) ── */}
+          <CollapsibleSection title="Address">
+            <div><Label className="text-xs">Street</Label><Input value={form.address_line_1 || ''} onChange={e => set('address_line_1', e.target.value)} className="h-10" /></div>
+            <div className="grid grid-cols-5 gap-2">
+              <div className="col-span-2"><Label className="text-xs">City</Label><Input value={form.city || ''} onChange={e => set('city', e.target.value)} className="h-10" /></div>
+              <div className="col-span-1">
+                <Label className="text-xs">Prov.</Label>
+                <select value={form.province || ''} onChange={e => set('province', e.target.value)} className="w-full rounded-md border border-input bg-background px-2 py-2 text-sm h-10">
+                  <option value="">—</option>
+                  {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div className="col-span-2"><Label className="text-xs">Postal</Label><Input value={form.postal_code || ''} onChange={e => set('postal_code', e.target.value)} className="h-10" /></div>
+            </div>
+          </CollapsibleSection>
+
+          {/* ── Internal Notes (collapsible) ── */}
+          <CollapsibleSection title="Internal Notes & Value">
+            <div><Label className="text-xs">Estimated Value</Label><Input value={form.estimated_value_range || ''} onChange={e => set('estimated_value_range', e.target.value)} className="h-10" placeholder="e.g. $1,000 - $5,000" /></div>
+            <div><Label className="text-xs">Internal Notes</Label><Textarea value={form.internal_notes || ''} onChange={e => set('internal_notes', e.target.value)} rows={3} /></div>
+          </CollapsibleSection>
         </div>
 
-        <div className="space-y-4">
-          <Button onClick={handleSave} className="w-full" disabled={updateLead.isPending}>
-            <Save className="h-4 w-4 mr-2" /> Save Changes
-          </Button>
-
+        {/* ── Right Column ── */}
+        <div className="space-y-3">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center justify-between">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center justify-between">
                 Quotes
-                <Button size="sm" variant="outline" onClick={handleCreateQuote}>
-                  <Plus className="h-3 w-3 mr-1" /> New Quote
+                <Button size="sm" variant="outline" onClick={handleCreateQuote} className="h-8">
+                  <Plus className="h-3 w-3 mr-1" /> New
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -179,12 +259,12 @@ export default function LeadDetail() {
               ) : (
                 <div className="space-y-2">
                   {leadQuotes.map((q: any) => (
-                    <Link key={q.id} to={`/quotes/${q.id}`} className="flex items-center justify-between p-2 rounded hover:bg-muted/50">
+                    <Link key={q.id} to={`/quotes/${q.id}`} className="flex items-center justify-between p-2 rounded active:bg-muted/50">
                       <div>
                         <p className="text-sm font-medium mono">{q.quote_number}</p>
                         <p className="text-xs text-muted-foreground">${Number(q.total).toLocaleString()}</p>
                       </div>
-                      <StatusBadge status={q.approval_status} />
+                      <StatusBadge status={q.approval_status} showIcon={false} />
                     </Link>
                   ))}
                 </div>
