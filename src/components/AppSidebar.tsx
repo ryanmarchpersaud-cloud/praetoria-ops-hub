@@ -24,6 +24,7 @@ const opsItems = [
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus },
   { title: 'Activity', url: '/activity', icon: Activity },
   { title: 'Employees', url: '/employees', icon: HardHat },
+  { title: 'Subcontractors', url: '/subcontractors', icon: Users },
 ];
 
 const systemItems = [

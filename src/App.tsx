@@ -8,6 +8,7 @@ import { PreviewModeBanner } from "@/components/PreviewModeBanner";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AppLayout } from "@/components/AppLayout";
 import { PortalLayout } from "@/components/PortalLayout";
+import { SubcontractorLayout } from "@/components/subcontractor/SubcontractorLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
@@ -31,6 +32,8 @@ import InvoiceDetail from "./pages/InvoiceDetail";
 import Requests from "./pages/Requests";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
+import Subcontractors from "./pages/Subcontractors";
+import SubcontractorDetail from "./pages/SubcontractorDetail";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 
@@ -67,26 +70,38 @@ import WorkerTimeOffPage from "./pages/worker/WorkerTimeOffPage";
 import WorkerEmergencyContactPage from "./pages/worker/WorkerEmergencyContactPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
+// Subcontractor pages
+import SubcontractorHome from "./pages/subcontractor/SubcontractorHome";
+import SubcontractorSchedule from "./pages/subcontractor/SubcontractorSchedule";
+import SubcontractorInvoices from "./pages/subcontractor/SubcontractorInvoices";
+import SubcontractorDocuments from "./pages/subcontractor/SubcontractorDocuments";
+import SubcontractorMore from "./pages/subcontractor/SubcontractorMore";
+import SubcontractorProfile from "./pages/subcontractor/SubcontractorProfile";
+import SubcontractorCompany from "./pages/subcontractor/SubcontractorCompany";
+import SubcontractorCompliance from "./pages/subcontractor/SubcontractorCompliance";
+import SubcontractorPayments from "./pages/subcontractor/SubcontractorPayments";
+import SubcontractorSupport from "./pages/subcontractor/SubcontractorSupport";
+import SubcontractorSettings from "./pages/subcontractor/SubcontractorSettings";
+import SubcontractorVisitExec from "./pages/subcontractor/SubcontractorVisitExec";
+
 const queryClient = new QueryClient();
 
-/** Loading spinner shared by route guards */
 function RouteLoading() {
   return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
 }
 
-/** Admin-only routes: dashboard, leads, quotes, invoices, customers, etc. */
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isAdmin, isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
+  const { isAdmin, isCustomer, isStaff, isSubcontractor, isLoading: roleLoading } = useUserRole();
   if (loading || roleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (isSubcontractor && !isAdmin) return <Navigate to="/subcontractor" replace />;
   if (isCustomer && !isAdmin) return <Navigate to="/portal/properties" replace />;
   if (isStaff && !isAdmin) return <Navigate to="/access-denied" replace />;
   if (!isAdmin) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
-/** Staff routes accessible by both admin and workers (settings, weather) */
 function StaffRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
@@ -122,14 +137,24 @@ function PortalRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
+function SubcontractorRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { isSubcontractor, isAdmin, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!isSubcontractor && !isAdmin) return <Navigate to="/access-denied" replace />;
+  return <>{children}</>;
+}
+
 function LoginRoute() {
   const { user, loading } = useAuth();
-  const { isCustomer, isStaff, isAdmin, isLoading: roleLoading } = useUserRole();
+  const { isCustomer, isStaff, isAdmin, isSubcontractor, isLoading: roleLoading } = useUserRole();
   if (loading || roleLoading) {
     if (!user) return <Login />;
     return <RouteLoading />;
   }
   if (user) {
+    if (isSubcontractor && !isAdmin && !isStaff) return <Navigate to="/subcontractor" replace />;
     if (isCustomer) return <Navigate to="/portal/properties" replace />;
     if (isStaff && !isAdmin) return <Navigate to="/worker" replace />;
     return <Navigate to="/" replace />;
@@ -166,10 +191,10 @@ function AppRoutes() {
       <Route path="/requests" element={<AdminRoute><Requests /></AdminRoute>} />
       <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
       <Route path="/employees/:id" element={<AdminRoute><EmployeeDetail /></AdminRoute>} />
+      <Route path="/subcontractors" element={<AdminRoute><Subcontractors /></AdminRoute>} />
+      <Route path="/subcontractors/:id" element={<AdminRoute><SubcontractorDetail /></AdminRoute>} />
 
-      {/* Admin-only settings */}
       <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
-      {/* Staff routes (admin + worker) */}
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
@@ -201,6 +226,20 @@ function AppRoutes() {
       <Route path="/worker/time-off" element={<WorkerRoute><WorkerLayout><WorkerTimeOffPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/emergency-contact" element={<WorkerRoute><WorkerLayout><WorkerEmergencyContactPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
+
+      {/* Subcontractor routes */}
+      <Route path="/subcontractor" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorHome /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/schedule" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSchedule /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/invoices" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorInvoices /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/documents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorDocuments /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/more" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorMore /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/profile" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorProfile /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/company" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorCompany /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/compliance" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorCompliance /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/payments" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorPayments /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/support" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSupport /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/settings" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSettings /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/visit/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorVisitExec /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

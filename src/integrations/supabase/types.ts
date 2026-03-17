@@ -1101,6 +1101,350 @@ export type Database = {
           },
         ]
       }
+      subcontractor_assignments: {
+        Row: {
+          assigned_at: string
+          assignment_status: string
+          created_at: string
+          id: string
+          job_id: string | null
+          notes: string | null
+          property_id: string | null
+          subcontractor_id: string
+          visit_id: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          assignment_status?: string
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          notes?: string | null
+          property_id?: string | null
+          subcontractor_id: string
+          visit_id?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          assignment_status?: string
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          notes?: string | null
+          property_id?: string | null
+          subcontractor_id?: string
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_assignments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontractor_assignments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontractor_assignments_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontractor_assignments_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractor_documents: {
+        Row: {
+          created_at: string
+          document_name: string
+          document_type: string
+          expiry_date: string | null
+          file_name: string
+          file_url: string
+          id: string
+          notes: string | null
+          status: string
+          subcontractor_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_name: string
+          document_type?: string
+          expiry_date?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          notes?: string | null
+          status?: string
+          subcontractor_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          expiry_date?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          subcontractor_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_documents_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractor_invoices: {
+        Row: {
+          admin_review_notes: string | null
+          amount: number
+          approved_at: string | null
+          attachment_url: string | null
+          created_at: string
+          currency: string
+          id: string
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          paid_at: string | null
+          service_period_end: string | null
+          service_period_start: string | null
+          status: string
+          subcontractor_id: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          admin_review_notes?: string | null
+          amount?: number
+          approved_at?: string | null
+          attachment_url?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          notes?: string | null
+          paid_at?: string | null
+          service_period_end?: string | null
+          service_period_start?: string | null
+          status?: string
+          subcontractor_id: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_review_notes?: string | null
+          amount?: number
+          approved_at?: string | null
+          attachment_url?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          paid_at?: string | null
+          service_period_end?: string | null
+          service_period_start?: string | null
+          status?: string
+          subcontractor_id?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_invoices_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractor_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          reference_number: string | null
+          subcontractor_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          reference_number?: string | null
+          subcontractor_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          reference_number?: string | null
+          subcontractor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractor_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontractor_payments_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractor_service_categories: {
+        Row: {
+          created_at: string
+          id: string
+          service_category: string
+          subcontractor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          service_category: string
+          subcontractor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          service_category?: string
+          subcontractor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_service_categories_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractors: {
+        Row: {
+          active_flag: boolean
+          agreement_signed_status: string
+          business_license_expiry: string | null
+          business_license_status: string
+          business_number: string | null
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string | null
+          id: string
+          insurance_expiry: string | null
+          insurance_status: string
+          mailing_address: string | null
+          notes_admin_only: string | null
+          onboarding_status: string
+          operating_name: string | null
+          phone: string | null
+          safety_doc_status: string
+          service_area_summary: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          wcb_expiry: string | null
+          wcb_status: string
+        }
+        Insert: {
+          active_flag?: boolean
+          agreement_signed_status?: string
+          business_license_expiry?: string | null
+          business_license_status?: string
+          business_number?: string | null
+          company_name: string
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          insurance_expiry?: string | null
+          insurance_status?: string
+          mailing_address?: string | null
+          notes_admin_only?: string | null
+          onboarding_status?: string
+          operating_name?: string | null
+          phone?: string | null
+          safety_doc_status?: string
+          service_area_summary?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          wcb_expiry?: string | null
+          wcb_status?: string
+        }
+        Update: {
+          active_flag?: boolean
+          agreement_signed_status?: string
+          business_license_expiry?: string | null
+          business_license_status?: string
+          business_number?: string | null
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          insurance_expiry?: string | null
+          insurance_status?: string
+          mailing_address?: string | null
+          notes_admin_only?: string | null
+          onboarding_status?: string
+          operating_name?: string | null
+          phone?: string | null
+          safety_doc_status?: string
+          service_area_summary?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          wcb_expiry?: string | null
+          wcb_status?: string
+        }
+        Relationships: []
+      }
       timesheets: {
         Row: {
           clock_in: string
@@ -1475,6 +1819,10 @@ export type Database = {
     }
     Functions: {
       get_customer_id_for_user: { Args: { _user_id: string }; Returns: string }
+      get_subcontractor_id_for_user: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1484,7 +1832,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "staff" | "customer"
+      app_role: "admin" | "staff" | "customer" | "subcontractor"
       billing_frequency:
         | "per-visit"
         | "weekly"
@@ -1706,7 +2054,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "staff", "customer"],
+      app_role: ["admin", "staff", "customer", "subcontractor"],
       billing_frequency: [
         "per-visit",
         "weekly",

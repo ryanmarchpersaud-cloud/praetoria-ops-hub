@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
       { email: "admin@praetoriagroup.ca", password: "TestAdmin123!", role: "admin" as const, displayName: "Admin User" },
       { email: "worker@praetoriagroup.ca", password: "TestWorker123!", role: "staff" as const, displayName: "Field Worker" },
       { email: "customer@praetoriagroup.ca", password: "TestCustomer123!", role: "customer" as const, displayName: "Demo Customer" },
+      { email: "subcontractor@praetoriagroup.ca", password: "TestSub123!", role: "subcontractor" as const, displayName: "Daniel Ross" },
     ];
 
     const results = [];
@@ -78,6 +79,37 @@ Deno.serve(async (req) => {
             city: "Vancouver",
             province: "BC",
             postal_code: "V6B 1A1",
+          });
+        }
+      }
+
+      // For subcontractor role, ensure a subcontractor record exists
+      if (account.role === "subcontractor") {
+        const { data: existingSub } = await supabaseAdmin
+          .from("subcontractors")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (!existingSub) {
+          await supabaseAdmin.from("subcontractors").insert({
+            user_id: userId,
+            company_name: "Prairie Seasonal Services Ltd.",
+            operating_name: "Prairie Seasonal",
+            contact_name: "Daniel Ross",
+            email: account.email,
+            phone: "306-555-0118",
+            service_area_summary: "Regina, SK",
+            status: "active",
+            onboarding_status: "approved",
+            active_flag: true,
+            insurance_status: "active",
+            insurance_expiry: "2027-03-01",
+            wcb_status: "active",
+            wcb_expiry: "2027-06-01",
+            business_license_status: "pending",
+            agreement_signed_status: "signed",
+            safety_doc_status: "active",
           });
         }
       }
