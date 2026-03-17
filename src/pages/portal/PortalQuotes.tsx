@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from '@/components/ui/textarea';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Check, X, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Check, X, MessageSquare, ChevronDown, ChevronUp, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 

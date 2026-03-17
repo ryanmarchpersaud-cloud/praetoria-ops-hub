@@ -42,6 +42,8 @@ export const SERVICE_CATALOG = {
       'General repair request', 'Fence / gate issue', 'Deck / stair concern', 'Door / lock issue',
       'Window issue', 'Caulking / sealing', 'Minor drywall / patch repair', 'Minor exterior repair',
       'Handyman visit', 'Safety / hazard correction',
+      'Garage door bottom weather strip replacement', 'Garage door weather seal inspection',
+      'Garage door side/top weather seal replacement', 'Door weatherproofing / draft sealing',
     ],
   },
   'Cleaning Services': {
