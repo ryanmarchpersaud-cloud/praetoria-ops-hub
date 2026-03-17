@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
-import { Monitor, Settings, LogOut, User, ChevronRight } from 'lucide-react';
+import { Monitor, Settings, LogOut, User, ChevronRight, HardHat, Users, Eye } from 'lucide-react';
 
 export default function WorkerMore() {
   const { user, signOut } = useAuth();
@@ -13,12 +13,13 @@ export default function WorkerMore() {
   };
 
   const menuItems = [
-    { icon: Monitor, label: 'Admin Dashboard', to: '/', description: 'Switch to desktop view' },
+    { icon: Monitor, label: 'Admin Dashboard', to: '/', description: 'Switch to desktop admin view' },
+    { icon: Eye, label: 'Customer Portal Preview', to: '/portal/properties', description: 'Preview the customer experience' },
     { icon: Settings, label: 'Settings', to: '/settings', description: 'Account & app settings' },
   ];
 
   return (
-    <div className="px-4 pt-6 space-y-4">
+    <div className="px-4 pt-6 pb-4 space-y-4">
       <h1 className="text-lg font-bold text-foreground">More</h1>
 
       {/* User info */}
@@ -33,11 +34,21 @@ export default function WorkerMore() {
             </p>
             <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
           </div>
+          <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">
+            Field Mode
+          </span>
         </CardContent>
       </Card>
 
-      {/* Menu items */}
-      <div className="space-y-2">
+      {/* Current mode indicator */}
+      <div className="flex items-center gap-2 px-1">
+        <HardHat className="h-4 w-4 text-blue-500" />
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">You are in Field Mode</span>
+      </div>
+
+      {/* Switch portals */}
+      <div className="space-y-1.5">
+        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">Switch View</p>
         {menuItems.map(item => (
           <Link key={item.to} to={item.to}>
             <Card className="active:shadow-sm transition-shadow">
@@ -55,10 +66,7 @@ export default function WorkerMore() {
       </div>
 
       {/* Logout */}
-      <button
-        onClick={handleLogout}
-        className="w-full"
-      >
+      <button onClick={handleLogout} className="w-full">
         <Card className="active:shadow-sm transition-shadow border-destructive/20">
           <CardContent className="p-4 flex items-center gap-3">
             <LogOut className="h-5 w-5 text-destructive shrink-0" />
@@ -66,6 +74,19 @@ export default function WorkerMore() {
           </CardContent>
         </Card>
       </button>
+
+      {/* Test credentials helper */}
+      <div className="rounded-lg border border-dashed border-amber-500/30 bg-amber-500/5 p-3 space-y-1.5">
+        <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">🧪 Testing Tip</p>
+        <p className="text-[11px] text-muted-foreground">
+          Sign out and use the <strong>Dev · Role Testing</strong> panel on the login page to switch between Admin, Worker, and Customer accounts.
+        </p>
+        <div className="text-[10px] text-muted-foreground/80 space-y-0.5">
+          <p>• <strong>Admin</strong> → admin@praetoriagroup.com</p>
+          <p>• <strong>Worker</strong> → worker@praetoriagroup.com</p>
+          <p>• <strong>Customer</strong> → customer@praetoriagroup.com</p>
+        </div>
+      </div>
     </div>
   );
 }
