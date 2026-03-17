@@ -80,7 +80,7 @@ export const SERVICE_PROMOS: ServicePromo[] = [
     id: 'property-management',
     title: 'Property Management',
     subtitle: 'Full-Service Building Operations',
-    audience: 'Multi-Unit · Strata · Commercial · Rental',
+    audience: 'Multi-Unit · Strata · Commercial · Government · Rental',
     highlights: [
       'Coordinated service across all properties',
       'Vendor management & work order tracking',
