@@ -101,14 +101,42 @@ export default function WorkerHome() {
             <Calendar className="h-3 w-3" /> {formatToday()}
           </p>
         </div>
-        <button className="relative w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center active:bg-muted transition-colors">
-          <Bell className="h-5 w-5 text-foreground" />
-          {todayVisits.length > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-              {todayVisits.length}
-            </span>
-          )}
-        </button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="relative w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center active:bg-muted transition-colors">
+              <Bell className="h-5 w-5 text-foreground" />
+              {notifications.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                  {notifications.length}
+                </span>
+              )}
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80">
+            <SheetHeader>
+              <SheetTitle>Notifications</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-3">
+              {notifications.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">No notifications</p>
+              ) : (
+                notifications.map(n => (
+                  <Link key={n.id} to={`/visits/${n.id}`}>
+                    <Card className="active:shadow-sm transition-shadow">
+                      <CardContent className="p-3 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span className="text-xs font-medium truncate">{n.title}</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground pl-5">{n.description}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* Clock In/Out */}
