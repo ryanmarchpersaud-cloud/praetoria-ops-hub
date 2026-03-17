@@ -27,6 +27,7 @@ interface QuickAction {
 export function WorkerFAB() {
   const [open, setOpen] = useState(false);
   const [comingSoonLabel, setComingSoonLabel] = useState<string | null>(null);
+  const [quickAction, setQuickAction] = useState<QuickActionType>(null);
   const { isAdmin, isStaff } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
