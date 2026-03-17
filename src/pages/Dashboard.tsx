@@ -50,7 +50,7 @@ export default function Dashboard() {
       </div>
 
       {/* Weather */}
-      <WeatherCard city="toronto" />
+      <WeatherCard city="regina" />
 
       <div className="grid md:grid-cols-2 gap-4">
         {/* New Leads */}

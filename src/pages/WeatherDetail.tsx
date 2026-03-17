@@ -69,7 +69,7 @@ const riskIcons = {
 
 export default function WeatherDetail() {
   const [searchParams] = useSearchParams();
-  const city = searchParams.get('city') || 'toronto';
+  const city = searchParams.get('city') || 'regina';
   const { data, loading, error, refetch } = useWeather(city);
 
   if (loading) {
