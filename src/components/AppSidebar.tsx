@@ -1,5 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Shield,
+  MapPin, Briefcase, ClipboardCheck,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -14,6 +15,9 @@ const navItems = [
   { title: 'Leads', url: '/leads', icon: Users },
   { title: 'Quotes', url: '/quotes', icon: FileText },
   { title: 'Customers', url: '/customers', icon: Building2 },
+  { title: 'Properties', url: '/properties', icon: MapPin },
+  { title: 'Jobs', url: '/jobs', icon: Briefcase },
+  { title: 'Visits', url: '/visits', icon: ClipboardCheck },
   { title: 'Activity', url: '/activity', icon: Activity },
   { title: 'Settings', url: '/settings', icon: Settings },
 ];
