@@ -39,16 +39,7 @@ export function PortalFAB() {
     if (action.dialog) {
       setActiveDialog(action.dialog);
     } else if (action.route) {
-      if (action.route.includes('?new=1')) {
-        navigate('/portal/requests');
-        // Small delay to let page load, then trigger new request
-        setTimeout(() => {
-          const btn = document.querySelector('[data-new-request]') as HTMLButtonElement;
-          btn?.click();
-        }, 200);
-      } else {
-        navigate(action.route);
-      }
+      navigate(action.route);
     }
   };
 
