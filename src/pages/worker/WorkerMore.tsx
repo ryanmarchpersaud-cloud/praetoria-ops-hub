@@ -23,7 +23,7 @@ export default function WorkerMore() {
     { icon: Briefcase, label: 'My Employment', to: '/worker/employment', description: 'Job details & compensation' },
     { icon: Award, label: 'Training & Certifications', to: '/worker/training', description: 'License, certs & equipment' },
     { icon: BookOpen, label: 'Training & Safety', to: '/worker/training-safety', description: 'WHMIS, first aid & acknowledgements' },
-    { icon: ShieldAlert, label: 'Safety & Incidents', to: '/worker/safety', description: 'Report incidents & near misses' },
+    { icon: ShieldAlert, label: 'Safety & Incidents', to: '/worker/incidents', description: 'Report incidents & near misses' },
     { icon: FileText, label: 'My Documents', to: '/worker/documents', description: 'Certificates, policies & uploads' },
     { icon: Receipt, label: 'Tax Documents', to: '/worker/tax-documents', description: 'T4 slips, ROE & pay summaries' },
     { icon: DollarSign, label: 'Payroll', to: '/worker/payroll', description: 'Pay stubs & earnings' },

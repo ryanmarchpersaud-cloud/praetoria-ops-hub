@@ -72,6 +72,9 @@ import WorkerSafetyPage from "./pages/worker/WorkerSafetyPage";
 import WorkerTaxDocsPage from "./pages/worker/WorkerTaxDocsPage";
 import WorkerTrainingSafetyPage from "./pages/worker/WorkerTrainingSafetyPage";
 import WorkerPPEPage from "./pages/worker/WorkerPPEPage";
+import WorkerIncidentsPage from "./pages/worker/WorkerIncidentsPage";
+import WorkerNewIncidentPage from "./pages/worker/WorkerNewIncidentPage";
+import WorkerIncidentDetailPage from "./pages/worker/WorkerIncidentDetailPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
@@ -91,6 +94,13 @@ import SubcontractorPropertyDetail from "./pages/subcontractor/SubcontractorProp
 import SubcontractorInvoiceDetail from "./pages/subcontractor/SubcontractorInvoiceDetail";
 import SubcontractorSafetyPage from "./pages/subcontractor/SubcontractorSafetyPage";
 import SubcontractorTaxDocsPage from "./pages/subcontractor/SubcontractorTaxDocsPage";
+import SubcontractorIncidentsPage from "./pages/subcontractor/SubcontractorIncidentsPage";
+import SubcontractorNewIncidentPage from "./pages/subcontractor/SubcontractorNewIncidentPage";
+import SubcontractorIncidentDetailPage from "./pages/subcontractor/SubcontractorIncidentDetailPage";
+
+// Admin incident pages
+import AdminIncidentsPage from "./pages/AdminIncidentsPage";
+import AdminIncidentDetailPage from "./pages/AdminIncidentDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -201,6 +211,8 @@ function AppRoutes() {
       <Route path="/employees/:id" element={<AdminRoute><EmployeeDetail /></AdminRoute>} />
       <Route path="/subcontractors" element={<AdminRoute><Subcontractors /></AdminRoute>} />
       <Route path="/subcontractors/:id" element={<AdminRoute><SubcontractorDetail /></AdminRoute>} />
+      <Route path="/incidents" element={<AdminRoute><AdminIncidentsPage /></AdminRoute>} />
+      <Route path="/incidents/:id" element={<AdminRoute><AdminIncidentDetailPage /></AdminRoute>} />
 
       <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
@@ -234,6 +246,9 @@ function AppRoutes() {
       <Route path="/worker/time-off" element={<WorkerRoute><WorkerLayout><WorkerTimeOffPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/emergency-contact" element={<WorkerRoute><WorkerLayout><WorkerEmergencyContactPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/safety" element={<WorkerRoute><WorkerLayout><WorkerSafetyPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/incidents" element={<WorkerRoute><WorkerLayout><WorkerIncidentsPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/incidents/new" element={<WorkerRoute><WorkerLayout><WorkerNewIncidentPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/incidents/:id" element={<WorkerRoute><WorkerLayout><WorkerIncidentDetailPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/tax-documents" element={<WorkerRoute><WorkerLayout><WorkerTaxDocsPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/training-safety" element={<WorkerRoute><WorkerLayout><WorkerTrainingSafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/ppe" element={<WorkerRoute><WorkerLayout><WorkerPPEPage /></WorkerLayout></WorkerRoute>} />
@@ -255,6 +270,9 @@ function AppRoutes() {
       <Route path="/subcontractor/property/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorPropertyDetail /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/invoices/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorInvoiceDetail /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/safety" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSafetyPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/incidents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorIncidentsPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/incidents/new" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorNewIncidentPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/incidents/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorIncidentDetailPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/tax-documents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorTaxDocsPage /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
