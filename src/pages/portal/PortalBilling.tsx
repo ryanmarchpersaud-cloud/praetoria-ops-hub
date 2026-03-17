@@ -301,7 +301,7 @@ export default function PortalBilling() {
               <DollarSign className="h-5 w-5 text-primary" /> Pay Invoice
             </DialogTitle>
             <DialogDescription>
-              Request payment for invoice {payDialog.invoice?.invoice_number}
+              Choose a payment method for invoice {payDialog.invoice?.invoice_number}
             </DialogDescription>
           </DialogHeader>
           {payDialog.invoice && (
@@ -310,22 +310,52 @@ export default function PortalBilling() {
                 <p className="text-xs text-muted-foreground">Amount Due</p>
                 <p className="text-2xl font-bold font-mono mt-1">${Number(payDialog.invoice.balance_due).toFixed(2)}</p>
               </div>
-              <div className="space-y-2 text-sm">
-                <p className="text-muted-foreground text-xs">
-                  To make a payment, our team will send you a secure payment link or you can contact us directly:
-                </p>
-                <div className="flex flex-col gap-2">
-                  <a href="tel:+18005551234" className="inline-flex items-center gap-2 text-xs text-primary hover:underline">
-                    <Phone className="h-3.5 w-3.5" /> Call: 1-800-555-1234
+
+              {/* E-Transfer option */}
+              <Card className="border-primary/20">
+                <CardContent className="p-4 space-y-2">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-primary" /> Interac e-Transfer
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Send an e-Transfer to:
+                  </p>
+                  <div className="bg-muted rounded-md px-3 py-2 text-sm font-mono font-medium">
+                    payments@praetoriagroup.ca
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Include invoice #{payDialog.invoice.invoice_number} in the message field.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Card payment placeholder */}
+              <Card>
+                <CardContent className="p-4 space-y-2">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" /> Pay by Card
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Secure card payments powered by Stripe — coming soon.
+                  </p>
+                  <Button className="w-full" size="sm" onClick={handlePayRequest}>
+                    Request Payment Link
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <p>Need help? Contact us:</p>
+                <div className="flex flex-col gap-1">
+                  <a href="tel:+18335772386" className="inline-flex items-center gap-2 text-primary hover:underline">
+                    <Phone className="h-3.5 w-3.5" /> 1-833-PRAETORIA
                   </a>
-                  <a href="mailto:billing@praetoriagroup.ca" className="inline-flex items-center gap-2 text-xs text-primary hover:underline">
+                  <a href="mailto:billing@praetoriagroup.ca" className="inline-flex items-center gap-2 text-primary hover:underline">
                     <Mail className="h-3.5 w-3.5" /> billing@praetoriagroup.ca
                   </a>
                 </div>
               </div>
-              <Button className="w-full" onClick={handlePayRequest}>
-                Request Payment Link
-              </Button>
+
               <Button variant="outline" className="w-full" onClick={() => setPayDialog({ open: false, invoice: null })}>
                 Close
               </Button>
