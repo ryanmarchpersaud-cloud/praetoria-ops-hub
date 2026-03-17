@@ -242,6 +242,8 @@ function AppRoutes() {
       <Route path="/subcontractor/support" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSupport /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/settings" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSettings /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/visit/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorVisitExec /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/property/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorPropertyDetail /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/invoices/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorInvoiceDetail /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
