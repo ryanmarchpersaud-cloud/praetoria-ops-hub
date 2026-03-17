@@ -205,6 +205,8 @@ export function WorkerFAB() {
           <Zap className="h-6 w-6 text-primary-foreground" />
         )}
       </button>
+      {/* Quick action dialogs */}
+      <WorkerQuickActionDialogs activeAction={quickAction} onClose={() => setQuickAction(null)} />
     </>
   );
 }
