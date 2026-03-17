@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { SERVICE_PROMOS } from '@/lib/servicePromos';
-import praetoriaCrest from '@/assets/praetoria-crest.png';
+import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import {
   Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
@@ -78,7 +78,7 @@ export default function Login() {
           {/* Brand */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-2">
-              <img src={praetoriaCrest} alt="Praetoria Group" className="w-11 h-11 object-contain" />
+              <img src={praetoriaLogo} alt="Praetoria Group" className="w-11 h-11 object-contain dark:invert-0 invert" />
               <span className="text-xl font-bold text-foreground tracking-tight">Praetoria Ops</span>
             </div>
             <p className="text-muted-foreground text-sm mt-1">
@@ -181,7 +181,7 @@ export default function Login() {
           </div>
 
           <div className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
-            <img src={praetoriaCrest} alt="" className="w-4 h-4 object-contain opacity-40" />
+            <img src={praetoriaLogo} alt="" className="w-4 h-4 object-contain opacity-40 invert dark:invert-0" />
             <span>Protected by Praetoria Group &middot; Secure login</span>
           </div>
         </div>
@@ -269,7 +269,7 @@ export default function Login() {
 
           {/* Footer */}
           <div className="mt-6 flex items-center gap-2 text-xs text-sidebar-foreground/40">
-            <img src={praetoriaCrest} alt="" className="w-4 h-4 object-contain opacity-50" />
+            <img src={praetoriaLogo} alt="" className="w-4 h-4 object-contain opacity-50" />
             <span>Serving Regina & surrounding areas · 306-737-6269</span>
           </div>
         </div>
