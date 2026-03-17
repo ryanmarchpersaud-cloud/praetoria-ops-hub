@@ -47,6 +47,8 @@ import WorkerTimesheet from "./pages/worker/WorkerTimesheet";
 import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
 import WorkerMore from "./pages/worker/WorkerMore";
 import WorkerVisitExec from "./pages/worker/WorkerVisitExec";
+import WorkerWeatherDetail from "./pages/worker/WorkerWeatherDetail";
+import WeatherDetail from "./pages/WeatherDetail";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +119,7 @@ function AppRoutes() {
       <Route path="/schedule" element={<StaffRoute><Schedule /></StaffRoute>} />
       <Route path="/activity" element={<StaffRoute><ActivityPage /></StaffRoute>} />
       <Route path="/settings" element={<StaffRoute><SettingsPage /></StaffRoute>} />
+      <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
       <Route path="/portal/properties" element={<PortalRoute><PortalProperties /></PortalRoute>} />
@@ -134,6 +137,7 @@ function AppRoutes() {
       <Route path="/worker/timesheet" element={<WorkerRoute><WorkerLayout><WorkerTimesheet /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/search" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Search" /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/visit/:id" element={<WorkerRoute><WorkerLayout><WorkerVisitExec /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/weather" element={<WorkerRoute><WorkerLayout><WorkerWeatherDetail /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerMore /></WorkerLayout></WorkerRoute>} />
 
       <Route path="*" element={<NotFound />} />
