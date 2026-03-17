@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { SERVICE_PROMOS } from '@/lib/servicePromos';
+import { LoginPromoPanel } from '@/components/LoginPromoPanel';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
-import {
-  Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight as ChevronRightIcon,
-} from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
