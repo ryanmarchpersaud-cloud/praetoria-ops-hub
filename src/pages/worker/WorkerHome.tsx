@@ -14,10 +14,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
   ChevronRight, Calendar, Zap, AlertCircle, Navigation,
-  CalendarDays, Camera, CloudSun, FileText,
+  CalendarDays, Camera, CloudSun, FileText, ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { differenceInDays } from 'date-fns';
 
 function formatElapsed(seconds: number) {
   const h = Math.floor(seconds / 3600);
