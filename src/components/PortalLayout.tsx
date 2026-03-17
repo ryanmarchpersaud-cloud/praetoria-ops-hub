@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomerProfile } from '@/hooks/useUserRole';
-import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Menu, X, ShieldCheck, Receipt, ChevronRight, Home } from 'lucide-react';
+import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Menu, X, ShieldCheck, Receipt, ChevronRight, Home, Settings2, RefreshCw, Gift } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -18,6 +18,9 @@ const portalNav = [
   { title: 'Billing', to: '/portal/billing', icon: Receipt, tileColor: 'action-tile-violet', iconColor: 'text-violet-600' },
   { title: 'My Photos', to: '/portal/photos', icon: Camera, tileColor: 'action-tile-rose', iconColor: 'text-rose-600' },
   { title: 'My Requests', to: '/portal/requests', icon: MessageSquarePlus, tileColor: 'action-tile-orange', iconColor: 'text-orange-600' },
+  { title: 'Recurring', to: '/portal/recurring', icon: RefreshCw, tileColor: 'action-tile-green', iconColor: 'text-green-600' },
+  { title: 'Preferences', to: '/portal/preferences', icon: Settings2, tileColor: 'action-tile-slate', iconColor: 'text-slate-600' },
+  { title: 'Referrals', to: '/portal/referrals', icon: Gift, tileColor: 'action-tile-amber', iconColor: 'text-amber-600' },
   { title: 'My Account', to: '/portal/account', icon: User, tileColor: 'action-tile-slate', iconColor: 'text-slate-600' },
 ];
 
