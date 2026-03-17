@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomerProfile } from '@/hooks/useUserRole';
-import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Shield, Menu, X, ShieldCheck } from 'lucide-react';
+import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Shield, Menu, X, ShieldCheck, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ const portalNav = [
   { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck },
   { title: 'My Quotes', to: '/portal/quotes', icon: FileText },
   { title: 'My Visits', to: '/portal/visits', icon: ClipboardCheck },
+  { title: 'Billing', to: '/portal/billing', icon: Receipt },
   { title: 'My Photos', to: '/portal/photos', icon: Camera },
   { title: 'My Requests', to: '/portal/requests', icon: MessageSquarePlus },
   { title: 'My Account', to: '/portal/account', icon: User },

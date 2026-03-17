@@ -59,6 +59,65 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_billing_profiles: {
+        Row: {
+          autopay_consent_at: string | null
+          autopay_enabled: boolean
+          billing_email: string | null
+          billing_frequency: Database["public"]["Enums"]["billing_frequency"]
+          card_brand: string | null
+          card_last4: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          notes: string | null
+          payment_method_present: boolean
+          payment_preference: Database["public"]["Enums"]["payment_method_type"]
+          processor_customer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          autopay_consent_at?: string | null
+          autopay_enabled?: boolean
+          billing_email?: string | null
+          billing_frequency?: Database["public"]["Enums"]["billing_frequency"]
+          card_brand?: string | null
+          card_last4?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          notes?: string | null
+          payment_method_present?: boolean
+          payment_preference?: Database["public"]["Enums"]["payment_method_type"]
+          processor_customer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          autopay_consent_at?: string | null
+          autopay_enabled?: boolean
+          billing_email?: string | null
+          billing_frequency?: Database["public"]["Enums"]["billing_frequency"]
+          card_brand?: string | null
+          card_last4?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          notes?: string | null
+          payment_method_present?: boolean
+          payment_preference?: Database["public"]["Enums"]["payment_method_type"]
+          processor_customer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_billing_profiles_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address_line_1: string | null
@@ -142,6 +201,163 @@ export type Database = {
           uploaded_by?: string | null
         }
         Relationships: []
+      }
+      invoice_line_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          invoice_id: string
+          item_name: string
+          line_total: number
+          quantity: number
+          sort_order: number
+          unit_price: number
+          visit_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          invoice_id: string
+          item_name: string
+          line_total?: number
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+          visit_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          invoice_id?: string
+          item_name?: string
+          line_total?: number
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount_paid: number
+          balance_due: number
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          customer_memo: string | null
+          due_date: string
+          id: string
+          internal_notes: string | null
+          invoice_number: string
+          issue_date: string
+          job_id: string | null
+          paid_at: string | null
+          payment_method: string | null
+          processor_payment_id: string | null
+          property_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          subtotal: number
+          tax: number
+          tax_rate: number
+          total: number
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          amount_paid?: number
+          balance_due?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          customer_memo?: string | null
+          due_date?: string
+          id?: string
+          internal_notes?: string | null
+          invoice_number: string
+          issue_date?: string
+          job_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          processor_payment_id?: string | null
+          property_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          tax?: number
+          tax_rate?: number
+          total?: number
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          balance_due?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          customer_memo?: string | null
+          due_date?: string
+          id?: string
+          internal_notes?: string | null
+          invoice_number?: string
+          issue_date?: string
+          job_id?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          processor_payment_id?: string | null
+          property_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          subtotal?: number
+          tax?: number
+          tax_rate?: number
+          total?: number
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       jobs: {
         Row: {
@@ -815,6 +1031,22 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "staff" | "customer"
+      billing_frequency:
+        | "per-visit"
+        | "weekly"
+        | "biweekly"
+        | "monthly"
+        | "quarterly"
+        | "annually"
+      invoice_status:
+        | "Draft"
+        | "Sent"
+        | "Viewed"
+        | "Paid"
+        | "Partially Paid"
+        | "Overdue"
+        | "Failed"
+        | "Voided"
       job_priority: "Low" | "Normal" | "High" | "Urgent"
       job_status:
         | "Draft"
@@ -833,6 +1065,7 @@ export type Database = {
         | "Won"
         | "Lost"
         | "Archived"
+      payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
       property_type:
@@ -1006,6 +1239,24 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "staff", "customer"],
+      billing_frequency: [
+        "per-visit",
+        "weekly",
+        "biweekly",
+        "monthly",
+        "quarterly",
+        "annually",
+      ],
+      invoice_status: [
+        "Draft",
+        "Sent",
+        "Viewed",
+        "Paid",
+        "Partially Paid",
+        "Overdue",
+        "Failed",
+        "Voided",
+      ],
       job_priority: ["Low", "Normal", "High", "Urgent"],
       job_status: [
         "Draft",
@@ -1026,6 +1277,7 @@ export const Constants = {
         "Lost",
         "Archived",
       ],
+      payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
       property_status: ["Active", "Inactive", "Seasonal", "Pending"],
       property_type: [

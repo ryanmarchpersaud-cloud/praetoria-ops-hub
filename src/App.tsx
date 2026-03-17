@@ -25,6 +25,8 @@ import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
 import SettingsPage from "./pages/SettingsPage";
 import Schedule from "./pages/Schedule";
+import Invoices from "./pages/Invoices";
+import InvoiceDetail from "./pages/InvoiceDetail";
 import NotFound from "./pages/NotFound";
 
 // Portal pages
@@ -34,6 +36,7 @@ import PortalVisits from "./pages/portal/PortalVisits";
 import PortalPlan from "./pages/portal/PortalPlan";
 import PortalPhotos from "./pages/portal/PortalPhotos";
 import PortalRequests from "./pages/portal/PortalRequests";
+import PortalBilling from "./pages/portal/PortalBilling";
 import PortalAccount from "./pages/portal/PortalAccount";
 
 // Worker pages
@@ -107,6 +110,9 @@ function AppRoutes() {
       <Route path="/jobs/:id" element={<StaffRoute><JobDetail /></StaffRoute>} />
       <Route path="/visits" element={<StaffRoute><Visits /></StaffRoute>} />
       <Route path="/visits/:id" element={<StaffRoute><VisitDetail /></StaffRoute>} />
+      <Route path="/invoices" element={<StaffRoute><Invoices /></StaffRoute>} />
+      <Route path="/invoices/new" element={<StaffRoute><InvoiceDetail /></StaffRoute>} />
+      <Route path="/invoices/:id" element={<StaffRoute><InvoiceDetail /></StaffRoute>} />
       <Route path="/schedule" element={<StaffRoute><Schedule /></StaffRoute>} />
       <Route path="/activity" element={<StaffRoute><ActivityPage /></StaffRoute>} />
       <Route path="/settings" element={<StaffRoute><SettingsPage /></StaffRoute>} />
@@ -117,6 +123,7 @@ function AppRoutes() {
       <Route path="/portal/plan" element={<PortalRoute><PortalPlan /></PortalRoute>} />
       <Route path="/portal/visits" element={<PortalRoute><PortalVisits /></PortalRoute>} />
       <Route path="/portal/photos" element={<PortalRoute><PortalPhotos /></PortalRoute>} />
+      <Route path="/portal/billing" element={<PortalRoute><PortalBilling /></PortalRoute>} />
       <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
       <Route path="/portal/account" element={<PortalRoute><PortalAccount /></PortalRoute>} />
 
