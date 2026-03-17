@@ -2,7 +2,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
-import { Monitor, Settings, LogOut, User, ChevronRight, HardHat, Eye } from 'lucide-react';
+import {
+  Monitor, Settings, LogOut, User, ChevronRight, HardHat, Eye,
+  Briefcase, FileText, Heart,
+} from 'lucide-react';
 
 export default function WorkerMore() {
   const { user, signOut } = useAuth();
@@ -14,7 +17,14 @@ export default function WorkerMore() {
     navigate('/login');
   };
 
-  const menuItems = [
+  const profileItems = [
+    { icon: User, label: 'My Profile', to: '/worker/profile', description: 'Personal info & license' },
+    { icon: Briefcase, label: 'My Employment', to: '/worker/employment', description: 'Job details & certifications' },
+    { icon: FileText, label: 'My Documents', to: '/worker/documents', description: 'Certificates, policies & uploads' },
+    { icon: Heart, label: 'Benefits', to: '/worker/benefits', description: 'Health benefits & plan info' },
+  ];
+
+  const switchItems = [
     ...(isAdmin ? [
       { icon: Monitor, label: 'Admin Dashboard', to: '/', description: 'Switch to desktop admin view' },
       { icon: Eye, label: 'Customer Portal Preview', to: '/portal/properties', description: 'Preview the customer experience' },
@@ -50,10 +60,29 @@ export default function WorkerMore() {
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">You are in Field Mode</span>
       </div>
 
-      {/* Switch portals */}
+      {/* Profile & Employment */}
+      <div className="space-y-1.5">
+        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">My Info</p>
+        {profileItems.map(item => (
+          <Link key={item.to} to={item.to}>
+            <Card className="active:shadow-sm transition-shadow">
+              <CardContent className="p-4 flex items-center gap-3">
+                <item.icon className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground">{item.label}</p>
+                  <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      {/* Switch portals / Settings */}
       <div className="space-y-1.5">
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">Switch View</p>
-        {menuItems.map(item => (
+        {switchItems.map(item => (
           <Link key={item.to} to={item.to}>
             <Card className="active:shadow-sm transition-shadow">
               <CardContent className="p-4 flex items-center gap-3">
