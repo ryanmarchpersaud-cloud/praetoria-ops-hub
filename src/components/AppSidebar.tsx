@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Shield,
-  MapPin, Briefcase, ClipboardCheck,
+  MapPin, Briefcase, ClipboardCheck, CalendarDays,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
