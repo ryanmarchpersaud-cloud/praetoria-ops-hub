@@ -2,13 +2,14 @@ import { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomerProfile } from '@/hooks/useUserRole';
-import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Menu, X, ShieldCheck, Receipt, ChevronRight } from 'lucide-react';
+import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Menu, X, ShieldCheck, Receipt, ChevronRight, Home } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const portalNav = [
+  { title: 'Home', to: '/portal', icon: Home, tileColor: 'action-tile-green', iconColor: 'text-emerald-600', exact: true },
   { title: 'My Properties', to: '/portal/properties', icon: MapPin, tileColor: 'action-tile-blue', iconColor: 'text-blue-600' },
   { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck, tileColor: 'action-tile-emerald', iconColor: 'text-emerald-600' },
   { title: 'My Quotes', to: '/portal/quotes', icon: FileText, tileColor: 'action-tile-amber', iconColor: 'text-amber-600' },
@@ -44,6 +45,7 @@ export function PortalLayout({ children }: { children: ReactNode }) {
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.exact}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-colors',

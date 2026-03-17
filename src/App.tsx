@@ -38,6 +38,7 @@ import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 
 // Portal pages
+import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalProperties from "./pages/portal/PortalProperties";
 import PortalQuotes from "./pages/portal/PortalQuotes";
 import PortalVisits from "./pages/portal/PortalVisits";
@@ -114,7 +115,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   if (loading || roleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (isSubcontractor && !isAdmin) return <Navigate to="/subcontractor" replace />;
-  if (isCustomer && !isAdmin) return <Navigate to="/portal/properties" replace />;
+  if (isCustomer && !isAdmin) return <Navigate to="/portal" replace />;
   if (isStaff && !isAdmin) return <Navigate to="/access-denied" replace />;
   if (!isAdmin) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children}</AppLayout>;
@@ -125,7 +126,7 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
   const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
   if (loading || roleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
-  if (isCustomer) return <Navigate to="/portal/properties" replace />;
+  if (isCustomer) return <Navigate to="/portal" replace />;
   if (!isStaff) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
@@ -173,7 +174,7 @@ function LoginRoute() {
   }
   if (user) {
     if (isSubcontractor && !isAdmin && !isStaff) return <Navigate to="/subcontractor" replace />;
-    if (isCustomer) return <Navigate to="/portal/properties" replace />;
+    if (isCustomer) return <Navigate to="/portal" replace />;
     if (isStaff && !isAdmin) return <Navigate to="/worker" replace />;
     return <Navigate to="/" replace />;
   }
@@ -218,6 +219,7 @@ function AppRoutes() {
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
+      <Route path="/portal" element={<PortalRoute><PortalDashboard /></PortalRoute>} />
       <Route path="/portal/properties" element={<PortalRoute><PortalProperties /></PortalRoute>} />
       <Route path="/portal/quotes" element={<PortalRoute><PortalQuotes /></PortalRoute>} />
       <Route path="/portal/plan" element={<PortalRoute><PortalPlan /></PortalRoute>} />
