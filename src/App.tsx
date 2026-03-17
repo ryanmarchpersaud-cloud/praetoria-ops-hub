@@ -49,6 +49,9 @@ import PortalRequestWizard from "./pages/portal/PortalRequestWizard";
 import PortalBilling from "./pages/portal/PortalBilling";
 import PortalAccount from "./pages/portal/PortalAccount";
 import PortalPropertyDetail from "./pages/portal/PortalPropertyDetail";
+import PortalServicePreferences from "./pages/portal/PortalServicePreferences";
+import PortalRecurringServices from "./pages/portal/PortalRecurringServices";
+import PortalReferrals from "./pages/portal/PortalReferrals";
 
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
