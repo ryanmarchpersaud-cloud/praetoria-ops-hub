@@ -54,6 +54,7 @@ function AppRoutes() {
       <Route path="/jobs/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
       <Route path="/visits" element={<ProtectedRoute><Visits /></ProtectedRoute>} />
       <Route path="/visits/:id" element={<ProtectedRoute><VisitDetail /></ProtectedRoute>} />
+      <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
       <Route path="/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
