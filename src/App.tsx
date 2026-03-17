@@ -94,6 +94,13 @@ import SubcontractorPropertyDetail from "./pages/subcontractor/SubcontractorProp
 import SubcontractorInvoiceDetail from "./pages/subcontractor/SubcontractorInvoiceDetail";
 import SubcontractorSafetyPage from "./pages/subcontractor/SubcontractorSafetyPage";
 import SubcontractorTaxDocsPage from "./pages/subcontractor/SubcontractorTaxDocsPage";
+import SubcontractorIncidentsPage from "./pages/subcontractor/SubcontractorIncidentsPage";
+import SubcontractorNewIncidentPage from "./pages/subcontractor/SubcontractorNewIncidentPage";
+import SubcontractorIncidentDetailPage from "./pages/subcontractor/SubcontractorIncidentDetailPage";
+
+// Admin incident pages
+import AdminIncidentsPage from "./pages/AdminIncidentsPage";
+import AdminIncidentDetailPage from "./pages/AdminIncidentDetailPage";
 
 const queryClient = new QueryClient();
 
