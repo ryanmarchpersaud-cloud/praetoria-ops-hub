@@ -126,7 +126,7 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
   const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
   if (loading || roleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
-  if (isCustomer) return <Navigate to="/portal/properties" replace />;
+  if (isCustomer) return <Navigate to="/portal" replace />;
   if (!isStaff) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
