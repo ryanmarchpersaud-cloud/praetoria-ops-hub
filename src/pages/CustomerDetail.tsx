@@ -32,7 +32,20 @@ export default function CustomerDetail() {
     setInviteEmail(customer.email || '');
   }
 
-  const { data: properties = [] } = useProperties(id);
+  const { data: properties = [] } = useQuery({
+    queryKey: ['customer_properties', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, property_name, city, status')
+        .eq('customer_id', id)
+        .order('property_name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
 
   if (isLoading) return <div className="p-8 text-muted-foreground text-sm">Loading...</div>;
   if (!customer) return <div className="p-8 text-muted-foreground text-sm">Customer not found</div>;
