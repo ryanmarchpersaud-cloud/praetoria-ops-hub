@@ -11,6 +11,7 @@ import Leads from "./pages/Leads";
 import LeadDetail from "./pages/LeadDetail";
 import Quotes from "./pages/Quotes";
 import QuoteDetail from "./pages/QuoteDetail";
+import QuotePrint from "./pages/QuotePrint";
 import Customers from "./pages/Customers";
 import ActivityPage from "./pages/ActivityPage";
 import SettingsPage from "./pages/SettingsPage";
