@@ -227,14 +227,10 @@ export default function Schedule() {
                       {format(day, 'd')}
                     </p>
                     {dayVisits.slice(0, 2).map((v: any) => (
-                      <DraggableItem key={v.id} id={v.id} type="visit" data={v}
-                        isDragDisabled={false}
-                      />
+                      <MonthDraggableChip key={v.id} id={v.id} type="visit" data={v} />
                     ))}
                     {dayJobs.slice(0, 1).map((j: any) => (
-                      <DraggableItem key={j.id} id={j.id} type="job" data={j}
-                        isDragDisabled={false}
-                      />
+                      <MonthDraggableChip key={j.id} id={j.id} type="job" data={j} />
                     ))}
                     {(dayVisits.length + dayJobs.length) > 3 && (
                       <p className="text-[8px] text-muted-foreground text-center">+{dayVisits.length + dayJobs.length - 3}</p>
