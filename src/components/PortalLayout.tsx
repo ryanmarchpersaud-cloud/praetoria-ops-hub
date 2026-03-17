@@ -45,6 +45,7 @@ export function PortalLayout({ children }: { children: ReactNode }) {
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.exact}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-colors',
