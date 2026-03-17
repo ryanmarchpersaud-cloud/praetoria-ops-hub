@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Shield,
-  MapPin, Briefcase, ClipboardCheck, CalendarDays,
+  MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -21,6 +21,7 @@ const navItems = [
   { title: 'Schedule', url: '/schedule', icon: CalendarDays },
   { title: 'Activity', url: '/activity', icon: Activity },
   { title: 'Settings', url: '/settings', icon: Settings },
+  { title: 'Field Mode', url: '/worker', icon: Smartphone },
 ];
 
 export function AppSidebar() {
