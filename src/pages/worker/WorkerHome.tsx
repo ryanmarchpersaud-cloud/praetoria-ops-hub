@@ -9,6 +9,7 @@ import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
   ChevronRight, Calendar, Zap,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
 function getGreeting() {
