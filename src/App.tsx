@@ -42,6 +42,7 @@ import WorkerHome from "./pages/worker/WorkerHome";
 import WorkerSchedule from "./pages/worker/WorkerSchedule";
 import WorkerTimesheet from "./pages/worker/WorkerTimesheet";
 import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
+import WorkerMore from "./pages/worker/WorkerMore";
 
 const queryClient = new QueryClient();
 
