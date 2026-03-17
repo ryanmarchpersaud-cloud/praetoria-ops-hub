@@ -222,6 +222,7 @@ function AppRoutes() {
       {/* Customer portal routes */}
       <Route path="/portal" element={<PortalRoute><PortalDashboard /></PortalRoute>} />
       <Route path="/portal/properties" element={<PortalRoute><PortalProperties /></PortalRoute>} />
+      <Route path="/portal/properties/:id" element={<PortalRoute><PortalPropertyDetail /></PortalRoute>} />
       <Route path="/portal/quotes" element={<PortalRoute><PortalQuotes /></PortalRoute>} />
       <Route path="/portal/plan" element={<PortalRoute><PortalPlan /></PortalRoute>} />
       <Route path="/portal/visits" element={<PortalRoute><PortalVisits /></PortalRoute>} />
