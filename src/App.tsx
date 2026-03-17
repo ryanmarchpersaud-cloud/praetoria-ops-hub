@@ -82,6 +82,7 @@ function AppRoutes() {
       <Route path="/quotes/:id" element={<StaffRoute><QuoteDetail /></StaffRoute>} />
       <Route path="/quotes/:id/print" element={<StaffRoute><QuotePrint /></StaffRoute>} />
       <Route path="/customers" element={<StaffRoute><Customers /></StaffRoute>} />
+      <Route path="/customers/:id" element={<StaffRoute><CustomerDetail /></StaffRoute>} />
       <Route path="/properties" element={<StaffRoute><Properties /></StaffRoute>} />
       <Route path="/properties/:id" element={<StaffRoute><PropertyDetail /></StaffRoute>} />
       <Route path="/jobs" element={<StaffRoute><Jobs /></StaffRoute>} />
