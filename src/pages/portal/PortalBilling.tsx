@@ -1,62 +1,221 @@
 import { useState } from 'react';
-import { useInvoices, useBillingProfile } from '@/hooks/useInvoices';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
+import { useBillingProfile } from '@/hooks/useInvoices';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+  CreditCard, FileText, CheckCircle, Receipt, ChevronDown, ChevronUp,
+  Phone, Mail, AlertCircle, ExternalLink, DollarSign,
+} from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 export default function PortalBilling() {
+  const { user } = useAuth();
   const { data: customer } = useCustomerProfile();
-  const { data: allInvoices = [], isLoading } = useInvoices();
+  const { toast } = useToast();
+
+  // All invoices for this customer
+  const { data: allInvoices = [], isLoading } = useQuery({
+    queryKey: ['portal_invoices', customer?.id],
+    queryFn: async () => {
+      if (!customer) return [];
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*, properties(property_name), jobs(job_title, job_number), invoice_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
+        .eq('customer_id', customer.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!customer,
+  });
+
   const { data: billingProfile } = useBillingProfile(customer?.id);
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [payDialog, setPayDialog] = useState<{ open: boolean; invoice: any }>({ open: false, invoice: null });
 
   const openInvoices = allInvoices.filter((i: any) => ['Sent', 'Viewed'].includes(i.status));
   const overdueInvoices = allInvoices.filter((i: any) => i.status === 'Overdue');
   const paidInvoices = allInvoices.filter((i: any) => i.status === 'Paid');
   const totalOwing = [...openInvoices, ...overdueInvoices].reduce((sum: number, i: any) => sum + Number(i.balance_due || 0), 0);
 
-  const InvoiceCard = ({ inv }: { inv: any }) => (
-    <Card className={inv.status === 'Overdue' ? 'border-destructive/30' : ''}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="font-medium text-sm mono">{inv.invoice_number}</p>
-              <StatusBadge status={inv.status} showIcon={false} />
+  // Mark invoice as viewed when expanded
+  const handleExpand = async (inv: any) => {
+    const next = expandedId === inv.id ? null : inv.id;
+    setExpandedId(next);
+    if (next && inv.status === 'Sent' && !inv.viewed_at) {
+      await supabase.from('invoices').update({ viewed_at: new Date().toISOString(), status: 'Viewed' as any }).eq('id', inv.id);
+    }
+  };
+
+  // Log payment request
+  const handlePayRequest = async () => {
+    const inv = payDialog.invoice;
+    if (!inv) return;
+    try {
+      await supabase.from('activities').insert({
+        action_name: 'Customer requested to pay invoice',
+        user_id: user?.id,
+        record_type: 'invoice',
+        record_id: inv.id,
+        workflow_name: 'customer_portal',
+        payload_summary: { invoice_number: inv.invoice_number, amount: inv.balance_due },
+        status: 'completed',
+      } as any);
+      toast({ title: 'Payment request sent', description: 'Our team will follow up with payment instructions.' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setPayDialog({ open: false, invoice: null });
+  };
+
+  const InvoiceCard = ({ inv }: { inv: any }) => {
+    const isExpanded = expandedId === inv.id;
+    const lineItems = (inv.invoice_line_items || []).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
+    const isOverdue = inv.status === 'Overdue';
+    const isPaid = inv.status === 'Paid';
+    const canPay = !isPaid && Number(inv.balance_due) > 0;
+
+    return (
+      <Card className={cn(isOverdue && 'border-destructive/30')}>
+        <CardContent className="p-4 space-y-2">
+          {/* Header row */}
+          <button onClick={() => handleExpand(inv)} className="w-full text-left">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-sm font-mono">{inv.invoice_number}</p>
+                  <StatusBadge status={inv.status} showIcon={false} />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Due {format(new Date(inv.due_date), 'MMM d, yyyy')}</p>
+                {inv.properties?.property_name && (
+                  <p className="text-xs text-muted-foreground">{inv.properties.property_name}</p>
+                )}
+              </div>
+              <div className="text-right flex items-center gap-2">
+                <div>
+                  <p className="font-semibold font-mono">${Number(inv.total).toFixed(2)}</p>
+                  {Number(inv.balance_due) > 0 && Number(inv.balance_due) !== Number(inv.total) && (
+                    <p className="text-[10px] text-muted-foreground">bal ${Number(inv.balance_due).toFixed(2)}</p>
+                  )}
+                </div>
+                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Due {format(new Date(inv.due_date), 'MMM d, yyyy')}</p>
-            {inv.properties?.property_name && (
-              <p className="text-xs text-muted-foreground">{inv.properties.property_name}</p>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="font-semibold mono">${Number(inv.total).toFixed(2)}</p>
-            {Number(inv.balance_due) > 0 && Number(inv.balance_due) !== Number(inv.total) && (
-              <p className="text-[10px] text-muted-foreground">bal ${Number(inv.balance_due).toFixed(2)}</p>
-            )}
-          </div>
-        </div>
-        {inv.status === 'Paid' && inv.paid_at && (
-          <p className="text-[11px] text-success mt-2 flex items-center gap-1">
-            <CheckCircle className="h-3 w-3" /> Paid {format(new Date(inv.paid_at), 'MMM d, yyyy')}
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
+          </button>
+
+          {isPaid && inv.paid_at && (
+            <p className="text-[11px] text-emerald-600 flex items-center gap-1">
+              <CheckCircle className="h-3 w-3" /> Paid {format(new Date(inv.paid_at), 'MMM d, yyyy')}
+              {inv.payment_method && <span className="text-muted-foreground ml-1">via {inv.payment_method}</span>}
+            </p>
+          )}
+
+          {/* Expanded details */}
+          {isExpanded && (
+            <div className="border-t border-border pt-3 space-y-3">
+              {/* Job reference */}
+              {inv.jobs?.job_title && (
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">{inv.jobs.job_title}</span>
+                  {inv.jobs.job_number && <span className="ml-1 font-mono">({inv.jobs.job_number})</span>}
+                </div>
+              )}
+
+              {/* Line items */}
+              {lineItems.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Line Items</p>
+                  <div className="border border-border rounded-md overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="text-left px-3 py-1.5 font-medium">Item</th>
+                          <th className="text-right px-3 py-1.5 font-medium w-16">Qty</th>
+                          <th className="text-right px-3 py-1.5 font-medium w-20">Price</th>
+                          <th className="text-right px-3 py-1.5 font-medium w-20">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lineItems.map((li: any) => (
+                          <tr key={li.id} className="border-t border-border">
+                            <td className="px-3 py-2">
+                              <p className="font-medium">{li.item_name}</p>
+                              {li.description && <p className="text-muted-foreground mt-0.5">{li.description}</p>}
+                            </td>
+                            <td className="text-right px-3 py-2">{li.quantity}</td>
+                            <td className="text-right px-3 py-2">${Number(li.unit_price || 0).toFixed(2)}</td>
+                            <td className="text-right px-3 py-2 font-medium">${Number(li.line_total || 0).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5 mt-2 text-xs">
+                    <span className="text-muted-foreground">Subtotal: ${Number(inv.subtotal || 0).toFixed(2)}</span>
+                    <span className="text-muted-foreground">Tax (HST): ${Number(inv.tax || 0).toFixed(2)}</span>
+                    <span className="font-semibold text-sm">Total: ${Number(inv.total || 0).toFixed(2)}</span>
+                    {Number(inv.amount_paid) > 0 && (
+                      <>
+                        <span className="text-emerald-600">Paid: -${Number(inv.amount_paid).toFixed(2)}</span>
+                        <span className="font-semibold text-sm text-destructive">Balance: ${Number(inv.balance_due).toFixed(2)}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Customer memo */}
+              {inv.customer_memo && (
+                <div className="bg-muted/50 rounded-md p-3">
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Note</p>
+                  <p className="text-xs text-foreground">{inv.customer_memo}</p>
+                </div>
+              )}
+
+              <p className="text-[10px] text-muted-foreground">
+                Issued {format(new Date(inv.issue_date), 'MMMM d, yyyy')}
+                {inv.sent_at && <> · Sent {format(new Date(inv.sent_at), 'MMM d')}</>}
+              </p>
+
+              {/* Pay button */}
+              {canPay && (
+                <Button
+                  className="w-full"
+                  size="sm"
+                  onClick={() => setPayDialog({ open: true, invoice: inv })}
+                >
+                  <DollarSign className="h-4 w-4 mr-1" /> Pay ${Number(inv.balance_due).toFixed(2)}
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <h1 className="text-xl font-bold">Billing & Payments</h1>
+      <h1 className="text-xl font-bold flex items-center gap-2">
+        <Receipt className="h-5 w-5 text-primary" /> Billing & Payments
+      </h1>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3">
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground">Amount Owing</p>
-            <p className={`text-xl font-bold mono mt-1 ${totalOwing > 0 ? 'text-destructive' : 'text-success'}`}>
+            <p className={cn('text-xl font-bold font-mono mt-1', totalOwing > 0 ? 'text-destructive' : 'text-emerald-600')}>
               ${totalOwing.toFixed(2)}
             </p>
           </CardContent>
@@ -64,7 +223,7 @@ export default function PortalBilling() {
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground">Overdue</p>
-            <p className={`text-xl font-bold mono mt-1 ${overdueInvoices.length > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+            <p className={cn('text-xl font-bold font-mono mt-1', overdueInvoices.length > 0 ? 'text-destructive' : 'text-muted-foreground')}>
               {overdueInvoices.length}
             </p>
           </CardContent>
@@ -83,7 +242,7 @@ export default function PortalBilling() {
                 <p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {billingProfile.autopay_enabled ? (
-                    <span className="text-success flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Auto-pay enabled</span>
+                    <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Auto-pay enabled</span>
                   ) : 'Manual payments'}
                 </p>
               </div>
@@ -112,7 +271,7 @@ export default function PortalBilling() {
           {isLoading ? <p className="text-center text-sm text-muted-foreground py-6">Loading...</p> :
            openInvoices.length === 0 ? (
             <Card><CardContent className="p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-              <CheckCircle className="h-8 w-8 text-success/40" />
+              <CheckCircle className="h-8 w-8 text-emerald-500/40" />
               No open invoices
             </CardContent></Card>
           ) : openInvoices.map((inv: any) => <InvoiceCard key={inv.id} inv={inv} />)}
@@ -121,7 +280,7 @@ export default function PortalBilling() {
         <TabsContent value="overdue" className="space-y-2 mt-3">
           {overdueInvoices.length === 0 ? (
             <Card><CardContent className="p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-              <CheckCircle className="h-8 w-8 text-success/40" />
+              <CheckCircle className="h-8 w-8 text-emerald-500/40" />
               Nothing overdue
             </CardContent></Card>
           ) : overdueInvoices.map((inv: any) => <InvoiceCard key={inv.id} inv={inv} />)}
@@ -133,6 +292,47 @@ export default function PortalBilling() {
           ) : paidInvoices.map((inv: any) => <InvoiceCard key={inv.id} inv={inv} />)}
         </TabsContent>
       </Tabs>
+
+      {/* Pay Invoice Dialog */}
+      <Dialog open={payDialog.open} onOpenChange={(o) => !o && setPayDialog({ open: false, invoice: null })}>
+        <DialogContent className="max-w-sm mx-3">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" /> Pay Invoice
+            </DialogTitle>
+            <DialogDescription>
+              Request payment for invoice {payDialog.invoice?.invoice_number}
+            </DialogDescription>
+          </DialogHeader>
+          {payDialog.invoice && (
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <p className="text-xs text-muted-foreground">Amount Due</p>
+                <p className="text-2xl font-bold font-mono mt-1">${Number(payDialog.invoice.balance_due).toFixed(2)}</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <p className="text-muted-foreground text-xs">
+                  To make a payment, our team will send you a secure payment link or you can contact us directly:
+                </p>
+                <div className="flex flex-col gap-2">
+                  <a href="tel:+18005551234" className="inline-flex items-center gap-2 text-xs text-primary hover:underline">
+                    <Phone className="h-3.5 w-3.5" /> Call: 1-800-555-1234
+                  </a>
+                  <a href="mailto:billing@praetoriagroup.ca" className="inline-flex items-center gap-2 text-xs text-primary hover:underline">
+                    <Mail className="h-3.5 w-3.5" /> billing@praetoriagroup.ca
+                  </a>
+                </div>
+              </div>
+              <Button className="w-full" onClick={handlePayRequest}>
+                Request Payment Link
+              </Button>
+              <Button variant="outline" className="w-full" onClick={() => setPayDialog({ open: false, invoice: null })}>
+                Close
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
