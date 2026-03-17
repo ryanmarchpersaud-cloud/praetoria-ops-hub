@@ -228,7 +228,7 @@ export default function WorkerHome() {
         </div>
 
         {highlightVisit ? (
-          <Link to={`/visits/${highlightVisit.id}`}>
+          <Link to={`/worker/visit/${highlightVisit.id}`}>
             <Card className={cn(
               'transition-shadow active:shadow-md',
               inProgressVisit && 'ring-2 ring-primary/30 bg-primary/5'
