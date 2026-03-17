@@ -289,7 +289,7 @@ export default function WorkerHome() {
           {todayVisits
             .filter(v => v.id !== highlightVisit?.id)
             .map((visit: any) => (
-              <Link key={visit.id} to={`/visits/${visit.id}`}>
+              <Link key={visit.id} to={`/worker/visit/${visit.id}`}>
                 <Card className="active:shadow-sm transition-shadow">
                   <CardContent className="py-3 px-4 flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
