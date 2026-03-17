@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { PreviewModeBanner } from "@/components/PreviewModeBanner";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AppLayout } from "@/components/AppLayout";
 import { PortalLayout } from "@/components/PortalLayout";
@@ -73,11 +74,18 @@ function WorkerRoute({ children }: { children: React.ReactNode }) {
 
 function PortalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isCustomer, isLoading: roleLoading } = useUserRole();
+  const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
   if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
-  if (!isCustomer) return <Navigate to="/" replace />;
-  return <PortalLayout>{children}</PortalLayout>;
+  if (!isCustomer && !isStaff) return <Navigate to="/" replace />;
+  // Staff can preview the portal
+  const isPreview = isStaff && !isCustomer;
+  return (
+    <>
+      {isPreview && <PreviewModeBanner />}
+      <PortalLayout>{children}</PortalLayout>
+    </>
+  );
 }
 
 function LoginRoute() {
