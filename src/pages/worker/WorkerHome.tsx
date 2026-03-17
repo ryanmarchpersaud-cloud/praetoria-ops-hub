@@ -48,6 +48,13 @@ export default function WorkerHome() {
   const clockInMut = useClockIn();
   const clockOutMut = useClockOut();
   const [elapsed, setElapsed] = useState(0);
+  const { data: certs = [] } = useWorkerCertifications();
+
+  const expiringCerts = certs.filter(c => {
+    if (!c.expiry_date || c.status === 'expired') return false;
+    const days = differenceInDays(new Date(c.expiry_date), new Date());
+    return days >= 0 && days <= 60;
+  });
 
   useEffect(() => {
     if (!active) { setElapsed(0); return; }
