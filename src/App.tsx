@@ -29,6 +29,8 @@ import Schedule from "./pages/Schedule";
 import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import Requests from "./pages/Requests";
+import Employees from "./pages/Employees";
+import EmployeeDetail from "./pages/EmployeeDetail";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 
@@ -162,6 +164,8 @@ function AppRoutes() {
       <Route path="/schedule" element={<AdminRoute><Schedule /></AdminRoute>} />
       <Route path="/activity" element={<AdminRoute><ActivityPage /></AdminRoute>} />
       <Route path="/requests" element={<AdminRoute><Requests /></AdminRoute>} />
+      <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
+      <Route path="/employees/:id" element={<AdminRoute><EmployeeDetail /></AdminRoute>} />
 
       {/* Admin-only settings */}
       <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />

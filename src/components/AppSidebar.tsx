@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
-  MessageSquarePlus, Eye,
+  MessageSquarePlus, Eye, HardHat,
 } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
@@ -23,6 +23,7 @@ const opsItems = [
   { title: 'Schedule', url: '/schedule', icon: CalendarDays },
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus },
   { title: 'Activity', url: '/activity', icon: Activity },
+  { title: 'Employees', url: '/employees', icon: HardHat },
 ];
 
 const systemItems = [
