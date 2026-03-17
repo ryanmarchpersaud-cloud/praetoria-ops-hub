@@ -180,9 +180,10 @@ export default function Login() {
             )}
           </div>
 
-          <p className="mt-8 text-center text-xs text-muted-foreground/60">
-            Protected by Praetoria Group &middot; Secure login
-          </p>
+          <div className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
+            <img src={praetoriaCrest} alt="" className="w-4 h-4 object-contain opacity-40" />
+            <span>Protected by Praetoria Group &middot; Secure login</span>
+          </div>
         </div>
       </div>
 
