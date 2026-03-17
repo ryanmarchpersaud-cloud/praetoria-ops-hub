@@ -87,6 +87,9 @@ export function useUpsertLineItems() {
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['quote_line_items', vars.quoteId] });
+      // Refetch quote since DB triggers recalculate subtotal/tax/total
+      qc.invalidateQueries({ queryKey: ['quote', vars.quoteId] });
+      qc.invalidateQueries({ queryKey: ['quotes'] });
     },
   });
 }
