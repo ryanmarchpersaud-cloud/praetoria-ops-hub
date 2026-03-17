@@ -38,6 +38,7 @@ import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 
 // Portal pages
+import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalProperties from "./pages/portal/PortalProperties";
 import PortalQuotes from "./pages/portal/PortalQuotes";
 import PortalVisits from "./pages/portal/PortalVisits";
