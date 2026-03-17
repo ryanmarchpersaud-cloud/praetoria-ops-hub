@@ -55,6 +55,10 @@ import WorkerPropertyDetail from "./pages/worker/WorkerPropertyDetail";
 import WorkerJobDetail from "./pages/worker/WorkerJobDetail";
 import WorkerWeatherDetail from "./pages/worker/WorkerWeatherDetail";
 import WorkerSettings from "./pages/worker/WorkerSettings";
+import WorkerProfilePage from "./pages/worker/WorkerProfilePage";
+import WorkerEmploymentPage from "./pages/worker/WorkerEmploymentPage";
+import WorkerDocumentsPage from "./pages/worker/WorkerDocumentsPage";
+import WorkerBenefitsPage from "./pages/worker/WorkerBenefitsPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 const queryClient = new QueryClient();
@@ -180,6 +184,10 @@ function AppRoutes() {
       <Route path="/worker/job/:id" element={<WorkerRoute><WorkerLayout><WorkerJobDetail /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/weather" element={<WorkerRoute><WorkerLayout><WorkerWeatherDetail /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerMore /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/profile" element={<WorkerRoute><WorkerLayout><WorkerProfilePage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/employment" element={<WorkerRoute><WorkerLayout><WorkerEmploymentPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/documents" element={<WorkerRoute><WorkerLayout><WorkerDocumentsPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/benefits" element={<WorkerRoute><WorkerLayout><WorkerBenefitsPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
 
       <Route path="*" element={<NotFound />} />
