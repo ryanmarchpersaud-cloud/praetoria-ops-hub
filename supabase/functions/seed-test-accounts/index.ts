@@ -113,6 +113,80 @@ Deno.serve(async (req) => {
           });
         }
       }
+
+      // For subcontractor, seed demo invoices and service categories
+      if (account.role === "subcontractor") {
+        const { data: subRecord } = await supabaseAdmin
+          .from("subcontractors")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (subRecord) {
+          // Seed service categories
+          const categories = ["snow_ice", "landscaping"];
+          for (const cat of categories) {
+            const { data: existingCat } = await supabaseAdmin
+              .from("subcontractor_service_categories")
+              .select("id")
+              .eq("subcontractor_id", subRecord.id)
+              .eq("service_category", cat)
+              .maybeSingle();
+            if (!existingCat) {
+              await supabaseAdmin.from("subcontractor_service_categories").insert({
+                subcontractor_id: subRecord.id,
+                service_category: cat,
+              });
+            }
+          }
+
+          // Seed demo invoices
+          const demoInvoices = [
+            { invoice_number: "INV-SUB-0001", amount: 1250, status: "submitted", invoice_date: "2026-03-10", service_period_start: "2026-03-01", service_period_end: "2026-03-07" },
+            { invoice_number: "INV-SUB-0002", amount: 2100, status: "approved", invoice_date: "2026-02-28", service_period_start: "2026-02-15", service_period_end: "2026-02-28", approved_at: "2026-03-05T12:00:00Z" },
+            { invoice_number: "INV-SUB-0003", amount: 875, status: "paid", invoice_date: "2026-02-14", service_period_start: "2026-02-01", service_period_end: "2026-02-14", approved_at: "2026-02-20T12:00:00Z", paid_at: "2026-02-25T12:00:00Z" },
+          ];
+          for (const inv of demoInvoices) {
+            const { data: existingInv } = await supabaseAdmin
+              .from("subcontractor_invoices")
+              .select("id")
+              .eq("subcontractor_id", subRecord.id)
+              .eq("invoice_number", inv.invoice_number)
+              .maybeSingle();
+            if (!existingInv) {
+              await supabaseAdmin.from("subcontractor_invoices").insert({
+                subcontractor_id: subRecord.id,
+                ...inv,
+              });
+            }
+          }
+
+          // Seed a demo payment for the paid invoice
+          const { data: paidInv } = await supabaseAdmin
+            .from("subcontractor_invoices")
+            .select("id")
+            .eq("subcontractor_id", subRecord.id)
+            .eq("invoice_number", "INV-SUB-0003")
+            .maybeSingle();
+          if (paidInv) {
+            const { data: existingPmt } = await supabaseAdmin
+              .from("subcontractor_payments")
+              .select("id")
+              .eq("invoice_id", paidInv.id)
+              .maybeSingle();
+            if (!existingPmt) {
+              await supabaseAdmin.from("subcontractor_payments").insert({
+                subcontractor_id: subRecord.id,
+                invoice_id: paidInv.id,
+                amount: 875,
+                payment_date: "2026-02-25",
+                payment_method: "e-transfer",
+                reference_number: "ET-20260225-001",
+              });
+            }
+          }
+        }
+      }
     }
 
     return new Response(JSON.stringify({ success: true, results }), {

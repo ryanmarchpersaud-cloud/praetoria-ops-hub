@@ -126,6 +126,10 @@ export function DevTestPanel() {
               <p>👤 <strong>Customer</strong> → Customer Portal at <code className="bg-muted px-1 rounded">/portal</code></p>
               <p className="pl-4 text-muted-foreground/70">My Properties, Visits, Photos, Quotes, Billing, Requests, Account</p>
             </div>
+            <div className="space-y-1">
+              <p>🚚 <strong>Subcontractor</strong> → Sub Portal at <code className="bg-muted px-1 rounded">/subcontractor</code></p>
+              <p className="pl-4 text-muted-foreground/70">Assigned Work, Schedule, Invoices, Documents, Compliance, Payments</p>
+            </div>
             <div className="mt-2 pt-1.5 border-t border-border/50">
               <p className="font-semibold text-foreground">Admin quick-switch (after login):</p>
               <p>• Sidebar → <strong>Field Mode</strong> to enter Worker view</p>
