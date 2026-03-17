@@ -125,7 +125,7 @@ function AppRoutes() {
       <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerSchedule /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/timesheet" element={<WorkerRoute><WorkerLayout><WorkerTimesheet /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/search" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Search" /></WorkerLayout></WorkerRoute>} />
-      <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="More" /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerMore /></WorkerLayout></WorkerRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
