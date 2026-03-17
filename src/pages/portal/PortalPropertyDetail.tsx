@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import {
-  ArrowLeft, MapPin, Key, StickyNote, ClipboardList, Camera,
-  AlertTriangle, History, ShieldCheck, Snowflake,
+  ArrowLeft, MapPin, Key, StickyNote, Camera, AlertTriangle,
+  History, ShieldCheck, Snowflake, FileText, ClipboardCheck, MessageSquarePlus,
 } from 'lucide-react';
 
 export default function PortalPropertyDetail() {
@@ -15,22 +15,16 @@ export default function PortalPropertyDetail() {
   const navigate = useNavigate();
   const { data: customer } = useCustomerProfile();
 
-  // Property
   const { data: property, isLoading } = useQuery({
     queryKey: ['portal_property', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id!)
-        .single();
+      const { data, error } = await supabase.from('properties').select('*').eq('id', id!).single();
       if (error) throw error;
       return data;
     },
     enabled: !!id,
   });
 
-  // Service history (visits)
   const { data: visits = [] } = useQuery({
     queryKey: ['portal_property_visits', id],
     queryFn: async () => {
@@ -46,7 +40,6 @@ export default function PortalPropertyDetail() {
     enabled: !!id,
   });
 
-  // Photos for this property
   const { data: photos = [] } = useQuery({
     queryKey: ['portal_property_photos', id],
     queryFn: async () => {
@@ -62,7 +55,6 @@ export default function PortalPropertyDetail() {
     enabled: !!id,
   });
 
-  // Active jobs/plans for this property
   const { data: plans = [] } = useQuery({
     queryKey: ['portal_property_plans', id],
     queryFn: async () => {
@@ -78,7 +70,6 @@ export default function PortalPropertyDetail() {
     enabled: !!id,
   });
 
-  // Open requests for this property
   const { data: requests = [] } = useQuery({
     queryKey: ['portal_property_requests', id],
     queryFn: async () => {
@@ -96,16 +87,27 @@ export default function PortalPropertyDetail() {
     enabled: !!id && !!customer,
   });
 
-  if (isLoading) {
-    return <p className="text-sm text-muted-foreground p-4">Loading...</p>;
-  }
+  // Property-specific documents (files table)
+  const { data: documents = [] } = useQuery({
+    queryKey: ['portal_property_docs', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('files')
+        .select('id, file_name, file_type, file_url, created_at')
+        .eq('record_type', 'property')
+        .eq('record_id', id!)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
 
-  if (!property) {
-    return <p className="text-sm text-muted-foreground p-4">Property not found.</p>;
-  }
+  if (isLoading) return <p className="text-sm text-muted-foreground p-4">Loading...</p>;
+  if (!property) return <p className="text-sm text-muted-foreground p-4">Property not found.</p>;
 
-  const fullAddress = [property.address_line_1, property.city, property.province, property.postal_code]
-    .filter(Boolean).join(', ');
+  const fullAddress = [property.address_line_1, property.city, property.province, property.postal_code].filter(Boolean).join(', ');
 
   return (
     <div className="space-y-5">
@@ -127,11 +129,25 @@ export default function PortalPropertyDetail() {
         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
           <span>{property.property_type}</span>
           {property.gate_code && (
-            <span className="flex items-center gap-1">
-              <Key className="h-3 w-3" /> Gate: {property.gate_code}
-            </span>
+            <span className="flex items-center gap-1"><Key className="h-3 w-3" /> Gate: {property.gate_code}</span>
           )}
         </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-3 gap-2">
+        <Button variant="outline" size="sm" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/portal/requests/new')}>
+          <MessageSquarePlus className="h-4 w-4" />
+          <span className="text-[10px]">New Request</span>
+        </Button>
+        <Button variant="outline" size="sm" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/portal/photos')}>
+          <Camera className="h-4 w-4" />
+          <span className="text-[10px]">All Photos</span>
+        </Button>
+        <Button variant="outline" size="sm" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/portal/preferences')}>
+          <ClipboardCheck className="h-4 w-4" />
+          <span className="text-[10px]">Preferences</span>
+        </Button>
       </div>
 
       {/* Site Notes & Access */}
@@ -139,8 +155,7 @@ export default function PortalPropertyDetail() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <StickyNote className="h-4 w-4 text-amber-500" />
-              Site Notes & Access
+              <StickyNote className="h-4 w-4 text-amber-500" /> Site Notes & Access
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -165,8 +180,7 @@ export default function PortalPropertyDetail() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              Active Service Plans
+              <ShieldCheck className="h-4 w-4 text-emerald-500" /> Active Service Plans
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -191,8 +205,7 @@ export default function PortalPropertyDetail() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
-              Open Requests
+              <AlertTriangle className="h-4 w-4 text-orange-500" /> Open Requests
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -209,33 +222,48 @@ export default function PortalPropertyDetail() {
         </Card>
       )}
 
+      {/* Property Documents */}
+      {documents.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-500" /> Property Documents
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {documents.map((doc: any) => (
+              <a key={doc.id} href={doc.file_url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-between py-2 border-b border-border last:border-0 hover:bg-muted/50 rounded px-1 -mx-1 transition-colors">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="text-sm truncate">{doc.file_name}</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground shrink-0">
+                  {new Date(doc.created_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
+                </span>
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Property Photos */}
       {photos.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Camera className="h-4 w-4 text-violet-500" />
-                Property Photos
+                <Camera className="h-4 w-4 text-violet-500" /> Property Photos
               </CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate('/portal/photos')}>
-                See all →
-              </Button>
+              <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate('/portal/photos')}>See all →</Button>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-4 gap-2">
               {photos.map((photo: any) => (
                 <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                  <img
-                    src={photo.file_url}
-                    alt={photo.caption || 'Property photo'}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  <span className="absolute top-1 left-1 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
-                    {photo.photo_tag}
-                  </span>
+                  <img src={photo.file_url} alt={photo.caption || 'Property photo'} className="w-full h-full object-cover" loading="lazy" />
+                  <span className="absolute top-1 left-1 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">{photo.photo_tag}</span>
                 </div>
               ))}
             </div>
@@ -248,12 +276,9 @@ export default function PortalPropertyDetail() {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
-              <History className="h-4 w-4 text-cyan-500" />
-              Recent Service History
+              <History className="h-4 w-4 text-cyan-500" /> Recent Service History
             </CardTitle>
-            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate('/portal/visits')}>
-              See all →
-            </Button>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate('/portal/visits')}>See all →</Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -270,15 +295,9 @@ export default function PortalPropertyDetail() {
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                       <span>{v.visit_type}</span>
-                      {v.snow_depth && (
-                        <span className="flex items-center gap-0.5">
-                          <Snowflake className="h-3 w-3" /> {v.snow_depth}
-                        </span>
-                      )}
+                      {v.snow_depth && <span className="flex items-center gap-0.5"><Snowflake className="h-3 w-3" /> {v.snow_depth}</span>}
                     </div>
-                    {v.service_summary && (
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{v.service_summary}</p>
-                    )}
+                    {v.service_summary && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{v.service_summary}</p>}
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0">
                     {new Date(v.service_date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
