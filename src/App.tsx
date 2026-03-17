@@ -174,7 +174,7 @@ function LoginRoute() {
   }
   if (user) {
     if (isSubcontractor && !isAdmin && !isStaff) return <Navigate to="/subcontractor" replace />;
-    if (isCustomer) return <Navigate to="/portal/properties" replace />;
+    if (isCustomer) return <Navigate to="/portal" replace />;
     if (isStaff && !isAdmin) return <Navigate to="/worker" replace />;
     return <Navigate to="/" replace />;
   }
