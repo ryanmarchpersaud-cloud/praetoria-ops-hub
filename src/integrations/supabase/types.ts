@@ -384,6 +384,7 @@ export type Database = {
       incident_reports: {
         Row: {
           admin_notes: string | null
+          corrective_action_notes: string | null
           created_at: string
           date_time: string
           description: string | null
@@ -395,8 +396,10 @@ export type Database = {
           medical_attention: boolean
           people_involved: string | null
           photos: string[] | null
+          report_number: string | null
           reported_to: string | null
           reporter_type: string
+          severity: string
           subcontractor_id: string | null
           updated_at: string
           user_id: string
@@ -405,6 +408,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          corrective_action_notes?: string | null
           created_at?: string
           date_time?: string
           description?: string | null
@@ -416,8 +420,10 @@ export type Database = {
           medical_attention?: boolean
           people_involved?: string | null
           photos?: string[] | null
+          report_number?: string | null
           reported_to?: string | null
           reporter_type?: string
+          severity?: string
           subcontractor_id?: string | null
           updated_at?: string
           user_id: string
@@ -426,6 +432,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          corrective_action_notes?: string | null
           created_at?: string
           date_time?: string
           description?: string | null
@@ -437,8 +444,10 @@ export type Database = {
           medical_attention?: boolean
           people_involved?: string | null
           photos?: string[] | null
+          report_number?: string | null
           reported_to?: string | null
           reporter_type?: string
+          severity?: string
           subcontractor_id?: string | null
           updated_at?: string
           user_id?: string
