@@ -55,14 +55,11 @@ export function ServiceCarousel() {
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-foreground">Services</h2>
         </div>
-        <ScrollArea className="w-full">
-          <div className="flex gap-2.5 pb-2">
-            {SERVICE_PROMOS.map((promo) => (
-              <ServiceChip key={promo.id} promo={promo} onClick={() => setSelected(promo)} />
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        <div className="flex gap-2.5 pb-2 overflow-x-auto scrollbar-hide -mx-3 px-3">
+          {SERVICE_PROMOS.map((promo) => (
+            <ServiceChip key={promo.id} promo={promo} onClick={() => setSelected(promo)} />
+          ))}
+        </div>
       </div>
 
       <Drawer open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
