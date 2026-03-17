@@ -152,8 +152,8 @@ export default function Visits() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
-            : visits.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No visits found</TableCell></TableRow>
+            {isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+            : visits.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No visits found</TableCell></TableRow>
             : visits.map((v: any) => (
               <TableRow key={v.id} className="cursor-pointer hover:bg-muted/50">
                 <TableCell>
