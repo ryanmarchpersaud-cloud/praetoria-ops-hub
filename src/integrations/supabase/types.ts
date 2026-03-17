@@ -545,6 +545,67 @@ export type Database = {
           },
         ]
       }
+      visit_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          customer_id: string | null
+          file_name: string
+          file_url: string
+          id: string
+          photo_tag: Database["public"]["Enums"]["photo_tag"]
+          property_id: string | null
+          uploaded_by: string | null
+          visit_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          customer_id?: string | null
+          file_name: string
+          file_url: string
+          id?: string
+          photo_tag?: Database["public"]["Enums"]["photo_tag"]
+          property_id?: string | null
+          uploaded_by?: string | null
+          visit_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          customer_id?: string | null
+          file_name?: string
+          file_url?: string
+          id?: string
+          photo_tag?: Database["public"]["Enums"]["photo_tag"]
+          property_id?: string | null
+          uploaded_by?: string | null
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_photos_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_photos_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_photos_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visits: {
         Row: {
           arrival_time: string | null
@@ -653,6 +714,7 @@ export type Database = {
         | "Won"
         | "Lost"
         | "Archived"
+      photo_tag: "Before" | "After" | "Progress" | "Issue"
       property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
       property_type:
         | "Residential"
@@ -844,6 +906,7 @@ export const Constants = {
         "Lost",
         "Archived",
       ],
+      photo_tag: ["Before", "After", "Progress", "Issue"],
       property_status: ["Active", "Inactive", "Seasonal", "Pending"],
       property_type: [
         "Residential",
