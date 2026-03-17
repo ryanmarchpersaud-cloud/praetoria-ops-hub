@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WorkerFAB } from '@/components/worker/WorkerFAB';
