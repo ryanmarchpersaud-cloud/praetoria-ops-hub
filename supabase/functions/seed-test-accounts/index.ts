@@ -15,9 +15,9 @@ Deno.serve(async (req) => {
     );
 
     const testAccounts = [
-      { email: "admin@praetoriagroup.com", password: "TestAdmin123!", role: "admin" as const, displayName: "Admin User" },
-      { email: "worker@praetoriagroup.com", password: "TestWorker123!", role: "staff" as const, displayName: "Field Worker" },
-      { email: "customer@praetoriagroup.com", password: "TestCustomer123!", role: "customer" as const, displayName: "Demo Customer" },
+      { email: "admin@praetoriagroup.ca", password: "TestAdmin123!", role: "admin" as const, displayName: "Admin User" },
+      { email: "worker@praetoriagroup.ca", password: "TestWorker123!", role: "staff" as const, displayName: "Field Worker" },
+      { email: "customer@praetoriagroup.ca", password: "TestCustomer123!", role: "customer" as const, displayName: "Demo Customer" },
     ];
 
     const results = [];

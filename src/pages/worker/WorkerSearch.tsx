@@ -55,7 +55,7 @@ export default function WorkerSearch() {
         id: p.id,
         title: p.property_name,
         subtitle: [p.address_line_1, p.city, p.customers ? `${p.customers.first_name} ${p.customers.last_name}` : null].filter(Boolean).join(', '),
-        link: `/worker/schedule`,
+        link: `/worker/property/${p.id}`,
       }));
 
       // Search customers
@@ -69,7 +69,7 @@ export default function WorkerSearch() {
         id: c.id,
         title: `${c.first_name} ${c.last_name}`,
         subtitle: [c.company_name, c.phone].filter(Boolean).join(' · '),
-        link: `/worker/schedule`,
+        link: `/worker/schedule`, // Workers view customer context through visits/properties
       }));
 
       // Search jobs
@@ -84,7 +84,7 @@ export default function WorkerSearch() {
         title: `${j.job_number} — ${j.job_title}`,
         subtitle: j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : '',
         status: j.status,
-        link: `/worker/schedule`,
+        link: `/worker/job/${j.id}`,
       }));
 
       return out;
