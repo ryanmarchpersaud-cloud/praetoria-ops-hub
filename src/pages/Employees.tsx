@@ -146,20 +146,18 @@ export default function Employees() {
               </TableHeader>
               <TableBody>
                 {filtered.map(emp => (
-                  <TableRow key={emp.id} className="cursor-pointer" asChild>
-                    <Link to={`/employees/${emp.user_id}`} className="contents">
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-foreground">{emp.full_name || '—'}</p>
-                          <p className="text-xs text-muted-foreground">{emp.employee_id || emp.work_email || '—'}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">{emp.role_title || '—'}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{emp.primary_service_category || '—'}</TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{emp.branch_location || '—'}</TableCell>
-                      <TableCell><StatusBadge status={emp.employment_status} /></TableCell>
-                      <TableCell><ChevronRight className="h-4 w-4 text-muted-foreground" /></TableCell>
-                    </Link>
+                  <TableRow key={emp.id} className="cursor-pointer" onClick={() => window.location.href = `/employees/${emp.user_id}`}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-foreground">{emp.full_name || '—'}</p>
+                        <p className="text-xs text-muted-foreground">{emp.employee_id || emp.work_email || '—'}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">{emp.role_title || '—'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{emp.primary_service_category || '—'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{emp.branch_location || '—'}</TableCell>
+                    <TableCell><StatusBadge status={emp.employment_status} /></TableCell>
+                    <TableCell><ChevronRight className="h-4 w-4 text-muted-foreground" /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
