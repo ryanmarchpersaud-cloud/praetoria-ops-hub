@@ -37,9 +37,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <div className="flex items-center gap-2 px-3 py-4">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center shrink-0">
-              <Shield className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <img src={praetoriaCrest} alt="Praetoria" className="w-8 h-8 object-contain shrink-0" />
             {!collapsed && (
               <span className="font-semibold text-sidebar-accent-foreground text-sm">Praetoria Ops</span>
             )}
