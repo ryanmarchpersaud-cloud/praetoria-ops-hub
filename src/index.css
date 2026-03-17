@@ -140,3 +140,33 @@
     font-family: 'JetBrains Mono', monospace;
   }
 }
+
+/* Print styles */
+@media print {
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Hide the app sidebar/layout chrome */
+  [data-sidebar],
+  nav,
+  header {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  @page {
+    margin: 0.75in;
+    size: letter;
+  }
+}
