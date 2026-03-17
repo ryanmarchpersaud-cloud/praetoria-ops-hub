@@ -30,27 +30,27 @@ export const QUOTE_APPROVAL_STATUSES = [
 export const URGENCY_LEVELS = ['Low', 'Normal', 'High', 'Urgent'] as const;
 
 export const LEAD_SOURCES = [
-  'Website',
-  'Referral',
-  'Phone call',
-  'Email',
-  'Walk-in',
-  'Social media',
-  'n8n webhook',
-  'Other',
+  'Website', 'Referral', 'Phone call', 'Email', 'Walk-in', 'Social media', 'n8n webhook', 'Other',
 ] as const;
 
 export const PROVINCES = [
   'AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT',
 ] as const;
 
+export const PROPERTY_STATUSES = ['Active', 'Inactive', 'Seasonal', 'Pending'] as const;
+export const PROPERTY_TYPES = ['Residential', 'Commercial', 'Industrial', 'Municipal', 'Strata', 'Other'] as const;
+export const JOB_STATUSES = ['Draft', 'Scheduled', 'In Progress', 'Completed', 'Cancelled', 'On Hold'] as const;
+export const JOB_PRIORITIES = ['Low', 'Normal', 'High', 'Urgent'] as const;
+export const VISIT_STATUSES = ['Scheduled', 'En Route', 'In Progress', 'Completed', 'Missed', 'Cancelled'] as const;
+export const VISIT_TYPES = ['Routine', 'One-time', 'Emergency', 'Inspection', 'Follow-up'] as const;
+
 export function getStatusClass(status: string): string {
   const s = status.toLowerCase();
-  if (s === 'new') return 'status-new';
-  if (['reviewing', 'awaiting info', 'quote drafting', 'needs review'].includes(s)) return 'status-reviewing';
-  if (['won', 'approved', 'quote ready'].includes(s)) return 'status-approved';
-  if (['lost', 'declined'].includes(s)) return 'status-declined';
-  if (['quote sent', 'sent'].includes(s)) return 'status-sent';
-  if (['archived'].includes(s)) return 'status-archived';
+  if (s === 'new' || s === 'scheduled') return 'status-new';
+  if (['reviewing', 'awaiting info', 'quote drafting', 'needs review', 'en route', 'on hold', 'pending'].includes(s)) return 'status-reviewing';
+  if (['won', 'approved', 'quote ready', 'completed', 'active'].includes(s)) return 'status-approved';
+  if (['lost', 'declined', 'cancelled', 'missed', 'inactive'].includes(s)) return 'status-declined';
+  if (['quote sent', 'sent', 'in progress'].includes(s)) return 'status-sent';
+  if (['archived', 'seasonal'].includes(s)) return 'status-archived';
   return 'status-draft';
 }

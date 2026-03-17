@@ -140,6 +140,72 @@ export type Database = {
         }
         Relationships: []
       }
+      jobs: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          internal_notes: string | null
+          job_number: string
+          job_title: string
+          priority: Database["public"]["Enums"]["job_priority"]
+          property_id: string | null
+          scheduled_date: string | null
+          scope_of_work: string | null
+          service_category: Database["public"]["Enums"]["service_category"]
+          status: Database["public"]["Enums"]["job_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          internal_notes?: string | null
+          job_number: string
+          job_title: string
+          priority?: Database["public"]["Enums"]["job_priority"]
+          property_id?: string | null
+          scheduled_date?: string | null
+          scope_of_work?: string | null
+          service_category?: Database["public"]["Enums"]["service_category"]
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          internal_notes?: string | null
+          job_number?: string
+          job_title?: string
+          priority?: Database["public"]["Enums"]["job_priority"]
+          property_id?: string | null
+          scheduled_date?: string | null
+          scope_of_work?: string | null
+          service_category?: Database["public"]["Enums"]["service_category"]
+          status?: Database["public"]["Enums"]["job_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           address_line_1: string | null
@@ -252,6 +318,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      properties: {
+        Row: {
+          access_notes: string | null
+          address_line_1: string | null
+          city: string | null
+          created_at: string
+          customer_id: string
+          gate_code: string | null
+          id: string
+          postal_code: string | null
+          property_name: string
+          property_type: Database["public"]["Enums"]["property_type"]
+          province: string | null
+          seasonal_notes: string | null
+          status: Database["public"]["Enums"]["property_status"]
+          updated_at: string
+        }
+        Insert: {
+          access_notes?: string | null
+          address_line_1?: string | null
+          city?: string | null
+          created_at?: string
+          customer_id: string
+          gate_code?: string | null
+          id?: string
+          postal_code?: string | null
+          property_name: string
+          property_type?: Database["public"]["Enums"]["property_type"]
+          province?: string | null
+          seasonal_notes?: string | null
+          status?: Database["public"]["Enums"]["property_status"]
+          updated_at?: string
+        }
+        Update: {
+          access_notes?: string | null
+          address_line_1?: string | null
+          city?: string | null
+          created_at?: string
+          customer_id?: string
+          gate_code?: string | null
+          id?: string
+          postal_code?: string | null
+          property_name?: string
+          property_type?: Database["public"]["Enums"]["property_type"]
+          province?: string | null
+          seasonal_notes?: string | null
+          status?: Database["public"]["Enums"]["property_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quote_line_items: {
         Row: {
@@ -393,6 +518,88 @@ export type Database = {
           },
         ]
       }
+      visits: {
+        Row: {
+          arrival_time: string | null
+          completion_time: string | null
+          created_at: string
+          crew_notes: string | null
+          customer_id: string | null
+          customer_visible_notes: string | null
+          id: string
+          job_id: string
+          property_id: string | null
+          service_date: string
+          service_summary: string | null
+          snow_depth: string | null
+          updated_at: string
+          visit_number: string
+          visit_status: Database["public"]["Enums"]["visit_status"]
+          visit_type: Database["public"]["Enums"]["visit_type"]
+          weather_notes: string | null
+        }
+        Insert: {
+          arrival_time?: string | null
+          completion_time?: string | null
+          created_at?: string
+          crew_notes?: string | null
+          customer_id?: string | null
+          customer_visible_notes?: string | null
+          id?: string
+          job_id: string
+          property_id?: string | null
+          service_date?: string
+          service_summary?: string | null
+          snow_depth?: string | null
+          updated_at?: string
+          visit_number: string
+          visit_status?: Database["public"]["Enums"]["visit_status"]
+          visit_type?: Database["public"]["Enums"]["visit_type"]
+          weather_notes?: string | null
+        }
+        Update: {
+          arrival_time?: string | null
+          completion_time?: string | null
+          created_at?: string
+          crew_notes?: string | null
+          customer_id?: string | null
+          customer_visible_notes?: string | null
+          id?: string
+          job_id?: string
+          property_id?: string | null
+          service_date?: string
+          service_summary?: string | null
+          snow_depth?: string | null
+          updated_at?: string
+          visit_number?: string
+          visit_status?: Database["public"]["Enums"]["visit_status"]
+          visit_type?: Database["public"]["Enums"]["visit_type"]
+          weather_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -401,6 +608,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      job_priority: "Low" | "Normal" | "High" | "Urgent"
+      job_status:
+        | "Draft"
+        | "Scheduled"
+        | "In Progress"
+        | "Completed"
+        | "Cancelled"
+        | "On Hold"
       lead_status:
         | "New"
         | "Reviewing"
@@ -411,6 +626,14 @@ export type Database = {
         | "Won"
         | "Lost"
         | "Archived"
+      property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
+      property_type:
+        | "Residential"
+        | "Commercial"
+        | "Industrial"
+        | "Municipal"
+        | "Strata"
+        | "Other"
       quote_approval_status:
         | "Draft"
         | "Needs review"
@@ -424,6 +647,19 @@ export type Database = {
         | "Property Care & Maintenance"
         | "Power Washing"
         | "Other"
+      visit_status:
+        | "Scheduled"
+        | "En Route"
+        | "In Progress"
+        | "Completed"
+        | "Missed"
+        | "Cancelled"
+      visit_type:
+        | "Routine"
+        | "One-time"
+        | "Emergency"
+        | "Inspection"
+        | "Follow-up"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -551,6 +787,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      job_priority: ["Low", "Normal", "High", "Urgent"],
+      job_status: [
+        "Draft",
+        "Scheduled",
+        "In Progress",
+        "Completed",
+        "Cancelled",
+        "On Hold",
+      ],
       lead_status: [
         "New",
         "Reviewing",
@@ -561,6 +806,15 @@ export const Constants = {
         "Won",
         "Lost",
         "Archived",
+      ],
+      property_status: ["Active", "Inactive", "Seasonal", "Pending"],
+      property_type: [
+        "Residential",
+        "Commercial",
+        "Industrial",
+        "Municipal",
+        "Strata",
+        "Other",
       ],
       quote_approval_status: [
         "Draft",
@@ -576,6 +830,21 @@ export const Constants = {
         "Property Care & Maintenance",
         "Power Washing",
         "Other",
+      ],
+      visit_status: [
+        "Scheduled",
+        "En Route",
+        "In Progress",
+        "Completed",
+        "Missed",
+        "Cancelled",
+      ],
+      visit_type: [
+        "Routine",
+        "One-time",
+        "Emergency",
+        "Inspection",
+        "Follow-up",
       ],
     },
   },

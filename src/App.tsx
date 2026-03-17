@@ -13,6 +13,12 @@ import Quotes from "./pages/Quotes";
 import QuoteDetail from "./pages/QuoteDetail";
 import QuotePrint from "./pages/QuotePrint";
 import Customers from "./pages/Customers";
+import Properties from "./pages/Properties";
+import PropertyDetail from "./pages/PropertyDetail";
+import Jobs from "./pages/Jobs";
+import JobDetail from "./pages/JobDetail";
+import Visits from "./pages/Visits";
+import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
@@ -41,6 +47,12 @@ function AppRoutes() {
       <Route path="/quotes/:id" element={<ProtectedRoute><QuoteDetail /></ProtectedRoute>} />
       <Route path="/quotes/:id/print" element={<ProtectedRoute><QuotePrint /></ProtectedRoute>} />
       <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+      <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
+      <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
+      <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
+      <Route path="/jobs/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
+      <Route path="/visits" element={<ProtectedRoute><Visits /></ProtectedRoute>} />
+      <Route path="/visits/:id" element={<ProtectedRoute><VisitDetail /></ProtectedRoute>} />
       <Route path="/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
