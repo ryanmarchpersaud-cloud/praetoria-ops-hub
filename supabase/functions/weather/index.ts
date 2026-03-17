@@ -116,9 +116,15 @@ serve(async (req) => {
     }
 
     const props = feature.properties;
+    console.log('Property keys:', Object.keys(props));
+    console.log('Forecast keys sample:', props.forecasts ? 'exists' : 'missing', props.forecast ? 'forecast exists' : 'forecast missing');
+    
+    // Try both possible keys
+    const forecastData = props.forecasts || props.forecast || props.forecastGroup || [];
+    
     const current = extractCurrent(props.currentConditions);
     const warnings = extractWarnings(props.warnings);
-    const forecast = extractForecasts(props.forecasts);
+    const forecast = extractForecasts(forecastData);
 
     // Snow analysis
     const hasSnowWarning = warnings.some((w: any) =>
