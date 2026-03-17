@@ -381,6 +381,94 @@ export type Database = {
         }
         Relationships: []
       }
+      incident_reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          date_time: string
+          description: string | null
+          follow_up_status: string
+          id: string
+          incident_type: string
+          job_id: string | null
+          location: string | null
+          medical_attention: boolean
+          people_involved: string | null
+          photos: string[] | null
+          reported_to: string | null
+          reporter_type: string
+          subcontractor_id: string | null
+          updated_at: string
+          user_id: string
+          visit_id: string | null
+          witnesses: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          date_time?: string
+          description?: string | null
+          follow_up_status?: string
+          id?: string
+          incident_type?: string
+          job_id?: string | null
+          location?: string | null
+          medical_attention?: boolean
+          people_involved?: string | null
+          photos?: string[] | null
+          reported_to?: string | null
+          reporter_type?: string
+          subcontractor_id?: string | null
+          updated_at?: string
+          user_id: string
+          visit_id?: string | null
+          witnesses?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          date_time?: string
+          description?: string | null
+          follow_up_status?: string
+          id?: string
+          incident_type?: string
+          job_id?: string | null
+          location?: string | null
+          medical_attention?: boolean
+          people_involved?: string | null
+          photos?: string[] | null
+          reported_to?: string | null
+          reporter_type?: string
+          subcontractor_id?: string | null
+          updated_at?: string
+          user_id?: string
+          visit_id?: string | null
+          witnesses?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_reports_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_reports_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incident_reports_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_line_items: {
         Row: {
           created_at: string
@@ -1364,6 +1452,53 @@ export type Database = {
           },
         ]
       }
+      subcontractor_tax_documents: {
+        Row: {
+          created_at: string
+          document_name: string
+          document_type: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          subcontractor_id: string
+          tax_year: number
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_name: string
+          document_type?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          subcontractor_id: string
+          tax_year: number
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          subcontractor_id?: string
+          tax_year?: number
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_tax_documents_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subcontractors: {
         Row: {
           active_flag: boolean
@@ -1708,6 +1843,51 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_equipment_items: {
+        Row: {
+          condition: string
+          created_at: string
+          id: string
+          issued_date: string | null
+          item_name: string
+          item_type: string
+          notes: string | null
+          replacement_requested: boolean
+          return_date: string | null
+          serial_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          condition?: string
+          created_at?: string
+          id?: string
+          issued_date?: string | null
+          item_name: string
+          item_type?: string
+          notes?: string | null
+          replacement_requested?: boolean
+          return_date?: string | null
+          serial_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          condition?: string
+          created_at?: string
+          id?: string
+          issued_date?: string | null
+          item_name?: string
+          item_type?: string
+          notes?: string | null
+          replacement_requested?: boolean
+          return_date?: string | null
+          serial_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       worker_profiles: {
         Row: {
           benefits_effective_date: string | null
@@ -1810,6 +1990,87 @@ export type Database = {
           user_id?: string
           vacation_balance?: number | null
           work_email?: string | null
+        }
+        Relationships: []
+      }
+      worker_tax_documents: {
+        Row: {
+          created_at: string
+          document_name: string
+          document_type: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          tax_year: number
+          uploaded_by: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_name: string
+          document_type?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          tax_year: number
+          uploaded_by?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          tax_year?: number
+          uploaded_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      worker_training_records: {
+        Row: {
+          acknowledged_at: string | null
+          completed_date: string | null
+          created_at: string
+          expiry_date: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          status: string
+          training_name: string
+          training_type: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          completed_date?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          training_name: string
+          training_type?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          completed_date?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          training_name?: string
+          training_type?: string
+          user_id?: string
         }
         Relationships: []
       }

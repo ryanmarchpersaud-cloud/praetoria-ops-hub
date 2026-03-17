@@ -3,7 +3,8 @@ import { useSubcontractorProfile } from '@/hooks/useSubcontractor';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  User, Building2, ShieldCheck, DollarSign, HelpCircle, Settings, LogOut, ChevronRight, Truck
+  User, Building2, ShieldCheck, DollarSign, HelpCircle, Settings, LogOut, ChevronRight, Truck,
+  ShieldAlert, Receipt,
 } from 'lucide-react';
 
 export default function SubcontractorMore() {
@@ -17,7 +18,9 @@ export default function SubcontractorMore() {
     { icon: User, label: 'My Profile', to: '/subcontractor/profile', description: 'Contact info & details' },
     { icon: Building2, label: 'Company Details', to: '/subcontractor/company', description: 'Business information' },
     { icon: ShieldCheck, label: 'Compliance', to: '/subcontractor/compliance', description: 'Insurance, WCB & docs' },
+    { icon: ShieldAlert, label: 'Incidents & Damage', to: '/subcontractor/safety', description: 'Report site incidents' },
     { icon: DollarSign, label: 'Payments', to: '/subcontractor/payments', description: 'Payment history & status' },
+    { icon: Receipt, label: 'Tax & Payment Docs', to: '/subcontractor/tax-documents', description: 'T4A, T5018 & payout history' },
     { icon: HelpCircle, label: 'Support', to: '/subcontractor/support', description: 'Contact admin' },
     { icon: Settings, label: 'Settings', to: '/subcontractor/settings', description: 'Account settings' },
   ];

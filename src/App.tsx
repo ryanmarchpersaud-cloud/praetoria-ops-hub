@@ -68,6 +68,10 @@ import WorkerPayrollPage from "./pages/worker/WorkerPayrollPage";
 import WorkerTrainingPage from "./pages/worker/WorkerTrainingPage";
 import WorkerTimeOffPage from "./pages/worker/WorkerTimeOffPage";
 import WorkerEmergencyContactPage from "./pages/worker/WorkerEmergencyContactPage";
+import WorkerSafetyPage from "./pages/worker/WorkerSafetyPage";
+import WorkerTaxDocsPage from "./pages/worker/WorkerTaxDocsPage";
+import WorkerTrainingSafetyPage from "./pages/worker/WorkerTrainingSafetyPage";
+import WorkerPPEPage from "./pages/worker/WorkerPPEPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
@@ -85,6 +89,8 @@ import SubcontractorSettings from "./pages/subcontractor/SubcontractorSettings";
 import SubcontractorVisitExec from "./pages/subcontractor/SubcontractorVisitExec";
 import SubcontractorPropertyDetail from "./pages/subcontractor/SubcontractorPropertyDetail";
 import SubcontractorInvoiceDetail from "./pages/subcontractor/SubcontractorInvoiceDetail";
+import SubcontractorSafetyPage from "./pages/subcontractor/SubcontractorSafetyPage";
+import SubcontractorTaxDocsPage from "./pages/subcontractor/SubcontractorTaxDocsPage";
 
 const queryClient = new QueryClient();
 
@@ -227,6 +233,10 @@ function AppRoutes() {
       <Route path="/worker/training" element={<WorkerRoute><WorkerLayout><WorkerTrainingPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/time-off" element={<WorkerRoute><WorkerLayout><WorkerTimeOffPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/emergency-contact" element={<WorkerRoute><WorkerLayout><WorkerEmergencyContactPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/safety" element={<WorkerRoute><WorkerLayout><WorkerSafetyPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/tax-documents" element={<WorkerRoute><WorkerLayout><WorkerTaxDocsPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/training-safety" element={<WorkerRoute><WorkerLayout><WorkerTrainingSafetyPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/ppe" element={<WorkerRoute><WorkerLayout><WorkerPPEPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
 
       {/* Subcontractor routes */}
@@ -244,6 +254,8 @@ function AppRoutes() {
       <Route path="/subcontractor/visit/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorVisitExec /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/property/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorPropertyDetail /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/invoices/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorInvoiceDetail /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/safety" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSafetyPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/tax-documents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorTaxDocsPage /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
