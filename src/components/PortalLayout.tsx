@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 
 const portalNav = [
   { title: 'My Properties', to: '/portal/properties', icon: MapPin },
+  { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck },
   { title: 'My Quotes', to: '/portal/quotes', icon: FileText },
   { title: 'My Visits', to: '/portal/visits', icon: ClipboardCheck },
   { title: 'My Photos', to: '/portal/photos', icon: Camera },
