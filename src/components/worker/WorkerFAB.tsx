@@ -55,14 +55,14 @@ export function WorkerFAB() {
     { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=photos` : '/worker/schedule', category: 'field' },
     { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=note` : '/worker/schedule', category: 'field' },
     { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=issue` : '/worker/schedule', category: 'field' },
-    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: 'coming_soon', category: 'field', comingSoon: true },
+    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: () => setQuickAction('expense'), category: 'field' },
     { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' },
     { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: '/worker/schedule?action=directions', category: 'field' },
     { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: '/worker/schedule?action=call', category: 'field' },
-    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: 'coming_soon', category: 'field', comingSoon: true },
+    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: () => setQuickAction('message_admin'), category: 'field' },
     { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' },
-    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: 'coming_soon', category: 'field', comingSoon: true },
-    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: 'coming_soon', category: 'field', comingSoon: true },
+    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: () => setQuickAction('equipment_issue'), category: 'field' },
+    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: () => setQuickAction('materials_used'), category: 'field' },
   ];
 
   const adminOnlyActions: QuickAction[] = [
