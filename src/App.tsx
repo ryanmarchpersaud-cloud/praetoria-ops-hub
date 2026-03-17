@@ -108,6 +108,13 @@ function AppRoutes() {
       <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
       <Route path="/portal/account" element={<PortalRoute><PortalAccount /></PortalRoute>} />
 
+      {/* Worker routes */}
+      <Route path="/worker" element={<StaffRoute><WorkerLayout><WorkerHome /></WorkerLayout></StaffRoute>} />
+      <Route path="/worker/schedule" element={<StaffRoute><WorkerLayout><WorkerPlaceholder title="Schedule" /></WorkerLayout></StaffRoute>} />
+      <Route path="/worker/timesheet" element={<StaffRoute><WorkerLayout><WorkerPlaceholder title="Timesheet" /></WorkerLayout></StaffRoute>} />
+      <Route path="/worker/search" element={<StaffRoute><WorkerLayout><WorkerPlaceholder title="Search" /></WorkerLayout></StaffRoute>} />
+      <Route path="/worker/more" element={<StaffRoute><WorkerLayout><WorkerPlaceholder title="More" /></WorkerLayout></StaffRoute>} />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
