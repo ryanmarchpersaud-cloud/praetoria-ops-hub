@@ -36,6 +36,11 @@ import PortalPhotos from "./pages/portal/PortalPhotos";
 import PortalRequests from "./pages/portal/PortalRequests";
 import PortalAccount from "./pages/portal/PortalAccount";
 
+// Worker pages
+import { WorkerLayout } from "./components/worker/WorkerLayout";
+import WorkerHome from "./pages/worker/WorkerHome";
+import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
+
 const queryClient = new QueryClient();
 
 function StaffRoute({ children }: { children: React.ReactNode }) {
