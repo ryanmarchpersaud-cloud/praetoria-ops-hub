@@ -121,7 +121,7 @@ export default function CustomerDetail() {
           </Button>
         ) : (
           <div className="flex items-center gap-1.5 px-3 h-11 rounded-md border bg-muted/50 text-xs text-muted-foreground">
-            <Check className="h-3.5 w-3.5 text-green-600" /> Portal active
+            <Check className="h-3.5 w-3.5 text-accent" /> Portal active
           </div>
         )}
       </div>
