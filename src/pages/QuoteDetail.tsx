@@ -50,7 +50,7 @@ function CollapsibleSection({ title, defaultOpen = false, children }: { title: s
 export default function QuoteDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: quote, isLoading } = useQuote(id);
+  const { data: quote, isLoading, refetch: refetchQuote } = useQuote(id);
   const { data: lineItems = [] } = useQuoteLineItems(id);
   const updateQuote = useUpdateQuote();
   const upsertItems = useUpsertLineItems();
