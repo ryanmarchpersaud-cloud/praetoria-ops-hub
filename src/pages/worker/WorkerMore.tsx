@@ -86,9 +86,9 @@ export default function WorkerMore() {
           Sign out and use the <strong>Dev · Role Testing</strong> panel on the login page to switch between Admin, Worker, and Customer accounts.
         </p>
         <div className="text-[10px] text-muted-foreground/80 space-y-0.5">
-          <p>• <strong>Admin</strong> → admin@praetoriagroup.com</p>
-          <p>• <strong>Worker</strong> → worker@praetoriagroup.com</p>
-          <p>• <strong>Customer</strong> → customer@praetoriagroup.com</p>
+          <p>• <strong>Admin</strong> → admin@praetoriagroup.ca</p>
+          <p>• <strong>Worker</strong> → worker@praetoriagroup.ca</p>
+          <p>• <strong>Customer</strong> → customer@praetoriagroup.ca</p>
         </div>
       </div>
     </div>
