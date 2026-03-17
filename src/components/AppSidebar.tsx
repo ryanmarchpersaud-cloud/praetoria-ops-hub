@@ -18,6 +18,7 @@ const navItems = [
   { title: 'Properties', url: '/properties', icon: MapPin },
   { title: 'Jobs', url: '/jobs', icon: Briefcase },
   { title: 'Visits', url: '/visits', icon: ClipboardCheck },
+  { title: 'Invoices', url: '/invoices', icon: Receipt },
   { title: 'Schedule', url: '/schedule', icon: CalendarDays },
   { title: 'Activity', url: '/activity', icon: Activity },
   { title: 'Settings', url: '/settings', icon: Settings },

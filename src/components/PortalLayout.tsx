@@ -12,6 +12,7 @@ const portalNav = [
   { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck },
   { title: 'My Quotes', to: '/portal/quotes', icon: FileText },
   { title: 'My Visits', to: '/portal/visits', icon: ClipboardCheck },
+  { title: 'Billing', to: '/portal/billing', icon: Receipt },
   { title: 'My Photos', to: '/portal/photos', icon: Camera },
   { title: 'My Requests', to: '/portal/requests', icon: MessageSquarePlus },
   { title: 'My Account', to: '/portal/account', icon: User },

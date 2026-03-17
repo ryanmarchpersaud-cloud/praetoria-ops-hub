@@ -123,6 +123,7 @@ function AppRoutes() {
       <Route path="/portal/plan" element={<PortalRoute><PortalPlan /></PortalRoute>} />
       <Route path="/portal/visits" element={<PortalRoute><PortalVisits /></PortalRoute>} />
       <Route path="/portal/photos" element={<PortalRoute><PortalPhotos /></PortalRoute>} />
+      <Route path="/portal/billing" element={<PortalRoute><PortalBilling /></PortalRoute>} />
       <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
       <Route path="/portal/account" element={<PortalRoute><PortalAccount /></PortalRoute>} />
 

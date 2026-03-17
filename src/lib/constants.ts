@@ -50,9 +50,10 @@ export function getStatusClass(status: string): string {
   const s = status.toLowerCase();
   if (s === 'new' || s === 'scheduled') return 'status-new';
   if (['reviewing', 'awaiting info', 'quote drafting', 'needs review', 'en route', 'on hold', 'pending', 'planned', 'rescheduled'].includes(s)) return 'status-reviewing';
-  if (['won', 'approved', 'quote ready', 'completed', 'active'].includes(s)) return 'status-approved';
-  if (['lost', 'declined', 'cancelled', 'missed', 'skipped', 'inactive'].includes(s)) return 'status-declined';
-  if (['quote sent', 'sent', 'in progress'].includes(s)) return 'status-sent';
+  if (['won', 'approved', 'quote ready', 'completed', 'active', 'paid'].includes(s)) return 'status-approved';
+  if (['lost', 'declined', 'cancelled', 'missed', 'skipped', 'inactive', 'voided', 'failed'].includes(s)) return 'status-declined';
+  if (['quote sent', 'sent', 'in progress', 'viewed', 'partially paid'].includes(s)) return 'status-sent';
+  if (['overdue'].includes(s)) return 'status-reviewing';
   if (['archived', 'seasonal'].includes(s)) return 'status-archived';
   return 'status-draft';
 }
