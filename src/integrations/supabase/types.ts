@@ -159,6 +159,196 @@ export type Database = {
           },
         ]
       }
+      customer_recurring_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          customer_id: string
+          frequency: string
+          id: string
+          payment_preference: string | null
+          preferred_service_window: string | null
+          preferred_start_date: string | null
+          property_id: string | null
+          service_category: string
+          special_instructions: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          customer_id: string
+          frequency?: string
+          id?: string
+          payment_preference?: string | null
+          preferred_service_window?: string | null
+          preferred_start_date?: string | null
+          property_id?: string | null
+          service_category: string
+          special_instructions?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          customer_id?: string
+          frequency?: string
+          id?: string
+          payment_preference?: string | null
+          preferred_service_window?: string | null
+          preferred_start_date?: string | null
+          property_id?: string | null
+          service_category?: string
+          special_instructions?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_recurring_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_recurring_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_referrals: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          notes: string | null
+          referral_address: string | null
+          referral_email: string | null
+          referral_name: string
+          referral_phone: string | null
+          reward_type: string | null
+          reward_value: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          notes?: string | null
+          referral_address?: string | null
+          referral_email?: string | null
+          referral_name: string
+          referral_phone?: string | null
+          reward_type?: string | null
+          reward_value?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          notes?: string | null
+          referral_address?: string | null
+          referral_email?: string | null
+          referral_name?: string
+          referral_phone?: string | null
+          reward_type?: string | null
+          reward_value?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_referrals_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_service_preferences: {
+        Row: {
+          afternoon_preference: boolean | null
+          back_alley_garbage_access_notes: string | null
+          basement_window_notes: string | null
+          before_6am_ok: boolean | null
+          before_7am_ok: boolean | null
+          created_at: string
+          customer_id: string
+          deck_patio_notes: string | null
+          general_property_instructions: string | null
+          generator_access_notes: string | null
+          hand_shovel_only_areas: string | null
+          id: string
+          morning_preference: boolean | null
+          preferred_service_window: string | null
+          restricted_access_areas: string | null
+          roof_access_request_notes: string | null
+          salt_restriction_notes: string | null
+          side_entrance_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          afternoon_preference?: boolean | null
+          back_alley_garbage_access_notes?: string | null
+          basement_window_notes?: string | null
+          before_6am_ok?: boolean | null
+          before_7am_ok?: boolean | null
+          created_at?: string
+          customer_id: string
+          deck_patio_notes?: string | null
+          general_property_instructions?: string | null
+          generator_access_notes?: string | null
+          hand_shovel_only_areas?: string | null
+          id?: string
+          morning_preference?: boolean | null
+          preferred_service_window?: string | null
+          restricted_access_areas?: string | null
+          roof_access_request_notes?: string | null
+          salt_restriction_notes?: string | null
+          side_entrance_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          afternoon_preference?: boolean | null
+          back_alley_garbage_access_notes?: string | null
+          basement_window_notes?: string | null
+          before_6am_ok?: boolean | null
+          before_7am_ok?: boolean | null
+          created_at?: string
+          customer_id?: string
+          deck_patio_notes?: string | null
+          general_property_instructions?: string | null
+          generator_access_notes?: string | null
+          hand_shovel_only_areas?: string | null
+          id?: string
+          morning_preference?: boolean | null
+          preferred_service_window?: string | null
+          restricted_access_areas?: string | null
+          roof_access_request_notes?: string | null
+          salt_restriction_notes?: string | null
+          side_entrance_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_service_preferences_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address_line_1: string | null
