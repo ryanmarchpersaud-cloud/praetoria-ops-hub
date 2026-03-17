@@ -47,6 +47,7 @@ import WorkerHome from "./pages/worker/WorkerHome";
 import WorkerSchedule from "./pages/worker/WorkerSchedule";
 import WorkerTimesheet from "./pages/worker/WorkerTimesheet";
 import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
+import WorkerSearch from "./pages/worker/WorkerSearch";
 import WorkerMore from "./pages/worker/WorkerMore";
 import WorkerVisitExec from "./pages/worker/WorkerVisitExec";
 import WorkerWeatherDetail from "./pages/worker/WorkerWeatherDetail";
@@ -145,7 +146,7 @@ function AppRoutes() {
       <Route path="/worker" element={<WorkerRoute><WorkerLayout><WorkerHome /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerSchedule /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/timesheet" element={<WorkerRoute><WorkerLayout><WorkerTimesheet /></WorkerLayout></WorkerRoute>} />
-      <Route path="/worker/search" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Search" /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/search" element={<WorkerRoute><WorkerLayout><WorkerSearch /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/visit/:id" element={<WorkerRoute><WorkerLayout><WorkerVisitExec /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/weather" element={<WorkerRoute><WorkerLayout><WorkerWeatherDetail /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerMore /></WorkerLayout></WorkerRoute>} />
