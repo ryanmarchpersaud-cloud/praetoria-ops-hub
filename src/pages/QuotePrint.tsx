@@ -118,7 +118,7 @@ export default function QuotePrint() {
             </p>
             <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
               <p>Toronto, Ontario, Canada</p>
-              <p>info@praetoriagroup.com</p>
+              <p>info@praetoriagroup.ca</p>
               <p>(416) 555-0100</p>
             </div>
           </div>
