@@ -49,6 +49,9 @@ import PortalRequestWizard from "./pages/portal/PortalRequestWizard";
 import PortalBilling from "./pages/portal/PortalBilling";
 import PortalAccount from "./pages/portal/PortalAccount";
 import PortalPropertyDetail from "./pages/portal/PortalPropertyDetail";
+import PortalServicePreferences from "./pages/portal/PortalServicePreferences";
+import PortalRecurringServices from "./pages/portal/PortalRecurringServices";
+import PortalReferrals from "./pages/portal/PortalReferrals";
 
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
@@ -232,7 +235,9 @@ function AppRoutes() {
       <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
       <Route path="/portal/requests/new" element={<PortalRoute><PortalRequestWizard /></PortalRoute>} />
       <Route path="/portal/account" element={<PortalRoute><PortalAccount /></PortalRoute>} />
-
+      <Route path="/portal/preferences" element={<PortalRoute><PortalServicePreferences /></PortalRoute>} />
+      <Route path="/portal/recurring" element={<PortalRoute><PortalRecurringServices /></PortalRoute>} />
+      <Route path="/portal/referrals" element={<PortalRoute><PortalReferrals /></PortalRoute>} />
       {/* Worker routes */}
       <Route path="/worker" element={<WorkerRoute><WorkerLayout><WorkerHome /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerSchedule /></WorkerLayout></WorkerRoute>} />
