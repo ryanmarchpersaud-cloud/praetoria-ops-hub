@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin } from 'lucide-react';
+import { MapPin, ChevronRight } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 
 export default function PortalProperties() {
+  const navigate = useNavigate();
   const { data: customer } = useCustomerProfile();
 
   const { data: properties = [], isLoading } = useQuery({
