@@ -115,7 +115,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   if (loading || roleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (isSubcontractor && !isAdmin) return <Navigate to="/subcontractor" replace />;
-  if (isCustomer && !isAdmin) return <Navigate to="/portal/properties" replace />;
+  if (isCustomer && !isAdmin) return <Navigate to="/portal" replace />;
   if (isStaff && !isAdmin) return <Navigate to="/access-denied" replace />;
   if (!isAdmin) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children}</AppLayout>;
