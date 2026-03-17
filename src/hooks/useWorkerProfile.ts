@@ -58,3 +58,60 @@ export function useWorkerDocuments() {
     enabled: !!user,
   });
 }
+
+export function useWorkerEmergencyContacts() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['worker_emergency_contacts', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('employee_emergency_contacts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('is_primary', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useWorkerPayStubs() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['worker_pay_stubs', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('employee_pay_stubs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('pay_date', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useWorkerTimeOff() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['worker_time_off', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('employee_time_off_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+}
