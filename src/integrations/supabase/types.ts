@@ -1,0 +1,567 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.4"
+  }
+  public: {
+    Tables: {
+      activities: {
+        Row: {
+          action_name: string
+          approved_by: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          needs_approval: boolean | null
+          payload_summary: Json | null
+          record_id: string | null
+          record_type: string | null
+          status: string | null
+          user_id: string | null
+          workflow_name: string | null
+        }
+        Insert: {
+          action_name: string
+          approved_by?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          needs_approval?: boolean | null
+          payload_summary?: Json | null
+          record_id?: string | null
+          record_type?: string | null
+          status?: string | null
+          user_id?: string | null
+          workflow_name?: string | null
+        }
+        Update: {
+          action_name?: string
+          approved_by?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          needs_approval?: boolean | null
+          payload_summary?: Json | null
+          record_id?: string | null
+          record_type?: string | null
+          status?: string | null
+          user_id?: string | null
+          workflow_name?: string | null
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          address_line_1: string | null
+          city: string | null
+          company_name: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          notes: string | null
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_line_1?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_line_1?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          record_id: string | null
+          record_type: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          record_id?: string | null
+          record_type?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          record_id?: string | null
+          record_type?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          address_line_1: string | null
+          assigned_to: string | null
+          city: string | null
+          company_name: string | null
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          email: string | null
+          estimated_value_range: string | null
+          first_name: string
+          id: string
+          internal_notes: string | null
+          last_name: string
+          lead_source: string | null
+          phone: string | null
+          postal_code: string | null
+          preferred_contact_method: string | null
+          province: string | null
+          service_type: Database["public"]["Enums"]["service_category"]
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          urgency: string | null
+        }
+        Insert: {
+          address_line_1?: string | null
+          assigned_to?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          email?: string | null
+          estimated_value_range?: string | null
+          first_name: string
+          id?: string
+          internal_notes?: string | null
+          last_name: string
+          lead_source?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          preferred_contact_method?: string | null
+          province?: string | null
+          service_type?: Database["public"]["Enums"]["service_category"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          urgency?: string | null
+        }
+        Update: {
+          address_line_1?: string | null
+          assigned_to?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          email?: string | null
+          estimated_value_range?: string | null
+          first_name?: string
+          id?: string
+          internal_notes?: string | null
+          last_name?: string
+          lead_source?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          preferred_contact_method?: string | null
+          province?: string | null
+          service_type?: Database["public"]["Enums"]["service_category"]
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          urgency?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quote_line_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          item_name: string
+          line_total: number | null
+          quantity: number | null
+          quote_id: string
+          sort_order: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_name: string
+          line_total?: number | null
+          quantity?: number | null
+          quote_id: string
+          sort_order?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_name?: string
+          line_total?: number | null
+          quantity?: number | null
+          quote_id?: string
+          sort_order?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_line_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          agent_summary: string | null
+          approval_status: Database["public"]["Enums"]["quote_approval_status"]
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          follow_up_due_at: string | null
+          id: string
+          internal_notes: string | null
+          lead_id: string
+          quote_number: string
+          scope_of_work: string | null
+          sent_at: string | null
+          sent_status: string | null
+          service_category: Database["public"]["Enums"]["service_category"]
+          subtotal: number | null
+          tax: number | null
+          total: number | null
+          updated_at: string
+        }
+        Insert: {
+          agent_summary?: string | null
+          approval_status?: Database["public"]["Enums"]["quote_approval_status"]
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          follow_up_due_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          lead_id: string
+          quote_number: string
+          scope_of_work?: string | null
+          sent_at?: string | null
+          sent_status?: string | null
+          service_category?: Database["public"]["Enums"]["service_category"]
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          agent_summary?: string | null
+          approval_status?: Database["public"]["Enums"]["quote_approval_status"]
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          follow_up_due_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          lead_id?: string
+          quote_number?: string
+          scope_of_work?: string | null
+          sent_at?: string | null
+          sent_status?: string | null
+          service_category?: Database["public"]["Enums"]["service_category"]
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      lead_status:
+        | "New"
+        | "Reviewing"
+        | "Awaiting info"
+        | "Quote drafting"
+        | "Quote ready"
+        | "Quote sent"
+        | "Won"
+        | "Lost"
+        | "Archived"
+      quote_approval_status:
+        | "Draft"
+        | "Needs review"
+        | "Approved"
+        | "Sent"
+        | "Declined"
+      service_category:
+        | "Snow & Ice"
+        | "Landscaping & Grounds"
+        | "Junk Removal"
+        | "Property Care & Maintenance"
+        | "Power Washing"
+        | "Other"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      lead_status: [
+        "New",
+        "Reviewing",
+        "Awaiting info",
+        "Quote drafting",
+        "Quote ready",
+        "Quote sent",
+        "Won",
+        "Lost",
+        "Archived",
+      ],
+      quote_approval_status: [
+        "Draft",
+        "Needs review",
+        "Approved",
+        "Sent",
+        "Declined",
+      ],
+      service_category: [
+        "Snow & Ice",
+        "Landscaping & Grounds",
+        "Junk Removal",
+        "Property Care & Maintenance",
+        "Power Washing",
+        "Other",
+      ],
+    },
+  },
+} as const
