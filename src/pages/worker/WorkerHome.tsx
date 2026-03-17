@@ -169,6 +169,29 @@ export default function WorkerHome() {
         </Sheet>
       </div>
 
+      {/* Expiring Certifications Alert */}
+      {expiringCerts.length > 0 && (
+        <Link to="/worker/training">
+          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 active:shadow-sm transition-shadow">
+            <CardContent className="p-3 flex items-start gap-3">
+              <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  {expiringCerts.length} certification{expiringCerts.length > 1 ? 's' : ''} expiring soon
+                </p>
+                <p className="text-[11px] text-amber-700/80 dark:text-amber-400/70 mt-0.5">
+                  {expiringCerts.map(c => {
+                    const days = differenceInDays(new Date(c.expiry_date!), new Date());
+                    return `${c.cert_name} (${days}d)`;
+                  }).join(' · ')}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-1" />
+            </CardContent>
+          </Card>
+        </Link>
+      )}
+
       {/* Clock In/Out */}
       <button
         onClick={handleClock}
