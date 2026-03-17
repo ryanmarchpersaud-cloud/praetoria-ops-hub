@@ -78,7 +78,7 @@ export default function SettingsPage() {
                 className="shrink-0 h-8 w-8"
                 onClick={() => copyToClipboard(webhookUrl, 'url')}
               >
-                {copied === 'url' ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied === 'url' ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
               </Button>
             </div>
           </div>
