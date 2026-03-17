@@ -105,7 +105,7 @@ export default function SettingsPage() {
                     className="text-xs h-7"
                     onClick={() => copyToClipboard(JSON.stringify(wa.example, null, 2), wa.action)}
                   >
-                    {copied === wa.action ? <Check className="w-3 h-3 mr-1 text-green-500" /> : <Copy className="w-3 h-3 mr-1" />}
+                    {copied === wa.action ? <Check className="w-3 h-3 mr-1 text-primary" /> : <Copy className="w-3 h-3 mr-1" />}
                     Copy
                   </Button>
                 </div>
