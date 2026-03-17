@@ -13,14 +13,29 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 
+/** Map promo id → database service_category enum value */
+const PROMO_TO_CATEGORY: Record<string, string> = {
+  'snow-ice': 'Snow & Ice',
+  'landscaping': 'Landscaping & Grounds',
+  'junk-removal': 'Junk Removal',
+  'maintenance': 'Property Care & Maintenance',
+  'property-management': 'Property Management',
+  'power-washing': 'Power Washing',
+  'cleaning': 'Cleaning Services',
+  'other': 'Other',
+};
 
-const SERVICE_ACTIONS = [
-  { label: 'New Lead', icon: Plus, path: '/leads', description: 'Capture a new lead for this service' },
-  { label: 'Create Quote', icon: FileText, path: '/quotes', description: 'Draft a quote for this service' },
-  { label: 'Create Job', icon: Briefcase, path: '/jobs', description: 'Set up a new job' },
-  { label: 'View Leads', icon: Eye, path: '/leads', description: 'Browse existing leads' },
-  { label: 'View Jobs', icon: ClipboardList, path: '/jobs', description: 'Browse active jobs' },
-];
+function buildActions(promoId: string) {
+  const cat = PROMO_TO_CATEGORY[promoId] || 'Other';
+  const catParam = encodeURIComponent(cat);
+  return [
+    { label: 'New Lead', icon: Plus, path: `/leads?new=1&service_type=${catParam}`, description: 'Capture a new lead for this service' },
+    { label: 'Create Quote', icon: FileText, path: `/quotes?new=1&service_category=${catParam}`, description: 'Draft a quote for this service' },
+    { label: 'Create Job', icon: Briefcase, path: `/jobs?new=1&service_category=${catParam}`, description: 'Set up a new job' },
+    { label: 'View Leads', icon: Eye, path: `/leads?filter=${catParam}`, description: 'Browse existing leads' },
+    { label: 'View Jobs', icon: ClipboardList, path: `/jobs?filter=${catParam}`, description: 'Browse active jobs' },
+  ];
+}
 
 function ServiceChip({ promo, onClick }: { promo: ServicePromo; onClick: () => void }) {
   const Icon = promo.icon;
@@ -48,6 +63,8 @@ function ServiceChip({ promo, onClick }: { promo: ServicePromo; onClick: () => v
 export function ServiceCarousel() {
   const [selected, setSelected] = useState<ServicePromo | null>(null);
   const navigate = useNavigate();
+
+  const actions = selected ? buildActions(selected.id) : [];
 
   return (
     <>
@@ -90,7 +107,7 @@ export function ServiceCarousel() {
                 </ul>
 
                 <div className="grid grid-cols-2 gap-2">
-                  {SERVICE_ACTIONS.map((action) => (
+                  {actions.map((action) => (
                     <Button
                       key={action.label}
                       variant="outline"
