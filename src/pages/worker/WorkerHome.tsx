@@ -228,7 +228,25 @@ export default function WorkerHome() {
         </div>
       )}
 
-      {/* Current / Next Visit */}
+      {/* Quick Actions */}
+      <div className="grid grid-cols-4 gap-2">
+        <Link to="/worker/schedule" className="action-tile action-tile-blue">
+          <CalendarDays className="h-5 w-5 text-blue-600" />
+          <span className="text-[10px] font-medium text-foreground">Schedule</span>
+        </Link>
+        <Link to="/worker/timesheet" className="action-tile action-tile-emerald">
+          <Clock className="h-5 w-5 text-emerald-600" />
+          <span className="text-[10px] font-medium text-foreground">Timesheet</span>
+        </Link>
+        <Link to="/worker/weather" className="action-tile action-tile-cyan">
+          <CloudSun className="h-5 w-5 text-cyan-600" />
+          <span className="text-[10px] font-medium text-foreground">Weather</span>
+        </Link>
+        <Link to="/worker/more" className="action-tile action-tile-violet">
+          <FileText className="h-5 w-5 text-violet-600" />
+          <span className="text-[10px] font-medium text-foreground">More</span>
+        </Link>
+      </div>
       {highlightVisit && (
         <div>
           <div className="flex items-center justify-between mb-2">
