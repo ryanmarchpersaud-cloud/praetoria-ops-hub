@@ -110,6 +110,9 @@ function AppRoutes() {
       <Route path="/jobs/:id" element={<StaffRoute><JobDetail /></StaffRoute>} />
       <Route path="/visits" element={<StaffRoute><Visits /></StaffRoute>} />
       <Route path="/visits/:id" element={<StaffRoute><VisitDetail /></StaffRoute>} />
+      <Route path="/invoices" element={<StaffRoute><Invoices /></StaffRoute>} />
+      <Route path="/invoices/new" element={<StaffRoute><InvoiceDetail /></StaffRoute>} />
+      <Route path="/invoices/:id" element={<StaffRoute><InvoiceDetail /></StaffRoute>} />
       <Route path="/schedule" element={<StaffRoute><Schedule /></StaffRoute>} />
       <Route path="/activity" element={<StaffRoute><ActivityPage /></StaffRoute>} />
       <Route path="/settings" element={<StaffRoute><SettingsPage /></StaffRoute>} />
