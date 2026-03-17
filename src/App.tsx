@@ -50,6 +50,8 @@ import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
 import WorkerSearch from "./pages/worker/WorkerSearch";
 import WorkerMore from "./pages/worker/WorkerMore";
 import WorkerVisitExec from "./pages/worker/WorkerVisitExec";
+import WorkerPropertyDetail from "./pages/worker/WorkerPropertyDetail";
+import WorkerJobDetail from "./pages/worker/WorkerJobDetail";
 import WorkerWeatherDetail from "./pages/worker/WorkerWeatherDetail";
 import WeatherDetail from "./pages/WeatherDetail";
 
