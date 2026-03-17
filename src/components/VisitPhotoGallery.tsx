@@ -184,7 +184,6 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
         type="file"
         accept="image/*"
         multiple
-        capture="environment"
         className="hidden"
         onChange={handleFileSelect}
       />
