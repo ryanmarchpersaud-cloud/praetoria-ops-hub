@@ -50,7 +50,7 @@ export const SERVICE_PROMOS: ServicePromo[] = [
     id: 'junk-removal',
     title: 'Junk Removal & Haul-Away',
     subtitle: 'Fast & Reliable Pickup',
-    audience: 'Residential · Commercial · Property Management',
+    audience: 'Residential · Commercial · Municipal · Property Management',
     highlights: [
       'Tenant move-outs & unit cleanouts',
       'Bin area overflow & bulky-item pickup',
