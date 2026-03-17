@@ -117,6 +117,13 @@ export default function VisitDetail() {
               <div><Label className="text-xs">Customer-Visible Notes</Label><Textarea value={form.customer_visible_notes || ''} onChange={e => set('customer_visible_notes', e.target.value)} rows={2} placeholder="Notes visible to customer..." /></div>
             </CardContent>
           </Card>
+
+          {/* Photo proof */}
+          <VisitPhotoGallery
+            visitId={id!}
+            propertyId={(visit as any).property_id}
+            customerId={(visit as any).customer_id}
+          />
         </div>
 
         <div className="space-y-3">
