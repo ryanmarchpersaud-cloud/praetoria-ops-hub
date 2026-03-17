@@ -30,6 +30,7 @@ import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import Requests from "./pages/Requests";
 import NotFound from "./pages/NotFound";
+import AccessDenied from "./pages/AccessDenied";
 
 // Portal pages
 import PortalProperties from "./pages/portal/PortalProperties";
@@ -57,31 +58,50 @@ import WeatherDetail from "./pages/WeatherDetail";
 
 const queryClient = new QueryClient();
 
+/** Loading spinner shared by route guards */
+function RouteLoading() {
+  return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+}
+
+/** Admin-only routes: dashboard, leads, quotes, invoices, customers, etc. */
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { isAdmin, isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (isCustomer && !isAdmin) return <Navigate to="/portal/properties" replace />;
+  if (isStaff && !isAdmin) return <Navigate to="/access-denied" replace />;
+  if (!isAdmin) return <Navigate to="/access-denied" replace />;
+  return <AppLayout>{children}</AppLayout>;
+}
+
+/** Staff routes accessible by both admin and workers (settings, weather) */
 function StaffRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isCustomer, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
+  if (!isStaff) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
 function WorkerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isCustomer, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
+  if (!isStaff) return <Navigate to="/access-denied" replace />;
   return <>{children}</>;
 }
 
 function PortalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  if (loading || roleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!isCustomer && !isStaff) return <Navigate to="/" replace />;
-  // Staff can preview the portal
+  if (!isCustomer && !isStaff) return <Navigate to="/access-denied" replace />;
   const isPreview = isStaff && !isCustomer;
   return (
     <>
@@ -93,13 +113,14 @@ function PortalRoute({ children }: { children: React.ReactNode }) {
 
 function LoginRoute() {
   const { user, loading } = useAuth();
-  const { isCustomer, isLoading: roleLoading } = useUserRole();
+  const { isCustomer, isStaff, isAdmin, isLoading: roleLoading } = useUserRole();
   if (loading || roleLoading) {
     if (!user) return <Login />;
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+    return <RouteLoading />;
   }
   if (user) {
     if (isCustomer) return <Navigate to="/portal/properties" replace />;
+    if (isStaff && !isAdmin) return <Navigate to="/worker" replace />;
     return <Navigate to="/" replace />;
   }
   return <Login />;
@@ -109,29 +130,32 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
+      <Route path="/access-denied" element={<AccessDenied />} />
 
-      {/* Staff/Admin routes */}
-      <Route path="/" element={<StaffRoute><Dashboard /></StaffRoute>} />
-      <Route path="/leads" element={<StaffRoute><Leads /></StaffRoute>} />
-      <Route path="/leads/:id" element={<StaffRoute><LeadDetail /></StaffRoute>} />
-      <Route path="/quotes" element={<StaffRoute><Quotes /></StaffRoute>} />
-      <Route path="/quotes/:id" element={<StaffRoute><QuoteDetail /></StaffRoute>} />
-      <Route path="/quotes/:id/print" element={<StaffRoute><QuotePrint /></StaffRoute>} />
-      <Route path="/customers" element={<StaffRoute><Customers /></StaffRoute>} />
-      <Route path="/customers/:id" element={<StaffRoute><CustomerDetail /></StaffRoute>} />
-      <Route path="/properties" element={<StaffRoute><Properties /></StaffRoute>} />
-      <Route path="/properties/:id" element={<StaffRoute><PropertyDetail /></StaffRoute>} />
-      <Route path="/jobs" element={<StaffRoute><Jobs /></StaffRoute>} />
-      <Route path="/jobs/:id" element={<StaffRoute><JobDetail /></StaffRoute>} />
-      <Route path="/visits" element={<StaffRoute><Visits /></StaffRoute>} />
-      <Route path="/visits/:id" element={<StaffRoute><VisitDetail /></StaffRoute>} />
-      <Route path="/invoices" element={<StaffRoute><Invoices /></StaffRoute>} />
-      <Route path="/invoices/new" element={<StaffRoute><InvoiceDetail /></StaffRoute>} />
-      <Route path="/invoices/:id" element={<StaffRoute><InvoiceDetail /></StaffRoute>} />
-      <Route path="/schedule" element={<StaffRoute><Schedule /></StaffRoute>} />
-      <Route path="/activity" element={<StaffRoute><ActivityPage /></StaffRoute>} />
+      {/* Admin-only routes */}
+      <Route path="/" element={<AdminRoute><Dashboard /></AdminRoute>} />
+      <Route path="/leads" element={<AdminRoute><Leads /></AdminRoute>} />
+      <Route path="/leads/:id" element={<AdminRoute><LeadDetail /></AdminRoute>} />
+      <Route path="/quotes" element={<AdminRoute><Quotes /></AdminRoute>} />
+      <Route path="/quotes/:id" element={<AdminRoute><QuoteDetail /></AdminRoute>} />
+      <Route path="/quotes/:id/print" element={<AdminRoute><QuotePrint /></AdminRoute>} />
+      <Route path="/customers" element={<AdminRoute><Customers /></AdminRoute>} />
+      <Route path="/customers/:id" element={<AdminRoute><CustomerDetail /></AdminRoute>} />
+      <Route path="/properties" element={<AdminRoute><Properties /></AdminRoute>} />
+      <Route path="/properties/:id" element={<AdminRoute><PropertyDetail /></AdminRoute>} />
+      <Route path="/jobs" element={<AdminRoute><Jobs /></AdminRoute>} />
+      <Route path="/jobs/:id" element={<AdminRoute><JobDetail /></AdminRoute>} />
+      <Route path="/visits" element={<AdminRoute><Visits /></AdminRoute>} />
+      <Route path="/visits/:id" element={<AdminRoute><VisitDetail /></AdminRoute>} />
+      <Route path="/invoices" element={<AdminRoute><Invoices /></AdminRoute>} />
+      <Route path="/invoices/new" element={<AdminRoute><InvoiceDetail /></AdminRoute>} />
+      <Route path="/invoices/:id" element={<AdminRoute><InvoiceDetail /></AdminRoute>} />
+      <Route path="/schedule" element={<AdminRoute><Schedule /></AdminRoute>} />
+      <Route path="/activity" element={<AdminRoute><ActivityPage /></AdminRoute>} />
+      <Route path="/requests" element={<AdminRoute><Requests /></AdminRoute>} />
+
+      {/* Staff routes (admin + worker) */}
       <Route path="/settings" element={<StaffRoute><SettingsPage /></StaffRoute>} />
-      <Route path="/requests" element={<StaffRoute><Requests /></StaffRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}

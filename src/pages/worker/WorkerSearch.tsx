@@ -16,6 +16,7 @@ interface SearchResult {
   subtitle: string;
   status?: string;
   link: string;
+  note?: string;
 }
 
 export default function WorkerSearch() {
@@ -69,7 +70,8 @@ export default function WorkerSearch() {
         id: c.id,
         title: `${c.first_name} ${c.last_name}`,
         subtitle: [c.company_name, c.phone].filter(Boolean).join(' · '),
-        link: `/worker/schedule`, // Workers view customer context through visits/properties
+        link: `/worker/schedule`, // Workers see customer context via assigned visits & properties
+        note: 'View assigned work for this customer on the schedule',
       }));
 
       // Search jobs
@@ -158,6 +160,7 @@ export default function WorkerSearch() {
                         {r.status && <StatusBadge status={r.status} showIcon={false} />}
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate">{r.subtitle}</p>
+                      {r.note && <p className="text-[10px] text-muted-foreground/60 italic truncate">{r.note}</p>}
                     </div>
                     <span className="text-[9px] font-medium uppercase text-muted-foreground/60 tracking-wider shrink-0">{r.type}</span>
                   </CardContent>
