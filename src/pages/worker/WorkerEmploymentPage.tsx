@@ -2,21 +2,13 @@ import { useWorkerProfile, useWorkerCertifications } from '@/hooks/useWorkerProf
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Briefcase, Calendar, DollarSign, MapPin, Award, ShieldCheck } from 'lucide-react';
+import { Briefcase, Calendar, DollarSign, MapPin, Award, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
-const certStatusColors: Record<string, string> = {
-  valid: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
-  expired: 'bg-destructive/10 text-destructive border-destructive/20',
-  pending: 'bg-amber-500/10 text-amber-700 border-amber-200',
-  revoked: 'bg-muted text-muted-foreground border-border',
-};
-
 export default function WorkerEmploymentPage() {
-  const { data: profile, isLoading: pLoading } = useWorkerProfile();
-  const { data: certs = [], isLoading: cLoading } = useWorkerCertifications();
+  const { data: profile, isLoading } = useWorkerProfile();
 
-  if (pLoading || cLoading) {
+  if (isLoading) {
     return (
       <div className="px-4 pt-3 pb-4 space-y-4">
         <Skeleton className="h-6 w-40" />
@@ -45,48 +37,53 @@ export default function WorkerEmploymentPage() {
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
       <h1 className="text-lg font-bold">My Employment</h1>
 
-      {/* Employment details */}
+      {/* Employment Summary */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Employment Details</CardTitle></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Employment Summary</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <Row icon={Calendar} label="Hire Date" value={profile.hire_date ? format(new Date(profile.hire_date), 'MMM d, yyyy') : undefined} />
           <Row icon={Briefcase} label="Type" value={profile.employment_type} />
-          <Row icon={Award} label="Service Category" value={profile.primary_service_category} />
-          <Row icon={DollarSign} label="Pay Type" value={profile.pay_type} />
-          <Row icon={MapPin} label="Branch / Location" value={profile.branch_location} />
+          <Row icon={Briefcase} label="Status" value={profile.employment_status} />
         </CardContent>
       </Card>
 
-      {/* Certifications */}
+      {/* Position & Reporting */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4" /> Certifications & Training
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {certs.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">No certifications on file.</p>
-          ) : (
-            <div className="space-y-2.5">
-              {certs.map(c => (
-                <div key={c.id} className="flex items-start justify-between gap-2 py-2 border-b last:border-0">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">{c.cert_name}</p>
-                    {c.issuer && <p className="text-xs text-muted-foreground">{c.issuer}</p>}
-                    {c.expiry_date && (
-                      <p className="text-xs text-muted-foreground">
-                        Expires {format(new Date(c.expiry_date), 'MMM d, yyyy')}
-                      </p>
-                    )}
-                  </div>
-                  <Badge variant="outline" className={`text-[10px] shrink-0 ${certStatusColors[c.status] ?? ''}`}>
-                    {c.status}
-                  </Badge>
-                </div>
-              ))}
-            </div>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Position & Reporting</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <Row icon={Award} label="Role Title" value={profile.role_title} />
+          <Row icon={Users} label="Supervisor" value={profile.supervisor_name} />
+          {profile.manager_name && <Row icon={Users} label="Manager" value={profile.manager_name} />}
+          <Row icon={MapPin} label="Branch" value={profile.branch_location} />
+        </CardContent>
+      </Card>
+
+      {/* Compensation Summary */}
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Compensation</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <Row icon={DollarSign} label="Pay Type" value={profile.pay_type} />
+          {profile.hourly_rate && (
+            <Row icon={DollarSign} label="Rate" value={`$${Number(profile.hourly_rate).toFixed(2)}/hr`} />
           )}
+        </CardContent>
+      </Card>
+
+      {/* Authorized Work Types */}
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Authorized Work Types</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-1.5">
+            {profile.primary_service_category && (
+              <Badge variant="default" className="text-xs">{profile.primary_service_category}</Badge>
+            )}
+            {profile.secondary_service_category && (
+              <Badge variant="secondary" className="text-xs">{profile.secondary_service_category}</Badge>
+            )}
+            {!profile.primary_service_category && (
+              <p className="text-xs text-muted-foreground">No service categories assigned.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

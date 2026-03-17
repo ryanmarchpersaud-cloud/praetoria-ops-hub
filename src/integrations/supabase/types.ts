@@ -210,6 +210,144 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_emergency_contacts: {
+        Row: {
+          address: string | null
+          contact_name: string
+          created_at: string
+          email: string | null
+          id: string
+          is_primary: boolean
+          phone_primary: string | null
+          phone_secondary: string | null
+          relationship: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          phone_primary?: string | null
+          phone_secondary?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          phone_primary?: string | null
+          phone_secondary?: string | null
+          relationship?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      employee_pay_stubs: {
+        Row: {
+          created_at: string
+          deductions: number
+          gross_pay: number
+          id: string
+          net_pay: number
+          notes: string | null
+          pay_date: string
+          pay_period_end: string
+          pay_period_start: string
+          stub_pdf_url: string | null
+          user_id: string
+          ytd_gross: number
+          ytd_net: number
+        }
+        Insert: {
+          created_at?: string
+          deductions?: number
+          gross_pay?: number
+          id?: string
+          net_pay?: number
+          notes?: string | null
+          pay_date: string
+          pay_period_end: string
+          pay_period_start: string
+          stub_pdf_url?: string | null
+          user_id: string
+          ytd_gross?: number
+          ytd_net?: number
+        }
+        Update: {
+          created_at?: string
+          deductions?: number
+          gross_pay?: number
+          id?: string
+          net_pay?: number
+          notes?: string | null
+          pay_date?: string
+          pay_period_end?: string
+          pay_period_start?: string
+          stub_pdf_url?: string | null
+          user_id?: string
+          ytd_gross?: number
+          ytd_net?: number
+        }
+        Relationships: []
+      }
+      employee_time_off_requests: {
+        Row: {
+          admin_notes: string | null
+          approved_by: string | null
+          created_at: string
+          days_requested: number
+          end_date: string
+          id: string
+          reason: string | null
+          request_type: string
+          reviewed_at: string | null
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_by?: string | null
+          created_at?: string
+          days_requested?: number
+          end_date: string
+          id?: string
+          reason?: string | null
+          request_type?: string
+          reviewed_at?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_by?: string | null
+          created_at?: string
+          days_requested?: number
+          end_date?: string
+          id?: string
+          reason?: string | null
+          request_type?: string
+          reviewed_at?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       files: {
         Row: {
           created_at: string
@@ -1242,16 +1380,23 @@ export type Database = {
           equipment_permissions: string[] | null
           full_name: string | null
           hire_date: string | null
+          hourly_rate: number | null
           id: string
           license_verified: boolean | null
+          manager_name: string | null
           pay_type: string | null
+          personal_days_balance: number | null
           phone: string | null
           primary_service_category: string | null
+          profile_photo_url: string | null
           role_title: string | null
+          secondary_service_category: string | null
+          sick_balance: number | null
           supervisor_name: string | null
           team: string | null
           updated_at: string
           user_id: string
+          vacation_balance: number | null
           work_email: string | null
         }
         Insert: {
@@ -1269,16 +1414,23 @@ export type Database = {
           equipment_permissions?: string[] | null
           full_name?: string | null
           hire_date?: string | null
+          hourly_rate?: number | null
           id?: string
           license_verified?: boolean | null
+          manager_name?: string | null
           pay_type?: string | null
+          personal_days_balance?: number | null
           phone?: string | null
           primary_service_category?: string | null
+          profile_photo_url?: string | null
           role_title?: string | null
+          secondary_service_category?: string | null
+          sick_balance?: number | null
           supervisor_name?: string | null
           team?: string | null
           updated_at?: string
           user_id: string
+          vacation_balance?: number | null
           work_email?: string | null
         }
         Update: {
@@ -1296,16 +1448,23 @@ export type Database = {
           equipment_permissions?: string[] | null
           full_name?: string | null
           hire_date?: string | null
+          hourly_rate?: number | null
           id?: string
           license_verified?: boolean | null
+          manager_name?: string | null
           pay_type?: string | null
+          personal_days_balance?: number | null
           phone?: string | null
           primary_service_category?: string | null
+          profile_photo_url?: string | null
           role_title?: string | null
+          secondary_service_category?: string | null
+          sick_balance?: number | null
           supervisor_name?: string | null
           team?: string | null
           updated_at?: string
           user_id?: string
+          vacation_balance?: number | null
           work_email?: string | null
         }
         Relationships: []
