@@ -142,50 +142,77 @@ export type Database = {
       }
       jobs: {
         Row: {
+          additional_visit_rate: number | null
           assigned_to: string | null
+          contract_end_date: string | null
+          contract_start_date: string | null
           created_at: string
           customer_id: string
           id: string
           internal_notes: string | null
           job_number: string
           job_title: string
+          minimum_included_visits: number | null
           priority: Database["public"]["Enums"]["job_priority"]
           property_id: string | null
           scheduled_date: string | null
           scope_of_work: string | null
+          season_name: string | null
           service_category: Database["public"]["Enums"]["service_category"]
+          service_frequency:
+            | Database["public"]["Enums"]["service_frequency"]
+            | null
+          service_instructions: string | null
           status: Database["public"]["Enums"]["job_status"]
           updated_at: string
         }
         Insert: {
+          additional_visit_rate?: number | null
           assigned_to?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
           created_at?: string
           customer_id: string
           id?: string
           internal_notes?: string | null
           job_number: string
           job_title: string
+          minimum_included_visits?: number | null
           priority?: Database["public"]["Enums"]["job_priority"]
           property_id?: string | null
           scheduled_date?: string | null
           scope_of_work?: string | null
+          season_name?: string | null
           service_category?: Database["public"]["Enums"]["service_category"]
+          service_frequency?:
+            | Database["public"]["Enums"]["service_frequency"]
+            | null
+          service_instructions?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           updated_at?: string
         }
         Update: {
+          additional_visit_rate?: number | null
           assigned_to?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
           created_at?: string
           customer_id?: string
           id?: string
           internal_notes?: string | null
           job_number?: string
           job_title?: string
+          minimum_included_visits?: number | null
           priority?: Database["public"]["Enums"]["job_priority"]
           property_id?: string | null
           scheduled_date?: string | null
           scope_of_work?: string | null
+          season_name?: string | null
           service_category?: Database["public"]["Enums"]["service_category"]
+          service_frequency?:
+            | Database["public"]["Enums"]["service_frequency"]
+            | null
+          service_instructions?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           updated_at?: string
         }
@@ -647,11 +674,21 @@ export type Database = {
         | "Property Care & Maintenance"
         | "Power Washing"
         | "Other"
+      service_frequency:
+        | "one-time"
+        | "weekly"
+        | "biweekly"
+        | "monthly"
+        | "on-snowfall"
+        | "custom-seasonal"
       visit_status:
+        | "Planned"
         | "Scheduled"
         | "En Route"
         | "In Progress"
         | "Completed"
+        | "Skipped"
+        | "Rescheduled"
         | "Missed"
         | "Cancelled"
       visit_type:
@@ -831,11 +868,22 @@ export const Constants = {
         "Power Washing",
         "Other",
       ],
+      service_frequency: [
+        "one-time",
+        "weekly",
+        "biweekly",
+        "monthly",
+        "on-snowfall",
+        "custom-seasonal",
+      ],
       visit_status: [
+        "Planned",
         "Scheduled",
         "En Route",
         "In Progress",
         "Completed",
+        "Skipped",
+        "Rescheduled",
         "Missed",
         "Cancelled",
       ],
