@@ -54,6 +54,7 @@ import WorkerVisitExec from "./pages/worker/WorkerVisitExec";
 import WorkerPropertyDetail from "./pages/worker/WorkerPropertyDetail";
 import WorkerJobDetail from "./pages/worker/WorkerJobDetail";
 import WorkerWeatherDetail from "./pages/worker/WorkerWeatherDetail";
+import WorkerSettings from "./pages/worker/WorkerSettings";
 import WeatherDetail from "./pages/WeatherDetail";
 
 const queryClient = new QueryClient();
