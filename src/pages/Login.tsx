@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { ServicePromoCard } from '@/components/ServicePromoCard';
 import { SERVICE_PROMOS } from '@/lib/servicePromos';
+import praetoriaCrest from '@/assets/praetoria-crest.png';
 import {
-  Shield, Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight as ChevronRightIcon,
+  Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 
 export default function Login() {
@@ -78,9 +78,7 @@ export default function Login() {
           {/* Brand */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src={praetoriaCrest} alt="Praetoria Group" className="w-11 h-11 object-contain" />
               <span className="text-xl font-bold text-foreground tracking-tight">Praetoria Ops</span>
             </div>
             <p className="text-muted-foreground text-sm mt-1">
@@ -182,9 +180,10 @@ export default function Login() {
             )}
           </div>
 
-          <p className="mt-8 text-center text-xs text-muted-foreground/60">
-            Protected by Praetoria Group &middot; Secure login
-          </p>
+          <div className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
+            <img src={praetoriaCrest} alt="" className="w-4 h-4 object-contain opacity-40" />
+            <span>Protected by Praetoria Group &middot; Secure login</span>
+          </div>
         </div>
       </div>
 
@@ -270,7 +269,7 @@ export default function Login() {
 
           {/* Footer */}
           <div className="mt-6 flex items-center gap-2 text-xs text-sidebar-foreground/40">
-            <Shield className="w-3.5 h-3.5" />
+            <img src={praetoriaCrest} alt="" className="w-4 h-4 object-contain opacity-50" />
             <span>Serving Regina & surrounding areas · 306-737-6269</span>
           </div>
         </div>
