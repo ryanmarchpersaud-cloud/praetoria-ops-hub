@@ -170,7 +170,12 @@ export default function Login() {
             )}
           </div>
 
-          <div className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
+          {/* Dev testing panel */}
+          <div className="mt-6">
+            <DevTestPanel />
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
             <img src={praetoriaLogo} alt="" className="w-4 h-4 object-contain opacity-40 invert dark:invert-0" />
             <span>Protected by Praetoria Group &middot; Secure login</span>
           </div>
