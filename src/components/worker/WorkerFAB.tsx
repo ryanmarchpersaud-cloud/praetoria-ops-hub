@@ -1,79 +1,182 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
 import {
-  Plus, X, Play, CheckCircle, Camera, StickyNote, AlertTriangle, Receipt,
-  UserPlus, FileText, Briefcase, FilePlus, Building2,
+  Zap, X, Play, CheckCircle, Camera, StickyNote, AlertTriangle, Receipt,
+  UserPlus, FileText, Briefcase, FilePlus, Building2, LogIn, LogOut,
+  Navigation, Phone, MessageSquare, ShieldAlert, Clock, Wrench, Package,
+  ClipboardList, CreditCard, RotateCcw, PenLine, Home, Send,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
-const workerActions = [
-  { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: '/worker/schedule' },
-  { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: '/worker/schedule' },
-  { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: '/worker/schedule' },
-  { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: '/worker/schedule' },
-  { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: '/worker/schedule' },
-  { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: '/worker/timesheet' },
-];
-
-const adminActions = [
-  { icon: UserPlus, label: 'New Lead', color: 'bg-blue-500', action: '/leads' },
-  { icon: FileText, label: 'New Quote', color: 'bg-amber-500', action: '/quotes' },
-  { icon: Briefcase, label: 'New Job', color: 'bg-emerald-500', action: '/jobs' },
-  { icon: FilePlus, label: 'New Invoice', color: 'bg-violet-500', action: '/worker' },
-  { icon: Building2, label: 'New Client', color: 'bg-cyan-500', action: '/customers' },
-];
+interface QuickAction {
+  icon: React.ElementType;
+  label: string;
+  color: string;
+  action: string | (() => void);
+  category: 'field' | 'admin';
+}
 
 export function WorkerFAB() {
   const [open, setOpen] = useState(false);
   const { isAdmin, isStaff } = useUserRole();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { data: active } = useActiveTimesheet();
+  const clockIn = useClockIn();
+  const clockOut = useClockOut();
 
-  const actions = isAdmin ? [...workerActions, ...adminActions] : workerActions;
+  const handleClock = useCallback(() => {
+    if (active) {
+      clockOut.mutate(active.id);
+      toast({ title: 'Clocked out' });
+    } else {
+      clockIn.mutate();
+      toast({ title: 'Clocked in' });
+    }
+  }, [active, clockIn, clockOut, toast]);
+
+  const fieldActions: QuickAction[] = [
+    { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: '/worker/schedule', category: 'field' },
+    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: '/worker/schedule', category: 'field' },
+    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: '/worker/schedule', category: 'field' },
+    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: '/worker/schedule', category: 'field' },
+    { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: '/worker/schedule', category: 'field' },
+    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: '/worker/timesheet', category: 'field' },
+    { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' },
+    { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: '/worker/schedule', category: 'field' },
+    { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: '/worker/schedule', category: 'field' },
+    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: '/worker/more', category: 'field' },
+    { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' },
+    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: '/worker/more', category: 'field' },
+    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: '/worker/more', category: 'field' },
+  ];
+
+  const adminOnlyActions: QuickAction[] = [
+    { icon: UserPlus, label: 'New Lead', color: 'bg-blue-500', action: '/leads', category: 'admin' },
+    { icon: FileText, label: 'New Quote', color: 'bg-amber-500', action: '/quotes', category: 'admin' },
+    { icon: FilePlus, label: 'New Invoice', color: 'bg-violet-500', action: '/invoices', category: 'admin' },
+    { icon: Briefcase, label: 'New Job', color: 'bg-emerald-500', action: '/jobs', category: 'admin' },
+    { icon: ClipboardList, label: 'New Visit', color: 'bg-sky-500', action: '/visits', category: 'admin' },
+    { icon: Building2, label: 'New Client', color: 'bg-cyan-500', action: '/customers', category: 'admin' },
+    { icon: Home, label: 'New Property', color: 'bg-lime-600', action: '/properties', category: 'admin' },
+    { icon: Send, label: 'New Request', color: 'bg-pink-500', action: '/leads', category: 'admin' },
+    { icon: CreditCard, label: 'Payment', color: 'bg-green-600', action: '/invoices', category: 'admin' },
+    { icon: RotateCcw, label: 'Follow-up', color: 'bg-orange-500', action: '/leads', category: 'admin' },
+    { icon: PenLine, label: 'Review Draft', color: 'bg-slate-600', action: '/quotes', category: 'admin' },
+  ];
+
+  // Role-based ordering: workers see field first, admin sees admin first
+  const actions = isAdmin
+    ? [...adminOnlyActions, ...fieldActions]
+    : fieldActions;
+
+  const handleAction = (a: QuickAction) => {
+    setOpen(false);
+    if (typeof a.action === 'function') {
+      a.action();
+    } else {
+      navigate(a.action);
+    }
+  };
 
   return (
     <>
       {/* Backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         />
       )}
 
-      {/* Action menu */}
+      {/* Action grid drawer */}
       {open && (
-        <div className="fixed bottom-24 right-4 z-50 flex flex-col-reverse gap-2 animate-fade-in">
-          {actions.map((a, i) => (
-            <button
-              key={a.label}
-              onClick={() => { setOpen(false); navigate(a.action); }}
-              className="flex items-center gap-3 pl-3 pr-4 py-2.5 bg-card rounded-full shadow-lg border border-border active:scale-95 transition-all"
-              style={{ animationDelay: `${i * 30}ms` }}
-            >
-              <div className={cn('w-8 h-8 rounded-full flex items-center justify-center', a.color)}>
-                <a.icon className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-sm font-medium text-foreground whitespace-nowrap">{a.label}</span>
-            </button>
-          ))}
+        <div className="fixed inset-x-0 bottom-0 z-50 animate-in slide-in-from-bottom-4 duration-200">
+          <div className="max-w-lg mx-auto bg-card rounded-t-2xl border-t border-x border-border shadow-2xl pb-safe">
+            {/* Handle + header */}
+            <div className="flex items-center justify-between px-4 pt-3 pb-2">
+              <h3 className="text-sm font-semibold text-foreground">Quick Actions</h3>
+              <button
+                onClick={() => setOpen(false)}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center active:scale-90"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="mx-auto w-10 h-1 rounded-full bg-muted mb-2" />
+
+            {/* Scrollable grid */}
+            <div className="max-h-[60vh] overflow-y-auto overscroll-contain px-3 pb-4">
+              {/* Field actions */}
+              {(isAdmin || isStaff || !isAdmin) && (
+                <>
+                  {isAdmin && (
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-1 mb-2">
+                      Office
+                    </p>
+                  )}
+                  {isAdmin && (
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                      {adminOnlyActions.map((a) => (
+                        <button
+                          key={a.label}
+                          onClick={() => handleAction(a)}
+                          className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl active:scale-95 active:bg-muted/50 transition-all"
+                        >
+                          <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm', a.color)}>
+                            <a.icon className="h-5 w-5 text-white" />
+                          </div>
+                          <span className="text-[10px] font-medium text-foreground text-center leading-tight line-clamp-2">
+                            {a.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-1 mb-2">
+                    Field
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {fieldActions.map((a) => (
+                      <button
+                        key={a.label}
+                        onClick={() => handleAction(a)}
+                        className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl active:scale-95 active:bg-muted/50 transition-all"
+                      >
+                        <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm', a.color)}>
+                          <a.icon className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="text-[10px] font-medium text-foreground text-center leading-tight line-clamp-2">
+                          {a.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* FAB button */}
+      {/* FAB trigger — compass/action style */}
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          'fixed bottom-[72px] right-4 z-50 w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-90',
+          'fixed bottom-[68px] right-4 z-50 w-14 h-14 rounded-2xl shadow-xl flex items-center justify-center transition-all active:scale-90',
           open
-            ? 'bg-foreground rotate-45'
+            ? 'bg-foreground rotate-180 rounded-full'
             : 'bg-primary'
         )}
       >
         {open ? (
           <X className="h-6 w-6 text-background" />
         ) : (
-          <Plus className="h-6 w-6 text-primary-foreground" />
+          <Zap className="h-6 w-6 text-primary-foreground" />
         )}
       </button>
     </>

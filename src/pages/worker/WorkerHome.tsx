@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +11,7 @@ import { DirectionsButton } from '@/components/DirectionsButton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
-  ChevronRight, Calendar, Zap, AlertCircle,
+  ChevronRight, Calendar, Zap, AlertCircle, Navigation,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -60,7 +60,7 @@ export default function WorkerHome() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city), customers(first_name, last_name)')
+        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city), customers(first_name, last_name, phone)')
         .eq('service_date', todayStr)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
@@ -71,7 +71,8 @@ export default function WorkerHome() {
   const completedVisits = todayVisits.filter(v => v.visit_status === 'Completed');
   const inProgressVisit = todayVisits.find(v => v.visit_status === 'In Progress' || v.visit_status === 'En Route');
   const nextVisit = todayVisits.find(v => v.visit_status === 'Scheduled' || v.visit_status === 'Planned');
-  const highlightVisit = inProgressVisit || nextVisit || completedVisits[completedVisits.length - 1];
+  const highlightVisit = inProgressVisit || nextVisit;
+  const lastCompleted = completedVisits[completedVisits.length - 1];
 
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
 
@@ -93,8 +94,19 @@ export default function WorkerHome() {
     status: v.visit_status,
   }));
 
+  // Next visit location for the map card
+  const nextVisitLocation = (highlightVisit || nextVisit)
+    ? {
+        propertyName: ((highlightVisit || nextVisit)!.properties as any)?.property_name,
+        address: ((highlightVisit || nextVisit)!.properties as any)?.address_line_1,
+        city: ((highlightVisit || nextVisit)!.properties as any)?.city,
+      }
+    : null;
+
+  const progressPct = todayVisits.length > 0 ? Math.round((completedVisits.length / todayVisits.length) * 100) : 0;
+
   return (
-    <div className="space-y-4 px-4 pt-3 pb-4">
+    <div className="space-y-3 px-4 pt-3 pb-4">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -145,7 +157,7 @@ export default function WorkerHome() {
       <button
         onClick={handleClock}
         className={cn(
-          'w-full rounded-xl py-4 px-5 flex items-center justify-between transition-all active:scale-[0.98] shadow-sm',
+          'w-full rounded-2xl py-4 px-5 flex items-center justify-between transition-all active:scale-[0.98] shadow-sm',
           clockedIn
             ? 'bg-emerald-50 border-2 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800'
             : 'bg-primary text-primary-foreground'
@@ -159,7 +171,7 @@ export default function WorkerHome() {
           )}
           <div className="text-left">
             <p className={cn('text-sm font-bold', clockedIn ? 'text-emerald-700 dark:text-emerald-300' : '')}>
-            {clockedIn ? 'Clock Out' : 'Clock In'}
+              {clockedIn ? 'Clock Out' : 'Clock In'}
             </p>
             {clockedIn && active && (
               <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
@@ -175,67 +187,64 @@ export default function WorkerHome() {
       </button>
 
       {/* Today's Summary */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         <Card className="bg-blue-50 border-blue-100 dark:bg-blue-950/30 dark:border-blue-900/40">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Zap className="h-3.5 w-3.5 text-blue-600" />
-              <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Today</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{todayVisits.length}</p>
-            <p className="text-[10px] text-muted-foreground">visits scheduled</p>
+          <CardContent className="p-2.5 text-center">
+            <Zap className="h-4 w-4 text-blue-600 mx-auto mb-0.5" />
+            <p className="text-xl font-bold text-foreground">{todayVisits.length}</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Scheduled</p>
           </CardContent>
         </Card>
         <Card className="bg-emerald-50 border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/40">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
-              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Done</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{completedVisits.length}</p>
-            <p className="text-[10px] text-muted-foreground">
-              of {todayVisits.length} completed
-            </p>
+          <CardContent className="p-2.5 text-center">
+            <CheckCircle className="h-4 w-4 text-emerald-600 mx-auto mb-0.5" />
+            <p className="text-xl font-bold text-foreground">{completedVisits.length}</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Completed</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-amber-50 border-amber-100 dark:bg-amber-950/30 dark:border-amber-900/40">
+          <CardContent className="p-2.5 text-center">
+            <Clock className="h-4 w-4 text-amber-600 mx-auto mb-0.5" />
+            <p className="text-xl font-bold text-foreground">{progressPct}%</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Progress</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Progress bar */}
       {todayVisits.length > 0 && (
-        <div className="space-y-1">
-          <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>Day progress</span>
-            <span>{todayVisits.length > 0 ? Math.round((completedVisits.length / todayVisits.length) * 100) : 0}%</span>
-          </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-500"
-              style={{ width: `${todayVisits.length > 0 ? (completedVisits.length / todayVisits.length) * 100 : 0}%` }}
-            />
-          </div>
+        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-500"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       )}
 
-      {/* Highlight Visit Card */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold text-foreground">
-            {inProgressVisit ? 'Current Visit' : nextVisit ? 'Next Visit' : completedVisits.length > 0 ? 'Last Completed' : "Today's Visits"}
-          </h2>
-          {todayVisits.length > 0 && (
+      {/* Current / Next Visit */}
+      {highlightVisit && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-foreground">
+              {inProgressVisit ? 'Current Visit' : 'Next Visit'}
+            </h2>
             <Link to="/worker/schedule" className="text-[11px] text-primary font-medium flex items-center gap-0.5">
               View all <ChevronRight className="h-3 w-3" />
             </Link>
-          )}
-        </div>
+          </div>
 
-        {highlightVisit ? (
           <Link to={`/worker/visit/${highlightVisit.id}`}>
             <Card className={cn(
-              'transition-shadow active:shadow-md',
-              inProgressVisit && 'ring-2 ring-primary/30 bg-primary/5'
+              'transition-shadow active:shadow-md overflow-hidden',
+              inProgressVisit && 'ring-2 ring-primary/30'
             )}>
-              <CardContent className="pt-4 pb-4 px-4 space-y-2">
+              {inProgressVisit && (
+                <div className="bg-primary/10 px-4 py-1.5 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  <span className="text-[11px] font-semibold text-primary">In Progress</span>
+                </div>
+              )}
+              <CardContent className="pt-3 pb-3 px-4 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-xs font-medium">{highlightVisit.visit_number}</span>
                   <StatusBadge status={highlightVisit.visit_status} showIcon={false} />
@@ -264,41 +273,82 @@ export default function WorkerHome() {
                     />
                   </div>
                 )}
-                {highlightVisit.service_summary && (
-                  <p className="text-xs text-muted-foreground line-clamp-2">{highlightVisit.service_summary}</p>
-                )}
-                {inProgressVisit && (
-                  <div className="pt-1">
-                    <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                      In Progress
-                    </div>
-                  </div>
-                )}
+                {/* Quick action row */}
+                <div className="flex gap-2 pt-1">
+                  {highlightVisit.properties && (
+                    <a
+                      href={`https://maps.google.com/maps?daddr=${encodeURIComponent([(highlightVisit.properties as any).address_line_1, (highlightVisit.properties as any).city].filter(Boolean).join(', '))}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/10 text-[11px] font-medium text-primary active:scale-95 transition-transform"
+                    >
+                      <Navigation className="h-3 w-3" /> Navigate
+                    </a>
+                  )}
+                  {(highlightVisit.customers as any)?.phone && (
+                    <a
+                      href={`tel:${(highlightVisit.customers as any).phone}`}
+                      onClick={e => e.stopPropagation()}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted text-[11px] font-medium text-foreground active:scale-95 transition-transform"
+                    >
+                      Call
+                    </a>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </Link>
-        ) : (
-          <Card>
-            <CardContent className="py-10 text-center space-y-1">
-              <Calendar className="h-8 w-8 mx-auto text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">No visits today</p>
-              <p className="text-xs text-muted-foreground">Check the schedule for upcoming work.</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Upcoming visits list */}
+      {/* Last Completed */}
+      {lastCompleted && !inProgressVisit && nextVisit && (
+        <div>
+          <h2 className="text-sm font-semibold text-foreground mb-2">Last Completed</h2>
+          <Link to={`/worker/visit/${lastCompleted.id}`}>
+            <Card className="active:shadow-sm transition-shadow bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30">
+              <CardContent className="py-3 px-4 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="font-mono text-[11px]">{lastCompleted.visit_number}</span>
+                  </div>
+                  {lastCompleted.properties && (
+                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      {(lastCompleted.properties as any).property_name}
+                    </p>
+                  )}
+                </div>
+                <StatusBadge status="Completed" showIcon={false} />
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      )}
+
+      {/* No visits state */}
+      {!highlightVisit && !lastCompleted && (
+        <Card>
+          <CardContent className="py-10 text-center space-y-1">
+            <Calendar className="h-8 w-8 mx-auto text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No visits today</p>
+            <p className="text-xs text-muted-foreground">Check the schedule for upcoming work.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Remaining visits list */}
       {todayVisits.length > 1 && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <h2 className="text-sm font-semibold text-foreground">All Today</h2>
           {todayVisits
-            .filter(v => v.id !== highlightVisit?.id)
+            .filter(v => v.id !== highlightVisit?.id && v.id !== lastCompleted?.id)
             .map((visit: any) => (
               <Link key={visit.id} to={`/worker/visit/${visit.id}`}>
                 <Card className="active:shadow-sm transition-shadow">
-                  <CardContent className="py-3 px-4 flex items-center justify-between gap-3">
+                  <CardContent className="py-2.5 px-4 flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="font-mono text-[11px]">{visit.visit_number}</span>
@@ -319,8 +369,11 @@ export default function WorkerHome() {
         </div>
       )}
 
-      {/* Location */}
-      <WorkerLocationCard />
+      {/* Location & Route card */}
+      <div>
+        <h2 className="text-sm font-semibold text-foreground mb-2">Location & Route</h2>
+        <WorkerLocationCard nextVisit={nextVisitLocation} />
+      </div>
 
       <WorkerFAB />
     </div>
