@@ -59,7 +59,8 @@ export default function QuoteDetail() {
 
   const recalculate = (updatedItems: LineItemForm[]) => {
     const subtotal = updatedItems.reduce((sum, i) => sum + i.line_total, 0);
-    const tax = subtotal * 0.13;
+    const taxRate = Number(form.tax_rate || 0.13);
+    const tax = subtotal * taxRate;
     setForm((p: any) => ({ ...p, subtotal, tax, total: subtotal + tax }));
   };
 
