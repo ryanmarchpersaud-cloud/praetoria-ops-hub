@@ -3,6 +3,7 @@ import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, Building2, MapPin, LogOut } from 'lucide-react';
+import { NotificationPreferencesCard } from '@/components/NotificationPreferencesCard';
 
 export default function PortalAccount() {
   const { user, signOut } = useAuth();
@@ -51,6 +52,8 @@ export default function PortalAccount() {
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </CardContent>
       </Card>
+
+      {customer && <NotificationPreferencesCard customerId={customer.id} />}
 
       <Button variant="outline" className="w-full" onClick={signOut}>
         <LogOut className="h-4 w-4 mr-2" /> Sign Out

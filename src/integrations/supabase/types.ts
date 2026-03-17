@@ -118,6 +118,47 @@ export type Database = {
           },
         ]
       }
+      customer_notification_preferences: {
+        Row: {
+          created_at: string
+          customer_id: string
+          email_enabled: boolean
+          event: Database["public"]["Enums"]["notification_event"]
+          id: string
+          in_app_enabled: boolean
+          sms_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          email_enabled?: boolean
+          event: Database["public"]["Enums"]["notification_event"]
+          id?: string
+          in_app_enabled?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          email_enabled?: boolean
+          event?: Database["public"]["Enums"]["notification_event"]
+          id?: string
+          in_app_enabled?: boolean
+          sms_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notification_preferences_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address_line_1: string | null
@@ -528,6 +569,104 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "leads_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_templates: {
+        Row: {
+          audience: Database["public"]["Enums"]["notification_audience"]
+          body_template: string
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          event: Database["public"]["Enums"]["notification_event"]
+          id: string
+          is_active: boolean
+          subject_template: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["notification_audience"]
+          body_template: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          event: Database["public"]["Enums"]["notification_event"]
+          id?: string
+          is_active?: boolean
+          subject_template: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["notification_audience"]
+          body_template?: string
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          event?: Database["public"]["Enums"]["notification_event"]
+          id?: string
+          is_active?: boolean
+          subject_template?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          audience: Database["public"]["Enums"]["notification_audience"]
+          body: string | null
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          customer_id: string | null
+          event: Database["public"]["Enums"]["notification_event"]
+          id: string
+          metadata: Json | null
+          read_at: string | null
+          recipient_id: string | null
+          record_id: string | null
+          record_type: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          audience?: Database["public"]["Enums"]["notification_audience"]
+          body?: string | null
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          customer_id?: string | null
+          event: Database["public"]["Enums"]["notification_event"]
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_id?: string | null
+          record_id?: string | null
+          record_type?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          audience?: Database["public"]["Enums"]["notification_audience"]
+          body?: string | null
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          customer_id?: string | null
+          event?: Database["public"]["Enums"]["notification_event"]
+          id?: string
+          metadata?: Json | null
+          read_at?: string | null
+          recipient_id?: string | null
+          record_id?: string | null
+          record_type?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
@@ -1065,6 +1204,18 @@ export type Database = {
         | "Won"
         | "Lost"
         | "Archived"
+      notification_audience: "customer" | "worker" | "admin"
+      notification_channel: "email" | "sms" | "in_app"
+      notification_event:
+        | "quote_sent"
+        | "visit_scheduled"
+        | "worker_assigned"
+        | "worker_en_route"
+        | "visit_completed"
+        | "invoice_sent"
+        | "invoice_overdue"
+        | "payment_received"
+        | "payment_failed"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
@@ -1276,6 +1427,19 @@ export const Constants = {
         "Won",
         "Lost",
         "Archived",
+      ],
+      notification_audience: ["customer", "worker", "admin"],
+      notification_channel: ["email", "sms", "in_app"],
+      notification_event: [
+        "quote_sent",
+        "visit_scheduled",
+        "worker_assigned",
+        "worker_en_route",
+        "visit_completed",
+        "invoice_sent",
+        "invoice_overdue",
+        "payment_received",
+        "payment_failed",
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
