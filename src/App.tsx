@@ -89,6 +89,8 @@ import SubcontractorSettings from "./pages/subcontractor/SubcontractorSettings";
 import SubcontractorVisitExec from "./pages/subcontractor/SubcontractorVisitExec";
 import SubcontractorPropertyDetail from "./pages/subcontractor/SubcontractorPropertyDetail";
 import SubcontractorInvoiceDetail from "./pages/subcontractor/SubcontractorInvoiceDetail";
+import SubcontractorSafetyPage from "./pages/subcontractor/SubcontractorSafetyPage";
+import SubcontractorTaxDocsPage from "./pages/subcontractor/SubcontractorTaxDocsPage";
 
 const queryClient = new QueryClient();
 
