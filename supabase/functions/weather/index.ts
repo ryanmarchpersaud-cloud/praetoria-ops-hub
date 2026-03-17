@@ -23,6 +23,8 @@ const CITY_CODES: Record<string, { id: string; name: string; province: string }>
   'vancouver':   { id: 'bc-74',  name: 'Vancouver',   province: 'BC' },
   'montreal':    { id: 'qc-147', name: 'Montréal',    province: 'QC' },
   'winnipeg':    { id: 'mb-38',  name: 'Winnipeg',    province: 'MB' },
+  'regina':      { id: 'sk-32',  name: 'Regina',      province: 'SK' },
+  'saskatoon':   { id: 'sk-40',  name: 'Saskatoon',   province: 'SK' },
 };
 
 function val(obj: any) {
