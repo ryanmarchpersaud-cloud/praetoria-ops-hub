@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WorkerFAB } from '@/components/worker/WorkerFAB';
 import { WorkerLocationCard } from '@/components/worker/WorkerLocationCard';
+import { WeatherCard } from '@/components/WeatherCard';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
@@ -373,6 +374,12 @@ export default function WorkerHome() {
             ))}
         </div>
       )}
+
+      {/* Weather */}
+      <div>
+        <h2 className="text-sm font-semibold text-foreground mb-2">Weather</h2>
+        <WeatherCard city="toronto" compact />
+      </div>
 
       {/* Location & Route card */}
       <div>
