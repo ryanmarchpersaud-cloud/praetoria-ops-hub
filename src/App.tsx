@@ -55,6 +55,10 @@ import WorkerPropertyDetail from "./pages/worker/WorkerPropertyDetail";
 import WorkerJobDetail from "./pages/worker/WorkerJobDetail";
 import WorkerWeatherDetail from "./pages/worker/WorkerWeatherDetail";
 import WorkerSettings from "./pages/worker/WorkerSettings";
+import WorkerProfilePage from "./pages/worker/WorkerProfilePage";
+import WorkerEmploymentPage from "./pages/worker/WorkerEmploymentPage";
+import WorkerDocumentsPage from "./pages/worker/WorkerDocumentsPage";
+import WorkerBenefitsPage from "./pages/worker/WorkerBenefitsPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 const queryClient = new QueryClient();
