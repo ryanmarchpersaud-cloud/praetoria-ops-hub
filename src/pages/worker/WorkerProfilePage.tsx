@@ -2,7 +2,7 @@ import { useWorkerProfile } from '@/hooks/useWorkerProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { User, Mail, Phone, Briefcase, Users, Shield } from 'lucide-react';
+import { User, Mail, Phone, Briefcase, Users, Shield, MapPin, Award } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   active: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
@@ -48,7 +48,7 @@ export default function WorkerProfilePage() {
         </Badge>
       </div>
 
-      {/* Identity card */}
+      {/* Profile Summary Card */}
       <Card>
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-4">
@@ -61,55 +61,57 @@ export default function WorkerProfilePage() {
               {profile.employee_id && <p className="text-xs text-muted-foreground font-mono">ID: {profile.employee_id}</p>}
             </div>
           </div>
-
-          <div className="grid grid-cols-1 gap-3 pt-2 border-t">
-            <InfoRow icon={Briefcase} label="Team" value={profile.team} />
-            <InfoRow icon={Mail} label="Work Email" value={profile.work_email} />
-            <InfoRow icon={Phone} label="Phone" value={profile.phone} />
-            <InfoRow icon={Users} label="Supervisor" value={profile.supervisor_name} />
-            <InfoRow icon={Shield} label="Branch" value={profile.branch_location} />
-          </div>
         </CardContent>
       </Card>
 
-      {/* License summary */}
+      {/* Role & Team Card */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Driver's License</CardTitle>
+          <CardTitle className="text-sm">Role & Team</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Class</span>
-            <span className="font-medium">{profile.driver_license_class || '—'}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Expiry</span>
-            <span className="font-medium">{profile.driver_license_expiry || '—'}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Verified</span>
-            <Badge variant={profile.license_verified ? 'default' : 'secondary'} className="text-xs">
-              {profile.license_verified ? 'Verified' : 'Pending'}
-            </Badge>
-          </div>
+        <CardContent className="space-y-3">
+          <InfoRow icon={Briefcase} label="Role" value={profile.role_title} />
+          <InfoRow icon={Users} label="Team" value={profile.team} />
+          <InfoRow icon={MapPin} label="Branch" value={profile.branch_location} />
+          <InfoRow icon={Users} label="Supervisor" value={profile.supervisor_name} />
+          {profile.manager_name && (
+            <InfoRow icon={Users} label="Manager" value={profile.manager_name} />
+          )}
         </CardContent>
       </Card>
 
-      {/* Equipment permissions */}
-      {profile.equipment_permissions && profile.equipment_permissions.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Equipment Permissions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-1.5">
-              {profile.equipment_permissions.map((p: string) => (
-                <Badge key={p} variant="secondary" className="text-xs">{p}</Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Contact Info Card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Contact Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <InfoRow icon={Mail} label="Work Email" value={profile.work_email} />
+          <InfoRow icon={Phone} label="Phone" value={profile.phone} />
+        </CardContent>
+      </Card>
+
+      {/* Authorized Service Lines Card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Award className="h-4 w-4" /> Authorized Service Lines
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-1.5">
+            {profile.primary_service_category && (
+              <Badge variant="default" className="text-xs">{profile.primary_service_category}</Badge>
+            )}
+            {profile.secondary_service_category && (
+              <Badge variant="secondary" className="text-xs">{profile.secondary_service_category}</Badge>
+            )}
+            {!profile.primary_service_category && !profile.secondary_service_category && (
+              <p className="text-xs text-muted-foreground">No service lines assigned yet.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -118,7 +120,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
   return (
     <div className="flex items-center gap-3">
       <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-      <span className="text-xs text-muted-foreground w-20 shrink-0">{label}</span>
+      <span className="text-xs text-muted-foreground w-24 shrink-0">{label}</span>
       <span className="text-sm text-foreground truncate">{value || '—'}</span>
     </div>
   );
