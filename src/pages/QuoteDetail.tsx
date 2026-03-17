@@ -390,6 +390,13 @@ export default function QuoteDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Email Quote Panel */}
+          <QuoteEmailPreview
+            quote={quote}
+            lineItems={lineItems}
+            onEmailStatusChange={() => refetchQuote()}
+          />
         </div>
       </div>
     </div>
