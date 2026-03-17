@@ -1,7 +1,8 @@
 import {
-  LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Shield,
+  LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
 } from 'lucide-react';
+import praetoriaCrest from '@/assets/praetoria-crest.png';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
