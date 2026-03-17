@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Monitor, Settings, LogOut, User, ChevronRight, HardHat, Eye,
-  Briefcase, FileText, Heart,
+  Briefcase, FileText, Heart, DollarSign, Award, CalendarDays, UserCheck,
 } from 'lucide-react';
 
 export default function WorkerMore() {
@@ -18,10 +18,14 @@ export default function WorkerMore() {
   };
 
   const profileItems = [
-    { icon: User, label: 'My Profile', to: '/worker/profile', description: 'Personal info & license' },
-    { icon: Briefcase, label: 'My Employment', to: '/worker/employment', description: 'Job details & certifications' },
+    { icon: User, label: 'My Profile', to: '/worker/profile', description: 'Personal info & service lines' },
+    { icon: Briefcase, label: 'My Employment', to: '/worker/employment', description: 'Job details & compensation' },
+    { icon: Award, label: 'Training & Certifications', to: '/worker/training', description: 'License, certs & equipment' },
     { icon: FileText, label: 'My Documents', to: '/worker/documents', description: 'Certificates, policies & uploads' },
+    { icon: DollarSign, label: 'Payroll', to: '/worker/payroll', description: 'Pay stubs & earnings' },
     { icon: Heart, label: 'Benefits', to: '/worker/benefits', description: 'Health benefits & plan info' },
+    { icon: CalendarDays, label: 'Time Off', to: '/worker/time-off', description: 'Balances & requests' },
+    { icon: UserCheck, label: 'Emergency Contact', to: '/worker/emergency-contact', description: 'Emergency contact info' },
   ];
 
   const switchItems = [
@@ -48,7 +52,7 @@ export default function WorkerMore() {
             </p>
             <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
           </div>
-          <span className="text-[10px] font-semibold uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
             Field Mode
           </span>
         </CardContent>
@@ -56,7 +60,7 @@ export default function WorkerMore() {
 
       {/* Current mode indicator */}
       <div className="flex items-center gap-2 px-1">
-        <HardHat className="h-4 w-4 text-blue-500" />
+        <HardHat className="h-4 w-4 text-primary" />
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">You are in Field Mode</span>
       </div>
 
