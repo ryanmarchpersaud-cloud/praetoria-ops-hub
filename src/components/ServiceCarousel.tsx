@@ -12,7 +12,7 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+
 
 const SERVICE_ACTIONS = [
   { label: 'New Lead', icon: Plus, path: '/leads', description: 'Capture a new lead for this service' },
