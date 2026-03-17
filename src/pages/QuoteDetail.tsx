@@ -163,9 +163,14 @@ export default function QuoteDetail() {
       </div>
 
       {/* ── Save Bar ── */}
-      <Button onClick={handleSave} className="w-full h-11" disabled={updateQuote.isPending}>
-        <Save className="h-4 w-4 mr-2" /> Save Quote
-      </Button>
+      <div className="flex gap-2">
+        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
+          <Save className="h-4 w-4 mr-2" /> Save Quote
+        </Button>
+        <Button variant="outline" className="h-11 shrink-0" onClick={() => navigate(`/quotes/${id}/print`)}>
+          <Printer className="h-4 w-4" />
+        </Button>
+      </div>
 
       {/* ── Mobile: Workflow first, then content ── */}
       {/* On mobile, workflow panel appears before content for quick status actions */}
