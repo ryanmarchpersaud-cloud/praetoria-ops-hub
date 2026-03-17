@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
   ChevronRight, Calendar, Zap, AlertCircle, Navigation,
+  CalendarDays, Camera, CloudSun, FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
