@@ -65,7 +65,7 @@ export const SERVICE_PROMOS: ServicePromo[] = [
     id: 'maintenance',
     title: 'Renovation & Maintenance Repair',
     subtitle: 'Landlord & Property Manager Focused',
-    audience: 'Residential · Commercial · Rental Properties',
+    audience: 'Residential · Commercial · Government · Rental Properties',
     highlights: [
       'General handyman, plumbing & basic electrical',
       'Painting, decorating & interior finishing',
