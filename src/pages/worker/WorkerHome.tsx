@@ -248,7 +248,7 @@ export default function WorkerHome() {
                 {highlightVisit.properties && (
                   <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <p>{(highlightVisit.properties as any).property_name}</p>
                       {(highlightVisit.properties as any).address_line_1 && (
                         <p className="text-[10px]">
@@ -257,6 +257,11 @@ export default function WorkerHome() {
                         </p>
                       )}
                     </div>
+                    <DirectionsButton
+                      address={(highlightVisit.properties as any).address_line_1}
+                      city={(highlightVisit.properties as any).city}
+                      variant="icon"
+                    />
                   </div>
                 )}
                 {highlightVisit.service_summary && (
