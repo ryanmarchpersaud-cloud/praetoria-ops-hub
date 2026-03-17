@@ -135,10 +135,14 @@ export default function PortalPropertyDetail() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <Button variant="outline" size="sm" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/portal/requests/new')}>
           <MessageSquarePlus className="h-4 w-4" />
           <span className="text-[10px]">New Request</span>
+        </Button>
+        <Button variant="outline" size="sm" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/portal/requests/new')}>
+          <AlertTriangle className="h-4 w-4" />
+          <span className="text-[10px]">Report Issue</span>
         </Button>
         <Button variant="outline" size="sm" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/portal/photos')}>
           <Camera className="h-4 w-4" />
