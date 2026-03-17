@@ -3,6 +3,7 @@ import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, Building2, MapPin, LogOut } from 'lucide-react';
+import { NotificationPreferencesCard } from '@/components/NotificationPreferencesCard';
 
 export default function PortalAccount() {
   const { user, signOut } = useAuth();
