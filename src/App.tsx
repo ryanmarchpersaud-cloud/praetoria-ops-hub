@@ -72,6 +72,9 @@ import WorkerSafetyPage from "./pages/worker/WorkerSafetyPage";
 import WorkerTaxDocsPage from "./pages/worker/WorkerTaxDocsPage";
 import WorkerTrainingSafetyPage from "./pages/worker/WorkerTrainingSafetyPage";
 import WorkerPPEPage from "./pages/worker/WorkerPPEPage";
+import WorkerIncidentsPage from "./pages/worker/WorkerIncidentsPage";
+import WorkerNewIncidentPage from "./pages/worker/WorkerNewIncidentPage";
+import WorkerIncidentDetailPage from "./pages/worker/WorkerIncidentDetailPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
