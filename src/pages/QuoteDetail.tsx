@@ -59,7 +59,8 @@ export default function QuoteDetail() {
 
   const recalculate = (updatedItems: LineItemForm[]) => {
     const subtotal = updatedItems.reduce((sum, i) => sum + i.line_total, 0);
-    const tax = subtotal * 0.13;
+    const taxRate = Number(form.tax_rate || 0.13);
+    const tax = subtotal * taxRate;
     setForm((p: any) => ({ ...p, subtotal, tax, total: subtotal + tax }));
   };
 
@@ -87,18 +88,18 @@ export default function QuoteDetail() {
   const handleSave = async () => {
     if (!id) return;
     try {
+      // Save quote metadata (totals are auto-calculated by DB triggers from line items)
       await updateQuote.mutateAsync({
         id,
         service_category: form.service_category,
         scope_of_work: form.scope_of_work,
-        subtotal: form.subtotal,
-        tax: form.tax,
-        total: form.total,
         agent_summary: form.agent_summary,
         internal_notes: form.internal_notes,
         approval_status: form.approval_status,
         follow_up_due_at: form.follow_up_due_at,
+        tax_rate: Number(form.tax_rate || 0.13),
       });
+      // Save line items — DB triggers auto-calculate line_total and quote subtotal/tax/total
       await upsertItems.mutateAsync({
         quoteId: id,
         items: items.filter(i => i.item_name).map((i, idx) => ({
@@ -107,7 +108,6 @@ export default function QuoteDetail() {
           description: i.description || null,
           quantity: i.quantity,
           unit_price: i.unit_price,
-          line_total: i.line_total,
           sort_order: idx,
         })),
       });
@@ -180,9 +180,28 @@ export default function QuoteDetail() {
               <div><Label>Scope of Work</Label><Textarea value={form.scope_of_work || ''} onChange={e => set('scope_of_work', e.target.value)} rows={4} /></div>
               <div><Label>Agent Summary</Label><Textarea value={form.agent_summary || ''} onChange={e => set('agent_summary', e.target.value)} rows={3} placeholder="AI-generated or agent notes about this quote" /></div>
               <div><Label>Internal Notes</Label><Textarea value={form.internal_notes || ''} onChange={e => set('internal_notes', e.target.value)} rows={2} /></div>
-              <div>
-                <Label>Follow-up Due</Label>
-                <Input type="datetime-local" value={form.follow_up_due_at ? form.follow_up_due_at.slice(0, 16) : ''} onChange={e => set('follow_up_due_at', e.target.value)} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Tax Rate (%)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={((Number(form.tax_rate) || 0.13) * 100).toFixed(2)}
+                    onChange={e => {
+                      const rate = Number(e.target.value) / 100;
+                      set('tax_rate', rate);
+                      // Recalculate preview with new rate
+                      const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
+                      const tax = subtotal * rate;
+                      setForm((p: any) => ({ ...p, tax_rate: rate, subtotal, tax, total: subtotal + tax }));
+                    }}
+                    placeholder="13.00"
+                  />
+                </div>
+                <div>
+                  <Label>Follow-up Due</Label>
+                  <Input type="datetime-local" value={form.follow_up_due_at ? form.follow_up_due_at.slice(0, 16) : ''} onChange={e => set('follow_up_due_at', e.target.value)} />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -229,7 +248,7 @@ export default function QuoteDetail() {
                   <Separator />
                   <div className="text-right space-y-1">
                     <p className="text-sm">Subtotal: <span className="font-medium">${Number(form.subtotal || 0).toFixed(2)}</span></p>
-                    <p className="text-sm">Tax (13%): <span className="font-medium">${Number(form.tax || 0).toFixed(2)}</span></p>
+                    <p className="text-sm">Tax ({((Number(form.tax_rate) || 0.13) * 100).toFixed(0)}%): <span className="font-medium">${Number(form.tax || 0).toFixed(2)}</span></p>
                     <p className="text-lg font-bold">Total: ${Number(form.total || 0).toFixed(2)}</p>
                   </div>
                 </div>
