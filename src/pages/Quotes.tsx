@@ -4,14 +4,14 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock } from 'lucide-react';
+import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
 const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: string }> = {
   Draft: { icon: FileEdit, color: 'text-muted-foreground', label: 'Drafts' },
-  'Needs review': { icon: Eye, color: 'text-warning', label: 'Needs Review' },
+  'Needs review': { icon: Eye, color: 'text-warning', label: 'Review' },
   Approved: { icon: CheckCircle, color: 'text-success', label: 'Approved' },
   Sent: { icon: Send, color: 'text-primary', label: 'Sent' },
   Declined: { icon: XCircle, color: 'text-destructive', label: 'Declined' },
@@ -23,7 +23,6 @@ export default function Quotes() {
     approval_status: statusFilter || undefined,
   });
 
-  // Counts by status
   const allQuotes = useQuotes({}).data || [];
   const counts = QUOTE_APPROVAL_STATUSES.reduce((acc, s) => {
     acc[s] = allQuotes.filter((q: any) => q.approval_status === s).length;
@@ -35,14 +34,14 @@ export default function Quotes() {
   ).length;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 md:space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">Quotes</h1>
-        <p className="text-sm text-muted-foreground">{allQuotes.length} total quotes</p>
+        <h1 className="text-xl md:text-2xl font-bold">Quotes</h1>
+        <p className="text-xs md:text-sm text-muted-foreground">{allQuotes.length} total</p>
       </div>
 
-      {/* ── Status Summary Cards ── */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      {/* Status chips — horizontal scroll on mobile */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {QUOTE_APPROVAL_STATUSES.map(s => {
           const meta = statusMeta[s];
           const Icon = meta.icon;
@@ -52,59 +51,96 @@ export default function Quotes() {
               key={s}
               onClick={() => setStatusFilter(isActive ? '' : s)}
               className={`
-                stat-card text-left cursor-pointer transition-all
-                ${isActive ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}
+                shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all active:scale-95
+                ${isActive ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-card border-border text-muted-foreground'}
               `}
             >
-              <div className="flex items-center gap-1.5 mb-1">
-                <Icon className={`h-3.5 w-3.5 ${meta.color}`} />
-                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{meta.label}</span>
-              </div>
-              <p className="text-xl font-bold">{counts[s] || 0}</p>
+              <Icon className={`h-3 w-3 ${isActive ? 'text-primary' : meta.color}`} />
+              {meta.label}
+              <span className={`ml-0.5 ${isActive ? 'text-primary' : 'text-muted-foreground/60'}`}>{counts[s] || 0}</span>
             </button>
           );
         })}
-        {/* Follow-up overdue */}
         <button
           onClick={() => setStatusFilter(statusFilter === '__overdue' ? '' : '__overdue')}
           className={`
-            stat-card text-left cursor-pointer transition-all
-            ${statusFilter === '__overdue' ? 'ring-2 ring-destructive ring-offset-1 ring-offset-background' : ''}
-            ${overdueCount > 0 ? 'border-destructive/30' : ''}
+            shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all active:scale-95
+            ${statusFilter === '__overdue' ? 'bg-destructive/10 border-destructive/30 text-destructive' : `bg-card border-border ${overdueCount > 0 ? 'text-destructive border-destructive/20' : 'text-muted-foreground'}`}
           `}
         >
-          <div className="flex items-center gap-1.5 mb-1">
-            <Clock className={`h-3.5 w-3.5 ${overdueCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
-            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Overdue</span>
-          </div>
-          <p className={`text-xl font-bold ${overdueCount > 0 ? 'text-destructive' : ''}`}>{overdueCount}</p>
+          <Clock className="h-3 w-3" />
+          Overdue
+          <span className="ml-0.5">{overdueCount}</span>
         </button>
       </div>
 
-      {/* ── Filter bar ── */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-        <Select value={statusFilter} onValueChange={v => setStatusFilter(v === 'all' ? '' : v)}>
-          <SelectTrigger className="w-[180px]"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {QUOTE_APPROVAL_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        {statusFilter && statusFilter !== '__overdue' && (
-          <button onClick={() => setStatusFilter('')} className="text-xs text-muted-foreground hover:text-foreground">
-            Clear filter ×
-          </button>
+      {statusFilter && (
+        <button onClick={() => setStatusFilter('')} className="text-xs text-muted-foreground hover:text-foreground">
+          Clear filter ×
+        </button>
+      )}
+
+      {/* Mobile: Card list */}
+      <div className="md:hidden space-y-2">
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-8 text-sm">Loading...</p>
+        ) : quotes.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8 text-sm">No quotes found</p>
+        ) : (
+          quotes
+            .filter((q: any) => {
+              if (statusFilter === '__overdue') return q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
+              return true;
+            })
+            .map((q: any) => {
+              const isOverdue = q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
+              return (
+                <Link
+                  key={q.id}
+                  to={`/quotes/${q.id}`}
+                  className={`block bg-card border rounded-lg p-3 active:bg-muted/50 transition-colors ${isOverdue ? 'border-destructive/30' : ''}`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium mono text-sm">{q.quote_number}</p>
+                        <StatusBadge status={q.approval_status} showIcon={false} />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {q.leads?.first_name} {q.leads?.last_name}
+                        {q.leads?.company_name && ` — ${q.leads.company_name}`}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-[11px] text-muted-foreground">{q.service_category}</span>
+                        {isOverdue && (
+                          <>
+                            <span className="text-muted-foreground/30">·</span>
+                            <span className="text-[11px] text-destructive font-medium flex items-center gap-0.5">
+                              <Clock className="h-2.5 w-2.5" /> Overdue
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="font-semibold text-sm mono">${Number(q.total).toLocaleString()}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })
         )}
       </div>
 
-      {/* ── Table ── */}
-      <div className="rounded-lg border bg-card overflow-auto">
+      {/* Desktop: Table */}
+      <div className="hidden md:block rounded-lg border bg-card overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Quote #</TableHead>
               <TableHead>Client</TableHead>
-              <TableHead className="hidden md:table-cell">Service</TableHead>
+              <TableHead>Service</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden lg:table-cell">Follow-up</TableHead>
@@ -119,35 +155,22 @@ export default function Quotes() {
             ) : (
               quotes
                 .filter((q: any) => {
-                  if (statusFilter === '__overdue') {
-                    return q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
-                  }
+                  if (statusFilter === '__overdue') return q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
                   return true;
                 })
                 .map((q: any) => {
                   const isOverdue = q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
                   return (
-                    <TableRow
-                      key={q.id}
-                      className={`cursor-pointer hover:bg-muted/50 ${isOverdue ? 'bg-destructive/5' : ''}`}
-                    >
-                      <TableCell>
-                        <Link to={`/quotes/${q.id}`} className="font-medium mono text-sm hover:text-primary transition-colors">
-                          {q.quote_number}
-                        </Link>
-                      </TableCell>
+                    <TableRow key={q.id} className={`cursor-pointer hover:bg-muted/50 ${isOverdue ? 'bg-destructive/5' : ''}`}>
+                      <TableCell><Link to={`/quotes/${q.id}`} className="font-medium mono text-sm hover:text-primary">{q.quote_number}</Link></TableCell>
                       <TableCell className="text-sm">
                         <div>
                           {q.leads?.first_name} {q.leads?.last_name}
-                          {q.leads?.company_name && (
-                            <span className="block text-xs text-muted-foreground">{q.leads.company_name}</span>
-                          )}
+                          {q.leads?.company_name && <span className="block text-xs text-muted-foreground">{q.leads.company_name}</span>}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{q.service_category}</TableCell>
-                      <TableCell className="text-sm font-medium text-right mono">
-                        ${Number(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{q.service_category}</TableCell>
+                      <TableCell className="text-sm font-medium text-right mono">${Number(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
                       <TableCell><StatusBadge status={q.approval_status} /></TableCell>
                       <TableCell className="hidden lg:table-cell text-sm">
                         {q.follow_up_due_at ? (
@@ -155,13 +178,9 @@ export default function Quotes() {
                             {isOverdue && <Clock className="h-3 w-3" />}
                             {formatDistanceToNow(new Date(q.follow_up_due_at), { addSuffix: true })}
                           </span>
-                        ) : (
-                          <span className="text-muted-foreground/50">—</span>
-                        )}
+                        ) : <span className="text-muted-foreground/30">—</span>}
                       </TableCell>
-                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(q.created_at), { addSuffix: true })}
-                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{formatDistanceToNow(new Date(q.created_at), { addSuffix: true })}</TableCell>
                     </TableRow>
                   );
                 })
