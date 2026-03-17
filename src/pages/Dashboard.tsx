@@ -2,6 +2,7 @@ import { useLeads } from '@/hooks/useLeads';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useActivities } from '@/hooks/useActivities';
 import { StatusBadge } from '@/components/StatusBadge';
+import { WeatherCard } from '@/components/WeatherCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Clock, CheckCircle, AlertCircle, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
