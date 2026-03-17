@@ -31,6 +31,7 @@ import NotFound from "./pages/NotFound";
 import PortalProperties from "./pages/portal/PortalProperties";
 import PortalQuotes from "./pages/portal/PortalQuotes";
 import PortalVisits from "./pages/portal/PortalVisits";
+import PortalPlan from "./pages/portal/PortalPlan";
 import PortalPhotos from "./pages/portal/PortalPhotos";
 import PortalRequests from "./pages/portal/PortalRequests";
 import PortalAccount from "./pages/portal/PortalAccount";
