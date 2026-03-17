@@ -9,9 +9,7 @@ import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
   ChevronRight, Calendar, Zap,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 
 function getGreeting() {
   const h = new Date().getHours();
