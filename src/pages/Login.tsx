@@ -19,7 +19,7 @@ const FEATURES = [
   { icon: Camera, label: 'Photos & Proof of Service', desc: 'Before/after documentation on every visit' },
   { icon: FileText, label: 'Invoicing & Billing', desc: 'Automated billing with payment tracking' },
   { icon: CloudSun, label: 'Weather Intelligence', desc: 'Environment Canada forecasts for route planning' },
-  { icon: Truck, label: 'Multi-Service Support', desc: 'Snow, landscaping, junk removal, maintenance & more' },
+  { icon: Truck, label: 'Multi-Service Support', desc: 'Snow, landscaping, junk removal, property management, cleaning & more' },
 ];
 
 export default function Login() {
