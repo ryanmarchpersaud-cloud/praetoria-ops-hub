@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const portalNav = [
+  { title: 'Home', to: '/portal', icon: Home, tileColor: 'action-tile-green', iconColor: 'text-emerald-600', exact: true },
   { title: 'My Properties', to: '/portal/properties', icon: MapPin, tileColor: 'action-tile-blue', iconColor: 'text-blue-600' },
   { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck, tileColor: 'action-tile-emerald', iconColor: 'text-emerald-600' },
   { title: 'My Quotes', to: '/portal/quotes', icon: FileText, tileColor: 'action-tile-amber', iconColor: 'text-amber-600' },
