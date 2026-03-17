@@ -28,12 +28,12 @@ function formatToday() {
 
 export default function WorkerHome() {
   const { user } = useAuth();
-  const [clockedIn, setClockedIn] = useState(false);
-  const [clockTime, setClockTime] = useState<Date | null>(null);
+  const { data: active } = useActiveTimesheet();
+  const clockInMut = useClockIn();
+  const clockOutMut = useClockOut();
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Fetch today's visits assigned or all visits for today
   const { data: todayVisits = [] } = useQuery({
     queryKey: ['worker_today_visits', todayStr],
     queryFn: async () => {
@@ -55,14 +55,14 @@ export default function WorkerHome() {
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
 
   const handleClock = () => {
-    if (clockedIn) {
-      setClockedIn(false);
-      setClockTime(null);
+    if (active) {
+      clockOutMut.mutate(active.id);
     } else {
-      setClockedIn(true);
-      setClockTime(new Date());
+      clockInMut.mutate();
     }
   };
+
+  const clockedIn = !!active;
 
   return (
     <div className="space-y-4 px-4 pt-3 pb-4">
