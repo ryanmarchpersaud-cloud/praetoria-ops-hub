@@ -23,6 +23,7 @@ const opsItems = [
   { title: 'Schedule', url: '/schedule', icon: CalendarDays },
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus },
   { title: 'Activity', url: '/activity', icon: Activity },
+  { title: 'Employees', url: '/employees', icon: HardHat },
 ];
 
 const systemItems = [
