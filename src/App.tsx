@@ -39,6 +39,7 @@ import PortalAccount from "./pages/portal/PortalAccount";
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
 import WorkerHome from "./pages/worker/WorkerHome";
+import WorkerSchedule from "./pages/worker/WorkerSchedule";
 import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
 
 const queryClient = new QueryClient();
