@@ -46,6 +46,7 @@ import WorkerSchedule from "./pages/worker/WorkerSchedule";
 import WorkerTimesheet from "./pages/worker/WorkerTimesheet";
 import WorkerPlaceholder from "./pages/worker/WorkerPlaceholder";
 import WorkerMore from "./pages/worker/WorkerMore";
+import WorkerVisitExec from "./pages/worker/WorkerVisitExec";
 
 const queryClient = new QueryClient();
 
@@ -132,6 +133,7 @@ function AppRoutes() {
       <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerSchedule /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/timesheet" element={<WorkerRoute><WorkerLayout><WorkerTimesheet /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/search" element={<WorkerRoute><WorkerLayout><WorkerPlaceholder title="Search" /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/visit/:id" element={<WorkerRoute><WorkerLayout><WorkerVisitExec /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerMore /></WorkerLayout></WorkerRoute>} />
 
       <Route path="*" element={<NotFound />} />

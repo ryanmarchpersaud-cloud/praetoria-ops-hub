@@ -121,7 +121,7 @@ export default function WorkerHome() {
                 <p className="text-sm text-muted-foreground text-center py-8">No notifications</p>
               ) : (
                 notifications.map(n => (
-                  <Link key={n.id} to={`/visits/${n.id}`}>
+                  <Link key={n.id} to={`/worker/visit/${n.id}`}>
                     <Card className="active:shadow-sm transition-shadow">
                       <CardContent className="p-3 space-y-1">
                         <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ export default function WorkerHome() {
         </div>
 
         {highlightVisit ? (
-          <Link to={`/visits/${highlightVisit.id}`}>
+          <Link to={`/worker/visit/${highlightVisit.id}`}>
             <Card className={cn(
               'transition-shadow active:shadow-md',
               inProgressVisit && 'ring-2 ring-primary/30 bg-primary/5'
@@ -289,7 +289,7 @@ export default function WorkerHome() {
           {todayVisits
             .filter(v => v.id !== highlightVisit?.id)
             .map((visit: any) => (
-              <Link key={visit.id} to={`/visits/${visit.id}`}>
+              <Link key={visit.id} to={`/worker/visit/${visit.id}`}>
                 <Card className="active:shadow-sm transition-shadow">
                   <CardContent className="py-3 px-4 flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
