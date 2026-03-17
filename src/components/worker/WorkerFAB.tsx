@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
+import { WorkerQuickActionDialogs, type QuickActionType } from './WorkerQuickActionDialogs';
 
 interface QuickAction {
   icon: React.ElementType;
