@@ -185,7 +185,7 @@ export function QuoteEmailPreview({ quote, lineItems, onEmailStatusChange }: Quo
               </div>
               <div className="flex gap-2">
                 <span className="text-muted-foreground w-10 shrink-0">From:</span>
-                <span>quotes@praetoriagroup.com</span>
+                <span>quotes@praetoriagroup.ca</span>
               </div>
               <div className="flex gap-2">
                 <span className="text-muted-foreground w-10 shrink-0">Subject:</span>

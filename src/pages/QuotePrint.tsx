@@ -118,7 +118,7 @@ export default function QuotePrint() {
             </p>
             <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
               <p>Toronto, Ontario, Canada</p>
-              <p>info@praetoriagroup.com</p>
+              <p>info@praetoriagroup.ca</p>
               <p>(416) 555-0100</p>
             </div>
           </div>
@@ -345,7 +345,7 @@ export default function QuotePrint() {
           {/* ── Footer ── */}
           <div className="text-center pt-8 text-xs text-[#9ca3af] print:text-sm print:pt-12 pb-4">
             <p className="font-medium text-[#6b7280]">Praetoria Group</p>
-            <p>info@praetoriagroup.com · (416) 555-0100</p>
+            <p>info@praetoriagroup.ca · (416) 555-0100</p>
             <p className="mt-1">Thank you for choosing Praetoria Group.</p>
           </div>
         </div>
