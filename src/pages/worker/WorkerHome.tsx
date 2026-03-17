@@ -395,10 +395,7 @@ export default function WorkerHome() {
       )}
 
       {/* Weather */}
-      <div>
-        <h2 className="text-sm font-semibold text-foreground mb-2">Weather</h2>
-        <WeatherCard city="toronto" compact />
-      </div>
+      <WeatherCard city="toronto" compact />
 
       {/* Location & Route card */}
       <div>
