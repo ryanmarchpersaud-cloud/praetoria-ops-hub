@@ -6,10 +6,13 @@ import {
   Zap, X, Play, CheckCircle, Camera, StickyNote, AlertTriangle, Receipt,
   UserPlus, FileText, Briefcase, FilePlus, Building2, LogIn, LogOut,
   Navigation, Phone, MessageSquare, ShieldAlert, Clock, Wrench, Package,
-  ClipboardList, CreditCard, RotateCcw, PenLine, Home, Send,
+  ClipboardList, CreditCard, RotateCcw, PenLine, Home, Send, Construction,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
 
 interface QuickAction {
   icon: React.ElementType;
@@ -17,10 +20,12 @@ interface QuickAction {
   color: string;
   action: string | (() => void);
   category: 'field' | 'admin';
+  comingSoon?: boolean;
 }
 
 export function WorkerFAB() {
   const [open, setOpen] = useState(false);
+  const [comingSoonLabel, setComingSoonLabel] = useState<string | null>(null);
   const { isAdmin, isStaff } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,7 +34,6 @@ export function WorkerFAB() {
   const clockIn = useClockIn();
   const clockOut = useClockOut();
 
-  // Extract current visit id from URL if on a visit page
   const visitMatch = location.pathname.match(/\/worker\/visit\/([^/]+)/);
   const currentVisitId = visitMatch?.[1];
 
@@ -49,14 +53,14 @@ export function WorkerFAB() {
     { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=photos` : '/worker/schedule', category: 'field' },
     { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=note` : '/worker/schedule', category: 'field' },
     { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=issue` : '/worker/schedule', category: 'field' },
-    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: '/worker/timesheet?tab=expenses', category: 'field' },
+    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: 'coming_soon', category: 'field', comingSoon: true },
     { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' },
     { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: '/worker/schedule?action=directions', category: 'field' },
     { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: '/worker/schedule?action=call', category: 'field' },
-    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: '/worker/more?action=message', category: 'field' },
-    { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet?tab=manual', category: 'field' },
-    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: '/worker/more?action=equipment', category: 'field' },
-    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: '/worker/more?action=materials', category: 'field' },
+    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: 'coming_soon', category: 'field', comingSoon: true },
+    { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' },
+    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: 'coming_soon', category: 'field', comingSoon: true },
+    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: 'coming_soon', category: 'field', comingSoon: true },
   ];
 
   const adminOnlyActions: QuickAction[] = [
@@ -75,6 +79,10 @@ export function WorkerFAB() {
 
   const handleAction = (a: QuickAction) => {
     setOpen(false);
+    if (a.comingSoon) {
+      setComingSoonLabel(a.label);
+      return;
+    }
     if (typeof a.action === 'function') {
       a.action();
     } else {
@@ -84,6 +92,21 @@ export function WorkerFAB() {
 
   return (
     <>
+      {/* Coming Soon dialog */}
+      <Dialog open={!!comingSoonLabel} onOpenChange={() => setComingSoonLabel(null)}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Construction className="h-5 w-5 text-amber-500" />
+              Coming Soon
+            </DialogTitle>
+            <DialogDescription>
+              <strong>{comingSoonLabel}</strong> is under development and will be available in a future update.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
       {/* Backdrop */}
       {open && (
         <div
@@ -96,7 +119,6 @@ export function WorkerFAB() {
       {open && (
         <div className="fixed inset-x-0 bottom-0 z-50 animate-in slide-in-from-bottom-4 duration-200">
           <div className="max-w-lg mx-auto bg-card rounded-t-2xl border-t border-x border-border shadow-2xl pb-safe">
-            {/* Handle + header */}
             <div className="flex items-center justify-between px-4 pt-3 pb-2">
               <h3 className="text-sm font-semibold text-foreground">Quick Actions</h3>
               <button
@@ -108,7 +130,6 @@ export function WorkerFAB() {
             </div>
             <div className="mx-auto w-10 h-1 rounded-full bg-muted mb-2" />
 
-            {/* Scrollable grid */}
             <div className="max-h-[60vh] overflow-y-auto overscroll-contain px-3 pb-4">
               {isAdmin && (
                 <>
@@ -142,10 +163,18 @@ export function WorkerFAB() {
                   <button
                     key={a.label}
                     onClick={() => handleAction(a)}
-                    className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl active:scale-95 active:bg-muted/50 transition-all"
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl active:scale-95 active:bg-muted/50 transition-all",
+                      a.comingSoon && "opacity-50"
+                    )}
                   >
-                    <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm', a.color)}>
+                    <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm relative', a.color)}>
                       <a.icon className="h-5 w-5 text-white" />
+                      {a.comingSoon && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center">
+                          <Construction className="h-2.5 w-2.5 text-white" />
+                        </div>
+                      )}
                     </div>
                     <span className="text-[10px] font-medium text-foreground text-center leading-tight line-clamp-2">
                       {a.label}
