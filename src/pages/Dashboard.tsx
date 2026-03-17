@@ -84,7 +84,10 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="pb-2 px-3 md:px-6">
             <CardTitle className="text-sm flex items-center gap-2">
-              <FileText className="h-4 w-4 text-warning" /> Needs Approval
+              <span className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center">
+                <FileText className="h-3.5 w-3.5 text-amber-600" />
+              </span>
+              Needs Approval
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 md:px-6">
