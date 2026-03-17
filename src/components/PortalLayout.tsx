@@ -8,14 +8,14 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const portalNav = [
-  { title: 'My Properties', to: '/portal/properties', icon: MapPin },
-  { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck },
-  { title: 'My Quotes', to: '/portal/quotes', icon: FileText },
-  { title: 'My Visits', to: '/portal/visits', icon: ClipboardCheck },
-  { title: 'Billing', to: '/portal/billing', icon: Receipt },
-  { title: 'My Photos', to: '/portal/photos', icon: Camera },
-  { title: 'My Requests', to: '/portal/requests', icon: MessageSquarePlus },
-  { title: 'My Account', to: '/portal/account', icon: User },
+  { title: 'My Properties', to: '/portal/properties', icon: MapPin, tileColor: 'action-tile-blue', iconColor: 'text-blue-600' },
+  { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck, tileColor: 'action-tile-emerald', iconColor: 'text-emerald-600' },
+  { title: 'My Quotes', to: '/portal/quotes', icon: FileText, tileColor: 'action-tile-amber', iconColor: 'text-amber-600' },
+  { title: 'My Visits', to: '/portal/visits', icon: ClipboardCheck, tileColor: 'action-tile-cyan', iconColor: 'text-cyan-600' },
+  { title: 'Billing', to: '/portal/billing', icon: Receipt, tileColor: 'action-tile-violet', iconColor: 'text-violet-600' },
+  { title: 'My Photos', to: '/portal/photos', icon: Camera, tileColor: 'action-tile-rose', iconColor: 'text-rose-600' },
+  { title: 'My Requests', to: '/portal/requests', icon: MessageSquarePlus, tileColor: 'action-tile-orange', iconColor: 'text-orange-600' },
+  { title: 'My Account', to: '/portal/account', icon: User, tileColor: 'action-tile-slate', iconColor: 'text-slate-600' },
 ];
 
 export function PortalLayout({ children }: { children: ReactNode }) {
