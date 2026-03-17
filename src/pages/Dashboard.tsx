@@ -183,7 +183,7 @@ export default function Dashboard() {
       <div>
         <h2 className="text-sm font-semibold text-foreground mb-3">Praetoria Services</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {SERVICE_PROMOS.slice(0, 4).map((promo) => (
+          {SERVICE_PROMOS.map((promo) => (
             <ServicePromoCard key={promo.id} promo={promo} variant="compact" />
           ))}
         </div>
