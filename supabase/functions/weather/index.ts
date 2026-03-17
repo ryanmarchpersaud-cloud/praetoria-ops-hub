@@ -5,10 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// New ECCC GeoMet OGC API (replaces deprecated dd.weather.gc.ca XML)
 const ECCC_API = 'https://api.weather.gc.ca/collections/citypageweather-realtime/items';
 
-// City identifiers for the new API
 const CITY_CODES: Record<string, { id: string; name: string; province: string }> = {
   'toronto':     { id: 'on-143', name: 'Toronto',     province: 'ON' },
   'mississauga': { id: 'on-84',  name: 'Mississauga', province: 'ON' },
@@ -27,10 +25,12 @@ const CITY_CODES: Record<string, { id: string; name: string; province: string }>
   'winnipeg':    { id: 'mb-38',  name: 'Winnipeg',    province: 'MB' },
 };
 
+function val(obj: any) {
+  return obj?.value?.en ?? obj?.value ?? null;
+}
+
 function extractCurrent(cc: any) {
   if (!cc) return null;
-  const val = (obj: any) => obj?.value?.en ?? null;
-  
   return {
     condition: cc.condition?.en || 'Unknown',
     temperature: val(cc.temperature),
@@ -49,28 +49,31 @@ function extractCurrent(cc: any) {
 function extractWarnings(warnings: any) {
   if (!warnings || !Array.isArray(warnings)) return [];
   return warnings.map((w: any) => ({
-    type: w.type?.en || '',
-    priority: w.priority?.en || '',
-    description: w.description?.en || w.type?.en || '',
+    type: w.type?.en || w.type || '',
+    priority: w.priority?.en || w.priority || '',
+    description: w.description?.en || w.type?.en || w.type || '',
   })).filter((w: any) => w.type || w.description);
 }
 
-function extractForecasts(forecasts: any) {
-  if (!forecasts || !Array.isArray(forecasts)) return [];
-  return forecasts.slice(0, 6).map((f: any) => {
-    const summary = f.textSummary?.en || '';
-    const temperature = f.temperature?.value?.en ?? null;
-    const iconCode = f.iconCode?.value?.toString() ?? null;
-    const pop = f.precipitation?.value?.en?.toString() ?? null;
+function extractForecasts(fg: any) {
+  if (!fg) return [];
+  // forecastGroup can be an object with a "forecast" array, or directly an array
+  const list = Array.isArray(fg) ? fg : (fg.forecast || fg.forecasts || []);
+  if (!Array.isArray(list)) return [];
+  
+  return list.slice(0, 6).map((f: any) => {
+    const summary = f.textSummary?.en || f.textSummary || '';
+    const temperature = val(f.temperature) ?? (typeof f.temperature === 'number' ? f.temperature : null);
+    const iconCode = f.iconCode?.value?.toString() ?? f.iconCode?.toString() ?? null;
+    const pop = f.precipitation?.value?.en?.toString() ?? f.pop?.toString() ?? null;
 
-    // Snow accumulation from text
     const snowMatch = summary.match(/snow[^.]*?(\d+)\s*(?:to\s*(\d+)\s*)?cm/i);
     const snowLevel = snowMatch
       ? (snowMatch[2] ? `${snowMatch[1]}-${snowMatch[2]} cm` : `${snowMatch[1]} cm`)
       : null;
 
     return {
-      period: f.name?.en || '',
+      period: f.name?.en || f.period?.en || f.period || '',
       summary,
       temperature,
       iconCode,
@@ -116,15 +119,9 @@ serve(async (req) => {
     }
 
     const props = feature.properties;
-    console.log('Property keys:', Object.keys(props));
-    console.log('Forecast keys sample:', props.forecasts ? 'exists' : 'missing', props.forecast ? 'forecast exists' : 'forecast missing');
-    
-    // Try both possible keys
-    const forecastData = props.forecasts || props.forecast || props.forecastGroup || [];
-    
     const current = extractCurrent(props.currentConditions);
     const warnings = extractWarnings(props.warnings);
-    const forecast = extractForecasts(forecastData);
+    const forecast = extractForecasts(props.forecastGroup);
 
     // Snow analysis
     const hasSnowWarning = warnings.some((w: any) =>
