@@ -15,6 +15,7 @@ import Quotes from "./pages/Quotes";
 import QuoteDetail from "./pages/QuoteDetail";
 import QuotePrint from "./pages/QuotePrint";
 import Customers from "./pages/Customers";
+import CustomerDetail from "./pages/CustomerDetail";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import Jobs from "./pages/Jobs";
