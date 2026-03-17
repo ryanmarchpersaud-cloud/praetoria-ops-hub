@@ -248,7 +248,7 @@ export default function QuoteDetail() {
                   <Separator />
                   <div className="text-right space-y-1">
                     <p className="text-sm">Subtotal: <span className="font-medium">${Number(form.subtotal || 0).toFixed(2)}</span></p>
-                    <p className="text-sm">Tax (13%): <span className="font-medium">${Number(form.tax || 0).toFixed(2)}</span></p>
+                    <p className="text-sm">Tax ({((Number(form.tax_rate) || 0.13) * 100).toFixed(0)}%): <span className="font-medium">${Number(form.tax || 0).toFixed(2)}</span></p>
                     <p className="text-lg font-bold">Total: ${Number(form.total || 0).toFixed(2)}</p>
                   </div>
                 </div>
