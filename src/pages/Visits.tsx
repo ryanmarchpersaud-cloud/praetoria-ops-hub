@@ -115,6 +115,11 @@ export default function Visits() {
                   <span className="text-[11px] text-muted-foreground">{v.service_date}</span>
                   <span className="text-muted-foreground/30">·</span>
                   <span className="text-[11px] text-muted-foreground">{v.visit_type}</span>
+                  {v.visit_photos?.length > 0 && (
+                    <span className="flex items-center gap-0.5 text-[11px] text-primary">
+                      <Camera className="h-3 w-3" />{v.visit_photos.length}
+                    </span>
+                  )}
                 </div>
                 {v.weather_notes && (
                   <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
