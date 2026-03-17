@@ -210,6 +210,15 @@ export default function QuoteDetail() {
         </Card>
       )}
 
+      {/* ── Email Quote (mobile) ── */}
+      <div className="lg:hidden">
+        <QuoteEmailPreview
+          quote={quote}
+          lineItems={lineItems}
+          onEmailStatusChange={() => refetchQuote()}
+        />
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-4">
         {/* ── Left Column: Content ── */}
         <div className="lg:col-span-2 space-y-3">
