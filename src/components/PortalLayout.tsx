@@ -2,20 +2,20 @@ import { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomerProfile } from '@/hooks/useUserRole';
-import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Shield, Menu, X, ShieldCheck, Receipt } from 'lucide-react';
+import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Shield, Menu, X, ShieldCheck, Receipt, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const portalNav = [
-  { title: 'My Properties', to: '/portal/properties', icon: MapPin },
-  { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck },
-  { title: 'My Quotes', to: '/portal/quotes', icon: FileText },
-  { title: 'My Visits', to: '/portal/visits', icon: ClipboardCheck },
-  { title: 'Billing', to: '/portal/billing', icon: Receipt },
-  { title: 'My Photos', to: '/portal/photos', icon: Camera },
-  { title: 'My Requests', to: '/portal/requests', icon: MessageSquarePlus },
-  { title: 'My Account', to: '/portal/account', icon: User },
+  { title: 'My Properties', to: '/portal/properties', icon: MapPin, tileColor: 'action-tile-blue', iconColor: 'text-blue-600' },
+  { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck, tileColor: 'action-tile-emerald', iconColor: 'text-emerald-600' },
+  { title: 'My Quotes', to: '/portal/quotes', icon: FileText, tileColor: 'action-tile-amber', iconColor: 'text-amber-600' },
+  { title: 'My Visits', to: '/portal/visits', icon: ClipboardCheck, tileColor: 'action-tile-cyan', iconColor: 'text-cyan-600' },
+  { title: 'Billing', to: '/portal/billing', icon: Receipt, tileColor: 'action-tile-violet', iconColor: 'text-violet-600' },
+  { title: 'My Photos', to: '/portal/photos', icon: Camera, tileColor: 'action-tile-rose', iconColor: 'text-rose-600' },
+  { title: 'My Requests', to: '/portal/requests', icon: MessageSquarePlus, tileColor: 'action-tile-orange', iconColor: 'text-orange-600' },
+  { title: 'My Account', to: '/portal/account', icon: User, tileColor: 'action-tile-slate', iconColor: 'text-slate-600' },
 ];
 
 export function PortalLayout({ children }: { children: ReactNode }) {
@@ -77,25 +77,28 @@ export function PortalLayout({ children }: { children: ReactNode }) {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <nav className="md:hidden border-t border-border bg-card px-4 py-2 space-y-1">
-            {portalNav.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  )
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                {item.title}
-              </NavLink>
-            ))}
+          <nav className="md:hidden border-t border-border bg-card px-4 py-3">
+            <div className="grid grid-cols-4 gap-2">
+              {portalNav.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      'action-tile',
+                      item.tileColor,
+                      isActive && 'ring-2 ring-primary/30'
+                    )
+                  }
+                >
+                  <item.icon className={cn('h-5 w-5', item.iconColor)} />
+                  <span className="text-[10px] font-medium text-foreground leading-tight">
+                    {item.title.replace('My ', '')}
+                  </span>
+                </NavLink>
+              ))}
+            </div>
           </nav>
         )}
       </header>
