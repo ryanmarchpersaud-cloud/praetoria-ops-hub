@@ -53,6 +53,8 @@ export default function PortalAccount() {
         </CardContent>
       </Card>
 
+      {customer && <NotificationPreferencesCard customerId={customer.id} />}
+
       <Button variant="outline" className="w-full" onClick={signOut}>
         <LogOut className="h-4 w-4 mr-2" /> Sign Out
       </Button>
