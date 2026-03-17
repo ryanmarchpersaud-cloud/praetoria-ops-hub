@@ -230,6 +230,7 @@ function AppRoutes() {
       <Route path="/portal/photos" element={<PortalRoute><PortalPhotos /></PortalRoute>} />
       <Route path="/portal/billing" element={<PortalRoute><PortalBilling /></PortalRoute>} />
       <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
+      <Route path="/portal/requests/new" element={<PortalRoute><PortalRequestWizard /></PortalRoute>} />
       <Route path="/portal/account" element={<PortalRoute><PortalAccount /></PortalRoute>} />
 
       {/* Worker routes */}

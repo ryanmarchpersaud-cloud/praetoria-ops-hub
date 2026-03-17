@@ -7,16 +7,9 @@ import { Button } from '@/components/ui/button';
 import { MessageSquarePlus, Plus } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 
-const SERVICE_TYPES = ['Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance', 'Property Management', 'Power Washing', 'Cleaning Services', 'Other'];
-const URGENCY_OPTIONS = ['Low', 'Normal', 'High', 'Urgent'];
-
 export default function PortalRequests() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: customer } = useCustomerProfile();
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ subject: '', description: '', service_type: 'Other', urgency: 'Normal', property_id: '' });
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['portal_requests', customer?.id],
