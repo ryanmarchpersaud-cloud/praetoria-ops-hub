@@ -121,7 +121,7 @@ export default function WorkerHome() {
                 <p className="text-sm text-muted-foreground text-center py-8">No notifications</p>
               ) : (
                 notifications.map(n => (
-                  <Link key={n.id} to={`/visits/${n.id}`}>
+                  <Link key={n.id} to={`/worker/visit/${n.id}`}>
                     <Card className="active:shadow-sm transition-shadow">
                       <CardContent className="p-3 space-y-1">
                         <div className="flex items-center gap-2">
