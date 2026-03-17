@@ -84,7 +84,7 @@ export default function WorkerSearch() {
         title: `${j.job_number} — ${j.job_title}`,
         subtitle: j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : '',
         status: j.status,
-        link: `/worker/schedule`,
+        link: `/worker/job/${j.id}`,
       }));
 
       return out;
