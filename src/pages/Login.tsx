@@ -269,7 +269,7 @@ export default function Login() {
 
           {/* Footer */}
           <div className="mt-6 flex items-center gap-2 text-xs text-sidebar-foreground/40">
-            <img src={praetoriaCrest} alt="" className="w-4 h-4 object-contain opacity-50" />
+            <img src={praetoriaLogo} alt="" className="w-4 h-4 object-contain opacity-50" />
             <span>Serving Regina & surrounding areas · 306-737-6269</span>
           </div>
         </div>
