@@ -52,6 +52,15 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
+function WorkerRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { isCustomer, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (isCustomer) return <Navigate to="/portal/properties" replace />;
+  return <>{children}</>;
+}
+
 function PortalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, isLoading: roleLoading } = useUserRole();
