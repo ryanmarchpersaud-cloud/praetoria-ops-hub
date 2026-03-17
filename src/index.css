@@ -6,98 +6,98 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card-foreground: 215 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 220 70% 50%;
+    --primary: 215 65% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 25% 20%;
+    --secondary: 210 18% 94%;
+    --secondary-foreground: 215 20% 25%;
 
-    --muted: 220 15% 94%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 210 14% 95%;
+    --muted-foreground: 215 12% 50%;
 
-    --accent: 160 60% 42%;
+    --accent: 158 50% 42%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 68% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
-    --ring: 220 70% 50%;
+    --border: 210 16% 90%;
+    --input: 210 16% 88%;
+    --ring: 215 65% 48%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 220 25% 12%;
-    --sidebar-foreground: 220 15% 85%;
-    --sidebar-primary: 220 70% 55%;
+    --sidebar-background: 215 25% 18%;
+    --sidebar-foreground: 210 15% 80%;
+    --sidebar-primary: 215 60% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 18%;
-    --sidebar-accent-foreground: 220 15% 90%;
-    --sidebar-border: 220 20% 20%;
-    --sidebar-ring: 220 70% 55%;
+    --sidebar-accent: 215 20% 24%;
+    --sidebar-accent-foreground: 210 15% 92%;
+    --sidebar-border: 215 20% 25%;
+    --sidebar-ring: 215 60% 55%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --success: 160 60% 42%;
+    --warning: 38 90% 50%;
+    --warning-foreground: 38 95% 15%;
+    --success: 158 50% 42%;
     --success-foreground: 0 0% 100%;
-    --info: 200 80% 50%;
+    --info: 200 75% 50%;
     --info-foreground: 0 0% 100%;
 
     font-family: 'DM Sans', system-ui, sans-serif;
   }
 
   .dark {
-    --background: 220 25% 8%;
-    --foreground: 220 15% 90%;
+    --background: 215 22% 11%;
+    --foreground: 210 15% 88%;
 
-    --card: 220 25% 11%;
-    --card-foreground: 220 15% 90%;
+    --card: 215 22% 14%;
+    --card-foreground: 210 15% 88%;
 
-    --popover: 220 25% 11%;
-    --popover-foreground: 220 15% 90%;
+    --popover: 215 22% 14%;
+    --popover-foreground: 210 15% 88%;
 
-    --primary: 220 70% 55%;
+    --primary: 215 60% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 16%;
-    --secondary-foreground: 220 15% 85%;
+    --secondary: 215 18% 20%;
+    --secondary-foreground: 210 15% 82%;
 
-    --muted: 220 20% 15%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 215 18% 18%;
+    --muted-foreground: 210 10% 52%;
 
-    --accent: 160 60% 42%;
+    --accent: 158 50% 42%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 68% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 20% 18%;
-    --input: 220 20% 18%;
-    --ring: 220 70% 55%;
+    --border: 215 18% 22%;
+    --input: 215 18% 22%;
+    --ring: 215 60% 55%;
 
-    --sidebar-background: 220 25% 6%;
-    --sidebar-foreground: 220 15% 75%;
-    --sidebar-primary: 220 70% 55%;
+    --sidebar-background: 215 25% 8%;
+    --sidebar-foreground: 210 15% 72%;
+    --sidebar-primary: 215 60% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 12%;
-    --sidebar-accent-foreground: 220 15% 85%;
-    --sidebar-border: 220 20% 14%;
-    --sidebar-ring: 220 70% 55%;
+    --sidebar-accent: 215 20% 14%;
+    --sidebar-accent-foreground: 210 15% 82%;
+    --sidebar-border: 215 20% 16%;
+    --sidebar-ring: 215 60% 55%;
 
-    --warning: 38 92% 50%;
+    --warning: 38 90% 50%;
     --warning-foreground: 0 0% 100%;
-    --success: 160 60% 42%;
+    --success: 158 50% 42%;
     --success-foreground: 0 0% 100%;
-    --info: 200 80% 50%;
+    --info: 200 75% 50%;
     --info-foreground: 0 0% 100%;
   }
 }
@@ -110,31 +110,33 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-semibold tracking-tight text-foreground;
   }
 }
 
 @layer components {
   .stat-card {
-    @apply bg-card border border-border rounded-lg p-4 transition-shadow hover:shadow-md;
+    @apply bg-card border border-border rounded-lg p-4 transition-shadow hover:shadow-sm;
   }
 
   .status-badge {
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
   }
 
-  .status-new { @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300; }
-  .status-reviewing { @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300; }
-  .status-won { @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300; }
-  .status-lost { @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300; }
-  .status-draft { @apply bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300; }
-  .status-approved { @apply bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300; }
-  .status-sent { @apply bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300; }
-  .status-declined { @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300; }
-  .status-archived { @apply bg-gray-100 text-gray-600 dark:bg-gray-800/50 dark:text-gray-400; }
+  .status-new { @apply bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300; }
+  .status-reviewing { @apply bg-amber-50 text-amber-700 dark:bg-yellow-900/30 dark:text-yellow-300; }
+  .status-won { @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300; }
+  .status-lost { @apply bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300; }
+  .status-draft { @apply bg-slate-100 text-slate-600 dark:bg-gray-800/50 dark:text-gray-300; }
+  .status-approved { @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300; }
+  .status-sent { @apply bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300; }
+  .status-declined { @apply bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300; }
+  .status-archived { @apply bg-slate-50 text-slate-500 dark:bg-gray-800/50 dark:text-gray-400; }
 
   .mono {
     font-family: 'JetBrains Mono', monospace;
