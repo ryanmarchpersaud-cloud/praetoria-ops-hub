@@ -49,7 +49,7 @@ export function usePropertyVisits(propertyId: string | undefined) {
     queryKey: ['property_visits', propertyId],
     queryFn: async () => {
       if (!propertyId) return [];
-      const { data, error } = await supabase.from('visits').select('*, jobs(job_title, job_number)').eq('property_id', propertyId).order('service_date', { ascending: false });
+      const { data, error } = await supabase.from('visits').select('*, jobs(id, job_title, job_number)').eq('property_id', propertyId).order('service_date', { ascending: false });
       if (error) throw error;
       return data;
     },
