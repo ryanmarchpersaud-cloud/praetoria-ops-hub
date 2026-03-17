@@ -54,7 +54,10 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="pb-2 px-3 md:px-6">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" /> New Leads
+              <span className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center">
+                <Users className="h-3.5 w-3.5 text-blue-600" />
+              </span>
+              New Leads
             </CardTitle>
           </CardHeader>
           <CardContent className="px-3 md:px-6">
