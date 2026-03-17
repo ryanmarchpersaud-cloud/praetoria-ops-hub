@@ -184,6 +184,10 @@ function AppRoutes() {
       <Route path="/worker/job/:id" element={<WorkerRoute><WorkerLayout><WorkerJobDetail /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/weather" element={<WorkerRoute><WorkerLayout><WorkerWeatherDetail /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerMore /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/profile" element={<WorkerRoute><WorkerLayout><WorkerProfilePage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/employment" element={<WorkerRoute><WorkerLayout><WorkerEmploymentPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/documents" element={<WorkerRoute><WorkerLayout><WorkerDocumentsPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/benefits" element={<WorkerRoute><WorkerLayout><WorkerBenefitsPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
 
       <Route path="*" element={<NotFound />} />
