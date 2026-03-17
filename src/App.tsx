@@ -27,6 +27,7 @@ import SettingsPage from "./pages/SettingsPage";
 import Schedule from "./pages/Schedule";
 import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
+import Requests from "./pages/Requests";
 import NotFound from "./pages/NotFound";
 
 // Portal pages
@@ -119,6 +120,7 @@ function AppRoutes() {
       <Route path="/schedule" element={<StaffRoute><Schedule /></StaffRoute>} />
       <Route path="/activity" element={<StaffRoute><ActivityPage /></StaffRoute>} />
       <Route path="/settings" element={<StaffRoute><SettingsPage /></StaffRoute>} />
+      <Route path="/requests" element={<StaffRoute><Requests /></StaffRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}

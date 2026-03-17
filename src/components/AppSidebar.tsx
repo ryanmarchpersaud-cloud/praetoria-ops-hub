@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
+  MessageSquarePlus, ShieldCheck,
 } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
@@ -11,7 +12,7 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 
-const navItems = [
+const opsItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Leads', url: '/leads', icon: Users },
   { title: 'Quotes', url: '/quotes', icon: FileText },
@@ -21,9 +22,14 @@ const navItems = [
   { title: 'Visits', url: '/visits', icon: ClipboardCheck },
   { title: 'Invoices', url: '/invoices', icon: Receipt },
   { title: 'Schedule', url: '/schedule', icon: CalendarDays },
+  { title: 'Requests', url: '/requests', icon: MessageSquarePlus },
   { title: 'Activity', url: '/activity', icon: Activity },
+];
+
+const systemItems = [
   { title: 'Settings', url: '/settings', icon: Settings },
   { title: 'Field Mode', url: '/worker', icon: Smartphone },
+  { title: 'Portal Preview', url: '/portal/properties', icon: ShieldCheck },
 ];
 
 export function AppSidebar() {
@@ -43,11 +49,12 @@ export function AppSidebar() {
             )}
           </div>
         </SidebarGroup>
+
         <SidebarGroup>
-          <SidebarGroupLabel>Operations</SidebarGroupLabel>
+          <SidebarGroupLabel>Internal Ops</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {opsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -65,7 +72,30 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>System</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {systemItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={item.url}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter>
         <div className="px-3 py-2">
           {!collapsed && (

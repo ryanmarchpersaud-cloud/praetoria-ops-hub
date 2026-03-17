@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
 import {
@@ -23,10 +23,15 @@ export function WorkerFAB() {
   const [open, setOpen] = useState(false);
   const { isAdmin, isStaff } = useUserRole();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { data: active } = useActiveTimesheet();
   const clockIn = useClockIn();
   const clockOut = useClockOut();
+
+  // Extract current visit id from URL if on a visit page
+  const visitMatch = location.pathname.match(/\/worker\/visit\/([^/]+)/);
+  const currentVisitId = visitMatch?.[1];
 
   const handleClock = useCallback(() => {
     if (active) {
@@ -40,38 +45,33 @@ export function WorkerFAB() {
 
   const fieldActions: QuickAction[] = [
     { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: '/worker/schedule', category: 'field' },
-    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: '/worker/schedule', category: 'field' },
-    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: '/worker/schedule', category: 'field' },
-    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: '/worker/schedule', category: 'field' },
-    { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: '/worker/schedule', category: 'field' },
-    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: '/worker/timesheet', category: 'field' },
+    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=complete` : '/worker/schedule', category: 'field' },
+    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=photos` : '/worker/schedule', category: 'field' },
+    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=note` : '/worker/schedule', category: 'field' },
+    { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=issue` : '/worker/schedule', category: 'field' },
+    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: '/worker/timesheet?tab=expenses', category: 'field' },
     { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' },
-    { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: '/worker/schedule', category: 'field' },
-    { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: '/worker/schedule', category: 'field' },
-    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: '/worker/more', category: 'field' },
-    { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' },
-    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: '/worker/more', category: 'field' },
-    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: '/worker/more', category: 'field' },
+    { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: '/worker/schedule?action=directions', category: 'field' },
+    { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: '/worker/schedule?action=call', category: 'field' },
+    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: '/worker/more?action=message', category: 'field' },
+    { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet?tab=manual', category: 'field' },
+    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: '/worker/more?action=equipment', category: 'field' },
+    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: '/worker/more?action=materials', category: 'field' },
   ];
 
   const adminOnlyActions: QuickAction[] = [
-    { icon: UserPlus, label: 'New Lead', color: 'bg-blue-500', action: '/leads', category: 'admin' },
-    { icon: FileText, label: 'New Quote', color: 'bg-amber-500', action: '/quotes', category: 'admin' },
-    { icon: FilePlus, label: 'New Invoice', color: 'bg-violet-500', action: '/invoices', category: 'admin' },
-    { icon: Briefcase, label: 'New Job', color: 'bg-emerald-500', action: '/jobs', category: 'admin' },
-    { icon: ClipboardList, label: 'New Visit', color: 'bg-sky-500', action: '/visits', category: 'admin' },
-    { icon: Building2, label: 'New Client', color: 'bg-cyan-500', action: '/customers', category: 'admin' },
-    { icon: Home, label: 'New Property', color: 'bg-lime-600', action: '/properties', category: 'admin' },
-    { icon: Send, label: 'New Request', color: 'bg-pink-500', action: '/leads', category: 'admin' },
-    { icon: CreditCard, label: 'Payment', color: 'bg-green-600', action: '/invoices', category: 'admin' },
-    { icon: RotateCcw, label: 'Follow-up', color: 'bg-orange-500', action: '/leads', category: 'admin' },
-    { icon: PenLine, label: 'Review Draft', color: 'bg-slate-600', action: '/quotes', category: 'admin' },
+    { icon: UserPlus, label: 'New Lead', color: 'bg-blue-500', action: '/leads?new=1', category: 'admin' },
+    { icon: FileText, label: 'New Quote', color: 'bg-amber-500', action: '/quotes?new=1', category: 'admin' },
+    { icon: FilePlus, label: 'New Invoice', color: 'bg-violet-500', action: '/invoices/new', category: 'admin' },
+    { icon: Briefcase, label: 'New Job', color: 'bg-emerald-500', action: '/jobs?new=1', category: 'admin' },
+    { icon: ClipboardList, label: 'New Visit', color: 'bg-sky-500', action: '/visits?new=1', category: 'admin' },
+    { icon: Building2, label: 'New Client', color: 'bg-cyan-500', action: '/customers?new=1', category: 'admin' },
+    { icon: Home, label: 'New Property', color: 'bg-lime-600', action: '/properties?new=1', category: 'admin' },
+    { icon: Send, label: 'New Request', color: 'bg-pink-500', action: '/leads?new=1&source=request', category: 'admin' },
+    { icon: CreditCard, label: 'Payment', color: 'bg-green-600', action: '/invoices?filter=unpaid', category: 'admin' },
+    { icon: RotateCcw, label: 'Follow-up', color: 'bg-orange-500', action: '/quotes?filter=follow-up', category: 'admin' },
+    { icon: PenLine, label: 'Review Draft', color: 'bg-slate-600', action: '/quotes?filter=draft', category: 'admin' },
   ];
-
-  // Role-based ordering: workers see field first, admin sees admin first
-  const actions = isAdmin
-    ? [...adminOnlyActions, ...fieldActions]
-    : fieldActions;
 
   const handleAction = (a: QuickAction) => {
     setOpen(false);
@@ -110,38 +110,13 @@ export function WorkerFAB() {
 
             {/* Scrollable grid */}
             <div className="max-h-[60vh] overflow-y-auto overscroll-contain px-3 pb-4">
-              {/* Field actions */}
-              {(isAdmin || isStaff || !isAdmin) && (
+              {isAdmin && (
                 <>
-                  {isAdmin && (
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-1 mb-2">
-                      Office
-                    </p>
-                  )}
-                  {isAdmin && (
-                    <div className="grid grid-cols-4 gap-2 mb-4">
-                      {adminOnlyActions.map((a) => (
-                        <button
-                          key={a.label}
-                          onClick={() => handleAction(a)}
-                          className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl active:scale-95 active:bg-muted/50 transition-all"
-                        >
-                          <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm', a.color)}>
-                            <a.icon className="h-5 w-5 text-white" />
-                          </div>
-                          <span className="text-[10px] font-medium text-foreground text-center leading-tight line-clamp-2">
-                            {a.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-1 mb-2">
-                    Field
+                    Office
                   </p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {fieldActions.map((a) => (
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                    {adminOnlyActions.map((a) => (
                       <button
                         key={a.label}
                         onClick={() => handleAction(a)}
@@ -158,12 +133,32 @@ export function WorkerFAB() {
                   </div>
                 </>
               )}
+
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-1 mb-2">
+                Field
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {fieldActions.map((a) => (
+                  <button
+                    key={a.label}
+                    onClick={() => handleAction(a)}
+                    className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl active:scale-95 active:bg-muted/50 transition-all"
+                  >
+                    <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm', a.color)}>
+                      <a.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-[10px] font-medium text-foreground text-center leading-tight line-clamp-2">
+                      {a.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* FAB trigger — compass/action style */}
+      {/* FAB trigger */}
       <button
         onClick={() => setOpen(!open)}
         className={cn(
