@@ -183,9 +183,19 @@ export default function PortalQuotes() {
                         </div>
                       )}
 
-                      <p className="text-[10px] text-muted-foreground">
-                        Received {format(new Date(q.created_at), 'MMMM d, yyyy')}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] text-muted-foreground">
+                          Received {format(new Date(q.created_at), 'MMMM d, yyyy')}
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs h-7 px-2"
+                          onClick={() => window.open(`/quotes/${q.id}/print`, '_blank')}
+                        >
+                          <Printer className="h-3.5 w-3.5 mr-1" /> Print / PDF
+                        </Button>
+                      </div>
 
                       {/* Action buttons */}
                       {canAct && (
