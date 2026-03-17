@@ -37,13 +37,13 @@ function useSubmitActivity() {
   const qc = useQueryClient();
 
   const submit = async (actionName: string, payload: Record<string, unknown>) => {
-    const { error } = await supabase.from('activities').insert({
+    const { error } = await supabase.from('activities').insert([{
       action_name: actionName,
       user_id: user?.id ?? null,
       workflow_name: 'field_worker',
-      payload_summary: payload,
+      payload_summary: payload as any,
       status: 'completed',
-    });
+    }]);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return false;
