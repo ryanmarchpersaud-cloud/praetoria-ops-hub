@@ -19,7 +19,7 @@ const FEATURES = [
   { icon: Camera, label: 'Photos & Proof of Service', desc: 'Before/after documentation on every visit' },
   { icon: FileText, label: 'Invoicing & Billing', desc: 'Automated billing with payment tracking' },
   { icon: CloudSun, label: 'Weather Intelligence', desc: 'Environment Canada forecasts for route planning' },
-  { icon: Truck, label: 'Multi-Service Support', desc: 'Snow, landscaping, junk removal, maintenance & more' },
+  { icon: Truck, label: 'Multi-Service Support', desc: 'Snow, landscaping, junk removal, property management, cleaning & more' },
 ];
 
 export default function Login() {
@@ -240,7 +240,7 @@ export default function Login() {
               One platform for<br />Praetoria operations
             </h2>
             <p className="text-sidebar-foreground/70 text-sm mt-2 leading-relaxed">
-              Snow removal, landscaping, junk removal, property maintenance, and power washing — managed end-to-end.
+              Snow removal, landscaping, junk removal, property management, cleaning, and power washing — managed end-to-end.
             </p>
           </div>
 
