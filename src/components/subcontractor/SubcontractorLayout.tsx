@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { SubcontractorBottomNav } from './SubcontractorBottomNav';
+import { SubcontractorFAB } from './SubcontractorFAB';
 
 export function SubcontractorLayout({ children }: { children: ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export function SubcontractorLayout({ children }: { children: ReactNode }) {
       <div className="max-w-lg mx-auto">
         {children}
       </div>
+      <SubcontractorFAB />
       <SubcontractorBottomNav />
     </div>
   );
