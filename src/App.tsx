@@ -68,6 +68,10 @@ import WorkerPayrollPage from "./pages/worker/WorkerPayrollPage";
 import WorkerTrainingPage from "./pages/worker/WorkerTrainingPage";
 import WorkerTimeOffPage from "./pages/worker/WorkerTimeOffPage";
 import WorkerEmergencyContactPage from "./pages/worker/WorkerEmergencyContactPage";
+import WorkerSafetyPage from "./pages/worker/WorkerSafetyPage";
+import WorkerTaxDocsPage from "./pages/worker/WorkerTaxDocsPage";
+import WorkerTrainingSafetyPage from "./pages/worker/WorkerTrainingSafetyPage";
+import WorkerPPEPage from "./pages/worker/WorkerPPEPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
