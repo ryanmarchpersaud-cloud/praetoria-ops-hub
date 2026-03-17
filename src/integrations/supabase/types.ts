@@ -305,7 +305,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_id: string | null
+          email_delivery_status: string | null
+          email_ready: boolean
+          email_sent_at: string | null
           follow_up_due_at: string | null
+          follow_up_email_due_at: string | null
           id: string
           internal_notes: string | null
           lead_id: string
@@ -327,7 +331,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          email_delivery_status?: string | null
+          email_ready?: boolean
+          email_sent_at?: string | null
           follow_up_due_at?: string | null
+          follow_up_email_due_at?: string | null
           id?: string
           internal_notes?: string | null
           lead_id: string
@@ -349,7 +357,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          email_delivery_status?: string | null
+          email_ready?: boolean
+          email_sent_at?: string | null
           follow_up_due_at?: string | null
+          follow_up_email_due_at?: string | null
           id?: string
           internal_notes?: string | null
           lead_id?: string

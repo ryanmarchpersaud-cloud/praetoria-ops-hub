@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText } from 'lucide-react';
+import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
@@ -49,7 +50,7 @@ function CollapsibleSection({ title, defaultOpen = false, children }: { title: s
 export default function QuoteDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: quote, isLoading } = useQuote(id);
+  const { data: quote, isLoading, refetch: refetchQuote } = useQuote(id);
   const { data: lineItems = [] } = useQuoteLineItems(id);
   const updateQuote = useUpdateQuote();
   const upsertItems = useUpsertLineItems();
@@ -208,6 +209,15 @@ export default function QuoteDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Email Quote (mobile) ── */}
+      <div className="lg:hidden">
+        <QuoteEmailPreview
+          quote={quote}
+          lineItems={lineItems}
+          onEmailStatusChange={() => refetchQuote()}
+        />
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
         {/* ── Left Column: Content ── */}
@@ -389,6 +399,13 @@ export default function QuoteDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Email Quote Panel */}
+          <QuoteEmailPreview
+            quote={quote}
+            lineItems={lineItems}
+            onEmailStatusChange={() => refetchQuote()}
+          />
         </div>
       </div>
     </div>
