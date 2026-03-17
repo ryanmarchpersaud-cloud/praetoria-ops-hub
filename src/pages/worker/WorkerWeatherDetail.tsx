@@ -52,7 +52,7 @@ const riskIcons = { low: Shield, medium: TriangleAlert, high: AlertTriangle, cri
 
 export default function WorkerWeatherDetail() {
   const [searchParams] = useSearchParams();
-  const city = searchParams.get('city') || 'toronto';
+  const city = searchParams.get('city') || 'regina';
   const { data, loading, error, refetch } = useWeather(city);
 
   if (loading) {

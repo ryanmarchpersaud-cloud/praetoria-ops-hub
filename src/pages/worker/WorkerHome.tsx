@@ -395,7 +395,7 @@ export default function WorkerHome() {
       )}
 
       {/* Weather */}
-      <WeatherCard city="toronto" compact />
+      <WeatherCard city="regina" compact />
 
       {/* Location & Route card */}
       <div>

@@ -11,7 +11,7 @@ interface WeatherCardProps {
   linkTo?: string;
 }
 
-export function WeatherCard({ city = 'toronto', compact = false, className, linkTo }: WeatherCardProps) {
+export function WeatherCard({ city = 'regina', compact = false, className, linkTo }: WeatherCardProps) {
   const { data, loading, error, refetch } = useWeather(city);
 
   if (loading) {
