@@ -147,7 +147,7 @@ export default function Employees() {
               </TableHeader>
               <TableBody>
                 {filtered.map(emp => (
-                  <TableRow key={emp.id} className="cursor-pointer" onClick={() => window.location.href = `/employees/${emp.user_id}`}>
+                  <TableRow key={emp.id} className="cursor-pointer" onClick={() => navigate(`/employees/${emp.user_id}`)}>
                     <TableCell>
                       <div>
                         <p className="font-medium text-foreground">{emp.full_name || '—'}</p>
