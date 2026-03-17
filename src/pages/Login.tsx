@@ -240,7 +240,7 @@ export default function Login() {
               One platform for<br />Praetoria operations
             </h2>
             <p className="text-sidebar-foreground/70 text-sm mt-2 leading-relaxed">
-              Snow removal, landscaping, junk removal, property maintenance, and power washing — managed end-to-end.
+              Snow removal, landscaping, junk removal, property management, cleaning, and power washing — managed end-to-end.
             </p>
           </div>
 

@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { MessageSquarePlus, Plus } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 
-const SERVICE_TYPES = ['Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance', 'Power Washing', 'Other'];
+const SERVICE_TYPES = ['Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance', 'Property Management', 'Power Washing', 'Cleaning Services', 'Other'];
 const URGENCY_OPTIONS = ['Low', 'Normal', 'High', 'Urgent'];
 
 export default function PortalRequests() {
