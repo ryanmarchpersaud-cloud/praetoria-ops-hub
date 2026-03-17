@@ -160,6 +160,7 @@ export default function WorkerSearch() {
                         {r.status && <StatusBadge status={r.status} showIcon={false} />}
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate">{r.subtitle}</p>
+                      {r.note && <p className="text-[10px] text-muted-foreground/60 italic truncate">{r.note}</p>}
                     </div>
                     <span className="text-[9px] font-medium uppercase text-muted-foreground/60 tracking-wider shrink-0">{r.type}</span>
                   </CardContent>
