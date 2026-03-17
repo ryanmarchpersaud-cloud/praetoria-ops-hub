@@ -165,6 +165,15 @@ export default function Visits() {
                 <TableCell className="text-sm text-muted-foreground">{v.properties ? <Link to={`/properties/${v.properties.id}`} className="text-primary hover:underline">{v.properties.property_name}</Link> : '—'}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{v.service_date ? format(new Date(v.service_date), 'MMM d, yyyy') : '—'}</TableCell>
                 <TableCell className="text-sm">{v.visit_type}</TableCell>
+                <TableCell>
+                  {v.visit_photos?.length > 0 ? (
+                    <span className="flex items-center gap-1 text-xs text-primary font-medium">
+                      <Camera className="h-3.5 w-3.5" /> {v.visit_photos.length}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/40">—</span>
+                  )}
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{v.weather_notes || '—'}</TableCell>
                 <TableCell><StatusBadge status={v.visit_status} /></TableCell>
               </TableRow>
