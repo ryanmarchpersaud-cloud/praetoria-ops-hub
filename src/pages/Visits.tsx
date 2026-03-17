@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, ChevronRight, Cloud } from 'lucide-react';
+import { Plus, Search, ChevronRight, Cloud, Camera } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
 import { useJobs } from '@/hooks/useJobs';
@@ -115,6 +115,11 @@ export default function Visits() {
                   <span className="text-[11px] text-muted-foreground">{v.service_date}</span>
                   <span className="text-muted-foreground/30">·</span>
                   <span className="text-[11px] text-muted-foreground">{v.visit_type}</span>
+                  {v.visit_photos?.length > 0 && (
+                    <span className="flex items-center gap-0.5 text-[11px] text-primary">
+                      <Camera className="h-3 w-3" />{v.visit_photos.length}
+                    </span>
+                  )}
                 </div>
                 {v.weather_notes && (
                   <div className="flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
@@ -141,13 +146,14 @@ export default function Visits() {
               <TableHead>Property</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Type</TableHead>
+              <TableHead>Photos</TableHead>
               <TableHead>Weather</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
-            : visits.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No visits found</TableCell></TableRow>
+            {isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+            : visits.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No visits found</TableCell></TableRow>
             : visits.map((v: any) => (
               <TableRow key={v.id} className="cursor-pointer hover:bg-muted/50">
                 <TableCell>
@@ -159,6 +165,15 @@ export default function Visits() {
                 <TableCell className="text-sm text-muted-foreground">{v.properties ? <Link to={`/properties/${v.properties.id}`} className="text-primary hover:underline">{v.properties.property_name}</Link> : '—'}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{v.service_date ? format(new Date(v.service_date), 'MMM d, yyyy') : '—'}</TableCell>
                 <TableCell className="text-sm">{v.visit_type}</TableCell>
+                <TableCell>
+                  {v.visit_photos?.length > 0 ? (
+                    <span className="flex items-center gap-1 text-xs text-primary font-medium">
+                      <Camera className="h-3.5 w-3.5" /> {v.visit_photos.length}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground/40">—</span>
+                  )}
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{v.weather_notes || '—'}</TableCell>
                 <TableCell><StatusBadge status={v.visit_status} /></TableCell>
               </TableRow>
