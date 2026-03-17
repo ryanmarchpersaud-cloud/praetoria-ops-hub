@@ -35,7 +35,7 @@ export function ServicePromoCard({ promo, variant = 'full', className }: Service
   }
 
   return (
-    <div className={cn('rounded-xl border border-border bg-card p-5 hover:shadow-md transition-shadow', className)}>
+    <div className={cn('rounded-xl border border-border/60 p-5 hover:shadow-md transition-shadow', promo.accentClass, className)}>
       <div className="flex items-center gap-3 mb-3">
         <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', promo.accentClass)}>
           <Icon className={cn('w-5 h-5', promo.iconColorClass)} />
