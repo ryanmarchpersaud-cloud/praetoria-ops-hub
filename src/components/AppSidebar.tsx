@@ -21,6 +21,7 @@ const navItems = [
   { title: 'Schedule', url: '/schedule', icon: CalendarDays },
   { title: 'Activity', url: '/activity', icon: Activity },
   { title: 'Settings', url: '/settings', icon: Settings },
+  { title: 'Field Mode', url: '/worker', icon: Smartphone },
 ];
 
 export function AppSidebar() {
