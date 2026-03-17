@@ -74,6 +74,7 @@ export type Database = {
           postal_code: string | null
           province: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           address_line_1?: string | null
@@ -89,6 +90,7 @@ export type Database = {
           postal_code?: string | null
           province?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           address_line_1?: string | null
@@ -104,6 +106,7 @@ export type Database = {
           postal_code?: string | null
           province?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
