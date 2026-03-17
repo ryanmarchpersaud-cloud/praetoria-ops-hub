@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { sendNotification } from '@/hooks/useNotifications';
+import { DirectionsButton } from '@/components/DirectionsButton';
 
 // Compress image for mobile upload
 async function compressImage(file: File, maxWidth = 1920, quality = 0.82): Promise<File> {
@@ -405,7 +406,7 @@ export default function WorkerVisitExec() {
           {property && (
             <div className="flex items-start gap-2">
               <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{property.property_name}</p>
                 {property.address_line_1 && (
                   <p className="text-[11px] text-muted-foreground">
@@ -415,6 +416,13 @@ export default function WorkerVisitExec() {
                 {property.gate_code && <p className="text-[11px] text-amber-600">Gate: {property.gate_code}</p>}
                 {property.access_notes && <p className="text-[11px] text-muted-foreground italic">{property.access_notes}</p>}
               </div>
+              <DirectionsButton
+                address={property.address_line_1}
+                city={property.city}
+                province={property.province}
+                postalCode={property.postal_code}
+                variant="icon"
+              />
             </div>
           )}
           {customer && (

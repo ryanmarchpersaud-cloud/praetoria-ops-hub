@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, ClipboardCheck, MapPin } from 'lucide-react';
+import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { JOB_STATUSES, JOB_PRIORITIES, SERVICE_CATEGORIES } from '@/lib/constants';
@@ -214,6 +215,14 @@ export default function JobDetail() {
               <CardContent className="text-sm space-y-1">
                 <Link to={`/properties/${property.id}`} className="font-medium text-primary hover:underline">{property.property_name}</Link>
                 {property.address_line_1 && <p className="text-xs text-muted-foreground">{property.address_line_1}, {property.city}</p>}
+                <DirectionsButton
+                  address={property.address_line_1}
+                  city={property.city}
+                  province={property.province}
+                  postalCode={property.postal_code}
+                  variant="compact"
+                  className="mt-1"
+                />
               </CardContent>
             </Card>
           )}

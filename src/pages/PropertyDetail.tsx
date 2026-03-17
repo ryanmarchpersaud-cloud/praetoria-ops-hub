@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, MapPin, Briefcase, ClipboardCheck } from 'lucide-react';
+import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PROPERTY_STATUSES, PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
@@ -60,9 +61,17 @@ export default function PropertyDetail() {
         </div>
       </div>
 
-      <Button onClick={handleSave} className="w-full h-11" disabled={updateProperty.isPending}>
-        <Save className="h-4 w-4 mr-2" /> Save Property
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateProperty.isPending}>
+          <Save className="h-4 w-4 mr-2" /> Save Property
+        </Button>
+        <DirectionsButton
+          address={form.address_line_1}
+          city={form.city}
+          province={form.province}
+          postalCode={form.postal_code}
+        />
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
