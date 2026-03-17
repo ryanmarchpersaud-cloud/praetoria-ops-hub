@@ -5,155 +5,79 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Environment Canada citypage XML weather data
-// Source: https://dd.weather.gc.ca/citypage_weather/xml/
-// Format: {province}/{site_code}_e.xml
-const ECCC_BASE = 'https://dd.weather.gc.ca/citypage_weather/xml';
+// New ECCC GeoMet OGC API (replaces deprecated dd.weather.gc.ca XML)
+const ECCC_API = 'https://api.weather.gc.ca/collections/citypageweather-realtime/items';
 
-// Common Ontario city codes for Praetoria's service area
-const CITY_CODES: Record<string, { province: string; code: string; name: string }> = {
-  'toronto': { province: 'ON', code: 's0000458', name: 'Toronto' },
-  'mississauga': { province: 'ON', code: 's0000786', name: 'Mississauga' },
-  'vaughan': { province: 'ON', code: 's0000585', name: 'Vaughan' },
-  'oakville': { province: 'ON', code: 's0000613', name: 'Oakville' },
-  'brampton': { province: 'ON', code: 's0000785', name: 'Brampton' },
-  'markham': { province: 'ON', code: 's0000585', name: 'Markham' },
-  'ottawa': { province: 'ON', code: 's0000430', name: 'Ottawa' },
-  'hamilton': { province: 'ON', code: 's0000318', name: 'Hamilton' },
-  'london': { province: 'ON', code: 's0000326', name: 'London' },
-  'lethbridge': { province: 'AB', code: 's0000652', name: 'Lethbridge' },
-  'calgary': { province: 'AB', code: 's0000047', name: 'Calgary' },
-  'edmonton': { province: 'AB', code: 's0000045', name: 'Edmonton' },
-  'vancouver': { province: 'BC', code: 's0000141', name: 'Vancouver' },
-  'montreal': { province: 'QC', code: 's0000635', name: 'Montréal' },
-  'winnipeg': { province: 'MB', code: 's0000193', name: 'Winnipeg' },
+// City identifiers for the new API
+const CITY_CODES: Record<string, { id: string; name: string; province: string }> = {
+  'toronto':     { id: 'on-143', name: 'Toronto',     province: 'ON' },
+  'mississauga': { id: 'on-84',  name: 'Mississauga', province: 'ON' },
+  'vaughan':     { id: 'on-150', name: 'Vaughan',     province: 'ON' },
+  'oakville':    { id: 'on-95',  name: 'Oakville',    province: 'ON' },
+  'brampton':    { id: 'on-11',  name: 'Brampton',    province: 'ON' },
+  'markham':     { id: 'on-150', name: 'Markham',     province: 'ON' },
+  'ottawa':      { id: 'on-118', name: 'Ottawa',      province: 'ON' },
+  'hamilton':    { id: 'on-42',  name: 'Hamilton',    province: 'ON' },
+  'london':      { id: 'on-72',  name: 'London',      province: 'ON' },
+  'lethbridge':  { id: 'ab-30',  name: 'Lethbridge',  province: 'AB' },
+  'calgary':     { id: 'ab-52',  name: 'Calgary',     province: 'AB' },
+  'edmonton':    { id: 'ab-50',  name: 'Edmonton',    province: 'AB' },
+  'vancouver':   { id: 'bc-74',  name: 'Vancouver',   province: 'BC' },
+  'montreal':    { id: 'qc-147', name: 'Montréal',    province: 'QC' },
+  'winnipeg':    { id: 'mb-38',  name: 'Winnipeg',    province: 'MB' },
 };
 
-function parseXMLValue(xml: string, tag: string): string | null {
-  const regex = new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`, 'i');
-  const match = xml.match(regex);
-  return match ? match[1].trim() : null;
-}
-
-function parseAttribute(xml: string, tag: string, attr: string): string | null {
-  const regex = new RegExp(`<${tag}[^>]*${attr}="([^"]*)"`, 'i');
-  const match = xml.match(regex);
-  return match ? match[1] : null;
-}
-
-function parseCurrentConditions(xml: string) {
-  // Extract the <currentConditions> block
-  const ccMatch = xml.match(/<currentConditions>[\s\S]*?<\/currentConditions>/);
-  if (!ccMatch) return null;
-  const cc = ccMatch[0];
-
-  const condition = parseXMLValue(cc, 'condition') || 'Unknown';
+function extractCurrent(cc: any) {
+  if (!cc) return null;
+  const val = (obj: any) => obj?.value?.en ?? null;
   
-  // Temperature
-  const tempMatch = cc.match(/<temperature[^>]*unitType="metric"[^>]*>([^<]*)<\/temperature>/);
-  const temperature = tempMatch ? parseFloat(tempMatch[1]) : null;
-
-  // Wind speed
-  const windSpeedMatch = cc.match(/<speed[^>]*unitType="metric"[^>]*>([^<]*)<\/speed>/);
-  const windSpeed = windSpeedMatch ? parseFloat(windSpeedMatch[1]) : null;
-  const windGust = parseXMLValue(cc, 'gust');
-  const windDir = parseXMLValue(cc, 'direction');
-
-  // Humidity
-  const humidityMatch = cc.match(/<relativeHumidity[^>]*>([^<]*)<\/relativeHumidity>/);
-  const humidity = humidityMatch ? parseInt(humidityMatch[1]) : null;
-
-  // Pressure
-  const pressureMatch = cc.match(/<pressure[^>]*unitType="metric"[^>]*>([^<]*)<\/pressure>/);
-  const pressure = pressureMatch ? parseFloat(pressureMatch[1]) : null;
-
-  // Visibility
-  const visibilityMatch = cc.match(/<visibility[^>]*unitType="metric"[^>]*>([^<]*)<\/visibility>/);
-  const visibility = visibilityMatch ? parseFloat(visibilityMatch[1]) : null;
-
-  // Wind chill or humidex
-  const windChillMatch = cc.match(/<windChill[^>]*>([^<]*)<\/windChill>/);
-  const windChill = windChillMatch ? parseFloat(windChillMatch[1]) : null;
-
-  // Icon code for weather icon mapping
-  const iconCode = parseXMLValue(cc, 'iconCode');
-
-  // Observation datetime
-  const dateTimeBlock = cc.match(/<dateTime[^>]*name="observation"[^>]*zone="UTC"[^>]*>[\s\S]*?<\/dateTime>/);
-  const observedAt = dateTimeBlock ? parseXMLValue(dateTimeBlock[0], 'textSummary') : null;
-
   return {
-    condition,
-    temperature,
-    windSpeed,
-    windGust: windGust ? parseFloat(windGust) : null,
-    windDirection: windDir,
-    humidity,
-    pressure,
-    visibility,
-    windChill,
-    iconCode,
-    observedAt,
+    condition: cc.condition?.en || 'Unknown',
+    temperature: val(cc.temperature),
+    windSpeed: val(cc.wind?.speed),
+    windGust: val(cc.wind?.gust),
+    windDirection: val(cc.wind?.direction),
+    humidity: val(cc.relativeHumidity),
+    pressure: val(cc.pressure),
+    visibility: val(cc.visibility),
+    windChill: val(cc.windChill),
+    iconCode: cc.iconCode?.value?.toString() ?? null,
+    observedAt: cc.timestamp?.en || null,
   };
 }
 
-function parseWarnings(xml: string) {
-  const warnings: Array<{ type: string; priority: string; description: string; url?: string }> = [];
-  
-  const warningsBlock = xml.match(/<warnings[^>]*>[\s\S]*?<\/warnings>/);
-  if (!warningsBlock) return warnings;
-
-  const eventMatches = warningsBlock[0].matchAll(/<event\s+([^>]*)\/>/g);
-  for (const m of eventMatches) {
-    const attrs = m[1];
-    const type = attrs.match(/type="([^"]*)"/)?.[1] || '';
-    const priority = attrs.match(/priority="([^"]*)"/)?.[1] || '';
-    const desc = attrs.match(/description="([^"]*)"/)?.[1] || '';
-    if (type || desc) {
-      warnings.push({ type, priority, description: desc });
-    }
-  }
-
-  return warnings;
+function extractWarnings(warnings: any) {
+  if (!warnings || !Array.isArray(warnings)) return [];
+  return warnings.map((w: any) => ({
+    type: w.type?.en || '',
+    priority: w.priority?.en || '',
+    description: w.description?.en || w.type?.en || '',
+  })).filter((w: any) => w.type || w.description);
 }
 
-function parseForecast(xml: string) {
-  const forecasts: Array<{
-    period: string;
-    summary: string;
-    temperature: number | null;
-    iconCode: string | null;
-    pop: string | null;
-    snowLevel: string | null;
-  }> = [];
+function extractForecasts(forecasts: any) {
+  if (!forecasts || !Array.isArray(forecasts)) return [];
+  return forecasts.slice(0, 6).map((f: any) => {
+    const summary = f.textSummary?.en || '';
+    const temperature = f.temperature?.value?.en ?? null;
+    const iconCode = f.iconCode?.value?.toString() ?? null;
+    const pop = f.precipitation?.value?.en?.toString() ?? null;
 
-  const forecastGroup = xml.match(/<forecastGroup>[\s\S]*?<\/forecastGroup>/);
-  if (!forecastGroup) return forecasts;
+    // Snow accumulation from text
+    const snowMatch = summary.match(/snow[^.]*?(\d+)\s*(?:to\s*(\d+)\s*)?cm/i);
+    const snowLevel = snowMatch
+      ? (snowMatch[2] ? `${snowMatch[1]}-${snowMatch[2]} cm` : `${snowMatch[1]} cm`)
+      : null;
 
-  const forecastBlocks = forecastGroup[0].matchAll(/<forecast>[\s\S]*?<\/forecast>/g);
-  let count = 0;
-  for (const fb of forecastBlocks) {
-    if (count >= 6) break; // Limit to 6 periods
-    const block = fb[0];
-    const period = parseXMLValue(block, 'period') || '';
-    const summary = parseXMLValue(block, 'textSummary') || '';
-    const tempMatch = block.match(/<temperature[^>]*>([^<]*)<\/temperature>/);
-    const temperature = tempMatch ? parseFloat(tempMatch[1]) : null;
-    const iconCode = parseXMLValue(block, 'iconCode');
-    
-    // Precipitation probability
-    const popBlock = block.match(/<abbreviatedForecast>[\s\S]*?<\/abbreviatedForecast>/);
-    const pop = popBlock ? parseXMLValue(popBlock[0], 'pop') : null;
-
-    // Snow accumulation
-    const snowMatch = block.match(/snow[^.]*?(\d+)\s*(?:to\s*(\d+)\s*)?cm/i);
-    const snowLevel = snowMatch ? (snowMatch[2] ? `${snowMatch[1]}-${snowMatch[2]} cm` : `${snowMatch[1]} cm`) : null;
-
-    forecasts.push({ period, summary, temperature, iconCode, pop, snowLevel });
-    count++;
-  }
-
-  return forecasts;
+    return {
+      period: f.name?.en || '',
+      summary,
+      temperature,
+      iconCode,
+      pop,
+      snowLevel,
+    };
+  });
 }
 
 serve(async (req) => {
@@ -164,7 +88,7 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const cityParam = (url.searchParams.get('city') || 'toronto').toLowerCase().trim();
-    
+
     const cityInfo = CITY_CODES[cityParam];
     if (!cityInfo) {
       return new Response(JSON.stringify({
@@ -176,42 +100,41 @@ serve(async (req) => {
       });
     }
 
-    const ecccUrl = `${ECCC_BASE}/${cityInfo.province}/${cityInfo.code}_e.xml`;
-    const response = await fetch(ecccUrl, {
-      headers: { 'Accept': 'application/xml' },
+    const apiUrl = `${ECCC_API}?lang=en&f=json&limit=1&identifier=${cityInfo.id}`;
+    const response = await fetch(apiUrl, {
+      headers: { 'Accept': 'application/json' },
     });
 
     if (!response.ok) {
       throw new Error(`ECCC API returned ${response.status}`);
     }
 
-    const xml = await response.text();
+    const json = await response.json();
+    const feature = json?.features?.[0];
+    if (!feature) {
+      throw new Error('No weather data returned for this city');
+    }
 
-    const current = parseCurrentConditions(xml);
-    const warnings = parseWarnings(xml);
-    const forecast = parseForecast(xml);
+    const props = feature.properties;
+    const current = extractCurrent(props.currentConditions);
+    const warnings = extractWarnings(props.warnings);
+    const forecast = extractForecasts(props.forecasts);
 
-    // Snow-related analysis for service planning
-    const hasSnowWarning = warnings.some(w =>
-      w.description.toLowerCase().includes('snow') ||
-      w.type.toLowerCase().includes('snow') ||
-      w.type.toLowerCase().includes('winter storm') ||
-      w.type.toLowerCase().includes('blizzard')
+    // Snow analysis
+    const hasSnowWarning = warnings.some((w: any) =>
+      (w.description + w.type).toLowerCase().match(/snow|winter storm|blizzard/)
     );
-
-    const forecastSnow = forecast.some(f =>
+    const forecastSnow = forecast.some((f: any) =>
       f.snowLevel !== null ||
       f.summary.toLowerCase().includes('snow') ||
       f.summary.toLowerCase().includes('flurries')
     );
-
     const snowAlertLevel = hasSnowWarning ? 'warning' : forecastSnow ? 'watch' : 'none';
 
     const weatherData = {
       city: cityInfo.name,
       province: cityInfo.province,
       source: 'Environment and Climate Change Canada',
-      sourceUrl: ecccUrl,
       fetchedAt: new Date().toISOString(),
       current,
       warnings,
