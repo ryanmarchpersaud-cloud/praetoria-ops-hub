@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 type DialogType = 'contact_support' | 'report_issue' | null;
 
 const quickActions = [
-  { icon: MessageSquarePlus, label: 'Request Service', color: 'bg-blue-500', route: '/portal/requests?new=1' },
+  { icon: MessageSquarePlus, label: 'Request Service', color: 'bg-blue-500', route: '/portal/requests/new' },
   { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', dialog: 'report_issue' as const },
   { icon: Phone, label: 'Contact Support', color: 'bg-emerald-500', dialog: 'contact_support' as const },
   { icon: Camera, label: 'Upload Photos', color: 'bg-violet-500', route: '/portal/photos' },

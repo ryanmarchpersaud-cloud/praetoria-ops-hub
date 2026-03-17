@@ -26,51 +26,11 @@ export default function PortalRequests() {
     enabled: !!customer,
   });
 
-  const { data: properties = [] } = useQuery({
-    queryKey: ['portal_properties_select', customer?.id],
-    queryFn: async () => {
-      if (!customer) return [];
-      const { data, error } = await supabase
-        .from('properties')
-        .select('id, property_name')
-        .eq('customer_id', customer.id)
-        .order('property_name');
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!customer,
-  });
-
-  const createRequest = useMutation({
-    mutationFn: async () => {
-      if (!customer || !user) throw new Error('Not authenticated');
-      const { error } = await supabase.from('service_requests').insert({
-        customer_id: customer.id,
-        user_id: user.id,
-        subject: form.subject,
-        description: form.description || null,
-        service_type: form.service_type,
-        urgency: form.urgency,
-        property_id: form.property_id || null,
-      } as any);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['portal_requests'] });
-      setDialogOpen(false);
-      setForm({ subject: '', description: '', service_type: 'Other', urgency: 'Normal', property_id: '' });
-      toast({ title: 'Request submitted' });
-    },
-    onError: (err: any) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    },
-  });
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold">My Requests</h1>
-        <Button size="sm" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" onClick={() => navigate('/portal/requests/new')}>
           <Plus className="h-4 w-4 mr-1" /> New Request
         </Button>
       </div>
@@ -81,7 +41,10 @@ export default function PortalRequests() {
         <Card>
           <CardContent className="py-8 text-center space-y-2">
             <MessageSquarePlus className="h-8 w-8 text-muted-foreground/30 mx-auto" />
-            <p className="text-sm text-muted-foreground">No requests yet. Submit a new service request to get started.</p>
+            <p className="text-sm text-muted-foreground">No requests yet.</p>
+            <Button size="sm" variant="outline" onClick={() => navigate('/portal/requests/new')}>
+              Submit a Request
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -97,10 +60,10 @@ export default function PortalRequests() {
                   <span>{r.service_type}</span>
                   <span>·</span>
                   <span>{r.urgency}</span>
-                  {r.properties?.property_name && (
+                  {(r as any).properties?.property_name && (
                     <>
                       <span>·</span>
-                      <span>{r.properties.property_name}</span>
+                      <span>{(r as any).properties.property_name}</span>
                     </>
                   )}
                 </div>
@@ -111,65 +74,6 @@ export default function PortalRequests() {
           ))}
         </div>
       )}
-
-      {/* New request dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md mx-3">
-          <DialogHeader>
-            <DialogTitle>New Service Request</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Subject *</Label>
-              <Input value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))} placeholder="e.g. Snow removal needed" />
-            </div>
-            <div>
-              <Label className="text-xs">Service Type</Label>
-              <select
-                value={form.service_type}
-                onChange={e => setForm(p => ({ ...p, service_type: e.target.value }))}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10"
-              >
-                {SERVICE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <Label className="text-xs">Urgency</Label>
-              <select
-                value={form.urgency}
-                onChange={e => setForm(p => ({ ...p, urgency: e.target.value }))}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10"
-              >
-                {URGENCY_OPTIONS.map(u => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </div>
-            {properties.length > 0 && (
-              <div>
-                <Label className="text-xs">Property (optional)</Label>
-                <select
-                  value={form.property_id}
-                  onChange={e => setForm(p => ({ ...p, property_id: e.target.value }))}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10"
-                >
-                  <option value="">Select property...</option>
-                  {properties.map((p: any) => <option key={p.id} value={p.id}>{p.property_name}</option>)}
-                </select>
-              </div>
-            )}
-            <div>
-              <Label className="text-xs">Description</Label>
-              <Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} placeholder="Describe what you need..." />
-            </div>
-            <Button
-              className="w-full"
-              disabled={!form.subject.trim() || createRequest.isPending}
-              onClick={() => createRequest.mutate()}
-            >
-              {createRequest.isPending ? 'Submitting...' : 'Submit Request'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
