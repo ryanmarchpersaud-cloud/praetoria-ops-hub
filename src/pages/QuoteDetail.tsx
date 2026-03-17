@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, Printer } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
