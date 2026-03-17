@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WorkerFAB } from '@/components/worker/WorkerFAB';
@@ -10,7 +11,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -29,12 +29,12 @@ function formatToday() {
 
 export default function WorkerHome() {
   const { user } = useAuth();
-  const [clockedIn, setClockedIn] = useState(false);
-  const [clockTime, setClockTime] = useState<Date | null>(null);
+  const { data: active } = useActiveTimesheet();
+  const clockInMut = useClockIn();
+  const clockOutMut = useClockOut();
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Fetch today's visits assigned or all visits for today
   const { data: todayVisits = [] } = useQuery({
     queryKey: ['worker_today_visits', todayStr],
     queryFn: async () => {
@@ -56,14 +56,14 @@ export default function WorkerHome() {
   const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
 
   const handleClock = () => {
-    if (clockedIn) {
-      setClockedIn(false);
-      setClockTime(null);
+    if (active) {
+      clockOutMut.mutate(active.id);
     } else {
-      setClockedIn(true);
-      setClockTime(new Date());
+      clockInMut.mutate();
     }
   };
+
+  const clockedIn = !!active;
 
   return (
     <div className="space-y-4 px-4 pt-3 pb-4">
@@ -105,9 +105,9 @@ export default function WorkerHome() {
             <p className={cn('text-sm font-bold', clockedIn ? 'text-emerald-700 dark:text-emerald-300' : '')}>
               {clockedIn ? 'Clock Out' : 'Clock In'}
             </p>
-            {clockedIn && clockTime && (
+            {clockedIn && active && (
               <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-                Since {clockTime.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}
+                Since {new Date(active.clock_in).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}
               </p>
             )}
             {!clockedIn && (
