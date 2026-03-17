@@ -31,6 +31,7 @@ import NotFound from "./pages/NotFound";
 import PortalProperties from "./pages/portal/PortalProperties";
 import PortalQuotes from "./pages/portal/PortalQuotes";
 import PortalVisits from "./pages/portal/PortalVisits";
+import PortalPlan from "./pages/portal/PortalPlan";
 import PortalPhotos from "./pages/portal/PortalPhotos";
 import PortalRequests from "./pages/portal/PortalRequests";
 import PortalAccount from "./pages/portal/PortalAccount";
@@ -96,6 +97,7 @@ function AppRoutes() {
       {/* Customer portal routes */}
       <Route path="/portal/properties" element={<PortalRoute><PortalProperties /></PortalRoute>} />
       <Route path="/portal/quotes" element={<PortalRoute><PortalQuotes /></PortalRoute>} />
+      <Route path="/portal/plan" element={<PortalRoute><PortalPlan /></PortalRoute>} />
       <Route path="/portal/visits" element={<PortalRoute><PortalVisits /></PortalRoute>} />
       <Route path="/portal/photos" element={<PortalRoute><PortalPhotos /></PortalRoute>} />
       <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
