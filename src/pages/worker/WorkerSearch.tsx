@@ -69,7 +69,7 @@ export default function WorkerSearch() {
         id: c.id,
         title: `${c.first_name} ${c.last_name}`,
         subtitle: [c.company_name, c.phone].filter(Boolean).join(' · '),
-        link: `/worker/schedule`,
+        link: `/worker/schedule`, // Workers view customer context through visits/properties
       }));
 
       // Search jobs
