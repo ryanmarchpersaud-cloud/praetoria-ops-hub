@@ -44,6 +44,7 @@ export const JOB_PRIORITIES = ['Low', 'Normal', 'High', 'Urgent'] as const;
 export const VISIT_STATUSES = ['Planned', 'Scheduled', 'En Route', 'In Progress', 'Completed', 'Skipped', 'Rescheduled', 'Missed', 'Cancelled'] as const;
 export const VISIT_TYPES = ['Routine', 'One-time', 'Emergency', 'Inspection', 'Follow-up'] as const;
 export const SERVICE_FREQUENCIES = ['one-time', 'weekly', 'biweekly', 'monthly', 'on-snowfall', 'custom-seasonal'] as const;
+export const INVOICE_STATUSES = ['Draft', 'Sent', 'Viewed', 'Paid', 'Partially Paid', 'Overdue', 'Failed', 'Voided'] as const;
 
 export function getStatusClass(status: string): string {
   const s = status.toLowerCase();
