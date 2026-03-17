@@ -25,6 +25,8 @@ import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
 import SettingsPage from "./pages/SettingsPage";
 import Schedule from "./pages/Schedule";
+import Invoices from "./pages/Invoices";
+import InvoiceDetail from "./pages/InvoiceDetail";
 import NotFound from "./pages/NotFound";
 
 // Portal pages
