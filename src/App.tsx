@@ -4,7 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AppLayout } from "@/components/AppLayout";
+import { PortalLayout } from "@/components/PortalLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
@@ -24,39 +26,79 @@ import SettingsPage from "./pages/SettingsPage";
 import Schedule from "./pages/Schedule";
 import NotFound from "./pages/NotFound";
 
+// Portal pages
+import PortalProperties from "./pages/portal/PortalProperties";
+import PortalQuotes from "./pages/portal/PortalQuotes";
+import PortalVisits from "./pages/portal/PortalVisits";
+import PortalPhotos from "./pages/portal/PortalPhotos";
+import PortalRequests from "./pages/portal/PortalRequests";
+import PortalAccount from "./pages/portal/PortalAccount";
+
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function StaffRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  const { isCustomer, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
+  if (isCustomer) return <Navigate to="/portal/properties" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
-function AppRoutes() {
+function PortalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const { isCustomer, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!isCustomer) return <Navigate to="/" replace />;
+  return <PortalLayout>{children}</PortalLayout>;
+}
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+function LoginRoute() {
+  const { user, loading } = useAuth();
+  const { isCustomer, isLoading: roleLoading } = useUserRole();
+  if (loading || roleLoading) {
+    if (!user) return <Login />;
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  }
+  if (user) {
+    if (isCustomer) return <Navigate to="/portal/properties" replace />;
+    return <Navigate to="/" replace />;
+  }
+  return <Login />;
+}
 
+function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
-      <Route path="/leads/:id" element={<ProtectedRoute><LeadDetail /></ProtectedRoute>} />
-      <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
-      <Route path="/quotes/:id" element={<ProtectedRoute><QuoteDetail /></ProtectedRoute>} />
-      <Route path="/quotes/:id/print" element={<ProtectedRoute><QuotePrint /></ProtectedRoute>} />
-      <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
-      <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
-      <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
-      <Route path="/jobs" element={<ProtectedRoute><Jobs /></ProtectedRoute>} />
-      <Route path="/jobs/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
-      <Route path="/visits" element={<ProtectedRoute><Visits /></ProtectedRoute>} />
-      <Route path="/visits/:id" element={<ProtectedRoute><VisitDetail /></ProtectedRoute>} />
-      <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-      <Route path="/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/login" element={<LoginRoute />} />
+
+      {/* Staff/Admin routes */}
+      <Route path="/" element={<StaffRoute><Dashboard /></StaffRoute>} />
+      <Route path="/leads" element={<StaffRoute><Leads /></StaffRoute>} />
+      <Route path="/leads/:id" element={<StaffRoute><LeadDetail /></StaffRoute>} />
+      <Route path="/quotes" element={<StaffRoute><Quotes /></StaffRoute>} />
+      <Route path="/quotes/:id" element={<StaffRoute><QuoteDetail /></StaffRoute>} />
+      <Route path="/quotes/:id/print" element={<StaffRoute><QuotePrint /></StaffRoute>} />
+      <Route path="/customers" element={<StaffRoute><Customers /></StaffRoute>} />
+      <Route path="/properties" element={<StaffRoute><Properties /></StaffRoute>} />
+      <Route path="/properties/:id" element={<StaffRoute><PropertyDetail /></StaffRoute>} />
+      <Route path="/jobs" element={<StaffRoute><Jobs /></StaffRoute>} />
+      <Route path="/jobs/:id" element={<StaffRoute><JobDetail /></StaffRoute>} />
+      <Route path="/visits" element={<StaffRoute><Visits /></StaffRoute>} />
+      <Route path="/visits/:id" element={<StaffRoute><VisitDetail /></StaffRoute>} />
+      <Route path="/schedule" element={<StaffRoute><Schedule /></StaffRoute>} />
+      <Route path="/activity" element={<StaffRoute><ActivityPage /></StaffRoute>} />
+      <Route path="/settings" element={<StaffRoute><SettingsPage /></StaffRoute>} />
+
+      {/* Customer portal routes */}
+      <Route path="/portal/properties" element={<PortalRoute><PortalProperties /></PortalRoute>} />
+      <Route path="/portal/quotes" element={<PortalRoute><PortalQuotes /></PortalRoute>} />
+      <Route path="/portal/visits" element={<PortalRoute><PortalVisits /></PortalRoute>} />
+      <Route path="/portal/photos" element={<PortalRoute><PortalPhotos /></PortalRoute>} />
+      <Route path="/portal/requests" element={<PortalRoute><PortalRequests /></PortalRoute>} />
+      <Route path="/portal/account" element={<PortalRoute><PortalAccount /></PortalRoute>} />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
