@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
