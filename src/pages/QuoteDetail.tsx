@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText } from 'lucide-react';
+import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
