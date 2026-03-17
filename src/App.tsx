@@ -246,6 +246,9 @@ function AppRoutes() {
       <Route path="/worker/time-off" element={<WorkerRoute><WorkerLayout><WorkerTimeOffPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/emergency-contact" element={<WorkerRoute><WorkerLayout><WorkerEmergencyContactPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/safety" element={<WorkerRoute><WorkerLayout><WorkerSafetyPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/incidents" element={<WorkerRoute><WorkerLayout><WorkerIncidentsPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/incidents/new" element={<WorkerRoute><WorkerLayout><WorkerNewIncidentPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/incidents/:id" element={<WorkerRoute><WorkerLayout><WorkerIncidentDetailPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/tax-documents" element={<WorkerRoute><WorkerLayout><WorkerTaxDocsPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/training-safety" element={<WorkerRoute><WorkerLayout><WorkerTrainingSafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/ppe" element={<WorkerRoute><WorkerLayout><WorkerPPEPage /></WorkerLayout></WorkerRoute>} />
