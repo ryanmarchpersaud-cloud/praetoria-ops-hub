@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { SERVICE_PROMOS } from '@/lib/servicePromos';
+import { LoginPromoPanel } from '@/components/LoginPromoPanel';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
-import {
-  Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight as ChevronRightIcon,
-} from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -17,16 +15,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [loading, setLoading] = useState(false);
-  const [promoIndex, setPromoIndex] = useState(0);
   const { toast } = useToast();
-
-  // Auto-rotate promos every 6s
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setPromoIndex((i) => (i + 1) % SERVICE_PROMOS.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +56,8 @@ export default function Login() {
     }
   };
 
-  const currentPromo = SERVICE_PROMOS[promoIndex];
-  const PromoIcon = currentPromo.icon;
+
+
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -188,92 +177,7 @@ export default function Login() {
       </div>
 
       {/* Right — Branded service promo panel (desktop only) */}
-      <div className="hidden lg:flex lg:w-[480px] xl:w-[540px] bg-sidebar text-sidebar-foreground flex-col justify-between p-10 xl:p-14 relative overflow-hidden">
-        {/* Decorative bg */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{
-          backgroundImage: 'radial-gradient(circle at 25% 25%, hsl(var(--sidebar-primary)) 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
-        }} />
-
-        <div className="relative z-10 flex flex-col h-full">
-          {/* Header */}
-          <div className="mb-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-sidebar-primary mb-1">
-              Praetoria Group
-            </p>
-            <h2 className="text-xl font-bold text-sidebar-accent-foreground leading-tight">
-              Residential & Commercial Services
-            </h2>
-            <p className="text-sidebar-foreground/60 text-sm mt-1.5 leading-relaxed">
-              One trusted team for year-round property care — snow, landscaping, junk removal, maintenance, and more.
-            </p>
-          </div>
-
-          {/* Rotating promo card */}
-          <div className="flex-1 flex flex-col justify-center">
-            <div
-              key={currentPromo.id}
-              className="rounded-xl border border-sidebar-border bg-sidebar-accent/60 p-6 animate-fade-in"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`w-11 h-11 rounded-lg flex items-center justify-center ${currentPromo.accentClass}`}>
-                  <PromoIcon className={`w-5.5 h-5.5 ${currentPromo.iconColorClass}`} />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-sidebar-accent-foreground leading-tight">
-                    {currentPromo.title}
-                  </h3>
-                  <p className="text-xs text-sidebar-foreground/70">{currentPromo.subtitle}</p>
-                </div>
-              </div>
-              <p className="text-[11px] font-medium text-sidebar-primary mb-3">{currentPromo.audience}</p>
-              <ul className="space-y-2">
-                {currentPromo.highlights.map((h) => (
-                  <li key={h} className="text-sm text-sidebar-foreground/80 flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-sidebar-primary mt-0.5 shrink-0" />
-                    {h}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Pagination dots + arrows */}
-            <div className="flex items-center justify-center gap-3 mt-5">
-              <button
-                onClick={() => setPromoIndex((i) => (i - 1 + SERVICE_PROMOS.length) % SERVICE_PROMOS.length)}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex gap-1.5">
-                {SERVICE_PROMOS.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPromoIndex(i)}
-                    className={`w-1.5 h-1.5 rounded-full transition-all ${
-                      i === promoIndex
-                        ? 'bg-sidebar-primary w-4'
-                        : 'bg-sidebar-foreground/25 hover:bg-sidebar-foreground/40'
-                    }`}
-                  />
-                ))}
-              </div>
-              <button
-                onClick={() => setPromoIndex((i) => (i + 1) % SERVICE_PROMOS.length)}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-              >
-                <ChevronRightIcon className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-6 flex items-center gap-2 text-xs text-sidebar-foreground/40">
-            <img src={praetoriaLogo} alt="" className="w-4 h-4 object-contain opacity-50" />
-            <span>Serving Regina & surrounding areas · 306-737-6269</span>
-          </div>
-        </div>
-      </div>
+      <LoginPromoPanel />
     </div>
   );
 }
