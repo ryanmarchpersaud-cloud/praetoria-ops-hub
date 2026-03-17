@@ -3,6 +3,8 @@ import { useQuotes } from '@/hooks/useQuotes';
 import { useActivities } from '@/hooks/useActivities';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WeatherCard } from '@/components/WeatherCard';
+import { ServicePromoCard } from '@/components/ServicePromoCard';
+import { SERVICE_PROMOS } from '@/lib/servicePromos';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Clock, CheckCircle, AlertCircle, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
