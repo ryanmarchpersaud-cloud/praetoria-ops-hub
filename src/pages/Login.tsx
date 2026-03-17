@@ -78,9 +78,7 @@ export default function Login() {
           {/* Brand */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src={praetoriaCrest} alt="Praetoria Group" className="w-11 h-11 object-contain" />
               <span className="text-xl font-bold text-foreground tracking-tight">Praetoria Ops</span>
             </div>
             <p className="text-muted-foreground text-sm mt-1">
