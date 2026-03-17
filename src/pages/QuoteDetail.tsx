@@ -88,18 +88,18 @@ export default function QuoteDetail() {
   const handleSave = async () => {
     if (!id) return;
     try {
+      // Save quote metadata (totals are auto-calculated by DB triggers from line items)
       await updateQuote.mutateAsync({
         id,
         service_category: form.service_category,
         scope_of_work: form.scope_of_work,
-        subtotal: form.subtotal,
-        tax: form.tax,
-        total: form.total,
         agent_summary: form.agent_summary,
         internal_notes: form.internal_notes,
         approval_status: form.approval_status,
         follow_up_due_at: form.follow_up_due_at,
+        tax_rate: Number(form.tax_rate || 0.13),
       });
+      // Save line items — DB triggers auto-calculate line_total and quote subtotal/tax/total
       await upsertItems.mutateAsync({
         quoteId: id,
         items: items.filter(i => i.item_name).map((i, idx) => ({
@@ -108,7 +108,6 @@ export default function QuoteDetail() {
           description: i.description || null,
           quantity: i.quantity,
           unit_price: i.unit_price,
-          line_total: i.line_total,
           sort_order: idx,
         })),
       });
