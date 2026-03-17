@@ -270,6 +270,9 @@ function AppRoutes() {
       <Route path="/subcontractor/property/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorPropertyDetail /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/invoices/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorInvoiceDetail /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/safety" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorSafetyPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/incidents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorIncidentsPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/incidents/new" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorNewIncidentPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/incidents/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorIncidentDetailPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/tax-documents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorTaxDocsPage /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
