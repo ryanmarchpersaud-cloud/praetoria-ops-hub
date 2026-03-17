@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useJob, useJobVisits, useUpdateJob } from '@/hooks/useJobs';
+import { useCreateVisit } from '@/hooks/useVisits';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +12,9 @@ import { ArrowLeft, Save, ClipboardCheck, MapPin } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { JOB_STATUSES, JOB_PRIORITIES, SERVICE_CATEGORIES } from '@/lib/constants';
+import { RecurringPlanCard } from '@/components/RecurringPlanCard';
+import { addWeeks, addDays, format, parseISO, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -18,8 +22,11 @@ export default function JobDetail() {
   const { data: job, isLoading } = useJob(id);
   const { data: visits = [] } = useJobVisits(id);
   const updateJob = useUpdateJob();
+  const createVisit = useCreateVisit();
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
+  const [generating, setGenerating] = useState(false);
+  const qc = useQueryClient();
 
   useEffect(() => { if (job) setForm(job); }, [job]);
 
@@ -38,10 +45,67 @@ export default function JobDetail() {
         scope_of_work: form.scope_of_work, priority: form.priority,
         scheduled_date: form.scheduled_date || null, status: form.status,
         internal_notes: form.internal_notes,
+        service_frequency: form.service_frequency || 'one-time',
+        season_name: form.season_name || null,
+        contract_start_date: form.contract_start_date || null,
+        contract_end_date: form.contract_end_date || null,
+        minimum_included_visits: form.minimum_included_visits || null,
+        additional_visit_rate: form.additional_visit_rate || null,
+        service_instructions: form.service_instructions || null,
       });
       toast({ title: 'Job saved' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleGenerateVisits = async () => {
+    if (!id || !form.contract_start_date || !form.contract_end_date) return;
+    
+    const freq = form.service_frequency;
+    const start = parseISO(form.contract_start_date);
+    const end = parseISO(form.contract_end_date);
+    
+    // Calculate visit dates based on frequency
+    let dates: Date[] = [];
+    
+    if (freq === 'weekly') {
+      dates = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+    } else if (freq === 'biweekly') {
+      const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+      dates = weeks.filter((_, i) => i % 2 === 0);
+    } else if (freq === 'monthly') {
+      dates = eachMonthOfInterval({ start, end });
+    } else if (freq === 'custom-seasonal' || freq === 'on-snowfall') {
+      // For custom/snowfall, generate monthly placeholders
+      dates = eachMonthOfInterval({ start, end });
+    }
+    
+    if (dates.length === 0) {
+      toast({ title: 'No visits to generate', description: 'Check frequency and date range', variant: 'destructive' });
+      return;
+    }
+    
+    setGenerating(true);
+    try {
+      for (const date of dates) {
+        await createVisit.mutateAsync({
+          visit_number: '',
+          job_id: id,
+          property_id: (job as any).property_id || null,
+          customer_id: (job as any).customer_id || null,
+          service_date: format(date, 'yyyy-MM-dd'),
+          visit_type: 'Routine',
+          visit_status: 'Planned',
+          crew_notes: form.service_instructions || null,
+        });
+      }
+      qc.invalidateQueries({ queryKey: ['job_visits', id] });
+      toast({ title: `${dates.length} planned visits generated` });
+    } catch (err: any) {
+      toast({ title: 'Error generating visits', description: err.message, variant: 'destructive' });
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -96,10 +160,17 @@ export default function JobDetail() {
               <div><Label className="text-xs">Internal Notes</Label><Textarea value={form.internal_notes || ''} onChange={e => set('internal_notes', e.target.value)} rows={2} /></div>
             </CardContent>
           </Card>
+
+          {/* Recurring Plan */}
+          <RecurringPlanCard
+            form={form}
+            set={set}
+            onGenerateVisits={handleGenerateVisits}
+            isGenerating={generating}
+          />
         </div>
 
         <div className="space-y-3">
-          {/* Customer & Property */}
           {customer && (
             <Card>
               <CardHeader className="pb-2">
@@ -134,7 +205,7 @@ export default function JobDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {visits.length === 0 ? <p className="text-xs text-muted-foreground">No visits yet</p> : visits.map((v: any) => (
+              {visits.length === 0 ? <p className="text-xs text-muted-foreground">No visits yet</p> : visits.slice(0, 8).map((v: any) => (
                 <Link key={v.id} to={`/visits/${v.id}`} className="block p-2 rounded border hover:bg-muted/50 transition-colors">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
@@ -145,6 +216,9 @@ export default function JobDetail() {
                   </div>
                 </Link>
               ))}
+              {visits.length > 8 && (
+                <p className="text-[10px] text-muted-foreground text-center">+{visits.length - 8} more</p>
+              )}
               <Link to={`/visits?job=${id}`} className="text-xs text-primary hover:underline block mt-2">View all visits →</Link>
             </CardContent>
           </Card>
