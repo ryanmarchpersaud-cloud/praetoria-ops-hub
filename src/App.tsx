@@ -47,6 +47,7 @@ import PortalPhotos from "./pages/portal/PortalPhotos";
 import PortalRequests from "./pages/portal/PortalRequests";
 import PortalBilling from "./pages/portal/PortalBilling";
 import PortalAccount from "./pages/portal/PortalAccount";
+import PortalPropertyDetail from "./pages/portal/PortalPropertyDetail";
 
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
