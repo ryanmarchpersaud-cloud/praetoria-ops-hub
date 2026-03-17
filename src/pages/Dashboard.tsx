@@ -46,6 +46,9 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Weather */}
+      <WeatherCard city="toronto" />
+
       <div className="grid md:grid-cols-2 gap-4">
         {/* New Leads */}
         <Card>
