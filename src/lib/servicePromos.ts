@@ -20,7 +20,7 @@ export const SERVICE_PROMOS: ServicePromo[] = [
     id: 'snow-ice',
     title: 'Snow & Ice Management',
     subtitle: 'Strength in Every Storm',
-    audience: 'Residential · Commercial · Municipal · Strata',
+    audience: 'Residential · Commercial · Municipal · Government · Strata',
     highlights: [
       'Reliable winter service with 24/7 response',
       'Plowing, salting, sanding & sidewalk clearing',
