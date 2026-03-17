@@ -16,6 +16,7 @@ interface SearchResult {
   subtitle: string;
   status?: string;
   link: string;
+  note?: string;
 }
 
 export default function WorkerSearch() {
