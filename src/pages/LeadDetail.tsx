@@ -136,10 +136,16 @@ export default function LeadDetail() {
               </a>
             )}
             {form.city && (
-              <span className="flex items-center gap-1.5 text-muted-foreground min-h-[44px] items-center">
+              <a
+                href={`https://maps.google.com/maps?daddr=${encodeURIComponent([form.address_line_1, form.city, form.province, form.postal_code].filter(Boolean).join(', '))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-primary active:opacity-70 min-h-[44px] items-center"
+                onClick={e => e.stopPropagation()}
+              >
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{form.city}{form.province ? `, ${form.province}` : ''}</span>
-              </span>
+              </a>
             )}
           </div>
           <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
