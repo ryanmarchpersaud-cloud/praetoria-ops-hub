@@ -19,12 +19,12 @@ export default function Dashboard() {
   const followUps = quotes.filter(q => q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date());
 
   const stats = [
-    { label: 'New Leads', value: newLeads.length, icon: Users, color: 'text-primary', link: '/leads' },
-    { label: 'Review', value: reviewLeads.length, icon: AlertCircle, color: 'text-warning', link: '/leads' },
-    { label: 'Drafts', value: draftQuotes.length, icon: FileText, color: 'text-muted-foreground', link: '/quotes' },
-    { label: 'Sent', value: sentQuotes.length, icon: CheckCircle, color: 'text-success', link: '/quotes' },
-    { label: 'Follow-up', value: followUps.length, icon: Clock, color: 'text-destructive', link: '/quotes' },
-    { label: 'Activity', value: activities.length, icon: Activity, color: 'text-info', link: '/activity' },
+    { label: 'New Leads', value: newLeads.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100 dark:bg-blue-950/30 dark:border-blue-900/40', link: '/leads' },
+    { label: 'Review', value: reviewLeads.length, icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100 dark:bg-amber-950/30 dark:border-amber-900/40', link: '/leads' },
+    { label: 'Drafts', value: draftQuotes.length, icon: FileText, color: 'text-slate-500', bg: 'bg-slate-50 border-slate-100 dark:bg-slate-950/30 dark:border-slate-800/40', link: '/quotes' },
+    { label: 'Sent', value: sentQuotes.length, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/40', link: '/quotes' },
+    { label: 'Follow-up', value: followUps.length, icon: Clock, color: 'text-rose-600', bg: 'bg-rose-50 border-rose-100 dark:bg-rose-950/30 dark:border-rose-900/40', link: '/quotes' },
+    { label: 'Activity', value: activities.length, icon: Activity, color: 'text-cyan-600', bg: 'bg-cyan-50 border-cyan-100 dark:bg-cyan-950/30 dark:border-cyan-900/40', link: '/activity' },
   ];
 
   return (
@@ -37,12 +37,10 @@ export default function Dashboard() {
       {/* Stats — 3×2 grid on mobile, 6 across on desktop */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
         {stats.map(s => (
-          <Link key={s.label} to={s.link} className="stat-card active:scale-[0.98] transition-transform">
-            <CardContent className="p-3 md:p-4">
-              <s.icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${s.color} mb-1.5`} />
-              <p className="text-xl md:text-2xl font-bold leading-none">{s.value}</p>
-              <p className="text-[10px] md:text-xs text-muted-foreground mt-1">{s.label}</p>
-            </CardContent>
+          <Link key={s.label} to={s.link} className={`rounded-lg border p-3 md:p-4 transition-all hover:shadow-sm active:scale-[0.98] ${s.bg}`}>
+            <s.icon className={`h-3.5 w-3.5 md:h-4 md:w-4 ${s.color} mb-1.5`} />
+            <p className="text-xl md:text-2xl font-bold leading-none text-foreground">{s.value}</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-1">{s.label}</p>
           </Link>
         ))}
       </div>
