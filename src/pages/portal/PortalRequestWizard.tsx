@@ -102,8 +102,8 @@ export default function PortalRequestWizard() {
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error } = await supabase.storage.from('request-attachments').upload(path, file);
       if (!error) {
-        const { data: urlData } = supabase.storage.from('request-attachments').getPublicUrl(path);
-        urls.push(urlData.publicUrl);
+        // Store the storage path, not a public URL (bucket is private)
+        urls.push(path);
       }
     }
     setUploading(false);

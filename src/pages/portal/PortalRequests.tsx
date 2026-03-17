@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,10 +8,29 @@ import { Button } from '@/components/ui/button';
 import { MessageSquarePlus, Plus, Image as ImageIcon } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 
+/** Resolve attachment strings to signed URLs.
+ *  Handles both legacy full URLs and new storage paths. */
+async function resolveAttachmentUrls(paths: string[]): Promise<string[]> {
+  const results: string[] = [];
+  for (const p of paths) {
+    if (p.startsWith('http')) {
+      // Legacy public URL — use as-is (will 403 if bucket went private, but keeps backwards compat)
+      results.push(p);
+    } else {
+      const { data } = await supabase.storage
+        .from('request-attachments')
+        .createSignedUrl(p, 3600); // 1 hour
+      if (data?.signedUrl) results.push(data.signedUrl);
+    }
+  }
+  return results;
+}
+
 export default function PortalRequests() {
   const navigate = useNavigate();
   const { data: customer } = useCustomerProfile();
   const [previewImg, setPreviewImg] = useState<string | null>(null);
+  const [signedUrlMap, setSignedUrlMap] = useState<Record<string, string[]>>({});
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['portal_requests', customer?.id],
@@ -27,6 +46,21 @@ export default function PortalRequests() {
     },
     enabled: !!customer,
   });
+
+  // Resolve signed URLs for all request attachments
+  useEffect(() => {
+    async function resolve() {
+      const map: Record<string, string[]> = {};
+      for (const r of requests as any[]) {
+        const raw: string[] = r.attachments || [];
+        if (raw.length > 0) {
+          map[r.id] = await resolveAttachmentUrls(raw);
+        }
+      }
+      setSignedUrlMap(map);
+    }
+    if (requests.length > 0) resolve();
+  }, [requests]);
 
   return (
     <div className="space-y-4">
@@ -52,7 +86,7 @@ export default function PortalRequests() {
       ) : (
         <div className="space-y-3">
           {requests.map((r: any) => {
-            const attachments: string[] = r.attachments || [];
+            const attachments: string[] = signedUrlMap[r.id] || [];
             return (
               <Card key={r.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="pt-4 space-y-2">
@@ -73,7 +107,7 @@ export default function PortalRequests() {
                   </div>
                   {r.description && <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>}
 
-                  {/* Attachment thumbnails */}
+                  {/* Attachment thumbnails (signed URLs) */}
                   {attachments.length > 0 && (
                     <div className="flex items-center gap-1.5 pt-1">
                       <ImageIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
