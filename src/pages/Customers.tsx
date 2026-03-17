@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -109,8 +110,10 @@ export default function Customers() {
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
             ) : (
               customers.map(c => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.first_name} {c.last_name}</TableCell>
+                <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">
+                    <Link to={`/customers/${c.id}`} className="hover:text-primary">{c.first_name} {c.last_name}</Link>
+                  </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.company_name || '—'}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.email || '—'}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm">{c.phone || '—'}</TableCell>
@@ -118,6 +121,7 @@ export default function Customers() {
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                     {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
                   </TableCell>
+                  <TableCell className="w-8"><Link to={`/customers/${c.id}`}><ChevronRight className="h-4 w-4 text-muted-foreground/40" /></Link></TableCell>
                 </TableRow>
               ))
             )}

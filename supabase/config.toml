@@ -2,3 +2,6 @@ project_id = "czltgypfgegjmcsczpms"
 
 [functions.n8n-webhook]
 verify_jwt = false
+
+[functions.invite-customer]
+verify_jwt = false

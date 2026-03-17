@@ -15,6 +15,7 @@ import Quotes from "./pages/Quotes";
 import QuoteDetail from "./pages/QuoteDetail";
 import QuotePrint from "./pages/QuotePrint";
 import Customers from "./pages/Customers";
+import CustomerDetail from "./pages/CustomerDetail";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import Jobs from "./pages/Jobs";
@@ -81,6 +82,7 @@ function AppRoutes() {
       <Route path="/quotes/:id" element={<StaffRoute><QuoteDetail /></StaffRoute>} />
       <Route path="/quotes/:id/print" element={<StaffRoute><QuotePrint /></StaffRoute>} />
       <Route path="/customers" element={<StaffRoute><Customers /></StaffRoute>} />
+      <Route path="/customers/:id" element={<StaffRoute><CustomerDetail /></StaffRoute>} />
       <Route path="/properties" element={<StaffRoute><Properties /></StaffRoute>} />
       <Route path="/properties/:id" element={<StaffRoute><PropertyDetail /></StaffRoute>} />
       <Route path="/jobs" element={<StaffRoute><Jobs /></StaffRoute>} />
