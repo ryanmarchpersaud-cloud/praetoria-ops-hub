@@ -4,10 +4,13 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, HardHat, User, Loader2, FlaskConical, ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 
+import { Truck } from 'lucide-react';
+
 const TEST_ACCOUNTS = [
   { email: 'admin@praetoriagroup.ca', password: 'TestAdmin123!', role: 'Admin', icon: Shield, color: 'text-amber-500', dest: 'Internal Ops dashboard → /' },
   { email: 'worker@praetoriagroup.ca', password: 'TestWorker123!', role: 'Worker', icon: HardHat, color: 'text-blue-500', dest: 'Field Mode → /worker' },
   { email: 'customer@praetoriagroup.ca', password: 'TestCustomer123!', role: 'Customer', icon: User, color: 'text-emerald-500', dest: 'Customer Portal → /portal' },
+  { email: 'subcontractor@praetoriagroup.ca', password: 'TestSub123!', role: 'Subcontractor', icon: Truck, color: 'text-purple-500', dest: 'Sub Portal → /subcontractor' },
 ];
 
 export function DevTestPanel() {
@@ -122,6 +125,10 @@ export function DevTestPanel() {
             <div className="space-y-1">
               <p>👤 <strong>Customer</strong> → Customer Portal at <code className="bg-muted px-1 rounded">/portal</code></p>
               <p className="pl-4 text-muted-foreground/70">My Properties, Visits, Photos, Quotes, Billing, Requests, Account</p>
+            </div>
+            <div className="space-y-1">
+              <p>🚚 <strong>Subcontractor</strong> → Sub Portal at <code className="bg-muted px-1 rounded">/subcontractor</code></p>
+              <p className="pl-4 text-muted-foreground/70">Assigned Work, Schedule, Invoices, Documents, Compliance, Payments</p>
             </div>
             <div className="mt-2 pt-1.5 border-t border-border/50">
               <p className="font-semibold text-foreground">Admin quick-switch (after login):</p>
