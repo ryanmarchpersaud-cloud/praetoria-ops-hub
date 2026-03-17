@@ -15,16 +15,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [loading, setLoading] = useState(false);
-  const [promoIndex, setPromoIndex] = useState(0);
   const { toast } = useToast();
-
-  // Auto-rotate promos every 6s
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setPromoIndex((i) => (i + 1) % SERVICE_PROMOS.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
