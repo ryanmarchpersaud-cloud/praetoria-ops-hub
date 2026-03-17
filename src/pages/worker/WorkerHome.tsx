@@ -105,9 +105,9 @@ export default function WorkerHome() {
             <p className={cn('text-sm font-bold', clockedIn ? 'text-emerald-700 dark:text-emerald-300' : '')}>
               {clockedIn ? 'Clock Out' : 'Clock In'}
             </p>
-            {clockedIn && clockTime && (
+            {clockedIn && active && (
               <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
-                Since {clockTime.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}
+                Since {new Date(active.clock_in).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}
               </p>
             )}
             {!clockedIn && (
