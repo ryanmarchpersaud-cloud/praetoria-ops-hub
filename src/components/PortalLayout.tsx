@@ -77,25 +77,28 @@ export function PortalLayout({ children }: { children: ReactNode }) {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <nav className="md:hidden border-t border-border bg-card px-4 py-2 space-y-1">
-            {portalNav.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  )
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                {item.title}
-              </NavLink>
-            ))}
+          <nav className="md:hidden border-t border-border bg-card px-4 py-3">
+            <div className="grid grid-cols-4 gap-2">
+              {portalNav.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      'action-tile',
+                      item.tileColor,
+                      isActive && 'ring-2 ring-primary/30'
+                    )
+                  }
+                >
+                  <item.icon className={cn('h-5 w-5', item.iconColor)} />
+                  <span className="text-[10px] font-medium text-foreground leading-tight">
+                    {item.title.replace('My ', '')}
+                  </span>
+                </NavLink>
+              ))}
+            </div>
           </nav>
         )}
       </header>
