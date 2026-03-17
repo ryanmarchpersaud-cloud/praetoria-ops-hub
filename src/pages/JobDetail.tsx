@@ -63,10 +63,16 @@ export default function JobDetail() {
     if (!id || !form.contract_start_date || !form.contract_end_date) return;
     
     const freq = form.service_frequency;
+    
+    // on-snowfall is trigger-based, not pre-scheduled
+    if (freq === 'on-snowfall') {
+      toast({ title: 'On-snowfall frequency', description: 'Visits for snowfall-triggered plans should be created manually or via automation when snow events occur.', variant: 'destructive' });
+      return;
+    }
+    
     const start = parseISO(form.contract_start_date);
     const end = parseISO(form.contract_end_date);
     
-    // Calculate visit dates based on frequency
     let dates: Date[] = [];
     
     if (freq === 'weekly') {
@@ -76,13 +82,28 @@ export default function JobDetail() {
       dates = weeks.filter((_, i) => i % 2 === 0);
     } else if (freq === 'monthly') {
       dates = eachMonthOfInterval({ start, end });
-    } else if (freq === 'custom-seasonal' || freq === 'on-snowfall') {
-      // For custom/snowfall, generate monthly placeholders
+    } else if (freq === 'custom-seasonal') {
       dates = eachMonthOfInterval({ start, end });
     }
     
     if (dates.length === 0) {
       toast({ title: 'No visits to generate', description: 'Check frequency and date range', variant: 'destructive' });
+      return;
+    }
+
+    // Guard: check for existing planned/scheduled visits in this date range
+    const existingPlanned = visits.filter((v: any) => 
+      ['Planned', 'Scheduled'].includes(v.visit_status) &&
+      v.service_date >= form.contract_start_date &&
+      v.service_date <= form.contract_end_date
+    );
+    
+    if (existingPlanned.length > 0) {
+      toast({ 
+        title: 'Planned visits already exist', 
+        description: `${existingPlanned.length} planned/scheduled visit(s) already exist in this date range. Delete them first to regenerate.`, 
+        variant: 'destructive' 
+      });
       return;
     }
     

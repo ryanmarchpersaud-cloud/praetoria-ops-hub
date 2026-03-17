@@ -105,7 +105,13 @@ export function RecurringPlanCard({ form, set, onGenerateVisits, isGenerating }:
               />
             </div>
 
-            {onGenerateVisits && form.contract_start_date && form.contract_end_date && (
+            {freq === 'on-snowfall' && (
+              <p className="text-xs text-muted-foreground bg-muted/50 rounded-md p-2">
+                Snowfall-triggered plans don't pre-generate visits. Create visits manually or via automation when snow events occur.
+              </p>
+            )}
+
+            {onGenerateVisits && freq !== 'on-snowfall' && form.contract_start_date && form.contract_end_date && (
               <Button
                 type="button"
                 variant="outline"
