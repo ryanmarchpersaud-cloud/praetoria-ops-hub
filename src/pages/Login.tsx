@@ -89,7 +89,7 @@ export default function Login() {
                 <Input
                   id="email" type="email" value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@praetoriagroup.com" required className="pl-10 h-11"
+                  placeholder="you@praetoriagroup.ca" required className="pl-10 h-11" required className="pl-10 h-11"
                 />
               </div>
             </div>
