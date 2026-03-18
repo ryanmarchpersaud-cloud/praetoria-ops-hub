@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -5,8 +7,6 @@ const corsHeaders = {
 };
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/twilio";
-
-// E.164 phone validation
 const E164_REGEX = /^\+[1-9]\d{6,14}$/;
 
 function json(body: Record<string, unknown>, status = 200) {
@@ -14,6 +14,38 @@ function json(body: Record<string, unknown>, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function getServiceClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+}
+
+async function logIntegration(entry: {
+  provider: string;
+  event_name: string;
+  channel?: string;
+  status: string;
+  recipient?: string;
+  record_type?: string;
+  record_id?: string;
+  provider_response_id?: string;
+  error_message?: string;
+  environment?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    const sb = getServiceClient();
+    await sb.from("integration_logs").insert({
+      ...entry,
+      environment: entry.environment || "production",
+      metadata: entry.metadata || {},
+    });
+  } catch (e) {
+    console.error("Failed to log integration event:", e);
+  }
 }
 
 function validatePhone(phone: string): { valid: boolean; cleaned: string; error?: string } {
@@ -24,7 +56,6 @@ function validatePhone(phone: string): { valid: boolean; cleaned: string; error?
   return { valid: true, cleaned };
 }
 
-// Rate limiting: simple in-memory counter per phone number
 const sendLog = new Map<string, { count: number; windowStart: number }>();
 const MAX_SMS_PER_PHONE_PER_HOUR = 5;
 
@@ -54,7 +85,7 @@ async function sendViaTwilio(payload: SmsPayload): Promise<{ ok: boolean; sid?: 
   if (!TWILIO_API_KEY) return { ok: false, error: "TWILIO_API_KEY not configured" };
 
   const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER");
-  if (!TWILIO_PHONE && !payload.from) return { ok: false, error: "TWILIO_PHONE_NUMBER not configured and no 'from' provided" };
+  if (!TWILIO_PHONE && !payload.from) return { ok: false, error: "TWILIO_PHONE_NUMBER not configured" };
 
   const fromNumber = payload.from || TWILIO_PHONE!;
 
@@ -87,48 +118,42 @@ Deno.serve(async (req) => {
   try {
     const { action, ...params } = await req.json();
 
-    // ---- Health check ----
     if (action === "health") {
       const hasLovableKey = !!Deno.env.get("LOVABLE_API_KEY");
       const hasTwilioKey = !!Deno.env.get("TWILIO_API_KEY");
       const hasPhone = !!Deno.env.get("TWILIO_PHONE_NUMBER");
-      return json({
-        ok: true,
-        twilio_configured: hasLovableKey && hasTwilioKey,
-        phone_configured: hasPhone,
-      });
+      return json({ ok: true, twilio_configured: hasLovableKey && hasTwilioKey, phone_configured: hasPhone });
     }
 
-    // ---- Admin test SMS ----
     if (action === "test") {
       const { to } = params;
       if (!to) return json({ error: "Missing 'to' phone number" }, 400);
-
       const phone = validatePhone(to);
       if (!phone.valid) return json({ error: phone.error }, 400);
-
-      if (!checkRateLimit(phone.cleaned)) {
-        return json({ error: "Rate limit exceeded. Max 5 SMS per phone per hour." }, 429);
-      }
+      if (!checkRateLimit(phone.cleaned)) return json({ error: "Rate limit exceeded. Max 5 SMS per phone per hour." }, 429);
 
       const result = await sendViaTwilio({
         to: phone.cleaned,
         body: `[Praetoria Ops] Test SMS — your Twilio integration is working. ${new Date().toISOString()}`,
       });
+      await logIntegration({
+        provider: "twilio",
+        event_name: "sms.admin_test",
+        channel: "sms",
+        status: result.ok ? "success" : "failed",
+        recipient: phone.cleaned,
+        provider_response_id: result.sid,
+        error_message: result.error,
+      });
       return json(result);
     }
 
-    // ---- Customer request confirmation SMS ----
     if (action === "request_confirmation") {
-      const { to, customer_name, request_subject } = params;
+      const { to, customer_name, request_subject, request_id } = params;
       if (!to) return json({ error: "Missing 'to' phone number" }, 400);
-
       const phone = validatePhone(to);
       if (!phone.valid) return json({ error: phone.error }, 400);
-
-      if (!checkRateLimit(phone.cleaned)) {
-        return json({ error: "Rate limit exceeded" }, 429);
-      }
+      if (!checkRateLimit(phone.cleaned)) return json({ error: "Rate limit exceeded" }, 429);
 
       const name = customer_name || "there";
       const subject = request_subject || "your service request";
@@ -136,25 +161,42 @@ Deno.serve(async (req) => {
         to: phone.cleaned,
         body: `Hi ${name}, we received ${subject}. Our team will follow up shortly. — Praetoria Group`,
       });
+      await logIntegration({
+        provider: "twilio",
+        event_name: "sms.request_confirmation",
+        channel: "sms",
+        status: result.ok ? "success" : "failed",
+        recipient: phone.cleaned,
+        record_type: "service_request",
+        record_id: request_id,
+        provider_response_id: result.sid,
+        error_message: result.error,
+        metadata: { customer_name },
+      });
       return json({ ...result, action: "request_confirmation" });
     }
 
-    // ---- Internal ops alert SMS ----
     if (action === "ops_alert") {
       const { to, message } = params;
       if (!to) return json({ error: "Missing 'to' phone number" }, 400);
       if (!message) return json({ error: "Missing 'message'" }, 400);
-
       const phone = validatePhone(to);
       if (!phone.valid) return json({ error: phone.error }, 400);
-
-      if (!checkRateLimit(phone.cleaned)) {
-        return json({ error: "Rate limit exceeded" }, 429);
-      }
+      if (!checkRateLimit(phone.cleaned)) return json({ error: "Rate limit exceeded" }, 429);
 
       const result = await sendViaTwilio({
         to: phone.cleaned,
         body: `[Praetoria Ops Alert] ${message}`,
+      });
+      await logIntegration({
+        provider: "twilio",
+        event_name: "sms.ops_alert",
+        channel: "sms",
+        status: result.ok ? "success" : "failed",
+        recipient: phone.cleaned,
+        provider_response_id: result.sid,
+        error_message: result.error,
+        metadata: { message },
       });
       return json({ ...result, action: "ops_alert" });
     }
