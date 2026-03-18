@@ -21,7 +21,7 @@ function getServiceClient() {
   );
 }
 
-async function logIntegration(entry: {
+interface IntegrationEntry {
   provider: string;
   event_name: string;
   channel?: string;
@@ -33,7 +33,9 @@ async function logIntegration(entry: {
   error_message?: string;
   environment?: string;
   metadata?: Record<string, unknown>;
-}) {
+}
+
+async function logIntegration(entry: IntegrationEntry) {
   try {
     const sb = getServiceClient();
     await sb.from("integration_logs").insert({
@@ -43,6 +45,62 @@ async function logIntegration(entry: {
     });
   } catch (e) {
     console.error("Failed to log integration event:", e);
+  }
+}
+
+// ── n8n Event Handoff ──────────────────────────────────────────
+const N8N_NOTIFY_EVENTS = new Set([
+  "stripe.service_checkout_created",
+  "stripe.test_checkout_created",
+]);
+
+async function notifyN8n(entry: IntegrationEntry) {
+  if (!N8N_NOTIFY_EVENTS.has(entry.event_name)) return;
+  const url = Deno.env.get("N8N_WEBHOOK_URL");
+  if (!url) return;
+
+  const payload = {
+    event: entry.event_name,
+    provider: entry.provider,
+    channel: entry.channel || "payment",
+    status: entry.status,
+    recipient: entry.recipient,
+    record_type: entry.record_type,
+    record_id: entry.record_id,
+    provider_response_id: entry.provider_response_id,
+    environment: entry.environment || "production",
+    metadata: entry.metadata || {},
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    await logIntegration({
+      provider: "n8n",
+      event_name: `n8n.handoff.${entry.event_name}`,
+      channel: "webhook",
+      status: res.ok ? "success" : "failed",
+      record_type: entry.record_type,
+      record_id: entry.record_id,
+      error_message: res.ok ? undefined : `n8n responded ${res.status}`,
+      environment: entry.environment || "production",
+      metadata: { upstream_event: entry.event_name },
+    });
+  } catch (e) {
+    console.error("n8n handoff failed:", e);
+    await logIntegration({
+      provider: "n8n",
+      event_name: `n8n.handoff.${entry.event_name}`,
+      channel: "webhook",
+      status: "failed",
+      error_message: e instanceof Error ? e.message : "Unknown error",
+      environment: entry.environment || "production",
+      metadata: { upstream_event: entry.event_name },
+    });
   }
 }
 
