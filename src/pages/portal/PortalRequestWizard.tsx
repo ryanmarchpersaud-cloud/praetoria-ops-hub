@@ -91,22 +91,13 @@ export default function PortalRequestWizard() {
     [properties, form.property_id],
   );
 
-  const catalogEntry = form.service_category ? SERVICE_CATALOG[form.service_category] : null;
-
-  // Merge DB catalog items into the selected category's item list
+  // Use ONLY DB catalog items — enforces customer_visible + online_booking_enabled + Active status
   const mergedItems = useMemo(() => {
     if (!form.service_category) return [];
-    const hardcoded: string[] = catalogEntry?.items ? Array.from(catalogEntry.items) : [];
-    const dbItems = catalogItems
+    return catalogItems
       .filter(i => i.service_category === form.service_category)
       .map(i => i.name);
-    dbItems.forEach(name => {
-      if (!hardcoded.some(h => h.toLowerCase() === name.toLowerCase())) {
-        hardcoded.push(name);
-      }
-    });
-    return hardcoded;
-  }, [form.service_category, catalogEntry, catalogItems]);
+  }, [form.service_category, catalogItems]);
 
   /* ── Photo handling ─────────────────────────────────────────────── */
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
