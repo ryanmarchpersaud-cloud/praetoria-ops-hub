@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -18,6 +18,7 @@ const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: 
 };
 
 export default function Quotes() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const { data: quotes = [], isLoading } = useQuotes({
     approval_status: statusFilter || undefined,
@@ -161,7 +162,7 @@ export default function Quotes() {
                 .map((q: any) => {
                   const isOverdue = q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
                   return (
-                    <TableRow key={q.id} className={`cursor-pointer hover:bg-muted/50 ${isOverdue ? 'bg-destructive/5' : ''}`}>
+                    <TableRow key={q.id} className={`cursor-pointer hover:bg-muted/50 ${isOverdue ? 'bg-destructive/5' : ''}`} onClick={() => navigate(`/quotes/${q.id}`)}>
                       <TableCell><Link to={`/quotes/${q.id}`} className="font-medium mono text-sm hover:text-primary">{q.quote_number}</Link></TableCell>
                       <TableCell className="text-sm">
                         <div>

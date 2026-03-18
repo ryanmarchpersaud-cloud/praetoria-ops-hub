@@ -10,11 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, ChevronRight, MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { PROPERTY_STATUSES, PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
 import { useCustomers } from '@/hooks/useCustomers';
 
 export default function Properties() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -156,7 +157,7 @@ export default function Properties() {
             {isLoading ? <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             : properties.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No properties found</TableCell></TableRow>
             : properties.map((p: any) => (
-              <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50">
+              <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/properties/${p.id}`)}>
                 <TableCell>
                   <Link to={`/properties/${p.id}`} className="block font-medium">{p.property_name}</Link>
                 </TableCell>

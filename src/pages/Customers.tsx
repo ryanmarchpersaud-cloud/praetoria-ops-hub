@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Customers() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const { data: customers = [], isLoading } = useCustomers(search || undefined);
@@ -110,7 +111,7 @@ export default function Customers() {
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
             ) : (
               customers.map(c => (
-                <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/customers/${c.id}`)}>
                   <TableCell className="font-medium">
                     <Link to={`/customers/${c.id}`} className="hover:text-primary">{c.first_name} {c.last_name}</Link>
                   </TableCell>

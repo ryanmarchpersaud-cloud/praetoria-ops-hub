@@ -10,12 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, ChevronRight, Cloud, Camera } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
 import { useJobs } from '@/hooks/useJobs';
 import { format } from 'date-fns';
 
 export default function Visits() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -155,7 +156,7 @@ export default function Visits() {
             {isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             : visits.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No visits found</TableCell></TableRow>
             : visits.map((v: any) => (
-              <TableRow key={v.id} className="cursor-pointer hover:bg-muted/50">
+              <TableRow key={v.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/visits/${v.id}`)}>
                 <TableCell>
                   <Link to={`/visits/${v.id}`} className="block font-medium mono text-sm">{v.visit_number}</Link>
                 </TableCell>

@@ -10,11 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Trash2, Phone, Mail, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SERVICE_CATEGORIES, LEAD_STATUSES, LEAD_SOURCES, URGENCY_LEVELS, PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Leads() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [serviceFilter, setServiceFilter] = useState<string>('');
@@ -225,7 +226,7 @@ export default function Leads() {
               <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No leads found</TableCell></TableRow>
             ) : (
               leads.map(lead => (
-                <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/leads/${lead.id}`)}>
                   <TableCell>
                     <Link to={`/leads/${lead.id}`} className="block">
                       <p className="font-medium">{lead.first_name} {lead.last_name}</p>
@@ -241,7 +242,7 @@ export default function Leads() {
                   <TableCell>
                     <Button
                       variant="ghost" size="icon"
-                      onClick={(e) => { e.preventDefault(); deleteLead.mutate(lead.id); }}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteLead.mutate(lead.id); }}
                     >
                       <Trash2 className="h-4 w-4 text-muted-foreground" />
                     </Button>
