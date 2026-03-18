@@ -315,6 +315,14 @@ export default function ConnectedAppsPage() {
             </div>
           )}
 
+          {/* Stripe test checkout button */}
+          {app.id === 'stripe' && (
+            <Button variant="default" size="sm" disabled={launchingStripeTest} onClick={handleStripeTestCheckout}>
+              {launchingStripeTest ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
+              Test Checkout ($1.00 CAD)
+            </Button>
+          )}
+
           <div className="flex gap-2">
             {app.canTest && (
               <Button variant="outline" size="sm" disabled={isTesting} onClick={() => handleTest(app)}>
