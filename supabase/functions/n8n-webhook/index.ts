@@ -169,6 +169,7 @@ Deno.serve(async (req) => {
       // ── Test n8n Handoff ────────────────────────────────────────
       case "test_handoff": {
         const n8nUrl = Deno.env.get("N8N_WEBHOOK_URL");
+        console.log("N8N_WEBHOOK_URL resolved to:", n8nUrl);
         if (!n8nUrl) return json({ error: "N8N_WEBHOOK_URL secret is not configured" }, 500);
 
         const payload = {
