@@ -1,6 +1,6 @@
 import {
   Snowflake, Trees, Trash2, Wrench, Sparkles, Droplets,
-  ClipboardCheck, Scale, Clock, AlertTriangle,
+  ClipboardCheck, Scale, Clock, AlertTriangle, Building2,
 } from 'lucide-react';
 
 export const SERVICE_CATALOG = {
@@ -78,6 +78,17 @@ export const SERVICE_CATALOG = {
       'Sidewalk snow clearing compliance', 'Ice control / slippery sidewalk',
       'Snow ridge / blocked access concern', 'Overgrown grass / yard cleanup',
       'Untidy property cleanup', 'Seasonal inspection request',
+    ],
+  },
+  'Property Management': {
+    icon: Building2,
+    color: 'bg-teal-600',
+    items: [
+      'Property check / walkthrough', 'Vacant property check',
+      'Tenant move-in coordination', 'Tenant move-out coordination',
+      'Vendor coordination', 'Maintenance dispatch',
+      'Emergency callout coordination', 'Owner report / update',
+      'Custom property management request',
     ],
   },
 } as const;

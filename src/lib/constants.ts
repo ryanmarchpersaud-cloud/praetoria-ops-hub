@@ -3,9 +3,11 @@ export const SERVICE_CATEGORIES = [
   'Landscaping & Grounds',
   'Junk Removal',
   'Property Care & Maintenance',
-  'Property Management',
-  'Power Washing',
   'Cleaning Services',
+  'Power Washing',
+  'Property Inspection',
+  'Bylaw / Compliance',
+  'Property Management',
   'Other',
 ] as const;
 
