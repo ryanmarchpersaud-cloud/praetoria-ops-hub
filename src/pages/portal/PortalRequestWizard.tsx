@@ -96,18 +96,16 @@ export default function PortalRequestWizard() {
   // Merge DB catalog items into the selected category's item list
   const mergedItems = useMemo(() => {
     if (!form.service_category) return [];
-    const hardcoded = catalogEntry?.items ? [...catalogEntry.items] : [];
+    const hardcoded: string[] = catalogEntry?.items ? Array.from(catalogEntry.items) : [];
     const dbItems = catalogItems
       .filter(i => i.service_category === form.service_category)
       .map(i => i.name);
-    // Add DB items that aren't already in hardcoded list
-    const combined = [...hardcoded];
     dbItems.forEach(name => {
-      if (!combined.some(h => h.toLowerCase() === name.toLowerCase())) {
-        combined.push(name);
+      if (!hardcoded.some(h => h.toLowerCase() === name.toLowerCase())) {
+        hardcoded.push(name);
       }
     });
-    return combined;
+    return hardcoded;
   }, [form.service_category, catalogEntry, catalogItems]);
 
   /* ── Photo handling ─────────────────────────────────────────────── */
