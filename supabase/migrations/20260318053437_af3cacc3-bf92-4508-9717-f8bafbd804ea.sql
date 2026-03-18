@@ -1,0 +1,12 @@
+
+ALTER TABLE public.products_services
+  ADD COLUMN IF NOT EXISTS taxable BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS online_booking_enabled BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS customer_visible BOOLEAN NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS internal_item_code TEXT,
+  ADD COLUMN IF NOT EXISTS price_type TEXT NOT NULL DEFAULT 'Flat Rate',
+  ADD COLUMN IF NOT EXISTS minimum_charge NUMERIC(12,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS seasonal_label TEXT,
+  ADD COLUMN IF NOT EXISTS recurring_eligible BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS portal_display_description TEXT,
+  ADD COLUMN IF NOT EXISTS internal_notes TEXT;
