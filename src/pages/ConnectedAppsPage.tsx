@@ -3,7 +3,8 @@ import { SettingsLayout } from '@/components/SettingsLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, CheckCircle2, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, CheckCircle2, AlertCircle, Clock, Loader2, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ interface Integration {
   lastChecked: string | null;
   canTest: boolean;
   testFn?: () => Promise<{ ok: boolean; message: string }>;
+  hasCustomAction?: boolean;
 }
 
 const statusStyles: Record<IntegrationStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof CheckCircle2 }> = {
@@ -51,10 +53,23 @@ async function testN8n(): Promise<{ ok: boolean; message: string }> {
   }
 }
 
+async function testResend(): Promise<{ ok: boolean; message: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: { action: 'health' },
+    });
+    if (error) return { ok: false, message: error.message };
+    if (data?.resend_configured) return { ok: true, message: 'Resend API key configured and edge function reachable' };
+    return { ok: false, message: 'RESEND_API_KEY not configured' };
+  } catch (e: any) {
+    return { ok: false, message: e.message };
+  }
+}
+
 const integrations: Integration[] = [
   {
     id: 'supabase',
-    name: 'Lovable Cloud',
+    name: 'Supabase Backend',
     icon: Database,
     status: 'connected',
     purpose: 'Core backend — authentication, database, storage, edge functions, and realtime.',
@@ -67,11 +82,13 @@ const integrations: Integration[] = [
     id: 'resend',
     name: 'Resend',
     icon: Mail,
-    status: 'not_configured',
-    purpose: 'Transactional email delivery — quote notifications, invoice emails, and welcome messages.',
-    configNotes: 'Requires RESEND_API_KEY secret. Domain verification needed for custom sender.',
+    status: 'configured',
+    purpose: 'Transactional email delivery — request confirmations, ops notifications, and system emails.',
+    configNotes: 'Sender: noreply@praetoriagroup.ca. Edge function: send-email. Supports test, request confirmation, and ops notification flows.',
     lastChecked: null,
-    canTest: false,
+    canTest: true,
+    testFn: testResend,
+    hasCustomAction: true,
   },
   {
     id: 'twilio',
@@ -109,8 +126,8 @@ const integrations: Integration[] = [
     name: 'IONOS Email',
     icon: Globe,
     status: 'not_configured',
-    purpose: 'Business email hosting — team mailboxes @praetoriagroup.com and domain DNS.',
-    configNotes: 'Requires IONOS API key for mailbox provisioning. DNS records managed externally.',
+    purpose: 'Business email hosting — team mailboxes for @praetoriagroup.ca and @praetoriasnowandice.ca. DNS managed externally.',
+    configNotes: 'Domains: praetoriagroup.ca, praetoriasnowandice.ca. Requires IONOS API key for mailbox provisioning.',
     lastChecked: null,
     canTest: false,
   },
@@ -132,6 +149,8 @@ const operationalIntegrations: Integration[] = [
 export default function ConnectedAppsPage() {
   const [testResults, setTestResults] = useState<Record<string, { status: IntegrationStatus; message: string }>>({});
   const [testing, setTesting] = useState<string | null>(null);
+  const [testEmailTo, setTestEmailTo] = useState('');
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
 
   const handleTest = async (integration: Integration) => {
     if (!integration.testFn) return;
@@ -151,6 +170,31 @@ export default function ConnectedAppsPage() {
       }));
     } finally {
       setTesting(null);
+    }
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmailTo) {
+      toast.error('Enter an email address');
+      return;
+    }
+    setSendingTestEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: { action: 'test', to: testEmailTo },
+      });
+      if (error) {
+        toast.error(`Send failed: ${error.message}`);
+      } else if (data?.ok) {
+        toast.success(`Test email sent to ${testEmailTo}`);
+        setTestEmailTo('');
+      } else {
+        toast.error(`Send failed: ${data?.error || 'Unknown error'}`);
+      }
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSendingTestEmail(false);
     }
   };
 
@@ -187,6 +231,28 @@ export default function ConnectedAppsPage() {
           {testResult?.message && (
             <div className="text-xs px-2 py-1.5 rounded bg-muted">
               <span className="font-medium">Last test:</span> {testResult.message}
+            </div>
+          )}
+
+          {/* Resend send-test-email inline form */}
+          {app.id === 'resend' && (
+            <div className="flex gap-2">
+              <Input
+                placeholder="admin@example.com"
+                value={testEmailTo}
+                onChange={(e) => setTestEmailTo(e.target.value)}
+                className="h-8 text-sm"
+                type="email"
+              />
+              <Button
+                variant="default"
+                size="sm"
+                disabled={sendingTestEmail || !testEmailTo}
+                onClick={handleSendTestEmail}
+              >
+                {sendingTestEmail ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
+                Send
+              </Button>
             </div>
           )}
 
