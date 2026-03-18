@@ -362,6 +362,8 @@ export default function ConnectedAppsPage() {
           <h2 className="text-lg font-semibold text-foreground">Operational Data &amp; Services</h2>
           <div className="grid gap-4 md:grid-cols-2">{operationalIntegrations.map(renderCard)}</div>
         </div>
+
+        <IntegrationActivityLog />
       </div>
     </SettingsLayout>
   );
