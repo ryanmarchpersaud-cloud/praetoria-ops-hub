@@ -224,6 +224,30 @@ export default function ConnectedAppsPage() {
     }
   };
 
+  const handleTestEmailOps = async () => {
+    setTestingEmailOps(true);
+    setEmailOpsResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('n8n-webhook', {
+        body: { action: 'test_email_ops' },
+      });
+      if (error) {
+        setEmailOpsResult({ success: false, message: error.message });
+        toast.error(`email.ops_notification test failed: ${error.message}`);
+      } else if (data?.success) {
+        setEmailOpsResult({ success: true, message: data.message });
+        toast.success(`email.ops_notification: ${data.message}`);
+      } else {
+        setEmailOpsResult({ success: false, message: data?.message || 'Unknown error' });
+        toast.error(`email.ops_notification failed: ${data?.message || 'Unknown error'}`);
+      }
+    } catch (e: any) {
+      setEmailOpsResult({ success: false, message: e.message });
+      toast.error(e.message);
+    } finally {
+      setTestingEmailOps(false);
+    }
+
   const handleTest = async (integration: Integration) => {
     if (!integration.testFn) return;
     setTesting(integration.id);
