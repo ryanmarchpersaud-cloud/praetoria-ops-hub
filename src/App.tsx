@@ -110,6 +110,10 @@ import SubcontractorIncidentDetailPage from "./pages/subcontractor/Subcontractor
 // Admin incident pages
 import AdminIncidentsPage from "./pages/AdminIncidentsPage";
 import AdminIncidentDetailPage from "./pages/AdminIncidentDetailPage";
+import RolesPermissionsPage from "./pages/RolesPermissionsPage";
+import AuditLogPage from "./pages/AuditLogPage";
+import ConnectedAppsPage from "./pages/ConnectedAppsPage";
+import SeatUsagePage from "./pages/SeatUsagePage";
 
 const queryClient = new QueryClient();
 
