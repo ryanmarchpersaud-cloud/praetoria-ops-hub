@@ -80,6 +80,17 @@ export const SERVICE_CATALOG = {
       'Untidy property cleanup', 'Seasonal inspection request',
     ],
   },
+  'Property Management': {
+    icon: ClipboardCheck,
+    color: 'bg-teal-600',
+    items: [
+      'Property check / walkthrough', 'Vacant property check',
+      'Tenant move-in coordination', 'Tenant move-out coordination',
+      'Vendor coordination', 'Maintenance dispatch',
+      'Emergency callout coordination', 'Owner report / update',
+      'Custom property management request',
+    ],
+  },
 } as const;
 
 export type CatalogKey = keyof typeof SERVICE_CATALOG;
