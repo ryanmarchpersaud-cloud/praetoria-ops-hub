@@ -15,6 +15,7 @@ import { PROPERTY_STATUSES, PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
 import { useCustomers } from '@/hooks/useCustomers';
 
 export default function Properties() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
