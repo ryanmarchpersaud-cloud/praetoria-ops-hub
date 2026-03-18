@@ -92,6 +92,11 @@ export default function PortalRequestWizard() {
   );
 
   // Use ONLY DB catalog items — enforces customer_visible + online_booking_enabled + Active status
+  const availableCategories = useMemo(() => {
+    const cats = new Set(catalogItems.map(i => i.service_category));
+    return Array.from(cats).sort();
+  }, [catalogItems]);
+
   const mergedItems = useMemo(() => {
     if (!form.service_category) return [];
     return catalogItems
