@@ -242,6 +242,23 @@ export default function ConnectedAppsPage() {
     finally { setSendingTestSms(false); }
   };
 
+  const handleStripeTestCheckout = async () => {
+    setLaunchingStripeTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { action: 'test_checkout' },
+      });
+      if (error) { toast.error(`Stripe test failed: ${error.message}`); return; }
+      if (data?.ok && data?.url) {
+        window.open(data.url, '_blank');
+        toast.success('Stripe test checkout opened in new tab');
+      } else {
+        toast.error(`Stripe test failed: ${data?.error || 'Unknown error'}`);
+      }
+    } catch (e: any) { toast.error(e.message); }
+    finally { setLaunchingStripeTest(false); }
+  };
+
   const renderCard = (app: Integration) => {
     const testResult = testResults[app.id];
     const currentStatus = testing === app.id ? 'checking' : (testResult?.status ?? app.status);
