@@ -26,6 +26,8 @@ import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
 import SettingsPage from "./pages/SettingsPage";
+import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
+import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
 import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
@@ -223,6 +225,8 @@ function AppRoutes() {
       <Route path="/incidents/:id" element={<AdminRoute><AdminIncidentDetailPage /></AdminRoute>} />
 
       <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+      <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
+      <Route path="/settings/team" element={<AdminRoute><ManageTeamPage /></AdminRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
