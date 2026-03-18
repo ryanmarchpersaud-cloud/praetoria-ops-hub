@@ -1099,6 +1099,48 @@ export type Database = {
           },
         ]
       }
+      products_services: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          product_type: string
+          service_category: string
+          sort_order: number | null
+          status: string
+          unit_label: string | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          product_type?: string
+          service_category?: string
+          sort_order?: number | null
+          status?: string
+          unit_label?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          product_type?: string
+          service_category?: string
+          sort_order?: number | null
+          status?: string
+          unit_label?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
