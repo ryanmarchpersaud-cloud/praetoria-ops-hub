@@ -66,6 +66,22 @@ async function testResend(): Promise<{ ok: boolean; message: string }> {
   }
 }
 
+async function testStripe(): Promise<{ ok: boolean; message: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: { action: 'health' },
+    });
+    if (error) return { ok: false, message: error.message };
+    if (data?.stripe_configured) {
+      const mode = data.livemode ? 'Live' : 'Test';
+      return { ok: true, message: `Connected to ${data.account_name || 'Stripe'} (${mode} mode)` };
+    }
+    return { ok: false, message: 'STRIPE_SECRET_KEY not configured' };
+  } catch (e: any) {
+    return { ok: false, message: e.message };
+  }
+}
+
 async function testTwilio(): Promise<{ ok: boolean; message: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('send-sms', {
@@ -124,11 +140,13 @@ const integrations: Integration[] = [
     id: 'stripe',
     name: 'Stripe Payments',
     icon: CreditCard,
-    status: 'coming_soon',
-    purpose: 'Online payments — customer autopay, invoice payment links, and payment reconciliation.',
-    configNotes: 'Will require Stripe publishable + secret keys. Webhook endpoint to be configured.',
+    status: 'configured',
+    purpose: 'Online payments — customer checkout sessions, invoice payment links, and admin test payments.',
+    configNotes: 'Account: Praetoria Snow & Ice. Edge function: create-checkout. Supports test checkout, service payments with internal metadata. Test mode active.',
     lastChecked: null,
-    canTest: false,
+    canTest: true,
+    testFn: testStripe,
+    hasCustomAction: true,
   },
   {
     id: 'n8n',
@@ -173,6 +191,7 @@ export default function ConnectedAppsPage() {
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
   const [testSmsTo, setTestSmsTo] = useState('');
   const [sendingTestSms, setSendingTestSms] = useState(false);
+  const [launchingStripeTest, setLaunchingStripeTest] = useState(false);
 
   const handleTest = async (integration: Integration) => {
     if (!integration.testFn) return;
@@ -221,6 +240,23 @@ export default function ConnectedAppsPage() {
       else toast.error(`Send failed: ${data?.error || 'Unknown error'}`);
     } catch (e: any) { toast.error(e.message); }
     finally { setSendingTestSms(false); }
+  };
+
+  const handleStripeTestCheckout = async () => {
+    setLaunchingStripeTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { action: 'test_checkout' },
+      });
+      if (error) { toast.error(`Stripe test failed: ${error.message}`); return; }
+      if (data?.ok && data?.url) {
+        window.open(data.url, '_blank');
+        toast.success('Stripe test checkout opened in new tab');
+      } else {
+        toast.error(`Stripe test failed: ${data?.error || 'Unknown error'}`);
+      }
+    } catch (e: any) { toast.error(e.message); }
+    finally { setLaunchingStripeTest(false); }
   };
 
   const renderCard = (app: Integration) => {
@@ -277,6 +313,14 @@ export default function ConnectedAppsPage() {
                 Send
               </Button>
             </div>
+          )}
+
+          {/* Stripe test checkout button */}
+          {app.id === 'stripe' && (
+            <Button variant="default" size="sm" disabled={launchingStripeTest} onClick={handleStripeTestCheckout}>
+              {launchingStripeTest ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
+              Test Checkout ($1.00 CAD)
+            </Button>
           )}
 
           <div className="flex gap-2">
