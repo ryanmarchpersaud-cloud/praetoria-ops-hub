@@ -407,7 +407,13 @@ export default function ConnectedAppsPage() {
           {/* n8n branch test buttons */}
           {app.id === 'n8n' && (
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Synthetic Branch Tests</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Synthetic Branch Tests</p>
+                <Button variant="default" size="sm" className="h-7 text-xs" disabled={testingAllN8n} onClick={handleTestAllN8n}>
+                  {testingAllN8n ? <Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> : <Zap className="h-3 w-3 mr-1.5" />}
+                  Test All Routes
+                </Button>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 {N8N_TESTS.map((def) => {
                   const Icon = def.icon;
