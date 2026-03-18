@@ -164,6 +164,7 @@ export default function ConnectedAppsPage() {
           </p>
         </div>
 
+        <h2 className="text-lg font-semibold text-foreground">Core Infrastructure</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {integrations.map((app) => {
             const testResult = testResults[app.id];
