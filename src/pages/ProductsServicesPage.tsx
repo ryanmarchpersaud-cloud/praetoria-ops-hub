@@ -8,13 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Plus, MoreHorizontal, Package, Pencil, Archive, Copy, XCircle, Check, Globe, CalendarCheck } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Search, Plus, MoreHorizontal, Package, Pencil, Archive, Copy, XCircle, Check, Globe, CalendarCheck, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const PRODUCT_TYPES = ['Service', 'Package', 'Add-On', 'Inspection', 'Recurring Plan', 'Material / Product'];
@@ -24,6 +26,25 @@ const SERVICE_CATEGORIES = [
 ];
 const PRICE_TYPES = ['Flat Rate', 'Hourly', 'Per Visit', 'Per Month', 'Per Unit', 'Custom Quote'];
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Archived'];
+const BOOK_AS_OPTIONS = ['Job', 'Visit', 'Assignment'];
+const DURATION_OPTIONS = [
+  { label: 'No duration', value: '' },
+  { label: '15m', value: '15' },
+  { label: '30m', value: '30' },
+  { label: '45m', value: '45' },
+  { label: '1h', value: '60' },
+  { label: '1h 30m', value: '90' },
+  { label: '2h', value: '120' },
+  { label: '2h 30m', value: '150' },
+  { label: '3h', value: '180' },
+  { label: '4h', value: '240' },
+  { label: '5h', value: '300' },
+  { label: '6h', value: '360' },
+  { label: '8h', value: '480' },
+  { label: '9h 30m', value: '570' },
+  { label: '10h', value: '600' },
+  { label: '12h', value: '720' },
+];
 
 type Product = {
   id: string;
@@ -45,6 +66,12 @@ type Product = {
   recurring_eligible: boolean;
   portal_display_description: string | null;
   internal_notes: string | null;
+  book_service_as: string;
+  service_duration_minutes: number | null;
+  allow_customer_quantity: boolean;
+  min_quantity: number;
+  max_quantity: number;
+  available_on_quotes: boolean;
 };
 
 type FormState = {
@@ -65,6 +92,12 @@ type FormState = {
   recurring_eligible: boolean;
   portal_display_description: string;
   internal_notes: string;
+  book_service_as: string;
+  service_duration_minutes: string;
+  allow_customer_quantity: boolean;
+  min_quantity: string;
+  max_quantity: string;
+  available_on_quotes: boolean;
 };
 
 const emptyForm: FormState = {
@@ -73,6 +106,8 @@ const emptyForm: FormState = {
   taxable: true, online_booking_enabled: false, customer_visible: true,
   internal_item_code: '', price_type: 'Flat Rate', minimum_charge: '0',
   seasonal_label: '', recurring_eligible: false, portal_display_description: '', internal_notes: '',
+  book_service_as: 'Job', service_duration_minutes: '', allow_customer_quantity: false,
+  min_quantity: '1', max_quantity: '100', available_on_quotes: true,
 };
 
 export default function ProductsServicesPage() {
@@ -83,6 +118,7 @@ export default function ProductsServicesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products_services'],
@@ -117,6 +153,12 @@ export default function ProductsServicesPage() {
         recurring_eligible: form.recurring_eligible,
         portal_display_description: form.portal_display_description.trim() || null,
         internal_notes: form.internal_notes.trim() || null,
+        book_service_as: form.book_service_as,
+        service_duration_minutes: form.service_duration_minutes ? parseInt(form.service_duration_minutes) : null,
+        allow_customer_quantity: form.allow_customer_quantity,
+        min_quantity: parseInt(form.min_quantity) || 1,
+        max_quantity: parseInt(form.max_quantity) || 100,
+        available_on_quotes: form.available_on_quotes,
       };
       if (editingId) {
         const { error } = await supabase.from('products_services').update(payload).eq('id', editingId);
@@ -132,6 +174,19 @@ export default function ProductsServicesPage() {
       queryClient.invalidateQueries({ queryKey: ['products_services'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to save'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('products_services').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Item deleted');
+      closeDialog();
+      queryClient.invalidateQueries({ queryKey: ['products_services'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to delete'),
   });
 
   const statusMutation = useMutation({
@@ -167,6 +222,7 @@ export default function ProductsServicesPage() {
     setDialogOpen(false);
     setEditingId(null);
     setForm(emptyForm);
+    setDeleteConfirmOpen(false);
   };
 
   const openEdit = (p: Product) => {
@@ -189,6 +245,12 @@ export default function ProductsServicesPage() {
       recurring_eligible: p.recurring_eligible,
       portal_display_description: p.portal_display_description || '',
       internal_notes: p.internal_notes || '',
+      book_service_as: p.book_service_as || 'Job',
+      service_duration_minutes: p.service_duration_minutes ? String(p.service_duration_minutes) : '',
+      allow_customer_quantity: p.allow_customer_quantity,
+      min_quantity: String(p.min_quantity),
+      max_quantity: String(p.max_quantity),
+      available_on_quotes: p.available_on_quotes,
     });
     setDialogOpen(true);
   };
@@ -215,6 +277,314 @@ export default function ProductsServicesPage() {
   const updateField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
+  /* ---------- Modal content (shared between create & edit) ---------- */
+  const renderModalContent = () => (
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-xl font-bold">
+          {editingId ? `Edit ${form.name || 'Item'}` : 'Add New Product/Service'}
+        </DialogTitle>
+        {editingId && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Changes will apply to new quotes, jobs, invoices, existing quote templates & online booking
+          </p>
+        )}
+      </DialogHeader>
+
+      <ScrollArea className="max-h-[62vh] pr-4">
+        <div className="space-y-6 py-2">
+          {/* Item Type */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Item type</Label>
+            <Select value={form.product_type} onValueChange={(v) => updateField('product_type', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PRODUCT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Name */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Name</Label>
+            <Input
+              placeholder="e.g. Driveway Snow Clearing"
+              value={form.name}
+              onChange={(e) => updateField('name', e.target.value)}
+            />
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Description</Label>
+            <Textarea
+              placeholder="Internal description for quotes and invoices..."
+              value={form.description}
+              onChange={(e) => updateField('description', e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          {/* Category */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Category</Label>
+            <Select value={form.service_category} onValueChange={(v) => updateField('service_category', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SERVICE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Unit Price */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Unit Price ($)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.unit_price}
+              onChange={(e) => updateField('unit_price', e.target.value)}
+            />
+          </div>
+
+          {/* Price Type & Min Charge */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Price Type</Label>
+              <Select value={form.price_type} onValueChange={(v) => updateField('price_type', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PRICE_TYPES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Minimum Charge ($)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.minimum_charge}
+                onChange={(e) => updateField('minimum_charge', e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Internal code & seasonal label */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Internal Item Code</Label>
+              <Input placeholder="e.g. SNW-DRV-01" value={form.internal_item_code} onChange={(e) => updateField('internal_item_code', e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Seasonal Label</Label>
+              <Input placeholder="e.g. Winter 2025-26" value={form.seasonal_label} onChange={(e) => updateField('seasonal_label', e.target.value)} />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Checkboxes: Tax exempt & Available on quotes */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="taxExempt"
+                checked={!form.taxable}
+                onCheckedChange={(v) => updateField('taxable', !v)}
+              />
+              <label htmlFor="taxExempt" className="text-sm cursor-pointer">Exempt from Tax</label>
+            </div>
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="availableOnQuotes"
+                checked={form.available_on_quotes}
+                onCheckedChange={(v) => updateField('available_on_quotes', v as boolean)}
+              />
+              <label htmlFor="availableOnQuotes" className="text-sm cursor-pointer">Available on quotes, quote templates, jobs, invoices & online booking</label>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Online Booking Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-foreground">Online Booking</h3>
+              <Switch
+                checked={form.online_booking_enabled}
+                onCheckedChange={(v) => updateField('online_booking_enabled', v)}
+              />
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              These settings are only available for online booking.
+            </p>
+
+            {form.online_booking_enabled && (
+              <div className="space-y-4 animate-fade-in">
+                {/* Book service as */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Book service as</Label>
+                  <Select value={form.book_service_as} onValueChange={(v) => updateField('book_service_as', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {BOOK_AS_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Service Duration */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Service Duration</Label>
+                  <Select
+                    value={form.service_duration_minutes}
+                    onValueChange={(v) => updateField('service_duration_minutes', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select duration" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DURATION_OPTIONS.map((d) => (
+                        <SelectItem key={d.value || 'none'} value={d.value || 'none'}>{d.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator />
+
+                {/* Allow customers to select quantity */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="allowQuantity"
+                      checked={form.allow_customer_quantity}
+                      onCheckedChange={(v) => updateField('allow_customer_quantity', v as boolean)}
+                    />
+                    <div>
+                      <label htmlFor="allowQuantity" className="text-sm font-medium cursor-pointer">Allow customers to select quantity</label>
+                      <p className="text-xs text-muted-foreground">Duration and unit price will scale based on quantity. (e.g. 15min x 4 = 1h)</p>
+                    </div>
+                  </div>
+
+                  {form.allow_customer_quantity && (
+                    <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Minimum quantity</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={form.min_quantity}
+                          onChange={(e) => updateField('min_quantity', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Maximum quantity</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={form.max_quantity}
+                          onChange={(e) => updateField('max_quantity', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Customer Visibility */}
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Visibility & Recurring</h3>
+            <div className="flex items-center justify-between">
+              <Label className="font-normal">Visible to customers in portal</Label>
+              <Switch checked={form.customer_visible} onCheckedChange={(v) => updateField('customer_visible', v)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label className="font-normal">Eligible for recurring plans</Label>
+              <Switch checked={form.recurring_eligible} onCheckedChange={(v) => updateField('recurring_eligible', v)} />
+            </div>
+            {form.customer_visible && (
+              <div className="space-y-2 animate-fade-in">
+                <Label className="text-xs text-muted-foreground">Portal Display Description</Label>
+                <Textarea
+                  placeholder="Customer-friendly description shown in the portal..."
+                  value={form.portal_display_description}
+                  onChange={(e) => updateField('portal_display_description', e.target.value)}
+                  rows={2}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Status (edit only) & Internal Notes */}
+          {editingId && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Status</Label>
+                  <Select value={form.status} onValueChange={(v) => updateField('status', v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Internal Notes</Label>
+            <Textarea
+              placeholder="Admin-only notes..."
+              value={form.internal_notes}
+              onChange={(e) => updateField('internal_notes', e.target.value)}
+              rows={2}
+            />
+          </div>
+        </div>
+      </ScrollArea>
+
+      {/* Footer — Delete / Cancel / Create|Update */}
+      <div className="flex items-center justify-between pt-2 border-t border-border">
+        <div>
+          {editingId && (
+            deleteConfirmOpen ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-destructive font-medium">Are you sure?</span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => deleteMutation.mutate(editingId)}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? 'Deleting...' : 'Yes, Delete'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setDeleteConfirmOpen(false)}>No</Button>
+              </div>
+            ) : (
+              <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmOpen(true)}>
+                <Trash2 className="h-4 w-4 mr-2" />Delete
+              </Button>
+            )
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+          <Button onClick={() => saveMutation.mutate()} disabled={!form.name.trim() || saveMutation.isPending}>
+            {saveMutation.isPending ? 'Saving...' : editingId ? 'Update' : 'Create'}
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <SettingsLayout>
       <div className="space-y-6 animate-fade-in">
@@ -222,7 +592,7 @@ export default function ProductsServicesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Products & Services</h1>
-            <p className="text-sm text-muted-foreground">Master catalog — used in quotes, jobs, visits, invoices, and customer requests.</p>
+            <p className="text-sm text-muted-foreground">Add and update your products & services to stay organized when creating quotes, quote templates, jobs, and invoices.</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) closeDialog(); else setDialogOpen(true); }}>
             <DialogTrigger asChild>
@@ -231,132 +601,7 @@ export default function ProductsServicesPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh]">
-              <DialogHeader>
-                <DialogTitle>{editingId ? 'Edit Product / Service' : 'Add New Product / Service'}</DialogTitle>
-              </DialogHeader>
-              <ScrollArea className="max-h-[65vh] pr-4">
-                <div className="space-y-6 py-2">
-                  {/* Core info */}
-                  <div className="space-y-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Core Information</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2 col-span-2 sm:col-span-1">
-                        <Label>Item Type *</Label>
-                        <Select value={form.product_type} onValueChange={(v) => updateField('product_type', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {PRODUCT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2 col-span-2 sm:col-span-1">
-                        <Label>Category *</Label>
-                        <Select value={form.service_category} onValueChange={(v) => updateField('service_category', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {SERVICE_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Name *</Label>
-                      <Input placeholder="e.g. Driveway Snow Clearing" value={form.name} onChange={(e) => updateField('name', e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Description</Label>
-                      <Textarea placeholder="Internal description for quotes and invoices..." value={form.description} onChange={(e) => updateField('description', e.target.value)} rows={2} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Internal Item Code</Label>
-                        <Input placeholder="e.g. SNW-DRV-01" value={form.internal_item_code} onChange={(e) => updateField('internal_item_code', e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Seasonal Label</Label>
-                        <Input placeholder="e.g. Winter 2025-26" value={form.seasonal_label} onChange={(e) => updateField('seasonal_label', e.target.value)} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pricing */}
-                  <div className="space-y-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pricing</p>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label>Price Type</Label>
-                        <Select value={form.price_type} onValueChange={(v) => updateField('price_type', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {PRICE_TYPES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Unit Price ($)</Label>
-                        <Input type="number" step="0.01" min="0" value={form.unit_price} onChange={(e) => updateField('unit_price', e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Min. Charge ($)</Label>
-                        <Input type="number" step="0.01" min="0" value={form.minimum_charge} onChange={(e) => updateField('minimum_charge', e.target.value)} />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Switch checked={form.taxable} onCheckedChange={(v) => updateField('taxable', v)} />
-                      <Label className="font-normal">Taxable (HST/GST applies)</Label>
-                    </div>
-                  </div>
-
-                  {/* Visibility & Booking */}
-                  <div className="space-y-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Customer Visibility & Booking</p>
-                    <div className="flex items-center gap-3">
-                      <Switch checked={form.customer_visible} onCheckedChange={(v) => updateField('customer_visible', v)} />
-                      <Label className="font-normal">Visible to customers in portal</Label>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Switch checked={form.online_booking_enabled} onCheckedChange={(v) => updateField('online_booking_enabled', v)} />
-                      <Label className="font-normal">Available for online booking / requests</Label>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Switch checked={form.recurring_eligible} onCheckedChange={(v) => updateField('recurring_eligible', v)} />
-                      <Label className="font-normal">Eligible for recurring plans</Label>
-                    </div>
-                    {form.customer_visible && (
-                      <div className="space-y-2">
-                        <Label>Portal Display Description</Label>
-                        <Textarea placeholder="Customer-friendly description shown in the portal..." value={form.portal_display_description} onChange={(e) => updateField('portal_display_description', e.target.value)} rows={2} />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Status & Notes */}
-                  <div className="space-y-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status & Notes</p>
-                    {editingId && (
-                      <div className="space-y-2">
-                        <Label>Status</Label>
-                        <Select value={form.status} onValueChange={(v) => updateField('status', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <Label>Internal Notes</Label>
-                      <Textarea placeholder="Admin-only notes..." value={form.internal_notes} onChange={(e) => updateField('internal_notes', e.target.value)} rows={2} />
-                    </div>
-                  </div>
-                </div>
-              </ScrollArea>
-              <DialogFooter>
-                <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-                <Button onClick={() => saveMutation.mutate()} disabled={!form.name.trim() || saveMutation.isPending}>
-                  {saveMutation.isPending ? 'Saving...' : editingId ? 'Update Item' : 'Create Item'}
-                </Button>
-              </DialogFooter>
+              {renderModalContent()}
             </DialogContent>
           </Dialog>
         </div>
@@ -515,8 +760,8 @@ export default function ProductsServicesPage() {
                 </div>
                 <div className="h-px bg-border" />
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Active</span><span className="font-medium text-emerald-600">{counts.active}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Inactive</span><span className="font-medium text-amber-600">{counts.inactive}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Active</span><span className="font-medium text-primary">{counts.active}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Inactive</span><span className="font-medium text-muted-foreground">{counts.inactive}</span></div>
                   <div className="flex justify-between"><span className="text-muted-foreground">Archived</span><span className="font-medium text-muted-foreground">{counts.archived}</span></div>
                 </div>
                 <div className="h-px bg-border" />

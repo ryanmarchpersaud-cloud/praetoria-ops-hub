@@ -1101,12 +1101,17 @@ export type Database = {
       }
       products_services: {
         Row: {
+          allow_customer_quantity: boolean
+          available_on_quotes: boolean
+          book_service_as: string
           created_at: string
           customer_visible: boolean
           description: string | null
           id: string
           internal_item_code: string | null
           internal_notes: string | null
+          max_quantity: number
+          min_quantity: number
           minimum_charge: number | null
           name: string
           online_booking_enabled: boolean
@@ -1116,6 +1121,7 @@ export type Database = {
           recurring_eligible: boolean
           seasonal_label: string | null
           service_category: string
+          service_duration_minutes: number | null
           sort_order: number | null
           status: string
           taxable: boolean
@@ -1124,12 +1130,17 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_customer_quantity?: boolean
+          available_on_quotes?: boolean
+          book_service_as?: string
           created_at?: string
           customer_visible?: boolean
           description?: string | null
           id?: string
           internal_item_code?: string | null
           internal_notes?: string | null
+          max_quantity?: number
+          min_quantity?: number
           minimum_charge?: number | null
           name: string
           online_booking_enabled?: boolean
@@ -1139,6 +1150,7 @@ export type Database = {
           recurring_eligible?: boolean
           seasonal_label?: string | null
           service_category?: string
+          service_duration_minutes?: number | null
           sort_order?: number | null
           status?: string
           taxable?: boolean
@@ -1147,12 +1159,17 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_customer_quantity?: boolean
+          available_on_quotes?: boolean
+          book_service_as?: string
           created_at?: string
           customer_visible?: boolean
           description?: string | null
           id?: string
           internal_item_code?: string | null
           internal_notes?: string | null
+          max_quantity?: number
+          min_quantity?: number
           minimum_charge?: number | null
           name?: string
           online_booking_enabled?: boolean
@@ -1162,6 +1179,7 @@ export type Database = {
           recurring_eligible?: boolean
           seasonal_label?: string | null
           service_category?: string
+          service_duration_minutes?: number | null
           sort_order?: number | null
           status?: string
           taxable?: boolean
