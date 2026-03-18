@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SettingsLayout } from '@/components/SettingsLayout';
+import { IntegrationActivityLog } from '@/components/IntegrationActivityLog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
