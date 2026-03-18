@@ -217,6 +217,37 @@ export default function ConnectedAppsPage() {
   // n8n branch test state — keyed by action key
   const [n8nTesting, setN8nTesting] = useState<Record<string, boolean>>({});
   const [n8nResults, setN8nResults] = useState<Record<string, { success: boolean; message: string }>>({});
+  const [testingAllN8n, setTestingAllN8n] = useState(false);
+
+  const handleTestAllN8n = async () => {
+    setTestingAllN8n(true);
+    setN8nResults({});
+    for (const def of N8N_TESTS) {
+      setN8nTesting(prev => ({ ...prev, [def.key]: true }));
+      try {
+        const { data, error } = await supabase.functions.invoke('n8n-webhook', {
+          body: { action: def.key },
+        });
+        if (error) {
+          setN8nResults(prev => ({ ...prev, [def.key]: { success: false, message: error.message } }));
+        } else if (data?.success) {
+          setN8nResults(prev => ({ ...prev, [def.key]: { success: true, message: data.message } }));
+        } else {
+          setN8nResults(prev => ({ ...prev, [def.key]: { success: false, message: data?.message || 'Unknown error' } }));
+        }
+      } catch (e: any) {
+        setN8nResults(prev => ({ ...prev, [def.key]: { success: false, message: e.message } }));
+      } finally {
+        setN8nTesting(prev => ({ ...prev, [def.key]: false }));
+      }
+      // Short delay between requests
+      await new Promise(r => setTimeout(r, 800));
+    }
+    setTestingAllN8n(false);
+    const results = Object.values(n8nResults);
+    const allPassed = N8N_TESTS.length > 0; // toast after state settles
+    toast.info('All n8n branch tests complete — check results below');
+  };
 
   const handleN8nBranchTest = async (def: N8nTestDef) => {
     setN8nTesting(prev => ({ ...prev, [def.key]: true }));
