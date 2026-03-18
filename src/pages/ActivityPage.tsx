@@ -54,18 +54,21 @@ export default function ActivityPage() {
             ) : activities.length === 0 ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No activity recorded</TableCell></TableRow>
             ) : (
-              activities.map(a => (
-                <TableRow key={a.id}>
+              activities.map(a => {
+                const link = getRecordLink(a.record_type, a.record_id);
+                return (
+                <TableRow key={a.id} className={link ? 'cursor-pointer hover:bg-muted/50' : ''} onClick={() => link && navigate(link)}>
                   <TableCell className="font-medium text-sm">{a.action_name}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{a.workflow_name || '—'}</TableCell>
-                  <TableCell className="text-sm">{a.record_type || '—'}</TableCell>
+                  <TableCell className={`text-sm ${link ? 'text-primary' : ''}`}>{a.record_type || '—'}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{a.status}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm">{a.needs_approval ? 'Yes' : 'No'}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
