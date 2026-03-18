@@ -142,8 +142,38 @@ Deno.serve(async (req) => {
           results.push({ channel, status: "queued", notification_id: notif.id, message: "Email queued (RESEND_API_KEY or to_email missing)" });
         }
       } else if (channel === "sms") {
-        // SMS integration placeholder - ready for Twilio connector
-        results.push({ channel, status: "queued", notification_id: notif.id, message: "SMS queued for delivery" });
+        // Send via Twilio through connector gateway
+        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+        const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
+        const TWILIO_PHONE = Deno.env.get("TWILIO_PHONE_NUMBER");
+        if (LOVABLE_API_KEY && TWILIO_API_KEY && TWILIO_PHONE && variables.to_phone) {
+          try {
+            const smsRes = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "X-Connection-Api-Key": TWILIO_API_KEY,
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                To: variables.to_phone,
+                From: TWILIO_PHONE,
+                Body: `${subject}: ${notifBody}`.substring(0, 1600),
+              }),
+            });
+            const smsData = await smsRes.json();
+            if (smsRes.ok) {
+              await supabase.from("notifications").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", notif.id);
+              results.push({ channel, status: "sent", notification_id: notif.id, twilio_sid: smsData.sid });
+            } else {
+              results.push({ channel, status: "failed", notification_id: notif.id, error: smsData.message || JSON.stringify(smsData) });
+            }
+          } catch (smsErr: any) {
+            results.push({ channel, status: "failed", notification_id: notif.id, error: smsErr.message });
+          }
+        } else {
+          results.push({ channel, status: "queued", notification_id: notif.id, message: "SMS queued (Twilio keys or to_phone missing)" });
+        }
       } else {
         results.push({ channel, status: "sent", notification_id: notif.id });
       }
