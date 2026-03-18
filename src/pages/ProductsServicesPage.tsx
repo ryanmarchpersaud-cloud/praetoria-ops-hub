@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 const PRODUCT_TYPES = ['Service', 'Package', 'Add-On', 'Inspection', 'Recurring Plan', 'Material / Product'];
 const SERVICE_CATEGORIES = [
   'Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance',
-  'Cleaning Services', 'Power Washing', 'Property Inspection', 'Bylaw / Compliance',
+  'Cleaning Services', 'Power Washing', 'Property Inspection', 'Bylaw / Compliance', 'Property Management',
 ];
 const PRICE_TYPES = ['Flat Rate', 'Hourly', 'Per Visit', 'Per Month', 'Per Unit', 'Custom Quote'];
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Archived'];
