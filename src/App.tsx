@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { PreviewModeBanner } from "@/components/PreviewModeBanner";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useAuthorization } from "@/hooks/useAuthorization";
 import { AppLayout } from "@/components/AppLayout";
 import { PortalLayout } from "@/components/PortalLayout";
 import { SubcontractorLayout } from "@/components/subcontractor/SubcontractorLayout";
