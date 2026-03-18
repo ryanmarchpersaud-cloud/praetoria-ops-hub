@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
         `),
         reply_to: "ops@praetoriagroup.ca",
       });
-      await logIntegration({
+      const logEntry: IntegrationEntry = {
         provider: "resend",
         event_name: "email.request_confirmation",
         channel: "email",
@@ -221,7 +221,9 @@ Deno.serve(async (req) => {
         provider_response_id: result.id,
         error_message: result.error,
         metadata: { customer_name, service_type },
-      });
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
       return json({ ...result, action: "request_confirmation" });
     }
 
