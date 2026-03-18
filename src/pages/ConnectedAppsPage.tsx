@@ -191,6 +191,7 @@ export default function ConnectedAppsPage() {
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
   const [testSmsTo, setTestSmsTo] = useState('');
   const [sendingTestSms, setSendingTestSms] = useState(false);
+  const [launchingStripeTest, setLaunchingStripeTest] = useState(false);
 
   const handleTest = async (integration: Integration) => {
     if (!integration.testFn) return;
