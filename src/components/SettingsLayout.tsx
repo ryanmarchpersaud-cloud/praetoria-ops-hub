@@ -1,13 +1,19 @@
 import { NavLink } from '@/components/NavLink';
-import { Users, Settings, Webhook, Plug, ShieldCheck, ScrollText, Gauge } from 'lucide-react';
+import {
+  Settings, Webhook, Plug, Users, ShieldCheck, ScrollText, Gauge,
+  Building2, Package, CreditCard, Receipt, Zap, Briefcase, CalendarCog,
+  MapPinned, ClipboardList, MessageSquare, Mail, BookOpen, Globe,
+} from 'lucide-react';
 
 const settingsNav = [
   {
     group: 'Business Management',
     items: [
-      { title: 'General', url: '/settings', icon: Settings },
-      { title: 'Integrations', url: '/settings/integrations', icon: Webhook },
-      { title: 'Connected Apps', url: '/settings/connected-apps', icon: Plug },
+      { title: 'Company Settings', url: '/settings', icon: Building2 },
+      { title: 'Products & Services', url: '/settings/products', icon: Package },
+      { title: 'Payments', url: '/settings/payments', icon: CreditCard },
+      { title: 'Expense Tracking', url: '/settings/expenses', icon: Receipt },
+      { title: 'Automations', url: '/settings/automations', icon: Zap },
     ],
   },
   {
@@ -15,6 +21,26 @@ const settingsNav = [
     items: [
       { title: 'Manage Team', url: '/settings/team', icon: Users },
       { title: 'Roles & Permissions', url: '/settings/roles', icon: ShieldCheck },
+      { title: 'Work Settings', url: '/settings/work', icon: Briefcase },
+      { title: 'Schedule Settings', url: '/settings/schedule-settings', icon: CalendarCog },
+      { title: 'Route Optimization', url: '/settings/routes', icon: MapPinned },
+      { title: 'Job Forms', url: '/settings/job-forms', icon: ClipboardList },
+    ],
+  },
+  {
+    group: 'Client Communication',
+    items: [
+      { title: 'Client Hub', url: '/settings/client-hub', icon: MessageSquare },
+      { title: 'Emails & Texts', url: '/settings/messaging', icon: Mail },
+      { title: 'Requests & Bookings', url: '/settings/requests-config', icon: BookOpen },
+      { title: 'Portal Settings', url: '/settings/portal', icon: Globe },
+    ],
+  },
+  {
+    group: 'Connected Apps',
+    items: [
+      { title: 'Integrations', url: '/settings/integrations', icon: Webhook },
+      { title: 'Connected Apps', url: '/settings/connected-apps', icon: Plug },
     ],
   },
   {
@@ -50,7 +76,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
       <div className="flex gap-6">
         {/* Desktop left sidebar */}
         <aside className="hidden lg:block w-56 shrink-0">
-          <div className="sticky top-6 space-y-6">
+          <div className="sticky top-6 space-y-5 max-h-[calc(100vh-4rem)] overflow-y-auto pb-8">
             <h2 className="text-sm font-semibold text-foreground px-3">Settings</h2>
             {settingsNav.map((group) => (
               <div key={group.group}>
