@@ -418,7 +418,7 @@ export default function ProductsServicesPage() {
                       </TableHeader>
                       <TableBody>
                         {filtered.map((p) => (
-                          <TableRow key={p.id} className={p.status !== 'Active' ? 'opacity-60' : ''}>
+                          <TableRow key={p.id} className={`cursor-pointer ${p.status !== 'Active' ? 'opacity-60' : ''}`} onClick={() => openEdit(p)}>
                             <TableCell>
                               <div className="min-w-0">
                                 <p className="font-medium text-foreground truncate">{p.name}</p>
@@ -456,7 +456,7 @@ export default function ProductsServicesPage() {
                                 {p.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
