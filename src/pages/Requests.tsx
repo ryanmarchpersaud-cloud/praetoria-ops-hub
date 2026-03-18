@@ -41,7 +41,8 @@ export default function Requests() {
       ) : (
         <div className="space-y-2">
           {requests.map((req: any) => (
-            <Card key={req.id} className="active:shadow-sm transition-shadow">
+            <Link key={req.id} to={`/requests/${req.id}`} className="block">
+            <Card className="active:shadow-sm transition-shadow hover:bg-muted/30">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -60,12 +61,16 @@ export default function Requests() {
                       <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{req.description}</p>
                     )}
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
-                    {req.urgency}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
+                      {req.urgency}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
+            </Link>
           ))}
         </div>
       )}
