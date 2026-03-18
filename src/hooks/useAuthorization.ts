@@ -15,10 +15,10 @@ import type { AppRole } from './useUserRole';
  *
  * Portal flags (from team_members):
  *   portal_admin, portal_worker, portal_subcontractor
- *   These gate which portal UIs a team member may enter.
+ *   These are SWITCHES within the allowed role class, NOT elevators.
+ *   They cannot grant access above what the role permits.
  *
- * Active status (from team_members):
- *   is_active + status ∈ {Active, Invited}
+ * Access truth table:
  *   Inactive / Archived users are blocked from all protected areas.
  */
 
@@ -99,11 +99,15 @@ export function useAuthorization(): AuthorizationState {
         ? true
         : true; // no team_member record but has roles (legacy) = allow
 
-  // Portal access: derive from team_members flags, fall back to role-based defaults
-  const canAccessAdminPortal = isAdmin || isManager || (teamMember?.portal_admin ?? false);
-  const canAccessWorkerPortal = isStaff || (teamMember?.portal_worker ?? false);
-  const canAccessSubcontractorPortal = isSubcontractor || (teamMember?.portal_subcontractor ?? false);
-  const canAccessCustomerPortal = isCustomer || isStaff; // staff can preview
+  // Portal access: role sets the ceiling, portal flags act as switches within that ceiling
+  // Admin/manager: always get admin portal; portal flags can additionally grant worker/sub access
+  const canAccessAdminPortal = isAdmin || isManager;
+  // Worker portal: staff by role, OR admin/manager always, OR explicit flag
+  const canAccessWorkerPortal = isStaff || isAdmin || isManager || (teamMember?.portal_worker ?? false);
+  // Subcontractor portal: subcontractor by role, OR admin (for oversight)
+  const canAccessSubcontractorPortal = isSubcontractor || isAdmin;
+  // Customer portal: customer by role, OR admin/manager for preview — plain staff CANNOT access
+  const canAccessCustomerPortal = isCustomer || isAdmin || isManager;
 
   return {
     roles,

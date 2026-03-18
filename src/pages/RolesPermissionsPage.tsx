@@ -12,12 +12,13 @@ const roleDefinitions = [
     icon: Shield,
     color: 'text-destructive',
     description: 'Full system access — manages team, settings, billing, and all operational data.',
-    portalAccess: ['Admin Dashboard', 'Worker Portal', 'Customer Portal (preview)', 'Subcontractor Portal'],
+    portalAccess: ['Admin Dashboard', 'Worker Portal', 'Subcontractor Portal', 'Customer Portal (preview)'],
     enforcedAccess: [
       'All admin routes (/, /leads, /quotes, /jobs, /invoices, /settings/*)',
       'All worker routes (/worker/*)',
       'All subcontractor routes (/subcontractor/*)',
       'Customer portal preview (/portal/*)',
+      'Inactive/archived users blocked',
     ],
   },
   {
@@ -26,12 +27,13 @@ const roleDefinitions = [
     icon: Briefcase,
     color: 'text-violet-600',
     description: 'Operational admin access — can view dashboards, manage jobs, and limited settings.',
-    portalAccess: ['Admin Dashboard (operational)', 'Worker Portal'],
+    portalAccess: ['Admin Dashboard (operational)', 'Worker Portal', 'Customer Portal (preview)'],
     enforcedAccess: [
       'Admin dashboard and operational routes',
-      'Worker portal routes',
-      'Customer portal preview',
+      'Worker portal routes (/worker/*)',
+      'Customer portal preview (/portal/*)',
       'Cannot access: Settings > Team, Roles, Connected Apps',
+      'Cannot access subcontractor portal',
     ],
   },
   {
@@ -44,6 +46,7 @@ const roleDefinitions = [
     enforcedAccess: [
       'Worker portal routes (/worker/*)',
       'Cannot access admin dashboard',
+      'Cannot access customer portal',
       'Cannot access subcontractor portal',
     ],
   },
