@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
           },
         });
 
-        await logIntegration({
+        const logEntry: IntegrationEntry = {
           provider: "stripe",
           event_name: "stripe.test_checkout_created",
           channel: "payment",
@@ -195,7 +195,9 @@ Deno.serve(async (req) => {
           provider_response_id: session.id,
           environment: env,
           metadata: { user_id: userId },
-        });
+        };
+        await logIntegration(logEntry);
+        await notifyN8n(logEntry);
         return json({ ok: true, url: session.url });
       } catch (e: any) {
         await logIntegration({
