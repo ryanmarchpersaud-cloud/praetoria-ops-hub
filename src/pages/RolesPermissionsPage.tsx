@@ -27,12 +27,13 @@ const roleDefinitions = [
     icon: Briefcase,
     color: 'text-violet-600',
     description: 'Operational admin access — can view dashboards, manage jobs, and limited settings.',
-    portalAccess: ['Admin Dashboard (operational)', 'Worker Portal'],
+    portalAccess: ['Admin Dashboard (operational)', 'Worker Portal', 'Customer Portal (preview)'],
     enforcedAccess: [
       'Admin dashboard and operational routes',
-      'Worker portal routes',
-      'Customer portal preview',
+      'Worker portal routes (/worker/*)',
+      'Customer portal preview (/portal/*)',
       'Cannot access: Settings > Team, Roles, Connected Apps',
+      'Cannot access subcontractor portal',
     ],
   },
   {
