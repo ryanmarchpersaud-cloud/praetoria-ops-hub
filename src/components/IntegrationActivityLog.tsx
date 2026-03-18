@@ -25,6 +25,7 @@ const providerColors: Record<string, string> = {
   resend: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   twilio: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   stripe: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+  n8n: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
 };
 
 const statusVariant: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
