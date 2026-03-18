@@ -3,7 +3,7 @@ import { SettingsLayout } from '@/components/SettingsLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CheckCircle2, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, CheckCircle2, AlertCircle, Clock, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
