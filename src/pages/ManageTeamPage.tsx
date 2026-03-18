@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Search, UserPlus, Users, MoreHorizontal, Shield, Eye, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { SettingsLayout } from '@/components/SettingsLayout';
 
 type TeamUser = {
   user_id: string;
