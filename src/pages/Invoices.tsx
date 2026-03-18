@@ -20,6 +20,7 @@ const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: 
 };
 
 export default function Invoices() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const { data: invoices = [], isLoading } = useInvoices({ status: statusFilter || undefined });
   const allInvoices = useInvoices({}).data || [];
