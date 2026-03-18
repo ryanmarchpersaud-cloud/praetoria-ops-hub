@@ -1,6 +1,6 @@
 import {
   Snowflake, Trees, Trash2, Wrench, Sparkles, Droplets,
-  ClipboardCheck, Scale, Clock, AlertTriangle,
+  ClipboardCheck, Scale, Clock, AlertTriangle, Building2,
 } from 'lucide-react';
 
 export const SERVICE_CATALOG = {
