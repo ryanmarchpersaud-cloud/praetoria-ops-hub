@@ -1908,6 +1908,63 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          phone: string | null
+          portal_admin: boolean
+          portal_subcontractor: boolean
+          portal_worker: boolean
+          service_categories: string[]
+          status: string
+          team_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          phone?: string | null
+          portal_admin?: boolean
+          portal_subcontractor?: boolean
+          portal_worker?: boolean
+          service_categories?: string[]
+          status?: string
+          team_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          phone?: string | null
+          portal_admin?: boolean
+          portal_subcontractor?: boolean
+          portal_worker?: boolean
+          service_categories?: string[]
+          status?: string
+          team_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       timesheets: {
         Row: {
           clock_in: string

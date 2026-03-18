@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
 
     // ── CREATE USER ──
     if (action === "create_user") {
-      const { email, password, full_name, role } = body;
+      const { email, password, full_name, role, phone, team_type, service_categories, notes, portal_admin, portal_worker, portal_subcontractor } = body;
       if (!email || !password || !role) {
         return new Response(
           JSON.stringify({ error: "email, password, and role are required" }),
@@ -84,8 +84,24 @@ Deno.serve(async (req) => {
       // Assign role
       await adminClient.from("user_roles").insert({ user_id: newUserId, role });
 
+      // Create team_member record
+      await adminClient.from("team_members").insert({
+        user_id: newUserId,
+        full_name: full_name || email,
+        email,
+        phone: phone || null,
+        team_type: team_type || (role === 'admin' ? 'Admin' : role === 'subcontractor' ? 'Subcontractor' : 'Worker'),
+        status: 'Active',
+        is_active: true,
+        service_categories: service_categories || [],
+        notes: notes || null,
+        portal_admin: portal_admin || role === 'admin',
+        portal_worker: portal_worker || role === 'staff',
+        portal_subcontractor: portal_subcontractor || role === 'subcontractor',
+      });
+
       // If staff, create employee record
-      if (role === "staff") {
+      if (role === "staff" || role === "lead_worker" || role === "supervisor" || role === "dispatcher" || role === "manager") {
         const { data: existingEmp } = await adminClient
           .from("employees")
           .select("id")
@@ -118,7 +134,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Prevent self-demotion from admin
       if (user_id === callingUser.id && new_role !== "admin") {
         return new Response(
           JSON.stringify({ error: "You cannot remove your own admin role" }),
@@ -126,12 +141,10 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Remove old role if specified
       if (old_role) {
         await adminClient.from("user_roles").delete().eq("user_id", user_id).eq("role", old_role);
       }
 
-      // Upsert new role
       const { data: existing } = await adminClient
         .from("user_roles")
         .select("id")
@@ -145,6 +158,50 @@ Deno.serve(async (req) => {
 
       return new Response(
         JSON.stringify({ success: true, message: `Role updated to ${new_role}` }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── UPDATE TEAM MEMBER ──
+    if (action === "update_team_member") {
+      const { user_id, updates } = body;
+      if (!user_id || !updates) {
+        return new Response(
+          JSON.stringify({ error: "user_id and updates are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Upsert team_member record
+      const { data: existing } = await adminClient
+        .from("team_members")
+        .select("id")
+        .eq("user_id", user_id)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await adminClient
+          .from("team_members")
+          .update(updates)
+          .eq("user_id", user_id);
+        if (error) throw error;
+      } else {
+        const { error } = await adminClient
+          .from("team_members")
+          .insert({ user_id, ...updates });
+        if (error) throw error;
+      }
+
+      // Sync display_name to profiles
+      if (updates.display_name !== undefined || updates.full_name !== undefined) {
+        await adminClient
+          .from("profiles")
+          .update({ display_name: updates.display_name || updates.full_name })
+          .eq("user_id", user_id);
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Team member updated" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -166,19 +223,21 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Ban the user (prevents login)
       const { error: banErr } = await adminClient.auth.admin.updateUserById(user_id, {
-        ban_duration: "876000h", // ~100 years
+        ban_duration: "876000h",
       });
-
       if (banErr) {
         return new Response(JSON.stringify({ error: banErr.message }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Update employee status if applicable
+      // Update team_members status
+      await adminClient
+        .from("team_members")
+        .update({ status: "Inactive", is_active: false })
+        .eq("user_id", user_id);
+
       await adminClient
         .from("employees")
         .update({ employment_status: "inactive" })
@@ -200,19 +259,20 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Unban the user
       const { error: unbanErr } = await adminClient.auth.admin.updateUserById(user_id, {
         ban_duration: "none",
       });
-
       if (unbanErr) {
         return new Response(JSON.stringify({ error: unbanErr.message }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Update employee status if applicable
+      await adminClient
+        .from("team_members")
+        .update({ status: "Active", is_active: true })
+        .eq("user_id", user_id);
+
       await adminClient
         .from("employees")
         .update({ employment_status: "active" })
@@ -224,13 +284,38 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ── GET USER STATUS (banned or not) ──
+    // ── ARCHIVE USER ──
+    if (action === "archive_user") {
+      const { user_id } = body;
+      if (!user_id) {
+        return new Response(
+          JSON.stringify({ error: "user_id is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Ban + archive
+      await adminClient.auth.admin.updateUserById(user_id, {
+        ban_duration: "876000h",
+      });
+
+      await adminClient
+        .from("team_members")
+        .update({ status: "Archived", is_active: false })
+        .eq("user_id", user_id);
+
+      return new Response(
+        JSON.stringify({ success: true, message: "User archived" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── GET USER STATUSES ──
     if (action === "get_user_statuses") {
       const { data: { users }, error } = await adminClient.auth.admin.listUsers();
       if (error) {
         return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
