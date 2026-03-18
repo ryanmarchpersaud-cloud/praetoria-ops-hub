@@ -116,6 +116,19 @@ const integrations: Integration[] = [
   },
 ];
 
+const operationalIntegrations: Integration[] = [
+  {
+    id: 'weather',
+    name: 'Weather Intelligence',
+    icon: CloudSun,
+    status: 'coming_soon',
+    purpose: 'Operational weather data — forecasts, snow event triggers, dispatch support, and weather-driven automations.',
+    configNotes: 'Provider: Environment & Climate Change Canada (ECCC) GeoMet API. Future: OpenWeatherMap or Tomorrow.io for enhanced forecasting. Will power snow dispatch triggers, safety alerts, and schedule adjustments.',
+    lastChecked: null,
+    canTest: false,
+  },
+];
+
 export default function ConnectedAppsPage() {
   const [testResults, setTestResults] = useState<Record<string, { status: IntegrationStatus; message: string }>>({});
   const [testing, setTesting] = useState<string | null>(null);
