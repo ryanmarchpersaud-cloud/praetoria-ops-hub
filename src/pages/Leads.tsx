@@ -242,7 +242,7 @@ export default function Leads() {
                   <TableCell>
                     <Button
                       variant="ghost" size="icon"
-                      onClick={(e) => { e.preventDefault(); deleteLead.mutate(lead.id); }}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); deleteLead.mutate(lead.id); }}
                     >
                       <Trash2 className="h-4 w-4 text-muted-foreground" />
                     </Button>
