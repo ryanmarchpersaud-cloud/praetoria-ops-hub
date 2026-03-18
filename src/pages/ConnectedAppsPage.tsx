@@ -66,6 +66,24 @@ async function testResend(): Promise<{ ok: boolean; message: string }> {
   }
 }
 
+async function testTwilio(): Promise<{ ok: boolean; message: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-sms', {
+      body: { action: 'health' },
+    });
+    if (error) return { ok: false, message: error.message };
+    if (data?.twilio_configured && data?.phone_configured) {
+      return { ok: true, message: 'Twilio connector linked and phone number configured' };
+    }
+    if (data?.twilio_configured) {
+      return { ok: true, message: 'Twilio connector linked (TWILIO_PHONE_NUMBER not yet set)' };
+    }
+    return { ok: false, message: 'Twilio connector not configured' };
+  } catch (e: any) {
+    return { ok: false, message: e.message };
+  }
+}
+
 const integrations: Integration[] = [
   {
     id: 'supabase',
@@ -94,11 +112,13 @@ const integrations: Integration[] = [
     id: 'twilio',
     name: 'Twilio',
     icon: MessageSquare,
-    status: 'not_configured',
-    purpose: 'SMS notifications — visit confirmations, schedule changes, and crew alerts.',
-    configNotes: 'Requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER secrets.',
+    status: 'configured',
+    purpose: 'Transactional SMS — admin test messages, request confirmations, and ops alerts.',
+    configNotes: 'Connected via Twilio connector. Edge function: send-sms. Supports test, request confirmation, and ops alert flows. Rate-limited to 5 SMS/phone/hour.',
     lastChecked: null,
-    canTest: false,
+    canTest: true,
+    testFn: testTwilio,
+    hasCustomAction: true,
   },
   {
     id: 'stripe',
@@ -151,6 +171,8 @@ export default function ConnectedAppsPage() {
   const [testing, setTesting] = useState<string | null>(null);
   const [testEmailTo, setTestEmailTo] = useState('');
   const [sendingTestEmail, setSendingTestEmail] = useState(false);
+  const [testSmsTo, setTestSmsTo] = useState('');
+  const [sendingTestSms, setSendingTestSms] = useState(false);
 
   const handleTest = async (integration: Integration) => {
     if (!integration.testFn) return;
@@ -174,28 +196,31 @@ export default function ConnectedAppsPage() {
   };
 
   const handleSendTestEmail = async () => {
-    if (!testEmailTo) {
-      toast.error('Enter an email address');
-      return;
-    }
+    if (!testEmailTo) { toast.error('Enter an email address'); return; }
     setSendingTestEmail(true);
     try {
       const { data, error } = await supabase.functions.invoke('send-email', {
         body: { action: 'test', to: testEmailTo },
       });
-      if (error) {
-        toast.error(`Send failed: ${error.message}`);
-      } else if (data?.ok) {
-        toast.success(`Test email sent to ${testEmailTo}`);
-        setTestEmailTo('');
-      } else {
-        toast.error(`Send failed: ${data?.error || 'Unknown error'}`);
-      }
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally {
-      setSendingTestEmail(false);
-    }
+      if (error) toast.error(`Send failed: ${error.message}`);
+      else if (data?.ok) { toast.success(`Test email sent to ${testEmailTo}`); setTestEmailTo(''); }
+      else toast.error(`Send failed: ${data?.error || 'Unknown error'}`);
+    } catch (e: any) { toast.error(e.message); }
+    finally { setSendingTestEmail(false); }
+  };
+
+  const handleSendTestSms = async () => {
+    if (!testSmsTo) { toast.error('Enter a phone number (E.164 format, e.g. +14165551234)'); return; }
+    setSendingTestSms(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-sms', {
+        body: { action: 'test', to: testSmsTo },
+      });
+      if (error) toast.error(`Send failed: ${error.message}`);
+      else if (data?.ok) { toast.success(`Test SMS sent to ${testSmsTo}`); setTestSmsTo(''); }
+      else toast.error(`Send failed: ${data?.error || 'Unknown error'}`);
+    } catch (e: any) { toast.error(e.message); }
+    finally { setSendingTestSms(false); }
   };
 
   const renderCard = (app: Integration) => {
@@ -222,9 +247,7 @@ export default function ConnectedAppsPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-              Configuration
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Configuration</p>
             <p className="text-sm text-foreground">{app.configNotes}</p>
           </div>
 
@@ -237,20 +260,20 @@ export default function ConnectedAppsPage() {
           {/* Resend send-test-email inline form */}
           {app.id === 'resend' && (
             <div className="flex gap-2">
-              <Input
-                placeholder="admin@example.com"
-                value={testEmailTo}
-                onChange={(e) => setTestEmailTo(e.target.value)}
-                className="h-8 text-sm"
-                type="email"
-              />
-              <Button
-                variant="default"
-                size="sm"
-                disabled={sendingTestEmail || !testEmailTo}
-                onClick={handleSendTestEmail}
-              >
+              <Input placeholder="admin@example.com" value={testEmailTo} onChange={(e) => setTestEmailTo(e.target.value)} className="h-8 text-sm" type="email" />
+              <Button variant="default" size="sm" disabled={sendingTestEmail || !testEmailTo} onClick={handleSendTestEmail}>
                 {sendingTestEmail ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
+                Send
+              </Button>
+            </div>
+          )}
+
+          {/* Twilio send-test-sms inline form */}
+          {app.id === 'twilio' && (
+            <div className="flex gap-2">
+              <Input placeholder="+14165551234" value={testSmsTo} onChange={(e) => setTestSmsTo(e.target.value)} className="h-8 text-sm" type="tel" />
+              <Button variant="default" size="sm" disabled={sendingTestSms || !testSmsTo} onClick={handleSendTestSms}>
+                {sendingTestSms ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <MessageSquare className="h-3.5 w-3.5 mr-1.5" />}
                 Send
               </Button>
             </div>
@@ -258,25 +281,16 @@ export default function ConnectedAppsPage() {
 
           <div className="flex gap-2">
             {app.canTest && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isTesting}
-                onClick={() => handleTest(app)}
-              >
+              <Button variant="outline" size="sm" disabled={isTesting} onClick={() => handleTest(app)}>
                 {isTesting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : null}
                 Test Connection
               </Button>
             )}
             {currentStatus === 'coming_soon' && (
-              <Button variant="ghost" size="sm" disabled>
-                Coming Soon
-              </Button>
+              <Button variant="ghost" size="sm" disabled>Coming Soon</Button>
             )}
             {!app.canTest && currentStatus !== 'coming_soon' && (
-              <Button variant="outline" size="sm" disabled>
-                Configure
-              </Button>
+              <Button variant="outline" size="sm" disabled>Configure</Button>
             )}
           </div>
         </CardContent>
@@ -296,16 +310,12 @@ export default function ConnectedAppsPage() {
 
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">Core Infrastructure</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {integrations.map(renderCard)}
-          </div>
+          <div className="grid gap-4 md:grid-cols-2">{integrations.map(renderCard)}</div>
         </div>
 
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">Operational Data &amp; Services</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            {operationalIntegrations.map(renderCard)}
-          </div>
+          <div className="grid gap-4 md:grid-cols-2">{operationalIntegrations.map(renderCard)}</div>
         </div>
       </div>
     </SettingsLayout>
