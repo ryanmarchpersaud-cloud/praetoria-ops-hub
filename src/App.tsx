@@ -124,44 +124,58 @@ function RouteLoading() {
   return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
 }
 
+/** Block inactive/archived users from all protected areas */
+function ActiveGuard({ children }: { children: React.ReactNode }) {
+  const { isActiveUser, isLoading } = useAuthorization();
+  const { user, loading } = useAuth();
+  if (loading || isLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  return <>{children}</>;
+}
+
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isAdmin, isCustomer, isStaff, isSubcontractor, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) return <RouteLoading />;
+  const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isActiveUser, isLoading } = useAuthorization();
+  if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
-  if (isSubcontractor && !isAdmin) return <Navigate to="/subcontractor" replace />;
-  if (isCustomer && !isAdmin) return <Navigate to="/portal" replace />;
-  if (isStaff && !isAdmin) return <Navigate to="/access-denied" replace />;
-  if (!isAdmin) return <Navigate to="/access-denied" replace />;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
+  if (isCustomer && !canAccessAdminPortal) return <Navigate to="/portal" replace />;
+  if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
+  if (!canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
 function StaffRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) return <RouteLoading />;
+  const { isCustomer, isStaff, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
+  if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
-  if (!isStaff) return <Navigate to="/access-denied" replace />;
+  if (!isStaff && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
 function WorkerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) return <RouteLoading />;
+  const { isCustomer, canAccessWorkerPortal, isActiveUser, isLoading } = useAuthorization();
+  if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
-  if (!isStaff) return <Navigate to="/access-denied" replace />;
+  if (!canAccessWorkerPortal) return <Navigate to="/access-denied" replace />;
   return <>{children}</>;
 }
 
 function PortalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isCustomer, isStaff, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) return <RouteLoading />;
+  const { isCustomer, canAccessCustomerPortal, isStaff, isActiveUser, isLoading } = useAuthorization();
+  if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!isCustomer && !isStaff) return <Navigate to="/access-denied" replace />;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (!canAccessCustomerPortal) return <Navigate to="/access-denied" replace />;
   const isPreview = isStaff && !isCustomer;
   return (
     <>
@@ -173,24 +187,25 @@ function PortalRoute({ children }: { children: React.ReactNode }) {
 
 function SubcontractorRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isSubcontractor, isAdmin, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) return <RouteLoading />;
+  const { canAccessSubcontractorPortal, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
+  if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!isSubcontractor && !isAdmin) return <Navigate to="/access-denied" replace />;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (!canAccessSubcontractorPortal && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
   return <>{children}</>;
 }
 
 function LoginRoute() {
   const { user, loading } = useAuth();
-  const { isCustomer, isStaff, isAdmin, isSubcontractor, isLoading: roleLoading } = useUserRole();
-  if (loading || roleLoading) {
+  const { isCustomer, isStaff, isAdmin, isSubcontractor, canAccessAdminPortal, isLoading } = useAuthorization();
+  if (loading || isLoading) {
     if (!user) return <Login />;
     return <RouteLoading />;
   }
   if (user) {
-    if (isSubcontractor && !isAdmin && !isStaff) return <Navigate to="/subcontractor" replace />;
+    if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
     if (isCustomer) return <Navigate to="/portal" replace />;
-    if (isStaff && !isAdmin) return <Navigate to="/worker" replace />;
+    if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
     return <Navigate to="/" replace />;
   }
   return <Login />;
