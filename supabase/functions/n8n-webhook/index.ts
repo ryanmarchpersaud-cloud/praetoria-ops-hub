@@ -166,8 +166,69 @@ Deno.serve(async (req) => {
         return json({ success: true, quote: data });
       }
 
+      // ── Test n8n Handoff ────────────────────────────────────────
+      case "test_handoff": {
+        const n8nUrl = Deno.env.get("N8N_WEBHOOK_URL");
+        if (!n8nUrl) return json({ error: "N8N_WEBHOOK_URL secret is not configured" }, 500);
+
+        const payload = {
+          event: "stripe.test_checkout_created",
+          provider: "stripe",
+          channel: "payment",
+          status: "success",
+          recipient: "admin@praetoriagroup.ca",
+          record_type: "invoice",
+          record_id: "synthetic-test",
+          provider_response_id: "synthetic-session",
+          environment: "test",
+          metadata: { source: "connected_apps_manual_test" },
+          timestamp: new Date().toISOString(),
+        };
+
+        let handoffOk = false;
+        let handoffMessage = "";
+        let handoffStatus = 0;
+
+        try {
+          const resp = await fetch(n8nUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          handoffStatus = resp.status;
+          handoffOk = resp.ok;
+          handoffMessage = handoffOk
+            ? `n8n responded ${resp.status}`
+            : `n8n returned ${resp.status}: ${(await resp.text()).slice(0, 200)}`;
+        } catch (fetchErr) {
+          handoffMessage = fetchErr instanceof Error ? fetchErr.message : "Fetch failed";
+        }
+
+        // Log to integration_logs
+        await supabase.from("integration_logs").insert({
+          event_name: "stripe.test_checkout_created",
+          provider: "n8n",
+          channel: "webhook",
+          status: handoffOk ? "delivered" : "failed",
+          recipient: "admin@praetoriagroup.ca",
+          record_type: "invoice",
+          record_id: "synthetic-test",
+          provider_response_id: "synthetic-session",
+          environment: "test",
+          error_message: handoffOk ? null : handoffMessage,
+          metadata: { source: "connected_apps_manual_test", http_status: handoffStatus },
+        });
+
+        return json({
+          success: handoffOk,
+          message: handoffMessage,
+          payload_sent: payload,
+          logged: true,
+        });
+      }
+
       default:
-        return json({ error: `Unknown action '${action}'. Supported: create_activity, update_lead_status, create_quote_draft, set_follow_up` }, 400);
+        return json({ error: `Unknown action '${action}'. Supported: create_activity, update_lead_status, create_quote_draft, set_follow_up, test_handoff` }, 400);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
