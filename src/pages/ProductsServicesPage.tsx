@@ -418,7 +418,7 @@ export default function ProductsServicesPage() {
                       </TableHeader>
                       <TableBody>
                         {filtered.map((p) => (
-                          <TableRow key={p.id} className={p.status !== 'Active' ? 'opacity-60' : ''}>
+                          <TableRow key={p.id} className={`cursor-pointer ${p.status !== 'Active' ? 'opacity-60' : ''}`} onClick={() => openEdit(p)}>
                             <TableCell>
                               <div className="min-w-0">
                                 <p className="font-medium text-foreground truncate">{p.name}</p>
