@@ -221,6 +221,7 @@ export default function ConnectedAppsPage() {
     }
   };
 
+  const handleTest = async (integration: Integration) => {
     if (!integration.testFn) return;
     setTesting(integration.id);
     try {
