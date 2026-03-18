@@ -248,7 +248,7 @@ Deno.serve(async (req) => {
         to: phone.cleaned,
         body: `[Praetoria Ops Alert] ${message}`,
       });
-      await logIntegration({
+      const logEntry: IntegrationEntry = {
         provider: "twilio",
         event_name: "sms.ops_alert",
         channel: "sms",
@@ -257,7 +257,9 @@ Deno.serve(async (req) => {
         provider_response_id: result.sid,
         error_message: result.error,
         metadata: { message },
-      });
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
       return json({ ...result, action: "ops_alert" });
     }
 

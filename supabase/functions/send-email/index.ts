@@ -236,7 +236,7 @@ Deno.serve(async (req) => {
         subject: `[Praetoria Ops] ${subject}`,
         html: wrapHtml("Internal Notification", body_html || `<p>${subject}</p>`),
       });
-      await logIntegration({
+      const logEntry: IntegrationEntry = {
         provider: "resend",
         event_name: "email.ops_notification",
         channel: "email",
@@ -245,7 +245,9 @@ Deno.serve(async (req) => {
         provider_response_id: result.id,
         error_message: result.error,
         metadata: { subject },
-      });
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
       return json({ ...result, action: "ops_notification" });
     }
 
