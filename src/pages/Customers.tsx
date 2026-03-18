@@ -111,7 +111,7 @@ export default function Customers() {
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
             ) : (
               customers.map(c => (
-                <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/customers/${c.id}`)}>
                   <TableCell className="font-medium">
                     <Link to={`/customers/${c.id}`} className="hover:text-primary">{c.first_name} {c.last_name}</Link>
                   </TableCell>

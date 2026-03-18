@@ -156,7 +156,7 @@ export default function Visits() {
             {isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             : visits.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No visits found</TableCell></TableRow>
             : visits.map((v: any) => (
-              <TableRow key={v.id} className="cursor-pointer hover:bg-muted/50">
+              <TableRow key={v.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/visits/${v.id}`)}>
                 <TableCell>
                   <Link to={`/visits/${v.id}`} className="block font-medium mono text-sm">{v.visit_number}</Link>
                 </TableCell>

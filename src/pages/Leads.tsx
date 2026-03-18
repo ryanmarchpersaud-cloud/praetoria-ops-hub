@@ -226,7 +226,7 @@ export default function Leads() {
               <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No leads found</TableCell></TableRow>
             ) : (
               leads.map(lead => (
-                <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/leads/${lead.id}`)}>
                   <TableCell>
                     <Link to={`/leads/${lead.id}`} className="block">
                       <p className="font-medium">{lead.first_name} {lead.last_name}</p>

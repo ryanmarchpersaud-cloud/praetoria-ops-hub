@@ -177,7 +177,7 @@ export default function Jobs() {
             {isLoading ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             : jobs.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No jobs found</TableCell></TableRow>
             : jobs.map((j: any) => (
-              <TableRow key={j.id} className="cursor-pointer hover:bg-muted/50">
+              <TableRow key={j.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/jobs/${j.id}`)}>
                 <TableCell>
                   <Link to={`/jobs/${j.id}`} className="block">
                     <p className="font-medium">{j.job_title}</p>

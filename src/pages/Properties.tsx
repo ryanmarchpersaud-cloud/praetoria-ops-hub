@@ -157,7 +157,7 @@ export default function Properties() {
             {isLoading ? <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             : properties.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No properties found</TableCell></TableRow>
             : properties.map((p: any) => (
-              <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50">
+              <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/properties/${p.id}`)}>
                 <TableCell>
                   <Link to={`/properties/${p.id}`} className="block font-medium">{p.property_name}</Link>
                 </TableCell>
