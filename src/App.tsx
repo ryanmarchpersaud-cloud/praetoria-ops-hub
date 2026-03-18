@@ -114,6 +114,8 @@ import RolesPermissionsPage from "./pages/RolesPermissionsPage";
 import AuditLogPage from "./pages/AuditLogPage";
 import ConnectedAppsPage from "./pages/ConnectedAppsPage";
 import SeatUsagePage from "./pages/SeatUsagePage";
+import ProductsServicesPage from "./pages/ProductsServicesPage";
+import SettingsPlaceholder from "./pages/SettingsPlaceholder";
 
 const queryClient = new QueryClient();
 
