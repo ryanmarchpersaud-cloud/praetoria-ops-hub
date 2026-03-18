@@ -69,12 +69,44 @@ export default function PortalRequestWizard() {
     enabled: !!customer,
   });
 
+  // Fetch bookable catalog items from DB
+  const { data: catalogItems = [] } = useQuery({
+    queryKey: ['portal_catalog_items'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products_services')
+        .select('id, name, service_category, portal_display_description, product_type, price_type, unit_price')
+        .eq('status', 'Active')
+        .eq('customer_visible', true)
+        .eq('online_booking_enabled', true)
+        .order('sort_order')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const selectedProperty = useMemo(
     () => properties.find(p => p.id === form.property_id),
     [properties, form.property_id],
   );
 
   const catalogEntry = form.service_category ? SERVICE_CATALOG[form.service_category] : null;
+
+  // Merge DB catalog items into the selected category's item list
+  const mergedItems = useMemo(() => {
+    if (!form.service_category) return [];
+    const hardcoded: string[] = catalogEntry?.items ? Array.from(catalogEntry.items) : [];
+    const dbItems = catalogItems
+      .filter(i => i.service_category === form.service_category)
+      .map(i => i.name);
+    dbItems.forEach(name => {
+      if (!hardcoded.some(h => h.toLowerCase() === name.toLowerCase())) {
+        hardcoded.push(name);
+      }
+    });
+    return hardcoded;
+  }, [form.service_category, catalogEntry, catalogItems]);
 
   /* ── Photo handling ─────────────────────────────────────────────── */
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -225,12 +257,12 @@ export default function PortalRequestWizard() {
   );
 
   const renderStep2 = () => {
-    if (!catalogEntry) return null;
+    if (!form.service_category) return null;
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">What specifically do you need?</p>
         <div className="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1">
-          {catalogEntry.items.map(item => (
+          {mergedItems.map(item => (
             <button
               key={item}
               onClick={() => setForm(f => ({ ...f, specific_request_type: item }))}
