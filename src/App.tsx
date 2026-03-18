@@ -214,6 +214,7 @@ function AppRoutes() {
       <Route path="/schedule" element={<AdminRoute><Schedule /></AdminRoute>} />
       <Route path="/activity" element={<AdminRoute><ActivityPage /></AdminRoute>} />
       <Route path="/requests" element={<AdminRoute><Requests /></AdminRoute>} />
+      <Route path="/requests/:id" element={<AdminRoute><RequestDetail /></AdminRoute>} />
       <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
       <Route path="/employees/:id" element={<AdminRoute><EmployeeDetail /></AdminRoute>} />
       <Route path="/subcontractors" element={<AdminRoute><Subcontractors /></AdminRoute>} />
