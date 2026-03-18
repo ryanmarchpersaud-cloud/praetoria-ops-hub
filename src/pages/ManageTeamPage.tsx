@@ -5,14 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, UserPlus, Users, MoreHorizontal, Shield, Eye, ChevronRight } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Search, UserPlus, Users, MoreHorizontal, Shield, Eye, UserX, UserCheck, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { SettingsLayout } from '@/components/SettingsLayout';
+
+type UserStatus = {
+  user_id: string;
+  email: string;
+  banned: boolean;
+  last_sign_in: string | null;
+  created_at: string;
+};
 
 type TeamUser = {
   user_id: string;
@@ -20,6 +27,8 @@ type TeamUser = {
   email: string;
   roles: string[];
   portal_access: string[];
+  banned: boolean;
+  last_sign_in: string | null;
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -33,6 +42,21 @@ function RoleBadge({ role }: { role: string }) {
   return (
     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold capitalize ${ROLE_COLORS[role] || 'bg-muted text-muted-foreground'}`}>
       {role}
+    </span>
+  );
+}
+
+function StatusBadge({ banned }: { banned: boolean }) {
+  if (banned) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-destructive/10 text-destructive border border-destructive/20 px-2 py-0.5 text-[11px] font-semibold">
+        Deactivated
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold">
+      Active
     </span>
   );
 }
@@ -57,37 +81,51 @@ export default function ManageTeamPage() {
   const [inviteRole, setInviteRole] = useState('staff');
   const [invitePassword, setInvitePassword] = useState('');
 
-  // Fetch all profiles + roles
+  // Edit role dialog state
+  const [editRoleOpen, setEditRoleOpen] = useState(false);
+  const [editRoleUser, setEditRoleUser] = useState<TeamUser | null>(null);
+  const [editRoleNewRole, setEditRoleNewRole] = useState('');
+
+  // Fetch all profiles + roles + auth statuses
   const { data: teamUsers = [], isLoading } = useQuery({
     queryKey: ['manage_team_users'],
     queryFn: async () => {
-      // Get all profiles
-      const { data: profiles, error: pErr } = await supabase
-        .from('profiles')
-        .select('user_id, display_name');
-      if (pErr) throw pErr;
+      // Parallel: profiles, roles, auth statuses
+      const [profilesRes, rolesRes, statusesRes] = await Promise.all([
+        supabase.from('profiles').select('user_id, display_name'),
+        supabase.from('user_roles').select('user_id, role'),
+        supabase.functions.invoke('manage-team', { body: { action: 'get_user_statuses' } }),
+      ]);
 
-      // Get all roles
-      const { data: roles, error: rErr } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-      if (rErr) throw rErr;
+      if (profilesRes.error) throw profilesRes.error;
+      if (rolesRes.error) throw rolesRes.error;
 
-      // Group roles by user_id
+      const profiles = profilesRes.data || [];
+      const roles = rolesRes.data || [];
+      const statuses: UserStatus[] = statusesRes.data?.statuses || [];
+
+      // Build lookup maps
       const roleMap: Record<string, string[]> = {};
       roles.forEach((r: any) => {
         if (!roleMap[r.user_id]) roleMap[r.user_id] = [];
         roleMap[r.user_id].push(r.role);
       });
 
-      // Build user list from profiles
-      const users: TeamUser[] = (profiles || []).map((p: any) => ({
-        user_id: p.user_id,
-        display_name: p.display_name,
-        email: p.display_name || '—', // profiles don't store email, display_name often is email
-        roles: roleMap[p.user_id] || [],
-        portal_access: (roleMap[p.user_id] || []).map(portalForRole).filter(Boolean) as string[],
-      }));
+      const statusMap: Record<string, UserStatus> = {};
+      statuses.forEach((s) => { statusMap[s.user_id] = s; });
+
+      const users: TeamUser[] = profiles.map((p: any) => {
+        const st = statusMap[p.user_id];
+        return {
+          user_id: p.user_id,
+          display_name: p.display_name,
+          email: st?.email || p.display_name || '—',
+          roles: roleMap[p.user_id] || [],
+          portal_access: (roleMap[p.user_id] || []).map(portalForRole).filter(Boolean) as string[],
+          banned: st?.banned || false,
+          last_sign_in: st?.last_sign_in || null,
+        };
+      });
 
       return users;
     },
@@ -107,50 +145,118 @@ export default function ManageTeamPage() {
 
   const counts = useMemo(() => ({
     total: teamUsers.length,
+    active: teamUsers.filter((u) => !u.banned).length,
+    deactivated: teamUsers.filter((u) => u.banned).length,
     admins: teamUsers.filter((u) => u.roles.includes('admin')).length,
     staff: teamUsers.filter((u) => u.roles.includes('staff')).length,
     customers: teamUsers.filter((u) => u.roles.includes('customer')).length,
     subcontractors: teamUsers.filter((u) => u.roles.includes('subcontractor')).length,
   }), [teamUsers]);
 
-  // Invite user mutation
-  const inviteMutation = useMutation({
+  const invalidateAll = () => queryClient.invalidateQueries({ queryKey: ['manage_team_users'] });
+
+  // ── Create user mutation ──
+  const createMutation = useMutation({
     mutationFn: async () => {
-      if (inviteRole === 'customer') {
-        throw new Error('Use the customer invite flow from the Customer Detail page.');
-      }
-      // For staff/admin: create auth user via edge function pattern
-      // For now, create via edge function seed-test-accounts pattern
-      const { data, error } = await supabase.functions.invoke('seed-test-accounts', {
+      const { data, error } = await supabase.functions.invoke('manage-team', {
         body: {
-          accounts: [{
-            email: inviteEmail,
-            password: invitePassword,
-            full_name: inviteName || inviteEmail,
-            role: inviteRole,
-          }],
+          action: 'create_user',
+          email: inviteEmail,
+          password: invitePassword,
+          full_name: inviteName || inviteEmail,
+          role: inviteRole,
         },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => {
-      toast.success('User invited successfully');
+    onSuccess: (data) => {
+      toast.success(data?.message || 'User created successfully');
       setInviteOpen(false);
       setInviteEmail('');
       setInviteName('');
       setInvitePassword('');
       setInviteRole('staff');
-      queryClient.invalidateQueries({ queryKey: ['manage_team_users'] });
+      invalidateAll();
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Failed to invite user');
+      toast.error(err.message || 'Failed to create user');
     },
   });
 
+  // ── Deactivate mutation ──
+  const deactivateMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('manage-team', {
+        body: { action: 'deactivate_user', user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('User deactivated');
+      invalidateAll();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to deactivate'),
+  });
+
+  // ── Reactivate mutation ──
+  const reactivateMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('manage-team', {
+        body: { action: 'reactivate_user', user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('User reactivated');
+      invalidateAll();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to reactivate'),
+  });
+
+  // ── Edit role mutation ──
+  const editRoleMutation = useMutation({
+    mutationFn: async () => {
+      if (!editRoleUser) throw new Error('No user selected');
+      const { data, error } = await supabase.functions.invoke('manage-team', {
+        body: {
+          action: 'update_role',
+          user_id: editRoleUser.user_id,
+          new_role: editRoleNewRole,
+          old_role: editRoleUser.roles[0] || null,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Role updated');
+      setEditRoleOpen(false);
+      setEditRoleUser(null);
+      invalidateAll();
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update role'),
+  });
+
+  const openEditRole = (user: TeamUser) => {
+    setEditRoleUser(user);
+    setEditRoleNewRole(user.roles[0] || 'staff');
+    setEditRoleOpen(true);
+  };
+
+  const formatDate = (d: string | null) => {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   return (
     <SettingsLayout>
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -166,16 +272,16 @@ export default function ManageTeamPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Invite New User</DialogTitle>
+              <DialogTitle>Add New User</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
                 <Label>Full Name</Label>
-                <Input placeholder="Jane Smith" value={inviteName} onChange={(e) => setInviteName(e.target.value)} />
+                <Input placeholder="Sarah Johnson" value={inviteName} onChange={(e) => setInviteName(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input type="email" placeholder="jane@praetoria.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                <Input type="email" placeholder="sarah@praetoriagroup.ca" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Temporary Password</Label>
@@ -192,7 +298,7 @@ export default function ManageTeamPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Customer accounts are created from the Customer Detail page via the Invite to Portal flow.
+                  Customer accounts are created from the Customer Detail page.
                 </p>
               </div>
             </div>
@@ -201,17 +307,17 @@ export default function ManageTeamPage() {
                 <Button variant="outline">Cancel</Button>
               </DialogClose>
               <Button
-                onClick={() => inviteMutation.mutate()}
-                disabled={!inviteEmail || !invitePassword || inviteMutation.isPending}
+                onClick={() => createMutation.mutate()}
+                disabled={!inviteEmail || !invitePassword || createMutation.isPending}
               >
-                {inviteMutation.isPending ? 'Creating...' : 'Create Account'}
+                {createMutation.isPending ? 'Creating...' : 'Create Account'}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 mt-6">
         {/* Main table area */}
         <div className="space-y-4">
           {/* Filters */}
@@ -254,23 +360,24 @@ export default function ManageTeamPage() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Role</TableHead>
-                      <TableHead className="hidden md:table-cell">Portal Access</TableHead>
+                      <TableHead className="hidden md:table-cell">Status</TableHead>
+                      <TableHead className="hidden lg:table-cell">Last Login</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filtered.map((user) => (
-                      <TableRow key={user.user_id}>
+                      <TableRow key={user.user_id} className={user.banned ? 'opacity-60' : ''}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                              <span className="text-xs font-semibold text-primary">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${user.banned ? 'bg-muted' : 'bg-primary/10'}`}>
+                              <span className={`text-xs font-semibold ${user.banned ? 'text-muted-foreground' : 'text-primary'}`}>
                                 {(user.display_name || '?')[0].toUpperCase()}
                               </span>
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium text-foreground truncate">{user.display_name || '—'}</p>
-                              <p className="text-xs text-muted-foreground truncate">{user.user_id.slice(0, 8)}…</p>
+                              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -284,15 +391,10 @@ export default function ManageTeamPage() {
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          <div className="flex flex-wrap gap-1">
-                            {user.portal_access.length > 0 ? user.portal_access.map((p) => (
-                              <span key={p} className="inline-flex items-center rounded border border-border bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                {p}
-                              </span>
-                            )) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </div>
+                          <StatusBadge banned={user.banned} />
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                          {formatDate(user.last_sign_in)}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -302,12 +404,30 @@ export default function ManageTeamPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => toast.info('View user detail coming soon')}>
-                                <Eye className="h-3.5 w-3.5 mr-2" /> View User
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => toast.info('Edit role coming soon')}>
+                              <DropdownMenuItem onClick={() => openEditRole(user)}>
                                 <Shield className="h-3.5 w-3.5 mr-2" /> Edit Role
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {user.banned ? (
+                                <DropdownMenuItem
+                                  onClick={() => reactivateMutation.mutate(user.user_id)}
+                                  disabled={reactivateMutation.isPending}
+                                >
+                                  <UserCheck className="h-3.5 w-3.5 mr-2" /> Reactivate User
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => {
+                                    if (confirm(`Deactivate ${user.display_name || user.email}? They will be unable to log in.`)) {
+                                      deactivateMutation.mutate(user.user_id);
+                                    }
+                                  }}
+                                  disabled={deactivateMutation.isPending}
+                                >
+                                  <UserX className="h-3.5 w-3.5 mr-2" /> Deactivate User
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -333,6 +453,17 @@ export default function ManageTeamPage() {
               <div className="flex items-baseline justify-between">
                 <span className="text-3xl font-bold text-foreground">{counts.total}</span>
                 <span className="text-xs text-muted-foreground">Total Users</span>
+              </div>
+              <div className="h-px bg-border" />
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Active</span>
+                  <span className="font-medium text-emerald-600">{counts.active}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Deactivated</span>
+                  <span className="font-medium text-destructive">{counts.deactivated}</span>
+                </div>
               </div>
               <div className="h-px bg-border" />
               <div className="space-y-2 text-sm">
@@ -373,6 +504,47 @@ export default function ManageTeamPage() {
           </Card>
         </div>
       </div>
+
+      {/* Edit Role Dialog */}
+      <Dialog open={editRoleOpen} onOpenChange={setEditRoleOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Role — {editRoleUser?.display_name || editRoleUser?.email}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Current role{editRoleUser?.roles?.length === 1 ? '' : 's'}:</p>
+              <div className="flex gap-1">
+                {editRoleUser?.roles.map((r) => <RoleBadge key={r} role={r} />)}
+                {editRoleUser?.roles.length === 0 && <span className="text-sm text-muted-foreground">None</span>}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>New Role</Label>
+              <Select value={editRoleNewRole} onValueChange={setEditRoleNewRole}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="staff">Staff / Worker</SelectItem>
+                  <SelectItem value="subcontractor">Subcontractor</SelectItem>
+                  <SelectItem value="customer">Customer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              onClick={() => editRoleMutation.mutate()}
+              disabled={editRoleMutation.isPending}
+            >
+              {editRoleMutation.isPending ? 'Saving...' : 'Save Role'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SettingsLayout>
   );
 }
