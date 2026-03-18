@@ -1102,39 +1102,69 @@ export type Database = {
       products_services: {
         Row: {
           created_at: string
+          customer_visible: boolean
           description: string | null
           id: string
+          internal_item_code: string | null
+          internal_notes: string | null
+          minimum_charge: number | null
           name: string
+          online_booking_enabled: boolean
+          portal_display_description: string | null
+          price_type: string
           product_type: string
+          recurring_eligible: boolean
+          seasonal_label: string | null
           service_category: string
           sort_order: number | null
           status: string
+          taxable: boolean
           unit_label: string | null
           unit_price: number | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          customer_visible?: boolean
           description?: string | null
           id?: string
+          internal_item_code?: string | null
+          internal_notes?: string | null
+          minimum_charge?: number | null
           name: string
+          online_booking_enabled?: boolean
+          portal_display_description?: string | null
+          price_type?: string
           product_type?: string
+          recurring_eligible?: boolean
+          seasonal_label?: string | null
           service_category?: string
           sort_order?: number | null
           status?: string
+          taxable?: boolean
           unit_label?: string | null
           unit_price?: number | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          customer_visible?: boolean
           description?: string | null
           id?: string
+          internal_item_code?: string | null
+          internal_notes?: string | null
+          minimum_charge?: number | null
           name?: string
+          online_booking_enabled?: boolean
+          portal_display_description?: string | null
+          price_type?: string
           product_type?: string
+          recurring_eligible?: boolean
+          seasonal_label?: string | null
           service_category?: string
           sort_order?: number | null
           status?: string
+          taxable?: boolean
           unit_label?: string | null
           unit_price?: number | null
           updated_at?: string
