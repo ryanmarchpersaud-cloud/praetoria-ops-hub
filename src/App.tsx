@@ -26,6 +26,8 @@ import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
 import SettingsPage from "./pages/SettingsPage";
+import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
+import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
 import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
