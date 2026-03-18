@@ -32,6 +32,24 @@ const statusStyles: Record<IntegrationStatus, { label: string; variant: 'default
   checking: { label: 'Checking…', variant: 'secondary', icon: Loader2 },
 };
 
+// ── n8n synthetic test button definitions ───────────────────────────────
+interface N8nTestDef {
+  key: string;
+  label: string;
+  eventName: string;
+  icon: typeof Zap;
+}
+
+const N8N_TESTS: N8nTestDef[] = [
+  { key: 'test_handoff', label: 'Test Stripe Test Checkout', eventName: 'stripe.test_checkout_created', icon: CreditCard },
+  { key: 'test_stripe_service', label: 'Test Stripe Service Checkout', eventName: 'stripe.service_checkout_created', icon: CreditCard },
+  { key: 'test_email_request_confirm', label: 'Test Email Request Confirm', eventName: 'email.request_confirmation', icon: Mail },
+  { key: 'test_email_ops', label: 'Test Email Ops Notification', eventName: 'email.ops_notification', icon: Mail },
+  { key: 'test_sms_request_confirm', label: 'Test SMS Request Confirm', eventName: 'sms.request_confirmation', icon: MessageSquare },
+  { key: 'test_sms_ops_alert', label: 'Test SMS Ops Alert', eventName: 'sms.ops_alert', icon: MessageSquare },
+];
+
+// ── Connectivity test functions ─────────────────────────────────────────
 async function testSupabase(): Promise<{ ok: boolean; message: string }> {
   try {
     const { count, error } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
@@ -102,6 +120,7 @@ async function testTwilio(): Promise<{ ok: boolean; message: string }> {
   }
 }
 
+// ── Integration definitions ─────────────────────────────────────────────
 const integrations: Integration[] = [
   {
     id: 'supabase',
@@ -180,7 +199,7 @@ const operationalIntegrations: Integration[] = [
     icon: CloudSun,
     status: 'coming_soon',
     purpose: 'Operational weather data — forecasts, snow event triggers, dispatch support, and weather-driven automations.',
-    configNotes: 'Provider: Environment & Climate Change Canada (ECCC) GeoMet API. Future: OpenWeatherMap or Tomorrow.io for enhanced forecasting. Will power snow dispatch triggers, safety alerts, and schedule adjustments.',
+    configNotes: 'Provider: Environment & Climate Change Canada (ECCC) GeoMet API. Future: OpenWeatherMap or Tomorrow.io for enhanced forecasting.',
     lastChecked: null,
     canTest: false,
   },
@@ -194,58 +213,33 @@ export default function ConnectedAppsPage() {
   const [testSmsTo, setTestSmsTo] = useState('');
   const [sendingTestSms, setSendingTestSms] = useState(false);
   const [launchingStripeTest, setLaunchingStripeTest] = useState(false);
-  const [testingN8nHandoff, setTestingN8nHandoff] = useState(false);
-  const [n8nHandoffResult, setN8nHandoffResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [testingEmailOps, setTestingEmailOps] = useState(false);
-  const [emailOpsResult, setEmailOpsResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  const handleTestN8nHandoff = async () => {
-    setTestingN8nHandoff(true);
-    setN8nHandoffResult(null);
+  // n8n branch test state — keyed by action key
+  const [n8nTesting, setN8nTesting] = useState<Record<string, boolean>>({});
+  const [n8nResults, setN8nResults] = useState<Record<string, { success: boolean; message: string }>>({});
+
+  const handleN8nBranchTest = async (def: N8nTestDef) => {
+    setN8nTesting(prev => ({ ...prev, [def.key]: true }));
+    setN8nResults(prev => { const next = { ...prev }; delete next[def.key]; return next; });
     try {
       const { data, error } = await supabase.functions.invoke('n8n-webhook', {
-        body: { action: 'test_handoff' },
+        body: { action: def.key },
       });
       if (error) {
-        setN8nHandoffResult({ success: false, message: error.message });
-        toast.error(`n8n handoff test failed: ${error.message}`);
+        setN8nResults(prev => ({ ...prev, [def.key]: { success: false, message: error.message } }));
+        toast.error(`${def.eventName} failed: ${error.message}`);
       } else if (data?.success) {
-        setN8nHandoffResult({ success: true, message: data.message });
-        toast.success(`n8n handoff: ${data.message}`);
+        setN8nResults(prev => ({ ...prev, [def.key]: { success: true, message: data.message } }));
+        toast.success(`${def.eventName}: ${data.message}`);
       } else {
-        setN8nHandoffResult({ success: false, message: data?.message || 'Unknown error' });
-        toast.error(`n8n handoff failed: ${data?.message || 'Unknown error'}`);
+        setN8nResults(prev => ({ ...prev, [def.key]: { success: false, message: data?.message || 'Unknown error' } }));
+        toast.error(`${def.eventName} failed: ${data?.message || 'Unknown error'}`);
       }
     } catch (e: any) {
-      setN8nHandoffResult({ success: false, message: e.message });
+      setN8nResults(prev => ({ ...prev, [def.key]: { success: false, message: e.message } }));
       toast.error(e.message);
     } finally {
-      setTestingN8nHandoff(false);
-    }
-  };
-
-  const handleTestEmailOps = async () => {
-    setTestingEmailOps(true);
-    setEmailOpsResult(null);
-    try {
-      const { data, error } = await supabase.functions.invoke('n8n-webhook', {
-        body: { action: 'test_email_ops' },
-      });
-      if (error) {
-        setEmailOpsResult({ success: false, message: error.message });
-        toast.error(`email.ops_notification test failed: ${error.message}`);
-      } else if (data?.success) {
-        setEmailOpsResult({ success: true, message: data.message });
-        toast.success(`email.ops_notification: ${data.message}`);
-      } else {
-        setEmailOpsResult({ success: false, message: data?.message || 'Unknown error' });
-        toast.error(`email.ops_notification failed: ${data?.message || 'Unknown error'}`);
-      }
-    } catch (e: any) {
-      setEmailOpsResult({ success: false, message: e.message });
-      toast.error(e.message);
-    } finally {
-      setTestingEmailOps(false);
+      setN8nTesting(prev => ({ ...prev, [def.key]: false }));
     }
   };
 
@@ -379,29 +373,32 @@ export default function ConnectedAppsPage() {
             </Button>
           )}
 
-          {/* n8n test handoff button */}
+          {/* n8n branch test buttons */}
           {app.id === 'n8n' && (
             <div className="space-y-2">
-              <div className="flex gap-2 flex-wrap">
-                <Button variant="default" size="sm" disabled={testingN8nHandoff} onClick={handleTestN8nHandoff}>
-                  {testingN8nHandoff ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Zap className="h-3.5 w-3.5 mr-1.5" />}
-                  Test Stripe Handoff
-                </Button>
-                <Button variant="default" size="sm" disabled={testingEmailOps} onClick={handleTestEmailOps}>
-                  {testingEmailOps ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1.5" />}
-                  Test Email Ops
-                </Button>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Synthetic Branch Tests</p>
+              <div className="grid grid-cols-2 gap-2">
+                {N8N_TESTS.map((def) => {
+                  const Icon = def.icon;
+                  const busy = !!n8nTesting[def.key];
+                  return (
+                    <Button key={def.key} variant="outline" size="sm" className="justify-start text-xs h-8" disabled={busy} onClick={() => handleN8nBranchTest(def)}>
+                      {busy ? <Loader2 className="h-3 w-3 mr-1.5 animate-spin shrink-0" /> : <Icon className="h-3 w-3 mr-1.5 shrink-0" />}
+                      <span className="truncate">{def.label}</span>
+                    </Button>
+                  );
+                })}
               </div>
-              {n8nHandoffResult && (
-                <div className={`text-xs px-2 py-1.5 rounded ${n8nHandoffResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                  <span className="font-medium">{n8nHandoffResult.success ? '✓ stripe.test_checkout' : '✗ Failed'}:</span> {n8nHandoffResult.message}
-                </div>
-              )}
-              {emailOpsResult && (
-                <div className={`text-xs px-2 py-1.5 rounded ${emailOpsResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                  <span className="font-medium">{emailOpsResult.success ? '✓ email.ops_notification' : '✗ Failed'}:</span> {emailOpsResult.message}
-                </div>
-              )}
+              {/* Inline results */}
+              {N8N_TESTS.map((def) => {
+                const result = n8nResults[def.key];
+                if (!result) return null;
+                return (
+                  <div key={def.key} className={`text-xs px-2 py-1.5 rounded ${result.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                    <span className="font-medium">{result.success ? '✓' : '✗'} {def.eventName}:</span> {result.message}
+                  </div>
+                );
+              })}
             </div>
           )}
 

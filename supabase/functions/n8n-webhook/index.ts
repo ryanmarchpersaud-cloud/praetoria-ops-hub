@@ -13,6 +13,147 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
+// ── Synthetic test payload definitions ─────────────────────────────────
+const SYNTHETIC_PAYLOADS: Record<string, Record<string, unknown>> = {
+  test_handoff: {
+    event: "stripe.test_checkout_created",
+    provider: "stripe",
+    channel: "payment",
+    status: "success",
+    recipient: "admin@praetoriagroup.ca",
+    record_type: "invoice",
+    record_id: "synthetic-test",
+    provider_response_id: "synthetic-session",
+    environment: "test",
+    metadata: { source: "connected_apps_manual_test" },
+  },
+  test_stripe_service: {
+    event: "stripe.service_checkout_created",
+    provider: "stripe",
+    channel: "payment",
+    status: "success",
+    recipient: "admin@praetoriagroup.ca",
+    record_type: "invoice",
+    record_id: "synthetic-service-test",
+    provider_response_id: "synthetic-service-session",
+    environment: "test",
+    metadata: { source: "connected_apps_manual_test" },
+  },
+  test_email_request_confirm: {
+    event: "email.request_confirmation",
+    provider: "resend",
+    channel: "email",
+    status: "sent",
+    recipient: "customer@example.com",
+    record_type: "service_request",
+    record_id: "synthetic-request-confirmation",
+    environment: "test",
+    metadata: {
+      source: "connected_apps_manual_test",
+      customer_name: "Test Customer",
+      service_type: "Snow Removal",
+    },
+  },
+  test_email_ops: {
+    event: "email.ops_notification",
+    provider: "resend",
+    channel: "email",
+    status: "sent",
+    recipient: "ops@praetoriagroup.ca",
+    record_type: "service_request",
+    record_id: "synthetic-test",
+    environment: "test",
+    metadata: {
+      source: "connected_apps_manual_test",
+      subject: "[TEST] Ops notification verification",
+      body_preview: "This is a synthetic ops notification to verify the n8n email branch.",
+    },
+  },
+  test_sms_request_confirm: {
+    event: "sms.request_confirmation",
+    provider: "twilio",
+    channel: "sms",
+    status: "sent",
+    recipient: "+13060000000",
+    record_type: "service_request",
+    record_id: "synthetic-sms-request",
+    environment: "test",
+    metadata: {
+      source: "connected_apps_manual_test",
+      customer_name: "Test Customer",
+    },
+  },
+  test_sms_ops_alert: {
+    event: "sms.ops_alert",
+    provider: "twilio",
+    channel: "sms",
+    status: "sent",
+    recipient: "+13060000000",
+    record_type: "service_request",
+    record_id: "synthetic-sms-alert",
+    environment: "test",
+    metadata: {
+      source: "connected_apps_manual_test",
+      message: "Test ops alert for n8n branch verification",
+    },
+  },
+};
+
+// ── Generic synthetic test handler ─────────────────────────────────────
+async function handleSyntheticTest(
+  supabase: ReturnType<typeof createClient>,
+  actionKey: string,
+) {
+  const n8nUrl = Deno.env.get("N8N_WEBHOOK_URL");
+  if (!n8nUrl) return json({ error: "N8N_WEBHOOK_URL secret is not configured" }, 500);
+
+  const template = SYNTHETIC_PAYLOADS[actionKey];
+  if (!template) return json({ error: `Unknown test action '${actionKey}'` }, 400);
+
+  const payload = { ...template, timestamp: new Date().toISOString() };
+
+  let handoffOk = false;
+  let handoffMessage = "";
+  let handoffStatus = 0;
+
+  try {
+    const resp = await fetch(n8nUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    handoffStatus = resp.status;
+    handoffOk = resp.ok;
+    handoffMessage = handoffOk
+      ? `n8n responded ${resp.status}`
+      : `n8n returned ${resp.status}: ${(await resp.text()).slice(0, 200)}`;
+  } catch (fetchErr) {
+    handoffMessage = fetchErr instanceof Error ? fetchErr.message : "Fetch failed";
+  }
+
+  await supabase.from("integration_logs").insert({
+    event_name: payload.event as string,
+    provider: "n8n",
+    channel: (payload.channel as string) || "webhook",
+    status: handoffOk ? "delivered" : "failed",
+    recipient: (payload.recipient as string) || null,
+    record_type: (payload.record_type as string) || null,
+    record_id: (payload.record_id as string) || null,
+    provider_response_id: (payload.provider_response_id as string) || null,
+    environment: "test",
+    error_message: handoffOk ? null : handoffMessage,
+    metadata: { source: "connected_apps_manual_test", http_status: handoffStatus },
+  });
+
+  return json({
+    success: handoffOk,
+    message: handoffMessage,
+    event: payload.event,
+    payload_sent: payload,
+    logged: true,
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -23,7 +164,6 @@ Deno.serve(async (req) => {
   const expectedSecret = Deno.env.get("N8N_WEBHOOK_SECRET");
 
   if (expectedSecret && webhookSecret !== expectedSecret) {
-    // Fall back to JWT auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return json({ error: "Unauthorized – provide x-webhook-secret header or Bearer token" }, 401);
@@ -48,7 +188,12 @@ Deno.serve(async (req) => {
     const action = body.action as string;
 
     if (!action) {
-      return json({ error: "Missing 'action' field. Supported: create_activity, update_lead_status, create_quote_draft, set_follow_up" }, 400);
+      return json({ error: "Missing 'action' field." }, 400);
+    }
+
+    // ── Synthetic test actions (all share the same handler) ────────
+    if (action in SYNTHETIC_PAYLOADS) {
+      return handleSyntheticTest(supabase, action);
     }
 
     switch (action) {
@@ -87,7 +232,6 @@ Deno.serve(async (req) => {
         const { data, error } = await supabase.from("leads").update(updates).eq("id", lead_id).select().single();
         if (error) return json({ error: error.message }, 500);
 
-        // Log activity
         await supabase.from("activities").insert({
           action_name: `Lead status → ${newStatus}`,
           workflow_name: "n8n",
@@ -106,7 +250,7 @@ Deno.serve(async (req) => {
 
         const { data: quote, error: qErr } = await supabase.from("quotes").insert({
           lead_id,
-          quote_number: "TEMP", // trigger will replace
+          quote_number: "TEMP",
           service_category: service_category || "Other",
           scope_of_work: scope_of_work || null,
           agent_summary: agent_summary || null,
@@ -116,7 +260,6 @@ Deno.serve(async (req) => {
 
         if (qErr) return json({ error: qErr.message }, 500);
 
-        // Insert line items if provided
         if (Array.isArray(line_items) && line_items.length > 0) {
           const items = line_items.map((li: Record<string, unknown>, i: number) => ({
             quote_id: quote.id,
@@ -130,7 +273,6 @@ Deno.serve(async (req) => {
           if (liErr) return json({ error: liErr.message }, 500);
         }
 
-        // Log activity
         await supabase.from("activities").insert({
           action_name: "Quote draft created via n8n",
           workflow_name: "n8n",
@@ -139,7 +281,6 @@ Deno.serve(async (req) => {
           status: "completed",
         });
 
-        // Refetch to get calculated totals
         const { data: final } = await supabase.from("quotes").select("*").eq("id", quote.id).single();
         return json({ success: true, quote: final });
       }
@@ -166,134 +307,8 @@ Deno.serve(async (req) => {
         return json({ success: true, quote: data });
       }
 
-      // ── Test n8n Handoff ────────────────────────────────────────
-      case "test_handoff": {
-        const n8nUrl = Deno.env.get("N8N_WEBHOOK_URL");
-        if (!n8nUrl) return json({ error: "N8N_WEBHOOK_URL secret is not configured" }, 500);
-
-        const payload = {
-          event: "stripe.test_checkout_created",
-          provider: "stripe",
-          channel: "payment",
-          status: "success",
-          recipient: "admin@praetoriagroup.ca",
-          record_type: "invoice",
-          record_id: "synthetic-test",
-          provider_response_id: "synthetic-session",
-          environment: "test",
-          metadata: { source: "connected_apps_manual_test" },
-          timestamp: new Date().toISOString(),
-        };
-
-        let handoffOk = false;
-        let handoffMessage = "";
-        let handoffStatus = 0;
-
-        try {
-          const resp = await fetch(n8nUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          handoffStatus = resp.status;
-          handoffOk = resp.ok;
-          handoffMessage = handoffOk
-            ? `n8n responded ${resp.status}`
-            : `n8n returned ${resp.status}: ${(await resp.text()).slice(0, 200)}`;
-        } catch (fetchErr) {
-          handoffMessage = fetchErr instanceof Error ? fetchErr.message : "Fetch failed";
-        }
-
-        // Log to integration_logs
-        await supabase.from("integration_logs").insert({
-          event_name: "stripe.test_checkout_created",
-          provider: "n8n",
-          channel: "webhook",
-          status: handoffOk ? "delivered" : "failed",
-          recipient: "admin@praetoriagroup.ca",
-          record_type: "invoice",
-          record_id: "synthetic-test",
-          provider_response_id: "synthetic-session",
-          environment: "test",
-          error_message: handoffOk ? null : handoffMessage,
-          metadata: { source: "connected_apps_manual_test", http_status: handoffStatus },
-        });
-
-        return json({
-          success: handoffOk,
-          message: handoffMessage,
-          payload_sent: payload,
-          logged: true,
-        });
-      }
-
-      // ── Test email.ops_notification Handoff ─────────────────────
-      case "test_email_ops": {
-        const n8nUrl = Deno.env.get("N8N_WEBHOOK_URL");
-        if (!n8nUrl) return json({ error: "N8N_WEBHOOK_URL secret is not configured" }, 500);
-
-        const payload = {
-          event: "email.ops_notification",
-          provider: "resend",
-          channel: "email",
-          status: "sent",
-          recipient: "ops@praetoriagroup.ca",
-          record_type: "service_request",
-          record_id: "synthetic-test",
-          provider_response_id: "synthetic-email-id",
-          environment: "test",
-          metadata: {
-            source: "connected_apps_manual_test",
-            subject: "[TEST] Ops notification verification",
-            body_preview: "This is a synthetic ops notification to verify the n8n email branch.",
-          },
-          timestamp: new Date().toISOString(),
-        };
-
-        let handoffOk = false;
-        let handoffMessage = "";
-        let handoffStatus = 0;
-
-        try {
-          const resp = await fetch(n8nUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          handoffStatus = resp.status;
-          handoffOk = resp.ok;
-          handoffMessage = handoffOk
-            ? `n8n responded ${resp.status}`
-            : `n8n returned ${resp.status}: ${(await resp.text()).slice(0, 200)}`;
-        } catch (fetchErr) {
-          handoffMessage = fetchErr instanceof Error ? fetchErr.message : "Fetch failed";
-        }
-
-        // Log to integration_logs
-        await supabase.from("integration_logs").insert({
-          event_name: "email.ops_notification",
-          provider: "n8n",
-          channel: "email",
-          status: handoffOk ? "delivered" : "failed",
-          recipient: "ops@praetoriagroup.ca",
-          record_type: "service_request",
-          record_id: "synthetic-test",
-          provider_response_id: "synthetic-email-id",
-          environment: "test",
-          error_message: handoffOk ? null : handoffMessage,
-          metadata: { source: "connected_apps_manual_test", http_status: handoffStatus },
-        });
-
-        return json({
-          success: handoffOk,
-          message: handoffMessage,
-          payload_sent: payload,
-          logged: true,
-        });
-      }
-
       default:
-        return json({ error: `Unknown action '${action}'. Supported: create_activity, update_lead_status, create_quote_draft, set_follow_up, test_handoff, test_email_ops` }, 400);
+        return json({ error: `Unknown action '${action}'.` }, 400);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
