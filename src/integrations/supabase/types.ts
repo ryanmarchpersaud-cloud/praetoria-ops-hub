@@ -668,6 +668,54 @@ export type Database = {
           },
         ]
       }
+      integration_logs: {
+        Row: {
+          channel: string | null
+          created_at: string
+          environment: string | null
+          error_message: string | null
+          event_name: string
+          id: string
+          metadata: Json | null
+          provider: string
+          provider_response_id: string | null
+          recipient: string | null
+          record_id: string | null
+          record_type: string | null
+          status: string
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          environment?: string | null
+          error_message?: string | null
+          event_name: string
+          id?: string
+          metadata?: Json | null
+          provider: string
+          provider_response_id?: string | null
+          recipient?: string | null
+          record_id?: string | null
+          record_type?: string | null
+          status?: string
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          environment?: string | null
+          error_message?: string | null
+          event_name?: string
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          provider_response_id?: string | null
+          recipient?: string | null
+          record_id?: string | null
+          record_type?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       invoice_line_items: {
         Row: {
           created_at: string

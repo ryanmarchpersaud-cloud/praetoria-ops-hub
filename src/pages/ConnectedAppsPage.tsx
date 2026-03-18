@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SettingsLayout } from '@/components/SettingsLayout';
+import { IntegrationActivityLog } from '@/components/IntegrationActivityLog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -361,6 +362,8 @@ export default function ConnectedAppsPage() {
           <h2 className="text-lg font-semibold text-foreground">Operational Data &amp; Services</h2>
           <div className="grid gap-4 md:grid-cols-2">{operationalIntegrations.map(renderCard)}</div>
         </div>
+
+        <IntegrationActivityLog />
       </div>
     </SettingsLayout>
   );

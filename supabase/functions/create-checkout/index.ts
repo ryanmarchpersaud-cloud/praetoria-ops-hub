@@ -14,7 +14,38 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
-// Test product price for admin verification
+function getServiceClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+}
+
+async function logIntegration(entry: {
+  provider: string;
+  event_name: string;
+  channel?: string;
+  status: string;
+  recipient?: string;
+  record_type?: string;
+  record_id?: string;
+  provider_response_id?: string;
+  error_message?: string;
+  environment?: string;
+  metadata?: Record<string, unknown>;
+}) {
+  try {
+    const sb = getServiceClient();
+    await sb.from("integration_logs").insert({
+      ...entry,
+      environment: entry.environment || "production",
+      metadata: entry.metadata || {},
+    });
+  } catch (e) {
+    console.error("Failed to log integration event:", e);
+  }
+}
+
 const TEST_PRICE_ID = "price_1TCO8lR6HWfxbuQUMooGNBfM";
 
 Deno.serve(async (req) => {
@@ -24,36 +55,47 @@ Deno.serve(async (req) => {
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (!stripeKey) return json({ error: "STRIPE_SECRET_KEY not configured" }, 500);
+  const env = stripeKey.startsWith("sk_test_") ? "test" : "live";
 
   try {
     const { action, ...params } = await req.json();
 
-    // ---- Health check ----
     if (action === "health") {
       try {
         const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
         const account = await stripe.accounts.retrieve();
+        await logIntegration({
+          provider: "stripe",
+          event_name: "stripe.health_check",
+          channel: "payment",
+          status: "success",
+          environment: env,
+          metadata: { account_name: account.settings?.dashboard?.display_name || account.business_profile?.name },
+        });
         return json({
           ok: true,
           stripe_configured: true,
           account_name: account.settings?.dashboard?.display_name || account.business_profile?.name || "Connected",
-          livemode: !stripeKey.startsWith("sk_test_"),
+          livemode: env === "live",
         });
       } catch (e: any) {
+        await logIntegration({
+          provider: "stripe",
+          event_name: "stripe.health_check",
+          channel: "payment",
+          status: "failed",
+          environment: env,
+          error_message: e.message,
+        });
         return json({ ok: false, stripe_configured: false, error: e.message });
       }
     }
 
-    // ---- Admin test checkout ----
     if (action === "test_checkout") {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
 
-      // Optionally authenticate user
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-      );
+      const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
       const authHeader = req.headers.get("Authorization");
       let userEmail: string | undefined;
       let userId: string | undefined;
@@ -64,34 +106,53 @@ Deno.serve(async (req) => {
         userId = data.user?.id ?? undefined;
       }
 
-      // Find or create Stripe customer
       let customerId: string | undefined;
       if (userEmail) {
         const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
-        if (customers.data.length > 0) {
-          customerId = customers.data[0].id;
-        }
+        if (customers.data.length > 0) customerId = customers.data[0].id;
       }
 
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        customer_email: customerId ? undefined : userEmail,
-        line_items: [{ price: TEST_PRICE_ID, quantity: 1 }],
-        mode: "payment",
-        success_url: `${origin}/settings/connected-apps?stripe_test=success`,
-        cancel_url: `${origin}/settings/connected-apps?stripe_test=cancelled`,
-        metadata: {
-          source: "praetoria_ops",
-          action: "admin_test",
-          environment: stripeKey.startsWith("sk_test_") ? "test" : "live",
-          internal_user_id: userId || "anonymous",
-        },
-      });
+      try {
+        const session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          customer_email: customerId ? undefined : userEmail,
+          line_items: [{ price: TEST_PRICE_ID, quantity: 1 }],
+          mode: "payment",
+          success_url: `${origin}/settings/connected-apps?stripe_test=success`,
+          cancel_url: `${origin}/settings/connected-apps?stripe_test=cancelled`,
+          metadata: {
+            source: "praetoria_ops",
+            action: "admin_test",
+            environment: env,
+            internal_user_id: userId || "anonymous",
+          },
+        });
 
-      return json({ ok: true, url: session.url });
+        await logIntegration({
+          provider: "stripe",
+          event_name: "stripe.test_checkout_created",
+          channel: "payment",
+          status: "success",
+          recipient: userEmail,
+          provider_response_id: session.id,
+          environment: env,
+          metadata: { user_id: userId },
+        });
+        return json({ ok: true, url: session.url });
+      } catch (e: any) {
+        await logIntegration({
+          provider: "stripe",
+          event_name: "stripe.test_checkout_created",
+          channel: "payment",
+          status: "failed",
+          recipient: userEmail,
+          environment: env,
+          error_message: e.message,
+        });
+        throw e;
+      }
     }
 
-    // ---- Create checkout for invoice/service payment ----
     if (action === "create_checkout") {
       const { price_id, quantity, customer_email, customer_id, invoice_id, service_category, description } = params;
       if (!price_id) return json({ error: "Missing price_id" }, 400);
@@ -99,34 +160,58 @@ Deno.serve(async (req) => {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
 
-      // Find or create Stripe customer
       let stripeCustomerId: string | undefined;
       if (customer_email) {
         const customers = await stripe.customers.list({ email: customer_email, limit: 1 });
-        if (customers.data.length > 0) {
-          stripeCustomerId = customers.data[0].id;
-        }
+        if (customers.data.length > 0) stripeCustomerId = customers.data[0].id;
       }
 
-      const session = await stripe.checkout.sessions.create({
-        customer: stripeCustomerId,
-        customer_email: stripeCustomerId ? undefined : customer_email,
-        line_items: [{ price: price_id, quantity: quantity || 1 }],
-        mode: "payment",
-        success_url: `${origin}/portal/billing?payment=success`,
-        cancel_url: `${origin}/portal/billing?payment=cancelled`,
-        metadata: {
-          source: "praetoria_ops",
-          action: "service_payment",
-          environment: stripeKey.startsWith("sk_test_") ? "test" : "live",
-          internal_customer_id: customer_id || "",
-          internal_invoice_id: invoice_id || "",
-          service_category: service_category || "",
-          description: description || "",
-        },
-      });
+      try {
+        const session = await stripe.checkout.sessions.create({
+          customer: stripeCustomerId,
+          customer_email: stripeCustomerId ? undefined : customer_email,
+          line_items: [{ price: price_id, quantity: quantity || 1 }],
+          mode: "payment",
+          success_url: `${origin}/portal/billing?payment=success`,
+          cancel_url: `${origin}/portal/billing?payment=cancelled`,
+          metadata: {
+            source: "praetoria_ops",
+            action: "service_payment",
+            environment: env,
+            internal_customer_id: customer_id || "",
+            internal_invoice_id: invoice_id || "",
+            service_category: service_category || "",
+            description: description || "",
+          },
+        });
 
-      return json({ ok: true, url: session.url, session_id: session.id });
+        await logIntegration({
+          provider: "stripe",
+          event_name: "stripe.service_checkout_created",
+          channel: "payment",
+          status: "success",
+          recipient: customer_email,
+          record_type: "invoice",
+          record_id: invoice_id,
+          provider_response_id: session.id,
+          environment: env,
+          metadata: { customer_id, service_category },
+        });
+        return json({ ok: true, url: session.url, session_id: session.id });
+      } catch (e: any) {
+        await logIntegration({
+          provider: "stripe",
+          event_name: "stripe.service_checkout_created",
+          channel: "payment",
+          status: "failed",
+          recipient: customer_email,
+          record_type: "invoice",
+          record_id: invoice_id,
+          environment: env,
+          error_message: e.message,
+        });
+        throw e;
+      }
     }
 
     return json({ error: `Unknown action: ${action}` }, 400);
