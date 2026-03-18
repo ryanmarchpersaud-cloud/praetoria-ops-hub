@@ -382,13 +382,24 @@ export default function ConnectedAppsPage() {
           {/* n8n test handoff button */}
           {app.id === 'n8n' && (
             <div className="space-y-2">
-              <Button variant="default" size="sm" disabled={testingN8nHandoff} onClick={handleTestN8nHandoff}>
-                {testingN8nHandoff ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Zap className="h-3.5 w-3.5 mr-1.5" />}
-                Test n8n Handoff
-              </Button>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="default" size="sm" disabled={testingN8nHandoff} onClick={handleTestN8nHandoff}>
+                  {testingN8nHandoff ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Zap className="h-3.5 w-3.5 mr-1.5" />}
+                  Test Stripe Handoff
+                </Button>
+                <Button variant="default" size="sm" disabled={testingEmailOps} onClick={handleTestEmailOps}>
+                  {testingEmailOps ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1.5" />}
+                  Test Email Ops
+                </Button>
+              </div>
               {n8nHandoffResult && (
                 <div className={`text-xs px-2 py-1.5 rounded ${n8nHandoffResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                  <span className="font-medium">{n8nHandoffResult.success ? '✓ Delivered' : '✗ Failed'}:</span> {n8nHandoffResult.message}
+                  <span className="font-medium">{n8nHandoffResult.success ? '✓ stripe.test_checkout' : '✗ Failed'}:</span> {n8nHandoffResult.message}
+                </div>
+              )}
+              {emailOpsResult && (
+                <div className={`text-xs px-2 py-1.5 rounded ${emailOpsResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                  <span className="font-medium">{emailOpsResult.success ? '✓ email.ops_notification' : '✗ Failed'}:</span> {emailOpsResult.message}
                 </div>
               )}
             </div>
