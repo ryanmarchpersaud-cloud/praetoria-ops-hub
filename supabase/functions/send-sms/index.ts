@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
         to: phone.cleaned,
         body: `Hi ${name}, we received ${subject}. Our team will follow up shortly. — Praetoria Group`,
       });
-      await logIntegration({
+      const logEntry: IntegrationEntry = {
         provider: "twilio",
         event_name: "sms.request_confirmation",
         channel: "sms",
@@ -230,7 +230,9 @@ Deno.serve(async (req) => {
         provider_response_id: result.sid,
         error_message: result.error,
         metadata: { customer_name },
-      });
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
       return json({ ...result, action: "request_confirmation" });
     }
 
