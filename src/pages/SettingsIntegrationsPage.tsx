@@ -26,6 +26,11 @@ const WEBHOOK_ACTIONS = [
     description: 'Set a follow-up reminder on a quote',
     example: { action: 'set_follow_up', quote_id: '<uuid>', follow_up_due_at: '2026-03-20T09:00:00Z' },
   },
+  {
+    action: 'test_handoff',
+    description: 'Send a synthetic event to n8n (no payment, no customer impact)',
+    example: { action: 'test_handoff' },
+  },
 ];
 
 export default function SettingsIntegrationsPage() {

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, CheckCircle2, AlertCircle, Clock, Loader2, Send } from 'lucide-react';
+import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, CheckCircle2, AlertCircle, Clock, Loader2, Send, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -193,6 +193,33 @@ export default function ConnectedAppsPage() {
   const [testSmsTo, setTestSmsTo] = useState('');
   const [sendingTestSms, setSendingTestSms] = useState(false);
   const [launchingStripeTest, setLaunchingStripeTest] = useState(false);
+  const [testingN8nHandoff, setTestingN8nHandoff] = useState(false);
+  const [n8nHandoffResult, setN8nHandoffResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleTestN8nHandoff = async () => {
+    setTestingN8nHandoff(true);
+    setN8nHandoffResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('n8n-webhook', {
+        body: { action: 'test_handoff' },
+      });
+      if (error) {
+        setN8nHandoffResult({ success: false, message: error.message });
+        toast.error(`n8n handoff test failed: ${error.message}`);
+      } else if (data?.success) {
+        setN8nHandoffResult({ success: true, message: data.message });
+        toast.success(`n8n handoff: ${data.message}`);
+      } else {
+        setN8nHandoffResult({ success: false, message: data?.message || 'Unknown error' });
+        toast.error(`n8n handoff failed: ${data?.message || 'Unknown error'}`);
+      }
+    } catch (e: any) {
+      setN8nHandoffResult({ success: false, message: e.message });
+      toast.error(e.message);
+    } finally {
+      setTestingN8nHandoff(false);
+    }
+  };
 
   const handleTest = async (integration: Integration) => {
     if (!integration.testFn) return;
@@ -322,6 +349,21 @@ export default function ConnectedAppsPage() {
               {launchingStripeTest ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
               Test Checkout ($1.00 CAD)
             </Button>
+          )}
+
+          {/* n8n test handoff button */}
+          {app.id === 'n8n' && (
+            <div className="space-y-2">
+              <Button variant="default" size="sm" disabled={testingN8nHandoff} onClick={handleTestN8nHandoff}>
+                {testingN8nHandoff ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Zap className="h-3.5 w-3.5 mr-1.5" />}
+                Test n8n Handoff
+              </Button>
+              {n8nHandoffResult && (
+                <div className={`text-xs px-2 py-1.5 rounded ${n8nHandoffResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                  <span className="font-medium">{n8nHandoffResult.success ? '✓ Delivered' : '✗ Failed'}:</span> {n8nHandoffResult.message}
+                </div>
+              )}
+            </div>
           )}
 
           <div className="flex gap-2">
