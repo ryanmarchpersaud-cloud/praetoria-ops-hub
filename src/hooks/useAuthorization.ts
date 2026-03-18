@@ -15,10 +15,10 @@ import type { AppRole } from './useUserRole';
  *
  * Portal flags (from team_members):
  *   portal_admin, portal_worker, portal_subcontractor
- *   These gate which portal UIs a team member may enter.
+ *   These are SWITCHES within the allowed role class, NOT elevators.
+ *   They cannot grant access above what the role permits.
  *
- * Active status (from team_members):
- *   is_active + status ∈ {Active, Invited}
+ * Access truth table:
  *   Inactive / Archived users are blocked from all protected areas.
  */
 
