@@ -1,29 +1,32 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { StatusBadge } from '@/components/StatusBadge';
 import {
-  RefreshCw, Plus, Snowflake, Trees, Sparkles, ClipboardCheck, Droplets, Wrench, Calendar,
+  RefreshCw, Plus, Snowflake, Trees, Sparkles, ClipboardCheck, Droplets, Wrench, Scale, Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const PLAN_CATEGORIES = [
-  { key: 'Snow & Ice Management', icon: Snowflake, color: 'bg-sky-500', desc: 'Seasonal snow clearing, de-icing, and ice management' },
-  { key: 'Lawn & Grounds Care', icon: Trees, color: 'bg-green-500', desc: 'Weekly mowing, trimming, seasonal cleanup' },
-  { key: 'Recurring Cleaning', icon: Sparkles, color: 'bg-pink-500', desc: 'Scheduled cleaning for common areas or turnover' },
-  { key: 'Property Inspections', icon: ClipboardCheck, color: 'bg-indigo-500', desc: 'Regular inspection and condition reporting' },
-  { key: 'Power Washing Plan', icon: Droplets, color: 'bg-blue-600', desc: 'Scheduled exterior washing and maintenance' },
-  { key: 'Property Maintenance', icon: Wrench, color: 'bg-orange-500', desc: 'Ongoing maintenance and handyman services' },
-];
+/* icon + color lookup per category */
+const CATEGORY_META: Record<string, { icon: React.ElementType; color: string }> = {
+  'Snow & Ice': { icon: Snowflake, color: 'bg-sky-500' },
+  'Landscaping & Grounds': { icon: Trees, color: 'bg-green-500' },
+  'Cleaning Services': { icon: Sparkles, color: 'bg-pink-500' },
+  'Property Inspection': { icon: ClipboardCheck, color: 'bg-indigo-500' },
+  'Power Washing': { icon: Droplets, color: 'bg-blue-600' },
+  'Property Care & Maintenance': { icon: Wrench, color: 'bg-orange-500' },
+  'Bylaw / Compliance': { icon: Scale, color: 'bg-red-500' },
+  'Property Management': { icon: Building2, color: 'bg-teal-600' },
+};
+const DEFAULT_META = { icon: RefreshCw, color: 'bg-muted-foreground' };
 
 const FREQUENCIES = ['Weekly', 'Biweekly', 'Monthly', 'Seasonal', 'On-demand'];
 const PAYMENT_PREFS = ['Invoice per visit', 'Monthly invoice', 'Seasonal flat rate'];
@@ -44,7 +47,45 @@ export default function PortalRecurringServices() {
     property_id: '',
   });
 
-  const { data: requests = [], isLoading } = useQuery({
+  /* ── Fetch recurring-eligible catalog items (live from DB) ── */
+  const { data: catalogItems = [] } = useQuery({
+    queryKey: ['portal_recurring_catalog'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products_services')
+        .select('id, name, service_category, portal_display_description, price_type, unit_price')
+        .eq('status', 'Active')
+        .eq('customer_visible', true)
+        .eq('recurring_eligible', true)
+        .order('sort_order')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  /* Group catalog items by category for plan cards */
+  const planCategories = useMemo(() => {
+    const map = new Map<string, { names: string[]; desc: string }>();
+    for (const item of catalogItems) {
+      if (!map.has(item.service_category)) {
+        map.set(item.service_category, { names: [], desc: '' });
+      }
+      const entry = map.get(item.service_category)!;
+      entry.names.push(item.name);
+      if (!entry.desc && item.portal_display_description) {
+        entry.desc = item.portal_display_description;
+      }
+    }
+    return Array.from(map.entries()).map(([category, { names, desc }]) => ({
+      category,
+      items: names,
+      desc: desc || `Recurring ${category.toLowerCase()} services`,
+      ...(CATEGORY_META[category] || DEFAULT_META),
+    }));
+  }, [catalogItems]);
+
+  const { data: requests = [] } = useQuery({
     queryKey: ['customer_recurring_requests', customer?.id],
     queryFn: async () => {
       if (!customer) return [];
@@ -108,28 +149,37 @@ export default function PortalRecurringServices() {
         Sign up for recurring service plans. Submit your request and our team will confirm details and pricing.
       </p>
 
-      {/* Available plans */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {PLAN_CATEGORIES.map(plan => {
-          const Icon = plan.icon;
-          return (
-            <Card key={plan.key} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4 flex items-start gap-3">
-                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white', plan.color)}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm">{plan.key}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{plan.desc}</p>
-                  <Button size="sm" variant="outline" className="mt-2 text-xs h-7" onClick={() => openEnroll(plan.key)}>
-                    <Plus className="h-3 w-3 mr-1" /> Enroll
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Available plans — driven by live catalog */}
+      {planCategories.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-center text-sm text-muted-foreground">
+            No recurring plans are currently available. Check back soon!
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {planCategories.map(plan => {
+            const Icon = plan.icon;
+            return (
+              <Card key={plan.category} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4 flex items-start gap-3">
+                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white', plan.color)}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm">{plan.category}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{plan.desc}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{plan.items.length} service{plan.items.length !== 1 ? 's' : ''} available</p>
+                    <Button size="sm" variant="outline" className="mt-2 text-xs h-7" onClick={() => openEnroll(plan.category)}>
+                      <Plus className="h-3 w-3 mr-1" /> Enroll
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Existing enrollments */}
       {requests.length > 0 && (
@@ -144,8 +194,8 @@ export default function PortalRecurringServices() {
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                   <span>{r.frequency}</span>
-                  {r.properties?.property_name && <><span>·</span><span>{r.properties.property_name}</span></> }
-                  {r.preferred_start_date && <><span>·</span><span>Start: {r.preferred_start_date}</span></> }
+                  {r.properties?.property_name && <><span>·</span><span>{r.properties.property_name}</span></>}
+                  {r.preferred_start_date && <><span>·</span><span>Start: {r.preferred_start_date}</span></>}
                 </div>
                 {r.special_instructions && <p className="text-xs text-muted-foreground line-clamp-2">{r.special_instructions}</p>}
               </CardContent>
