@@ -12,12 +12,13 @@ const roleDefinitions = [
     icon: Shield,
     color: 'text-destructive',
     description: 'Full system access — manages team, settings, billing, and all operational data.',
-    portalAccess: ['Admin Dashboard', 'Worker Portal', 'Customer Portal (preview)', 'Subcontractor Portal'],
+    portalAccess: ['Admin Dashboard', 'Worker Portal', 'Subcontractor Portal', 'Customer Portal (preview)'],
     enforcedAccess: [
       'All admin routes (/, /leads, /quotes, /jobs, /invoices, /settings/*)',
       'All worker routes (/worker/*)',
       'All subcontractor routes (/subcontractor/*)',
       'Customer portal preview (/portal/*)',
+      'Inactive/archived users blocked',
     ],
   },
   {
