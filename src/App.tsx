@@ -231,6 +231,10 @@ function AppRoutes() {
       <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
       <Route path="/settings/team" element={<AdminRoute><ManageTeamPage /></AdminRoute>} />
+      <Route path="/settings/roles" element={<AdminRoute><RolesPermissionsPage /></AdminRoute>} />
+      <Route path="/settings/audit-log" element={<AdminRoute><AuditLogPage /></AdminRoute>} />
+      <Route path="/settings/connected-apps" element={<AdminRoute><ConnectedAppsPage /></AdminRoute>} />
+      <Route path="/settings/usage" element={<AdminRoute><SeatUsagePage /></AdminRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
