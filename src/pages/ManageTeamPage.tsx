@@ -373,6 +373,6 @@ export default function ManageTeamPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </SettingsLayout>
   );
 }
