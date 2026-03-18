@@ -30,6 +30,7 @@ import Schedule from "./pages/Schedule";
 import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import Requests from "./pages/Requests";
+import RequestDetail from "./pages/RequestDetail";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import Subcontractors from "./pages/Subcontractors";
