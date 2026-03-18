@@ -193,8 +193,34 @@ export default function ConnectedAppsPage() {
   const [testSmsTo, setTestSmsTo] = useState('');
   const [sendingTestSms, setSendingTestSms] = useState(false);
   const [launchingStripeTest, setLaunchingStripeTest] = useState(false);
+  const [testingN8nHandoff, setTestingN8nHandoff] = useState(false);
+  const [n8nHandoffResult, setN8nHandoffResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  const handleTest = async (integration: Integration) => {
+  const handleTestN8nHandoff = async () => {
+    setTestingN8nHandoff(true);
+    setN8nHandoffResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('n8n-webhook', {
+        body: { action: 'test_handoff' },
+      });
+      if (error) {
+        setN8nHandoffResult({ success: false, message: error.message });
+        toast.error(`n8n handoff test failed: ${error.message}`);
+      } else if (data?.success) {
+        setN8nHandoffResult({ success: true, message: data.message });
+        toast.success(`n8n handoff: ${data.message}`);
+      } else {
+        setN8nHandoffResult({ success: false, message: data?.message || 'Unknown error' });
+        toast.error(`n8n handoff failed: ${data?.message || 'Unknown error'}`);
+      }
+    } catch (e: any) {
+      setN8nHandoffResult({ success: false, message: e.message });
+      toast.error(e.message);
+    } finally {
+      setTestingN8nHandoff(false);
+    }
+  };
+
     if (!integration.testFn) return;
     setTesting(integration.id);
     try {
