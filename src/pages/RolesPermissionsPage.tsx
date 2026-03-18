@@ -46,6 +46,7 @@ const roleDefinitions = [
     enforcedAccess: [
       'Worker portal routes (/worker/*)',
       'Cannot access admin dashboard',
+      'Cannot access customer portal',
       'Cannot access subcontractor portal',
     ],
   },

@@ -99,11 +99,15 @@ export function useAuthorization(): AuthorizationState {
         ? true
         : true; // no team_member record but has roles (legacy) = allow
 
-  // Portal access: derive from team_members flags, fall back to role-based defaults
-  const canAccessAdminPortal = isAdmin || isManager || (teamMember?.portal_admin ?? false);
-  const canAccessWorkerPortal = isStaff || (teamMember?.portal_worker ?? false);
-  const canAccessSubcontractorPortal = isSubcontractor || (teamMember?.portal_subcontractor ?? false);
-  const canAccessCustomerPortal = isCustomer || isStaff; // staff can preview
+  // Portal access: role sets the ceiling, portal flags act as switches within that ceiling
+  // Admin/manager: always get admin portal; portal flags can additionally grant worker/sub access
+  const canAccessAdminPortal = isAdmin || isManager;
+  // Worker portal: staff by role, OR admin/manager always, OR explicit flag
+  const canAccessWorkerPortal = isStaff || isAdmin || isManager || (teamMember?.portal_worker ?? false);
+  // Subcontractor portal: subcontractor by role, OR admin (for oversight)
+  const canAccessSubcontractorPortal = isSubcontractor || isAdmin;
+  // Customer portal: customer by role, OR admin/manager for preview — plain staff CANNOT access
+  const canAccessCustomerPortal = isCustomer || isAdmin || isManager;
 
   return {
     roles,
