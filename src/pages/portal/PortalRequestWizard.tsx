@@ -259,12 +259,12 @@ export default function PortalRequestWizard() {
   );
 
   const renderStep2 = () => {
-    if (!catalogEntry) return null;
+    if (!form.service_category) return null;
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">What specifically do you need?</p>
         <div className="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1">
-          {catalogEntry.items.map(item => (
+          {mergedItems.map(item => (
             <button
               key={item}
               onClick={() => setForm(f => ({ ...f, specific_request_type: item }))}
