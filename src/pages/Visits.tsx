@@ -16,6 +16,7 @@ import { useJobs } from '@/hooks/useJobs';
 import { format } from 'date-fns';
 
 export default function Visits() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
