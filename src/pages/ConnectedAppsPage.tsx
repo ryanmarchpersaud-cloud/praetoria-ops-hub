@@ -351,6 +351,21 @@ export default function ConnectedAppsPage() {
             </Button>
           )}
 
+          {/* n8n test handoff button */}
+          {app.id === 'n8n' && (
+            <div className="space-y-2">
+              <Button variant="default" size="sm" disabled={testingN8nHandoff} onClick={handleTestN8nHandoff}>
+                {testingN8nHandoff ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Zap className="h-3.5 w-3.5 mr-1.5" />}
+                Test n8n Handoff
+              </Button>
+              {n8nHandoffResult && (
+                <div className={`text-xs px-2 py-1.5 rounded ${n8nHandoffResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                  <span className="font-medium">{n8nHandoffResult.success ? '✓ Delivered' : '✗ Failed'}:</span> {n8nHandoffResult.message}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-2">
             {app.canTest && (
               <Button variant="outline" size="sm" disabled={isTesting} onClick={() => handleTest(app)}>
