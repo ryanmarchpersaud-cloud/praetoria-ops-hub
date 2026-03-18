@@ -91,22 +91,18 @@ export default function PortalRequestWizard() {
     [properties, form.property_id],
   );
 
-  const catalogEntry = form.service_category ? SERVICE_CATALOG[form.service_category] : null;
+  // Use ONLY DB catalog items — enforces customer_visible + online_booking_enabled + Active status
+  const availableCategories = useMemo(() => {
+    const cats = new Set(catalogItems.map(i => i.service_category));
+    return Array.from(cats).sort();
+  }, [catalogItems]);
 
-  // Merge DB catalog items into the selected category's item list
   const mergedItems = useMemo(() => {
     if (!form.service_category) return [];
-    const hardcoded: string[] = catalogEntry?.items ? Array.from(catalogEntry.items) : [];
-    const dbItems = catalogItems
+    return catalogItems
       .filter(i => i.service_category === form.service_category)
       .map(i => i.name);
-    dbItems.forEach(name => {
-      if (!hardcoded.some(h => h.toLowerCase() === name.toLowerCase())) {
-        hardcoded.push(name);
-      }
-    });
-    return hardcoded;
-  }, [form.service_category, catalogEntry, catalogItems]);
+  }, [form.service_category, catalogItems]);
 
   /* ── Photo handling ─────────────────────────────────────────────── */
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,28 +227,33 @@ export default function PortalRequestWizard() {
   const renderStep1 = () => (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">What type of service do you need?</p>
-      <div className="grid grid-cols-2 gap-2">
-        {(Object.keys(SERVICE_CATALOG) as CatalogKey[]).map(key => {
-          const cat = SERVICE_CATALOG[key];
-          const Icon = cat.icon;
-          const selected = form.service_category === key;
-          return (
-            <button
-              key={key}
-              onClick={() => setForm(f => ({ ...f, service_category: key, specific_request_type: '' }))}
-              className={cn(
-                'flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-all text-center',
-                selected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40',
-              )}
-            >
-              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-white', cat.color)}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <span className="text-xs font-medium leading-tight">{key}</span>
-            </button>
-          );
-        })}
-      </div>
+      {availableCategories.length === 0 ? (
+        <p className="text-sm text-muted-foreground italic">No services are currently available for online booking.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {availableCategories.map(key => {
+            const cat = SERVICE_CATALOG[key as CatalogKey];
+            const Icon = cat?.icon || ClipboardCheck;
+            const color = cat?.color || 'bg-muted-foreground';
+            const selected = form.service_category === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setForm(f => ({ ...f, service_category: key as CatalogKey | '', specific_request_type: '' }))}
+                className={cn(
+                  'flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-all text-center',
+                  selected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40',
+                )}
+              >
+                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-white', color)}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-medium leading-tight">{key}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 
