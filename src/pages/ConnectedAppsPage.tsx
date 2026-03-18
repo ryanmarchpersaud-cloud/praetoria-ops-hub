@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, CheckCircle2, AlertCircle, Clock, Loader2, Send } from 'lucide-react';
+import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, CheckCircle2, AlertCircle, Clock, Loader2, Send, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
