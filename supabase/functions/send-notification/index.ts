@@ -110,8 +110,37 @@ Deno.serve(async (req) => {
       // For email/sms - mark as pending (ready for external processor)
       // In production, this is where Stripe/Twilio/email API calls would go
       if (channel === "email") {
-        // Email integration placeholder - ready for Lovable email or external SMTP
-        results.push({ channel, status: "queued", notification_id: notif.id, message: "Email queued for delivery" });
+        // Send via Resend through send-email edge function
+        const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+        if (RESEND_API_KEY && variables.to_email) {
+          try {
+            const emailRes = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${RESEND_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                from: "Praetoria Ops <noreply@praetoriagroup.ca>",
+                to: [variables.to_email],
+                subject,
+                html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><h2>${subject}</h2><div>${notifBody}</div><p style="color:#71717a;font-size:12px;margin-top:24px;">Praetoria Group &bull; praetoriagroup.ca</p></div>`,
+                reply_to: variables.reply_to || "ops@praetoriagroup.ca",
+              }),
+            });
+            const emailData = await emailRes.json();
+            if (emailRes.ok) {
+              await supabase.from("notifications").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", notif.id);
+              results.push({ channel, status: "sent", notification_id: notif.id, resend_id: emailData.id });
+            } else {
+              results.push({ channel, status: "failed", notification_id: notif.id, error: emailData.message });
+            }
+          } catch (emailErr: any) {
+            results.push({ channel, status: "failed", notification_id: notif.id, error: emailErr.message });
+          }
+        } else {
+          results.push({ channel, status: "queued", notification_id: notif.id, message: "Email queued (RESEND_API_KEY or to_email missing)" });
+        }
       } else if (channel === "sms") {
         // SMS integration placeholder - ready for Twilio connector
         results.push({ channel, status: "queued", notification_id: notif.id, message: "SMS queued for delivery" });

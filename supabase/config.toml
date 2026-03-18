@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.weather]
 verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.manage-team]
+verify_jwt = false
+
+[functions.seed-test-accounts]
+verify_jwt = false
