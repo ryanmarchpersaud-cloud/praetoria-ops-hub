@@ -247,6 +247,7 @@ export default function ConnectedAppsPage() {
     } finally {
       setTestingEmailOps(false);
     }
+  };
 
   const handleTest = async (integration: Integration) => {
     if (!integration.testFn) return;
