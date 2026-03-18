@@ -28,8 +28,13 @@ const WEBHOOK_ACTIONS = [
   },
   {
     action: 'test_handoff',
-    description: 'Send a synthetic event to n8n (no payment, no customer impact)',
+    description: 'Send a synthetic stripe.test_checkout_created event to n8n',
     example: { action: 'test_handoff' },
+  },
+  {
+    action: 'test_email_ops',
+    description: 'Send a synthetic email.ops_notification event to n8n',
+    example: { action: 'test_email_ops' },
   },
 ];
 

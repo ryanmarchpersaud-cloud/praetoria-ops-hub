@@ -196,6 +196,8 @@ export default function ConnectedAppsPage() {
   const [launchingStripeTest, setLaunchingStripeTest] = useState(false);
   const [testingN8nHandoff, setTestingN8nHandoff] = useState(false);
   const [n8nHandoffResult, setN8nHandoffResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testingEmailOps, setTestingEmailOps] = useState(false);
+  const [emailOpsResult, setEmailOpsResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleTestN8nHandoff = async () => {
     setTestingN8nHandoff(true);
@@ -219,6 +221,31 @@ export default function ConnectedAppsPage() {
       toast.error(e.message);
     } finally {
       setTestingN8nHandoff(false);
+    }
+  };
+
+  const handleTestEmailOps = async () => {
+    setTestingEmailOps(true);
+    setEmailOpsResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('n8n-webhook', {
+        body: { action: 'test_email_ops' },
+      });
+      if (error) {
+        setEmailOpsResult({ success: false, message: error.message });
+        toast.error(`email.ops_notification test failed: ${error.message}`);
+      } else if (data?.success) {
+        setEmailOpsResult({ success: true, message: data.message });
+        toast.success(`email.ops_notification: ${data.message}`);
+      } else {
+        setEmailOpsResult({ success: false, message: data?.message || 'Unknown error' });
+        toast.error(`email.ops_notification failed: ${data?.message || 'Unknown error'}`);
+      }
+    } catch (e: any) {
+      setEmailOpsResult({ success: false, message: e.message });
+      toast.error(e.message);
+    } finally {
+      setTestingEmailOps(false);
     }
   };
 
@@ -355,13 +382,24 @@ export default function ConnectedAppsPage() {
           {/* n8n test handoff button */}
           {app.id === 'n8n' && (
             <div className="space-y-2">
-              <Button variant="default" size="sm" disabled={testingN8nHandoff} onClick={handleTestN8nHandoff}>
-                {testingN8nHandoff ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Zap className="h-3.5 w-3.5 mr-1.5" />}
-                Test n8n Handoff
-              </Button>
+              <div className="flex gap-2 flex-wrap">
+                <Button variant="default" size="sm" disabled={testingN8nHandoff} onClick={handleTestN8nHandoff}>
+                  {testingN8nHandoff ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Zap className="h-3.5 w-3.5 mr-1.5" />}
+                  Test Stripe Handoff
+                </Button>
+                <Button variant="default" size="sm" disabled={testingEmailOps} onClick={handleTestEmailOps}>
+                  {testingEmailOps ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1.5" />}
+                  Test Email Ops
+                </Button>
+              </div>
               {n8nHandoffResult && (
                 <div className={`text-xs px-2 py-1.5 rounded ${n8nHandoffResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                  <span className="font-medium">{n8nHandoffResult.success ? '✓ Delivered' : '✗ Failed'}:</span> {n8nHandoffResult.message}
+                  <span className="font-medium">{n8nHandoffResult.success ? '✓ stripe.test_checkout' : '✗ Failed'}:</span> {n8nHandoffResult.message}
+                </div>
+              )}
+              {emailOpsResult && (
+                <div className={`text-xs px-2 py-1.5 rounded ${emailOpsResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                  <span className="font-medium">{emailOpsResult.success ? '✓ email.ops_notification' : '✗ Failed'}:</span> {emailOpsResult.message}
                 </div>
               )}
             </div>
