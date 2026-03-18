@@ -3,7 +3,7 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FileEdit, Send, Eye, CheckCircle, AlertCircle, Clock, Ban, ChevronRight, DollarSign } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
 
 const INVOICE_STATUSES = ['Draft', 'Sent', 'Viewed', 'Paid', 'Partially Paid', 'Overdue', 'Failed', 'Voided'] as const;
@@ -20,6 +20,7 @@ const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: 
 };
 
 export default function Invoices() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const { data: invoices = [], isLoading } = useInvoices({ status: statusFilter || undefined });
   const allInvoices = useInvoices({}).data || [];
@@ -141,9 +142,9 @@ export default function Invoices() {
               <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow>
             ) : (
               invoices.map((inv: any) => (
-                <TableRow key={inv.id} className={`cursor-pointer hover:bg-muted/50 ${inv.status === 'Overdue' || inv.status === 'Failed' ? 'bg-destructive/5' : ''}`}>
+                <TableRow key={inv.id} className={`cursor-pointer hover:bg-muted/50 ${inv.status === 'Overdue' || inv.status === 'Failed' ? 'bg-destructive/5' : ''}`} onClick={() => navigate(`/invoices/${inv.id}`)}>
                   <TableCell>
-                    <Link to={`/invoices/${inv.id}`} className="font-medium mono text-sm hover:text-primary">{inv.invoice_number}</Link>
+                    <Link to={`/invoices/${inv.id}`} className="font-medium mono text-sm hover:text-primary" onClick={e => e.stopPropagation()}>{inv.invoice_number}</Link>
                   </TableCell>
                   <TableCell className="text-sm">
                     {inv.customers?.first_name} {inv.customers?.last_name}
