@@ -45,10 +45,11 @@ async function testSupabase(): Promise<{ ok: boolean; message: string }> {
 async function testN8n(): Promise<{ ok: boolean; message: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('n8n-webhook', {
-      body: { event: 'health_check', payload: {} },
+      body: { action: 'test_handoff' },
     });
     if (error) return { ok: false, message: error.message };
-    return { ok: true, message: 'Edge function reachable' };
+    if (data?.success) return { ok: true, message: data?.message || 'Synthetic handoff delivered' };
+    return { ok: false, message: data?.message || 'Synthetic handoff failed' };
   } catch (e: any) {
     return { ok: false, message: e.message };
   }
