@@ -3,7 +3,7 @@ import { SettingsLayout } from '@/components/SettingsLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CheckCircle2, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { Database, Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, CheckCircle2, AlertCircle, Clock, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -116,6 +116,19 @@ const integrations: Integration[] = [
   },
 ];
 
+const operationalIntegrations: Integration[] = [
+  {
+    id: 'weather',
+    name: 'Weather Intelligence',
+    icon: CloudSun,
+    status: 'coming_soon',
+    purpose: 'Operational weather data — forecasts, snow event triggers, dispatch support, and weather-driven automations.',
+    configNotes: 'Provider: Environment & Climate Change Canada (ECCC) GeoMet API. Future: OpenWeatherMap or Tomorrow.io for enhanced forecasting. Will power snow dispatch triggers, safety alerts, and schedule adjustments.',
+    lastChecked: null,
+    canTest: false,
+  },
+];
+
 export default function ConnectedAppsPage() {
   const [testResults, setTestResults] = useState<Record<string, { status: IntegrationStatus; message: string }>>({});
   const [testing, setTesting] = useState<string | null>(null);
@@ -141,9 +154,73 @@ export default function ConnectedAppsPage() {
     }
   };
 
+  const renderCard = (app: Integration) => {
+    const testResult = testResults[app.id];
+    const currentStatus = testing === app.id ? 'checking' : (testResult?.status ?? app.status);
+    const style = statusStyles[currentStatus];
+    const StatusIcon = style.icon;
+    const isTesting = testing === app.id;
+
+    return (
+      <Card key={app.id} className={currentStatus === 'coming_soon' ? 'opacity-60' : ''}>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <app.icon className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">{app.name}</CardTitle>
+            </div>
+            <Badge variant={style.variant} className="gap-1">
+              <StatusIcon className={`h-3 w-3 ${isTesting ? 'animate-spin' : ''}`} />
+              {style.label}
+            </Badge>
+          </div>
+          <CardDescription>{app.purpose}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+              Configuration
+            </p>
+            <p className="text-sm text-foreground">{app.configNotes}</p>
+          </div>
+
+          {testResult?.message && (
+            <div className="text-xs px-2 py-1.5 rounded bg-muted">
+              <span className="font-medium">Last test:</span> {testResult.message}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {app.canTest && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isTesting}
+                onClick={() => handleTest(app)}
+              >
+                {isTesting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : null}
+                Test Connection
+              </Button>
+            )}
+            {currentStatus === 'coming_soon' && (
+              <Button variant="ghost" size="sm" disabled>
+                Coming Soon
+              </Button>
+            )}
+            {!app.canTest && currentStatus !== 'coming_soon' && (
+              <Button variant="outline" size="sm" disabled>
+                Configure
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <SettingsLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-8 animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold">Connected Apps</h1>
           <p className="text-sm text-muted-foreground">
@@ -151,70 +228,18 @@ export default function ConnectedAppsPage() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {integrations.map((app) => {
-            const testResult = testResults[app.id];
-            const currentStatus = testing === app.id ? 'checking' : (testResult?.status ?? app.status);
-            const style = statusStyles[currentStatus];
-            const StatusIcon = style.icon;
-            const isTesting = testing === app.id;
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Core Infrastructure</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {integrations.map(renderCard)}
+          </div>
+        </div>
 
-            return (
-              <Card key={app.id} className={currentStatus === 'coming_soon' ? 'opacity-60' : ''}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <app.icon className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-lg">{app.name}</CardTitle>
-                    </div>
-                    <Badge variant={style.variant} className="gap-1">
-                      <StatusIcon className={`h-3 w-3 ${isTesting ? 'animate-spin' : ''}`} />
-                      {style.label}
-                    </Badge>
-                  </div>
-                  <CardDescription>{app.purpose}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                      Configuration
-                    </p>
-                    <p className="text-sm text-foreground">{app.configNotes}</p>
-                  </div>
-
-                  {testResult?.message && (
-                    <div className="text-xs px-2 py-1.5 rounded bg-muted">
-                      <span className="font-medium">Last test:</span> {testResult.message}
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    {app.canTest && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={isTesting}
-                        onClick={() => handleTest(app)}
-                      >
-                        {isTesting ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : null}
-                        Test Connection
-                      </Button>
-                    )}
-                    {currentStatus === 'coming_soon' && (
-                      <Button variant="ghost" size="sm" disabled>
-                        Coming Soon
-                      </Button>
-                    )}
-                    {!app.canTest && currentStatus !== 'coming_soon' && (
-                      <Button variant="outline" size="sm" disabled>
-                        Configure
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Operational Data &amp; Services</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {operationalIntegrations.map(renderCard)}
+          </div>
         </div>
       </div>
     </SettingsLayout>
