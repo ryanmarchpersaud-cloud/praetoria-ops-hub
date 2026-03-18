@@ -66,6 +66,22 @@ async function testResend(): Promise<{ ok: boolean; message: string }> {
   }
 }
 
+async function testStripe(): Promise<{ ok: boolean; message: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: { action: 'health' },
+    });
+    if (error) return { ok: false, message: error.message };
+    if (data?.stripe_configured) {
+      const mode = data.livemode ? 'Live' : 'Test';
+      return { ok: true, message: `Connected to ${data.account_name || 'Stripe'} (${mode} mode)` };
+    }
+    return { ok: false, message: 'STRIPE_SECRET_KEY not configured' };
+  } catch (e: any) {
+    return { ok: false, message: e.message };
+  }
+}
+
 async function testTwilio(): Promise<{ ok: boolean; message: string }> {
   try {
     const { data, error } = await supabase.functions.invoke('send-sms', {
