@@ -15,6 +15,7 @@ import { SERVICE_CATEGORIES, LEAD_STATUSES, LEAD_SOURCES, URGENCY_LEVELS, PROVIN
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Leads() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [serviceFilter, setServiceFilter] = useState<string>('');
