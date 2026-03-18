@@ -227,8 +227,73 @@ Deno.serve(async (req) => {
         });
       }
 
+      // ── Test email.ops_notification Handoff ─────────────────────
+      case "test_email_ops": {
+        const n8nUrl = Deno.env.get("N8N_WEBHOOK_URL");
+        if (!n8nUrl) return json({ error: "N8N_WEBHOOK_URL secret is not configured" }, 500);
+
+        const payload = {
+          event: "email.ops_notification",
+          provider: "resend",
+          channel: "email",
+          status: "sent",
+          recipient: "ops@praetoriagroup.ca",
+          record_type: "service_request",
+          record_id: "synthetic-test",
+          provider_response_id: "synthetic-email-id",
+          environment: "test",
+          metadata: {
+            source: "connected_apps_manual_test",
+            subject: "[TEST] Ops notification verification",
+            body_preview: "This is a synthetic ops notification to verify the n8n email branch.",
+          },
+          timestamp: new Date().toISOString(),
+        };
+
+        let handoffOk = false;
+        let handoffMessage = "";
+        let handoffStatus = 0;
+
+        try {
+          const resp = await fetch(n8nUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          handoffStatus = resp.status;
+          handoffOk = resp.ok;
+          handoffMessage = handoffOk
+            ? `n8n responded ${resp.status}`
+            : `n8n returned ${resp.status}: ${(await resp.text()).slice(0, 200)}`;
+        } catch (fetchErr) {
+          handoffMessage = fetchErr instanceof Error ? fetchErr.message : "Fetch failed";
+        }
+
+        // Log to integration_logs
+        await supabase.from("integration_logs").insert({
+          event_name: "email.ops_notification",
+          provider: "n8n",
+          channel: "email",
+          status: handoffOk ? "delivered" : "failed",
+          recipient: "ops@praetoriagroup.ca",
+          record_type: "service_request",
+          record_id: "synthetic-test",
+          provider_response_id: "synthetic-email-id",
+          environment: "test",
+          error_message: handoffOk ? null : handoffMessage,
+          metadata: { source: "connected_apps_manual_test", http_status: handoffStatus },
+        });
+
+        return json({
+          success: handoffOk,
+          message: handoffMessage,
+          payload_sent: payload,
+          logged: true,
+        });
+      }
+
       default:
-        return json({ error: `Unknown action '${action}'. Supported: create_activity, update_lead_status, create_quote_draft, set_follow_up, test_handoff` }, 400);
+        return json({ error: `Unknown action '${action}'. Supported: create_activity, update_lead_status, create_quote_draft, set_follow_up, test_handoff, test_email_ops` }, 400);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";

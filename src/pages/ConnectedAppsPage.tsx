@@ -196,6 +196,8 @@ export default function ConnectedAppsPage() {
   const [launchingStripeTest, setLaunchingStripeTest] = useState(false);
   const [testingN8nHandoff, setTestingN8nHandoff] = useState(false);
   const [n8nHandoffResult, setN8nHandoffResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testingEmailOps, setTestingEmailOps] = useState(false);
+  const [emailOpsResult, setEmailOpsResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleTestN8nHandoff = async () => {
     setTestingN8nHandoff(true);
