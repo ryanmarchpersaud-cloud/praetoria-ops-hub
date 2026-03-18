@@ -81,7 +81,7 @@ export const SERVICE_CATALOG = {
     ],
   },
   'Property Management': {
-    icon: ClipboardCheck,
+    icon: Building2,
     color: 'bg-teal-600',
     items: [
       'Property check / walkthrough', 'Vacant property check',
