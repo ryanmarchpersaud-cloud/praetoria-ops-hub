@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { SettingsLayout } from '@/components/SettingsLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Users, HardHat, UserCheck } from 'lucide-react';
+import { Shield, Users, HardHat, UserCheck, Star, Eye, Truck, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const roleDefinitions = [
@@ -18,15 +18,68 @@ const roleDefinitions = [
       'Manage team members — invite, deactivate, assign roles',
       'Access settings, integrations, and audit logs',
       'Approve quotes, invoices, and subcontractor submissions',
-      'View all customer portals in preview mode',
+      'Manage catalog, pricing, and permissions',
+    ],
+  },
+  {
+    role: 'manager',
+    label: 'Manager',
+    icon: Briefcase,
+    color: 'text-violet-600',
+    description: 'All dispatcher permissions plus ability to edit pricing within allowed limits.',
+    portal: 'Admin Dashboard (limited)',
+    permissions: [
+      'Create jobs and assign workers',
+      'Add line items from catalog',
+      'Edit pricing within limits',
+      'Submit for approval and publish to customer',
+    ],
+  },
+  {
+    role: 'dispatcher',
+    label: 'Dispatcher',
+    icon: Truck,
+    color: 'text-blue-600',
+    description: 'Creates jobs, assigns workers, and selects catalog items for scheduling.',
+    portal: 'Admin Dashboard (limited)',
+    permissions: [
+      'Create jobs and assign to workers',
+      'Add line items and select catalog items',
+      'Submit work for approval',
+    ],
+  },
+  {
+    role: 'supervisor',
+    label: 'Supervisor',
+    icon: Eye,
+    color: 'text-amber-600',
+    description: 'Oversees field crews with ability to create draft jobs and add line items.',
+    portal: 'Worker Portal (elevated)',
+    permissions: [
+      'All lead worker permissions',
+      'Create draft jobs',
+      'Add line items from catalog',
+    ],
+  },
+  {
+    role: 'lead_worker',
+    label: 'Lead Worker',
+    icon: Star,
+    color: 'text-yellow-600',
+    description: 'Senior field worker who can suggest line items and create service recommendations.',
+    portal: 'Worker Portal (elevated)',
+    permissions: [
+      'All worker permissions',
+      'Create draft service recommendations',
+      'Suggest line items from catalog',
     ],
   },
   {
     role: 'staff',
-    label: 'Staff / Worker',
+    label: 'Worker',
     icon: HardHat,
     color: 'text-primary',
-    description: 'Field workers and office staff with access to their own schedules, timesheets, and assigned work.',
+    description: 'Field workers with access to assigned schedules, timesheets, and basic catalog browsing.',
     portal: 'Worker Portal (/worker)',
     permissions: [
       'View assigned visits, jobs, and schedules',
@@ -61,9 +114,9 @@ const roleDefinitions = [
     permissions: [
       'View own properties, visits, and photos',
       'View and respond to quotes',
-      'Submit service requests',
+      'Submit service requests from catalog',
       'Manage billing preferences and payment methods',
-      'Set notification and service preferences',
+      'Enroll in recurring plans where enabled',
     ],
   },
 ];
@@ -90,7 +143,7 @@ export default function RolesPermissionsPage() {
         <div>
           <h1 className="text-2xl font-bold">Roles &amp; Permissions</h1>
           <p className="text-sm text-muted-foreground">
-            Reference guide — permissions are enforced server-side via row-level security.
+            Role hierarchy and permission reference. Permissions are enforced server-side via row-level security and the <code className="text-xs bg-muted px-1 rounded">role_permissions</code> table.
           </p>
         </div>
 

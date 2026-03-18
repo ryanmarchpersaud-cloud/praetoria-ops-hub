@@ -1418,6 +1418,27 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission_key: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_key: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_key?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
       service_requests: {
         Row: {
           access_notes: string | null
@@ -2391,6 +2412,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2400,7 +2425,15 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "staff" | "customer" | "subcontractor"
+      app_role:
+        | "admin"
+        | "staff"
+        | "customer"
+        | "subcontractor"
+        | "lead_worker"
+        | "supervisor"
+        | "dispatcher"
+        | "manager"
       billing_frequency:
         | "per-visit"
         | "weekly"
@@ -2622,7 +2655,16 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "staff", "customer", "subcontractor"],
+      app_role: [
+        "admin",
+        "staff",
+        "customer",
+        "subcontractor",
+        "lead_worker",
+        "supervisor",
+        "dispatcher",
+        "manager",
+      ],
       billing_frequency: [
         "per-visit",
         "weekly",
