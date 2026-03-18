@@ -1,4 +1,3 @@
-import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Webhook, Copy, Check } from 'lucide-react';
@@ -28,13 +27,33 @@ const WEBHOOK_ACTIONS = [
   },
   {
     action: 'test_handoff',
-    description: 'Send a synthetic stripe.test_checkout_created event to n8n',
+    description: 'Synthetic test → stripe.test_checkout_created',
     example: { action: 'test_handoff' },
   },
   {
+    action: 'test_stripe_service',
+    description: 'Synthetic test → stripe.service_checkout_created',
+    example: { action: 'test_stripe_service' },
+  },
+  {
+    action: 'test_email_request_confirm',
+    description: 'Synthetic test → email.request_confirmation',
+    example: { action: 'test_email_request_confirm' },
+  },
+  {
     action: 'test_email_ops',
-    description: 'Send a synthetic email.ops_notification event to n8n',
+    description: 'Synthetic test → email.ops_notification',
     example: { action: 'test_email_ops' },
+  },
+  {
+    action: 'test_sms_request_confirm',
+    description: 'Synthetic test → sms.request_confirmation',
+    example: { action: 'test_sms_request_confirm' },
+  },
+  {
+    action: 'test_sms_ops_alert',
+    description: 'Synthetic test → sms.ops_alert',
+    example: { action: 'test_sms_ops_alert' },
   },
 ];
 
