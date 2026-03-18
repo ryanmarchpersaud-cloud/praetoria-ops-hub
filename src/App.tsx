@@ -232,11 +232,23 @@ function AppRoutes() {
 
       <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
+      <Route path="/settings/products" element={<AdminRoute><ProductsServicesPage /></AdminRoute>} />
       <Route path="/settings/team" element={<AdminRoute><ManageTeamPage /></AdminRoute>} />
       <Route path="/settings/roles" element={<AdminRoute><RolesPermissionsPage /></AdminRoute>} />
       <Route path="/settings/audit-log" element={<AdminRoute><AuditLogPage /></AdminRoute>} />
       <Route path="/settings/connected-apps" element={<AdminRoute><ConnectedAppsPage /></AdminRoute>} />
       <Route path="/settings/usage" element={<AdminRoute><SeatUsagePage /></AdminRoute>} />
+      <Route path="/settings/payments" element={<AdminRoute><SettingsPlaceholder title="Payments" description="Payment processing and billing configuration." /></AdminRoute>} />
+      <Route path="/settings/expenses" element={<AdminRoute><SettingsPlaceholder title="Expense Tracking" description="Track and categorize business expenses." /></AdminRoute>} />
+      <Route path="/settings/automations" element={<AdminRoute><SettingsPlaceholder title="Automations" description="Configure workflow automations and triggers." /></AdminRoute>} />
+      <Route path="/settings/work" element={<AdminRoute><SettingsPlaceholder title="Work Settings" description="Default work hours, overtime rules, and labor settings." /></AdminRoute>} />
+      <Route path="/settings/schedule-settings" element={<AdminRoute><SettingsPlaceholder title="Schedule Settings" description="Scheduling defaults, buffer times, and availability windows." /></AdminRoute>} />
+      <Route path="/settings/routes" element={<AdminRoute><SettingsPlaceholder title="Route Optimization" description="Route planning and geographic service area configuration." /></AdminRoute>} />
+      <Route path="/settings/job-forms" element={<AdminRoute><SettingsPlaceholder title="Job Forms" description="Custom checklists and form templates for field work." /></AdminRoute>} />
+      <Route path="/settings/client-hub" element={<AdminRoute><SettingsPlaceholder title="Client Hub" description="Customer communication preferences and branding." /></AdminRoute>} />
+      <Route path="/settings/messaging" element={<AdminRoute><SettingsPlaceholder title="Emails & Text Messages" description="Email templates, SMS configuration, and notification rules." /></AdminRoute>} />
+      <Route path="/settings/requests-config" element={<AdminRoute><SettingsPlaceholder title="Requests & Bookings" description="Configure how customers submit requests and book services." /></AdminRoute>} />
+      <Route path="/settings/portal" element={<AdminRoute><SettingsPlaceholder title="Portal Settings" description="Customer portal appearance and feature toggles." /></AdminRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
