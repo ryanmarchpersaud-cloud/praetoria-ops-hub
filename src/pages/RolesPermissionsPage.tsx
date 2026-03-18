@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { SettingsLayout } from '@/components/SettingsLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Users, HardHat, UserCheck, Star, Eye, Truck, Briefcase } from 'lucide-react';
+import { Shield, Users, HardHat, UserCheck, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const roleDefinitions = [
@@ -12,13 +12,12 @@ const roleDefinitions = [
     icon: Shield,
     color: 'text-destructive',
     description: 'Full system access — manages team, settings, billing, and all operational data.',
-    portal: 'Admin Dashboard',
-    permissions: [
-      'Full CRUD on all records (leads, quotes, jobs, visits, invoices)',
-      'Manage team members — invite, deactivate, assign roles',
-      'Access settings, integrations, and audit logs',
-      'Approve quotes, invoices, and subcontractor submissions',
-      'Manage catalog, pricing, and permissions',
+    portalAccess: ['Admin Dashboard', 'Worker Portal', 'Customer Portal (preview)', 'Subcontractor Portal'],
+    enforcedAccess: [
+      'All admin routes (/, /leads, /quotes, /jobs, /invoices, /settings/*)',
+      'All worker routes (/worker/*)',
+      'All subcontractor routes (/subcontractor/*)',
+      'Customer portal preview (/portal/*)',
     ],
   },
   {
@@ -26,52 +25,13 @@ const roleDefinitions = [
     label: 'Manager',
     icon: Briefcase,
     color: 'text-violet-600',
-    description: 'All dispatcher permissions plus ability to edit pricing within allowed limits.',
-    portal: 'Admin Dashboard (limited)',
-    permissions: [
-      'Create jobs and assign workers',
-      'Add line items from catalog',
-      'Edit pricing within limits',
-      'Submit for approval and publish to customer',
-    ],
-  },
-  {
-    role: 'dispatcher',
-    label: 'Dispatcher',
-    icon: Truck,
-    color: 'text-blue-600',
-    description: 'Creates jobs, assigns workers, and selects catalog items for scheduling.',
-    portal: 'Admin Dashboard (limited)',
-    permissions: [
-      'Create jobs and assign to workers',
-      'Add line items and select catalog items',
-      'Submit work for approval',
-    ],
-  },
-  {
-    role: 'supervisor',
-    label: 'Supervisor',
-    icon: Eye,
-    color: 'text-amber-600',
-    description: 'Oversees field crews with ability to create draft jobs and add line items.',
-    portal: 'Worker Portal (elevated)',
-    permissions: [
-      'All lead worker permissions',
-      'Create draft jobs',
-      'Add line items from catalog',
-    ],
-  },
-  {
-    role: 'lead_worker',
-    label: 'Lead Worker',
-    icon: Star,
-    color: 'text-yellow-600',
-    description: 'Senior field worker who can suggest line items and create service recommendations.',
-    portal: 'Worker Portal (elevated)',
-    permissions: [
-      'All worker permissions',
-      'Create draft service recommendations',
-      'Suggest line items from catalog',
+    description: 'Operational admin access — can view dashboards, manage jobs, and limited settings.',
+    portalAccess: ['Admin Dashboard (operational)', 'Worker Portal'],
+    enforcedAccess: [
+      'Admin dashboard and operational routes',
+      'Worker portal routes',
+      'Customer portal preview',
+      'Cannot access: Settings > Team, Roles, Connected Apps',
     ],
   },
   {
@@ -79,14 +39,12 @@ const roleDefinitions = [
     label: 'Worker',
     icon: HardHat,
     color: 'text-primary',
-    description: 'Field workers with access to assigned schedules, timesheets, and basic catalog browsing.',
-    portal: 'Worker Portal (/worker)',
-    permissions: [
-      'View assigned visits, jobs, and schedules',
-      'Clock in/out and manage timesheets',
-      'Submit incident reports',
-      'View own pay stubs and tax documents',
-      'Request time off',
+    description: 'Field workers with access to assigned schedules, timesheets, and safety tools.',
+    portalAccess: ['Worker Portal (/worker)'],
+    enforcedAccess: [
+      'Worker portal routes (/worker/*)',
+      'Cannot access admin dashboard',
+      'Cannot access subcontractor portal',
     ],
   },
   {
@@ -95,13 +53,11 @@ const roleDefinitions = [
     icon: UserCheck,
     color: 'text-orange-500',
     description: 'External contractors who manage their own invoices, compliance documents, and assigned work.',
-    portal: 'Subcontractor Portal (/subcontractor)',
-    permissions: [
-      'View assigned visits and properties',
-      'Submit and track invoices',
-      'Upload compliance & insurance documents',
-      'Submit incident reports',
-      'View own payments and tax documents',
+    portalAccess: ['Subcontractor Portal (/subcontractor)'],
+    enforcedAccess: [
+      'Subcontractor portal routes (/subcontractor/*)',
+      'Cannot access admin dashboard',
+      'Cannot access worker portal',
     ],
   },
   {
@@ -110,13 +66,11 @@ const roleDefinitions = [
     icon: Users,
     color: 'text-green-600',
     description: 'Property owners who view their service history, approve quotes, and submit requests.',
-    portal: 'Customer Portal (/portal)',
-    permissions: [
-      'View own properties, visits, and photos',
-      'View and respond to quotes',
-      'Submit service requests from catalog',
-      'Manage billing preferences and payment methods',
-      'Enroll in recurring plans where enabled',
+    portalAccess: ['Customer Portal (/portal)'],
+    enforcedAccess: [
+      'Customer portal routes (/portal/*)',
+      'Cannot access admin, worker, or subcontractor portals',
+      'RLS restricts data to own records only',
     ],
   },
 ];
@@ -143,9 +97,57 @@ export default function RolesPermissionsPage() {
         <div>
           <h1 className="text-2xl font-bold">Roles &amp; Permissions</h1>
           <p className="text-sm text-muted-foreground">
-            Role hierarchy and permission reference. Permissions are enforced server-side via row-level security and the <code className="text-xs bg-muted px-1 rounded">role_permissions</code> table.
+            Enforced authorization model. Roles control portal access, route guards block unauthorized navigation, and RLS policies protect data server-side.
           </p>
         </div>
+
+        {/* Authorization model summary */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Authorization Model v1</CardTitle>
+            <CardDescription>How access is enforced across the system</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div>
+              <p className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-1">Layers</p>
+              <ul className="space-y-1">
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                  <span><strong>Role</strong> (user_roles) — determines authorization level</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                  <span><strong>Team type</strong> (team_members) — organizational/person record</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                  <span><strong>Portal flags</strong> (team_members) — which portal UIs a member may enter</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                  <span><strong>Active status</strong> — inactive/archived users blocked from all areas</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-1">Enforcement</p>
+              <ul className="space-y-1">
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
+                  <span>Route guards (AdminRoute, WorkerRoute, etc.) check useAuthorization()</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
+                  <span>RLS policies on every table enforce data isolation server-side</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
+                  <span>has_role() security definer function prevents RLS recursion</span>
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
           {roleDefinitions.map((rd) => (
@@ -165,16 +167,20 @@ export default function RolesPermissionsPage() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                     Portal Access
                   </p>
-                  <p className="text-sm">{rd.portal}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {rd.portalAccess.map((p, i) => (
+                      <Badge key={i} variant="outline" className="text-xs">{p}</Badge>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Key Permissions
+                    Enforced Access Rules
                   </p>
                   <ul className="text-sm space-y-1">
-                    {rd.permissions.map((p, i) => (
+                    {rd.enforcedAccess.map((p, i) => (
                       <li key={i} className="flex items-start gap-1.5">
-                        <span className="text-primary mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                         {p}
                       </li>
                     ))}
