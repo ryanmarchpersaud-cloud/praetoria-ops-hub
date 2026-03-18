@@ -142,7 +142,7 @@ export default function Invoices() {
               <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow>
             ) : (
               invoices.map((inv: any) => (
-                <TableRow key={inv.id} className={`cursor-pointer hover:bg-muted/50 ${inv.status === 'Overdue' || inv.status === 'Failed' ? 'bg-destructive/5' : ''}`} onClick={() => window.location.href = `/invoices/${inv.id}`}>
+                <TableRow key={inv.id} className={`cursor-pointer hover:bg-muted/50 ${inv.status === 'Overdue' || inv.status === 'Failed' ? 'bg-destructive/5' : ''}`} onClick={() => navigate(`/invoices/${inv.id}`)}>
                   <TableCell>
                     <Link to={`/invoices/${inv.id}`} className="font-medium mono text-sm hover:text-primary" onClick={e => e.stopPropagation()}>{inv.invoice_number}</Link>
                   </TableCell>
