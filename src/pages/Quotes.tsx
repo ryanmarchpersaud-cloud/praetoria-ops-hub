@@ -18,6 +18,7 @@ const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: 
 };
 
 export default function Quotes() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const { data: quotes = [], isLoading } = useQuotes({
     approval_status: statusFilter || undefined,
