@@ -149,7 +149,8 @@ export default function ManageTeamPage() {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <SettingsLayout>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
