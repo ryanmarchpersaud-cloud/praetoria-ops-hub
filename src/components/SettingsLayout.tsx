@@ -1,5 +1,5 @@
 import { NavLink } from '@/components/NavLink';
-import { Users, Settings, Webhook } from 'lucide-react';
+import { Users, Settings, Webhook, Plug, ShieldCheck, ScrollText, Gauge } from 'lucide-react';
 
 const settingsNav = [
   {
@@ -7,12 +7,21 @@ const settingsNav = [
     items: [
       { title: 'General', url: '/settings', icon: Settings },
       { title: 'Integrations', url: '/settings/integrations', icon: Webhook },
+      { title: 'Connected Apps', url: '/settings/connected-apps', icon: Plug },
     ],
   },
   {
     group: 'Team Organization',
     items: [
       { title: 'Manage Team', url: '/settings/team', icon: Users },
+      { title: 'Roles & Permissions', url: '/settings/roles', icon: ShieldCheck },
+    ],
+  },
+  {
+    group: 'Administration',
+    items: [
+      { title: 'Audit Log', url: '/settings/audit-log', icon: ScrollText },
+      { title: 'Seat Usage', url: '/settings/usage', icon: Gauge },
     ],
   },
 ];
