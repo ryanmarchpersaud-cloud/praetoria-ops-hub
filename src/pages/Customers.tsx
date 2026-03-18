@@ -13,6 +13,7 @@ import { PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function Customers() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const { data: customers = [], isLoading } = useCustomers(search || undefined);
