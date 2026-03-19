@@ -47,12 +47,16 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default function EmployeeDetail() {
   const { id: userId } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const { data: emp, isLoading } = useEmployee(userId);
   const { data: certs = [] } = useEmployeeCertifications(userId);
   const { data: docs = [] } = useEmployeeDocuments(userId);
   const { data: payStubs = [] } = useEmployeePayStubs(userId);
   const { data: timeOff = [] } = useEmployeeTimeOff(userId);
   const { data: contacts = [] } = useEmployeeEmergencyContacts(userId);
+  const { data: equipment = [] } = useEmployeeEquipment(userId);
+  const issueEquipment = useIssueEquipment();
+  const [showIssueDialog, setShowIssueDialog] = useState(false);
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   if (!emp) return <div className="p-8 text-center text-muted-foreground">Employee not found.</div>;
