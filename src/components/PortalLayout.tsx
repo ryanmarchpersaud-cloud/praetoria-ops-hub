@@ -112,6 +112,9 @@ export function PortalLayout({ children }: { children: ReactNode }) {
         )}
       </header>
 
+      {/* Announcements */}
+      <AnnouncementBanner />
+
       {/* Content */}
       <main className="max-w-5xl mx-auto p-4 md:p-6">
         {children}

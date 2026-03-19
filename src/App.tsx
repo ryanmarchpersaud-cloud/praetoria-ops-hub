@@ -285,6 +285,7 @@ function AppRoutes() {
       <Route path="/settings/messaging" element={<AdminRoute><EmailsTextsPage /></AdminRoute>} />
       <Route path="/settings/requests-config" element={<AdminRoute><RequestsBookingsPage /></AdminRoute>} />
       <Route path="/settings/portal" element={<AdminRoute><PortalSettingsPage /></AdminRoute>} />
+      <Route path="/settings/announcements" element={<AdminRoute><SystemAnnouncementsPage /></AdminRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
