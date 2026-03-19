@@ -54,13 +54,13 @@ export function useSidebarCounts() {
         supabase
           .from('invoices')
           .select('id', { count: 'exact', head: true })
-          .in('status', ['Sent', 'Overdue', 'Partially Paid']),
+          .in('status', ['Sent', 'Overdue', 'Partially Paid'] as any),
 
         // Pending service requests
         supabase
           .from('service_requests')
           .select('id', { count: 'exact', head: true })
-          .in('status', ['New', 'Pending']),
+          .in('status', ['New', 'Pending'] as any),
       ]);
 
       return {
