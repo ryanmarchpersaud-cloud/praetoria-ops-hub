@@ -111,6 +111,7 @@ import SubcontractorIncidentsPage from "./pages/subcontractor/SubcontractorIncid
 import SubcontractorNewIncidentPage from "./pages/subcontractor/SubcontractorNewIncidentPage";
 import SubcontractorIncidentDetailPage from "./pages/subcontractor/SubcontractorIncidentDetailPage";
 import SubcontractorEmergencySafetyPage from "./pages/subcontractor/SubcontractorEmergencySafetyPage";
+import SubcontractorMessagesPage from "./pages/subcontractor/SubcontractorMessagesPage";
 
 // Admin incident pages
 import AdminIncidentsPage from "./pages/AdminIncidentsPage";
