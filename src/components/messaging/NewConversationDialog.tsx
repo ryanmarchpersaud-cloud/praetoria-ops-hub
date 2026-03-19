@@ -96,7 +96,6 @@ export function NewConversationDialog({ onCreated, trigger }: Props) {
           <DialogTitle>New Conversation</DialogTitle>
           <p id="new-convo-desc" className="text-xs text-muted-foreground">Select members and start a conversation</p>
         </DialogHeader>
-        </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-y-auto">
           <div className="space-y-1.5">
