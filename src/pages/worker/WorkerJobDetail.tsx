@@ -71,12 +71,26 @@ export default function WorkerJobDetail() {
           {customer && (
             <p className="text-sm text-muted-foreground">Customer: {customer.first_name} {customer.last_name}</p>
           )}
-          {property && (
-            <div className="flex items-start gap-2">
-              <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-              <span className="text-xs text-muted-foreground">{property.property_name}{property.city && `, ${property.city}`}</span>
+          {job.service_instructions && (
+            <div className="pt-2 border-t">
+              <div className="flex items-center gap-1.5 mb-1">
+                <FileText className="h-3.5 w-3.5 text-amber-600" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-600">Instructions</span>
+              </div>
+              <p className="text-xs whitespace-pre-wrap">{job.service_instructions}</p>
             </div>
           )}
+          {job.scope_of_work && (
+            <div className="pt-2 border-t">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Scope of Work</p>
+              <p className="text-xs whitespace-pre-wrap">{job.scope_of_work}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Property Verification */}
+      {property && <PropertyVerificationCard property={property} compact />}
           {job.service_instructions && (
             <div className="pt-2 border-t">
               <div className="flex items-center gap-1.5 mb-1">
