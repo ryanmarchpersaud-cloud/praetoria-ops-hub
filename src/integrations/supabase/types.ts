@@ -889,6 +889,110 @@ export type Database = {
         }
         Relationships: []
       }
+      form_template_fields: {
+        Row: {
+          created_at: string
+          default_value: string | null
+          field_label: string
+          field_type: string
+          id: string
+          is_required: boolean | null
+          options: Json | null
+          placeholder: string | null
+          sort_order: number | null
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_value?: string | null
+          field_label: string
+          field_type?: string
+          id?: string
+          is_required?: boolean | null
+          options?: Json | null
+          placeholder?: string | null
+          sort_order?: number | null
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          default_value?: string | null
+          field_label?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean | null
+          options?: Json | null
+          placeholder?: string | null
+          sort_order?: number | null
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_template_fields_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "form_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_templates: {
+        Row: {
+          admin_visible: boolean | null
+          completion_timing: string | null
+          created_at: string
+          created_by: string | null
+          customer_visible: boolean | null
+          description: string | null
+          form_type: string | null
+          id: string
+          is_active: boolean | null
+          is_required: boolean | null
+          name: string
+          service_category: string | null
+          sort_order: number | null
+          updated_at: string
+          version: number | null
+          worker_visible: boolean | null
+        }
+        Insert: {
+          admin_visible?: boolean | null
+          completion_timing?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_visible?: boolean | null
+          description?: string | null
+          form_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          name: string
+          service_category?: string | null
+          sort_order?: number | null
+          updated_at?: string
+          version?: number | null
+          worker_visible?: boolean | null
+        }
+        Update: {
+          admin_visible?: boolean | null
+          completion_timing?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_visible?: boolean | null
+          description?: string | null
+          form_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          name?: string
+          service_category?: string | null
+          sort_order?: number | null
+          updated_at?: string
+          version?: number | null
+          worker_visible?: boolean | null
+        }
+        Relationships: []
+      }
       incident_reports: {
         Row: {
           admin_notes: string | null
@@ -1913,6 +2017,132 @@ export type Database = {
         }
         Relationships: []
       }
+      route_settings: {
+        Row: {
+          avg_travel_speed_kmh: number | null
+          created_at: string
+          default_travel_buffer: number | null
+          id: string
+          optimization_priority: string | null
+          planning_mode: string | null
+          return_to_base: boolean | null
+          service_time_weight: number | null
+          start_location: string | null
+          updated_at: string
+        }
+        Insert: {
+          avg_travel_speed_kmh?: number | null
+          created_at?: string
+          default_travel_buffer?: number | null
+          id?: string
+          optimization_priority?: string | null
+          planning_mode?: string | null
+          return_to_base?: boolean | null
+          service_time_weight?: number | null
+          start_location?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avg_travel_speed_kmh?: number | null
+          created_at?: string
+          default_travel_buffer?: number | null
+          id?: string
+          optimization_priority?: string | null
+          planning_mode?: string | null
+          return_to_base?: boolean | null
+          service_time_weight?: number | null
+          start_location?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule_settings: {
+        Row: {
+          admin_approval_for_changes: boolean | null
+          after_hours_available: boolean | null
+          allow_overlapping: boolean | null
+          auto_create_visits: boolean | null
+          blackout_dates: Json | null
+          business_hours: Json | null
+          cancellation_window_hours: number | null
+          created_at: string
+          default_duration_minutes: number | null
+          default_view: string | null
+          emergency_scheduling: boolean | null
+          enforce_worker_availability: boolean | null
+          first_day_of_week: number | null
+          holidays: Json | null
+          id: string
+          lead_time_hours: number | null
+          prevent_double_booking: boolean | null
+          same_day_booking: boolean | null
+          setup_buffer_minutes: number | null
+          subcontractor_scheduling: boolean | null
+          time_slot_increment: number | null
+          travel_buffer_minutes: number | null
+          updated_at: string
+          weekend_scheduling: boolean | null
+          workday_end: string | null
+          workday_start: string | null
+        }
+        Insert: {
+          admin_approval_for_changes?: boolean | null
+          after_hours_available?: boolean | null
+          allow_overlapping?: boolean | null
+          auto_create_visits?: boolean | null
+          blackout_dates?: Json | null
+          business_hours?: Json | null
+          cancellation_window_hours?: number | null
+          created_at?: string
+          default_duration_minutes?: number | null
+          default_view?: string | null
+          emergency_scheduling?: boolean | null
+          enforce_worker_availability?: boolean | null
+          first_day_of_week?: number | null
+          holidays?: Json | null
+          id?: string
+          lead_time_hours?: number | null
+          prevent_double_booking?: boolean | null
+          same_day_booking?: boolean | null
+          setup_buffer_minutes?: number | null
+          subcontractor_scheduling?: boolean | null
+          time_slot_increment?: number | null
+          travel_buffer_minutes?: number | null
+          updated_at?: string
+          weekend_scheduling?: boolean | null
+          workday_end?: string | null
+          workday_start?: string | null
+        }
+        Update: {
+          admin_approval_for_changes?: boolean | null
+          after_hours_available?: boolean | null
+          allow_overlapping?: boolean | null
+          auto_create_visits?: boolean | null
+          blackout_dates?: Json | null
+          business_hours?: Json | null
+          cancellation_window_hours?: number | null
+          created_at?: string
+          default_duration_minutes?: number | null
+          default_view?: string | null
+          emergency_scheduling?: boolean | null
+          enforce_worker_availability?: boolean | null
+          first_day_of_week?: number | null
+          holidays?: Json | null
+          id?: string
+          lead_time_hours?: number | null
+          prevent_double_booking?: boolean | null
+          same_day_booking?: boolean | null
+          setup_buffer_minutes?: number | null
+          subcontractor_scheduling?: boolean | null
+          time_slot_increment?: number | null
+          travel_buffer_minutes?: number | null
+          updated_at?: string
+          weekend_scheduling?: boolean | null
+          workday_end?: string | null
+          workday_start?: string | null
+        }
+        Relationships: []
+      }
       service_requests: {
         Row: {
           access_notes: string | null
@@ -1990,6 +2220,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_territories: {
+        Row: {
+          cities: string[] | null
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          postal_codes: string[] | null
+          preferred_worker_ids: string[] | null
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          cities?: string[] | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          postal_codes?: string[] | null
+          preferred_worker_ids?: string[] | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cities?: string[] | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          postal_codes?: string[] | null
+          preferred_worker_ids?: string[] | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       subcontractor_assignments: {
         Row: {
@@ -2668,6 +2940,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      work_settings: {
+        Row: {
+          after_hours_work_allowed: boolean | null
+          break_duration_minutes: number | null
+          created_at: string
+          damage_reporting_required: boolean | null
+          default_estimated_duration: number | null
+          default_labor_unit: string | null
+          dispatch_notes_default: string | null
+          id: string
+          internal_approval_required: boolean | null
+          max_workers_per_job: number | null
+          notes_required: boolean | null
+          oncall_enabled: boolean | null
+          overtime_threshold_hours: number | null
+          photo_after_required: boolean | null
+          photo_before_required: boolean | null
+          signature_required: boolean | null
+          subcontractor_assignment_allowed: boolean | null
+          team_lead_required: boolean | null
+          updated_at: string
+          weather_sensitive_toggle: boolean | null
+          weekend_work_allowed: boolean | null
+          worker_checkin_required: boolean | null
+          worker_checkout_required: boolean | null
+          worker_instruction_visibility: string | null
+        }
+        Insert: {
+          after_hours_work_allowed?: boolean | null
+          break_duration_minutes?: number | null
+          created_at?: string
+          damage_reporting_required?: boolean | null
+          default_estimated_duration?: number | null
+          default_labor_unit?: string | null
+          dispatch_notes_default?: string | null
+          id?: string
+          internal_approval_required?: boolean | null
+          max_workers_per_job?: number | null
+          notes_required?: boolean | null
+          oncall_enabled?: boolean | null
+          overtime_threshold_hours?: number | null
+          photo_after_required?: boolean | null
+          photo_before_required?: boolean | null
+          signature_required?: boolean | null
+          subcontractor_assignment_allowed?: boolean | null
+          team_lead_required?: boolean | null
+          updated_at?: string
+          weather_sensitive_toggle?: boolean | null
+          weekend_work_allowed?: boolean | null
+          worker_checkin_required?: boolean | null
+          worker_checkout_required?: boolean | null
+          worker_instruction_visibility?: string | null
+        }
+        Update: {
+          after_hours_work_allowed?: boolean | null
+          break_duration_minutes?: number | null
+          created_at?: string
+          damage_reporting_required?: boolean | null
+          default_estimated_duration?: number | null
+          default_labor_unit?: string | null
+          dispatch_notes_default?: string | null
+          id?: string
+          internal_approval_required?: boolean | null
+          max_workers_per_job?: number | null
+          notes_required?: boolean | null
+          oncall_enabled?: boolean | null
+          overtime_threshold_hours?: number | null
+          photo_after_required?: boolean | null
+          photo_before_required?: boolean | null
+          signature_required?: boolean | null
+          subcontractor_assignment_allowed?: boolean | null
+          team_lead_required?: boolean | null
+          updated_at?: string
+          weather_sensitive_toggle?: boolean | null
+          weekend_work_allowed?: boolean | null
+          worker_checkin_required?: boolean | null
+          worker_checkout_required?: boolean | null
+          worker_instruction_visibility?: string | null
+        }
+        Relationships: []
       }
       worker_certifications: {
         Row: {
