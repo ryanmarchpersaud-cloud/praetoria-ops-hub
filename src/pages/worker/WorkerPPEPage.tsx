@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useWorkerEquipment } from '@/hooks/useWorkerTaxDocs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +29,7 @@ export default function WorkerPPEPage() {
   const qc = useQueryClient();
   const { data: items = [], isLoading } = useWorkerEquipment();
 
+  // Workers can only request replacement for their own items — no issue/assign/edit actions
   const handleReplacementRequest = async (id: string) => {
     const { error } = await supabase
       .from('worker_equipment_items')
@@ -59,8 +59,9 @@ export default function WorkerPPEPage() {
   return (
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
       <h1 className="text-lg font-bold">PPE & Equipment</h1>
+      <p className="text-xs text-muted-foreground">Equipment issued to you by your manager. Contact your supervisor to request new items.</p>
 
-      {/* Active Items */}
+      {/* Active Items — view only + request replacement */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -96,6 +97,7 @@ export default function WorkerPPEPage() {
                         {item.condition}
                       </Badge>
                     </div>
+                    {/* Worker action: request replacement for damaged/fair items */}
                     {!item.replacement_requested && item.condition !== 'good' && (
                       <Button
                         size="sm"
@@ -117,7 +119,7 @@ export default function WorkerPPEPage() {
         </CardContent>
       </Card>
 
-      {/* Returned Items */}
+      {/* Returned Items — view only */}
       {returnedItems.length > 0 && (
         <Card>
           <CardHeader className="pb-2">

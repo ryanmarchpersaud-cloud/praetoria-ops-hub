@@ -39,9 +39,11 @@ export function useUserRole() {
   const isCustomer = roles.includes('customer');
   const isStaff = !isCustomer && !roles.includes('subcontractor') && roles.length > 0;
   const isAdmin = roles.includes('admin');
+  const isManager = roles.includes('manager');
   const isSubcontractor = roles.includes('subcontractor');
+  const canManageWorkers = isAdmin || isManager;
 
-  return { roles, isCustomer, isStaff, isAdmin, isSubcontractor, isLoading };
+  return { roles, isCustomer, isStaff, isAdmin, isManager, isSubcontractor, canManageWorkers, isLoading };
 }
 
 /** Fetch resolved permission keys for the current user */

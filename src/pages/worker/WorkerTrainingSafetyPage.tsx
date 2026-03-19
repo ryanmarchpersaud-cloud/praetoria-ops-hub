@@ -6,10 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Award, BookOpen, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Award, BookOpen, ShieldCheck, CheckCircle2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useState, useRef } from 'react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const statusColors: Record<string, string> = {
   completed: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
@@ -35,7 +41,13 @@ export default function WorkerTrainingSafetyPage() {
   const { data: training = [], isLoading: loadingTraining } = useWorkerTrainingRecords();
   const { data: certs = [], isLoading: loadingCerts } = useWorkerCertifications();
   const isLoading = loadingTraining || loadingCerts;
+  const [uploadCertOpen, setUploadCertOpen] = useState(false);
+  const [certName, setCertName] = useState('');
+  const [certIssuer, setCertIssuer] = useState('');
+  const [certExpiry, setCertExpiry] = useState('');
+  const [uploading, setUploading] = useState(false);
 
+  // Worker action: acknowledge training
   const handleAcknowledge = async (id: string) => {
     const { error } = await supabase
       .from('worker_training_records')
@@ -47,6 +59,33 @@ export default function WorkerTrainingSafetyPage() {
     } else {
       toast({ title: 'Training acknowledged' });
       qc.invalidateQueries({ queryKey: ['worker_training_records'] });
+    }
+  };
+
+  // Worker action: upload own completion certificate (pending approval)
+  const handleUploadCert = async () => {
+    if (!certName.trim()) {
+      toast({ title: 'Enter certificate name', variant: 'destructive' });
+      return;
+    }
+    setUploading(true);
+    const { error } = await supabase
+      .from('worker_certifications')
+      .insert({
+        user_id: user?.id,
+        cert_name: certName.trim(),
+        issuer: certIssuer.trim() || null,
+        expiry_date: certExpiry || null,
+        status: 'pending', // requires admin/manager approval
+      } as any);
+    setUploading(false);
+    if (error) {
+      toast({ title: 'Failed to submit certificate', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Certificate submitted for approval' });
+      setCertName(''); setCertIssuer(''); setCertExpiry('');
+      setUploadCertOpen(false);
+      qc.invalidateQueries({ queryKey: ['worker_certifications'] });
     }
   };
 
@@ -64,9 +103,15 @@ export default function WorkerTrainingSafetyPage() {
 
   return (
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
-      <h1 className="text-lg font-bold">Training & Safety</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-bold">Training & Safety</h1>
+        <Button size="sm" variant="outline" onClick={() => setUploadCertOpen(true)} className="gap-1.5 text-xs">
+          <Upload className="h-3.5 w-3.5" /> Submit Certificate
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">View your assigned training and certifications. Submit completion certificates for manager approval.</p>
 
-      {/* Pending acknowledgements */}
+      {/* Pending acknowledgements — worker can acknowledge */}
       {pendingTraining.length > 0 && (
         <Card className="border-amber-200 bg-amber-500/5">
           <CardHeader className="pb-2">
@@ -90,7 +135,7 @@ export default function WorkerTrainingSafetyPage() {
         </Card>
       )}
 
-      {/* Certifications */}
+      {/* Certifications — view only, worker sees status (pending = awaiting approval) */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -110,6 +155,9 @@ export default function WorkerTrainingSafetyPage() {
                       {c.issuer && `${c.issuer} · `}
                       {c.expiry_date ? `Expires ${format(new Date(c.expiry_date), 'MMM d, yyyy')}` : 'No expiry'}
                     </p>
+                    {c.status === 'pending' && (
+                      <p className="text-xs text-amber-600">⏳ Awaiting manager approval</p>
+                    )}
                   </div>
                   <Badge variant="outline" className={`text-[10px] ${statusColors[c.status] ?? ''}`}>{c.status}</Badge>
                 </div>
@@ -119,7 +167,7 @@ export default function WorkerTrainingSafetyPage() {
         </CardContent>
       </Card>
 
-      {/* Completed Training */}
+      {/* Completed Training — view only */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -147,6 +195,38 @@ export default function WorkerTrainingSafetyPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Worker Upload Certificate Dialog */}
+      <Dialog open={uploadCertOpen} onOpenChange={setUploadCertOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-primary" /> Submit Certificate
+            </DialogTitle>
+            <DialogDescription>Submit a completion certificate for manager review and approval.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Certificate Name *</Label>
+              <Input placeholder="e.g. WHMIS 2025, First Aid Level C" value={certName} onChange={e => setCertName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Issuer (optional)</Label>
+              <Input placeholder="e.g. St. John Ambulance" value={certIssuer} onChange={e => setCertIssuer(e.target.value)} />
+            </div>
+            <div>
+              <Label>Expiry Date (optional)</Label>
+              <Input type="date" value={certExpiry} onChange={e => setCertExpiry(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUploadCertOpen(false)}>Cancel</Button>
+            <Button onClick={handleUploadCert} disabled={uploading}>
+              {uploading ? 'Submitting…' : 'Submit for Approval'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
