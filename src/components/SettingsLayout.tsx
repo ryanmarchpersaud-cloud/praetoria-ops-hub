@@ -46,6 +46,7 @@ const settingsNav = [
   {
     group: 'Administration',
     items: [
+      { title: 'System Announcements', url: '/settings/announcements', icon: Megaphone },
       { title: 'Audit Log', url: '/settings/audit-log', icon: ScrollText },
       { title: 'Seat Usage', url: '/settings/usage', icon: Gauge },
     ],
