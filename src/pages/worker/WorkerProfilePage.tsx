@@ -1,7 +1,11 @@
 import { useWorkerProfile } from '@/hooks/useWorkerProfile';
+import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { User, Mail, Phone, Briefcase, Users, Shield, MapPin, Award } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
