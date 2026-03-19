@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarUpload } from '@/components/AvatarUpload';
 import { Link } from 'react-router-dom';
+import { DailyRouteMap, type RouteStop } from '@/components/DailyRouteMap';
 import {
   CalendarDays, Receipt, FileText, ChevronRight, MapPin, CheckCircle,
   AlertTriangle, Briefcase, ShieldCheck, Clock, Truck, DollarSign,
