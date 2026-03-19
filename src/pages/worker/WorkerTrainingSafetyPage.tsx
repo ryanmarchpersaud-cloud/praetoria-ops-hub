@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Award, BookOpen, ShieldCheck, CheckCircle2, Upload } from 'lucide-react';
+import { Award, BookOpen, ShieldCheck, CheckCircle2, Upload, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -45,9 +45,10 @@ export default function WorkerTrainingSafetyPage() {
   const [certName, setCertName] = useState('');
   const [certIssuer, setCertIssuer] = useState('');
   const [certExpiry, setCertExpiry] = useState('');
+  const [certFile, setCertFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Worker action: acknowledge training
   const handleAcknowledge = async (id: string) => {
     const { error } = await supabase
       .from('worker_training_records')
@@ -62,13 +63,35 @@ export default function WorkerTrainingSafetyPage() {
     }
   };
 
-  // Worker action: upload own completion certificate (pending approval)
   const handleUploadCert = async () => {
     if (!certName.trim()) {
       toast({ title: 'Enter certificate name', variant: 'destructive' });
       return;
     }
     setUploading(true);
+
+    let fileUrl: string | null = null;
+
+    // Upload file if selected
+    if (certFile && user) {
+      const ext = certFile.name.split('.').pop();
+      const path = `${user.id}/certs/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('worker-documents')
+        .upload(path, certFile);
+      if (uploadError) {
+        toast({ title: 'File upload failed', description: uploadError.message, variant: 'destructive' });
+        setUploading(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from('worker-documents').getPublicUrl(path);
+      // worker-documents is private, use signed URL
+      const { data: signedData } = await supabase.storage
+        .from('worker-documents')
+        .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year
+      fileUrl = signedData?.signedUrl || urlData.publicUrl;
+    }
+
     const { error } = await supabase
       .from('worker_certifications')
       .insert({
@@ -76,14 +99,16 @@ export default function WorkerTrainingSafetyPage() {
         cert_name: certName.trim(),
         issuer: certIssuer.trim() || null,
         expiry_date: certExpiry || null,
-        status: 'pending', // requires admin/manager approval
+        file_url: fileUrl,
+        status: 'pending',
       } as any);
     setUploading(false);
     if (error) {
       toast({ title: 'Failed to submit certificate', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Certificate submitted for approval' });
-      setCertName(''); setCertIssuer(''); setCertExpiry('');
+      setCertName(''); setCertIssuer(''); setCertExpiry(''); setCertFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       setUploadCertOpen(false);
       qc.invalidateQueries({ queryKey: ['worker_certifications'] });
     }
@@ -111,7 +136,7 @@ export default function WorkerTrainingSafetyPage() {
       </div>
       <p className="text-xs text-muted-foreground">View your assigned training and certifications. Submit completion certificates for manager approval.</p>
 
-      {/* Pending acknowledgements — worker can acknowledge */}
+      {/* Pending acknowledgements */}
       {pendingTraining.length > 0 && (
         <Card className="border-amber-200 bg-amber-500/5">
           <CardHeader className="pb-2">
@@ -125,6 +150,11 @@ export default function WorkerTrainingSafetyPage() {
                 <div>
                   <p className="text-sm font-medium">{t.training_name}</p>
                   <p className="text-xs text-muted-foreground">{typeLabels[t.training_type] || t.training_type}</p>
+                  {t.file_url && (
+                    <a href={t.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline mt-0.5">
+                      <ExternalLink className="h-3 w-3" /> Open Material
+                    </a>
+                  )}
                 </div>
                 <Button size="sm" variant="outline" onClick={() => handleAcknowledge(t.id)}>
                   <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Acknowledge
@@ -135,7 +165,7 @@ export default function WorkerTrainingSafetyPage() {
         </Card>
       )}
 
-      {/* Certifications — view only, worker sees status (pending = awaiting approval) */}
+      {/* Certifications */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -158,6 +188,11 @@ export default function WorkerTrainingSafetyPage() {
                     {c.status === 'pending' && (
                       <p className="text-xs text-amber-600">⏳ Awaiting manager approval</p>
                     )}
+                    {c.file_url && (
+                      <a href={c.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline mt-0.5">
+                        <ExternalLink className="h-3 w-3" /> View Uploaded Proof
+                      </a>
+                    )}
                   </div>
                   <Badge variant="outline" className={`text-[10px] ${statusColors[c.status] ?? ''}`}>{c.status}</Badge>
                 </div>
@@ -167,7 +202,7 @@ export default function WorkerTrainingSafetyPage() {
         </CardContent>
       </Card>
 
-      {/* Completed Training — view only */}
+      {/* Training History */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
@@ -187,6 +222,11 @@ export default function WorkerTrainingSafetyPage() {
                       {typeLabels[t.training_type] || t.training_type}
                       {t.completed_date && ` · ${format(new Date(t.completed_date), 'MMM d, yyyy')}`}
                     </p>
+                    {t.file_url && (
+                      <a href={t.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline mt-0.5">
+                        <ExternalLink className="h-3 w-3" /> Open Material
+                      </a>
+                    )}
                   </div>
                   <Badge variant="outline" className={`text-[10px] ${statusColors[t.status] ?? ''}`}>{t.status}</Badge>
                 </div>
@@ -196,7 +236,7 @@ export default function WorkerTrainingSafetyPage() {
         </CardContent>
       </Card>
 
-      {/* Worker Upload Certificate Dialog */}
+      {/* Upload Certificate Dialog */}
       <Dialog open={uploadCertOpen} onOpenChange={setUploadCertOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -217,6 +257,16 @@ export default function WorkerTrainingSafetyPage() {
             <div>
               <Label>Expiry Date (optional)</Label>
               <Input type="date" value={certExpiry} onChange={e => setCertExpiry(e.target.value)} />
+            </div>
+            <div>
+              <Label>Upload Proof (PDF, image)</Label>
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                onChange={e => setCertFile(e.target.files?.[0] || null)}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Attach a scan or photo of your certificate for manager review.</p>
             </div>
           </div>
           <DialogFooter>
