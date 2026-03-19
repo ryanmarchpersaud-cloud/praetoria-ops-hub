@@ -550,9 +550,10 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
   const [name, setName] = useState('');
   const [type, setType] = useState('other');
   const [expiryDate, setExpiryDate] = useState('');
+  const [fileUrl, setFileUrl] = useState('');
   const [notes, setNotes] = useState('');
 
-  const reset = () => { setName(''); setType('other'); setExpiryDate(''); setNotes(''); };
+  const reset = () => { setName(''); setType('other'); setExpiryDate(''); setFileUrl(''); setNotes(''); };
 
   const handleSubmit = () => {
     if (!name.trim()) {
@@ -564,6 +565,7 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
       training_name: name.trim(),
       training_type: type,
       expiry_date: expiryDate || undefined,
+      file_url: fileUrl.trim() || undefined,
       notes: notes.trim() || undefined,
     }, {
       onSuccess: () => {
