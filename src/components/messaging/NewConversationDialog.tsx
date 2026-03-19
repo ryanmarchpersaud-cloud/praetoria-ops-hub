@@ -91,9 +91,10 @@ export function NewConversationDialog({ onCreated, trigger }: Props) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
+      <DialogContent className="max-w-md max-h-[80vh] flex flex-col" aria-describedby="new-convo-desc">
         <DialogHeader>
           <DialogTitle>New Conversation</DialogTitle>
+          <p id="new-convo-desc" className="text-xs text-muted-foreground">Select members and start a conversation</p>
         </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-y-auto">
