@@ -26,7 +26,7 @@ import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
-import SettingsPage from "./pages/SettingsPage";
+// SettingsPage replaced by CompanySettingsPage (imported below)
 import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
@@ -116,6 +116,10 @@ import AuditLogPage from "./pages/AuditLogPage";
 import ConnectedAppsPage from "./pages/ConnectedAppsPage";
 import SeatUsagePage from "./pages/SeatUsagePage";
 import ProductsServicesPage from "./pages/ProductsServicesPage";
+import CompanySettingsPage from "./pages/CompanySettingsPage";
+import PaymentsSettingsPage from "./pages/PaymentsSettingsPage";
+import ExpenseTrackingPage from "./pages/ExpenseTrackingPage";
+import AutomationsPage from "./pages/AutomationsPage";
 import SettingsPlaceholder from "./pages/SettingsPlaceholder";
 
 const queryClient = new QueryClient();
@@ -246,7 +250,7 @@ function AppRoutes() {
       <Route path="/incidents" element={<AdminRoute><AdminIncidentsPage /></AdminRoute>} />
       <Route path="/incidents/:id" element={<AdminRoute><AdminIncidentDetailPage /></AdminRoute>} />
 
-      <Route path="/settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
+      <Route path="/settings" element={<AdminRoute><CompanySettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
       <Route path="/settings/products" element={<AdminRoute><ProductsServicesPage /></AdminRoute>} />
       <Route path="/settings/team" element={<AdminRoute><ManageTeamPage /></AdminRoute>} />
@@ -254,9 +258,9 @@ function AppRoutes() {
       <Route path="/settings/audit-log" element={<AdminRoute><AuditLogPage /></AdminRoute>} />
       <Route path="/settings/connected-apps" element={<AdminRoute><ConnectedAppsPage /></AdminRoute>} />
       <Route path="/settings/usage" element={<AdminRoute><SeatUsagePage /></AdminRoute>} />
-      <Route path="/settings/payments" element={<AdminRoute><SettingsPlaceholder title="Payments" description="Payment processing and billing configuration." /></AdminRoute>} />
-      <Route path="/settings/expenses" element={<AdminRoute><SettingsPlaceholder title="Expense Tracking" description="Track and categorize business expenses." /></AdminRoute>} />
-      <Route path="/settings/automations" element={<AdminRoute><SettingsPlaceholder title="Automations" description="Configure workflow automations and triggers." /></AdminRoute>} />
+      <Route path="/settings/payments" element={<AdminRoute><PaymentsSettingsPage /></AdminRoute>} />
+      <Route path="/settings/expenses" element={<AdminRoute><ExpenseTrackingPage /></AdminRoute>} />
+      <Route path="/settings/automations" element={<AdminRoute><AutomationsPage /></AdminRoute>} />
       <Route path="/settings/work" element={<AdminRoute><SettingsPlaceholder title="Work Settings" description="Default work hours, overtime rules, and labor settings." /></AdminRoute>} />
       <Route path="/settings/schedule-settings" element={<AdminRoute><SettingsPlaceholder title="Schedule Settings" description="Scheduling defaults, buffer times, and availability windows." /></AdminRoute>} />
       <Route path="/settings/routes" element={<AdminRoute><SettingsPlaceholder title="Route Optimization" description="Route planning and geographic service area configuration." /></AdminRoute>} />
