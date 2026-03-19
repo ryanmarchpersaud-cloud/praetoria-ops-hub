@@ -42,7 +42,7 @@ export function useSidebarCounts() {
         supabase
           .from('jobs')
           .select('id', { count: 'exact', head: true })
-          .in('status', ['Pending', 'Scheduled']),
+          .in('status', ['Draft', 'Scheduled'] as any),
 
         // Today's visits or visits in progress
         supabase
