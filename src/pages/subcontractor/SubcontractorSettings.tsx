@@ -27,6 +27,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value
 export default function SubcontractorSettings() {
   const { user, signOut } = useAuth();
   const { data: profile, isLoading } = useSubcontractorProfile();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const { data: billing } = useQuery({
