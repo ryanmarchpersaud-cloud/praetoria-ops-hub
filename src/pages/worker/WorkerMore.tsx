@@ -57,8 +57,8 @@ export default function WorkerMore() {
             </p>
             <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
           </div>
-          <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-            Field Mode
+           <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+            Worker Portal
           </span>
         </CardContent>
       </Card>
