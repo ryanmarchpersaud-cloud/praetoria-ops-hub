@@ -187,6 +187,11 @@ export default function EmployeeDetail() {
                           <TableCell className="text-sm text-muted-foreground">{c.issuer || '—'}</TableCell>
                           <TableCell><StatusChip status={c.status} /></TableCell>
                           <TableCell className="text-sm text-muted-foreground">{c.expiry_date ? format(new Date(c.expiry_date), 'MMM d, yyyy') : '—'}</TableCell>
+                          <TableCell>
+                            {c.file_url ? (
+                              <a href={c.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">View File</a>
+                            ) : <span className="text-xs text-muted-foreground">—</span>}
+                          </TableCell>
                           {canManageWorkers && (
                             <TableCell>
                               <div className="flex gap-1">
