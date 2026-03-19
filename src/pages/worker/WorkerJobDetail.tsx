@@ -16,7 +16,7 @@ export default function WorkerJobDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('jobs')
-        .select('*, customers(first_name, last_name), properties(property_name, address_line_1, city)')
+        .select('*, customers(first_name, last_name), properties(property_name, address_line_1, city, province, postal_code, gate_code, access_notes, access_type, landmark_notes, caution_notes, high_risk_flag, house_number_location, photo_front_url, photo_winter_url, photo_night_url)')
         .eq('id', id!)
         .single();
       if (error) throw error;
