@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
+import { useVisit, useUpdateVisit } from '@/hooks/useVisits';
 import {
   Zap, X, Play, CheckCircle, Camera, StickyNote, AlertTriangle, Receipt,
   UserPlus, FileText, Briefcase, FilePlus, Building2, LogIn, LogOut,
@@ -21,8 +22,8 @@ interface QuickAction {
   color: string;
   action: string | (() => void);
   category: 'field' | 'admin';
+  requiresVisitContext?: boolean;
   comingSoon?: boolean;
-  hidden?: boolean;
 }
 
 export function WorkerFAB() {
@@ -36,10 +37,17 @@ export function WorkerFAB() {
   const { data: active } = useActiveTimesheet();
   const clockIn = useClockIn();
   const clockOut = useClockOut();
+  const updateVisit = useUpdateVisit();
 
   const visitMatch = location.pathname.match(/\/worker\/visit\/([^/]+)/);
   const currentVisitId = visitMatch?.[1];
   const isOnVisitPage = !!currentVisitId;
+
+  // Load the actual visit data when on a visit page
+  const { data: visitData } = useVisit(currentVisitId);
+  const property = visitData ? (visitData as any).properties : null;
+  const customer = visitData ? (visitData as any).customers : null;
+  const visitStatus = visitData?.visit_status || '';
 
   const handleClock = useCallback(() => {
     if (active) {
@@ -51,30 +59,89 @@ export function WorkerFAB() {
     }
   }, [active, clockIn, clockOut, toast]);
 
-  const handleVisitAction = useCallback((fallback?: string) => {
-    if (isOnVisitPage) return `/worker/visit/${currentVisitId}`;
-    toast({ title: 'No active visit', description: 'Open a visit first to use this action.', variant: 'destructive' });
-    return '';
-  }, [isOnVisitPage, currentVisitId, toast]);
+  // ── Real visit-context action handlers ──
+
+  const handleStartVisit = useCallback(() => {
+    if (!isOnVisitPage || !currentVisitId) return;
+    // Map current status to next logical step
+    if (visitStatus === 'Completed') {
+      toast({ title: 'Already completed', description: 'This visit is already marked as completed.' });
+      return;
+    }
+    const nextStatus = visitStatus === 'En Route' ? 'In Progress' : 'En Route';
+    updateVisit.mutate({ id: currentVisitId, visit_status: nextStatus } as any, {
+      onSuccess: () => toast({ title: nextStatus === 'En Route' ? 'En Route' : 'Visit Started', description: `Status updated to ${nextStatus}.` }),
+      onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+    });
+  }, [isOnVisitPage, currentVisitId, visitStatus, updateVisit, toast]);
+
+  const handleCompleteVisit = useCallback(() => {
+    if (!isOnVisitPage || !currentVisitId) return;
+    if (visitStatus === 'Completed') {
+      toast({ title: 'Already completed' });
+      return;
+    }
+    updateVisit.mutate({ id: currentVisitId, visit_status: 'Completed' } as any, {
+      onSuccess: () => toast({ title: 'Visit Completed', description: 'Great work! Visit marked as completed.' }),
+      onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+    });
+  }, [isOnVisitPage, currentVisitId, visitStatus, updateVisit, toast]);
+
+  const handleAddPhotos = useCallback(() => {
+    if (!isOnVisitPage || !currentVisitId) return;
+    // Navigate to visit page with hash to scroll to photos section
+    navigate(`/worker/visit/${currentVisitId}#photos`);
+  }, [isOnVisitPage, currentVisitId, navigate]);
+
+  const handleAddNote = useCallback(() => {
+    if (!isOnVisitPage || !currentVisitId) return;
+    // Navigate to visit page with hash to scroll to notes section
+    navigate(`/worker/visit/${currentVisitId}#notes`);
+  }, [isOnVisitPage, currentVisitId, navigate]);
+
+  const handleOpenDirections = useCallback(() => {
+    if (!property) {
+      toast({ title: 'No address available' });
+      return;
+    }
+    const addr = [property.address_line_1, property.city, property.province, property.postal_code]
+      .filter(Boolean).join(', ');
+    if (!addr) {
+      toast({ title: 'No address available' });
+      return;
+    }
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`, '_blank');
+  }, [property, toast]);
+
+  const handleCallCustomer = useCallback(() => {
+    if (!customer?.phone) {
+      toast({ title: 'No phone number', description: 'Customer phone is not on file.' });
+      return;
+    }
+    window.open(`tel:${customer.phone}`, '_self');
+  }, [customer, toast]);
+
+  // ── Build field actions ──
+
+  const noVisitToast = useCallback(() => {
+    toast({ title: 'Open a visit first', description: 'This action requires an active visit.' });
+  }, [toast]);
 
   const fieldActions: QuickAction[] = useMemo(() => [
-    // Visit-context actions — always visible, but require visit context
-    { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
-    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
-    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
-    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
+    { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: isOnVisitPage ? handleStartVisit : noVisitToast, category: 'field' as const, requiresVisitContext: true },
+    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: isOnVisitPage ? handleCompleteVisit : noVisitToast, category: 'field' as const, requiresVisitContext: true },
+    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: isOnVisitPage ? handleAddPhotos : noVisitToast, category: 'field' as const, requiresVisitContext: true },
+    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: isOnVisitPage ? handleAddNote : noVisitToast, category: 'field' as const, requiresVisitContext: true },
     { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '/worker/incidents', category: 'field' as const },
     { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: () => setQuickAction('expense'), category: 'field' as const },
     { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' as const },
-    { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
-    { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
+    { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: isOnVisitPage ? handleOpenDirections : noVisitToast, category: 'field' as const, requiresVisitContext: true },
+    { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: isOnVisitPage ? handleCallCustomer : noVisitToast, category: 'field' as const, requiresVisitContext: true },
     { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: () => setQuickAction('message_admin'), category: 'field' as const },
     { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' as const },
     { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: () => setQuickAction('equipment_issue'), category: 'field' as const },
     { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: () => setQuickAction('materials_used'), category: 'field' as const },
-  ], [currentVisitId, isOnVisitPage, active, handleClock]);
-
-  const visibleFieldActions = fieldActions;
+  ], [currentVisitId, isOnVisitPage, active, handleClock, handleStartVisit, handleCompleteVisit, handleAddPhotos, handleAddNote, handleOpenDirections, handleCallCustomer, noVisitToast]);
 
   const adminOnlyActions: QuickAction[] = [
     { icon: UserPlus, label: 'New Lead', color: 'bg-blue-500', action: '/leads?new=1', category: 'admin' },
@@ -90,14 +157,8 @@ export function WorkerFAB() {
     { icon: PenLine, label: 'Review Draft', color: 'bg-slate-600', action: '/quotes?filter=draft', category: 'admin' },
   ];
 
-  const visitRequiredLabels = ['Start Visit', 'Complete Visit', 'Add Photos', 'Add Note', 'Open Directions', 'Call Customer'];
-
   const handleAction = (a: QuickAction) => {
     setOpen(false);
-    if (a.comingSoon && visitRequiredLabels.includes(a.label)) {
-      toast({ title: 'Open a visit first', description: `"${a.label}" requires an active visit.` });
-      return;
-    }
     if (a.comingSoon) {
       setComingSoonLabel(a.label);
       return;
@@ -108,6 +169,8 @@ export function WorkerFAB() {
       navigate(a.action);
     }
   };
+
+  const isActionDimmed = (a: QuickAction) => !!a.requiresVisitContext && !isOnVisitPage;
 
   return (
     <>
@@ -178,28 +241,26 @@ export function WorkerFAB() {
                 {isOnVisitPage ? 'Visit Actions' : 'Field'}
               </p>
               <div className="grid grid-cols-4 gap-2">
-                {visibleFieldActions.map((a) => (
-                  <button
-                    key={a.label}
-                    onClick={() => handleAction(a)}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl active:scale-95 active:bg-muted/50 transition-all",
-                      a.comingSoon && "opacity-50"
-                    )}
-                  >
-                    <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm relative', a.color)}>
-                      <a.icon className="h-5 w-5 text-white" />
-                      {a.comingSoon && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center">
-                          <Construction className="h-2.5 w-2.5 text-white" />
-                        </div>
+                {fieldActions.map((a) => {
+                  const dimmed = isActionDimmed(a);
+                  return (
+                    <button
+                      key={a.label}
+                      onClick={() => handleAction(a)}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl active:scale-95 active:bg-muted/50 transition-all",
+                        dimmed && "opacity-40"
                       )}
-                    </div>
-                    <span className="text-[10px] font-medium text-foreground text-center leading-tight line-clamp-2">
-                      {a.label}
-                    </span>
-                  </button>
-                ))}
+                    >
+                      <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm', a.color)}>
+                        <a.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="text-[10px] font-medium text-foreground text-center leading-tight line-clamp-2">
+                        {a.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               {!isOnVisitPage && (
