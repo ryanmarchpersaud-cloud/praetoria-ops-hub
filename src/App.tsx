@@ -26,7 +26,7 @@ import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
-// SettingsPage replaced by CompanySettingsPage (imported below)
+
 import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
@@ -120,7 +120,7 @@ import CompanySettingsPage from "./pages/CompanySettingsPage";
 import PaymentsSettingsPage from "./pages/PaymentsSettingsPage";
 import ExpenseTrackingPage from "./pages/ExpenseTrackingPage";
 import AutomationsPage from "./pages/AutomationsPage";
-import SettingsPlaceholder from "./pages/SettingsPlaceholder";
+
 import WorkSettingsPage from "./pages/WorkSettingsPage";
 import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
 import RouteOptimizationPage from "./pages/RouteOptimizationPage";
