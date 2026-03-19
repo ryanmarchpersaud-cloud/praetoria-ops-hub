@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -139,6 +140,28 @@ export default function QuoteDetail() {
   const isSentOrApproved = ['Sent', 'Approved'].includes(form.approval_status);
   const validItems = items.filter(i => i.item_name);
 
+  const handleConvertToJob = async () => {
+    if (!id || !lead) return;
+    try {
+      const { data: job, error } = await supabase.from('jobs').insert({
+        job_number: '',
+        job_title: `${form.service_category} — ${lead.first_name} ${lead.last_name}`,
+        customer_id: lead.customer_id || (quote as any).customer_id,
+        property_id: null,
+        service_category: form.service_category as any,
+        status: 'Scheduled' as any,
+        scope_of_work: form.scope_of_work || null,
+        quote_id: id,
+        request_id: (quote as any).request_id || null,
+      } as any).select().single();
+      if (error) throw error;
+      toast({ title: 'Job created from quote' });
+      navigate(`/jobs/${job.id}`);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
       {/* ── Header ── */}
@@ -168,6 +191,12 @@ export default function QuoteDetail() {
         <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
           <Save className="h-4 w-4 mr-2" /> Save Quote
         </Button>
+        {form.approval_status === 'Approved' && (
+          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleConvertToJob}>
+            <Briefcase className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Job</span>
+          </Button>
+        )}
         <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => navigate(`/quotes/${id}/print`)}>
           <FileText className="h-4 w-4" />
           <span className="hidden sm:inline">Export PDF</span>

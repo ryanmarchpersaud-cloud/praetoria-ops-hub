@@ -1373,6 +1373,8 @@ export type Database = {
           minimum_included_visits: number | null
           priority: Database["public"]["Enums"]["job_priority"]
           property_id: string | null
+          quote_id: string | null
+          request_id: string | null
           scheduled_date: string | null
           scope_of_work: string | null
           season_name: string | null
@@ -1398,6 +1400,8 @@ export type Database = {
           minimum_included_visits?: number | null
           priority?: Database["public"]["Enums"]["job_priority"]
           property_id?: string | null
+          quote_id?: string | null
+          request_id?: string | null
           scheduled_date?: string | null
           scope_of_work?: string | null
           season_name?: string | null
@@ -1423,6 +1427,8 @@ export type Database = {
           minimum_included_visits?: number | null
           priority?: Database["public"]["Enums"]["job_priority"]
           property_id?: string | null
+          quote_id?: string | null
+          request_id?: string | null
           scheduled_date?: string | null
           scope_of_work?: string | null
           season_name?: string | null
@@ -1447,6 +1453,20 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -2130,6 +2150,7 @@ export type Database = {
           internal_notes: string | null
           lead_id: string
           quote_number: string
+          request_id: string | null
           scope_of_work: string | null
           sent_at: string | null
           sent_status: string | null
@@ -2156,6 +2177,7 @@ export type Database = {
           internal_notes?: string | null
           lead_id: string
           quote_number: string
+          request_id?: string | null
           scope_of_work?: string | null
           sent_at?: string | null
           sent_status?: string | null
@@ -2182,6 +2204,7 @@ export type Database = {
           internal_notes?: string | null
           lead_id?: string
           quote_number?: string
+          request_id?: string | null
           scope_of_work?: string | null
           sent_at?: string | null
           sent_status?: string | null
@@ -2205,6 +2228,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
             referencedColumns: ["id"]
           },
         ]

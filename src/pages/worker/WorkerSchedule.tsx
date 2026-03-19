@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { startOfWeek, endOfWeek, addWeeks, format, isSameDay, isToday, addDays } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
 
 function getWeekDays(weekStart: Date) {
   return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -42,19 +43,26 @@ export default function WorkerSchedule() {
   const startStr = format(weekStart, 'yyyy-MM-dd');
   const endStr = format(weekEnd, 'yyyy-MM-dd');
 
+  const { user } = useAuth();
+
   const { data: visits = [], isLoading } = useQuery({
-    queryKey: ['worker_week_visits', startStr, endStr],
+    queryKey: ['worker_week_visits', startStr, endStr, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city), customers(first_name, last_name)')
+        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city), customers(first_name, last_name), jobs(assigned_to)')
         .gte('service_date', startStr)
         .lte('service_date', endStr)
         .order('service_date', { ascending: true })
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return data as unknown as Visit[];
+      // Filter to visits assigned to this worker or unassigned
+      return ((data || []) as any[]).filter((v: any) => {
+        const assignedTo = v.jobs?.assigned_to;
+        return !assignedTo || assignedTo === user?.id;
+      }) as unknown as Visit[];
     },
+    enabled: !!user,
   });
 
   const visitsByDay = useMemo(() => {
