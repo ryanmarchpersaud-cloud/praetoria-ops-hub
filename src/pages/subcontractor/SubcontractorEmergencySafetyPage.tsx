@@ -25,7 +25,7 @@ export default function SubcontractorEmergencySafetyPage() {
   const todayStr = new Date().toISOString().split('T')[0];
   const todayAssignment = assignments.find((a: any) => a.visits?.service_date === todayStr &&
     (a.assignment_status === 'in_progress' || a.assignment_status === 'assigned' || a.assignment_status === 'en_route'));
-  const propertyId = todayAssignment?.visits?.properties?.id || (todayAssignment as any)?.property_id;
+  const propertyId = (todayAssignment as any)?.property_id || (todayAssignment as any)?.visits?.property_id;
   const { data: propertyInfo } = usePropertyEmergencyInfo(propertyId);
 
   const startEditContact = () => {
