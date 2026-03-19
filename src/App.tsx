@@ -121,6 +121,10 @@ import PaymentsSettingsPage from "./pages/PaymentsSettingsPage";
 import ExpenseTrackingPage from "./pages/ExpenseTrackingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 import SettingsPlaceholder from "./pages/SettingsPlaceholder";
+import WorkSettingsPage from "./pages/WorkSettingsPage";
+import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
+import RouteOptimizationPage from "./pages/RouteOptimizationPage";
+import JobFormsPage from "./pages/JobFormsPage";
 
 const queryClient = new QueryClient();
 
@@ -261,10 +265,10 @@ function AppRoutes() {
       <Route path="/settings/payments" element={<AdminRoute><PaymentsSettingsPage /></AdminRoute>} />
       <Route path="/settings/expenses" element={<AdminRoute><ExpenseTrackingPage /></AdminRoute>} />
       <Route path="/settings/automations" element={<AdminRoute><AutomationsPage /></AdminRoute>} />
-      <Route path="/settings/work" element={<AdminRoute><SettingsPlaceholder title="Work Settings" description="Default work hours, overtime rules, and labor settings." /></AdminRoute>} />
-      <Route path="/settings/schedule-settings" element={<AdminRoute><SettingsPlaceholder title="Schedule Settings" description="Scheduling defaults, buffer times, and availability windows." /></AdminRoute>} />
-      <Route path="/settings/routes" element={<AdminRoute><SettingsPlaceholder title="Route Optimization" description="Route planning and geographic service area configuration." /></AdminRoute>} />
-      <Route path="/settings/job-forms" element={<AdminRoute><SettingsPlaceholder title="Job Forms" description="Custom checklists and form templates for field work." /></AdminRoute>} />
+      <Route path="/settings/work" element={<AdminRoute><WorkSettingsPage /></AdminRoute>} />
+      <Route path="/settings/schedule-settings" element={<AdminRoute><ScheduleSettingsPage /></AdminRoute>} />
+      <Route path="/settings/routes" element={<AdminRoute><RouteOptimizationPage /></AdminRoute>} />
+      <Route path="/settings/job-forms" element={<AdminRoute><JobFormsPage /></AdminRoute>} />
       <Route path="/settings/client-hub" element={<AdminRoute><SettingsPlaceholder title="Client Hub" description="Customer communication preferences and branding." /></AdminRoute>} />
       <Route path="/settings/messaging" element={<AdminRoute><SettingsPlaceholder title="Emails & Text Messages" description="Email templates, SMS configuration, and notification rules." /></AdminRoute>} />
       <Route path="/settings/requests-config" element={<AdminRoute><SettingsPlaceholder title="Requests & Bookings" description="Configure how customers submit requests and book services." /></AdminRoute>} />
