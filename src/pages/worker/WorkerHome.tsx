@@ -14,7 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
   ChevronRight, Calendar, Zap, AlertCircle, Navigation,
-  CalendarDays, Camera, CloudSun, FileText, ShieldAlert,
+  CalendarDays, Camera, CloudSun, FileText, ShieldAlert, Phone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -69,18 +69,14 @@ export default function WorkerHome() {
   const { data: todayVisits = [] } = useQuery({
     queryKey: ['worker_today_visits', todayStr, user?.id],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs(assigned_to)')
+        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs(assigned_to, service_category)')
         .eq('service_date', todayStr)
         .order('arrival_time', { ascending: true });
-      const { data, error } = await query;
       if (error) throw error;
-      // Filter to visits assigned to this worker (via job.assigned_to) or unassigned
-      return (data || []).filter((v: any) => {
-        const assignedTo = v.jobs?.assigned_to;
-        return !assignedTo || assignedTo === user?.id;
-      });
+      // Only show visits assigned to this worker
+      return (data || []).filter((v: any) => v.jobs?.assigned_to === user?.id);
     },
     enabled: !!user,
   });
@@ -103,27 +99,12 @@ export default function WorkerHome() {
 
   const clockedIn = !!active;
 
-  // Build notifications from today's visits
   const notifications = todayVisits.map(v => ({
     id: v.id,
     title: `${v.visit_number} — ${v.visit_status}`,
     description: `${(v.properties as any)?.property_name || 'Unknown property'}${(v.customers as any) ? ` • ${(v.customers as any).first_name} ${(v.customers as any).last_name}` : ''}`,
     status: v.visit_status,
   }));
-
-  // Next visit location for the map card
-  const mapVisit = highlightVisit || nextVisit;
-  const nextVisitLocation = mapVisit
-    ? {
-        propertyName: (mapVisit.properties as any)?.property_name,
-        address: (mapVisit.properties as any)?.address_line_1,
-        city: (mapVisit.properties as any)?.city,
-        customerName: (mapVisit.customers as any) ? `${(mapVisit.customers as any).first_name} ${(mapVisit.customers as any).last_name}` : undefined,
-        serviceType: mapVisit.visit_type,
-        visitStatus: mapVisit.visit_status,
-        customerPhone: (mapVisit.customers as any)?.phone,
-      }
-    : null;
 
   const progressPct = todayVisits.length > 0 ? Math.round((completedVisits.length / todayVisits.length) * 100) : 0;
 
@@ -237,7 +218,7 @@ export default function WorkerHome() {
           <CardContent className="p-2.5 text-center">
             <Zap className="h-4 w-4 text-blue-600 mx-auto mb-0.5" />
             <p className="text-xl font-bold text-foreground">{todayVisits.length}</p>
-            <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Scheduled</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Assigned</p>
           </CardContent>
         </Card>
         <Card className="bg-emerald-50 border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/40">
@@ -285,6 +266,8 @@ export default function WorkerHome() {
           <span className="text-[10px] font-medium text-foreground">More</span>
         </Link>
       </div>
+
+      {/* Current/Next Visit */}
       {highlightVisit && (
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -309,7 +292,14 @@ export default function WorkerHome() {
               )}
               <CardContent className="pt-3 pb-3 px-4 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-xs font-medium">{highlightVisit.visit_number}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-medium">{highlightVisit.visit_number}</span>
+                    {(highlightVisit as any).jobs?.service_category && (
+                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        {(highlightVisit as any).jobs.service_category}
+                      </span>
+                    )}
+                  </div>
                   <StatusBadge status={highlightVisit.visit_status} showIcon={false} />
                 </div>
                 {highlightVisit.customers && (
@@ -321,7 +311,7 @@ export default function WorkerHome() {
                   <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
                     <div className="flex-1 min-w-0">
-                      <p>{(highlightVisit.properties as any).property_name}</p>
+                      <p className="font-medium text-foreground text-xs">{(highlightVisit.properties as any).property_name}</p>
                       {(highlightVisit.properties as any).address_line_1 && (
                         <p className="text-[10px]">
                           {(highlightVisit.properties as any).address_line_1}
@@ -355,7 +345,7 @@ export default function WorkerHome() {
                       onClick={e => e.stopPropagation()}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted text-[11px] font-medium text-foreground active:scale-95 transition-transform"
                     >
-                      Call
+                      <Phone className="h-3 w-3" /> Call
                     </a>
                   )}
                 </div>
@@ -363,6 +353,17 @@ export default function WorkerHome() {
             </Card>
           </Link>
         </div>
+      )}
+
+      {/* Empty state when no visits today */}
+      {todayVisits.length === 0 && (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <Calendar className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No visits assigned for today</p>
+            <Link to="/worker/schedule" className="text-xs text-primary mt-1 inline-block">View schedule →</Link>
+          </CardContent>
+        </Card>
       )}
 
       {/* Last Completed */}
@@ -379,69 +380,33 @@ export default function WorkerHome() {
                   </div>
                   {lastCompleted.properties && (
                     <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                      <MapPin className="h-3 w-3 shrink-0" />
-                      {(lastCompleted.properties as any).property_name}
+                      <MapPin className="h-3 w-3 shrink-0" /> {(lastCompleted.properties as any).property_name}
                     </p>
                   )}
                 </div>
-                <StatusBadge status="Completed" showIcon={false} />
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </CardContent>
             </Card>
           </Link>
         </div>
       )}
 
-      {/* No visits state */}
-      {!highlightVisit && !lastCompleted && (
-        <Card>
-          <CardContent className="py-10 text-center space-y-1">
-            <Calendar className="h-8 w-8 mx-auto text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No visits today</p>
-            <p className="text-xs text-muted-foreground">Check the schedule for upcoming work.</p>
-          </CardContent>
-        </Card>
+      {/* Map / Weather */}
+      {highlightVisit && (highlightVisit.properties as any)?.address_line_1 && (
+        <WorkerLocationCard
+          nextVisit={{
+            propertyName: (highlightVisit.properties as any)?.property_name,
+            address: (highlightVisit.properties as any)?.address_line_1,
+            city: (highlightVisit.properties as any)?.city,
+            customerName: (highlightVisit.customers as any) ? `${(highlightVisit.customers as any).first_name} ${(highlightVisit.customers as any).last_name}` : undefined,
+            serviceType: highlightVisit.visit_type,
+            visitStatus: highlightVisit.visit_status,
+            customerPhone: (highlightVisit.customers as any)?.phone,
+          }}
+        />
       )}
 
-      {/* Remaining visits list */}
-      {todayVisits.length > 1 && (
-        <div className="space-y-1.5">
-          <h2 className="text-sm font-semibold text-foreground">All Today</h2>
-          {todayVisits
-            .filter(v => v.id !== highlightVisit?.id && v.id !== lastCompleted?.id)
-            .map((visit: any) => (
-              <Link key={visit.id} to={`/worker/visit/${visit.id}`}>
-                <Card className="active:shadow-sm transition-shadow">
-                  <CardContent className="py-2.5 px-4 flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-mono text-[11px]">{visit.visit_number}</span>
-                        <StatusBadge status={visit.visit_status} showIcon={false} />
-                      </div>
-                      {visit.properties && (
-                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                          <MapPin className="h-3 w-3 shrink-0" />
-                          {visit.properties.property_name}
-                        </p>
-                      )}
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-        </div>
-      )}
-
-      {/* Weather */}
-      <WeatherCard city="regina" compact />
-
-      {/* Location & Route card */}
-      <div>
-        <h2 className="text-sm font-semibold text-foreground mb-2">Location & Route</h2>
-        <WorkerLocationCard nextVisit={nextVisitLocation} />
-      </div>
-
-      <WorkerFAB />
+      <WeatherCard />
     </div>
   );
 }
