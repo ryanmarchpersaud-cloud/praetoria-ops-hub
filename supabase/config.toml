@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.sync-payment-method]
 verify_jwt = false
+
+[functions.video-room]
+verify_jwt = false
+
+[functions.summarize-meeting]
+verify_jwt = false
