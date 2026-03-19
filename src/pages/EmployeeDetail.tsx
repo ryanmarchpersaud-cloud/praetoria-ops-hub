@@ -234,7 +234,7 @@ export default function EmployeeDetail() {
               <CardContent className="p-0">
                 {trainingRecords.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No training assigned.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Training</TableHead><TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Training</TableHead><TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead><TableHead>Material</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {trainingRecords.map((t: any) => (
                         <TableRow key={t.id}>
@@ -243,6 +243,11 @@ export default function EmployeeDetail() {
                           <TableCell><StatusChip status={t.status} /></TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {t.completed_date ? format(new Date(t.completed_date), 'MMM d, yyyy') : t.expiry_date ? `Due: ${format(new Date(t.expiry_date), 'MMM d, yyyy')}` : '—'}
+                          </TableCell>
+                          <TableCell>
+                            {t.file_url ? (
+                              <a href={t.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">Open</a>
+                            ) : <span className="text-xs text-muted-foreground">—</span>}
                           </TableCell>
                         </TableRow>
                       ))}
