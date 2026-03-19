@@ -90,8 +90,14 @@ export function WorkerFAB() {
     { icon: PenLine, label: 'Review Draft', color: 'bg-slate-600', action: '/quotes?filter=draft', category: 'admin' },
   ];
 
+  const visitRequiredLabels = ['Start Visit', 'Complete Visit', 'Add Photos', 'Add Note', 'Open Directions', 'Call Customer'];
+
   const handleAction = (a: QuickAction) => {
     setOpen(false);
+    if (a.comingSoon && visitRequiredLabels.includes(a.label)) {
+      toast({ title: 'Open a visit first', description: `"${a.label}" requires an active visit.` });
+      return;
+    }
     if (a.comingSoon) {
       setComingSoonLabel(a.label);
       return;
