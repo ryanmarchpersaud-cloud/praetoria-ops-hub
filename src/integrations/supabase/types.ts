@@ -154,6 +154,69 @@ export type Database = {
         }
         Relationships: []
       }
+      client_hub_settings: {
+        Row: {
+          client_notes_editable_by: string | null
+          comm_history_visible_to: string | null
+          comm_prefs_editable_by: string | null
+          created_at: string
+          default_contact_method: string | null
+          default_customer_types: Json | null
+          default_tags: Json | null
+          do_not_contact_enabled: boolean | null
+          duplicate_detection_enabled: boolean | null
+          id: string
+          portal_invitation_auto: boolean | null
+          require_address: boolean | null
+          require_email: boolean | null
+          require_phone: boolean | null
+          require_postal_code: boolean | null
+          separate_billing_address: boolean | null
+          updated_at: string
+          vip_flag_enabled: boolean | null
+        }
+        Insert: {
+          client_notes_editable_by?: string | null
+          comm_history_visible_to?: string | null
+          comm_prefs_editable_by?: string | null
+          created_at?: string
+          default_contact_method?: string | null
+          default_customer_types?: Json | null
+          default_tags?: Json | null
+          do_not_contact_enabled?: boolean | null
+          duplicate_detection_enabled?: boolean | null
+          id?: string
+          portal_invitation_auto?: boolean | null
+          require_address?: boolean | null
+          require_email?: boolean | null
+          require_phone?: boolean | null
+          require_postal_code?: boolean | null
+          separate_billing_address?: boolean | null
+          updated_at?: string
+          vip_flag_enabled?: boolean | null
+        }
+        Update: {
+          client_notes_editable_by?: string | null
+          comm_history_visible_to?: string | null
+          comm_prefs_editable_by?: string | null
+          created_at?: string
+          default_contact_method?: string | null
+          default_customer_types?: Json | null
+          default_tags?: Json | null
+          do_not_contact_enabled?: boolean | null
+          duplicate_detection_enabled?: boolean | null
+          id?: string
+          portal_invitation_auto?: boolean | null
+          require_address?: boolean | null
+          require_email?: boolean | null
+          require_phone?: boolean | null
+          require_postal_code?: boolean | null
+          separate_billing_address?: boolean | null
+          updated_at?: string
+          vip_flag_enabled?: boolean | null
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           accent_color: string | null
@@ -1471,6 +1534,66 @@ export type Database = {
           },
         ]
       }
+      messaging_settings: {
+        Row: {
+          created_at: string
+          default_sender_email: string | null
+          default_sender_name: string | null
+          default_signature: string | null
+          email_enabled: boolean | null
+          id: string
+          internal_notifications: boolean | null
+          invoice_notification: boolean | null
+          job_reminder: boolean | null
+          marketing_enabled: boolean | null
+          overdue_reminder: boolean | null
+          quote_notification: boolean | null
+          reply_to_email: string | null
+          sms_enabled: boolean | null
+          sms_sender_label: string | null
+          unsubscribe_footer: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_sender_email?: string | null
+          default_sender_name?: string | null
+          default_signature?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          internal_notifications?: boolean | null
+          invoice_notification?: boolean | null
+          job_reminder?: boolean | null
+          marketing_enabled?: boolean | null
+          overdue_reminder?: boolean | null
+          quote_notification?: boolean | null
+          reply_to_email?: string | null
+          sms_enabled?: boolean | null
+          sms_sender_label?: string | null
+          unsubscribe_footer?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_sender_email?: string | null
+          default_sender_name?: string | null
+          default_signature?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          internal_notifications?: boolean | null
+          invoice_notification?: boolean | null
+          job_reminder?: boolean | null
+          marketing_enabled?: boolean | null
+          overdue_reminder?: boolean | null
+          quote_notification?: boolean | null
+          reply_to_email?: string | null
+          sms_enabled?: boolean | null
+          sms_sender_label?: string | null
+          unsubscribe_footer?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notification_templates: {
         Row: {
           audience: Database["public"]["Enums"]["notification_audience"]
@@ -1674,6 +1797,96 @@ export type Database = {
           tax_rate_1?: number | null
           tax_rate_2?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      portal_settings: {
+        Row: {
+          allow_approve_quotes: boolean | null
+          allow_cancel_requests: boolean | null
+          allow_decline_quotes: boolean | null
+          allow_manage_addresses: boolean | null
+          allow_pay_invoices: boolean | null
+          allow_reschedule: boolean | null
+          allow_submit_requests: boolean | null
+          allow_update_contact: boolean | null
+          created_at: string
+          footer_note: string | null
+          id: string
+          inactive_client_blocked: boolean | null
+          invitation_required: boolean | null
+          login_instructions: string | null
+          multi_property_enabled: boolean | null
+          self_signup_allowed: boolean | null
+          show_comm_history: boolean | null
+          show_documents: boolean | null
+          show_invoices: boolean | null
+          show_jobs: boolean | null
+          show_properties: boolean | null
+          show_quotes: boolean | null
+          show_requests: boolean | null
+          show_visits: boolean | null
+          support_text: string | null
+          updated_at: string
+          welcome_message: string | null
+        }
+        Insert: {
+          allow_approve_quotes?: boolean | null
+          allow_cancel_requests?: boolean | null
+          allow_decline_quotes?: boolean | null
+          allow_manage_addresses?: boolean | null
+          allow_pay_invoices?: boolean | null
+          allow_reschedule?: boolean | null
+          allow_submit_requests?: boolean | null
+          allow_update_contact?: boolean | null
+          created_at?: string
+          footer_note?: string | null
+          id?: string
+          inactive_client_blocked?: boolean | null
+          invitation_required?: boolean | null
+          login_instructions?: string | null
+          multi_property_enabled?: boolean | null
+          self_signup_allowed?: boolean | null
+          show_comm_history?: boolean | null
+          show_documents?: boolean | null
+          show_invoices?: boolean | null
+          show_jobs?: boolean | null
+          show_properties?: boolean | null
+          show_quotes?: boolean | null
+          show_requests?: boolean | null
+          show_visits?: boolean | null
+          support_text?: string | null
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Update: {
+          allow_approve_quotes?: boolean | null
+          allow_cancel_requests?: boolean | null
+          allow_decline_quotes?: boolean | null
+          allow_manage_addresses?: boolean | null
+          allow_pay_invoices?: boolean | null
+          allow_reschedule?: boolean | null
+          allow_submit_requests?: boolean | null
+          allow_update_contact?: boolean | null
+          created_at?: string
+          footer_note?: string | null
+          id?: string
+          inactive_client_blocked?: boolean | null
+          invitation_required?: boolean | null
+          login_instructions?: string | null
+          multi_property_enabled?: boolean | null
+          self_signup_allowed?: boolean | null
+          show_comm_history?: boolean | null
+          show_documents?: boolean | null
+          show_invoices?: boolean | null
+          show_jobs?: boolean | null
+          show_properties?: boolean | null
+          show_quotes?: boolean | null
+          show_requests?: boolean | null
+          show_visits?: boolean | null
+          support_text?: string | null
+          updated_at?: string
+          welcome_message?: string | null
         }
         Relationships: []
       }
@@ -1995,6 +2208,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      request_booking_settings: {
+        Row: {
+          auto_convert_to_quote: boolean | null
+          booking_approval_required: boolean | null
+          booking_confirmation_text: string | null
+          cancellation_hours: number | null
+          created_at: string
+          customers_can_cancel: boolean | null
+          customers_can_create: boolean | null
+          default_request_owner: string | null
+          emergency_requests: boolean | null
+          id: string
+          lead_time_hours: number | null
+          max_bookings_per_day: number | null
+          online_booking_enabled: boolean | null
+          portal_help_text: string | null
+          recurring_booking_enabled: boolean | null
+          request_approval_required: boolean | null
+          request_form_instructions: string | null
+          request_intake_enabled: boolean | null
+          request_received_text: string | null
+          require_description: boolean | null
+          require_photos: boolean | null
+          require_service_type: boolean | null
+          review_before_convert: boolean | null
+          same_day_requests: boolean | null
+          staff_can_create: boolean | null
+          subcontractors_can_view: boolean | null
+          triage_required: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          auto_convert_to_quote?: boolean | null
+          booking_approval_required?: boolean | null
+          booking_confirmation_text?: string | null
+          cancellation_hours?: number | null
+          created_at?: string
+          customers_can_cancel?: boolean | null
+          customers_can_create?: boolean | null
+          default_request_owner?: string | null
+          emergency_requests?: boolean | null
+          id?: string
+          lead_time_hours?: number | null
+          max_bookings_per_day?: number | null
+          online_booking_enabled?: boolean | null
+          portal_help_text?: string | null
+          recurring_booking_enabled?: boolean | null
+          request_approval_required?: boolean | null
+          request_form_instructions?: string | null
+          request_intake_enabled?: boolean | null
+          request_received_text?: string | null
+          require_description?: boolean | null
+          require_photos?: boolean | null
+          require_service_type?: boolean | null
+          review_before_convert?: boolean | null
+          same_day_requests?: boolean | null
+          staff_can_create?: boolean | null
+          subcontractors_can_view?: boolean | null
+          triage_required?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          auto_convert_to_quote?: boolean | null
+          booking_approval_required?: boolean | null
+          booking_confirmation_text?: string | null
+          cancellation_hours?: number | null
+          created_at?: string
+          customers_can_cancel?: boolean | null
+          customers_can_create?: boolean | null
+          default_request_owner?: string | null
+          emergency_requests?: boolean | null
+          id?: string
+          lead_time_hours?: number | null
+          max_bookings_per_day?: number | null
+          online_booking_enabled?: boolean | null
+          portal_help_text?: string | null
+          recurring_booking_enabled?: boolean | null
+          request_approval_required?: boolean | null
+          request_form_instructions?: string | null
+          request_intake_enabled?: boolean | null
+          request_received_text?: string | null
+          require_description?: boolean | null
+          require_photos?: boolean | null
+          require_service_type?: boolean | null
+          review_before_convert?: boolean | null
+          same_day_requests?: boolean | null
+          staff_can_create?: boolean | null
+          subcontractors_can_view?: boolean | null
+          triage_required?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
