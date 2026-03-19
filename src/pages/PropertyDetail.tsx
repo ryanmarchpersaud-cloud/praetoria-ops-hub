@@ -7,11 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Briefcase, ClipboardCheck } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Briefcase, ClipboardCheck, ShieldAlert, Eye } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
+import { PropertyPhotoUpload } from '@/components/PropertyPhotoUpload';
+import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PROPERTY_STATUSES, PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
+
+const ACCESS_TYPES = ['Front Drive', 'Back Alley', 'Side Entrance', 'Garage', 'Shared Lot', 'Other'];
 
 export default function PropertyDetail() {
   const { id } = useParams();
