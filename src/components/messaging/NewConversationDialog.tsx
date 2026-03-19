@@ -33,11 +33,11 @@ export function NewConversationDialog({ onCreated, trigger }: Props) {
       
       const { data: team } = await supabase
         .from('team_members')
-        .select('user_id, first_name, last_name, job_title')
+        .select('user_id, full_name, display_name, job_title')
         .eq('is_active', true);
       (team || []).forEach((t: any) => {
         if (t.user_id && t.user_id !== user?.id) {
-          results.push({ id: t.user_id, name: `${t.first_name} ${t.last_name}`.trim(), role: t.job_title || 'Staff' });
+          results.push({ id: t.user_id, name: t.full_name || t.display_name || 'Unknown', role: t.job_title || 'Staff' });
         }
       });
 
