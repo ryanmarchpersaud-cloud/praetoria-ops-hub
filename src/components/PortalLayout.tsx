@@ -68,8 +68,9 @@ export function PortalLayout({ children }: { children: ReactNode }) {
             <span className="hidden sm:block text-xs text-muted-foreground truncate max-w-[140px]">
               {displayName}
             </span>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={signOut}>
-              <LogOut className="h-4 w-4" />
+            <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-destructive" onClick={signOut}>
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
             <Button
               variant="ghost"
