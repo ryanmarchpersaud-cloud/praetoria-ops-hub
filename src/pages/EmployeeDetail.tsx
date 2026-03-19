@@ -83,6 +83,7 @@ export default function EmployeeDetail() {
           <TabsTrigger value="benefits" className="gap-1.5"><Heart className="h-3.5 w-3.5" /> Benefits</TabsTrigger>
           <TabsTrigger value="timeoff" className="gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Time Off</TabsTrigger>
           <TabsTrigger value="emergency" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Emergency</TabsTrigger>
+          <TabsTrigger value="equipment" className="gap-1.5"><HardHat className="h-3.5 w-3.5" /> Equipment</TabsTrigger>
         </TabsList>
 
         {/* Profile */}
