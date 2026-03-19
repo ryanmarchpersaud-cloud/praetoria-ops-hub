@@ -246,7 +246,7 @@ Deno.serve(async (req) => {
 
       const result = await sendViaTwilio({
         to: phone.cleaned,
-        body: `[Praetoria Ops Alert] ${message}`,
+        body: `[Praetoria Group Alert] ${message}`,
       });
       const logEntry: IntegrationEntry = {
         provider: "twilio",

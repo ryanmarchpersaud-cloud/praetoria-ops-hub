@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
       const recipients = to_addresses || ["ops@praetoriagroup.ca"];
       const result = await sendViaResend({
         to: recipients,
-        subject: `[Praetoria Ops] ${subject}`,
+        subject: `[Praetoria Group] ${subject}`,
         html: wrapHtml("Internal Notification", body_html || `<p>${subject}</p>`),
       });
       const logEntry: IntegrationEntry = {

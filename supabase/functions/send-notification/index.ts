@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                from: "Praetoria Ops <noreply@praetoriagroup.ca>",
+                from: "Praetoria Group <noreply@praetoriagroup.ca>",
                 to: [variables.to_email],
                 subject,
                 html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;"><h2>${subject}</h2><div>${notifBody}</div><p style="color:#71717a;font-size:12px;margin-top:24px;">Praetoria Group &bull; praetoriagroup.ca</p></div>`,
