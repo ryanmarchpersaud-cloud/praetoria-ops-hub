@@ -121,14 +121,23 @@ export default function WorkerHome() {
 
   return (
     <div className="space-y-3 px-4 pt-3 pb-4">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-lg font-bold text-foreground">{getGreeting()}, {firstName}</p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Calendar className="h-3 w-3" /> {formatToday()}
-          </p>
-        </div>
+      {/* Welcome Banner */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AvatarUpload
+              currentUrl={workerProfile?.profile_photo_url}
+              initials={initials}
+              onUploaded={handleAvatarUploaded}
+              size="sm"
+            />
+            <div>
+              <p className="text-lg font-bold">{getGreeting()}, {firstName}</p>
+              <p className="text-xs opacity-80 flex items-center gap-1">
+                <Calendar className="h-3 w-3" /> {formatToday()}
+              </p>
+            </div>
+          </div>
         <Sheet>
           <SheetTrigger asChild>
             <button className="relative w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center active:bg-muted transition-colors">
