@@ -1672,6 +1672,57 @@ export type Database = {
           },
         ]
       }
+      meeting_notes: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          note_type: string
+          title: string | null
+          updated_at: string
+          video_call_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          note_type?: string
+          title?: string | null
+          updated_at?: string
+          video_call_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          note_type?: string
+          title?: string | null
+          updated_at?: string
+          video_call_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_notes_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_notes_video_call_id_fkey"
+            columns: ["video_call_id"]
+            isOneToOne: false
+            referencedRelation: "video_calls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_attachments: {
         Row: {
           created_at: string
@@ -3517,6 +3568,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      video_calls: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          recording_url: string | null
+          room_name: string
+          room_sid: string | null
+          started_at: string
+          started_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          recording_url?: string | null
+          room_name: string
+          room_sid?: string | null
+          started_at?: string
+          started_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          recording_url?: string | null
+          room_name?: string
+          room_sid?: string | null
+          started_at?: string
+          started_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_calls_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       visit_photos: {
         Row: {

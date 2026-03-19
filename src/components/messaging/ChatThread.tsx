@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useMessages, useSendMessage, useMarkRead } from '@/hooks/useMessaging';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { VideoCallPanel } from './VideoCallPanel';
+import { Loader2, ArrowLeft, Video } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   conversationId: string;
@@ -22,6 +24,7 @@ export function ChatThread({ conversationId, title, isAnnouncementOnly, onBack, 
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showVideo, setShowVideo] = useState(false);
 
   // Fetch user role for announcement gating
   useEffect(() => {
@@ -62,7 +65,24 @@ export function ChatThread({ conversationId, title, isAnnouncementOnly, onBack, 
           </button>
         )}
         <h2 className="text-sm font-semibold truncate flex-1">{title || 'Chat'}</h2>
+        <Button
+          variant={showVideo ? 'default' : 'ghost'}
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          onClick={() => setShowVideo(!showVideo)}
+          title="Video Call"
+        >
+          <Video className="h-4 w-4" />
+        </Button>
       </div>
+
+      {/* Video Call Panel */}
+      {showVideo && (
+        <VideoCallPanel
+          conversationId={conversationId}
+          onClose={() => setShowVideo(false)}
+        />
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
