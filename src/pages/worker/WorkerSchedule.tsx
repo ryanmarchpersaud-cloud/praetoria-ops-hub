@@ -30,7 +30,7 @@ type Visit = {
   jobs: { assigned_to: string | null; service_category: string | null; job_title: string | null; job_number: string | null; service_instructions: string | null } | null;
 };
 
-const VISIT_SELECT = 'id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, crew_notes, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs(assigned_to, service_category, job_title, job_number, service_instructions)';
+const VISIT_SELECT = 'id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, crew_notes, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs!inner(assigned_to, service_category, job_title, job_number, service_instructions)';
 
 function getWeekDays(weekStart: Date) {
   return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -178,9 +178,10 @@ export default function WorkerSchedule() {
         .from('visits')
         .select(VISIT_SELECT)
         .eq('service_date', todayStr)
+        .eq('jobs.assigned_to', user!.id)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return ((data || []) as any[]).filter((v: any) => v.jobs?.assigned_to === user?.id) as unknown as Visit[];
+      return (data || []) as unknown as Visit[];
     },
     enabled: !!user,
   });
@@ -196,10 +197,11 @@ export default function WorkerSchedule() {
         .select(VISIT_SELECT)
         .gte('service_date', tomorrowStr)
         .lte('service_date', upcomingEnd)
+        .eq('jobs.assigned_to', user!.id)
         .order('service_date', { ascending: true })
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return ((data || []) as any[]).filter((v: any) => v.jobs?.assigned_to === user?.id) as unknown as Visit[];
+      return (data || []) as unknown as Visit[];
     },
     enabled: !!user,
   });
@@ -213,10 +215,11 @@ export default function WorkerSchedule() {
         .select(VISIT_SELECT)
         .gte('service_date', startStr)
         .lte('service_date', endStr)
+        .eq('jobs.assigned_to', user!.id)
         .order('service_date', { ascending: true })
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return ((data || []) as any[]).filter((v: any) => v.jobs?.assigned_to === user?.id) as unknown as Visit[];
+      return (data || []) as unknown as Visit[];
     },
     enabled: !!user,
   });
