@@ -85,6 +85,7 @@ import WorkerPPEPage from "./pages/worker/WorkerPPEPage";
 import WorkerIncidentsPage from "./pages/worker/WorkerIncidentsPage";
 import WorkerNewIncidentPage from "./pages/worker/WorkerNewIncidentPage";
 import WorkerIncidentDetailPage from "./pages/worker/WorkerIncidentDetailPage";
+import WorkerExpensesPage from "./pages/worker/WorkerExpensesPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
@@ -319,6 +320,7 @@ function AppRoutes() {
       <Route path="/worker/tax-documents" element={<WorkerRoute><WorkerLayout><WorkerTaxDocsPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/training-safety" element={<WorkerRoute><WorkerLayout><WorkerTrainingSafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/ppe" element={<WorkerRoute><WorkerLayout><WorkerPPEPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/expenses" element={<WorkerRoute><WorkerLayout><WorkerExpensesPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
 
       {/* Subcontractor routes */}

@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { DollarSign, Plus, Pencil, Trash2, Search, Loader2, Receipt, TrendingUp, AlertTriangle, Building2 } from 'lucide-react';
+import { DollarSign, Plus, Pencil, Trash2, Search, Loader2, Receipt, TrendingUp, AlertTriangle, Building2, CheckCircle2, XCircle, ExternalLink, Paperclip } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -28,6 +28,151 @@ const SERVICE_LINES = ['Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'P
 
 type Expense = Record<string, any>;
 type Vendor = Record<string, any>;
+
+function WorkerClaimsSection() {
+  const queryClient = useQueryClient();
+  const { data: claims = [], isLoading } = useQuery({
+    queryKey: ['admin_worker_expense_claims'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('worker_expense_claims')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: profiles = [] } = useQuery({
+    queryKey: ['profiles_for_claims'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('profiles').select('user_id, display_name');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const profileMap = new Map(profiles.map((p: any) => [p.user_id, p.display_name]));
+
+  const updateStatus = async (id: string, status: string, notes?: string) => {
+    const { error } = await supabase.from('worker_expense_claims').update({
+      status,
+      admin_notes: notes || null,
+      reviewed_at: new Date().toISOString(),
+    }).eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Claim ${status}`);
+    queryClient.invalidateQueries({ queryKey: ['admin_worker_expense_claims'] });
+  };
+
+  const pending = claims.filter((c: any) => c.status === 'submitted');
+  const processed = claims.filter((c: any) => c.status !== 'submitted');
+
+  const statusColors: Record<string, string> = {
+    submitted: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    approved: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    reimbursed: 'bg-primary/10 text-primary',
+    rejected: 'bg-destructive/10 text-destructive',
+  };
+
+  if (isLoading) return null;
+  if (claims.length === 0) return null;
+
+  return (
+    <>
+      <Separator />
+      <div>
+        <h2 className="text-lg font-bold text-foreground mb-1">Worker Reimbursement Claims</h2>
+        <p className="text-sm text-muted-foreground mb-4">Expense claims submitted by workers for approval</p>
+      </div>
+      {pending.length > 0 && (
+        <Card className="border-amber-200 dark:border-amber-800/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              Pending Review ({pending.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Worker</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Receipt</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pending.map((c: any) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="text-sm font-medium">{profileMap.get(c.user_id) || 'Unknown'}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{format(new Date(c.expense_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{c.category}</TableCell>
+                    <TableCell className="text-sm text-right font-medium">${Number(c.amount).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {c.receipt_url ? (
+                        <a href={c.receipt_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs flex items-center gap-1">
+                          <Paperclip className="h-3 w-3" /> View
+                        </a>
+                      ) : <span className="text-xs text-muted-foreground">None</span>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs text-green-600" onClick={() => updateStatus(c.id, 'approved')}>
+                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs text-destructive" onClick={() => updateStatus(c.id, 'rejected')}>
+                          <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+      {processed.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Processed Claims ({processed.length})</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Worker</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {processed.map((c: any) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="text-sm font-medium">{profileMap.get(c.user_id) || 'Unknown'}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{format(new Date(c.expense_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{c.category}</TableCell>
+                    <TableCell className="text-sm text-right font-medium">${Number(c.amount).toFixed(2)}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[c.status] || 'bg-muted text-muted-foreground'}`}>
+                        {c.status}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
 
 export default function ExpenseTrackingPage() {
   const { user } = useAuth();
@@ -263,7 +408,9 @@ export default function ExpenseTrackingPage() {
           </CardContent>
         </Card>
 
-        {/* Expense Dialog */}
+        {/* Worker Reimbursement Claims */}
+        <WorkerClaimsSection />
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>

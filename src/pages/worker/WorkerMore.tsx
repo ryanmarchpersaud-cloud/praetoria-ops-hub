@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Monitor, Settings, LogOut, User, ChevronRight, HardHat, Eye,
   Briefcase, FileText, Heart, DollarSign, Award, CalendarDays, UserCheck,
-  ShieldAlert, Receipt, BookOpen,
+  ShieldAlert, Receipt, BookOpen, CreditCard,
 } from 'lucide-react';
 
 export default function WorkerMore() {
@@ -26,6 +26,7 @@ export default function WorkerMore() {
     { icon: ShieldAlert, label: 'Safety & Incidents', to: '/worker/incidents', description: 'Report incidents & near misses' },
     { icon: FileText, label: 'My Documents', to: '/worker/documents', description: 'Certificates, policies & uploads' },
     { icon: Receipt, label: 'Tax Documents', to: '/worker/tax-documents', description: 'T4 slips, ROE & pay summaries' },
+    { icon: CreditCard, label: 'Expense Claims', to: '/worker/expenses', description: 'Submit receipts for reimbursement' },
     { icon: DollarSign, label: 'Payroll', to: '/worker/payroll', description: 'Pay stubs & earnings' },
     { icon: Heart, label: 'Benefits', to: '/worker/benefits', description: 'Health benefits & plan info' },
     { icon: CalendarDays, label: 'Time Off', to: '/worker/time-off', description: 'Balances & requests' },
