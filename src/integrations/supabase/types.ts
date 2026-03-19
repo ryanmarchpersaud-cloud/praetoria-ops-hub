@@ -2039,11 +2039,18 @@ export type Database = {
           city: string | null
           created_at: string
           customer_id: string
+          emergency_exit_notes: string | null
+          fire_extinguisher_location: string | null
+          first_aid_kit_location: string | null
           gate_code: string | null
           high_risk_flag: boolean
           house_number_location: string | null
           id: string
           landmark_notes: string | null
+          muster_point_description: string | null
+          muster_point_map_notes: string | null
+          muster_point_name: string | null
+          muster_point_photo_url: string | null
           photo_front_url: string | null
           photo_night_url: string | null
           photo_winter_url: string | null
@@ -2052,6 +2059,7 @@ export type Database = {
           property_type: Database["public"]["Enums"]["property_type"]
           province: string | null
           seasonal_notes: string | null
+          site_emergency_notes: string | null
           status: Database["public"]["Enums"]["property_status"]
           updated_at: string
           verification_notes: string | null
@@ -2064,11 +2072,18 @@ export type Database = {
           city?: string | null
           created_at?: string
           customer_id: string
+          emergency_exit_notes?: string | null
+          fire_extinguisher_location?: string | null
+          first_aid_kit_location?: string | null
           gate_code?: string | null
           high_risk_flag?: boolean
           house_number_location?: string | null
           id?: string
           landmark_notes?: string | null
+          muster_point_description?: string | null
+          muster_point_map_notes?: string | null
+          muster_point_name?: string | null
+          muster_point_photo_url?: string | null
           photo_front_url?: string | null
           photo_night_url?: string | null
           photo_winter_url?: string | null
@@ -2077,6 +2092,7 @@ export type Database = {
           property_type?: Database["public"]["Enums"]["property_type"]
           province?: string | null
           seasonal_notes?: string | null
+          site_emergency_notes?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
           verification_notes?: string | null
@@ -2089,11 +2105,18 @@ export type Database = {
           city?: string | null
           created_at?: string
           customer_id?: string
+          emergency_exit_notes?: string | null
+          fire_extinguisher_location?: string | null
+          first_aid_kit_location?: string | null
           gate_code?: string | null
           high_risk_flag?: boolean
           house_number_location?: string | null
           id?: string
           landmark_notes?: string | null
+          muster_point_description?: string | null
+          muster_point_map_notes?: string | null
+          muster_point_name?: string | null
+          muster_point_photo_url?: string | null
           photo_front_url?: string | null
           photo_night_url?: string | null
           photo_winter_url?: string | null
@@ -2102,6 +2125,7 @@ export type Database = {
           property_type?: Database["public"]["Enums"]["property_type"]
           province?: string | null
           seasonal_notes?: string | null
+          site_emergency_notes?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
           verification_notes?: string | null
@@ -2996,23 +3020,38 @@ export type Database = {
         Row: {
           active_flag: boolean
           agreement_signed_status: string
+          allergies: string | null
+          blood_pressure_alert: boolean | null
           business_license_expiry: string | null
           business_license_status: string
           business_number: string | null
+          carries_epipen: boolean | null
+          carries_inhaler: boolean | null
           company_name: string
           contact_name: string
           created_at: string
+          diabetes_alert: boolean | null
           email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
+          emergency_medical_notes: string | null
           id: string
           insurance_expiry: string | null
           insurance_status: string
           mailing_address: string | null
+          medical_info_consent: boolean | null
+          medical_info_last_updated_at: string | null
           notes_admin_only: string | null
           onboarding_status: string
           operating_name: string | null
           phone: string | null
           profile_photo_url: string | null
           safety_doc_status: string
+          secondary_emergency_contact_name: string | null
+          secondary_emergency_contact_phone: string | null
+          secondary_emergency_contact_relationship: string | null
+          seizure_or_fainting_alert: boolean | null
           service_area_summary: string | null
           status: string
           updated_at: string
@@ -3023,23 +3062,38 @@ export type Database = {
         Insert: {
           active_flag?: boolean
           agreement_signed_status?: string
+          allergies?: string | null
+          blood_pressure_alert?: boolean | null
           business_license_expiry?: string | null
           business_license_status?: string
           business_number?: string | null
+          carries_epipen?: boolean | null
+          carries_inhaler?: boolean | null
           company_name: string
           contact_name: string
           created_at?: string
+          diabetes_alert?: boolean | null
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          emergency_medical_notes?: string | null
           id?: string
           insurance_expiry?: string | null
           insurance_status?: string
           mailing_address?: string | null
+          medical_info_consent?: boolean | null
+          medical_info_last_updated_at?: string | null
           notes_admin_only?: string | null
           onboarding_status?: string
           operating_name?: string | null
           phone?: string | null
           profile_photo_url?: string | null
           safety_doc_status?: string
+          secondary_emergency_contact_name?: string | null
+          secondary_emergency_contact_phone?: string | null
+          secondary_emergency_contact_relationship?: string | null
+          seizure_or_fainting_alert?: boolean | null
           service_area_summary?: string | null
           status?: string
           updated_at?: string
@@ -3050,23 +3104,38 @@ export type Database = {
         Update: {
           active_flag?: boolean
           agreement_signed_status?: string
+          allergies?: string | null
+          blood_pressure_alert?: boolean | null
           business_license_expiry?: string | null
           business_license_status?: string
           business_number?: string | null
+          carries_epipen?: boolean | null
+          carries_inhaler?: boolean | null
           company_name?: string
           contact_name?: string
           created_at?: string
+          diabetes_alert?: boolean | null
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          emergency_medical_notes?: string | null
           id?: string
           insurance_expiry?: string | null
           insurance_status?: string
           mailing_address?: string | null
+          medical_info_consent?: boolean | null
+          medical_info_last_updated_at?: string | null
           notes_admin_only?: string | null
           onboarding_status?: string
           operating_name?: string | null
           phone?: string | null
           profile_photo_url?: string | null
           safety_doc_status?: string
+          secondary_emergency_contact_name?: string | null
+          secondary_emergency_contact_phone?: string | null
+          secondary_emergency_contact_relationship?: string | null
+          seizure_or_fainting_alert?: boolean | null
           service_area_summary?: string | null
           status?: string
           updated_at?: string
@@ -3617,14 +3686,20 @@ export type Database = {
       }
       worker_profiles: {
         Row: {
+          allergies: string | null
           benefits_effective_date: string | null
           benefits_plan_summary: string | null
           benefits_provider: string | null
           benefits_status: string | null
+          blood_pressure_alert: boolean | null
           branch_location: string | null
+          carries_epipen: boolean | null
+          carries_inhaler: boolean | null
           created_at: string
+          diabetes_alert: boolean | null
           driver_license_class: string | null
           driver_license_expiry: string | null
+          emergency_medical_notes: string | null
           employee_id: string | null
           employment_status: string
           employment_type: string | null
@@ -3635,6 +3710,8 @@ export type Database = {
           id: string
           license_verified: boolean | null
           manager_name: string | null
+          medical_info_consent: boolean | null
+          medical_info_last_updated_at: string | null
           pay_type: string | null
           personal_days_balance: number | null
           phone: string | null
@@ -3642,6 +3719,7 @@ export type Database = {
           profile_photo_url: string | null
           role_title: string | null
           secondary_service_category: string | null
+          seizure_or_fainting_alert: boolean | null
           sick_balance: number | null
           supervisor_name: string | null
           team: string | null
@@ -3651,14 +3729,20 @@ export type Database = {
           work_email: string | null
         }
         Insert: {
+          allergies?: string | null
           benefits_effective_date?: string | null
           benefits_plan_summary?: string | null
           benefits_provider?: string | null
           benefits_status?: string | null
+          blood_pressure_alert?: boolean | null
           branch_location?: string | null
+          carries_epipen?: boolean | null
+          carries_inhaler?: boolean | null
           created_at?: string
+          diabetes_alert?: boolean | null
           driver_license_class?: string | null
           driver_license_expiry?: string | null
+          emergency_medical_notes?: string | null
           employee_id?: string | null
           employment_status?: string
           employment_type?: string | null
@@ -3669,6 +3753,8 @@ export type Database = {
           id?: string
           license_verified?: boolean | null
           manager_name?: string | null
+          medical_info_consent?: boolean | null
+          medical_info_last_updated_at?: string | null
           pay_type?: string | null
           personal_days_balance?: number | null
           phone?: string | null
@@ -3676,6 +3762,7 @@ export type Database = {
           profile_photo_url?: string | null
           role_title?: string | null
           secondary_service_category?: string | null
+          seizure_or_fainting_alert?: boolean | null
           sick_balance?: number | null
           supervisor_name?: string | null
           team?: string | null
@@ -3685,14 +3772,20 @@ export type Database = {
           work_email?: string | null
         }
         Update: {
+          allergies?: string | null
           benefits_effective_date?: string | null
           benefits_plan_summary?: string | null
           benefits_provider?: string | null
           benefits_status?: string | null
+          blood_pressure_alert?: boolean | null
           branch_location?: string | null
+          carries_epipen?: boolean | null
+          carries_inhaler?: boolean | null
           created_at?: string
+          diabetes_alert?: boolean | null
           driver_license_class?: string | null
           driver_license_expiry?: string | null
+          emergency_medical_notes?: string | null
           employee_id?: string | null
           employment_status?: string
           employment_type?: string | null
@@ -3703,6 +3796,8 @@ export type Database = {
           id?: string
           license_verified?: boolean | null
           manager_name?: string | null
+          medical_info_consent?: boolean | null
+          medical_info_last_updated_at?: string | null
           pay_type?: string | null
           personal_days_balance?: number | null
           phone?: string | null
@@ -3710,6 +3805,7 @@ export type Database = {
           profile_photo_url?: string | null
           role_title?: string | null
           secondary_service_category?: string | null
+          seizure_or_fainting_alert?: boolean | null
           sick_balance?: number | null
           supervisor_name?: string | null
           team?: string | null

@@ -86,6 +86,7 @@ import WorkerIncidentsPage from "./pages/worker/WorkerIncidentsPage";
 import WorkerNewIncidentPage from "./pages/worker/WorkerNewIncidentPage";
 import WorkerIncidentDetailPage from "./pages/worker/WorkerIncidentDetailPage";
 import WorkerExpensesPage from "./pages/worker/WorkerExpensesPage";
+import WorkerEmergencySafetyPage from "./pages/worker/WorkerEmergencySafetyPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
@@ -108,6 +109,7 @@ import SubcontractorTaxDocsPage from "./pages/subcontractor/SubcontractorTaxDocs
 import SubcontractorIncidentsPage from "./pages/subcontractor/SubcontractorIncidentsPage";
 import SubcontractorNewIncidentPage from "./pages/subcontractor/SubcontractorNewIncidentPage";
 import SubcontractorIncidentDetailPage from "./pages/subcontractor/SubcontractorIncidentDetailPage";
+import SubcontractorEmergencySafetyPage from "./pages/subcontractor/SubcontractorEmergencySafetyPage";
 
 // Admin incident pages
 import AdminIncidentsPage from "./pages/AdminIncidentsPage";
@@ -321,6 +323,7 @@ function AppRoutes() {
       <Route path="/worker/training-safety" element={<WorkerRoute><WorkerLayout><WorkerTrainingSafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/ppe" element={<WorkerRoute><WorkerLayout><WorkerPPEPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/expenses" element={<WorkerRoute><WorkerLayout><WorkerExpensesPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/emergency-safety" element={<WorkerRoute><WorkerLayout><WorkerEmergencySafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
 
       {/* Subcontractor routes */}
@@ -343,6 +346,7 @@ function AppRoutes() {
       <Route path="/subcontractor/incidents/new" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorNewIncidentPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/incidents/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorIncidentDetailPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/tax-documents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorTaxDocsPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/emergency-safety" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorEmergencySafetyPage /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
