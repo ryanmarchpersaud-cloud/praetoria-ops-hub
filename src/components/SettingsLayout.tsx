@@ -2,7 +2,7 @@ import { NavLink } from '@/components/NavLink';
 import {
   Settings, Webhook, Plug, Users, ShieldCheck, ScrollText, Gauge,
   Building2, Package, CreditCard, Receipt, Zap, Briefcase, CalendarCog,
-  MapPinned, ClipboardList, MessageSquare, Mail, BookOpen, Globe,
+  MapPinned, ClipboardList, MessageSquare, Mail, BookOpen, Globe, Megaphone,
 } from 'lucide-react';
 
 const settingsNav = [
