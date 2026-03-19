@@ -57,36 +57,7 @@ export default function WorkerPropertyDetail() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-4 space-y-3">
-          {property.address_line_1 && (
-            <div className="flex items-start gap-2">
-              <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm">{property.address_line_1}</p>
-                <p className="text-xs text-muted-foreground">
-                  {[property.city, property.province, property.postal_code].filter(Boolean).join(', ')}
-                </p>
-              </div>
-            </div>
-          )}
-          {customer && (
-            <div className="flex items-center gap-2 pt-2 border-t">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">{customer.first_name} {customer.last_name}</p>
-                {customer.company_name && <p className="text-xs text-muted-foreground">{customer.company_name}</p>}
-              </div>
-              {customer.phone && (
-                <a href={`tel:${customer.phone}`} className="ml-auto text-xs text-primary font-medium">Call</a>
-              )}
-            </div>
-          )}
-          {property.gate_code && <p className="text-xs text-amber-600">🔑 Gate code: {property.gate_code}</p>}
-          {property.access_notes && <p className="text-xs text-muted-foreground italic">{property.access_notes}</p>}
-          {property.seasonal_notes && <p className="text-xs text-muted-foreground italic">{property.seasonal_notes}</p>}
-        </CardContent>
-      </Card>
+      <PropertyVerificationCard property={property} />
 
       <div>
         <h2 className="text-sm font-semibold mb-2">Recent Visits</h2>
