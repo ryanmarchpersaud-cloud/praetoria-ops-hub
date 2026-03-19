@@ -268,6 +268,240 @@ function WorkerClaimsSection() {
 }
 
 
+function SubcontractorInvoicesSection() {
+  const queryClient = useQueryClient();
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [reviewNotes, setReviewNotes] = useState('');
+
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ['admin_subcontractor_invoices'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subcontractor_invoices')
+        .select('*, subcontractors(company_name, contact_name)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const updateStatus = async (id: string, status: string, notes?: string) => {
+    const updates: Record<string, any> = {
+      status,
+      admin_review_notes: notes || null,
+    };
+    if (status === 'approved') updates.approved_at = new Date().toISOString();
+    if (status === 'paid') updates.paid_at = new Date().toISOString();
+
+    const { error } = await supabase.from('subcontractor_invoices').update(updates).eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Invoice ${status}`);
+    setSelectedInvoice(null);
+    setReviewNotes('');
+    queryClient.invalidateQueries({ queryKey: ['admin_subcontractor_invoices'] });
+  };
+
+  const pending = invoices.filter((i: any) => i.status === 'submitted');
+  const processed = invoices.filter((i: any) => i.status !== 'submitted');
+
+  const statusColors: Record<string, string> = {
+    submitted: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    approved: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    paid: 'bg-primary/10 text-primary',
+    rejected: 'bg-destructive/10 text-destructive',
+  };
+
+  if (isLoading) return null;
+  if (invoices.length === 0) return null;
+
+  return (
+    <>
+      <Separator />
+      <div>
+        <h2 className="text-lg font-bold text-foreground mb-1">Subcontractor Invoices</h2>
+        <p className="text-sm text-muted-foreground mb-4">Invoices submitted by subcontractors for payment. Click a row to review.</p>
+      </div>
+      {pending.length > 0 && (
+        <Card className="border-amber-200 dark:border-amber-800/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              Pending Review ({pending.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Contractor</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Attachment</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pending.map((inv: any) => (
+                  <TableRow key={inv.id} className="cursor-pointer" onClick={() => { setSelectedInvoice(inv); setReviewNotes(inv.admin_review_notes || ''); }}>
+                    <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
+                    <TableCell className="text-sm">{inv.subcontractors?.company_name || 'Unknown'}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{format(new Date(inv.invoice_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm text-right font-medium">${Number(inv.amount).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {inv.attachment_url ? (
+                        <a href={inv.attachment_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                          <Paperclip className="h-3 w-3" /> View
+                        </a>
+                      ) : <span className="text-xs text-muted-foreground">None</span>}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs text-green-600" onClick={() => updateStatus(inv.id, 'approved')}>
+                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs text-destructive" onClick={() => updateStatus(inv.id, 'rejected')}>
+                          <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+      {processed.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Processed Invoices ({processed.length})</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice #</TableHead>
+                  <TableHead>Contractor</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {processed.map((inv: any) => (
+                  <TableRow key={inv.id} className="cursor-pointer" onClick={() => { setSelectedInvoice(inv); setReviewNotes(inv.admin_review_notes || ''); }}>
+                    <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
+                    <TableCell className="text-sm">{inv.subcontractors?.company_name || 'Unknown'}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{format(new Date(inv.invoice_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm text-right font-medium">${Number(inv.amount).toFixed(2)}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[inv.status] || 'bg-muted text-muted-foreground'}`}>
+                        {inv.status}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Subcontractor Invoice Detail Dialog */}
+      <Dialog open={!!selectedInvoice} onOpenChange={(v) => { if (!v) { setSelectedInvoice(null); setReviewNotes(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Subcontractor Invoice Detail</DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Invoice #</p>
+                  <p className="text-sm font-medium text-foreground">{selectedInvoice.invoice_number}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Amount</p>
+                  <p className="text-sm font-bold text-foreground">${Number(selectedInvoice.amount).toFixed(2)} {selectedInvoice.currency}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Contractor</p>
+                  <p className="text-sm text-foreground">{selectedInvoice.subcontractors?.company_name || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Invoice Date</p>
+                  <p className="text-sm text-foreground">{format(new Date(selectedInvoice.invoice_date), 'MMMM d, yyyy')}</p>
+                </div>
+                {selectedInvoice.service_period_start && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-muted-foreground">Service Period</p>
+                    <p className="text-sm text-foreground">
+                      {format(new Date(selectedInvoice.service_period_start), 'MMM d, yyyy')}
+                      {selectedInvoice.service_period_end && ` — ${format(new Date(selectedInvoice.service_period_end), 'MMM d, yyyy')}`}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[selectedInvoice.status] || 'bg-muted text-muted-foreground'}`}>
+                    {selectedInvoice.status}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Submitted</p>
+                  <p className="text-sm text-foreground">{format(new Date(selectedInvoice.submitted_at), 'MMM d, yyyy h:mm a')}</p>
+                </div>
+              </div>
+
+              {selectedInvoice.notes && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Contractor Notes</p>
+                  <p className="text-sm text-foreground bg-muted/50 rounded p-2">{selectedInvoice.notes}</p>
+                </div>
+              )}
+
+              {selectedInvoice.attachment_url && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Attachment</p>
+                  <a href={selectedInvoice.attachment_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                    <ExternalLink className="h-3.5 w-3.5" /> View / Download Invoice
+                  </a>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Admin Review Notes</Label>
+                <Textarea
+                  value={reviewNotes}
+                  onChange={e => setReviewNotes(e.target.value)}
+                  placeholder="Add a note before approving/rejecting..."
+                  rows={2}
+                />
+              </div>
+
+              {selectedInvoice.status === 'submitted' && (
+                <div className="flex gap-2">
+                  <Button className="flex-1 gap-1.5" variant="outline" onClick={() => updateStatus(selectedInvoice.id, 'rejected', reviewNotes)}>
+                    <XCircle className="h-4 w-4 text-destructive" /> Reject
+                  </Button>
+                  <Button className="flex-1 gap-1.5" onClick={() => updateStatus(selectedInvoice.id, 'approved', reviewNotes)}>
+                    <CheckCircle2 className="h-4 w-4" /> Approve
+                  </Button>
+                </div>
+              )}
+              {selectedInvoice.status === 'approved' && (
+                <Button className="w-full gap-1.5" onClick={() => updateStatus(selectedInvoice.id, 'paid', reviewNotes)}>
+                  <DollarSign className="h-4 w-4" /> Mark as Paid
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+
 export default function ExpenseTrackingPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -276,6 +510,7 @@ export default function ExpenseTrackingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [vendorDialogOpen, setVendorDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewExpense, setViewExpense] = useState<Expense | null>(null);
   const [form, setForm] = useState<Record<string, any>>({
     expense_date: format(new Date(), 'yyyy-MM-dd'), amount: '', tax_amount: '',
     category: 'Miscellaneous', vendor_name: '', description: '', payment_method: 'Other',
