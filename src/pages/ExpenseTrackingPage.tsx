@@ -713,14 +713,14 @@ export default function ExpenseTrackingPage() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((e: Expense) => (
-                    <TableRow key={e.id}>
+                    <TableRow key={e.id} className="cursor-pointer" onClick={() => setViewExpense(e)}>
                       <TableCell className="text-sm">{e.expense_date}</TableCell>
                       <TableCell className="text-sm max-w-[200px] truncate">{e.description || '—'}</TableCell>
                       <TableCell><Badge variant="secondary" className="text-xs">{e.category}</Badge></TableCell>
                       <TableCell className="text-sm">{e.vendor_name || '—'}</TableCell>
                       <TableCell className="text-right font-medium">${Number(e.amount).toFixed(2)}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex gap-1 justify-end">
+                        <div className="flex gap-1 justify-end" onClick={ev => ev.stopPropagation()}>
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(e)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
