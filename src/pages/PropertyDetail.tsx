@@ -43,6 +43,15 @@ export default function PropertyDetail() {
         city: form.city, province: form.province, postal_code: form.postal_code,
         property_type: form.property_type, access_notes: form.access_notes,
         gate_code: form.gate_code, seasonal_notes: form.seasonal_notes, status: form.status,
+        photo_front_url: form.photo_front_url || null,
+        photo_winter_url: form.photo_winter_url || null,
+        photo_night_url: form.photo_night_url || null,
+        landmark_notes: form.landmark_notes || null,
+        caution_notes: form.caution_notes || null,
+        verification_notes: form.verification_notes || null,
+        high_risk_flag: form.high_risk_flag || false,
+        house_number_location: form.house_number_location || null,
+        access_type: form.access_type || null,
       });
       toast({ title: 'Property saved' });
     } catch (err: any) {
