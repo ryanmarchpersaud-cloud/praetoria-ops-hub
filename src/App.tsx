@@ -86,6 +86,7 @@ import WorkerIncidentsPage from "./pages/worker/WorkerIncidentsPage";
 import WorkerNewIncidentPage from "./pages/worker/WorkerNewIncidentPage";
 import WorkerIncidentDetailPage from "./pages/worker/WorkerIncidentDetailPage";
 import WorkerExpensesPage from "./pages/worker/WorkerExpensesPage";
+import WorkerEmergencySafetyPage from "./pages/worker/WorkerEmergencySafetyPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
