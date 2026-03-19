@@ -18,7 +18,6 @@ interface TeamMember {
   portal_admin: boolean;
   portal_worker: boolean;
   portal_subcontractor: boolean;
-  portal_customer: boolean;
   created_at: string;
 }
 
