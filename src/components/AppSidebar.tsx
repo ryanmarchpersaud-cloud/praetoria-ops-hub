@@ -41,6 +41,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { signOut, user } = useAuth();
+  const { data: unreadCount } = useUnreadCount();
 
   return (
     <Sidebar collapsible="icon">
