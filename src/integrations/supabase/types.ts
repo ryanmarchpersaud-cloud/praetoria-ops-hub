@@ -2033,12 +2033,20 @@ export type Database = {
       properties: {
         Row: {
           access_notes: string | null
+          access_type: string | null
           address_line_1: string | null
+          caution_notes: string | null
           city: string | null
           created_at: string
           customer_id: string
           gate_code: string | null
+          high_risk_flag: boolean
+          house_number_location: string | null
           id: string
+          landmark_notes: string | null
+          photo_front_url: string | null
+          photo_night_url: string | null
+          photo_winter_url: string | null
           postal_code: string | null
           property_name: string
           property_type: Database["public"]["Enums"]["property_type"]
@@ -2046,15 +2054,24 @@ export type Database = {
           seasonal_notes: string | null
           status: Database["public"]["Enums"]["property_status"]
           updated_at: string
+          verification_notes: string | null
         }
         Insert: {
           access_notes?: string | null
+          access_type?: string | null
           address_line_1?: string | null
+          caution_notes?: string | null
           city?: string | null
           created_at?: string
           customer_id: string
           gate_code?: string | null
+          high_risk_flag?: boolean
+          house_number_location?: string | null
           id?: string
+          landmark_notes?: string | null
+          photo_front_url?: string | null
+          photo_night_url?: string | null
+          photo_winter_url?: string | null
           postal_code?: string | null
           property_name: string
           property_type?: Database["public"]["Enums"]["property_type"]
@@ -2062,15 +2079,24 @@ export type Database = {
           seasonal_notes?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
+          verification_notes?: string | null
         }
         Update: {
           access_notes?: string | null
+          access_type?: string | null
           address_line_1?: string | null
+          caution_notes?: string | null
           city?: string | null
           created_at?: string
           customer_id?: string
           gate_code?: string | null
+          high_risk_flag?: boolean
+          house_number_location?: string | null
           id?: string
+          landmark_notes?: string | null
+          photo_front_url?: string | null
+          photo_night_url?: string | null
+          photo_winter_url?: string | null
           postal_code?: string | null
           property_name?: string
           property_type?: Database["public"]["Enums"]["property_type"]
@@ -2078,6 +2104,7 @@ export type Database = {
           seasonal_notes?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
+          verification_notes?: string | null
         }
         Relationships: [
           {
