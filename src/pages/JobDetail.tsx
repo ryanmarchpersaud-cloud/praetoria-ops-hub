@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useJob, useJobVisits, useUpdateJob } from '@/hooks/useJobs';
 import { useCreateVisit } from '@/hooks/useVisits';
+import { useEmployees } from '@/hooks/useEmployees';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -23,6 +24,7 @@ export default function JobDetail() {
   const navigate = useNavigate();
   const { data: job, isLoading } = useJob(id);
   const { data: visits = [] } = useJobVisits(id);
+  const { data: employees = [] } = useEmployees();
   const updateJob = useUpdateJob();
   const createVisit = useCreateVisit();
   const { toast } = useToast();
@@ -38,6 +40,7 @@ export default function JobDetail() {
   const set = (key: string, value: any) => setForm((p: any) => ({ ...p, [key]: value }));
   const customer = (job as any).customers;
   const property = (job as any).properties;
+  const assignedWorker = employees.find((e: any) => e.user_id === form.assigned_to);
 
   const handleSave = async () => {
     if (!id) return;
@@ -47,6 +50,7 @@ export default function JobDetail() {
         scope_of_work: form.scope_of_work, priority: form.priority,
         scheduled_date: form.scheduled_date || null, status: form.status,
         internal_notes: form.internal_notes,
+        assigned_to: form.assigned_to || null,
         service_frequency: form.service_frequency || 'one-time',
         season_name: form.season_name || null,
         contract_start_date: form.contract_start_date || null,
@@ -215,6 +219,32 @@ export default function JobDetail() {
                 </div>
                 <div><Label className="text-xs">Scheduled Date</Label><Input type="date" value={form.scheduled_date || ''} onChange={e => set('scheduled_date', e.target.value)} /></div>
               </div>
+
+              {/* Worker Assignment */}
+              <div>
+                <Label className="text-xs flex items-center gap-1">
+                  <UserCheck className="h-3 w-3" /> Assign Worker
+                </Label>
+                <select
+                  value={form.assigned_to || ''}
+                  onChange={e => set('assigned_to', e.target.value || null)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10"
+                >
+                  <option value="">— Unassigned —</option>
+                  {(employees as any[]).map((emp: any) => (
+                    <option key={emp.user_id} value={emp.user_id}>
+                      {emp.full_name || emp.user_id}
+                    </option>
+                  ))}
+                </select>
+                {assignedWorker && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Assigned to: <span className="font-medium text-foreground">{(assignedWorker as any).full_name}</span>
+                  </p>
+                )}
+              </div>
+
+              <div><Label className="text-xs">Service Instructions</Label><Textarea value={form.service_instructions || ''} onChange={e => set('service_instructions', e.target.value)} rows={2} placeholder="Instructions visible to worker..." /></div>
               <div><Label className="text-xs">Scope of Work</Label><Textarea value={form.scope_of_work || ''} onChange={e => set('scope_of_work', e.target.value)} rows={4} /></div>
               <div><Label className="text-xs">Internal Notes</Label><Textarea value={form.internal_notes || ''} onChange={e => set('internal_notes', e.target.value)} rows={2} /></div>
             </CardContent>
@@ -251,6 +281,25 @@ export default function JobDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Assignment card */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <UserCheck className="h-3.5 w-3.5" /> Assignment
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-1">
+              {assignedWorker ? (
+                <>
+                  <p className="font-medium">{(assignedWorker as any).full_name}</p>
+                  {(assignedWorker as any).job_title && <p className="text-xs text-muted-foreground">{(assignedWorker as any).job_title}</p>}
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">No worker assigned yet</p>
+              )}
+            </CardContent>
+          </Card>
 
           {customer && (
             <Card>
