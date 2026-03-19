@@ -358,6 +358,124 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_members: {
+        Row: {
+          conversation_id: string
+          id: string
+          joined_at: string
+          last_read_at: string | null
+          muted: boolean
+          role_snapshot: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          muted?: boolean
+          role_snapshot?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          muted?: boolean
+          role_snapshot?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          conversation_type: string
+          created_at: string
+          created_by: string
+          equipment_item_id: string | null
+          id: string
+          incident_id: string | null
+          is_announcement_only: boolean
+          is_archived: boolean
+          job_id: string | null
+          last_message_at: string | null
+          last_message_preview: string | null
+          title: string | null
+          updated_at: string
+          visit_id: string | null
+        }
+        Insert: {
+          conversation_type?: string
+          created_at?: string
+          created_by: string
+          equipment_item_id?: string | null
+          id?: string
+          incident_id?: string | null
+          is_announcement_only?: boolean
+          is_archived?: boolean
+          job_id?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          title?: string | null
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Update: {
+          conversation_type?: string
+          created_at?: string
+          created_by?: string
+          equipment_item_id?: string | null
+          id?: string
+          incident_id?: string | null
+          is_announcement_only?: boolean
+          is_archived?: boolean
+          job_id?: string | null
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          title?: string | null
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_equipment_item_id_fkey"
+            columns: ["equipment_item_id"]
+            isOneToOne: false
+            referencedRelation: "worker_equipment_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incident_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_billing_profiles: {
         Row: {
           autopay_consent_at: string | null
@@ -1550,6 +1668,117 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          message_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          message_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          message_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reads: {
+        Row: {
+          id: string
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachment_count: number
+          body: string | null
+          conversation_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          message_type: string
+          sender_user_id: string
+        }
+        Insert: {
+          attachment_count?: number
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          message_type?: string
+          sender_user_id: string
+        }
+        Update: {
+          attachment_count?: number
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          message_type?: string
+          sender_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]

@@ -87,6 +87,7 @@ import WorkerNewIncidentPage from "./pages/worker/WorkerNewIncidentPage";
 import WorkerIncidentDetailPage from "./pages/worker/WorkerIncidentDetailPage";
 import WorkerExpensesPage from "./pages/worker/WorkerExpensesPage";
 import WorkerEmergencySafetyPage from "./pages/worker/WorkerEmergencySafetyPage";
+import WorkerMessagesPage from "./pages/worker/WorkerMessagesPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
@@ -110,6 +111,7 @@ import SubcontractorIncidentsPage from "./pages/subcontractor/SubcontractorIncid
 import SubcontractorNewIncidentPage from "./pages/subcontractor/SubcontractorNewIncidentPage";
 import SubcontractorIncidentDetailPage from "./pages/subcontractor/SubcontractorIncidentDetailPage";
 import SubcontractorEmergencySafetyPage from "./pages/subcontractor/SubcontractorEmergencySafetyPage";
+import SubcontractorMessagesPage from "./pages/subcontractor/SubcontractorMessagesPage";
 
 // Admin incident pages
 import AdminIncidentsPage from "./pages/AdminIncidentsPage";
@@ -122,6 +124,7 @@ import ProductsServicesPage from "./pages/ProductsServicesPage";
 import CompanySettingsPage from "./pages/CompanySettingsPage";
 import PaymentsSettingsPage from "./pages/PaymentsSettingsPage";
 import ExpenseTrackingPage from "./pages/ExpenseTrackingPage";
+import MessagingPage from "./pages/MessagingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 
 import WorkSettingsPage from "./pages/WorkSettingsPage";
@@ -260,6 +263,7 @@ function AppRoutes() {
       <Route path="/subcontractors/:id" element={<AdminRoute><SubcontractorDetail /></AdminRoute>} />
       <Route path="/incidents" element={<AdminRoute><AdminIncidentsPage /></AdminRoute>} />
       <Route path="/incidents/:id" element={<AdminRoute><AdminIncidentDetailPage /></AdminRoute>} />
+      <Route path="/messaging" element={<AdminRoute><MessagingPage /></AdminRoute>} />
 
       <Route path="/settings" element={<AdminRoute><CompanySettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
@@ -325,6 +329,7 @@ function AppRoutes() {
       <Route path="/worker/expenses" element={<WorkerRoute><WorkerLayout><WorkerExpensesPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/emergency-safety" element={<WorkerRoute><WorkerLayout><WorkerEmergencySafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/messages" element={<WorkerRoute><WorkerLayout><WorkerMessagesPage /></WorkerLayout></WorkerRoute>} />
 
       {/* Subcontractor routes */}
       <Route path="/subcontractor" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorHome /></SubcontractorLayout></SubcontractorRoute>} />
@@ -347,6 +352,7 @@ function AppRoutes() {
       <Route path="/subcontractor/incidents/:id" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorIncidentDetailPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/tax-documents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorTaxDocsPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/emergency-safety" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorEmergencySafetyPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/messages" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorMessagesPage /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
