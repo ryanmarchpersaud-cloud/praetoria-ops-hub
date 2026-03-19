@@ -142,9 +142,7 @@ export default function WorkerVisitExec() {
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   if (!visit) return <div className="p-6 text-center text-muted-foreground">Visit not found</div>;
 
-  const property = (visit as any).properties;
-  const customer = (visit as any).customers;
-  const job = (visit as any).jobs;
+  // property, customer, job already extracted above
 
   // Guard: worker can only access visits assigned to them
   const assignedTo = job?.assigned_to;
