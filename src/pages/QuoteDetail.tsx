@@ -140,6 +140,28 @@ export default function QuoteDetail() {
   const isSentOrApproved = ['Sent', 'Approved'].includes(form.approval_status);
   const validItems = items.filter(i => i.item_name);
 
+  const handleConvertToJob = async () => {
+    if (!id || !lead) return;
+    try {
+      const { data: job, error } = await supabase.from('jobs').insert({
+        job_number: '',
+        job_title: `${form.service_category} — ${lead.first_name} ${lead.last_name}`,
+        customer_id: lead.customer_id || (quote as any).customer_id,
+        property_id: null,
+        service_category: form.service_category as any,
+        status: 'Scheduled' as any,
+        scope_of_work: form.scope_of_work || null,
+        quote_id: id,
+        request_id: (quote as any).request_id || null,
+      } as any).select().single();
+      if (error) throw error;
+      toast({ title: 'Job created from quote' });
+      navigate(`/jobs/${job.id}`);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
       {/* ── Header ── */}
