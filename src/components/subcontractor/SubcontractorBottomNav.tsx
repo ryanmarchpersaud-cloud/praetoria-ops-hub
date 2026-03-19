@@ -31,7 +31,14 @@ export function SubcontractorBottomNav() {
                 isActive ? 'text-primary' : 'text-muted-foreground active:text-foreground'
               )}
             >
-              <tab.icon className={cn('h-5 w-5', isActive && 'stroke-[2.5]')} />
+              <div className="relative">
+                <tab.icon className={cn('h-5 w-5', isActive && 'stroke-[2.5]')} />
+                {(tab as any).badge && (unreadCount ?? 0) > 0 && (
+                  <span className="absolute -top-1 -right-1.5 min-w-[16px] h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center px-1">
+                    {unreadCount! > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-medium">{tab.label}</span>
             </NavLink>
           );
