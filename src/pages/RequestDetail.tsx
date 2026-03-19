@@ -17,6 +17,7 @@ const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'
 export default function RequestDetail() {
   const { id } = useParams<{ id: string }>();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [internalNotes, setInternalNotes] = useState('');
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
