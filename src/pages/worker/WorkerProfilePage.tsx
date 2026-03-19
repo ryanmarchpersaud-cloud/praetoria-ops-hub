@@ -1,7 +1,11 @@
 import { useWorkerProfile } from '@/hooks/useWorkerProfile';
+import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { User, Mail, Phone, Briefcase, Users, Shield, MapPin, Award } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
@@ -12,7 +16,19 @@ const statusColors: Record<string, string> = {
 };
 
 export default function WorkerProfilePage() {
+  const { user } = useAuth();
   const { data: profile, isLoading } = useWorkerProfile();
+  const queryClient = useQueryClient();
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const initials = displayName
+    .split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const handleAvatarUploaded = async (url: string) => {
+    if (!user) return;
+    await supabase.from('worker_profiles').update({ profile_photo_url: url }).eq('user_id', user.id);
+    queryClient.invalidateQueries({ queryKey: ['worker_profile'] });
+  };
 
   if (isLoading) {
     return (
@@ -52,9 +68,12 @@ export default function WorkerProfilePage() {
       <Card>
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <User className="h-7 w-7 text-primary" />
-            </div>
+            <AvatarUpload
+              currentUrl={profile.profile_photo_url}
+              initials={initials}
+              onUploaded={handleAvatarUploaded}
+              size="lg"
+            />
             <div className="min-w-0">
               <p className="text-base font-semibold text-foreground">{profile.full_name || '—'}</p>
               {profile.role_title && <p className="text-sm text-muted-foreground">{profile.role_title}</p>}
