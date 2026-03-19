@@ -11,69 +11,37 @@ export interface SidebarCounts {
   requests: number;
 }
 
+async function countRows(table: string, column: string, values: string[]): Promise<number> {
+  const { count, error } = await (supabase as any)
+    .from(table)
+    .select('id', { count: 'exact', head: true })
+    .in(column, values);
+  if (error) {
+    console.error(`Sidebar count error (${table}):`, error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 export function useSidebarCounts() {
   const { user } = useAuth();
 
   return useQuery({
     queryKey: ['sidebar_counts', user?.id],
     queryFn: async (): Promise<SidebarCounts> => {
-      const [
-        leadsRes,
-        quotesRes,
-        jobsRes,
-        visitsRes,
-        invoicesRes,
-        requestsRes,
-      ] = await Promise.all([
-        // New leads that haven't been reviewed
-        supabase
-          .from('leads')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'New'),
-
-        // Quotes awaiting action (draft or follow-up overdue)
-        supabase
-          .from('quotes')
-          .select('id', { count: 'exact', head: true })
-          .in('approval_status', ['Draft', 'Approved'])
-          .eq('sent_status', 'Not sent'),
-
-        // Jobs that are unscheduled or need attention
-        supabase
-          .from('jobs')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['Draft', 'Scheduled'] as any),
-
-        // Today's visits or visits in progress
-        supabase
-          .from('visits')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['Scheduled', 'In Progress'] as any),
-
-        // Overdue or unpaid invoices
-        supabase
-          .from('invoices')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['Sent', 'Overdue', 'Partially Paid'] as any),
-
-        // Pending service requests
-        supabase
-          .from('service_requests')
-          .select('id', { count: 'exact', head: true })
-          .in('status', ['New', 'Pending'] as any),
+      const [leads, quotes, jobs, visits, invoices, requests] = await Promise.all([
+        countRows('leads', 'status', ['New']),
+        countRows('quotes', 'sent_status', ['Not sent']),
+        countRows('jobs', 'status', ['Draft', 'Scheduled']),
+        countRows('visits', 'status', ['Scheduled', 'In Progress']),
+        countRows('invoices', 'status', ['Sent', 'Overdue', 'Partially Paid']),
+        countRows('service_requests', 'status', ['New', 'Pending']),
       ]);
 
-      return {
-        leads: leadsRes.count ?? 0,
-        quotes: quotesRes.count ?? 0,
-        jobs: jobsRes.count ?? 0,
-        visits: visitsRes.count ?? 0,
-        invoices: invoicesRes.count ?? 0,
-        requests: requestsRes.count ?? 0,
-      };
+      return { leads, quotes, jobs, visits, invoices, requests };
     },
     enabled: !!user,
-    refetchInterval: 30000, // refresh every 30s
+    refetchInterval: 30000,
     staleTime: 15000,
   });
 }
