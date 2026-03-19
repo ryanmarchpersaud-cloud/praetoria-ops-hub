@@ -151,12 +151,12 @@ export default function SubcontractorHome() {
           <Receipt className="h-5 w-5 text-emerald-600" />
           <span className="text-[10px] font-medium text-foreground">Invoices</span>
         </Link>
-        <Link to="/subcontractor/documents" className="action-tile action-tile-amber">
-          <FileText className="h-5 w-5 text-amber-600" />
-          <span className="text-[10px] font-medium text-foreground">Documents</span>
-        </Link>
-        <Link to="/subcontractor/compliance" className="action-tile action-tile-rose">
+        <Link to="/subcontractor/emergency-safety" className="action-tile action-tile-rose">
           <ShieldCheck className="h-5 w-5 text-rose-600" />
+          <span className="text-[10px] font-medium text-foreground">Emergency</span>
+        </Link>
+        <Link to="/subcontractor/compliance" className="action-tile action-tile-amber">
+          <ShieldCheck className="h-5 w-5 text-amber-600" />
           <span className="text-[10px] font-medium text-foreground">Compliance</span>
         </Link>
       </div>
