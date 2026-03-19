@@ -141,16 +141,27 @@ export default function QuoteDetail() {
   const validItems = items.filter(i => i.item_name);
 
   const handleConvertToJob = async () => {
-    if (!id || !lead) return;
+    if (!id) return;
     try {
+      // Resolve customer_id from lead or quote
+      const customerId = lead?.customer_id || (quote as any).customer_id;
+      // Try to get the first property for this customer
+      let propertyId: string | null = null;
+      if (customerId) {
+        const { data: props } = await supabase.from('properties').select('id').eq('customer_id', customerId).limit(1);
+        if (props && props.length > 0) propertyId = props[0].id;
+      }
+      const customerName = lead ? `${lead.first_name} ${lead.last_name}` : 'Customer';
       const { data: job, error } = await supabase.from('jobs').insert({
         job_number: '',
-        job_title: `${form.service_category} — ${lead.first_name} ${lead.last_name}`,
-        customer_id: lead.customer_id || (quote as any).customer_id,
-        property_id: null,
+        job_title: `${form.service_category} — ${customerName}`,
+        customer_id: customerId,
+        property_id: propertyId,
         service_category: form.service_category as any,
         status: 'Scheduled' as any,
         scope_of_work: form.scope_of_work || null,
+        internal_notes: form.agent_summary ? `Quote notes: ${form.agent_summary}` : (form.internal_notes || null),
+        service_instructions: form.scope_of_work || null,
         quote_id: id,
         request_id: (quote as any).request_id || null,
       } as any).select().single();
@@ -425,6 +436,20 @@ export default function QuoteDetail() {
                 )}
                 {lead.address_line_1 && <p className="text-xs text-muted-foreground">{lead.address_line_1}, {lead.city} {lead.province}</p>}
                 <Link to={`/leads/${lead.id}`} className="text-primary text-xs hover:underline inline-block mt-1">View Lead →</Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Cross-links: Source Request & Created Job */}
+          {((quote as any).request_id) && (
+            <Card className="hidden lg:block">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Source</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <Link to={`/requests/${(quote as any).request_id}`} className="text-primary text-xs hover:underline">
+                  View Original Request →
+                </Link>
               </CardContent>
             </Card>
           )}

@@ -8,14 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { JOB_STATUSES, JOB_PRIORITIES, SERVICE_CATEGORIES } from '@/lib/constants';
 import { RecurringPlanCard } from '@/components/RecurringPlanCard';
-import { addWeeks, addDays, format, parseISO, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns';
+import { format, parseISO, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -62,20 +63,14 @@ export default function JobDetail() {
 
   const handleGenerateVisits = async () => {
     if (!id || !form.contract_start_date || !form.contract_end_date) return;
-    
     const freq = form.service_frequency;
-    
-    // on-snowfall is trigger-based, not pre-scheduled
     if (freq === 'on-snowfall') {
       toast({ title: 'On-snowfall frequency', description: 'Visits for snowfall-triggered plans should be created manually or via automation when snow events occur.', variant: 'destructive' });
       return;
     }
-    
     const start = parseISO(form.contract_start_date);
     const end = parseISO(form.contract_end_date);
-    
     let dates: Date[] = [];
-    
     if (freq === 'weekly') {
       dates = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
     } else if (freq === 'biweekly') {
@@ -86,28 +81,19 @@ export default function JobDetail() {
     } else if (freq === 'custom-seasonal') {
       dates = eachMonthOfInterval({ start, end });
     }
-    
     if (dates.length === 0) {
       toast({ title: 'No visits to generate', description: 'Check frequency and date range', variant: 'destructive' });
       return;
     }
-
-    // Guard: check for existing planned/scheduled visits in this date range
-    const existingPlanned = visits.filter((v: any) => 
+    const existingPlanned = visits.filter((v: any) =>
       ['Planned', 'Scheduled'].includes(v.visit_status) &&
       v.service_date >= form.contract_start_date &&
       v.service_date <= form.contract_end_date
     );
-    
     if (existingPlanned.length > 0) {
-      toast({ 
-        title: 'Planned visits already exist', 
-        description: `${existingPlanned.length} planned/scheduled visit(s) already exist in this date range. Delete them first to regenerate.`, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Planned visits already exist', description: `${existingPlanned.length} planned/scheduled visit(s) already exist in this date range. Delete them first to regenerate.`, variant: 'destructive' });
       return;
     }
-    
     setGenerating(true);
     try {
       for (const date of dates) {
@@ -131,6 +117,49 @@ export default function JobDetail() {
     }
   };
 
+  const handleCreateOneTimeVisit = async () => {
+    if (!id) return;
+    try {
+      await createVisit.mutateAsync({
+        visit_number: '',
+        job_id: id,
+        property_id: (job as any).property_id || null,
+        customer_id: (job as any).customer_id || null,
+        service_date: form.scheduled_date || format(new Date(), 'yyyy-MM-dd'),
+        visit_type: 'Routine',
+        visit_status: 'Scheduled',
+        crew_notes: form.service_instructions || form.scope_of_work || null,
+      });
+      qc.invalidateQueries({ queryKey: ['job_visits', id] });
+      toast({ title: 'Visit created' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleCreateInvoice = async () => {
+    if (!id) return;
+    try {
+      const { data: invoice, error } = await supabase.from('invoices').insert({
+        invoice_number: '',
+        customer_id: (job as any).customer_id,
+        property_id: (job as any).property_id || null,
+        job_id: id,
+        status: 'Draft' as any,
+        customer_memo: form.job_title || null,
+        internal_notes: `From job ${job.job_number}`,
+      }).select().single();
+      if (error) throw error;
+      toast({ title: 'Invoice created' });
+      navigate(`/invoices/${invoice.id}`);
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const isCompleted = form.status === 'Completed';
+  const isOneTime = !form.service_frequency || form.service_frequency === 'one-time';
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center gap-2">
@@ -146,9 +175,17 @@ export default function JobDetail() {
         </div>
       </div>
 
-      <Button onClick={handleSave} className="w-full h-11" disabled={updateJob.isPending}>
-        <Save className="h-4 w-4 mr-2" /> Save Job
-      </Button>
+      <div className="flex gap-2 flex-wrap">
+        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateJob.isPending}>
+          <Save className="h-4 w-4 mr-2" /> Save Job
+        </Button>
+        {isCompleted && (
+          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleCreateInvoice}>
+            <Receipt className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Invoice</span>
+          </Button>
+        )}
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
@@ -183,7 +220,6 @@ export default function JobDetail() {
             </CardContent>
           </Card>
 
-          {/* Recurring Plan */}
           <RecurringPlanCard
             form={form}
             set={set}
@@ -193,18 +229,25 @@ export default function JobDetail() {
         </div>
 
         <div className="space-y-3">
-          {/* Source Quote link */}
-          {(job as any).quote_id && (
+          {/* Source Quote / Request links */}
+          {((job as any).quote_id || (job as any).request_id) && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="h-3.5 w-3.5" /> Source Quote
+                  <LinkIcon className="h-3.5 w-3.5" /> Source
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-sm">
-                <Link to={`/quotes/${(job as any).quote_id}`} className="text-primary hover:underline text-xs">
-                  View Quote →
-                </Link>
+              <CardContent className="text-sm space-y-1.5">
+                {(job as any).quote_id && (
+                  <Link to={`/quotes/${(job as any).quote_id}`} className="text-primary hover:underline text-xs flex items-center gap-1">
+                    <FileText className="h-3 w-3" /> View Source Quote →
+                  </Link>
+                )}
+                {(job as any).request_id && (
+                  <Link to={`/requests/${(job as any).request_id}`} className="text-primary hover:underline text-xs flex items-center gap-1">
+                    <FileText className="h-3 w-3" /> View Original Request →
+                  </Link>
+                )}
               </CardContent>
             </Card>
           )}
@@ -217,6 +260,7 @@ export default function JobDetail() {
               <CardContent className="text-sm space-y-1">
                 <p className="font-medium">{customer.first_name} {customer.last_name}</p>
                 {customer.company_name && <p className="text-muted-foreground text-xs">{customer.company_name}</p>}
+                <Link to={`/customers/${(job as any).customer_id}`} className="text-primary text-xs hover:underline inline-block mt-1">View Customer →</Link>
               </CardContent>
             </Card>
           )}
@@ -246,8 +290,15 @@ export default function JobDetail() {
           {/* Visits */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <ClipboardCheck className="h-3.5 w-3.5" /> Visits ({visits.length})
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <ClipboardCheck className="h-3.5 w-3.5" /> Visits ({visits.length})
+                </span>
+                {isOneTime && visits.length === 0 && !isCompleted && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleCreateOneTimeVisit} disabled={createVisit.isPending}>
+                    <Plus className="h-3 w-3 mr-1" /> Create Visit
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">

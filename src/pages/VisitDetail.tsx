@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
-// Visit statuses now include: Planned, Scheduled, En Route, In Progress, Completed, Skipped, Rescheduled, Missed, Cancelled
 import { VisitPhotoGallery } from '@/components/VisitPhotoGallery';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function VisitDetail() {
   const { id } = useParams();
@@ -59,13 +59,38 @@ export default function VisitDetail() {
             <h1 className="text-lg md:text-xl font-bold mono">{visit.visit_number}</h1>
             <StatusBadge status={form.visit_status || 'Scheduled'} />
           </div>
-          {job && <p className="text-xs text-muted-foreground">{job.job_title} ({job.job_number})</p>}
+      {job && <p className="text-xs text-muted-foreground">{job.job_title} ({job.job_number})</p>}
         </div>
       </div>
 
-      <Button onClick={handleSave} className="w-full h-11" disabled={updateVisit.isPending}>
-        <Save className="h-4 w-4 mr-2" /> Save Visit
-      </Button>
+      <div className="flex gap-2 flex-wrap">
+        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateVisit.isPending}>
+          <Save className="h-4 w-4 mr-2" /> Save Visit
+        </Button>
+        {form.visit_status === 'Completed' && (
+          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={async () => {
+            try {
+              const { data: invoice, error } = await supabase.from('invoices').insert({
+                invoice_number: '',
+                customer_id: (visit as any).customer_id,
+                property_id: (visit as any).property_id || null,
+                job_id: (visit as any).job_id || null,
+                status: 'Draft' as any,
+                customer_memo: form.service_summary || null,
+                internal_notes: `From visit ${visit.visit_number}`,
+              }).select().single();
+              if (error) throw error;
+              toast({ title: 'Invoice created' });
+              navigate(`/invoices/${invoice.id}`);
+            } catch (err: any) {
+              toast({ title: 'Error', description: err.message, variant: 'destructive' });
+            }
+          }}>
+            <Receipt className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Invoice</span>
+          </Button>
+        )}
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
@@ -160,11 +185,15 @@ export default function VisitDetail() {
           {customer && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Customer</CardTitle>
+                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" /> Customer
+                </CardTitle>
               </CardHeader>
-              <CardContent className="text-sm">
+              <CardContent className="text-sm space-y-1">
                 <p className="font-medium">{customer.first_name} {customer.last_name}</p>
                 {customer.company_name && <p className="text-xs text-muted-foreground">{customer.company_name}</p>}
+                {customer.phone && <p className="text-xs text-muted-foreground">{customer.phone}</p>}
+                <Link to={`/customers/${(visit as any).customer_id}`} className="text-primary text-xs hover:underline inline-block mt-1">View Customer →</Link>
               </CardContent>
             </Card>
           )}
