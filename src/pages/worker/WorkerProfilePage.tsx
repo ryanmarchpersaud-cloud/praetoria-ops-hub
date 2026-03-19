@@ -68,9 +68,12 @@ export default function WorkerProfilePage() {
       <Card>
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <User className="h-7 w-7 text-primary" />
-            </div>
+            <AvatarUpload
+              currentUrl={profile.profile_photo_url}
+              initials={initials}
+              onUploaded={handleAvatarUploaded}
+              size="lg"
+            />
             <div className="min-w-0">
               <p className="text-base font-semibold text-foreground">{profile.full_name || '—'}</p>
               {profile.role_title && <p className="text-sm text-muted-foreground">{profile.role_title}</p>}
