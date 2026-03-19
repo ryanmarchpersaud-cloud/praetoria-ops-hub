@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useEffect, useState } from 'react';
 
 export interface SidebarCounts {
   leads: number;
@@ -24,10 +24,20 @@ async function countRows(table: string, column: string, values: string[]): Promi
 }
 
 export function useSidebarCounts() {
-  const { user } = useAuth();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserId(data.session?.user?.id ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return useQuery({
-    queryKey: ['sidebar_counts', user?.id],
+    queryKey: ['sidebar_counts', userId],
     queryFn: async (): Promise<SidebarCounts> => {
       const [leads, quotes, jobs, visits, invoices, requests] = await Promise.all([
         countRows('leads', 'status', ['New']),
@@ -40,7 +50,7 @@ export function useSidebarCounts() {
 
       return { leads, quotes, jobs, visits, invoices, requests };
     },
-    enabled: !!user,
+    enabled: !!userId,
     refetchInterval: 30000,
     staleTime: 15000,
   });
