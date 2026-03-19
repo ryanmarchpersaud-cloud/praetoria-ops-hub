@@ -102,6 +102,7 @@ export default function WorkerVisitExec() {
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  const [propertyConfirmed, setPropertyConfirmed] = useState(false);
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
