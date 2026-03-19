@@ -149,12 +149,11 @@ export default function RolesPermissionsPage() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // Delete all existing for this role, re-insert
-      const role = selectedRole;
+      const role = selectedRole as "admin" | "customer" | "dispatcher" | "lead_worker" | "manager" | "staff" | "subcontractor" | "supervisor";
       await supabase.from('role_permissions').delete().eq('role', role);
-      const rows: { role: string; permission_key: string }[] = [];
+      const rows: { role: typeof role; permission_key: string }[] = [];
       MODULES.forEach(m => {
-        (permState[role]?.[m.key] || []).forEach(action => {
+        (permState[selectedRole]?.[m.key] || []).forEach(action => {
           rows.push({ role, permission_key: `can_${action}_${m.key}` });
         });
       });

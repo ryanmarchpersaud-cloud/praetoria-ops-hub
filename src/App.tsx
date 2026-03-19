@@ -121,6 +121,10 @@ import PaymentsSettingsPage from "./pages/PaymentsSettingsPage";
 import ExpenseTrackingPage from "./pages/ExpenseTrackingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 import SettingsPlaceholder from "./pages/SettingsPlaceholder";
+import WorkSettingsPage from "./pages/WorkSettingsPage";
+import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
+import RouteOptimizationPage from "./pages/RouteOptimizationPage";
+import JobFormsPage from "./pages/JobFormsPage";
 
 const queryClient = new QueryClient();
 
