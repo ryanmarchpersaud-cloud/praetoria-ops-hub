@@ -24,6 +24,7 @@ export function ChatThread({ conversationId, title, isAnnouncementOnly, onBack, 
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showVideo, setShowVideo] = useState(false);
 
   // Fetch user role for announcement gating
   useEffect(() => {
