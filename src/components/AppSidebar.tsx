@@ -63,7 +63,7 @@ export function AppSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Internal Ops</SidebarGroupLabel>
+          <SidebarGroupLabel>Admin Portal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {opsItems.map((item) => (
