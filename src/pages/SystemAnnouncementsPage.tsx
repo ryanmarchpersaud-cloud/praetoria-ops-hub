@@ -42,16 +42,16 @@ function ComposeDialog({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    let status: string = 'draft';
+    let annStatus: Announcement['status'] = 'draft';
     let publish_at: string | null = null;
 
     if (!asDraft) {
       if (publishMode === 'now') {
-        status = 'active';
+        annStatus = 'active';
         publish_at = new Date().toISOString();
       } else {
         if (!publishAt) { toast.error('Select a publish date'); return; }
-        status = 'scheduled';
+        annStatus = 'scheduled';
         publish_at = new Date(publishAt).toISOString();
       }
     }
@@ -60,7 +60,7 @@ function ComposeDialog({ onClose }: { onClose: () => void }) {
       title: title.trim(),
       body: body.trim(),
       priority,
-      status,
+      status: annStatus,
       publish_at,
       expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
     });
