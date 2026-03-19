@@ -134,6 +134,23 @@ export function useEmployeeEquipment(userId: string | undefined) {
   });
 }
 
+export function useEmployeeTrainingRecords(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['employee_training_admin', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from('worker_training_records')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId,
+  });
+}
+
 export function useIssueEquipment() {
   const qc = useQueryClient();
   return useMutation({
@@ -157,6 +174,69 @@ export function useIssueEquipment() {
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['employee_equipment_admin', variables.user_id] });
       qc.invalidateQueries({ queryKey: ['worker_equipment'] });
+    },
+  });
+}
+
+export function useUpdateEquipment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string; user_id: string; condition?: string; return_date?: string; replacement_requested?: boolean; notes?: string }) => {
+      const { user_id, ...fields } = updates;
+      const { error } = await supabase
+        .from('worker_equipment_items')
+        .update(fields as any)
+        .eq('id', id);
+      if (error) throw error;
+      return { user_id };
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['employee_equipment_admin'] });
+      qc.invalidateQueries({ queryKey: ['worker_equipment'] });
+    },
+  });
+}
+
+export function useAssignTraining() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (record: {
+      user_id: string;
+      training_name: string;
+      training_type: string;
+      expiry_date?: string;
+      notes?: string;
+      file_url?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('worker_training_records')
+        .insert({ ...record, status: 'pending' } as any)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['employee_training_admin', variables.user_id] });
+      qc.invalidateQueries({ queryKey: ['worker_training_records'] });
+    },
+  });
+}
+
+export function useApproveCertificate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status, user_id }: { id: string; status: 'valid' | 'revoked'; user_id: string }) => {
+      const { error } = await supabase
+        .from('worker_certifications')
+        .update({ status } as any)
+        .eq('id', id);
+      if (error) throw error;
+      return { user_id };
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['employee_certifications', variables.user_id] });
+      qc.invalidateQueries({ queryKey: ['worker_certifications'] });
     },
   });
 }
