@@ -197,10 +197,11 @@ export default function WorkerSchedule() {
         .select(VISIT_SELECT)
         .gte('service_date', tomorrowStr)
         .lte('service_date', upcomingEnd)
+        .eq('jobs.assigned_to', user!.id)
         .order('service_date', { ascending: true })
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return ((data || []) as any[]).filter((v: any) => v.jobs?.assigned_to === user?.id) as unknown as Visit[];
+      return (data || []) as unknown as Visit[];
     },
     enabled: !!user,
   });
