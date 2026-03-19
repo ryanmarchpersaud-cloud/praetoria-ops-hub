@@ -90,7 +90,15 @@ export default function WorkerHome() {
   const highlightVisit = inProgressVisit || nextVisit;
   const lastCompleted = completedVisits[completedVisits.length - 1];
 
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
+  const firstName = workerProfile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
+  const initials = (workerProfile?.full_name || user?.user_metadata?.full_name || user?.email || '?')
+    .split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const handleAvatarUploaded = async (url: string) => {
+    if (!user) return;
+    await supabase.from('worker_profiles').update({ profile_photo_url: url }).eq('user_id', user.id);
+    queryClient.invalidateQueries({ queryKey: ['worker_profile'] });
+  };
 
   const handleClock = () => {
     if (active) {
