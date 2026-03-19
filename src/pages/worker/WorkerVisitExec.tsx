@@ -142,7 +142,9 @@ export default function WorkerVisitExec() {
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   if (!visit) return <div className="p-6 text-center text-muted-foreground">Visit not found</div>;
 
-  // property, customer, job already extracted above
+  const property = (visit as any).properties;
+  const customer = (visit as any).customers;
+  const job = (visit as any).jobs;
 
   // Guard: worker can only access visits assigned to them
   const assignedTo = job?.assigned_to;
@@ -157,9 +159,6 @@ export default function WorkerVisitExec() {
     );
   }
 
-  const property = (visit as any).properties;
-  const customer = (visit as any).customers;
-  const job = (visit as any).jobs;
   const execState = mapStatusToExec(visit.visit_status);
   const photoCount = (photos as any[]).length + stagedFiles.length;
   const canComplete = photoCount >= MIN_PHOTOS_FOR_COMPLETION;
