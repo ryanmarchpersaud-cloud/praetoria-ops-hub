@@ -440,6 +440,20 @@ export default function QuoteDetail() {
             </Card>
           )}
 
+          {/* Cross-links: Source Request & Created Job */}
+          {((quote as any).request_id) && (
+            <Card className="hidden lg:block">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Source</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <Link to={`/requests/${(quote as any).request_id}`} className="text-primary text-xs hover:underline">
+                  View Original Request →
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Email Quote Panel */}
           <QuoteEmailPreview
             quote={quote}
