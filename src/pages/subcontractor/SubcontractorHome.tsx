@@ -29,6 +29,7 @@ function formatToday() {
 
 export default function SubcontractorHome() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: profile } = useSubcontractorProfile();
   const { data: assignments = [] } = useSubcontractorAssignments(profile?.id);
   const { data: invoices = [] } = useSubcontractorInvoices(profile?.id);
