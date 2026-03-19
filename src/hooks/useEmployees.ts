@@ -116,3 +116,47 @@ export function useEmployeeEmergencyContacts(userId: string | undefined) {
     enabled: !!userId,
   });
 }
+
+export function useEmployeeEquipment(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['employee_equipment_admin', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from('worker_equipment_items')
+        .select('*')
+        .eq('user_id', userId)
+        .order('issued_date', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useIssueEquipment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (item: {
+      user_id: string;
+      item_name: string;
+      item_type: string;
+      serial_number?: string;
+      condition: string;
+      issued_date: string;
+      notes?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('worker_equipment_items')
+        .insert(item as any)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['employee_equipment_admin', variables.user_id] });
+      qc.invalidateQueries({ queryKey: ['worker_equipment'] });
+    },
+  });
+}
