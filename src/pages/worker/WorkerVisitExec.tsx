@@ -402,46 +402,31 @@ export default function WorkerVisitExec() {
         })}
       </div>
 
-      {/* Property & Customer info */}
-      <Card>
-        <CardContent className="p-3 space-y-2">
-          {property && (
-            <div className="flex items-start gap-2">
-              <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{property.property_name}</p>
-                {property.address_line_1 && (
-                  <p className="text-[11px] text-muted-foreground">
-                    {property.address_line_1}{property.city && `, ${property.city}`}
-                  </p>
-                )}
-                {property.gate_code && <p className="text-[11px] text-amber-600">Gate: {property.gate_code}</p>}
-                {property.access_notes && <p className="text-[11px] text-muted-foreground italic">{property.access_notes}</p>}
-              </div>
-              <DirectionsButton
-                address={property.address_line_1}
-                city={property.city}
-                province={property.province}
-                postalCode={property.postal_code}
-                variant="icon"
-              />
+      {/* Property Verification */}
+      {property && (
+        <PropertyVerificationCard
+          property={property}
+          onConfirm={() => setPropertyConfirmed(true)}
+          confirmed={propertyConfirmed}
+        />
+      )}
+
+      {/* Customer info */}
+      {customer && (
+        <Card>
+          <CardContent className="p-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium">{customer.first_name} {customer.last_name}</p>
+              {customer.company_name && <p className="text-[10px] text-muted-foreground">{customer.company_name}</p>}
             </div>
-          )}
-          {customer && (
-            <div className="flex items-center justify-between pt-1 border-t">
-              <div>
-                <p className="text-xs font-medium">{customer.first_name} {customer.last_name}</p>
-                {customer.company_name && <p className="text-[10px] text-muted-foreground">{customer.company_name}</p>}
-              </div>
-              {customer.phone && (
-                <a href={`tel:${customer.phone}`} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Phone className="h-3.5 w-3.5 text-primary" />
-                </a>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {customer.phone && (
+              <a href={`tel:${customer.phone}`} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Phone className="h-3.5 w-3.5 text-primary" />
+              </a>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Job instructions */}
       {job?.service_instructions && (
