@@ -1,6 +1,9 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useSubcontractorProfile, useSubcontractorAssignments, useSubcontractorInvoices } from '@/hooks/useSubcontractor';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays, Receipt, FileText, ChevronRight, MapPin, CheckCircle,
