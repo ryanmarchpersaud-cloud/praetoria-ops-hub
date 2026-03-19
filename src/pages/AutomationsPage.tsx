@@ -264,12 +264,12 @@ export default function AutomationsPage() {
                       {logs.map((l: Log) => (
                         <TableRow key={l.id}>
                           <TableCell>
-                            {l.status === 'success' ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          {l.status === 'success' ? (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                             ) : l.status === 'failed' ? (
                               <XCircle className="h-4 w-4 text-destructive" />
                             ) : (
-                              <Clock className="h-4 w-4 text-amber-500" />
+                              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                             )}
                           </TableCell>
                           <TableCell className="text-sm font-medium">{l.rule_name}</TableCell>
