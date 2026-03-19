@@ -122,6 +122,7 @@ import ProductsServicesPage from "./pages/ProductsServicesPage";
 import CompanySettingsPage from "./pages/CompanySettingsPage";
 import PaymentsSettingsPage from "./pages/PaymentsSettingsPage";
 import ExpenseTrackingPage from "./pages/ExpenseTrackingPage";
+import MessagingPage from "./pages/MessagingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 
 import WorkSettingsPage from "./pages/WorkSettingsPage";
