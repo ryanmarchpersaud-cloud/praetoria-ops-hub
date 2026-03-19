@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ArrowLeft, Briefcase, MapPin, Calendar, Loader2, ChevronRight, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
 
 export default function WorkerJobDetail() {
   const { id } = useParams();
