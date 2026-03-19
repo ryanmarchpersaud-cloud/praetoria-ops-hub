@@ -329,34 +329,17 @@ export function useUnreadCount() {
     queryFn: async () => {
       if (!user) return 0;
 
-      const { data: memberships, error } = await supabase
-        .from('conversation_members')
-        .select('conversation_id, last_read_at')
-        .eq('user_id', user.id);
-      if (error) return 0;
-      if (!memberships?.length) return 0;
-
-      let total = 0;
-      for (const mem of memberships) {
-        let q = supabase
-          .from('messages')
-          .select('id', { count: 'exact', head: true })
-          .eq('conversation_id', mem.conversation_id)
-          .neq('sender_user_id', user.id)
-          .is('deleted_at', null);
-        
-        if (mem.last_read_at) {
-          q = q.gt('created_at', mem.last_read_at);
-        }
-        
-        const { count } = await q;
-        total += count || 0;
+      const { data, error } = await (supabase.rpc as any)('get_unread_message_count', {
+        _user_id: user.id,
+      });
+      if (error) {
+        console.error('Unread count error:', error);
+        return 0;
       }
-
-      return total;
+      return (data as number) || 0;
     },
     enabled: !!user,
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 }
 
