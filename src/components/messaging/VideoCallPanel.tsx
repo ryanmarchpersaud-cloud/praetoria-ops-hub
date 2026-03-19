@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Video, VideoOff, Mic, MicOff, PhoneOff, Users, Maximize2, Minimize2 } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, PhoneOff, Users, Maximize2, Minimize2, AlertCircle, PhoneMissed, Phone } from 'lucide-react';
 import { useCreateVideoCall, useJoinVideoCall, useEndVideoCall, useActiveVideoCall } from '@/hooks/useVideoCall';
+import { useSendMessage } from '@/hooks/useMessaging';
 import { MeetingNotesPanel } from './MeetingNotesPanel';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+
+type CallState = 'idle' | 'starting' | 'connecting' | 'active' | 'ended' | 'failed' | 'permission_denied' | 'missed';
 
 interface Props {
   conversationId: string;
@@ -16,8 +19,9 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
   const createCall = useCreateVideoCall();
   const joinCall = useJoinVideoCall();
   const endCall = useEndVideoCall();
+  const sendMessage = useSendMessage();
 
-  const [isInCall, setIsInCall] = useState(false);
+  const [callState, setCallState] = useState<CallState>('idle');
   const [room, setRoom] = useState<any>(null);
   const [localTracks, setLocalTracks] = useState<any[]>([]);
   const [remoteParticipants, setRemoteParticipants] = useState<Map<string, any>>(new Map());
@@ -27,11 +31,22 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
   const [showNotes, setShowNotes] = useState(false);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [currentRoomName, setCurrentRoomName] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const localVideoRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Post a system message to the conversation thread
+  const postCallEvent = useCallback((text: string) => {
+    sendMessage.mutate({
+      conversationId,
+      body: text,
+      messageType: 'system',
+    });
+  }, [conversationId, sendMessage]);
+
   const connectToRoom = useCallback(async (token: string, roomName: string) => {
+    setCallState('connecting');
     try {
       const TwilioVideo = await import('twilio-video');
       const connectedRoom = await TwilioVideo.connect(token, {
@@ -42,7 +57,7 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
       });
 
       setRoom(connectedRoom);
-      setIsInCall(true);
+      setCallState('active');
 
       // Attach local tracks
       const localParticipant = connectedRoom.localParticipant;
@@ -81,7 +96,7 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
       });
 
       connectedRoom.on('disconnected', () => {
-        setIsInCall(false);
+        setCallState('ended');
         setRoom(null);
         setRemoteParticipants(new Map());
         setLocalTracks([]);
@@ -90,23 +105,35 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
       toast.success('Connected to video call');
     } catch (err: any) {
       console.error('Failed to connect:', err);
-      toast.error(err.message || 'Failed to connect to video call');
+      if (err.name === 'NotAllowedError' || err.message?.includes('Permission denied')) {
+        setCallState('permission_denied');
+        setErrorMessage('Camera/microphone access was denied. Please allow access in your browser settings and try again.');
+      } else {
+        setCallState('failed');
+        setErrorMessage(err.message || 'Failed to connect to video call');
+      }
     }
   }, []);
 
   const handleStartCall = async () => {
+    setCallState('starting');
+    setErrorMessage(null);
     try {
       const result = await createCall.mutateAsync(conversationId);
       setCurrentCallId(result.video_call_id);
       setCurrentRoomName(result.room_name);
+      postCallEvent('📹 Video call started');
       await connectToRoom(result.token, result.room_name);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to start call');
+      setCallState('failed');
+      setErrorMessage(err.message || 'Failed to start call');
     }
   };
 
   const handleJoinCall = async () => {
     if (!activeCall) return;
+    setCallState('connecting');
+    setErrorMessage(null);
     try {
       const result = await joinCall.mutateAsync({
         roomName: activeCall.room_name,
@@ -114,9 +141,11 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
       });
       setCurrentCallId(activeCall.id);
       setCurrentRoomName(activeCall.room_name);
+      postCallEvent('📹 Joined video call');
       await connectToRoom(result.token, result.room_name);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to join call');
+      setCallState('failed');
+      setErrorMessage(err.message || 'Failed to join call');
     }
   };
 
@@ -127,11 +156,12 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
     if (currentRoomName) {
       try {
         await endCall.mutateAsync({ roomName: currentRoomName, conversationId });
+        postCallEvent('📹 Video call ended');
       } catch (err) {
         console.error('End call error:', err);
       }
     }
-    setIsInCall(false);
+    setCallState('ended');
     setRoom(null);
     setCurrentCallId(null);
     setCurrentRoomName(null);
@@ -140,14 +170,15 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
     }
   };
 
+  const handleRetry = () => {
+    setCallState('idle');
+    setErrorMessage(null);
+  };
+
   const toggleMute = () => {
     localTracks.forEach(track => {
       if (track.kind === 'audio') {
-        if (isMuted) {
-          track.enable();
-        } else {
-          track.disable();
-        }
+        if (isMuted) track.enable(); else track.disable();
       }
     });
     setIsMuted(!isMuted);
@@ -156,11 +187,7 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
   const toggleVideo = () => {
     localTracks.forEach(track => {
       if (track.kind === 'video') {
-        if (isVideoOff) {
-          track.enable();
-        } else {
-          track.disable();
-        }
+        if (isVideoOff) track.enable(); else track.disable();
       }
     });
     setIsVideoOff(!isVideoOff);
@@ -169,11 +196,105 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (room) {
-        room.disconnect();
-      }
+      if (room) room.disconnect();
     };
   }, [room]);
+
+  // Render state-specific content
+  const renderPreCallContent = () => {
+    if (callState === 'ended') {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <PhoneOff className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Call ended</p>
+            <p className="text-xs text-muted-foreground mt-1">The video call has been disconnected</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} className="gap-2">
+              Close
+            </Button>
+            <Button onClick={handleRetry} className="gap-2">
+              <Video className="h-4 w-4" /> New Call
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (callState === 'failed' || callState === 'permission_denied') {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">
+              {callState === 'permission_denied' ? 'Permission Denied' : 'Connection Failed'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
+              {errorMessage}
+            </p>
+          </div>
+          <Button onClick={handleRetry} variant="outline" className="gap-2">
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+
+    if (callState === 'starting' || callState === 'connecting') {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
+            <Video className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">
+              {callState === 'starting' ? 'Starting call...' : 'Connecting...'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Setting up your camera and microphone</p>
+          </div>
+        </div>
+      );
+    }
+
+    // idle state
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+          <Video className="h-8 w-8 text-primary" />
+        </div>
+        {activeCall ? (
+          <>
+            <div>
+              <p className="text-sm font-medium">Call in progress</p>
+              <p className="text-xs text-muted-foreground mt-1">Join the active video call</p>
+            </div>
+            <Button onClick={handleJoinCall} disabled={joinCall.isPending} className="gap-2">
+              <Phone className="h-4 w-4" />
+              {joinCall.isPending ? 'Connecting...' : 'Join Call'}
+            </Button>
+          </>
+        ) : (
+          <>
+            <div>
+              <p className="text-sm font-medium">Start a video call</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Great for safety meetings, job briefings, and team check-ins
+              </p>
+            </div>
+            <Button onClick={handleStartCall} disabled={createCall.isPending} className="gap-2">
+              <Video className="h-4 w-4" />
+              {createCall.isPending ? 'Starting...' : 'Start Call'}
+            </Button>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -188,16 +309,19 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
         <div className="flex items-center gap-2">
           <Video className="h-4 w-4 text-primary" />
           <span className="text-sm font-semibold">
-            {isInCall ? '🔴 Live Call' : 'Video Call'}
+            {callState === 'active' ? '🔴 Live Call' :
+             callState === 'ended' ? 'Call Ended' :
+             callState === 'failed' || callState === 'permission_denied' ? '⚠️ Call Error' :
+             'Video Call'}
           </span>
-          {isInCall && (
+          {callState === 'active' && (
             <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">
               {remoteParticipants.size + 1} participant{remoteParticipants.size > 0 ? 's' : ''}
             </span>
           )}
         </div>
         <div className="flex items-center gap-1">
-          {isInCall && (
+          {callState === 'active' && (
             <Button
               variant="ghost"
               size="icon"
@@ -222,38 +346,8 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
       <div className="flex-1 flex overflow-hidden">
         {/* Video area */}
         <div className={cn('flex-1 flex flex-col', showNotes && 'w-1/2')}>
-          {!isInCall ? (
-            /* Pre-call state */
-            <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Video className="h-8 w-8 text-primary" />
-              </div>
-              {activeCall ? (
-                <>
-                  <div>
-                    <p className="text-sm font-medium">Call in progress</p>
-                    <p className="text-xs text-muted-foreground mt-1">Join the active video call</p>
-                  </div>
-                  <Button onClick={handleJoinCall} disabled={joinCall.isPending} className="gap-2">
-                    <Video className="h-4 w-4" />
-                    {joinCall.isPending ? 'Connecting...' : 'Join Call'}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <p className="text-sm font-medium">Start a video call</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Great for safety meetings, job briefings, and team check-ins
-                    </p>
-                  </div>
-                  <Button onClick={handleStartCall} disabled={createCall.isPending} className="gap-2">
-                    <Video className="h-4 w-4" />
-                    {createCall.isPending ? 'Starting...' : 'Start Call'}
-                  </Button>
-                </>
-              )}
-            </div>
+          {callState !== 'active' ? (
+            renderPreCallContent()
           ) : (
             /* In-call state */
             <div className="flex-1 flex flex-col">
@@ -309,7 +403,7 @@ export function VideoCallPanel({ conversationId, onClose }: Props) {
         </div>
 
         {/* Meeting notes side panel */}
-        {showNotes && isInCall && currentCallId && (
+        {showNotes && callState === 'active' && currentCallId && (
           <div className="w-1/2 border-l overflow-hidden">
             <MeetingNotesPanel
               videoCallId={currentCallId}

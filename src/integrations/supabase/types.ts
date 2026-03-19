@@ -4235,6 +4235,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_conversation_unread_counts: {
+        Args: { _user_id: string }
+        Returns: {
+          conversation_id: string
+          unread_count: number
+        }[]
+      }
       get_customer_id_for_user: { Args: { _user_id: string }; Returns: string }
       get_subcontractor_id_for_user: {
         Args: { _user_id: string }

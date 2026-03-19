@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 
 export type ConversationType = 'direct_message' | 'team_channel' | 'job_thread' | 'visit_thread' | 'incident_thread' | 'equipment_thread' | 'announcement_channel';
 
@@ -21,6 +21,8 @@ export interface Conversation {
   created_at: string;
   members?: ConversationMember[];
   unread_count?: number;
+  _last_read_at?: string | null;
+  _muted?: boolean;
 }
 
 export interface ConversationMember {
@@ -58,7 +60,7 @@ export interface MessageAttachment {
 }
 
 /** Fetch all conversations the current user is a member of */
-export function useConversations(filter?: { type?: string; unreadOnly?: boolean }) {
+export function useConversations(filter?: { type?: string; unreadOnly?: boolean; includeArchived?: boolean }) {
   const { user } = useAuth();
 
   return useQuery({
@@ -68,10 +70,13 @@ export function useConversations(filter?: { type?: string; unreadOnly?: boolean 
 
       let query = supabase
         .from('conversations')
-        .select('*, conversation_members!inner(user_id, last_read_at, role_snapshot)')
+        .select('*, conversation_members!inner(user_id, last_read_at, role_snapshot, muted)')
         .eq('conversation_members.user_id', user.id)
-        .eq('is_archived', false)
         .order('last_message_at', { ascending: false });
+
+      if (!filter?.includeArchived) {
+        query = query.eq('is_archived', false);
+      }
 
       if (filter?.type) {
         query = query.eq('conversation_type', filter.type);
@@ -80,14 +85,23 @@ export function useConversations(filter?: { type?: string; unreadOnly?: boolean 
       const { data, error } = await query;
       if (error) throw error;
 
-      // Calculate unread counts
+      // Get per-conversation unread counts
+      const { data: unreadData } = await (supabase.rpc as any)('get_conversation_unread_counts', {
+        _user_id: user.id,
+      });
+      const unreadMap: Record<string, number> = {};
+      (unreadData || []).forEach((r: any) => {
+        unreadMap[r.conversation_id] = Number(r.unread_count);
+      });
+
       const convos = (data || []).map((c: any) => {
         const membership = c.conversation_members?.[0];
-        const lastRead = membership?.last_read_at;
         return {
           ...c,
           members: c.conversation_members,
-          _last_read_at: lastRead,
+          _last_read_at: membership?.last_read_at,
+          _muted: membership?.muted ?? false,
+          unread_count: unreadMap[c.id] || 0,
         };
       });
 
@@ -121,7 +135,6 @@ export function useMessages(conversationId: string | null) {
       const profiles: Record<string, any> = {};
       
       if (senderIds.length > 0) {
-        // Try team_members first
         const { data: teamMembers } = await supabase
           .from('team_members')
           .select('user_id, full_name, display_name, email')
@@ -136,7 +149,6 @@ export function useMessages(conversationId: string | null) {
           };
         });
 
-        // Try subcontractors
         const missingSenders = senderIds.filter(id => !profiles[id]);
         if (missingSenders.length > 0) {
           const { data: subs } = await supabase
@@ -163,7 +175,7 @@ export function useMessages(conversationId: string | null) {
     enabled: !!conversationId && !!user,
   });
 
-  // Realtime subscription for new messages
+  // Realtime subscription for new messages — invalidate conversations + unread too
   useEffect(() => {
     if (!conversationId) return;
     const channel = supabase
@@ -176,6 +188,7 @@ export function useMessages(conversationId: string | null) {
       }, () => {
         queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        queryClient.invalidateQueries({ queryKey: ['unread_count'] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -190,9 +203,10 @@ export function useSendMessage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ conversationId, body, attachments }: {
+    mutationFn: async ({ conversationId, body, messageType, attachments }: {
       conversationId: string;
       body: string;
+      messageType?: string;
       attachments?: { file_url: string; file_name: string; file_type: string }[];
     }) => {
       if (!user) throw new Error('Not authenticated');
@@ -203,14 +217,13 @@ export function useSendMessage() {
           conversation_id: conversationId,
           sender_user_id: user.id,
           body,
-          message_type: attachments?.length ? 'attachment' : 'text',
+          message_type: messageType || (attachments?.length ? 'attachment' : 'text'),
           attachment_count: attachments?.length || 0,
         })
         .select()
         .single();
       if (error) throw error;
 
-      // Insert attachments
       if (attachments?.length) {
         const { error: attErr } = await supabase
           .from('message_attachments')
@@ -234,7 +247,7 @@ export function useSendMessage() {
         })
         .eq('id', conversationId);
 
-      // Mark as read
+      // Mark as read for sender
       await supabase
         .from('conversation_members')
         .update({ last_read_at: new Date().toISOString() })
@@ -246,6 +259,7 @@ export function useSendMessage() {
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['messages', vars.conversationId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread_count'] });
     },
   });
 }
@@ -281,7 +295,6 @@ export function useCreateConversation() {
         .single();
       if (error) throw error;
 
-      // Add members (include creator)
       const allMembers = [...new Set([user.id, ...memberUserIds])];
       const { error: memErr } = await supabase
         .from('conversation_members')
@@ -320,15 +333,56 @@ export function useMarkRead() {
   });
 }
 
+/** Mute/unmute conversation */
+export function useToggleMute() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ conversationId, muted }: { conversationId: string; muted: boolean }) => {
+      if (!user) return;
+      await supabase
+        .from('conversation_members')
+        .update({ muted })
+        .eq('conversation_id', conversationId)
+        .eq('user_id', user.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+    },
+  });
+}
+
+/** Archive/unarchive conversation */
+export function useToggleArchive() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ conversationId, archived }: { conversationId: string; archived: boolean }) => {
+      if (!user) return;
+      await supabase
+        .from('conversations')
+        .update({ is_archived: archived, updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+    },
+  });
+}
+
 /** Get total unread count across all conversations */
 export function useUnreadCount() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['unread_count', user?.id],
     queryFn: async () => {
       if (!user) return 0;
-
       const { data, error } = await (supabase.rpc as any)('get_unread_message_count', {
         _user_id: user.id,
       });
@@ -341,6 +395,28 @@ export function useUnreadCount() {
     enabled: !!user,
     refetchInterval: 15000,
   });
+
+  // Global realtime listener for any new message to update unread count instantly
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('global-unread-counter')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+      }, (payload: any) => {
+        // Only invalidate if the message is from someone else
+        if (payload.new?.sender_user_id !== user.id) {
+          queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
+
+  return query;
 }
 
 /** Get conversation members with profile info */
