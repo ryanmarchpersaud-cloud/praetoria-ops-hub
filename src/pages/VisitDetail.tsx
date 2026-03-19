@@ -154,6 +154,33 @@ export default function VisitDetail() {
         </div>
 
         <div className="space-y-3">
+          {/* Assigned Worker */}
+          {job && (() => {
+            const assignedWorker = (employees as any[]).find((e: any) => e.user_id === job.assigned_to);
+            return (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <UserCheck className="h-3.5 w-3.5" /> Assigned Worker
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm space-y-1">
+                  {assignedWorker ? (
+                    <>
+                      <p className="font-medium">{assignedWorker.full_name}</p>
+                      {assignedWorker.job_title && <p className="text-xs text-muted-foreground">{assignedWorker.job_title}</p>}
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Unassigned — assign via job</p>
+                  )}
+                  {job && (
+                    <Link to={`/jobs/${job.id}`} className="text-primary text-xs hover:underline inline-block mt-1">Manage assignment →</Link>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
+
           {job && (
             <Card>
               <CardHeader className="pb-2">
