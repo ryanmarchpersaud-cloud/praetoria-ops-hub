@@ -1,17 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMessages, useSendMessage, useMarkRead } from '@/hooks/useMessaging';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   conversationId: string;
   title?: string;
   isAnnouncementOnly?: boolean;
   onBack?: () => void;
-  /** Whether sender is allowed to post (admins can always post to announcements) */
   canPost?: boolean;
 }
 
@@ -21,9 +21,9 @@ export function ChatThread({ conversationId, title, isAnnouncementOnly, onBack, 
   const markRead = useMarkRead();
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // For announcements, only admins/managers can post
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  // Fetch user role for announcement gating
   useEffect(() => {
     if (!user) return;
     supabase.from('user_roles').select('role').eq('user_id', user.id).then(({ data }) => {
@@ -33,11 +33,6 @@ export function ChatThread({ conversationId, title, isAnnouncementOnly, onBack, 
 
   const isAdmin = userRole === 'admin' || userRole === 'manager';
   const effectiveCanPost = canPost && (!isAnnouncementOnly || isAdmin);
-  const { data: messages, isLoading } = useMessages(conversationId);
-  const sendMessage = useSendMessage();
-  const markRead = useMarkRead();
-  const { user } = useAuth();
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -103,14 +98,18 @@ export function ChatThread({ conversationId, title, isAnnouncementOnly, onBack, 
       </div>
 
       {/* Input */}
-      {canPost && (
+      {effectiveCanPost ? (
         <MessageInput
           conversationId={conversationId}
           onSend={handleSend}
           disabled={sendMessage.isPending}
-          isAnnouncementOnly={isAnnouncementOnly}
+          isAnnouncementOnly={false}
         />
-      )}
+      ) : isAnnouncementOnly ? (
+        <div className="p-3 text-center text-xs text-muted-foreground bg-muted/30 border-t">
+          📢 This is an announcement-only channel
+        </div>
+      ) : null}
     </div>
   );
 }
