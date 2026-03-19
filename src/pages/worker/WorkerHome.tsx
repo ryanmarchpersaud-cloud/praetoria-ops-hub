@@ -45,6 +45,8 @@ function formatToday() {
 
 export default function WorkerHome() {
   const { user } = useAuth();
+  const { data: workerProfile } = useWorkerProfile();
+  const queryClient = useQueryClient();
   const { data: active } = useActiveTimesheet();
   const clockInMut = useClockIn();
   const clockOutMut = useClockOut();
