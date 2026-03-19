@@ -84,9 +84,9 @@ serve(async (req) => {
 
     const { action, conversation_id, room_name } = await req.json();
 
-    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
-    const apiKeySid = Deno.env.get("TWILIO_VIDEO_API_KEY_SID");
-    const apiKeySecret = Deno.env.get("TWILIO_VIDEO_API_KEY_SECRET");
+    const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID")?.trim();
+    const apiKeySid = Deno.env.get("TWILIO_VIDEO_API_KEY_SID")?.trim();
+    const apiKeySecret = Deno.env.get("TWILIO_VIDEO_API_KEY_SECRET")?.trim();
 
     if (!accountSid || !apiKeySid || !apiKeySecret) {
       return new Response(JSON.stringify({ error: "Twilio Video credentials not configured" }), {
