@@ -51,23 +51,30 @@ export function WorkerFAB() {
     }
   }, [active, clockIn, clockOut, toast]);
 
+  const handleVisitAction = useCallback((fallback?: string) => {
+    if (isOnVisitPage) return `/worker/visit/${currentVisitId}`;
+    toast({ title: 'No active visit', description: 'Open a visit first to use this action.', variant: 'destructive' });
+    return '';
+  }, [isOnVisitPage, currentVisitId, toast]);
+
   const fieldActions: QuickAction[] = useMemo(() => [
-    // Visit-context actions — only show when on a visit page
-    { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: `/worker/visit/${currentVisitId}`, category: 'field' as const, hidden: !isOnVisitPage },
-    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: `/worker/visit/${currentVisitId}`, category: 'field' as const, hidden: !isOnVisitPage },
-    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, hidden: !isOnVisitPage },
-    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, hidden: !isOnVisitPage },
+    // Visit-context actions — always visible, but require visit context
+    { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
+    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
+    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
+    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
     { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '/worker/incidents', category: 'field' as const },
-    // Always-available actions
     { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: () => setQuickAction('expense'), category: 'field' as const },
     { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' as const },
-    { icon: Clock, label: 'Timesheet', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' as const },
+    { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
+    { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, comingSoon: !isOnVisitPage },
     { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: () => setQuickAction('message_admin'), category: 'field' as const },
+    { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' as const },
     { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: () => setQuickAction('equipment_issue'), category: 'field' as const },
     { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: () => setQuickAction('materials_used'), category: 'field' as const },
   ], [currentVisitId, isOnVisitPage, active, handleClock]);
 
-  const visibleFieldActions = fieldActions.filter(a => !a.hidden);
+  const visibleFieldActions = fieldActions;
 
   const adminOnlyActions: QuickAction[] = [
     { icon: UserPlus, label: 'New Lead', color: 'bg-blue-500', action: '/leads?new=1', category: 'admin' },
@@ -83,8 +90,14 @@ export function WorkerFAB() {
     { icon: PenLine, label: 'Review Draft', color: 'bg-slate-600', action: '/quotes?filter=draft', category: 'admin' },
   ];
 
+  const visitRequiredLabels = ['Start Visit', 'Complete Visit', 'Add Photos', 'Add Note', 'Open Directions', 'Call Customer'];
+
   const handleAction = (a: QuickAction) => {
     setOpen(false);
+    if (a.comingSoon && visitRequiredLabels.includes(a.label)) {
+      toast({ title: 'Open a visit first', description: `"${a.label}" requires an active visit.` });
+      return;
+    }
     if (a.comingSoon) {
       setComingSoonLabel(a.label);
       return;
