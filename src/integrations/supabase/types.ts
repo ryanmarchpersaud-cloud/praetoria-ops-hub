@@ -2691,6 +2691,62 @@ export type Database = {
           },
         ]
       }
+      subcontractor_billing_profiles: {
+        Row: {
+          autopay_consent_at: string | null
+          autopay_enabled: boolean
+          billing_email: string | null
+          card_brand: string | null
+          card_last4: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method_present: boolean
+          payment_preference: string
+          processor_customer_id: string | null
+          subcontractor_id: string
+          updated_at: string
+        }
+        Insert: {
+          autopay_consent_at?: string | null
+          autopay_enabled?: boolean
+          billing_email?: string | null
+          card_brand?: string | null
+          card_last4?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method_present?: boolean
+          payment_preference?: string
+          processor_customer_id?: string | null
+          subcontractor_id: string
+          updated_at?: string
+        }
+        Update: {
+          autopay_consent_at?: string | null
+          autopay_enabled?: boolean
+          billing_email?: string | null
+          card_brand?: string | null
+          card_last4?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method_present?: boolean
+          payment_preference?: string
+          processor_customer_id?: string | null
+          subcontractor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_billing_profiles_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: true
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subcontractor_documents: {
         Row: {
           created_at: string
