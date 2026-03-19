@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { PortalFAB } from '@/components/portal/PortalFAB';
+import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 
 const portalNav = [
   { title: 'Home', to: '/portal', icon: Home, tileColor: 'action-tile-green', iconColor: 'text-emerald-600', exact: true },
