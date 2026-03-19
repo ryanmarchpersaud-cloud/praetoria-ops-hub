@@ -115,7 +115,7 @@ export function DevTestPanel() {
           <div className="text-[10px] text-muted-foreground space-y-1.5 pt-2 border-t border-border">
             <p className="font-semibold text-foreground">Where each role goes:</p>
             <div className="space-y-1">
-              <p>🛡️ <strong>Admin</strong> → Internal Ops dashboard at <code className="bg-muted px-1 rounded">/</code></p>
+              <p>🛡️ <strong>Admin</strong> → Admin Portal at <code className="bg-muted px-1 rounded">/</code></p>
               <p className="pl-4 text-muted-foreground/70">Dashboard, Leads, Quotes, Customers, Jobs, Invoices, Schedule, Settings</p>
             </div>
             <div className="space-y-1">
