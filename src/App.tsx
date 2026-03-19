@@ -125,6 +125,10 @@ import WorkSettingsPage from "./pages/WorkSettingsPage";
 import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
 import RouteOptimizationPage from "./pages/RouteOptimizationPage";
 import JobFormsPage from "./pages/JobFormsPage";
+import ClientHubPage from "./pages/ClientHubPage";
+import EmailsTextsPage from "./pages/EmailsTextsPage";
+import RequestsBookingsPage from "./pages/RequestsBookingsPage";
+import PortalSettingsPage from "./pages/PortalSettingsPage";
 
 const queryClient = new QueryClient();
 
