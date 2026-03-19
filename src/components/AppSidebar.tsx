@@ -32,8 +32,8 @@ const systemItems = [
 ];
 
 const viewAsItems = [
-  { title: 'Field Mode', url: '/worker', icon: Smartphone, badge: 'Worker view' },
-  { title: 'Portal Preview', url: '/portal/properties', icon: Eye, badge: 'Customer view' },
+  { title: 'Worker Portal', url: '/worker', icon: Smartphone, badge: 'Worker view' },
+  { title: 'Customer Portal', url: '/portal/properties', icon: Eye, badge: 'Customer view' },
 ];
 
 export function AppSidebar() {

@@ -13,7 +13,7 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
-const SENDER = "Praetoria Ops <noreply@praetoriagroup.ca>";
+const SENDER = "Praetoria Group <noreply@praetoriagroup.ca>";
 
 function getServiceClient() {
   return createClient(

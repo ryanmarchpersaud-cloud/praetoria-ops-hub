@@ -13,7 +13,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <div className="flex items-center">
               <SidebarTrigger className="mr-3" />
               <span className="text-xs md:text-sm font-medium text-muted-foreground truncate">
-                <span className="hidden sm:inline">Praetoria Group — </span>Internal Ops
+                <span className="hidden sm:inline">Praetoria Group — </span>Admin Portal
               </span>
             </div>
             <NotificationCenter />

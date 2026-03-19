@@ -66,7 +66,7 @@ export default function WorkerMore() {
       {/* Current mode indicator */}
       <div className="flex items-center gap-2 px-1">
         <HardHat className="h-4 w-4 text-primary" />
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">You are in Field Mode</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Worker Portal</span>
       </div>
 
       {/* Profile & Employment */}

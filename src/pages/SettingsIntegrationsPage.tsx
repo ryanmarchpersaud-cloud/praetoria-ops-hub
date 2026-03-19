@@ -152,7 +152,7 @@ export default function SettingsIntegrationsPage() {
       <div className="space-y-6 animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold">Integrations</h1>
-          <p className="text-sm text-muted-foreground">Manage third-party services and system connections for Praetoria Ops.</p>
+          <p className="text-sm text-muted-foreground">Manage third-party services and system connections for Praetoria Group.</p>
         </div>
 
         {/* Summary cards */}

@@ -76,7 +76,7 @@ export default function Login() {
                 ? 'Enter your email to reset your password'
                 : mode === 'signup'
                   ? 'Request access to the operations platform'
-                  : 'Sign in to your operations platform'}
+                  : 'Sign in to your portal'}
             </p>
           </div>
 

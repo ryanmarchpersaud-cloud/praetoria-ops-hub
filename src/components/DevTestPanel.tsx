@@ -119,7 +119,7 @@ export function DevTestPanel() {
               <p className="pl-4 text-muted-foreground/70">Dashboard, Leads, Quotes, Customers, Jobs, Invoices, Schedule, Settings</p>
             </div>
             <div className="space-y-1">
-              <p>🔧 <strong>Worker</strong> → Field Mode at <code className="bg-muted px-1 rounded">/worker</code></p>
+              <p>🔧 <strong>Worker</strong> → Worker Portal at <code className="bg-muted px-1 rounded">/worker</code></p>
               <p className="pl-4 text-muted-foreground/70">Field Dashboard, Schedule, Timesheet, Visit Execution, Quick Actions</p>
             </div>
             <div className="space-y-1">
