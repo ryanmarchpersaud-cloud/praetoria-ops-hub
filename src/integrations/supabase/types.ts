@@ -3390,6 +3390,7 @@ export type Database = {
           cert_name: string
           created_at: string
           expiry_date: string | null
+          file_url: string | null
           id: string
           issue_date: string | null
           issuer: string | null
@@ -3401,6 +3402,7 @@ export type Database = {
           cert_name: string
           created_at?: string
           expiry_date?: string | null
+          file_url?: string | null
           id?: string
           issue_date?: string | null
           issuer?: string | null
@@ -3412,6 +3414,7 @@ export type Database = {
           cert_name?: string
           created_at?: string
           expiry_date?: string | null
+          file_url?: string | null
           id?: string
           issue_date?: string | null
           issuer?: string | null
