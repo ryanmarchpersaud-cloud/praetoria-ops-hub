@@ -3,12 +3,13 @@ import { useSubcontractorProfile } from '@/hooks/useSubcontractor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import {
   User, Mail, Phone, Building2, LogOut, ShieldCheck, Truck, MapPin,
   HelpCircle, CreditCard,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
