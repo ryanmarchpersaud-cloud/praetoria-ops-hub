@@ -1,6 +1,9 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useSubcontractorProfile, useSubcontractorAssignments, useSubcontractorInvoices } from '@/hooks/useSubcontractor';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { Link } from 'react-router-dom';
 import {
   CalendarDays, Receipt, FileText, ChevronRight, MapPin, CheckCircle,
@@ -26,6 +29,7 @@ function formatToday() {
 
 export default function SubcontractorHome() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: profile } = useSubcontractorProfile();
   const { data: assignments = [] } = useSubcontractorAssignments(profile?.id);
   const { data: invoices = [] } = useSubcontractorInvoices(profile?.id);
@@ -75,9 +79,16 @@ export default function SubcontractorHome() {
       {/* Welcome Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
         <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center text-lg font-bold">
-            {firstName.charAt(0).toUpperCase()}
-          </div>
+          <AvatarUpload
+            currentUrl={(profile as any)?.profile_photo_url}
+            initials={firstName.charAt(0).toUpperCase()}
+            onUploaded={async (url) => {
+              if (!profile) return;
+              await supabase.from('subcontractors').update({ profile_photo_url: url }).eq('id', profile.id);
+              queryClient.invalidateQueries({ queryKey: ['subcontractor_profile'] });
+            }}
+            size="sm"
+          />
           <div>
             <p className="text-lg font-bold">{getGreeting()}, {firstName}</p>
             <p className="text-xs opacity-80">{profile?.company_name || 'Subcontractor Portal'}</p>

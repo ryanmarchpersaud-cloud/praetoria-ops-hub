@@ -3011,6 +3011,7 @@ export type Database = {
           onboarding_status: string
           operating_name: string | null
           phone: string | null
+          profile_photo_url: string | null
           safety_doc_status: string
           service_area_summary: string | null
           status: string
@@ -3037,6 +3038,7 @@ export type Database = {
           onboarding_status?: string
           operating_name?: string | null
           phone?: string | null
+          profile_photo_url?: string | null
           safety_doc_status?: string
           service_area_summary?: string | null
           status?: string
@@ -3063,6 +3065,7 @@ export type Database = {
           onboarding_status?: string
           operating_name?: string | null
           phone?: string | null
+          profile_photo_url?: string | null
           safety_doc_status?: string
           service_area_summary?: string | null
           status?: string

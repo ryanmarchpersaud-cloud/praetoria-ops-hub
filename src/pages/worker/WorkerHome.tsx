@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
-import { useWorkerCertifications } from '@/hooks/useWorkerProfile';
+import { useWorkerCertifications, useWorkerProfile } from '@/hooks/useWorkerProfile';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WorkerFAB } from '@/components/worker/WorkerFAB';
 import { WorkerLocationCard } from '@/components/worker/WorkerLocationCard';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { WeatherCard } from '@/components/WeatherCard';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -44,6 +45,8 @@ function formatToday() {
 
 export default function WorkerHome() {
   const { user } = useAuth();
+  const { data: workerProfile } = useWorkerProfile();
+  const queryClient = useQueryClient();
   const { data: active } = useActiveTimesheet();
   const clockInMut = useClockIn();
   const clockOutMut = useClockOut();
@@ -87,7 +90,15 @@ export default function WorkerHome() {
   const highlightVisit = inProgressVisit || nextVisit;
   const lastCompleted = completedVisits[completedVisits.length - 1];
 
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
+  const firstName = workerProfile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
+  const initials = (workerProfile?.full_name || user?.user_metadata?.full_name || user?.email || '?')
+    .split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const handleAvatarUploaded = async (url: string) => {
+    if (!user) return;
+    await supabase.from('worker_profiles').update({ profile_photo_url: url }).eq('user_id', user.id);
+    queryClient.invalidateQueries({ queryKey: ['worker_profile'] });
+  };
 
   const handleClock = () => {
     if (active) {
@@ -110,50 +121,60 @@ export default function WorkerHome() {
 
   return (
     <div className="space-y-3 px-4 pt-3 pb-4">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-lg font-bold text-foreground">{getGreeting()}, {firstName}</p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Calendar className="h-3 w-3" /> {formatToday()}
-          </p>
-        </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <button className="relative w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center active:bg-muted transition-colors">
-              <Bell className="h-5 w-5 text-foreground" />
-              {notifications.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-                  {notifications.length}
-                </span>
-              )}
-            </button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-80">
-            <SheetHeader>
-              <SheetTitle>Notifications</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 space-y-3">
-              {notifications.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">No notifications</p>
-              ) : (
-                notifications.map(n => (
-                  <Link key={n.id} to={`/worker/visit/${n.id}`}>
-                    <Card className="active:shadow-sm transition-shadow">
-                      <CardContent className="p-3 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <AlertCircle className="h-3.5 w-3.5 text-primary shrink-0" />
-                          <span className="text-xs font-medium truncate">{n.title}</span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground pl-5">{n.description}</p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))
-              )}
+      {/* Welcome Banner */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AvatarUpload
+              currentUrl={workerProfile?.profile_photo_url}
+              initials={initials}
+              onUploaded={handleAvatarUploaded}
+              size="sm"
+            />
+            <div>
+              <p className="text-lg font-bold">{getGreeting()}, {firstName}</p>
+              <p className="text-xs opacity-80 flex items-center gap-1">
+                <Calendar className="h-3 w-3" /> {formatToday()}
+              </p>
             </div>
-          </SheetContent>
-        </Sheet>
+          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="relative w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center active:bg-primary-foreground/30 transition-colors">
+                <Bell className="h-5 w-5 text-primary-foreground" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80">
+              <SheetHeader>
+                <SheetTitle>Notifications</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-3">
+                {notifications.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">No notifications</p>
+                ) : (
+                  notifications.map(n => (
+                    <Link key={n.id} to={`/worker/visit/${n.id}`}>
+                      <Card className="active:shadow-sm transition-shadow">
+                        <CardContent className="p-3 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <span className="text-xs font-medium truncate">{n.title}</span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground pl-5">{n.description}</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       {/* Expiring Certifications Alert */}

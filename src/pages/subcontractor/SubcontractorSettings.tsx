@@ -3,12 +3,13 @@ import { useSubcontractorProfile } from '@/hooks/useSubcontractor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import {
   User, Mail, Phone, Building2, LogOut, ShieldCheck, Truck, MapPin,
   HelpCircle, CreditCard,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
@@ -26,6 +27,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value
 export default function SubcontractorSettings() {
   const { user, signOut } = useAuth();
   const { data: profile, isLoading } = useSubcontractorProfile();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const { data: billing } = useQuery({
@@ -54,14 +56,23 @@ export default function SubcontractorSettings() {
     ? profile.contact_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : user?.email?.charAt(0).toUpperCase() || '?';
 
+  const handleAvatarUploaded = async (url: string) => {
+    if (!profile) return;
+    await supabase.from('subcontractors').update({ profile_photo_url: url }).eq('id', profile.id);
+    queryClient.invalidateQueries({ queryKey: ['subcontractor_profile'] });
+  };
+
   return (
     <div className="px-4 pt-6 pb-4 space-y-4 max-w-lg animate-fade-in">
       {/* Profile Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-primary-foreground/20 flex items-center justify-center text-xl font-bold border-2 border-primary-foreground/30">
-            {initials}
-          </div>
+          <AvatarUpload
+            currentUrl={(profile as any)?.profile_photo_url}
+            initials={initials}
+            onUploaded={handleAvatarUploaded}
+            size="lg"
+          />
           <div>
             <p className="text-lg font-bold">{profile?.contact_name || 'My Account'}</p>
             <p className="text-xs opacity-80">{profile?.company_name || 'Subcontractor'}</p>

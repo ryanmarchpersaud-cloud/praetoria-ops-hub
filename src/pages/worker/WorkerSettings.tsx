@@ -1,17 +1,28 @@
 import { useAuth } from '@/hooks/useAuth';
+import { useWorkerProfile } from '@/hooks/useWorkerProfile';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, LogOut, Mail, HelpCircle, Phone } from 'lucide-react';
+import { AvatarUpload } from '@/components/AvatarUpload';
+import { LogOut, Mail, HelpCircle, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function WorkerSettings() {
   const { user, signOut } = useAuth();
+  const { data: workerProfile } = useWorkerProfile();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'User';
-  const initials = user?.user_metadata?.full_name
-    ? user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-    : user?.email?.charAt(0).toUpperCase() || '?';
+  const displayName = workerProfile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const initials = displayName
+    .split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const handleAvatarUploaded = async (url: string) => {
+    if (!user) return;
+    await supabase.from('worker_profiles').update({ profile_photo_url: url }).eq('user_id', user.id);
+    queryClient.invalidateQueries({ queryKey: ['worker_profile'] });
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -23,12 +34,15 @@ export default function WorkerSettings() {
       {/* Profile Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-primary-foreground/20 flex items-center justify-center text-xl font-bold border-2 border-primary-foreground/30">
-            {initials}
-          </div>
+          <AvatarUpload
+            currentUrl={workerProfile?.profile_photo_url}
+            initials={initials}
+            onUploaded={handleAvatarUploaded}
+            size="lg"
+          />
           <div>
-            <p className="text-lg font-bold">{user?.user_metadata?.full_name || firstName}</p>
-            <p className="text-xs opacity-80">Field Worker</p>
+            <p className="text-lg font-bold">{displayName}</p>
+            <p className="text-xs opacity-80">{workerProfile?.role_title || 'Field Worker'}</p>
             <p className="text-[11px] opacity-60 mt-0.5">{user?.email}</p>
           </div>
         </div>
