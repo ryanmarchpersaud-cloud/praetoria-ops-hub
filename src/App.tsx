@@ -323,6 +323,7 @@ function AppRoutes() {
       <Route path="/worker/training-safety" element={<WorkerRoute><WorkerLayout><WorkerTrainingSafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/ppe" element={<WorkerRoute><WorkerLayout><WorkerPPEPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/expenses" element={<WorkerRoute><WorkerLayout><WorkerExpensesPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/emergency-safety" element={<WorkerRoute><WorkerLayout><WorkerEmergencySafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
 
       {/* Subcontractor routes */}
