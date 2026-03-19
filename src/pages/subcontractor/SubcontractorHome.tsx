@@ -231,8 +231,8 @@ export default function SubcontractorHome() {
             status: a.assignment_status,
           }))}
         />
-      )
-      </div>
+      )}
+
 
       {/* Recent Invoices */}
       {invoices.length > 0 && (
