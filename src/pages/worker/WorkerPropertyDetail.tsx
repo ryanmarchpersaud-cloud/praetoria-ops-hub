@@ -3,8 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
-import { ArrowLeft, MapPin, User, Calendar, Loader2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Loader2, Calendar, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
 
 export default function WorkerPropertyDetail() {
   const { id } = useParams();
