@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, User, MapPin, Clock, AlertTriangle, Phone, FileText, ImageIcon, X } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Clock, AlertTriangle, Phone, FileText, ImageIcon, X, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'];
 
