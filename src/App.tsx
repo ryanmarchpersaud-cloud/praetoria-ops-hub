@@ -26,7 +26,7 @@ import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
-import CompanySettingsPage from "./pages/CompanySettingsPage";
+// SettingsPage replaced by CompanySettingsPage (imported below)
 import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
