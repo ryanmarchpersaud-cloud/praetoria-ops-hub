@@ -193,6 +193,22 @@ export default function JobDetail() {
         </div>
 
         <div className="space-y-3">
+          {/* Source Quote link */}
+          {(job as any).quote_id && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5" /> Source Quote
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <Link to={`/quotes/${(job as any).quote_id}`} className="text-primary hover:underline text-xs">
+                  View Quote →
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
           {customer && (
             <Card>
               <CardHeader className="pb-2">

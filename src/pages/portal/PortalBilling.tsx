@@ -31,6 +31,7 @@ export default function PortalBilling() {
         .from('invoices')
         .select('*, properties(property_name), jobs(job_title, job_number), invoice_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
         .eq('customer_id', customer.id)
+        .not('status', 'eq', 'Draft')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
