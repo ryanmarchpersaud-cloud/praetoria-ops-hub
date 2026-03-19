@@ -42,7 +42,7 @@ export function PortalLayout({ children }: { children: ReactNode }) {
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center p-1">
               <img src={praetoriaLogo} alt="Praetoria" className="w-full h-full object-contain" />
             </div>
-            <span className="font-semibold text-sm text-foreground">Praetoria Portal</span>
+            <span className="font-semibold text-sm text-foreground">Praetoria Group</span>
           </div>
           <div className="hidden md:flex items-center gap-1">
             {portalNav.map((item) => (

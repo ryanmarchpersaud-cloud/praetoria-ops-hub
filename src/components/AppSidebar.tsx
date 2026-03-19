@@ -32,8 +32,8 @@ const systemItems = [
 ];
 
 const viewAsItems = [
-  { title: 'Field Mode', url: '/worker', icon: Smartphone, badge: 'Worker view' },
-  { title: 'Portal Preview', url: '/portal/properties', icon: Eye, badge: 'Customer view' },
+  { title: 'Worker Portal', url: '/worker', icon: Smartphone, badge: 'Worker view' },
+  { title: 'Customer Portal', url: '/portal/properties', icon: Eye, badge: 'Customer view' },
 ];
 
 export function AppSidebar() {
@@ -48,7 +48,7 @@ export function AppSidebar() {
           <div className="flex items-center gap-2 px-3 py-4">
             <img src={praetoriaLogo} alt="Praetoria" className="w-8 h-8 object-contain shrink-0" />
             {!collapsed && (
-              <span className="font-semibold text-sidebar-accent-foreground text-sm">Praetoria Ops</span>
+              <span className="font-semibold text-sidebar-accent-foreground text-sm">Praetoria Group</span>
             )}
           </div>
         </SidebarGroup>
@@ -57,13 +57,13 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="px-4 pb-2">
             <span className="text-[10px] font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">
-              🛡️ Internal Ops
+              🛡️ Admin Portal
             </span>
           </div>
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Internal Ops</SidebarGroupLabel>
+          <SidebarGroupLabel>Admin Portal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {opsItems.map((item) => (

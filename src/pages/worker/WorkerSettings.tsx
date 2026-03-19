@@ -28,8 +28,8 @@ export default function WorkerSettings() {
       <Card>
         <CardHeader><CardTitle className="text-base">App Info</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>Praetoria Ops v1.0</p>
-          <p>Field Mode</p>
+          <p>Praetoria Group v1.0</p>
+          <p>Worker Portal</p>
         </CardContent>
       </Card>
 

@@ -57,8 +57,8 @@ export default function WorkerMore() {
             </p>
             <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
           </div>
-          <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-            Field Mode
+           <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+            Worker Portal
           </span>
         </CardContent>
       </Card>
@@ -66,7 +66,7 @@ export default function WorkerMore() {
       {/* Current mode indicator */}
       <div className="flex items-center gap-2 px-1">
         <HardHat className="h-4 w-4 text-primary" />
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">You are in Field Mode</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Worker Portal</span>
       </div>
 
       {/* Profile & Employment */}

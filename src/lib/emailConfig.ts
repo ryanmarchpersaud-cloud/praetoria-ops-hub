@@ -1,4 +1,4 @@
-// PRAETORIA OPS — EMAIL ARCHITECTURE
+// PRAETORIA GROUP — EMAIL ARCHITECTURE
 
 export const APP_EMAIL_CONFIG = {
   systemOwner: "admin@praetoriagroup.ca",

@@ -69,14 +69,14 @@ export default function Login() {
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-2">
               <img src={praetoriaLogo} alt="Praetoria Group" className="w-11 h-11 object-contain dark:invert-0 invert" />
-              <span className="text-xl font-bold text-foreground tracking-tight">Praetoria Ops</span>
+              <span className="text-xl font-bold text-foreground tracking-tight">Praetoria Group</span>
             </div>
             <p className="text-muted-foreground text-sm mt-1">
               {mode === 'forgot'
                 ? 'Enter your email to reset your password'
                 : mode === 'signup'
                   ? 'Request access to the operations platform'
-                  : 'Sign in to your operations platform'}
+                  : 'Sign in to your portal'}
             </p>
           </div>
 

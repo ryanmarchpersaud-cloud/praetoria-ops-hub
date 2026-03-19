@@ -13,7 +13,7 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
-const SENDER = "Praetoria Ops <noreply@praetoriagroup.ca>";
+const SENDER = "Praetoria Group <noreply@praetoriagroup.ca>";
 
 function getServiceClient() {
   return createClient(
@@ -175,9 +175,9 @@ Deno.serve(async (req) => {
       if (!to) return json({ error: "Missing 'to' email address" }, 400);
       const result = await sendViaResend({
         to,
-        subject: "Praetoria Ops — Resend Test Email",
+        subject: "Praetoria Group — Resend Test Email",
         html: wrapHtml("Test Email", `
-          <p>This is a test email sent from <strong>Praetoria Ops</strong> via Resend.</p>
+          <p>This is a test email sent from <strong>Praetoria Group</strong> via Resend.</p>
           <p>If you received this, your email integration is working correctly.</p>
           <p style="color:#71717a;font-size:13px;">Sent at ${new Date().toISOString()}</p>
         `),
@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
       const recipients = to_addresses || ["ops@praetoriagroup.ca"];
       const result = await sendViaResend({
         to: recipients,
-        subject: `[Praetoria Ops] ${subject}`,
+        subject: `[Praetoria Group] ${subject}`,
         html: wrapHtml("Internal Notification", body_html || `<p>${subject}</p>`),
       });
       const logEntry: IntegrationEntry = {

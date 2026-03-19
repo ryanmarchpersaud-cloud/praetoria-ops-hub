@@ -7,10 +7,10 @@ import { Shield, HardHat, User, Loader2, FlaskConical, ChevronDown, ChevronUp, A
 import { Truck } from 'lucide-react';
 
 const TEST_ACCOUNTS = [
-  { email: 'admin@praetoriagroup.ca', password: 'TestAdmin123!', role: 'Admin', icon: Shield, color: 'text-amber-500', dest: 'Internal Ops dashboard → /' },
-  { email: 'worker@praetoriagroup.ca', password: 'TestWorker123!', role: 'Worker', icon: HardHat, color: 'text-blue-500', dest: 'Field Mode → /worker' },
+  { email: 'admin@praetoriagroup.ca', password: 'TestAdmin123!', role: 'Admin', icon: Shield, color: 'text-amber-500', dest: 'Admin Portal → /' },
+  { email: 'worker@praetoriagroup.ca', password: 'TestWorker123!', role: 'Worker', icon: HardHat, color: 'text-blue-500', dest: 'Worker Portal → /worker' },
   { email: 'customer@praetoriagroup.ca', password: 'TestCustomer123!', role: 'Customer', icon: User, color: 'text-emerald-500', dest: 'Customer Portal → /portal' },
-  { email: 'subcontractor@praetoriagroup.ca', password: 'TestSub123!', role: 'Subcontractor', icon: Truck, color: 'text-purple-500', dest: 'Sub Portal → /subcontractor' },
+  { email: 'subcontractor@praetoriagroup.ca', password: 'TestSub123!', role: 'Subcontractor', icon: Truck, color: 'text-purple-500', dest: 'Subcontractor Portal → /subcontractor' },
 ];
 
 export function DevTestPanel() {
@@ -115,11 +115,11 @@ export function DevTestPanel() {
           <div className="text-[10px] text-muted-foreground space-y-1.5 pt-2 border-t border-border">
             <p className="font-semibold text-foreground">Where each role goes:</p>
             <div className="space-y-1">
-              <p>🛡️ <strong>Admin</strong> → Internal Ops dashboard at <code className="bg-muted px-1 rounded">/</code></p>
+              <p>🛡️ <strong>Admin</strong> → Admin Portal at <code className="bg-muted px-1 rounded">/</code></p>
               <p className="pl-4 text-muted-foreground/70">Dashboard, Leads, Quotes, Customers, Jobs, Invoices, Schedule, Settings</p>
             </div>
             <div className="space-y-1">
-              <p>🔧 <strong>Worker</strong> → Field Mode at <code className="bg-muted px-1 rounded">/worker</code></p>
+              <p>🔧 <strong>Worker</strong> → Worker Portal at <code className="bg-muted px-1 rounded">/worker</code></p>
               <p className="pl-4 text-muted-foreground/70">Field Dashboard, Schedule, Timesheet, Visit Execution, Quick Actions</p>
             </div>
             <div className="space-y-1">
