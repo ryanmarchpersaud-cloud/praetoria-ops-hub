@@ -740,6 +740,80 @@ export default function ExpenseTrackingPage() {
         {/* Worker Reimbursement Claims */}
         <WorkerClaimsSection />
 
+        {/* Subcontractor Invoices */}
+        <SubcontractorInvoicesSection />
+
+        {/* Expense Detail View Dialog */}
+        <Dialog open={!!viewExpense} onOpenChange={(v) => { if (!v) setViewExpense(null); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Expense Detail</DialogTitle>
+            </DialogHeader>
+            {viewExpense && (
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Date</p>
+                    <p className="text-sm font-medium text-foreground">{format(new Date(viewExpense.expense_date), 'MMMM d, yyyy')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Amount</p>
+                    <p className="text-sm font-bold text-foreground">${Number(viewExpense.amount).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Category</p>
+                    <p className="text-sm text-foreground">{viewExpense.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Payment Method</p>
+                    <p className="text-sm text-foreground">{viewExpense.payment_method || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Vendor</p>
+                    <p className="text-sm text-foreground">{viewExpense.vendor_name || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Service Line</p>
+                    <p className="text-sm text-foreground">{viewExpense.service_line || '—'}</p>
+                  </div>
+                  {viewExpense.tax_amount > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tax</p>
+                      <p className="text-sm text-foreground">${Number(viewExpense.tax_amount).toFixed(2)}</p>
+                    </div>
+                  )}
+                </div>
+                {viewExpense.description && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Description</p>
+                    <p className="text-sm text-foreground bg-muted/50 rounded p-2">{viewExpense.description}</p>
+                  </div>
+                )}
+                {viewExpense.notes && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Notes</p>
+                    <p className="text-sm text-foreground bg-muted/50 rounded p-2">{viewExpense.notes}</p>
+                  </div>
+                )}
+                {viewExpense.receipt_url && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Receipt</p>
+                    <a href={viewExpense.receipt_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                      <ExternalLink className="h-3.5 w-3.5" /> View / Download Receipt
+                    </a>
+                  </div>
+                )}
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" className="flex-1" onClick={() => setViewExpense(null)}>Close</Button>
+                  <Button className="flex-1 gap-1.5" onClick={() => { openEdit(viewExpense); setViewExpense(null); }}>
+                    <Pencil className="h-4 w-4" /> Edit
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
