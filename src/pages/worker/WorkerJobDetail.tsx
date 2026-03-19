@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ArrowLeft, Briefcase, MapPin, Calendar, Loader2, ChevronRight, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
 
 export default function WorkerJobDetail() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ export default function WorkerJobDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('jobs')
-        .select('*, customers(first_name, last_name), properties(property_name, address_line_1, city)')
+        .select('*, customers(first_name, last_name), properties(property_name, address_line_1, city, province, postal_code, gate_code, access_notes, access_type, landmark_notes, caution_notes, high_risk_flag, house_number_location, photo_front_url, photo_winter_url, photo_night_url)')
         .eq('id', id!)
         .single();
       if (error) throw error;
@@ -70,12 +71,6 @@ export default function WorkerJobDetail() {
           {customer && (
             <p className="text-sm text-muted-foreground">Customer: {customer.first_name} {customer.last_name}</p>
           )}
-          {property && (
-            <div className="flex items-start gap-2">
-              <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
-              <span className="text-xs text-muted-foreground">{property.property_name}{property.city && `, ${property.city}`}</span>
-            </div>
-          )}
           {job.service_instructions && (
             <div className="pt-2 border-t">
               <div className="flex items-center gap-1.5 mb-1">
@@ -93,6 +88,10 @@ export default function WorkerJobDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Property Verification */}
+      {property && <PropertyVerificationCard property={property} compact />}
+
 
       <div>
         <h2 className="text-sm font-semibold mb-2">Visits</h2>
