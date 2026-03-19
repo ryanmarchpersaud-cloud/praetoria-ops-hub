@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { startOfWeek, endOfWeek, addWeeks, format, isSameDay, isToday, addDays } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
 
 function getWeekDays(weekStart: Date) {
   return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
