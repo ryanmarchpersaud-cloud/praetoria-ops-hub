@@ -50,17 +50,31 @@ export default function SubcontractorSettings() {
 
   if (isLoading) return <p className="text-sm text-muted-foreground p-4">Loading...</p>;
 
+  const initials = profile?.contact_name
+    ? profile.contact_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email?.charAt(0).toUpperCase() || '?';
+
   return (
     <div className="px-4 pt-6 pb-4 space-y-4 max-w-lg animate-fade-in">
-      <h1 className="text-xl font-bold flex items-center gap-2">
-        <User className="h-5 w-5 text-primary" /> My Account
-      </h1>
+      {/* Profile Banner */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-primary-foreground/20 flex items-center justify-center text-xl font-bold border-2 border-primary-foreground/30">
+            {initials}
+          </div>
+          <div>
+            <p className="text-lg font-bold">{profile?.contact_name || 'My Account'}</p>
+            <p className="text-xs opacity-80">{profile?.company_name || 'Subcontractor'}</p>
+            {profile?.email && <p className="text-[11px] opacity-60 mt-0.5">{profile.email}</p>}
+          </div>
+        </div>
+      </div>
 
-      {/* Profile card */}
+      {/* Profile details card */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Truck className="h-4 w-4" /> Profile
+            <Truck className="h-4 w-4 text-primary" /> Profile Details
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -83,7 +97,7 @@ export default function SubcontractorSettings() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> Compliance Status
+              <ShieldCheck className="h-4 w-4 text-primary" /> Compliance Status
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -116,7 +130,7 @@ export default function SubcontractorSettings() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <CreditCard className="h-4 w-4" /> Payment Method
+            <CreditCard className="h-4 w-4 text-primary" /> Payment Method
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -140,7 +154,7 @@ export default function SubcontractorSettings() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Mail className="h-4 w-4" /> Login
+            <Mail className="h-4 w-4 text-primary" /> Login
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -152,7 +166,7 @@ export default function SubcontractorSettings() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <HelpCircle className="h-4 w-4" /> Support
+            <HelpCircle className="h-4 w-4 text-primary" /> Support
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">

@@ -2,7 +2,27 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSubcontractorProfile, useSubcontractorAssignments, useSubcontractorInvoices } from '@/hooks/useSubcontractor';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { CalendarDays, Receipt, FileText, ChevronRight, MapPin, Clock, CheckCircle, AlertTriangle, Briefcase } from 'lucide-react';
+import {
+  CalendarDays, Receipt, FileText, ChevronRight, MapPin, CheckCircle,
+  AlertTriangle, Briefcase, ShieldCheck, Clock, Truck, DollarSign,
+  Navigation, Phone,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatToday() {
+  return new Date().toLocaleDateString('en-CA', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
 
 export default function SubcontractorHome() {
   const { user } = useAuth();
@@ -14,6 +34,7 @@ export default function SubcontractorHome() {
   const todayStr = new Date().toISOString().split('T')[0];
   const todayAssignments = assignments.filter((a: any) => a.visits?.service_date === todayStr);
   const pendingInvoices = invoices.filter((i: any) => i.status === 'submitted' || i.status === 'pending');
+  const completedAssignments = assignments.filter((a: any) => a.assignment_status === 'completed');
 
   // Compliance alerts
   const complianceAlerts: string[] = [];
@@ -24,11 +45,47 @@ export default function SubcontractorHome() {
     if (profile.agreement_signed_status === 'missing') complianceAlerts.push('Agreement');
   }
 
+  // Earnings
+  const totalEarnings = invoices
+    .filter((i: any) => i.status === 'paid')
+    .reduce((sum: number, i: any) => sum + Number(i.amount || 0), 0);
+
+  const statusColor = (status: string) => {
+    switch (status) {
+      case 'assigned': return 'border-l-blue-500';
+      case 'en_route': return 'border-l-amber-500';
+      case 'in_progress': return 'border-l-violet-500';
+      case 'completed': return 'border-l-emerald-500';
+      default: return 'border-l-muted-foreground';
+    }
+  };
+
+  const statusBg = (status: string) => {
+    switch (status) {
+      case 'assigned': return 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'en_route': return 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+      case 'in_progress': return 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300';
+      case 'completed': return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
   return (
     <div className="space-y-3 px-4 pt-6 pb-4">
-      <div>
-        <p className="text-lg font-bold text-foreground">Welcome, {firstName}</p>
-        <p className="text-xs text-muted-foreground">{profile?.company_name || 'Subcontractor Portal'}</p>
+      {/* Welcome Banner */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-10 h-10 rounded-full bg-primary-foreground/20 flex items-center justify-center text-lg font-bold">
+            {firstName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="text-lg font-bold">{getGreeting()}, {firstName}</p>
+            <p className="text-xs opacity-80">{profile?.company_name || 'Subcontractor Portal'}</p>
+          </div>
+        </div>
+        <p className="text-[11px] opacity-70 mt-1 flex items-center gap-1">
+          <CalendarDays className="h-3 w-3" /> {formatToday()}
+        </p>
       </div>
 
       {/* Compliance Alert */}
@@ -47,40 +104,68 @@ export default function SubcontractorHome() {
         </Link>
       )}
 
-      {/* Today Summary */}
+      {/* Today Summary — tinted stat cards */}
       <div className="grid grid-cols-3 gap-2">
-        <Card><CardContent className="p-2.5 text-center">
-          <Briefcase className="h-4 w-4 text-primary mx-auto mb-0.5" />
-          <p className="text-xl font-bold text-foreground">{todayAssignments.length}</p>
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Today</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-2.5 text-center">
-          <CheckCircle className="h-4 w-4 text-green-600 mx-auto mb-0.5" />
-          <p className="text-xl font-bold text-foreground">{assignments.filter((a: any) => a.assignment_status === 'completed').length}</p>
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Completed</p>
-        </CardContent></Card>
-        <Card><CardContent className="p-2.5 text-center">
-          <Receipt className="h-4 w-4 text-amber-600 mx-auto mb-0.5" />
-          <p className="text-xl font-bold text-foreground">{pendingInvoices.length}</p>
-          <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Pending $</p>
-        </CardContent></Card>
+        <Card className="bg-blue-50 border-blue-100 dark:bg-blue-950/30 dark:border-blue-900/40">
+          <CardContent className="p-2.5 text-center">
+            <Briefcase className="h-4 w-4 text-blue-600 mx-auto mb-0.5" />
+            <p className="text-xl font-bold text-foreground">{todayAssignments.length}</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Today</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-emerald-50 border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/40">
+          <CardContent className="p-2.5 text-center">
+            <CheckCircle className="h-4 w-4 text-emerald-600 mx-auto mb-0.5" />
+            <p className="text-xl font-bold text-foreground">{completedAssignments.length}</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Completed</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-amber-50 border-amber-100 dark:bg-amber-950/30 dark:border-amber-900/40">
+          <CardContent className="p-2.5 text-center">
+            <Receipt className="h-4 w-4 text-amber-600 mx-auto mb-0.5" />
+            <p className="text-xl font-bold text-foreground">{pendingInvoices.length}</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Pending $</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-2">
-        <Link to="/subcontractor/schedule" className="flex flex-col items-center gap-1 p-3 rounded-xl bg-card border border-border active:bg-muted transition-colors">
-          <CalendarDays className="h-5 w-5 text-primary" />
+      {/* Quick Actions — action tile system */}
+      <div className="grid grid-cols-4 gap-2">
+        <Link to="/subcontractor/schedule" className="action-tile action-tile-blue">
+          <CalendarDays className="h-5 w-5 text-blue-600" />
           <span className="text-[10px] font-medium text-foreground">Schedule</span>
         </Link>
-        <Link to="/subcontractor/invoices" className="flex flex-col items-center gap-1 p-3 rounded-xl bg-card border border-border active:bg-muted transition-colors">
-          <Receipt className="h-5 w-5 text-primary" />
+        <Link to="/subcontractor/invoices" className="action-tile action-tile-emerald">
+          <Receipt className="h-5 w-5 text-emerald-600" />
           <span className="text-[10px] font-medium text-foreground">Invoices</span>
         </Link>
-        <Link to="/subcontractor/documents" className="flex flex-col items-center gap-1 p-3 rounded-xl bg-card border border-border active:bg-muted transition-colors">
-          <FileText className="h-5 w-5 text-primary" />
+        <Link to="/subcontractor/documents" className="action-tile action-tile-amber">
+          <FileText className="h-5 w-5 text-amber-600" />
           <span className="text-[10px] font-medium text-foreground">Documents</span>
         </Link>
+        <Link to="/subcontractor/compliance" className="action-tile action-tile-rose">
+          <ShieldCheck className="h-5 w-5 text-rose-600" />
+          <span className="text-[10px] font-medium text-foreground">Compliance</span>
+        </Link>
       </div>
+
+      {/* Earnings Card */}
+      <Card className="bg-gradient-to-r from-emerald-50 to-emerald-50/50 border-emerald-100 dark:from-emerald-950/20 dark:to-emerald-950/10 dark:border-emerald-900/30">
+        <CardContent className="p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+              <DollarSign className="h-4.5 w-4.5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Paid</p>
+              <p className="text-lg font-bold text-foreground">${totalEarnings.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</p>
+            </div>
+          </div>
+          <Link to="/subcontractor/payments" className="text-[11px] text-primary font-medium flex items-center gap-0.5">
+            Details <ChevronRight className="h-3 w-3" />
+          </Link>
+        </CardContent>
+      </Card>
 
       {/* Today's Work */}
       <div>
@@ -89,20 +174,31 @@ export default function SubcontractorHome() {
           <Card><CardContent className="py-8 text-center">
             <CalendarDays className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
             <p className="text-sm text-muted-foreground">No assignments today</p>
+            <Link to="/subcontractor/schedule" className="text-xs text-primary mt-1 inline-block">View schedule →</Link>
           </CardContent></Card>
         ) : (
           <div className="space-y-2">
             {todayAssignments.map((a: any) => (
               <Link key={a.id} to={a.visits?.id ? `/subcontractor/visit/${a.visits.id}` : '#'}>
-                <Card className="active:shadow-sm transition-shadow">
+                <Card className={cn(
+                  'active:shadow-sm transition-shadow border-l-4',
+                  statusColor(a.assignment_status)
+                )}>
                   <CardContent className="p-3 flex items-center gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{a.visits?.visit_number || 'Assignment'}</p>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-sm font-medium text-foreground">{a.visits?.visit_number || 'Assignment'}</p>
+                        <span className={cn(
+                          'text-[10px] font-medium px-2 py-0.5 rounded-full capitalize',
+                          statusBg(a.assignment_status)
+                        )}>
+                          {a.assignment_status?.replace('_', ' ')}
+                        </span>
+                      </div>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />{a.visits?.properties?.property_name || '—'}
+                        <MapPin className="h-3 w-3 text-primary" />{a.visits?.properties?.property_name || '—'}
                       </p>
                     </div>
-                    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">{a.assignment_status}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </CardContent>
                 </Card>
@@ -119,17 +215,28 @@ export default function SubcontractorHome() {
             <h2 className="text-sm font-semibold text-foreground">Recent Invoices</h2>
             <Link to="/subcontractor/invoices" className="text-[11px] text-primary font-medium flex items-center gap-0.5">View all <ChevronRight className="h-3 w-3" /></Link>
           </div>
-          {invoices.slice(0, 3).map((inv: any) => (
-            <Card key={inv.id} className="mb-1.5">
-              <CardContent className="p-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{inv.invoice_number}</p>
-                  <p className="text-xs text-muted-foreground">${Number(inv.amount).toFixed(2)}</p>
-                </div>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">{inv.status}</span>
-              </CardContent>
-            </Card>
-          ))}
+          {invoices.slice(0, 3).map((inv: any) => {
+            const invStatusBg = inv.status === 'paid'
+              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+              : inv.status === 'approved'
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                : inv.status === 'rejected'
+                  ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                  : 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+            return (
+              <Card key={inv.id} className="mb-1.5">
+                <CardContent className="p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{inv.invoice_number}</p>
+                    <p className="text-xs text-muted-foreground">${Number(inv.amount).toFixed(2)}</p>
+                  </div>
+                  <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full capitalize', invStatusBg)}>
+                    {inv.status}
+                  </span>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
