@@ -1,12 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, CalendarDays, Receipt, FileText, MoreHorizontal } from 'lucide-react';
+import { Home, CalendarDays, Receipt, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUnreadCount } from '@/hooks/useMessaging';
 
 const tabs = [
   { to: '/subcontractor', icon: Home, label: 'Home', end: true },
   { to: '/subcontractor/schedule', icon: CalendarDays, label: 'Schedule', end: false },
   { to: '/subcontractor/invoices', icon: Receipt, label: 'Invoices', end: false },
-  { to: '/subcontractor/documents', icon: FileText, label: 'Docs', end: false },
+  { to: '/subcontractor/messages', icon: MessageSquare, label: 'Messages', end: false, badge: true },
   { to: '/subcontractor/more', icon: MoreHorizontal, label: 'More', end: false },
 ];
 
