@@ -79,7 +79,7 @@ export default function SeatUsagePage() {
     { label: 'Admin Portal', value: members.filter(m => m.portal_admin).length },
     { label: 'Worker Portal', value: members.filter(m => m.portal_worker).length },
     { label: 'Subcontractor Portal', value: members.filter(m => m.portal_subcontractor).length },
-    { label: 'Customer Portal', value: members.filter(m => m.portal_customer).length },
+    { label: 'Customer Portal', value: 0 },
   ];
 
   // Team type breakdown
