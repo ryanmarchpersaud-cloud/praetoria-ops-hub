@@ -25,19 +25,22 @@ export default function WorkerPropertyDetail() {
     enabled: !!id,
   });
 
+  const { user } = useAuth();
+
   const { data: visits = [] } = useQuery({
-    queryKey: ['worker_property_visits', id],
+    queryKey: ['worker_property_visits', id, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, visit_status, service_date, visit_type')
+        .select('id, visit_number, visit_status, service_date, visit_type, jobs(assigned_to)')
         .eq('property_id', id!)
         .order('service_date', { ascending: false })
         .limit(20);
       if (error) throw error;
-      return data;
+      // Only show visits assigned to this worker
+      return (data || []).filter((v: any) => v.jobs?.assigned_to === user?.id);
     },
-    enabled: !!id,
+    enabled: !!id && !!user,
   });
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
