@@ -22,6 +22,23 @@ export function ChatThread({ conversationId, title, isAnnouncementOnly, onBack, 
   const { user } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // For announcements, only admins/managers can post
+  const [userRole, setUserRole] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('user_roles').select('role').eq('user_id', user.id).then(({ data }) => {
+      setUserRole(data?.[0]?.role || null);
+    });
+  }, [user]);
+
+  const isAdmin = userRole === 'admin' || userRole === 'manager';
+  const effectiveCanPost = canPost && (!isAnnouncementOnly || isAdmin);
+  const { data: messages, isLoading } = useMessages(conversationId);
+  const sendMessage = useSendMessage();
+  const markRead = useMarkRead();
+  const { user } = useAuth();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   // Auto scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {

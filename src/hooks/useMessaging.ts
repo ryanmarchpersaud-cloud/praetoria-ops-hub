@@ -378,10 +378,10 @@ export function useConversationMembers(conversationId: string | null) {
       if (userIds.length > 0) {
         const { data: team } = await supabase
           .from('team_members')
-          .select('user_id, full_name, display_name, email, profile_photo_url')
+          .select('user_id, full_name, display_name, email')
           .in('user_id', userIds);
         (team || []).forEach((t: any) => {
-          profiles[t.user_id] = { name: t.full_name || t.display_name || 'Unknown', email: t.email, avatar: t.profile_photo_url };
+          profiles[t.user_id] = { name: t.full_name || t.display_name || 'Unknown', email: t.email, avatar: null };
         });
 
         const missing = userIds.filter((id: string) => !profiles[id]);
