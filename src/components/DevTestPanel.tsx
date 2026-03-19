@@ -7,10 +7,10 @@ import { Shield, HardHat, User, Loader2, FlaskConical, ChevronDown, ChevronUp, A
 import { Truck } from 'lucide-react';
 
 const TEST_ACCOUNTS = [
-  { email: 'admin@praetoriagroup.ca', password: 'TestAdmin123!', role: 'Admin', icon: Shield, color: 'text-amber-500', dest: 'Internal Ops dashboard → /' },
-  { email: 'worker@praetoriagroup.ca', password: 'TestWorker123!', role: 'Worker', icon: HardHat, color: 'text-blue-500', dest: 'Field Mode → /worker' },
+  { email: 'admin@praetoriagroup.ca', password: 'TestAdmin123!', role: 'Admin', icon: Shield, color: 'text-amber-500', dest: 'Admin Portal → /' },
+  { email: 'worker@praetoriagroup.ca', password: 'TestWorker123!', role: 'Worker', icon: HardHat, color: 'text-blue-500', dest: 'Worker Portal → /worker' },
   { email: 'customer@praetoriagroup.ca', password: 'TestCustomer123!', role: 'Customer', icon: User, color: 'text-emerald-500', dest: 'Customer Portal → /portal' },
-  { email: 'subcontractor@praetoriagroup.ca', password: 'TestSub123!', role: 'Subcontractor', icon: Truck, color: 'text-purple-500', dest: 'Sub Portal → /subcontractor' },
+  { email: 'subcontractor@praetoriagroup.ca', password: 'TestSub123!', role: 'Subcontractor', icon: Truck, color: 'text-purple-500', dest: 'Subcontractor Portal → /subcontractor' },
 ];
 
 export function DevTestPanel() {
