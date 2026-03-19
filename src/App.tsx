@@ -273,10 +273,10 @@ function AppRoutes() {
       <Route path="/settings/schedule-settings" element={<AdminRoute><ScheduleSettingsPage /></AdminRoute>} />
       <Route path="/settings/routes" element={<AdminRoute><RouteOptimizationPage /></AdminRoute>} />
       <Route path="/settings/job-forms" element={<AdminRoute><JobFormsPage /></AdminRoute>} />
-      <Route path="/settings/client-hub" element={<AdminRoute><SettingsPlaceholder title="Client Hub" description="Customer communication preferences and branding." /></AdminRoute>} />
-      <Route path="/settings/messaging" element={<AdminRoute><SettingsPlaceholder title="Emails & Text Messages" description="Email templates, SMS configuration, and notification rules." /></AdminRoute>} />
-      <Route path="/settings/requests-config" element={<AdminRoute><SettingsPlaceholder title="Requests & Bookings" description="Configure how customers submit requests and book services." /></AdminRoute>} />
-      <Route path="/settings/portal" element={<AdminRoute><SettingsPlaceholder title="Portal Settings" description="Customer portal appearance and feature toggles." /></AdminRoute>} />
+      <Route path="/settings/client-hub" element={<AdminRoute><ClientHubPage /></AdminRoute>} />
+      <Route path="/settings/messaging" element={<AdminRoute><EmailsTextsPage /></AdminRoute>} />
+      <Route path="/settings/requests-config" element={<AdminRoute><RequestsBookingsPage /></AdminRoute>} />
+      <Route path="/settings/portal" element={<AdminRoute><PortalSettingsPage /></AdminRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
