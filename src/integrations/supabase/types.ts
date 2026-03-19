@@ -4136,6 +4136,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_unread_message_count: { Args: { _user_id: string }; Returns: number }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
