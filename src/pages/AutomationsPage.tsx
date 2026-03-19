@@ -166,7 +166,7 @@ export default function AutomationsPage() {
           </CardContent></Card>
           <Card><CardContent className="pt-4">
             <p className="text-xs text-muted-foreground">Active</p>
-            <p className="text-2xl font-bold text-green-600">{activeCount}</p>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{activeCount}</p>
           </CardContent></Card>
           <Card><CardContent className="pt-4">
             <p className="text-xs text-muted-foreground">Total Triggers</p>
