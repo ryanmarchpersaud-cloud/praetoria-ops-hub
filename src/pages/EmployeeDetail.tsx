@@ -179,7 +179,7 @@ export default function EmployeeDetail() {
               <CardContent className="p-0">
                 {certs.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No certifications recorded.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Issuer</TableHead><TableHead>Status</TableHead><TableHead>Expiry</TableHead>{canManageWorkers && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Issuer</TableHead><TableHead>Status</TableHead><TableHead>Expiry</TableHead><TableHead>File</TableHead>{canManageWorkers && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                     <TableBody>
                       {certs.map((c: any) => (
                         <TableRow key={c.id}>
