@@ -71,12 +71,12 @@ export default function WorkerHome() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs(assigned_to, service_category)')
+        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs!inner(assigned_to, service_category)')
         .eq('service_date', todayStr)
+        .eq('jobs.assigned_to', user!.id)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      // Only show visits assigned to this worker
-      return (data || []).filter((v: any) => v.jobs?.assigned_to === user?.id);
+      return data || [];
     },
     enabled: !!user,
   });
