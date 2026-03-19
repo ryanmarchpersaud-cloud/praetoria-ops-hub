@@ -263,7 +263,9 @@ export default function ExpenseTrackingPage() {
           </CardContent>
         </Card>
 
-        {/* Expense Dialog */}
+        {/* Worker Reimbursement Claims */}
+        <WorkerClaimsSection />
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
