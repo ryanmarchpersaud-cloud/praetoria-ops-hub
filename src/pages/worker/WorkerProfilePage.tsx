@@ -16,7 +16,19 @@ const statusColors: Record<string, string> = {
 };
 
 export default function WorkerProfilePage() {
+  const { user } = useAuth();
   const { data: profile, isLoading } = useWorkerProfile();
+  const queryClient = useQueryClient();
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const initials = displayName
+    .split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const handleAvatarUploaded = async (url: string) => {
+    if (!user) return;
+    await supabase.from('worker_profiles').update({ profile_photo_url: url }).eq('user_id', user.id);
+    queryClient.invalidateQueries({ queryKey: ['worker_profile'] });
+  };
 
   if (isLoading) {
     return (
