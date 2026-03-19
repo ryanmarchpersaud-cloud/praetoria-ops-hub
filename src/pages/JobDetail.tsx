@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -16,6 +16,7 @@ import { JOB_STATUSES, JOB_PRIORITIES, SERVICE_CATEGORIES } from '@/lib/constant
 import { RecurringPlanCard } from '@/components/RecurringPlanCard';
 import { addWeeks, addDays, format, parseISO, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function JobDetail() {
   const { id } = useParams();
