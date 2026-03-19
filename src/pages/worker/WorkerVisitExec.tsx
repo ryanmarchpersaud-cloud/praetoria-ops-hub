@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { sendNotification } from '@/hooks/useNotifications';
 import { DirectionsButton } from '@/components/DirectionsButton';
+import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
 
 // Compress image for mobile upload
 async function compressImage(file: File, maxWidth = 1920, quality = 0.82): Promise<File> {
