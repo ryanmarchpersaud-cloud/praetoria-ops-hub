@@ -185,11 +185,15 @@ export default function VisitDetail() {
           {customer && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Customer</CardTitle>
+                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" /> Customer
+                </CardTitle>
               </CardHeader>
-              <CardContent className="text-sm">
+              <CardContent className="text-sm space-y-1">
                 <p className="font-medium">{customer.first_name} {customer.last_name}</p>
                 {customer.company_name && <p className="text-xs text-muted-foreground">{customer.company_name}</p>}
+                {customer.phone && <p className="text-xs text-muted-foreground">{customer.phone}</p>}
+                <Link to={`/customers/${(visit as any).customer_id}`} className="text-primary text-xs hover:underline inline-block mt-1">View Customer →</Link>
               </CardContent>
             </Card>
           )}
