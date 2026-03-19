@@ -192,7 +192,7 @@ Deno.serve(async (req) => {
 
       const result = await sendViaTwilio({
         to: phone.cleaned,
-        body: `[Praetoria Ops] Test SMS — your Twilio integration is working. ${new Date().toISOString()}`,
+        body: `[Praetoria Group] Test SMS — your Twilio integration is working. ${new Date().toISOString()}`,
       });
       await logIntegration({
         provider: "twilio",
