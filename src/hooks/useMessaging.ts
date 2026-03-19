@@ -124,12 +124,12 @@ export function useMessages(conversationId: string | null) {
         // Try team_members first
         const { data: teamMembers } = await supabase
           .from('team_members')
-          .select('user_id, first_name, last_name, email, profile_photo_url, job_title')
+          .select('user_id, full_name, display_name, email, profile_photo_url, job_title')
           .in('user_id', senderIds);
         
         (teamMembers || []).forEach((tm: any) => {
           profiles[tm.user_id] = {
-            full_name: `${tm.first_name} ${tm.last_name}`.trim(),
+            full_name: tm.full_name || tm.display_name || 'Unknown',
             email: tm.email,
             avatar_url: tm.profile_photo_url,
             role_label: tm.job_title || 'Staff',
