@@ -613,6 +613,10 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
             <Input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} />
           </div>
           <div>
+            <Label>Training Material URL (optional)</Label>
+            <Input placeholder="https://… or link to PDF/course" value={fileUrl} onChange={e => setFileUrl(e.target.value)} />
+          </div>
+          <div>
             <Label>Notes (optional)</Label>
             <Textarea rows={2} placeholder="Instructions or details" value={notes} onChange={e => setNotes(e.target.value)} />
           </div>
