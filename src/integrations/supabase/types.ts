@@ -59,6 +59,242 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_logs: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          metadata: Json | null
+          rule_id: string | null
+          rule_name: string
+          status: string
+          trigger_event: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          rule_id?: string | null
+          rule_name: string
+          status?: string
+          trigger_event: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          metadata?: Json | null
+          rule_id?: string | null
+          rule_name?: string
+          status?: string
+          trigger_event?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          actions: Json | null
+          category: string | null
+          conditions: Json | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          enabled: boolean
+          id: string
+          last_triggered_at: string | null
+          name: string
+          priority: number | null
+          scope: string | null
+          trigger_count: number | null
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json | null
+          category?: string | null
+          conditions?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          last_triggered_at?: string | null
+          name: string
+          priority?: number | null
+          scope?: string | null
+          trigger_count?: number | null
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json | null
+          category?: string | null
+          conditions?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          last_triggered_at?: string | null
+          name?: string
+          priority?: number | null
+          scope?: string | null
+          trigger_count?: number | null
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_settings: {
+        Row: {
+          accent_color: string | null
+          after_hours_enabled: boolean | null
+          billing_email: string | null
+          brand_notes: string | null
+          business_number: string | null
+          created_at: string
+          currency: string | null
+          date_format: string | null
+          default_due_days: number | null
+          default_payment_terms: string | null
+          default_service_area: string | null
+          default_tax_enabled: boolean | null
+          default_tax_rate: number | null
+          default_timezone: string | null
+          deposit_required: boolean | null
+          description: string | null
+          display_name: string | null
+          email: string | null
+          email_signature: string | null
+          emergency_service_enabled: boolean | null
+          gst_number: string | null
+          id: string
+          internal_notes_visible_default: boolean | null
+          invoice_header_name: string | null
+          invoice_prefix: string | null
+          job_prefix: string | null
+          language: string | null
+          legal_name: string | null
+          logo_url: string | null
+          mailing_address: string | null
+          operating_hours: string | null
+          operating_name: string | null
+          phone: string | null
+          physical_address: string | null
+          primary_color: string | null
+          pst_number: string | null
+          quote_footer_text: string | null
+          quote_prefix: string | null
+          request_prefix: string | null
+          secondary_color: string | null
+          support_email: string | null
+          updated_at: string
+          website: string | null
+          weekend_service_enabled: boolean | null
+        }
+        Insert: {
+          accent_color?: string | null
+          after_hours_enabled?: boolean | null
+          billing_email?: string | null
+          brand_notes?: string | null
+          business_number?: string | null
+          created_at?: string
+          currency?: string | null
+          date_format?: string | null
+          default_due_days?: number | null
+          default_payment_terms?: string | null
+          default_service_area?: string | null
+          default_tax_enabled?: boolean | null
+          default_tax_rate?: number | null
+          default_timezone?: string | null
+          deposit_required?: boolean | null
+          description?: string | null
+          display_name?: string | null
+          email?: string | null
+          email_signature?: string | null
+          emergency_service_enabled?: boolean | null
+          gst_number?: string | null
+          id?: string
+          internal_notes_visible_default?: boolean | null
+          invoice_header_name?: string | null
+          invoice_prefix?: string | null
+          job_prefix?: string | null
+          language?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          mailing_address?: string | null
+          operating_hours?: string | null
+          operating_name?: string | null
+          phone?: string | null
+          physical_address?: string | null
+          primary_color?: string | null
+          pst_number?: string | null
+          quote_footer_text?: string | null
+          quote_prefix?: string | null
+          request_prefix?: string | null
+          secondary_color?: string | null
+          support_email?: string | null
+          updated_at?: string
+          website?: string | null
+          weekend_service_enabled?: boolean | null
+        }
+        Update: {
+          accent_color?: string | null
+          after_hours_enabled?: boolean | null
+          billing_email?: string | null
+          brand_notes?: string | null
+          business_number?: string | null
+          created_at?: string
+          currency?: string | null
+          date_format?: string | null
+          default_due_days?: number | null
+          default_payment_terms?: string | null
+          default_service_area?: string | null
+          default_tax_enabled?: boolean | null
+          default_tax_rate?: number | null
+          default_timezone?: string | null
+          deposit_required?: boolean | null
+          description?: string | null
+          display_name?: string | null
+          email?: string | null
+          email_signature?: string | null
+          emergency_service_enabled?: boolean | null
+          gst_number?: string | null
+          id?: string
+          internal_notes_visible_default?: boolean | null
+          invoice_header_name?: string | null
+          invoice_prefix?: string | null
+          job_prefix?: string | null
+          language?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          mailing_address?: string | null
+          operating_hours?: string | null
+          operating_name?: string | null
+          phone?: string | null
+          physical_address?: string | null
+          primary_color?: string | null
+          pst_number?: string | null
+          quote_footer_text?: string | null
+          quote_prefix?: string | null
+          request_prefix?: string | null
+          secondary_color?: string | null
+          support_email?: string | null
+          updated_at?: string
+          website?: string | null
+          weekend_service_enabled?: boolean | null
+        }
+        Relationships: []
+      }
       customer_billing_profiles: {
         Row: {
           autopay_consent_at: string | null
@@ -537,6 +773,88 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expense_date: string
+          id: string
+          job_id: string | null
+          notes: string | null
+          payment_method: string | null
+          property_id: string | null
+          receipt_url: string | null
+          service_line: string | null
+          tax_amount: number | null
+          updated_at: string
+          vendor_id: string | null
+          vendor_name: string | null
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          job_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          property_id?: string | null
+          receipt_url?: string | null
+          service_line?: string | null
+          tax_amount?: number | null
+          updated_at?: string
+          vendor_id?: string | null
+          vendor_name?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          job_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          property_id?: string | null
+          receipt_url?: string | null
+          service_line?: string | null
+          tax_amount?: number | null
+          updated_at?: string
+          vendor_id?: string | null
+          vendor_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       files: {
         Row: {
@@ -1146,6 +1464,114 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_settings: {
+        Row: {
+          auto_mark_sent: boolean | null
+          cash_enabled: boolean | null
+          cash_instructions: string | null
+          cheque_enabled: boolean | null
+          cheque_instructions: string | null
+          created_at: string
+          credit_card_enabled: boolean | null
+          credit_card_instructions: string | null
+          custom_terms_days: number | null
+          default_deposit_percentage: number | null
+          default_payment_terms: string | null
+          default_tax_rate: number | null
+          deposit_required: boolean | null
+          etransfer_enabled: boolean | null
+          etransfer_instructions: string | null
+          id: string
+          invoice_footer_text: string | null
+          late_fee_enabled: boolean | null
+          late_fee_type: string | null
+          late_fee_value: number | null
+          manual_reminders_only: boolean | null
+          other_method_enabled: boolean | null
+          other_method_instructions: string | null
+          other_method_name: string | null
+          overdue_reminder_days: string | null
+          partial_payment_allowed: boolean | null
+          stripe_mode: string | null
+          tax_enabled: boolean | null
+          tax_label_1: string | null
+          tax_label_2: string | null
+          tax_rate_1: number | null
+          tax_rate_2: number | null
+          updated_at: string
+        }
+        Insert: {
+          auto_mark_sent?: boolean | null
+          cash_enabled?: boolean | null
+          cash_instructions?: string | null
+          cheque_enabled?: boolean | null
+          cheque_instructions?: string | null
+          created_at?: string
+          credit_card_enabled?: boolean | null
+          credit_card_instructions?: string | null
+          custom_terms_days?: number | null
+          default_deposit_percentage?: number | null
+          default_payment_terms?: string | null
+          default_tax_rate?: number | null
+          deposit_required?: boolean | null
+          etransfer_enabled?: boolean | null
+          etransfer_instructions?: string | null
+          id?: string
+          invoice_footer_text?: string | null
+          late_fee_enabled?: boolean | null
+          late_fee_type?: string | null
+          late_fee_value?: number | null
+          manual_reminders_only?: boolean | null
+          other_method_enabled?: boolean | null
+          other_method_instructions?: string | null
+          other_method_name?: string | null
+          overdue_reminder_days?: string | null
+          partial_payment_allowed?: boolean | null
+          stripe_mode?: string | null
+          tax_enabled?: boolean | null
+          tax_label_1?: string | null
+          tax_label_2?: string | null
+          tax_rate_1?: number | null
+          tax_rate_2?: number | null
+          updated_at?: string
+        }
+        Update: {
+          auto_mark_sent?: boolean | null
+          cash_enabled?: boolean | null
+          cash_instructions?: string | null
+          cheque_enabled?: boolean | null
+          cheque_instructions?: string | null
+          created_at?: string
+          credit_card_enabled?: boolean | null
+          credit_card_instructions?: string | null
+          custom_terms_days?: number | null
+          default_deposit_percentage?: number | null
+          default_payment_terms?: string | null
+          default_tax_rate?: number | null
+          deposit_required?: boolean | null
+          etransfer_enabled?: boolean | null
+          etransfer_instructions?: string | null
+          id?: string
+          invoice_footer_text?: string | null
+          late_fee_enabled?: boolean | null
+          late_fee_type?: string | null
+          late_fee_value?: number | null
+          manual_reminders_only?: boolean | null
+          other_method_enabled?: boolean | null
+          other_method_instructions?: string | null
+          other_method_name?: string | null
+          overdue_reminder_days?: string | null
+          partial_payment_allowed?: boolean | null
+          stripe_mode?: string | null
+          tax_enabled?: boolean | null
+          tax_label_1?: string | null
+          tax_label_2?: string | null
+          tax_rate_1?: number | null
+          tax_rate_2?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       products_services: {
         Row: {
@@ -2058,6 +2484,45 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vendors: {
+        Row: {
+          address: string | null
+          contact_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
