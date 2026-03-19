@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Search, MapPin, User, Briefcase, Calendar, X } from 'lucide-react';
+import { Search, MapPin, Briefcase, Calendar, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-type ResultType = 'visit' | 'property' | 'customer' | 'job';
+type ResultType = 'visit' | 'property' | 'job';
 
 interface SearchResult {
   type: ResultType;
@@ -16,68 +17,70 @@ interface SearchResult {
   subtitle: string;
   status?: string;
   link: string;
-  note?: string;
 }
 
 export default function WorkerSearch() {
   const [query, setQuery] = useState('');
+  const { user } = useAuth();
   const trimmed = query.trim();
 
   const { data: results = [], isLoading } = useQuery({
-    queryKey: ['worker_search', trimmed],
+    queryKey: ['worker_search', trimmed, user?.id],
     queryFn: async () => {
-      if (trimmed.length < 2) return [];
+      if (trimmed.length < 2 || !user) return [];
       const q = `%${trimmed}%`;
       const out: SearchResult[] = [];
 
-      // Search visits
+      // Search visits — only those assigned to this worker via job
       const { data: visits } = await supabase
         .from('visits')
-        .select('id, visit_number, visit_status, service_date, properties(property_name), customers(first_name, last_name)')
+        .select('id, visit_number, visit_status, service_date, properties(property_name), customers(first_name, last_name), jobs(assigned_to)')
         .or(`visit_number.ilike.${q}`)
-        .limit(10);
-      visits?.forEach((v: any) => out.push({
-        type: 'visit',
-        id: v.id,
-        title: v.visit_number,
-        subtitle: [v.properties?.property_name, v.customers ? `${v.customers.first_name} ${v.customers.last_name}` : null, v.service_date].filter(Boolean).join(' · '),
-        status: v.visit_status,
-        link: `/worker/visit/${v.id}`,
-      }));
+        .limit(20);
+      visits?.forEach((v: any) => {
+        if (v.jobs?.assigned_to !== user.id) return;
+        out.push({
+          type: 'visit',
+          id: v.id,
+          title: v.visit_number,
+          subtitle: [v.properties?.property_name, v.customers ? `${v.customers.first_name} ${v.customers.last_name}` : null, v.service_date].filter(Boolean).join(' · '),
+          status: v.visit_status,
+          link: `/worker/visit/${v.id}`,
+        });
+      });
 
-      // Search properties
+      // Search properties — only those linked to jobs assigned to this worker
       const { data: props } = await supabase
         .from('properties')
-        .select('id, property_name, address_line_1, city, customers(first_name, last_name)')
+        .select('id, property_name, address_line_1, city')
         .or(`property_name.ilike.${q},address_line_1.ilike.${q},city.ilike.${q}`)
-        .limit(10);
-      props?.forEach((p: any) => out.push({
-        type: 'property',
-        id: p.id,
-        title: p.property_name,
-        subtitle: [p.address_line_1, p.city, p.customers ? `${p.customers.first_name} ${p.customers.last_name}` : null].filter(Boolean).join(', '),
-        link: `/worker/property/${p.id}`,
-      }));
+        .limit(20);
+      if (props && props.length > 0) {
+        // Check which properties have jobs assigned to this worker
+        const propIds = props.map(p => p.id);
+        const { data: assignedJobs } = await supabase
+          .from('jobs')
+          .select('property_id')
+          .eq('assigned_to', user.id)
+          .in('property_id', propIds);
+        const assignedPropertyIds = new Set((assignedJobs || []).map((j: any) => j.property_id));
+        props.forEach((p: any) => {
+          if (!assignedPropertyIds.has(p.id)) return;
+          out.push({
+            type: 'property',
+            id: p.id,
+            title: p.property_name,
+            subtitle: [p.address_line_1, p.city].filter(Boolean).join(', '),
+            link: `/worker/property/${p.id}`,
+          });
+        });
+      }
 
-      // Search customers
-      const { data: custs } = await supabase
-        .from('customers')
-        .select('id, first_name, last_name, company_name, phone')
-        .or(`first_name.ilike.${q},last_name.ilike.${q},company_name.ilike.${q}`)
-        .limit(10);
-      custs?.forEach((c: any) => out.push({
-        type: 'customer',
-        id: c.id,
-        title: `${c.first_name} ${c.last_name}`,
-        subtitle: [c.company_name, c.phone].filter(Boolean).join(' · '),
-        link: `/worker/schedule`, // Workers see customer context via assigned visits & properties
-        note: 'View assigned work for this customer on the schedule',
-      }));
-
-      // Search jobs
+      // Search jobs — only assigned to this worker
       const { data: jobs } = await supabase
         .from('jobs')
-        .select('id, job_number, job_title, status, customers(first_name, last_name)')
+        .select('id, job_number, job_title, status, customers(first_name, last_name), assigned_to')
+        .eq('assigned_to', user.id)
         .or(`job_number.ilike.${q},job_title.ilike.${q}`)
         .limit(10);
       jobs?.forEach((j: any) => out.push({
@@ -91,13 +94,12 @@ export default function WorkerSearch() {
 
       return out;
     },
-    enabled: trimmed.length >= 2,
+    enabled: trimmed.length >= 2 && !!user,
   });
 
   const iconMap: Record<ResultType, React.ElementType> = {
     visit: Calendar,
     property: MapPin,
-    customer: User,
     job: Briefcase,
   };
 
@@ -110,7 +112,7 @@ export default function WorkerSearch() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search visits, properties, customers, jobs…"
+          placeholder="Search your visits, properties, jobs…"
           value={query}
           onChange={e => setQuery(e.target.value)}
           className="pl-9 pr-9"
@@ -127,6 +129,7 @@ export default function WorkerSearch() {
         <div className="py-12 text-center">
           <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
           <p className="text-sm text-muted-foreground">Type at least 2 characters to search</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Only your assigned work will appear</p>
         </div>
       )}
 
@@ -140,6 +143,7 @@ export default function WorkerSearch() {
         <div className="py-12 text-center">
           <Search className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
           <p className="text-sm text-muted-foreground">No results for "{trimmed}"</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Only your assigned visits, jobs, and properties are searchable</p>
         </div>
       )}
 
@@ -160,7 +164,6 @@ export default function WorkerSearch() {
                         {r.status && <StatusBadge status={r.status} showIcon={false} />}
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate">{r.subtitle}</p>
-                      {r.note && <p className="text-[10px] text-muted-foreground/60 italic truncate">{r.note}</p>}
                     </div>
                     <span className="text-[9px] font-medium uppercase text-muted-foreground/60 tracking-wider shrink-0">{r.type}</span>
                   </CardContent>

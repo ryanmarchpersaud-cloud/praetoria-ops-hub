@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
 import {
   Zap, X, Play, CheckCircle, Camera, StickyNote, AlertTriangle, Receipt,
   UserPlus, FileText, Briefcase, FilePlus, Building2, LogIn, LogOut,
-  Navigation, Phone, MessageSquare, ShieldAlert, Clock, Wrench, Package,
+  Navigation, Phone, MessageSquare, Clock, Wrench, Package,
   ClipboardList, CreditCard, RotateCcw, PenLine, Home, Send, Construction,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,13 +22,14 @@ interface QuickAction {
   action: string | (() => void);
   category: 'field' | 'admin';
   comingSoon?: boolean;
+  hidden?: boolean;
 }
 
 export function WorkerFAB() {
   const [open, setOpen] = useState(false);
   const [comingSoonLabel, setComingSoonLabel] = useState<string | null>(null);
   const [quickAction, setQuickAction] = useState<QuickActionType>(null);
-  const { isAdmin, isStaff } = useUserRole();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -38,6 +39,7 @@ export function WorkerFAB() {
 
   const visitMatch = location.pathname.match(/\/worker\/visit\/([^/]+)/);
   const currentVisitId = visitMatch?.[1];
+  const isOnVisitPage = !!currentVisitId;
 
   const handleClock = useCallback(() => {
     if (active) {
@@ -49,21 +51,23 @@ export function WorkerFAB() {
     }
   }, [active, clockIn, clockOut, toast]);
 
-  const fieldActions: QuickAction[] = [
-    { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: '/worker/schedule', category: 'field' },
-    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=complete` : '/worker/schedule', category: 'field' },
-    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=photos` : '/worker/schedule', category: 'field' },
-    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=note` : '/worker/schedule', category: 'field' },
-    { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: currentVisitId ? `/worker/visit/${currentVisitId}?action=issue` : '/worker/schedule', category: 'field' },
-    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: () => setQuickAction('expense'), category: 'field' },
-    { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' },
-    { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: '/worker/schedule?action=directions', category: 'field' },
-    { icon: Phone, label: 'Call Customer', color: 'bg-green-600', action: '/worker/schedule?action=call', category: 'field' },
-    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: () => setQuickAction('message_admin'), category: 'field' },
-    { icon: Clock, label: 'Timesheet Entry', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' },
-    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: () => setQuickAction('equipment_issue'), category: 'field' },
-    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: () => setQuickAction('materials_used'), category: 'field' },
-  ];
+  const fieldActions: QuickAction[] = useMemo(() => [
+    // Visit-context actions — only show when on a visit page
+    { icon: Play, label: 'Start Visit', color: 'bg-emerald-500', action: `/worker/visit/${currentVisitId}`, category: 'field' as const, hidden: !isOnVisitPage },
+    { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: `/worker/visit/${currentVisitId}`, category: 'field' as const, hidden: !isOnVisitPage },
+    { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, hidden: !isOnVisitPage },
+    { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '', category: 'field' as const, hidden: !isOnVisitPage },
+    { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '/worker/incidents', category: 'field' as const },
+    // Always-available actions
+    { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: () => setQuickAction('expense'), category: 'field' as const },
+    { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' as const },
+    { icon: Clock, label: 'Timesheet', color: 'bg-sky-500', action: '/worker/timesheet', category: 'field' as const },
+    { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: () => setQuickAction('message_admin'), category: 'field' as const },
+    { icon: Wrench, label: 'Equipment Issue', color: 'bg-red-500', action: () => setQuickAction('equipment_issue'), category: 'field' as const },
+    { icon: Package, label: 'Materials Used', color: 'bg-teal-500', action: () => setQuickAction('materials_used'), category: 'field' as const },
+  ], [currentVisitId, isOnVisitPage, active, handleClock]);
+
+  const visibleFieldActions = fieldActions.filter(a => !a.hidden);
 
   const adminOnlyActions: QuickAction[] = [
     { icon: UserPlus, label: 'New Lead', color: 'bg-blue-500', action: '/leads?new=1', category: 'admin' },
@@ -87,7 +91,7 @@ export function WorkerFAB() {
     }
     if (typeof a.action === 'function') {
       a.action();
-    } else {
+    } else if (a.action) {
       navigate(a.action);
     }
   };
@@ -158,10 +162,10 @@ export function WorkerFAB() {
               )}
 
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-1 mb-2">
-                Field
+                {isOnVisitPage ? 'Visit Actions' : 'Field'}
               </p>
               <div className="grid grid-cols-4 gap-2">
-                {fieldActions.map((a) => (
+                {visibleFieldActions.map((a) => (
                   <button
                     key={a.label}
                     onClick={() => handleAction(a)}
@@ -184,6 +188,12 @@ export function WorkerFAB() {
                   </button>
                 ))}
               </div>
+
+              {!isOnVisitPage && (
+                <p className="text-[10px] text-muted-foreground/60 text-center mt-3 px-4">
+                  Open a visit to see visit-specific actions like Start, Complete, Photos, and Notes
+                </p>
+              )}
             </div>
           </div>
         </div>
