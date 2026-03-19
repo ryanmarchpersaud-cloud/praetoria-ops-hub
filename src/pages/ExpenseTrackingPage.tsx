@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { DollarSign, Plus, Pencil, Trash2, Search, Loader2, Receipt, TrendingUp, AlertTriangle, Building2 } from 'lucide-react';
+import { DollarSign, Plus, Pencil, Trash2, Search, Loader2, Receipt, TrendingUp, AlertTriangle, Building2, CheckCircle2, XCircle, ExternalLink, Paperclip } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
