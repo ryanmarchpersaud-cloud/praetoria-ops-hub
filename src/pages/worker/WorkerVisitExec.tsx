@@ -145,6 +145,23 @@ export default function WorkerVisitExec() {
   const property = (visit as any).properties;
   const customer = (visit as any).customers;
   const job = (visit as any).jobs;
+
+  // Guard: worker can only access visits assigned to them
+  const assignedTo = job?.assigned_to;
+  if (assignedTo && user?.id && assignedTo !== user.id) {
+    return (
+      <div className="p-6 text-center space-y-2">
+        <AlertTriangle className="h-8 w-8 text-destructive mx-auto" />
+        <p className="text-sm font-medium text-foreground">Access Denied</p>
+        <p className="text-xs text-muted-foreground">This visit is not assigned to you.</p>
+        <Button variant="outline" size="sm" onClick={() => navigate('/worker/schedule')}>Back to Schedule</Button>
+      </div>
+    );
+  }
+
+  const property = (visit as any).properties;
+  const customer = (visit as any).customers;
+  const job = (visit as any).jobs;
   const execState = mapStatusToExec(visit.visit_status);
   const photoCount = (photos as any[]).length + stagedFiles.length;
   const canComplete = photoCount >= MIN_PHOTOS_FOR_COMPLETION;
