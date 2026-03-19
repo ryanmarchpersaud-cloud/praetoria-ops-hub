@@ -1,14 +1,25 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   useEmployee, useEmployeeCertifications, useEmployeeDocuments,
   useEmployeePayStubs, useEmployeeTimeOff, useEmployeeEmergencyContacts,
+  useEmployeeEquipment, useIssueEquipment,
 } from '@/hooks/useEmployees';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, Phone, Mail } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, Phone, Mail, HardHat, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -36,12 +47,16 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default function EmployeeDetail() {
   const { id: userId } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const { data: emp, isLoading } = useEmployee(userId);
   const { data: certs = [] } = useEmployeeCertifications(userId);
   const { data: docs = [] } = useEmployeeDocuments(userId);
   const { data: payStubs = [] } = useEmployeePayStubs(userId);
   const { data: timeOff = [] } = useEmployeeTimeOff(userId);
   const { data: contacts = [] } = useEmployeeEmergencyContacts(userId);
+  const { data: equipment = [] } = useEmployeeEquipment(userId);
+  const issueEquipment = useIssueEquipment();
+  const [showIssueDialog, setShowIssueDialog] = useState(false);
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   if (!emp) return <div className="p-8 text-center text-muted-foreground">Employee not found.</div>;
@@ -68,6 +83,7 @@ export default function EmployeeDetail() {
           <TabsTrigger value="benefits" className="gap-1.5"><Heart className="h-3.5 w-3.5" /> Benefits</TabsTrigger>
           <TabsTrigger value="timeoff" className="gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Time Off</TabsTrigger>
           <TabsTrigger value="emergency" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Emergency</TabsTrigger>
+          <TabsTrigger value="equipment" className="gap-1.5"><HardHat className="h-3.5 w-3.5" /> Equipment</TabsTrigger>
         </TabsList>
 
         {/* Profile */}
@@ -266,7 +282,150 @@ export default function EmployeeDetail() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Equipment / PPE */}
+        <TabsContent value="equipment">
+          <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2"><HardHat className="h-4 w-4" /> Issued Equipment ({equipment.length})</CardTitle>
+              <Button size="sm" onClick={() => setShowIssueDialog(true)} className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" /> Issue Item
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+              {equipment.length === 0 ? (
+                <p className="p-4 text-sm text-muted-foreground">No equipment issued to this worker yet.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Serial #</TableHead>
+                      <TableHead>Condition</TableHead>
+                      <TableHead>Issued</TableHead>
+                      <TableHead>Replacement</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {equipment.map((item: any) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="text-sm font-medium">{item.item_name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground capitalize">{item.item_type}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{item.serial_number || '—'}</TableCell>
+                        <TableCell>
+                          <StatusChip status={item.condition} />
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {item.issued_date ? format(new Date(item.issued_date), 'MMM d, yyyy') : '—'}
+                        </TableCell>
+                        <TableCell>
+                          {item.replacement_requested ? (
+                            <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-700 border-amber-200">Requested</Badge>
+                          ) : '—'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Issue Equipment Dialog */}
+      <IssueEquipmentDialog
+        open={showIssueDialog}
+        onClose={() => setShowIssueDialog(false)}
+        userId={userId!}
+        onIssue={issueEquipment}
+        toast={toast}
+      />
     </div>
+  );
+}
+
+function IssueEquipmentDialog({ open, onClose, userId, onIssue, toast }: {
+  open: boolean;
+  onClose: () => void;
+  userId: string;
+  onIssue: ReturnType<typeof useIssueEquipment>;
+  toast: ReturnType<typeof useToast>['toast'];
+}) {
+  const [itemName, setItemName] = useState('');
+  const [itemType, setItemType] = useState('ppe');
+  const [serialNumber, setSerialNumber] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const reset = () => { setItemName(''); setItemType('ppe'); setSerialNumber(''); setNotes(''); };
+
+  const handleSubmit = () => {
+    if (!itemName.trim()) {
+      toast({ title: 'Enter an item name', variant: 'destructive' });
+      return;
+    }
+    onIssue.mutate({
+      user_id: userId,
+      item_name: itemName.trim(),
+      item_type: itemType,
+      serial_number: serialNumber.trim() || undefined,
+      condition: 'good',
+      issued_date: new Date().toISOString().split('T')[0],
+      notes: notes.trim() || undefined,
+    }, {
+      onSuccess: () => {
+        toast({ title: 'Equipment issued', description: `${itemName} has been issued.` });
+        reset();
+        onClose();
+      },
+      onError: (err: any) => {
+        toast({ title: 'Failed to issue equipment', description: err.message, variant: 'destructive' });
+      },
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={() => { reset(); onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <HardHat className="h-5 w-5 text-primary" /> Issue Equipment
+          </DialogTitle>
+          <DialogDescription>Add a new PPE or equipment item for this worker.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Item Name *</Label>
+            <Input placeholder="e.g. Safety Vest, Steel-Toe Boots, Hard Hat" value={itemName} onChange={e => setItemName(e.target.value)} />
+          </div>
+          <div>
+            <Label>Type</Label>
+            <Select value={itemType} onValueChange={setItemType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ppe">PPE</SelectItem>
+                <SelectItem value="tool">Tool</SelectItem>
+                <SelectItem value="device">Device</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Serial Number (optional)</Label>
+            <Input placeholder="S/N if applicable" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} />
+          </div>
+          <div>
+            <Label>Notes (optional)</Label>
+            <Textarea rows={2} placeholder="Size, color, brand, etc." value={notes} onChange={e => setNotes(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={onIssue.isPending}>
+            {onIssue.isPending ? 'Issuing…' : 'Issue Item'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
