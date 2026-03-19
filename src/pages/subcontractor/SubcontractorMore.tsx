@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   User, Building2, ShieldCheck, DollarSign, HelpCircle, Settings, LogOut, ChevronRight, Truck,
-  ShieldAlert, Receipt,
+  ShieldAlert, Receipt, Shield,
 } from 'lucide-react';
 
 export default function SubcontractorMore() {
