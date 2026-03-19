@@ -178,9 +178,10 @@ export default function WorkerSchedule() {
         .from('visits')
         .select(VISIT_SELECT)
         .eq('service_date', todayStr)
+        .eq('jobs.assigned_to', user!.id)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return ((data || []) as any[]).filter((v: any) => v.jobs?.assigned_to === user?.id) as unknown as Visit[];
+      return (data || []) as unknown as Visit[];
     },
     enabled: !!user,
   });
