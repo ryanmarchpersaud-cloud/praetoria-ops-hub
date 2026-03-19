@@ -279,9 +279,9 @@ export default function WorkerHome() {
           <Clock className="h-5 w-5 text-emerald-600" />
           <span className="text-[10px] font-medium text-foreground">Timesheet</span>
         </Link>
-        <Link to="/worker/weather" className="action-tile action-tile-cyan">
-          <CloudSun className="h-5 w-5 text-cyan-600" />
-          <span className="text-[10px] font-medium text-foreground">Weather</span>
+        <Link to="/worker/emergency-safety" className="action-tile action-tile-rose">
+          <ShieldAlert className="h-5 w-5 text-rose-600" />
+          <span className="text-[10px] font-medium text-foreground">Emergency</span>
         </Link>
         <Link to="/worker/more" className="action-tile action-tile-violet">
           <FileText className="h-5 w-5 text-violet-600" />
