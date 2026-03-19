@@ -67,16 +67,22 @@ export default function WorkerHome() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const { data: todayVisits = [] } = useQuery({
-    queryKey: ['worker_today_visits', todayStr],
+    queryKey: ['worker_today_visits', todayStr, user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('visits')
-        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city), customers(first_name, last_name, phone)')
+        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs(assigned_to)')
         .eq('service_date', todayStr)
         .order('arrival_time', { ascending: true });
+      const { data, error } = await query;
       if (error) throw error;
-      return data;
+      // Filter to visits assigned to this worker (via job.assigned_to) or unassigned
+      return (data || []).filter((v: any) => {
+        const assignedTo = v.jobs?.assigned_to;
+        return !assignedTo || assignedTo === user?.id;
+      });
     },
+    enabled: !!user,
   });
 
   const completedVisits = todayVisits.filter(v => v.visit_status === 'Completed');

@@ -140,6 +140,50 @@ export default function RequestDetail() {
             </Button>
           </Link>
         )}
+        {request.status !== 'Closed' && request.status !== 'Cancelled' && (
+          <Button
+            size="sm"
+            className="text-xs h-8"
+            onClick={async () => {
+              try {
+                // Create a lead from the request
+                const { data: lead, error: leadErr } = await supabase.from('leads').insert({
+                  first_name: (request.customers as any)?.first_name || 'Unknown',
+                  last_name: (request.customers as any)?.last_name || '',
+                  email: (request.customers as any)?.email || null,
+                  phone: (request.customers as any)?.phone || null,
+                  company_name: (request.customers as any)?.company_name || null,
+                  service_type: request.service_type as any || 'Other',
+                  description: request.description || request.subject,
+                  urgency: request.urgency || 'Normal',
+                  lead_source: 'Service Request',
+                  status: 'Quote drafting' as any,
+                  customer_id: request.customer_id,
+                }).select().single();
+                if (leadErr) throw leadErr;
+
+                // Create a quote linked to the lead and request
+                const { data: quote, error: quoteErr } = await supabase.from('quotes').insert({
+                  lead_id: lead.id,
+                  quote_number: '',
+                  service_category: request.service_type as any || 'Other',
+                  customer_id: request.customer_id,
+                  request_id: id,
+                } as any).select().single();
+                if (quoteErr) throw quoteErr;
+
+                // Update request status
+                await updateRequest.mutateAsync({ status: 'In Progress' });
+                toast.success('Quote created from request');
+                navigate(`/quotes/${quote.id}`);
+              } catch (err: any) {
+                toast.error(err.message || 'Failed to create quote');
+              }
+            }}
+          >
+            <Plus className="h-3.5 w-3.5 mr-1" /> Create Quote
+          </Button>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">
