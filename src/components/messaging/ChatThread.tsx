@@ -65,7 +65,24 @@ export function ChatThread({ conversationId, title, isAnnouncementOnly, onBack, 
           </button>
         )}
         <h2 className="text-sm font-semibold truncate flex-1">{title || 'Chat'}</h2>
+        <Button
+          variant={showVideo ? 'default' : 'ghost'}
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          onClick={() => setShowVideo(!showVideo)}
+          title="Video Call"
+        >
+          <Video className="h-4 w-4" />
+        </Button>
       </div>
+
+      {/* Video Call Panel */}
+      {showVideo && (
+        <VideoCallPanel
+          conversationId={conversationId}
+          onClose={() => setShowVideo(false)}
+        />
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
