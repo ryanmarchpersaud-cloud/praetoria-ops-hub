@@ -1,0 +1,1 @@
+ALTER TABLE public.worker_certifications ADD COLUMN IF NOT EXISTS file_url text;

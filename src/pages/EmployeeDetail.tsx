@@ -179,7 +179,7 @@ export default function EmployeeDetail() {
               <CardContent className="p-0">
                 {certs.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No certifications recorded.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Issuer</TableHead><TableHead>Status</TableHead><TableHead>Expiry</TableHead>{canManageWorkers && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Issuer</TableHead><TableHead>Status</TableHead><TableHead>Expiry</TableHead><TableHead>File</TableHead>{canManageWorkers && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                     <TableBody>
                       {certs.map((c: any) => (
                         <TableRow key={c.id}>
@@ -187,6 +187,11 @@ export default function EmployeeDetail() {
                           <TableCell className="text-sm text-muted-foreground">{c.issuer || '—'}</TableCell>
                           <TableCell><StatusChip status={c.status} /></TableCell>
                           <TableCell className="text-sm text-muted-foreground">{c.expiry_date ? format(new Date(c.expiry_date), 'MMM d, yyyy') : '—'}</TableCell>
+                          <TableCell>
+                            {c.file_url ? (
+                              <a href={c.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">View File</a>
+                            ) : <span className="text-xs text-muted-foreground">—</span>}
+                          </TableCell>
                           {canManageWorkers && (
                             <TableCell>
                               <div className="flex gap-1">
@@ -229,7 +234,7 @@ export default function EmployeeDetail() {
               <CardContent className="p-0">
                 {trainingRecords.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No training assigned.</p> : (
                   <Table>
-                    <TableHeader><TableRow><TableHead>Training</TableHead><TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Training</TableHead><TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead><TableHead>Material</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {trainingRecords.map((t: any) => (
                         <TableRow key={t.id}>
@@ -238,6 +243,11 @@ export default function EmployeeDetail() {
                           <TableCell><StatusChip status={t.status} /></TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {t.completed_date ? format(new Date(t.completed_date), 'MMM d, yyyy') : t.expiry_date ? `Due: ${format(new Date(t.expiry_date), 'MMM d, yyyy')}` : '—'}
+                          </TableCell>
+                          <TableCell>
+                            {t.file_url ? (
+                              <a href={t.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">Open</a>
+                            ) : <span className="text-xs text-muted-foreground">—</span>}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -540,9 +550,10 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
   const [name, setName] = useState('');
   const [type, setType] = useState('other');
   const [expiryDate, setExpiryDate] = useState('');
+  const [fileUrl, setFileUrl] = useState('');
   const [notes, setNotes] = useState('');
 
-  const reset = () => { setName(''); setType('other'); setExpiryDate(''); setNotes(''); };
+  const reset = () => { setName(''); setType('other'); setExpiryDate(''); setFileUrl(''); setNotes(''); };
 
   const handleSubmit = () => {
     if (!name.trim()) {
@@ -554,6 +565,7 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
       training_name: name.trim(),
       training_type: type,
       expiry_date: expiryDate || undefined,
+      file_url: fileUrl.trim() || undefined,
       notes: notes.trim() || undefined,
     }, {
       onSuccess: () => {
@@ -599,6 +611,10 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
           <div>
             <Label>Due / Expiry Date (optional)</Label>
             <Input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} />
+          </div>
+          <div>
+            <Label>Training Material URL (optional)</Label>
+            <Input placeholder="https://… or link to PDF/course" value={fileUrl} onChange={e => setFileUrl(e.target.value)} />
           </div>
           <div>
             <Label>Notes (optional)</Label>
