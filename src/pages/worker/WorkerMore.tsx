@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Monitor, Settings, LogOut, User, ChevronRight, HardHat, Eye,
   Briefcase, FileText, Heart, DollarSign, Award, CalendarDays, UserCheck,
-  ShieldAlert, Receipt, BookOpen,
+  ShieldAlert, Receipt, BookOpen, CreditCard,
 } from 'lucide-react';
 
 export default function WorkerMore() {
