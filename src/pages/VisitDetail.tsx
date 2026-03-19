@@ -59,13 +59,38 @@ export default function VisitDetail() {
             <h1 className="text-lg md:text-xl font-bold mono">{visit.visit_number}</h1>
             <StatusBadge status={form.visit_status || 'Scheduled'} />
           </div>
-          {job && <p className="text-xs text-muted-foreground">{job.job_title} ({job.job_number})</p>}
+      {job && <p className="text-xs text-muted-foreground">{job.job_title} ({job.job_number})</p>}
         </div>
       </div>
 
-      <Button onClick={handleSave} className="w-full h-11" disabled={updateVisit.isPending}>
-        <Save className="h-4 w-4 mr-2" /> Save Visit
-      </Button>
+      <div className="flex gap-2 flex-wrap">
+        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateVisit.isPending}>
+          <Save className="h-4 w-4 mr-2" /> Save Visit
+        </Button>
+        {form.visit_status === 'Completed' && (
+          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={async () => {
+            try {
+              const { data: invoice, error } = await supabase.from('invoices').insert({
+                invoice_number: '',
+                customer_id: (visit as any).customer_id,
+                property_id: (visit as any).property_id || null,
+                job_id: (visit as any).job_id || null,
+                status: 'Draft' as any,
+                customer_memo: form.service_summary || null,
+                internal_notes: `From visit ${visit.visit_number}`,
+              }).select().single();
+              if (error) throw error;
+              toast({ title: 'Invoice created' });
+              navigate(`/invoices/${invoice.id}`);
+            } catch (err: any) {
+              toast({ title: 'Error', description: err.message, variant: 'destructive' });
+            }
+          }}>
+            <Receipt className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Invoice</span>
+          </Button>
+        )}
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
