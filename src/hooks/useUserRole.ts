@@ -14,7 +14,10 @@ export type PermissionKey =
   | 'can_manage_team'
   | 'can_manage_roles'
   | 'can_manage_catalog'
-  | 'can_view_audit_log';
+  | 'can_view_audit_log'
+  | 'can_manage_equipment'
+  | 'can_manage_training'
+  | 'can_approve_certificates';
 
 export function useUserRole() {
   const { user } = useAuth();
