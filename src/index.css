@@ -161,6 +161,13 @@
   }
 }
 
+/* Leaflet marker pulse */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.custom-route-marker { background: none !important; border: none !important; }
+
 /* Print styles */
 @media print {
   body {

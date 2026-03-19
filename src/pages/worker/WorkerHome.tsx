@@ -11,6 +11,7 @@ import { WorkerLocationCard } from '@/components/worker/WorkerLocationCard';
 import { AvatarUpload } from '@/components/AvatarUpload';
 import { WeatherCard } from '@/components/WeatherCard';
 import { DirectionsButton } from '@/components/DirectionsButton';
+import { DailyRouteMap, type RouteStop } from '@/components/DailyRouteMap';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
@@ -412,18 +413,16 @@ export default function WorkerHome() {
         </div>
       )}
 
-      {/* Map / Weather */}
-      {highlightVisit && (highlightVisit.properties as any)?.address_line_1 && (
-        <WorkerLocationCard
-          nextVisit={{
-            propertyName: (highlightVisit.properties as any)?.property_name,
-            address: (highlightVisit.properties as any)?.address_line_1,
-            city: (highlightVisit.properties as any)?.city,
-            customerName: (highlightVisit.customers as any) ? `${(highlightVisit.customers as any).first_name} ${(highlightVisit.customers as any).last_name}` : undefined,
-            serviceType: highlightVisit.visit_type,
-            visitStatus: highlightVisit.visit_status,
-            customerPhone: (highlightVisit.customers as any)?.phone,
-          }}
+      {/* Daily Route Map */}
+      {todayVisits.length > 0 && (
+        <DailyRouteMap
+          stops={todayVisits.map((v): RouteStop => ({
+            id: v.id,
+            label: `${v.visit_number} — ${(v.properties as any)?.property_name || 'Visit'}`,
+            address: (v.properties as any)?.address_line_1 || '',
+            city: (v.properties as any)?.city,
+            status: v.visit_status,
+          }))}
         />
       )}
 

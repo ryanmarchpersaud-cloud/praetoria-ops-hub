@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarUpload } from '@/components/AvatarUpload';
 import { Link } from 'react-router-dom';
+import { DailyRouteMap, type RouteStop } from '@/components/DailyRouteMap';
 import {
   CalendarDays, Receipt, FileText, ChevronRight, MapPin, CheckCircle,
   AlertTriangle, Briefcase, ShieldCheck, Clock, Truck, DollarSign,
@@ -218,6 +219,20 @@ export default function SubcontractorHome() {
           </div>
         )}
       </div>
+
+      {/* Daily Route Map */}
+      {todayAssignments.length > 0 && (
+        <DailyRouteMap
+          stops={todayAssignments.map((a: any): RouteStop => ({
+            id: a.id,
+            label: `${a.visits?.visit_number || 'Assignment'} — ${a.visits?.properties?.property_name || 'Site'}`,
+            address: a.visits?.properties?.address_line_1 || '',
+            city: a.visits?.properties?.city,
+            status: a.assignment_status,
+          }))}
+        />
+      )}
+
 
       {/* Recent Invoices */}
       {invoices.length > 0 && (
