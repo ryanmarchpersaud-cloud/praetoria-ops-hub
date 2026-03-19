@@ -13,6 +13,7 @@ const tabs = [
 
 export function WorkerBottomNav() {
   const location = useLocation();
+  const { data: unreadCount } = useUnreadCount();
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border safe-area-bottom">
