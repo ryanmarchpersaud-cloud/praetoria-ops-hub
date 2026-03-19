@@ -21,6 +21,7 @@ export default function WorkerMore() {
   const profileItems = [
     { icon: User, label: 'My Profile', to: '/worker/profile', description: 'Personal info & service lines' },
     { icon: Briefcase, label: 'My Employment', to: '/worker/employment', description: 'Job details & compensation' },
+    { icon: ShieldAlert, label: 'Emergency & Safety', to: '/worker/emergency-safety', description: 'SOS, contacts & medical alerts' },
     { icon: Award, label: 'Training & Certifications', to: '/worker/training', description: 'License, certs & equipment' },
     { icon: BookOpen, label: 'Training & Safety', to: '/worker/training-safety', description: 'WHMIS, first aid & acknowledgements' },
     { icon: ShieldAlert, label: 'Safety & Incidents', to: '/worker/incidents', description: 'Report incidents & near misses' },

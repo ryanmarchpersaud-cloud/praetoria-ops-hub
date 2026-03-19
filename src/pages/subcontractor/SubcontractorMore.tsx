@@ -17,6 +17,7 @@ export default function SubcontractorMore() {
   const items = [
     { icon: User, label: 'My Profile', to: '/subcontractor/profile', description: 'Contact info & details' },
     { icon: Building2, label: 'Company Details', to: '/subcontractor/company', description: 'Business information' },
+    { icon: Shield, label: 'Emergency & Safety', to: '/subcontractor/emergency-safety', description: 'SOS, contacts & medical alerts' },
     { icon: ShieldCheck, label: 'Compliance', to: '/subcontractor/compliance', description: 'Insurance, WCB & docs' },
     { icon: ShieldAlert, label: 'Incidents & Damage', to: '/subcontractor/incidents', description: 'Report site incidents' },
     { icon: DollarSign, label: 'Payments', to: '/subcontractor/payments', description: 'Payment history & status' },
