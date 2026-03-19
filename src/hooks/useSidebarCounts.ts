@@ -48,7 +48,7 @@ export function useSidebarCounts() {
         supabase
           .from('visits')
           .select('id', { count: 'exact', head: true })
-          .in('status', ['Scheduled', 'In Progress']),
+          .in('status', ['Scheduled', 'In Progress'] as any),
 
         // Overdue or unpaid invoices
         supabase
