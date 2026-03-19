@@ -1,14 +1,25 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   useEmployee, useEmployeeCertifications, useEmployeeDocuments,
   useEmployeePayStubs, useEmployeeTimeOff, useEmployeeEmergencyContacts,
+  useEmployeeEquipment, useIssueEquipment,
 } from '@/hooks/useEmployees';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, Phone, Mail } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, Phone, Mail, HardHat, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
