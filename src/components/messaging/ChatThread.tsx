@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useMessages, useSendMessage, useMarkRead } from '@/hooks/useMessaging';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { VideoCallPanel } from './VideoCallPanel';
+import { Loader2, ArrowLeft, Video } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   conversationId: string;
