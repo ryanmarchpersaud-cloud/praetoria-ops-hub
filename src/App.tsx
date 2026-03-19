@@ -263,6 +263,7 @@ function AppRoutes() {
       <Route path="/subcontractors/:id" element={<AdminRoute><SubcontractorDetail /></AdminRoute>} />
       <Route path="/incidents" element={<AdminRoute><AdminIncidentsPage /></AdminRoute>} />
       <Route path="/incidents/:id" element={<AdminRoute><AdminIncidentDetailPage /></AdminRoute>} />
+      <Route path="/messaging" element={<AdminRoute><MessagingPage /></AdminRoute>} />
 
       <Route path="/settings" element={<AdminRoute><CompanySettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
