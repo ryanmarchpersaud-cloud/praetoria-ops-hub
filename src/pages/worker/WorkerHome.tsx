@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTimesheet, useClockIn, useClockOut } from '@/hooks/useTimesheets';
-import { useWorkerCertifications } from '@/hooks/useWorkerProfile';
+import { useWorkerCertifications, useWorkerProfile } from '@/hooks/useWorkerProfile';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { WorkerFAB } from '@/components/worker/WorkerFAB';
 import { WorkerLocationCard } from '@/components/worker/WorkerLocationCard';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { WeatherCard } from '@/components/WeatherCard';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
