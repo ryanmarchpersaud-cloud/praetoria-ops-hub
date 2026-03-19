@@ -31,6 +31,9 @@ type Vendor = Record<string, any>;
 
 function WorkerClaimsSection() {
   const queryClient = useQueryClient();
+  const [selectedClaim, setSelectedClaim] = useState<any>(null);
+  const [adminNotes, setAdminNotes] = useState('');
+
   const { data: claims = [], isLoading } = useQuery({
     queryKey: ['admin_worker_expense_claims'],
     queryFn: async () => {
@@ -62,7 +65,14 @@ function WorkerClaimsSection() {
     }).eq('id', id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Claim ${status}`);
+    setSelectedClaim(null);
+    setAdminNotes('');
     queryClient.invalidateQueries({ queryKey: ['admin_worker_expense_claims'] });
+  };
+
+  const openDetail = (claim: any) => {
+    setSelectedClaim(claim);
+    setAdminNotes(claim.admin_notes || '');
   };
 
   const pending = claims.filter((c: any) => c.status === 'submitted');
@@ -83,7 +93,7 @@ function WorkerClaimsSection() {
       <Separator />
       <div>
         <h2 className="text-lg font-bold text-foreground mb-1">Worker Reimbursement Claims</h2>
-        <p className="text-sm text-muted-foreground mb-4">Expense claims submitted by workers for approval</p>
+        <p className="text-sm text-muted-foreground mb-4">Expense claims submitted by workers for approval. Click a row to view full details.</p>
       </div>
       {pending.length > 0 && (
         <Card className="border-amber-200 dark:border-amber-800/30">
@@ -107,20 +117,20 @@ function WorkerClaimsSection() {
               </TableHeader>
               <TableBody>
                 {pending.map((c: any) => (
-                  <TableRow key={c.id}>
+                  <TableRow key={c.id} className="cursor-pointer" onClick={() => openDetail(c)}>
                     <TableCell className="text-sm font-medium">{profileMap.get(c.user_id) || 'Unknown'}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{format(new Date(c.expense_date), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.category}</TableCell>
                     <TableCell className="text-sm text-right font-medium">${Number(c.amount).toFixed(2)}</TableCell>
                     <TableCell>
                       {c.receipt_url ? (
-                        <a href={c.receipt_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs flex items-center gap-1">
+                        <a href={c.receipt_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs flex items-center gap-1" onClick={e => e.stopPropagation()}>
                           <Paperclip className="h-3 w-3" /> View
                         </a>
                       ) : <span className="text-xs text-muted-foreground">None</span>}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
                         <Button size="sm" variant="outline" className="h-7 px-2 text-xs text-green-600" onClick={() => updateStatus(c.id, 'approved')}>
                           <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
                         </Button>
@@ -152,7 +162,7 @@ function WorkerClaimsSection() {
               </TableHeader>
               <TableBody>
                 {processed.map((c: any) => (
-                  <TableRow key={c.id}>
+                  <TableRow key={c.id} className="cursor-pointer" onClick={() => openDetail(c)}>
                     <TableCell className="text-sm font-medium">{profileMap.get(c.user_id) || 'Unknown'}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{format(new Date(c.expense_date), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{c.category}</TableCell>
@@ -169,6 +179,90 @@ function WorkerClaimsSection() {
           </CardContent>
         </Card>
       )}
+
+      {/* Claim Detail Dialog */}
+      <Dialog open={!!selectedClaim} onOpenChange={(v) => { if (!v) { setSelectedClaim(null); setAdminNotes(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Expense Claim Detail</DialogTitle>
+          </DialogHeader>
+          {selectedClaim && (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Worker</p>
+                  <p className="text-sm font-medium text-foreground">{profileMap.get(selectedClaim.user_id) || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Amount</p>
+                  <p className="text-sm font-bold text-foreground">${Number(selectedClaim.amount).toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Date of Purchase</p>
+                  <p className="text-sm text-foreground">{format(new Date(selectedClaim.expense_date), 'MMMM d, yyyy')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Category</p>
+                  <p className="text-sm text-foreground">{selectedClaim.category}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${statusColors[selectedClaim.status] || 'bg-muted text-muted-foreground'}`}>
+                    {selectedClaim.status}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Submitted</p>
+                  <p className="text-sm text-foreground">{format(new Date(selectedClaim.created_at), 'MMM d, yyyy h:mm a')}</p>
+                </div>
+              </div>
+
+              {selectedClaim.description && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Description</p>
+                  <p className="text-sm text-foreground bg-muted/50 rounded p-2">{selectedClaim.description}</p>
+                </div>
+              )}
+
+              {selectedClaim.receipt_url && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Receipt</p>
+                  <a href={selectedClaim.receipt_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    {selectedClaim.receipt_file_name || 'View Receipt'}
+                  </a>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Admin Notes</Label>
+                <Textarea
+                  value={adminNotes}
+                  onChange={e => setAdminNotes(e.target.value)}
+                  placeholder="Add a note before approving/rejecting..."
+                  rows={2}
+                />
+              </div>
+
+              {selectedClaim.status === 'submitted' && (
+                <div className="flex gap-2">
+                  <Button className="flex-1 gap-1.5" variant="outline" onClick={() => updateStatus(selectedClaim.id, 'rejected', adminNotes)}>
+                    <XCircle className="h-4 w-4 text-destructive" /> Reject
+                  </Button>
+                  <Button className="flex-1 gap-1.5" onClick={() => updateStatus(selectedClaim.id, 'approved', adminNotes)}>
+                    <CheckCircle2 className="h-4 w-4" /> Approve
+                  </Button>
+                </div>
+              )}
+              {selectedClaim.status === 'approved' && (
+                <Button className="w-full gap-1.5" onClick={() => updateStatus(selectedClaim.id, 'reimbursed', adminNotes)}>
+                  <DollarSign className="h-4 w-4" /> Mark as Reimbursed
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
