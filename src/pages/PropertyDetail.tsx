@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Briefcase, ClipboardCheck, ShieldAlert, Eye } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Briefcase, ClipboardCheck, ShieldAlert, Eye, Receipt, User } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { PropertyPhotoUpload } from '@/components/PropertyPhotoUpload';
 import { Switch } from '@/components/ui/switch';
