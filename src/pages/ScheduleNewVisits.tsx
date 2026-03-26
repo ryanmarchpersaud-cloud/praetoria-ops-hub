@@ -198,7 +198,7 @@ export default function ScheduleNewVisits() {
           service_summary: job.job_title,
           crew_notes: instructions || null,
           assigned_worker_id: selectedTeam.length === 1 ? selectedTeam[0] : null,
-          service_category: (job as any).service_category || 'snow_removal',
+          service_category: (job as any).service_category || 'Snow & Ice',
         };
         await createVisit.mutateAsync(visitPayload);
         successCount++;
