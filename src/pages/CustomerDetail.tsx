@@ -231,6 +231,8 @@ export default function CustomerDetail() {
             icon={Building2}
             count={(properties as any[]).length}
             emptyText="No properties linked"
+            createLink={`/properties?new=1&customer_id=${id}`}
+            createLabel="Add"
             items={(properties as any[]).map((p: any) => ({
               id: p.id,
               link: `/properties/${p.id}`,
