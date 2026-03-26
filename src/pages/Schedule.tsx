@@ -2,8 +2,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List, MoreHorizontal, CalendarPlus } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List, MoreHorizontal, CalendarPlus, Briefcase, FileText, CheckSquare, CalendarClock, ArrowRightLeft, Upload, RefreshCw, ClipboardList } from 'lucide-react';
 import { useVisits, useUpdateVisit } from '@/hooks/useVisits';
 import { useJobs, useUpdateJob } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
@@ -134,11 +134,40 @@ export default function Schedule() {
                 <MoreHorizontal className="h-3.5 w-3.5" /> More Actions
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Create</DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link to="/jobs/new" className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" /> Job
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/requests" className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4" /> Request
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/visits" className="flex items-center gap-2">
+                  <CalendarPlus className="h-4 w-4" /> Visit
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Schedule</DropdownMenuLabel>
               <DropdownMenuItem asChild>
                 <Link to="/schedule/new-visits" className="flex items-center gap-2">
-                  <CalendarPlus className="h-4 w-4" /> Schedule New Visits
+                  <CalendarClock className="h-4 w-4" /> Schedule New Visits
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Tools</DropdownMenuLabel>
+              <DropdownMenuItem disabled className="flex items-center gap-2 opacity-50">
+                <ArrowRightLeft className="h-4 w-4" /> Move Visit
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled className="flex items-center gap-2 opacity-50">
+                <Upload className="h-4 w-4" /> Import Jobs
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled className="flex items-center gap-2 opacity-50">
+                <RefreshCw className="h-4 w-4" /> Set Up Calendar Sync
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
