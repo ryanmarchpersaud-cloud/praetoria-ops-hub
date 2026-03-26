@@ -227,7 +227,7 @@ export default function InvoiceDetail() {
                   <div><span className="text-muted-foreground">Issue Date</span><p className="font-medium">{format(new Date(invoice.issue_date), 'MMM d, yyyy')}</p></div>
                   <div><span className="text-muted-foreground">Due Date</span><p className="font-medium">{format(new Date(invoice.due_date), 'MMM d, yyyy')}</p></div>
                   {invoice.jobs && <div><span className="text-muted-foreground">Job</span><p className="font-medium"><Link to={`/jobs/${invoice.jobs.id}`} className="text-primary hover:underline">{invoice.jobs.job_number} — {invoice.jobs.job_title}</Link></p></div>}
-                  {invoice.properties && <div><span className="text-muted-foreground">Property</span><p className="font-medium">{invoice.properties.property_name}</p></div>}
+                  {invoice.properties && <div><span className="text-muted-foreground">Property</span><p className="font-medium"><Link to={`/properties/${invoice.property_id}`} className="text-primary hover:underline">{invoice.properties.property_name}</Link></p></div>}
                   {invoice.sent_at && <div><span className="text-muted-foreground">Sent</span><p className="font-medium">{format(new Date(invoice.sent_at), 'MMM d, yyyy h:mm a')}</p></div>}
                   {invoice.paid_at && <div><span className="text-muted-foreground">Paid</span><p className="font-medium">{format(new Date(invoice.paid_at), 'MMM d, yyyy h:mm a')}</p></div>}
                 </>
