@@ -420,9 +420,9 @@ export default function QuoteDetail() {
                     </div>
                     {items.map((item, idx) => (
                       <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-4"><Input value={item.item_name} onChange={e => updateItem(idx, 'item_name', e.target.value)} placeholder="Item" disabled={isSentOrApproved} className="h-9" /></div>
+                        <div className="col-span-3"><Input value={item.item_name} onChange={e => updateItem(idx, 'item_name', e.target.value)} placeholder="Item" disabled={isSentOrApproved} className="h-9" /></div>
                         <div className="col-span-3"><Input value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder="Desc" disabled={isSentOrApproved} className="h-9" /></div>
-                        <div className="col-span-1"><Input type="number" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="text-center h-9" disabled={isSentOrApproved} /></div>
+                        <div className="col-span-2"><Input type="number" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="text-center h-9" disabled={isSentOrApproved} /></div>
                         <div className="col-span-2"><Input type="number" value={item.unit_price} onChange={e => updateItem(idx, 'unit_price', Number(e.target.value))} className="text-right h-9" disabled={isSentOrApproved} /></div>
                         <div className="col-span-1 text-sm font-medium text-right mono">${item.line_total.toFixed(2)}</div>
                         <div className="col-span-1">{!isSentOrApproved && <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-8 w-8"><Trash2 className="h-3 w-3" /></Button>}</div>
