@@ -325,6 +325,7 @@ export default function ScheduleNewVisits() {
                 const customerName = job.customers
                   ? `${job.customers.first_name} ${job.customers.last_name}`
                   : 'Unknown Client';
+                const hasLocation = job.property_id && propertyLocations[job.property_id];
 
                 return (
                   <button
@@ -352,6 +353,11 @@ export default function ScheduleNewVisits() {
                           {job.job_title}
                           {job.properties?.property_name && ` · ${job.properties.property_name}`}
                         </p>
+                        {!hasLocation && locationsLoaded && (
+                          <p className="text-xs text-amber-500 flex items-center gap-1 mt-0.5">
+                            <MapPinOff className="h-3 w-3" /> No map location
+                          </p>
+                        )}
                       </div>
                     </div>
                   </button>
