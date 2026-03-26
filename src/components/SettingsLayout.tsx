@@ -59,7 +59,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="space-y-4">
       {/* Mobile/tablet horizontal tab bar */}
-      <div className="lg:hidden flex gap-1 overflow-x-auto border-b border-border pb-2">
+      <div className="md:hidden flex gap-1 overflow-x-auto border-b border-border pb-2">
         {allItems.map((item) => (
           <NavLink
             key={item.url}
@@ -76,7 +76,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
 
       <div className="flex gap-6">
         {/* Desktop left sidebar */}
-        <aside className="hidden lg:block w-56 shrink-0">
+        <aside className="hidden md:block w-56 shrink-0">
           <div className="sticky top-6 space-y-5 max-h-[calc(100vh-4rem)] overflow-y-auto pb-8">
             <h2 className="text-sm font-semibold text-foreground px-3">Settings</h2>
             {settingsNav.map((group) => (
