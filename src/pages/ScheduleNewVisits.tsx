@@ -351,8 +351,12 @@ export default function ScheduleNewVisits() {
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {job.job_title}
-                          {job.properties?.property_name && ` · ${job.properties.property_name}`}
                         </p>
+                        {job.properties?.property_name && (
+                          <p className="text-xs text-muted-foreground/70 truncate">
+                            📍 {job.properties.property_name}
+                          </p>
+                        )}
                         {!hasLocation && locationsLoaded && (
                           <p className="text-xs text-amber-500 flex items-center gap-1 mt-0.5">
                             <MapPinOff className="h-3 w-3" /> No map location
