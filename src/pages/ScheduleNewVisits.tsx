@@ -17,7 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { format } from 'date-fns';
-import { CalendarIcon, ArrowLeft, Check, X, Search, Filter } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, Check, X, Search, Filter, MapPinOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function ScheduleNewVisits() {
@@ -52,7 +52,7 @@ export default function ScheduleNewVisits() {
     });
   }, [allJobs]);
 
-  // Load property locations
+  // Load property locations + geocode fallback
   useEffect(() => {
     if (recurringJobs.length === 0) return;
     const propertyIds = [...new Set(recurringJobs.map((j: any) => j.property_id).filter(Boolean))];
@@ -62,18 +62,37 @@ export default function ScheduleNewVisits() {
       .from('properties')
       .select('id, property_name, address_line_1, city, province, postal_code, latitude, longitude')
       .in('id', propertyIds)
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (!data) return;
         const locs: Record<string, { lat: number; lng: number; address: string }> = {};
+        const toGeocode: any[] = [];
+
         data.forEach((p: any) => {
+          const address = [p.address_line_1, p.city, p.province, p.postal_code].filter(Boolean).join(', ');
           if (p.latitude && p.longitude) {
-            locs[p.id] = {
-              lat: p.latitude,
-              lng: p.longitude,
-              address: [p.address_line_1, p.city, p.province].filter(Boolean).join(', '),
-            };
+            locs[p.id] = { lat: p.latitude, lng: p.longitude, address };
+          } else if (address.length > 3) {
+            toGeocode.push({ ...p, address });
           }
         });
+
+        // Geocode properties with address but no coordinates
+        for (const prop of toGeocode) {
+          try {
+            const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(prop.address)}&limit=1`);
+            const results = await resp.json();
+            if (results.length > 0) {
+              const lat = parseFloat(results[0].lat);
+              const lng = parseFloat(results[0].lon);
+              locs[prop.id] = { lat, lng, address: prop.address };
+              // Save back to DB for future use
+              supabase.from('properties').update({ latitude: lat, longitude: lng } as any).eq('id', prop.id).then(() => {});
+            }
+          } catch {
+            // Geocoding failed — skip this property
+          }
+        }
+
         setPropertyLocations(locs);
         setLocationsLoaded(true);
       });
@@ -306,6 +325,7 @@ export default function ScheduleNewVisits() {
                 const customerName = job.customers
                   ? `${job.customers.first_name} ${job.customers.last_name}`
                   : 'Unknown Client';
+                const hasLocation = job.property_id && propertyLocations[job.property_id];
 
                 return (
                   <button
@@ -333,6 +353,11 @@ export default function ScheduleNewVisits() {
                           {job.job_title}
                           {job.properties?.property_name && ` · ${job.properties.property_name}`}
                         </p>
+                        {!hasLocation && locationsLoaded && (
+                          <p className="text-xs text-amber-500 flex items-center gap-1 mt-0.5">
+                            <MapPinOff className="h-3 w-3" /> No map location
+                          </p>
+                        )}
                       </div>
                     </div>
                   </button>
@@ -342,15 +367,15 @@ export default function ScheduleNewVisits() {
           </div>
         </div>
 
-        {/* Right: Map */}
-        <Card className="overflow-hidden relative z-0">
+        {/* Right: Map — isolation creates a stacking context so Leaflet z-indexes don't leak */}
+        <Card className="overflow-hidden" style={{ isolation: 'isolate', position: 'relative', zIndex: 0 }}>
           <div ref={mapContainerRef} className="h-[500px] w-full" />
         </Card>
       </div>
 
-      {/* Create Visits Modal */}
+      {/* Create Visits Modal — rendered via DialogPortal so it's always above everything */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-lg z-[1000]">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create {selectedJobIds.size} Visit{selectedJobIds.size !== 1 ? 's' : ''}</DialogTitle>
           </DialogHeader>
