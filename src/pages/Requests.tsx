@@ -3,13 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link, useNavigate } from 'react-router-dom';
-import { MessageSquarePlus, ChevronRight, Search, Inbox } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { MessageSquarePlus, ChevronRight, Search, Inbox, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
+import { CreateRequestDialog } from '@/components/CreateRequestDialog';
 
 const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'];
 
