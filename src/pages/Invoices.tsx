@@ -211,9 +211,15 @@ export default function Invoices() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="cursor-pointer hover:border-primary/30 transition-colors"
+          onClick={() => { setStatusFilter('Paid'); setDateFilter('all'); }}
+        >
           <CardContent className="p-4 flex flex-col justify-between h-full">
-            <p className="text-sm font-semibold">Invoice payment time</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold">Invoice payment time</p>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </div>
             <div className="mt-2 space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold">{paidInvoices.length}</span>
