@@ -248,6 +248,8 @@ export default function CustomerDetail() {
             icon={MessageSquarePlus}
             count={requests.length}
             emptyText="No requests"
+            createLink={`/requests?new=1&customer_id=${id}`}
+            createLabel="New"
             items={requests.map((r: any) => ({
               id: r.id,
               link: `/requests/${r.id}`,
