@@ -337,7 +337,7 @@ export default function ScheduleNewVisits() {
         </div>
 
         {/* Right: Map */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden relative z-0">
           <div ref={mapContainerRef} className="h-[500px] w-full" />
         </Card>
       </div>
