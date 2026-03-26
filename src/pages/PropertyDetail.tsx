@@ -82,7 +82,14 @@ export default function PropertyDetail() {
             <h1 className="text-lg md:text-xl font-bold truncate">{form.property_name}</h1>
             <StatusBadge status={form.status || 'Active'} />
           </div>
-          {customer && <p className="text-xs text-muted-foreground">{customer.first_name} {customer.last_name}{customer.company_name ? ` — ${customer.company_name}` : ''}</p>}
+          {customer && (
+            <p className="text-xs text-muted-foreground">
+              <Link to={`/customers/${(property as any).customer_id}`} className="text-primary hover:underline">
+                {customer.first_name} {customer.last_name}
+              </Link>
+              {customer.company_name ? ` — ${customer.company_name}` : ''}
+            </p>
+          )}
         </div>
       </div>
 
