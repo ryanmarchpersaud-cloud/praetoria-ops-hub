@@ -361,8 +361,8 @@ export default function ScheduleNewVisits() {
           </div>
         </div>
 
-        {/* Right: Map */}
-        <Card className="overflow-hidden relative z-0">
+        {/* Right: Map — isolation creates a stacking context so Leaflet z-indexes don't leak */}
+        <Card className="overflow-hidden" style={{ isolation: 'isolate', position: 'relative', zIndex: 0 }}>
           <div ref={mapContainerRef} className="h-[500px] w-full" />
         </Card>
       </div>
