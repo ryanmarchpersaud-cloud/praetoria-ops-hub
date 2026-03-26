@@ -25,6 +25,16 @@ export default function PropertyDetail() {
   const { data: property, isLoading } = useProperty(id);
   const { data: jobs = [] } = usePropertyJobs(id);
   const { data: visits = [] } = usePropertyVisits(id);
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['property_invoices', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase.from('invoices').select('id, invoice_number, status, total, balance_due').eq('property_id', id).order('created_at', { ascending: false }).limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
   const updateProperty = useUpdateProperty();
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
