@@ -35,6 +35,7 @@ export default function ScheduleNewVisits() {
   const [isCreating, setIsCreating] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [descriptionFilter, setDescriptionFilter] = useState('');
+  const [teamSearch, setTeamSearch] = useState('');
   const [propertyLocations, setPropertyLocations] = useState<Record<string, { lat: number; lng: number; address: string }>>({});
   const [locationsLoaded, setLocationsLoaded] = useState(false);
 
