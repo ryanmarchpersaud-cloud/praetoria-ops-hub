@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus } from 'lucide-react';
+import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
