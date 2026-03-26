@@ -71,7 +71,7 @@ export default function JobNew() {
   // Catalog
   const [catalogItems, setCatalogItems] = useState<any[]>([]);
   useEffect(() => {
-    supabase.from('products_services').select('*').eq('status', 'active').order('name').then(({ data }) => {
+    supabase.from('products_services').select('*').ilike('status', 'active').order('name').then(({ data }) => {
       if (data) setCatalogItems(data);
     });
   }, []);
