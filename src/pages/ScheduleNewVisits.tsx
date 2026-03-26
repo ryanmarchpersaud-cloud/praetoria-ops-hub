@@ -45,8 +45,8 @@ export default function ScheduleNewVisits() {
   // Filter recurring jobs
   const recurringJobs = useMemo(() => {
     return (allJobs as any[]).filter((j) => {
-      const isRecurring = j.service_frequency && j.service_frequency !== 'one_time';
-      const isActive = j.status === 'active' || j.status === 'scheduled' || j.status === 'in_progress';
+      const isRecurring = j.service_frequency && j.service_frequency !== 'one-time';
+      const isActive = j.status === 'Scheduled' || j.status === 'In Progress';
       return isRecurring && isActive;
     });
   }, [allJobs]);
