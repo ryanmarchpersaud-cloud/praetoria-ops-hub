@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List, MoreHorizontal, CalendarPlus } from 'lucide-react';
 import { useVisits, useUpdateVisit } from '@/hooks/useVisits';
 import { useJobs, useUpdateJob } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
