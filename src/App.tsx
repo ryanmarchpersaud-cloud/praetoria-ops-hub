@@ -22,6 +22,7 @@ import CustomerDetail from "./pages/CustomerDetail";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import Jobs from "./pages/Jobs";
+import JobNew from "./pages/JobNew";
 import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
@@ -250,6 +251,7 @@ function AppRoutes() {
       <Route path="/properties" element={<AdminRoute><Properties /></AdminRoute>} />
       <Route path="/properties/:id" element={<AdminRoute><PropertyDetail /></AdminRoute>} />
       <Route path="/jobs" element={<AdminRoute><Jobs /></AdminRoute>} />
+      <Route path="/jobs/new" element={<AdminRoute><JobNew /></AdminRoute>} />
       <Route path="/jobs/:id" element={<AdminRoute><JobDetail /></AdminRoute>} />
       <Route path="/visits" element={<AdminRoute><Visits /></AdminRoute>} />
       <Route path="/visits/:id" element={<AdminRoute><VisitDetail /></AdminRoute>} />

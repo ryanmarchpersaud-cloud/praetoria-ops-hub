@@ -1505,16 +1505,75 @@ export type Database = {
           },
         ]
       }
+      job_line_items: {
+        Row: {
+          catalog_item_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          item_name: string
+          job_id: string
+          line_total: number
+          quantity: number
+          sort_order: number
+          unit_price: number
+        }
+        Insert: {
+          catalog_item_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_name: string
+          job_id: string
+          line_total?: number
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+        }
+        Update: {
+          catalog_item_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          item_name?: string
+          job_id?: string
+          line_total?: number
+          quantity?: number
+          sort_order?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_line_items_catalog_item_id_fkey"
+            columns: ["catalog_item_id"]
+            isOneToOne: false
+            referencedRelation: "products_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_line_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           additional_visit_rate: number | null
           assigned_to: string | null
+          billing_notes: string | null
+          billing_type: string | null
           contract_end_date: string | null
           contract_start_date: string | null
           created_at: string
+          customer_billing_notes: string | null
           customer_id: string
+          estimated_total: number | null
           id: string
           internal_notes: string | null
+          invoice_reminder: boolean | null
           job_number: string
           job_title: string
           minimum_included_visits: number | null
@@ -1536,12 +1595,17 @@ export type Database = {
         Insert: {
           additional_visit_rate?: number | null
           assigned_to?: string | null
+          billing_notes?: string | null
+          billing_type?: string | null
           contract_end_date?: string | null
           contract_start_date?: string | null
           created_at?: string
+          customer_billing_notes?: string | null
           customer_id: string
+          estimated_total?: number | null
           id?: string
           internal_notes?: string | null
+          invoice_reminder?: boolean | null
           job_number: string
           job_title: string
           minimum_included_visits?: number | null
@@ -1563,12 +1627,17 @@ export type Database = {
         Update: {
           additional_visit_rate?: number | null
           assigned_to?: string | null
+          billing_notes?: string | null
+          billing_type?: string | null
           contract_end_date?: string | null
           contract_start_date?: string | null
           created_at?: string
+          customer_billing_notes?: string | null
           customer_id?: string
+          estimated_total?: number | null
           id?: string
           internal_notes?: string | null
+          invoice_reminder?: boolean | null
           job_number?: string
           job_title?: string
           minimum_included_visits?: number | null

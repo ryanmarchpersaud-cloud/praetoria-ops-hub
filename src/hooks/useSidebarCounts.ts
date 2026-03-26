@@ -43,7 +43,7 @@ export function useSidebarCounts() {
         countRows('leads', 'status', ['New']),
         countRows('quotes', 'sent_status', ['Not sent']),
         countRows('jobs', 'status', ['Draft', 'Scheduled']),
-        countRows('visits', 'status', ['Scheduled', 'In Progress']),
+        countRows('visits', 'visit_status', ['Scheduled', 'In Progress']),
         countRows('invoices', 'status', ['Sent', 'Overdue', 'Partially Paid']),
         countRows('service_requests', 'status', ['New', 'Pending']),
       ]);

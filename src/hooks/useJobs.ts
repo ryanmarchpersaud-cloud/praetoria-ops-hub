@@ -49,11 +49,17 @@ export function useCreateJob() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (job: any) => {
-      const { data, error } = await supabase.from('jobs').insert(job).select().single();
+      // Clean "none" sentinel values
+      const cleaned = { ...job };
+      if (cleaned.assigned_to === 'none' || cleaned.assigned_to === '') cleaned.assigned_to = null;
+      const { data, error } = await supabase.from('jobs').insert(cleaned).select().single();
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['jobs'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['jobs'] });
+      qc.invalidateQueries({ queryKey: ['property_jobs'] });
+    },
   });
 }
 
