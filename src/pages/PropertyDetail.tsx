@@ -222,6 +222,45 @@ export default function PropertyDetail() {
               ))}
             </CardContent>
           </Card>
+
+          {/* Invoices */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Receipt className="h-3.5 w-3.5" /> Invoices ({invoices.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {invoices.length === 0 ? <p className="text-xs text-muted-foreground">No invoices yet</p> : invoices.map((inv: any) => (
+                <Link key={inv.id} to={`/invoices/${inv.id}`} className="block p-2 rounded border hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium font-mono">{inv.invoice_number}</p>
+                      <p className="text-[10px] text-muted-foreground">${Number(inv.total || 0).toLocaleString()} · Bal: ${Number(inv.balance_due || 0).toLocaleString()}</p>
+                    </div>
+                    <StatusBadge status={inv.status} showIcon={false} />
+                  </div>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Customer */}
+          {customer && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" /> Customer
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-1">
+                <Link to={`/customers/${(property as any).customer_id}`} className="font-medium text-primary hover:underline block">
+                  {customer.first_name} {customer.last_name}
+                </Link>
+                {customer.company_name && <p className="text-xs text-muted-foreground">{customer.company_name}</p>}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
