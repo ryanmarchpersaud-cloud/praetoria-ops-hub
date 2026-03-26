@@ -411,18 +411,18 @@ export default function QuoteDetail() {
                   {/* Desktop: grid view */}
                   <div className="hidden md:block space-y-2">
                     <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">
-                      <div className="col-span-4">Item</div>
+                      <div className="col-span-3">Item</div>
                       <div className="col-span-3">Description</div>
-                      <div className="col-span-1 text-center">Qty</div>
+                      <div className="col-span-2 text-center">Qty</div>
                       <div className="col-span-2 text-right">Price</div>
                       <div className="col-span-1 text-right">Total</div>
                       <div className="col-span-1"></div>
                     </div>
                     {items.map((item, idx) => (
                       <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-4"><Input value={item.item_name} onChange={e => updateItem(idx, 'item_name', e.target.value)} placeholder="Item" disabled={isSentOrApproved} className="h-9" /></div>
+                        <div className="col-span-3"><Input value={item.item_name} onChange={e => updateItem(idx, 'item_name', e.target.value)} placeholder="Item" disabled={isSentOrApproved} className="h-9" /></div>
                         <div className="col-span-3"><Input value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder="Desc" disabled={isSentOrApproved} className="h-9" /></div>
-                        <div className="col-span-1"><Input type="number" value={item.quantity} onChange={e => updateItem(idx, 'quantity', Number(e.target.value))} className="text-center h-9" disabled={isSentOrApproved} /></div>
+                        <div className="col-span-2"><Input type="number" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="text-center h-9" disabled={isSentOrApproved} /></div>
                         <div className="col-span-2"><Input type="number" value={item.unit_price} onChange={e => updateItem(idx, 'unit_price', Number(e.target.value))} className="text-right h-9" disabled={isSentOrApproved} /></div>
                         <div className="col-span-1 text-sm font-medium text-right mono">${item.line_total.toFixed(2)}</div>
                         <div className="col-span-1">{!isSentOrApproved && <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-8 w-8"><Trash2 className="h-3 w-3" /></Button>}</div>
@@ -448,7 +448,7 @@ export default function QuoteDetail() {
                         <div className="grid grid-cols-3 gap-2 items-end">
                           <div>
                             <Label className="text-[10px] text-muted-foreground">Qty</Label>
-                            <Input type="number" inputMode="decimal" value={item.quantity} onChange={e => updateItem(idx, 'quantity', Number(e.target.value))} className="h-9 text-center" disabled={isSentOrApproved} />
+                            <Input type="number" inputMode="decimal" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="h-9 text-center" disabled={isSentOrApproved} />
                           </div>
                           <div>
                             <Label className="text-[10px] text-muted-foreground">Price</Label>
