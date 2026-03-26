@@ -9,6 +9,7 @@ import { ArrowLeft, Send, RotateCcw, CheckCircle, Ban, AlertCircle, CreditCard }
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
+import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 
 export default function InvoiceDetail() {
   const { id } = useParams();
@@ -93,46 +94,52 @@ export default function InvoiceDetail() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Line Items</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Price</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lineItems.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-6">No line items</TableCell></TableRow>
-                ) : (
-                  lineItems.map((item: any) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <p className="text-sm font-medium">{item.item_name}</p>
-                        {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
-                      </TableCell>
-                      <TableCell className="text-right text-sm mono">{item.quantity}</TableCell>
-                      <TableCell className="text-right text-sm mono">${Number(item.unit_price).toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-sm font-medium mono">${Number(item.line_total).toFixed(2)}</TableCell>
+          <CardContent className={invoice.status === 'Draft' ? 'p-4' : 'p-0'}>
+            {invoice.status === 'Draft' ? (
+              <InvoiceLineItemEditor invoiceId={invoice.id} existingItems={lineItems} />
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead className="text-right">Qty</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-            <div className="px-4 py-3 space-y-1 border-t">
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="mono">${Number(invoice.subtotal).toFixed(2)}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax ({(Number(invoice.tax_rate) * 100).toFixed(0)}%)</span><span className="mono">${Number(invoice.tax).toFixed(2)}</span></div>
-              <Separator />
-              <div className="flex justify-between text-sm font-semibold"><span>Total</span><span className="mono">${Number(invoice.total).toFixed(2)}</span></div>
-              {Number(invoice.amount_paid) > 0 && (
-                <>
-                  <div className="flex justify-between text-sm text-success"><span>Paid</span><span className="mono">-${Number(invoice.amount_paid).toFixed(2)}</span></div>
-                  <div className="flex justify-between text-sm font-semibold text-destructive"><span>Balance Due</span><span className="mono">${Number(invoice.balance_due).toFixed(2)}</span></div>
-                </>
-              )}
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {lineItems.length === 0 ? (
+                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-6">No line items</TableCell></TableRow>
+                    ) : (
+                      lineItems.map((item: any) => (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <p className="text-sm font-medium">{item.item_name}</p>
+                            {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
+                          </TableCell>
+                          <TableCell className="text-right text-sm mono">{item.quantity}</TableCell>
+                          <TableCell className="text-right text-sm mono">${Number(item.unit_price).toFixed(2)}</TableCell>
+                          <TableCell className="text-right text-sm font-medium mono">${Number(item.line_total).toFixed(2)}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+                <div className="px-4 py-3 space-y-1 border-t">
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="mono">${Number(invoice.subtotal).toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax ({(Number(invoice.tax_rate) * 100).toFixed(0)}%)</span><span className="mono">${Number(invoice.tax).toFixed(2)}</span></div>
+                  <Separator />
+                  <div className="flex justify-between text-sm font-semibold"><span>Total</span><span className="mono">${Number(invoice.total).toFixed(2)}</span></div>
+                  {Number(invoice.amount_paid) > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm text-success"><span>Paid</span><span className="mono">-${Number(invoice.amount_paid).toFixed(2)}</span></div>
+                      <div className="flex justify-between text-sm font-semibold text-destructive"><span>Balance Due</span><span className="mono">${Number(invoice.balance_due).toFixed(2)}</span></div>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
