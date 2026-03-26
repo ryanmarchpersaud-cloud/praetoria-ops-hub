@@ -120,6 +120,22 @@ export default function QuoteDetail() {
     recalculate(updated);
   };
 
+  const addFromCatalog = (product: any) => {
+    const price = Number(product.unit_price) || 0;
+    const newItem: LineItemForm = {
+      item_name: product.name,
+      description: product.description || '',
+      quantity: 1,
+      unit_price: price,
+      line_total: price,
+      sort_order: items.length,
+    };
+    const updated = [...items, newItem];
+    setItems(updated);
+    recalculate(updated);
+    setCatalogOpen(false);
+  };
+
   const addItem = () => {
     setItems([...items, { item_name: '', description: '', quantity: 1, unit_price: 0, line_total: 0, sort_order: items.length }]);
   };
