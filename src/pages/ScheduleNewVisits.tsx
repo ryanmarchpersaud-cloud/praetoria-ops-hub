@@ -17,11 +17,15 @@ import { useCreateVisit } from '@/hooks/useVisits';
 import { supabase } from '@/integrations/supabase/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
 import { format } from 'date-fns';
 import {
   CalendarIcon, ArrowLeft, Check, X, Search, Filter, MapPinOff,
   AlertTriangle, Heart, Accessibility, Dog, Lock, Mountain, Zap, Crown,
-  Wrench, Snowflake, Shovel, TreePine
+  Wrench, Snowflake, Shovel, TreePine, Route, DollarSign, Clock,
+  CloudRain, Users, History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -79,6 +83,21 @@ type CustomerWarning = {
   is_active: boolean;
 };
 
+type VisitHistory = {
+  visit_count: number;
+  last_visit: string | null;
+  missed_count: number;
+};
+
+type WeatherData = {
+  condition: string;
+  temperature: number | null;
+  windSpeed: number | null;
+  windGust: number | null;
+  hasWarning: boolean;
+  warningText: string;
+};
+
 // Small icon badge component
 function AlertIcon({ icon: Icon, tooltip, color }: { icon: typeof AlertTriangle; tooltip: string; color: string }) {
   return (
@@ -95,6 +114,24 @@ function AlertIcon({ icon: Icon, tooltip, color }: { icon: typeof AlertTriangle;
       </Tooltip>
     </TooltipProvider>
   );
+}
+
+// Nearest-neighbor route optimization (greedy TSP)
+function optimizeRoute(points: { id: string; lat: number; lng: number }[]): string[] {
+  if (points.length <= 2) return points.map(p => p.id);
+  const remaining = [...points];
+  const route: typeof points = [remaining.shift()!];
+  while (remaining.length > 0) {
+    const last = route[route.length - 1];
+    let nearestIdx = 0;
+    let nearestDist = Infinity;
+    remaining.forEach((p, i) => {
+      const d = Math.sqrt(Math.pow(p.lat - last.lat, 2) + Math.pow(p.lng - last.lng, 2));
+      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+    });
+    route.push(remaining.splice(nearestIdx, 1)[0]);
+  }
+  return route.map(p => p.id);
 }
 
 export default function ScheduleNewVisits() {
@@ -117,10 +154,18 @@ export default function ScheduleNewVisits() {
   const [locationsLoaded, setLocationsLoaded] = useState(false);
   const [siteAlerts, setSiteAlerts] = useState<Record<string, SiteAlert>>({});
   const [customerWarnings, setCustomerWarnings] = useState<Record<string, CustomerWarning[]>>({});
+  const [visitHistory, setVisitHistory] = useState<Record<string, VisitHistory>>({});
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [crewCounts, setCrewCounts] = useState<Record<string, number>>({});
+  const [showRouteOptimization, setShowRouteOptimization] = useState(false);
+  const [clusteringEnabled, setClusteringEnabled] = useState(true);
 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
+  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
+  const routeLineRef = useRef<L.Polyline | null>(null);
 
   // Filter recurring jobs
   const recurringJobs = useMemo(() => {
@@ -173,7 +218,7 @@ export default function ScheduleNewVisits() {
       });
   }, [recurringJobs]);
 
-  // Load site alerts & customer warnings
+  // Load site alerts, customer warnings, and visit history
   useEffect(() => {
     if (recurringJobs.length === 0) return;
     const propertyIds = [...new Set(recurringJobs.map((j: any) => j.property_id).filter(Boolean))];
@@ -186,6 +231,29 @@ export default function ScheduleNewVisits() {
         (data as any[]).forEach((a) => { map[a.property_id] = a; });
         setSiteAlerts(map);
       });
+
+      // Visit history per property
+      supabase
+        .from('visits')
+        .select('property_id, service_date, visit_status')
+        .in('property_id', propertyIds)
+        .then(({ data }) => {
+          if (!data) return;
+          const hist: Record<string, VisitHistory> = {};
+          (data as any[]).forEach((v) => {
+            if (!hist[v.property_id]) {
+              hist[v.property_id] = { visit_count: 0, last_visit: null, missed_count: 0 };
+            }
+            hist[v.property_id].visit_count++;
+            if (!hist[v.property_id].last_visit || v.service_date > hist[v.property_id].last_visit!) {
+              hist[v.property_id].last_visit = v.service_date;
+            }
+            if (v.visit_status === 'missed' || v.visit_status === 'cancelled') {
+              hist[v.property_id].missed_count++;
+            }
+          });
+          setVisitHistory(hist);
+        });
     }
 
     if (customerIds.length > 0) {
@@ -200,6 +268,71 @@ export default function ScheduleNewVisits() {
       });
     }
   }, [recurringJobs]);
+
+  // Load weather for the selected date
+  useEffect(() => {
+    const fetchWeather = async () => {
+      setWeatherLoading(true);
+      try {
+        const { data: fnData } = await supabase.functions.invoke('weather', {
+          body: { city: 'regina' },
+        });
+        if (fnData) {
+          const current = fnData.current;
+          const forecast = fnData.forecast;
+          const dateStr = format(startDate, 'yyyy-MM-dd');
+
+          // Check if selected date has bad weather in forecast
+          let dayForecast: any = null;
+          if (forecast) {
+            dayForecast = forecast.find((f: any) => f.date === dateStr);
+          }
+
+          const temp = current?.temperature ?? null;
+          const condition = dayForecast?.condition || current?.condition || 'Unknown';
+          const isBadWeather = /rain|storm|thunder|blizzard|freezing|heavy snow|ice pellet/i.test(condition);
+          const isExtremeCold = temp !== null && temp < -25;
+          const isHighWind = (current?.windGust ?? 0) > 60;
+
+          const warnings: string[] = [];
+          if (isBadWeather) warnings.push(`⛈ ${condition} expected`);
+          if (isExtremeCold) warnings.push(`🥶 Extreme cold: ${temp}°C`);
+          if (isHighWind) warnings.push(`💨 High wind gusts: ${current.windGust} km/h`);
+
+          setWeatherData({
+            condition,
+            temperature: temp,
+            windSpeed: current?.windSpeed ?? null,
+            windGust: current?.windGust ?? null,
+            hasWarning: warnings.length > 0,
+            warningText: warnings.join(' | '),
+          });
+        }
+      } catch {
+        // Weather fetch failed silently
+      }
+      setWeatherLoading(false);
+    };
+    fetchWeather();
+  }, [startDate]);
+
+  // Load crew capacity for selected date
+  useEffect(() => {
+    const dateStr = format(startDate, 'yyyy-MM-dd');
+    supabase
+      .from('visits')
+      .select('assigned_worker_id')
+      .eq('service_date', dateStr)
+      .not('assigned_worker_id', 'is', null)
+      .then(({ data }) => {
+        if (!data) return;
+        const counts: Record<string, number> = {};
+        (data as any[]).forEach((v) => {
+          counts[v.assigned_worker_id] = (counts[v.assigned_worker_id] || 0) + 1;
+        });
+        setCrewCounts(counts);
+      });
+  }, [startDate]);
 
   // Filtered list
   const filteredJobs = useMemo(() => {
@@ -241,37 +374,35 @@ export default function ScheduleNewVisits() {
     );
   };
 
+  // Estimated revenue for selected jobs
+  const estimatedRevenue = useMemo(() => {
+    return filteredJobs
+      .filter((j: any) => selectedJobIds.has(j.id))
+      .reduce((sum: number, j: any) => sum + (parseFloat(j.estimated_total) || 0), 0);
+  }, [filteredJobs, selectedJobIds]);
+
   // Build alert icons for a job
   const getAlertIcons = (job: any) => {
     const icons: { icon: typeof AlertTriangle; tooltip: string; color: string }[] = [];
     const alert = job.property_id ? siteAlerts[job.property_id] : null;
     const warnings = job.customer_id ? customerWarnings[job.customer_id] : null;
 
-    // Priority tier
     if (alert?.priority_tier === 'vip') {
       icons.push({ icon: Crown, tooltip: 'VIP Customer', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' });
     }
-
-    // Customer warnings
     if (warnings && warnings.length > 0) {
       const desc = warnings.map(w => w.description).filter(Boolean).join('; ');
       icons.push({ icon: AlertTriangle, tooltip: `⚠ ${desc || 'Customer warning'}`, color: 'bg-destructive/15 text-destructive' });
     }
-
-    // Accessibility
     if (alert?.has_wheelchair_ramp || alert?.has_mobility_impaired) {
       icons.push({ icon: Accessibility, tooltip: alert.accessibility_notes || 'Wheelchair ramp / mobility access', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' });
     }
     if (alert?.has_elderly_resident) {
       icons.push({ icon: Heart, tooltip: alert.accessibility_notes || 'Elderly resident on site', color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-400' });
     }
-
-    // Medical
     if (alert?.medical_alert) {
       icons.push({ icon: Heart, tooltip: `🏥 ${alert.medical_alert_text || 'Medical alert on site'}`, color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' });
     }
-
-    // Hazards
     if (alert?.has_dog) {
       icons.push({ icon: Dog, tooltip: alert.dog_notes || 'Dog on property', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' });
     }
@@ -284,15 +415,12 @@ export default function ScheduleNewVisits() {
     if (alert?.has_low_wires || alert?.has_icy_spots) {
       icons.push({ icon: Zap, tooltip: alert.hazard_notes || 'Site hazard present', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400' });
     }
-
-    // Equipment
     if (alert?.hand_shovel_only) {
       icons.push({ icon: Shovel, tooltip: 'Hand shovel only areas', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' });
     }
     if (alert?.required_equipment && alert.required_equipment.length > 0) {
       icons.push({ icon: Wrench, tooltip: `Equipment: ${alert.required_equipment.join(', ')}`, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400' });
     }
-
     return icons;
   };
 
@@ -301,21 +429,31 @@ export default function ScheduleNewVisits() {
     const customerName = job.customers ? `${job.customers.first_name} ${job.customers.last_name}` : 'Unknown';
     const alert = job.property_id ? siteAlerts[job.property_id] : null;
     const warnings = job.customer_id ? customerWarnings[job.customer_id] : null;
+    const hist = job.property_id ? visitHistory[job.property_id] : null;
     const cat = CATEGORY_COLORS[job.service_category];
+    const revenue = parseFloat(job.estimated_total) || 0;
 
-    let html = `<div style="font-size:12px;min-width:180px">`;
+    let html = `<div style="font-size:12px;min-width:200px">`;
     html += `<strong>${customerName}</strong>`;
     if (alert?.priority_tier === 'vip') html += ` <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600">VIP</span>`;
     html += `<br/>${job.job_number} – ${job.job_title}`;
-    if (cat) html += `<br/><span style="color:${cat.url.includes('blue') ? '#2563eb' : cat.url.includes('green') ? '#16a34a' : '#ea580c'};font-size:11px">● ${cat.label}</span>`;
+    if (cat) html += `<br/><span style="font-size:11px">● ${cat.label}</span>`;
+    if (revenue > 0) html += `<br/><span style="color:#16a34a;font-size:11px;font-weight:600">$${revenue.toFixed(2)}</span>`;
     html += `<br/><span style="color:#888">${address}</span>`;
 
-    // Warnings
+    // Visit history
+    if (hist) {
+      html += `<div style="margin-top:4px;font-size:10px;color:#6b7280">`;
+      html += `📋 ${hist.visit_count} visits this season`;
+      if (hist.last_visit) html += ` · Last: ${hist.last_visit}`;
+      if (hist.missed_count > 0) html += ` · <span style="color:#dc2626">${hist.missed_count} missed</span>`;
+      html += `</div>`;
+    }
+
     if (warnings && warnings.length > 0) {
       html += `<div style="margin-top:4px;padding:3px 6px;background:#fef2f2;border-radius:4px;color:#dc2626;font-size:11px">⚠ ${warnings[0].description || 'Customer warning'}</div>`;
     }
 
-    // Site flags summary
     const flags: string[] = [];
     if (alert?.has_wheelchair_ramp) flags.push('♿ Ramp');
     if (alert?.has_elderly_resident) flags.push('👴 Elderly');
@@ -355,18 +493,37 @@ export default function ScheduleNewVisits() {
     };
   }, []);
 
-  // Update markers with color-coded icons
+  // Update markers with clustering + route line
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
+    // Cleanup old
     Object.values(markersRef.current).forEach((m) => m.remove());
     markersRef.current = {};
+    if (clusterGroupRef.current) {
+      map.removeLayer(clusterGroupRef.current);
+      clusterGroupRef.current = null;
+    }
+    if (routeLineRef.current) {
+      map.removeLayer(routeLineRef.current);
+      routeLineRef.current = null;
+    }
 
     const selectedIcon = new L.Icon({ iconUrl: SELECTED_MARKER_URL, shadowUrl: SHADOW_URL, ...ICON_OPTS });
-
     const bounds: L.LatLngExpression[] = [];
     const coordCounts: Record<string, number> = {};
+
+    // Create cluster group
+    const clusterGroup = (L as any).markerClusterGroup({
+      maxClusterRadius: clusteringEnabled ? 40 : 0,
+      disableClusteringAtZoom: 14,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+    });
+
+    // Track points for route optimization
+    const routePoints: { id: string; lat: number; lng: number }[] = [];
 
     filteredJobs.forEach((j: any) => {
       if (!j.property_id || !propertyLocations[j.property_id]) return;
@@ -374,22 +531,15 @@ export default function ScheduleNewVisits() {
       const isSelected = selectedJobIds.has(j.id);
       const customerName = j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : 'Unknown';
 
-      // Color by service category (unless selected → red)
       const catColor = CATEGORY_COLORS[j.service_category];
-      const normalIcon = new L.Icon({
-        iconUrl: catColor?.url || DEFAULT_MARKER_URL,
-        shadowUrl: SHADOW_URL,
-        ...ICON_OPTS,
-      });
+      const normalIcon = new L.Icon({ iconUrl: catColor?.url || DEFAULT_MARKER_URL, shadowUrl: SHADOW_URL, ...ICON_OPTS });
 
-      // Offset co-located markers
       const coordKey = `${loc.lat},${loc.lng}`;
       const idx = coordCounts[coordKey] || 0;
       coordCounts[coordKey] = idx + 1;
       const offsetLat = loc.lat + idx * 0.0008;
       const offsetLng = loc.lng + idx * 0.0008;
 
-      // Build tooltip with alert summary
       const alert = siteAlerts[j.property_id];
       const warnings = customerWarnings[j.customer_id];
       let tooltipExtra = '';
@@ -400,19 +550,62 @@ export default function ScheduleNewVisits() {
       const tooltipText = `${customerName} – #${j.job_number}${tooltipExtra}`;
 
       const marker = L.marker([offsetLat, offsetLng], { icon: isSelected ? selectedIcon : normalIcon })
-        .addTo(map)
         .bindTooltip(tooltipText, { permanent: false, direction: 'top', offset: [0, -35] })
         .bindPopup(buildPopupHtml(j, loc.address));
 
       marker.on('click', () => toggleJob(j.id));
       markersRef.current[j.id] = marker;
       bounds.push([offsetLat, offsetLng]);
+
+      if (isSelected) {
+        routePoints.push({ id: j.id, lat: offsetLat, lng: offsetLng });
+      }
+
+      if (clusteringEnabled) {
+        clusterGroup.addLayer(marker);
+      } else {
+        marker.addTo(map);
+      }
     });
+
+    if (clusteringEnabled) {
+      map.addLayer(clusterGroup);
+      clusterGroupRef.current = clusterGroup;
+    }
+
+    // Draw route line for selected jobs
+    if (showRouteOptimization && routePoints.length >= 2) {
+      const optimizedOrder = optimizeRoute(routePoints);
+      const routeLatLngs = optimizedOrder.map(id => {
+        const pt = routePoints.find(p => p.id === id)!;
+        return L.latLng(pt.lat, pt.lng);
+      });
+
+      const polyline = L.polyline(routeLatLngs, {
+        color: 'hsl(var(--primary))',
+        weight: 3,
+        opacity: 0.7,
+        dashArray: '8, 6',
+      }).addTo(map);
+
+      // Add numbered labels along route
+      routeLatLngs.forEach((ll, i) => {
+        const numberIcon = L.divIcon({
+          className: 'route-number-icon',
+          html: `<div style="background:hsl(var(--primary));color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.3)">${i + 1}</div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        });
+        L.marker(ll, { icon: numberIcon, interactive: false }).addTo(map);
+      });
+
+      routeLineRef.current = polyline;
+    }
 
     if (bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds as any), { padding: [40, 40], maxZoom: 13 });
     }
-  }, [filteredJobs, propertyLocations, selectedJobIds, toggleJob, siteAlerts, customerWarnings]);
+  }, [filteredJobs, propertyLocations, selectedJobIds, toggleJob, siteAlerts, customerWarnings, visitHistory, clusteringEnabled, showRouteOptimization]);
 
   const handleCreateVisits = async () => {
     if (selectedJobIds.size === 0) return;
@@ -461,7 +654,6 @@ export default function ScheduleNewVisits() {
     }
   };
 
-  // Category legend items
   const activeCats = useMemo(() => {
     const cats = new Set(filteredJobs.map((j: any) => j.service_category));
     return [...cats].filter(Boolean);
@@ -470,7 +662,7 @@ export default function ScheduleNewVisits() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/schedule')}>
             <ArrowLeft className="h-4 w-4" />
@@ -480,24 +672,51 @@ export default function ScheduleNewVisits() {
             <p className="text-sm text-muted-foreground">Quickly create visits for active <strong>recurring jobs</strong>.</p>
           </div>
         </div>
-        <Button
-          disabled={selectedJobIds.size === 0}
-          onClick={() => setShowModal(true)}
-          className="gap-2"
-        >
-          {selectedJobIds.size > 0 ? `${selectedJobIds.size} Selected` : '0 Selected'} – Next
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Revenue estimate */}
+          {selectedJobIds.size > 0 && estimatedRevenue > 0 && (
+            <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800">
+              <DollarSign className="h-3 w-3" />
+              ${estimatedRevenue.toFixed(2)}
+            </Badge>
+          )}
+          <Button
+            disabled={selectedJobIds.size === 0}
+            onClick={() => setShowModal(true)}
+            className="gap-2"
+          >
+            {selectedJobIds.size > 0 ? `${selectedJobIds.size} Selected` : '0 Selected'} – Next
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
+      {/* Weather warning banner */}
+      {weatherData?.hasWarning && (
+        <Card className="border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">
+          <CardContent className="p-3 flex items-center gap-2">
+            <CloudRain className="h-4 w-4 text-amber-600 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                Weather Alert for {format(startDate, 'MMM d')}
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400">{weatherData.warningText}</p>
+            </div>
+            <Badge variant="outline" className="text-amber-700 border-amber-300 text-xs shrink-0">
+              {weatherData.temperature !== null ? `${weatherData.temperature}°C` : '--'}
+            </Badge>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Filters + map controls */}
       <Card>
         <CardContent className="p-3">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-              <Filter className="h-3.5 w-3.5" /> Filter recurring jobs
+              <Filter className="h-3.5 w-3.5" /> Filter
             </p>
             <div className="flex items-center gap-2 flex-1 flex-wrap">
-              <div className="relative flex-1 min-w-[180px]">
+              <div className="relative flex-1 min-w-[160px]">
                 <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   placeholder="Search client, job #..."
@@ -506,7 +725,7 @@ export default function ScheduleNewVisits() {
                   className="h-9 pl-8 text-sm"
                 />
               </div>
-              <div className="relative flex-1 min-w-[180px]">
+              <div className="relative flex-1 min-w-[160px]">
                 <Input
                   placeholder="Description contains..."
                   value={descriptionFilter}
@@ -514,6 +733,39 @@ export default function ScheduleNewVisits() {
                   className="h-9 text-sm"
                 />
               </div>
+            </div>
+            {/* Map toggles */}
+            <div className="flex items-center gap-1">
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={showRouteOptimization ? 'default' : 'outline'}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setShowRouteOptimization(!showRouteOptimization)}
+                    >
+                      <Route className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Route optimization</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={clusteringEnabled ? 'default' : 'outline'}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setClusteringEnabled(!clusteringEnabled)}
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Cluster nearby markers</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardContent>
@@ -546,6 +798,8 @@ export default function ScheduleNewVisits() {
                 const hasLocation = job.property_id && propertyLocations[job.property_id];
                 const alertIcons = getAlertIcons(job);
                 const catInfo = CATEGORY_COLORS[job.service_category];
+                const hist = job.property_id ? visitHistory[job.property_id] : null;
+                const revenue = parseFloat(job.estimated_total) || 0;
 
                 return (
                   <button
@@ -581,6 +835,23 @@ export default function ScheduleNewVisits() {
                           <p className="text-xs text-muted-foreground/70 truncate">📍 {job.properties.property_name}</p>
                         )}
 
+                        {/* Visit history + revenue row */}
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {hist && (
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                              <History className="h-2.5 w-2.5" />
+                              {hist.visit_count} visits
+                              {hist.last_visit && ` · Last: ${hist.last_visit}`}
+                              {hist.missed_count > 0 && <span className="text-destructive ml-0.5">({hist.missed_count} missed)</span>}
+                            </span>
+                          )}
+                          {revenue > 0 && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
+                              <DollarSign className="h-2.5 w-2.5" />${revenue.toFixed(0)}
+                            </span>
+                          )}
+                        </div>
+
                         {/* Alert icons row */}
                         {alertIcons.length > 0 && (
                           <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -604,7 +875,7 @@ export default function ScheduleNewVisits() {
           </div>
         </div>
 
-        {/* Right: Map */}
+        {/* Right: Map + legends */}
         <div className="space-y-2">
           <Card className="overflow-hidden" style={{ isolation: 'isolate', position: 'relative', zIndex: 0 }}>
             <div ref={mapContainerRef} className="h-[460px] w-full" />
@@ -627,18 +898,21 @@ export default function ScheduleNewVisits() {
             <span className="flex items-center gap-1 text-xs text-destructive">
               <span className="h-2.5 w-2.5 rounded-full bg-destructive inline-block" /> Selected
             </span>
+            {showRouteOptimization && selectedJobIds.size >= 2 && (
+              <span className="flex items-center gap-1 text-xs text-primary">
+                <Route className="h-3 w-3" /> Optimized route
+              </span>
+            )}
           </div>
 
-          {/* Alert legend */}
-          <div className="flex items-center gap-2 flex-wrap px-1">
-            <span className="text-xs font-medium text-muted-foreground">Alerts:</span>
-            <span className="text-[10px] text-muted-foreground">⭐ VIP</span>
-            <span className="text-[10px] text-muted-foreground">⚠️ Warning</span>
-            <span className="text-[10px] text-muted-foreground">♿ Access</span>
-            <span className="text-[10px] text-muted-foreground">🏥 Medical</span>
-            <span className="text-[10px] text-muted-foreground">🐕 Dog</span>
-            <span className="text-[10px] text-muted-foreground">🔒 Gate</span>
-          </div>
+          {/* Weather bar */}
+          {weatherData && !weatherData.hasWarning && (
+            <div className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+              <CloudRain className="h-3 w-3" />
+              <span>{format(startDate, 'MMM d')}: {weatherData.condition} {weatherData.temperature !== null ? `${weatherData.temperature}°C` : ''}</span>
+              {weatherData.windSpeed && <span>· Wind {weatherData.windSpeed} km/h</span>}
+            </div>
+          )}
         </div>
       </div>
 
@@ -647,7 +921,21 @@ export default function ScheduleNewVisits() {
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create {selectedJobIds.size} Visit{selectedJobIds.size !== 1 ? 's' : ''}</DialogTitle>
+            {estimatedRevenue > 0 && (
+              <p className="text-sm text-emerald-600 font-medium flex items-center gap-1">
+                <DollarSign className="h-3.5 w-3.5" />
+                Estimated run value: ${estimatedRevenue.toFixed(2)}
+              </p>
+            )}
           </DialogHeader>
+
+          {/* Weather warning in modal */}
+          {weatherData?.hasWarning && (
+            <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-center gap-2">
+              <CloudRain className="h-4 w-4 text-amber-600 shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-400">{weatherData.warningText}</p>
+            </div>
+          )}
 
           <div className="space-y-4">
             {/* Start Date */}
@@ -672,7 +960,7 @@ export default function ScheduleNewVisits() {
               </Popover>
             </div>
 
-            {/* Team Selection */}
+            {/* Team Selection with capacity */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Assign Team</label>
               {selectedTeam.length === 0 ? (
@@ -681,9 +969,13 @@ export default function ScheduleNewVisits() {
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {selectedTeam.map((uid) => {
                     const emp = (employees as any[]).find((e: any) => e.user_id === uid);
+                    const existingCount = crewCounts[uid] || 0;
                     return (
                       <Badge key={uid} variant="secondary" className="gap-1 pr-1">
                         {emp?.full_name || 'Unknown'}
+                        {existingCount > 0 && (
+                          <span className="text-[10px] text-amber-600 ml-0.5">({existingCount} visits)</span>
+                        )}
                         <button onClick={() => toggleEmployee(uid)} className="ml-1 rounded-full hover:bg-muted p-0.5">
                           <X className="h-3 w-3" />
                         </button>
@@ -704,21 +996,36 @@ export default function ScheduleNewVisits() {
                 ) : (
                   (employees as any[])
                     .filter((emp: any) => !teamSearch || emp.full_name?.toLowerCase().includes(teamSearch.toLowerCase()) || emp.role_title?.toLowerCase().includes(teamSearch.toLowerCase()))
-                    .map((emp: any) => (
-                    <label
-                      key={emp.user_id}
-                      className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 cursor-pointer text-sm border-b last:border-b-0"
-                    >
-                      <Checkbox
-                        checked={selectedTeam.includes(emp.user_id)}
-                        onCheckedChange={() => toggleEmployee(emp.user_id)}
-                      />
-                      <div className="min-w-0">
-                        <span className="font-medium">{emp.full_name || 'Unnamed'}</span>
-                        {emp.role_title && <span className="text-muted-foreground ml-1.5 text-xs">· {emp.role_title}</span>}
-                      </div>
-                    </label>
-                  ))
+                    .map((emp: any) => {
+                      const existingCount = crewCounts[emp.user_id] || 0;
+                      return (
+                        <label
+                          key={emp.user_id}
+                          className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 cursor-pointer text-sm border-b last:border-b-0"
+                        >
+                          <Checkbox
+                            checked={selectedTeam.includes(emp.user_id)}
+                            onCheckedChange={() => toggleEmployee(emp.user_id)}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium">{emp.full_name || 'Unnamed'}</span>
+                            {emp.role_title && <span className="text-muted-foreground ml-1.5 text-xs">· {emp.role_title}</span>}
+                          </div>
+                          {/* Crew capacity indicator */}
+                          <span className={cn(
+                            'text-[10px] px-1.5 py-0.5 rounded-full shrink-0',
+                            existingCount === 0
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                              : existingCount <= 3
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          )}>
+                            <Clock className="h-2.5 w-2.5 inline mr-0.5" />
+                            {existingCount} on {format(startDate, 'MMM d')}
+                          </span>
+                        </label>
+                      );
+                    })
                 )}
               </div>
             </div>
