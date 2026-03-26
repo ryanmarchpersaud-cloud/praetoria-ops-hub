@@ -22,6 +22,7 @@ import CustomerDetail from "./pages/CustomerDetail";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import Jobs from "./pages/Jobs";
+import JobNew from "./pages/JobNew";
 import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
