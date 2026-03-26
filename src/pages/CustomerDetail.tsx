@@ -283,6 +283,8 @@ export default function CustomerDetail() {
             icon={Briefcase}
             count={jobs.length}
             emptyText="No jobs"
+            createLink={`/jobs/new?customer_id=${id}`}
+            createLabel="New"
             items={jobs.map((j: any) => ({
               id: j.id,
               link: `/jobs/${j.id}`,
