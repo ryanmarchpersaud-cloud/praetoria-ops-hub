@@ -795,6 +795,47 @@ export type Database = {
           },
         ]
       }
+      customer_warnings: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          severity: string
+          updated_at: string | null
+          warning_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          severity?: string
+          updated_at?: string | null
+          warning_type?: string
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          severity?: string
+          updated_at?: string | null
+          warning_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_warnings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address_line_1: string | null
@@ -2520,6 +2561,89 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_site_alerts: {
+        Row: {
+          accessibility_notes: string | null
+          created_at: string | null
+          dog_notes: string | null
+          equipment_notes: string | null
+          gate_access_notes: string | null
+          hand_shovel_only: boolean | null
+          has_dog: boolean | null
+          has_elderly_resident: boolean | null
+          has_icy_spots: boolean | null
+          has_locked_gate: boolean | null
+          has_low_wires: boolean | null
+          has_mobility_impaired: boolean | null
+          has_steep_grade: boolean | null
+          has_wheelchair_ramp: boolean | null
+          hazard_notes: string | null
+          id: string
+          medical_alert: boolean | null
+          medical_alert_text: string | null
+          priority_tier: string | null
+          property_id: string
+          required_equipment: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          accessibility_notes?: string | null
+          created_at?: string | null
+          dog_notes?: string | null
+          equipment_notes?: string | null
+          gate_access_notes?: string | null
+          hand_shovel_only?: boolean | null
+          has_dog?: boolean | null
+          has_elderly_resident?: boolean | null
+          has_icy_spots?: boolean | null
+          has_locked_gate?: boolean | null
+          has_low_wires?: boolean | null
+          has_mobility_impaired?: boolean | null
+          has_steep_grade?: boolean | null
+          has_wheelchair_ramp?: boolean | null
+          hazard_notes?: string | null
+          id?: string
+          medical_alert?: boolean | null
+          medical_alert_text?: string | null
+          priority_tier?: string | null
+          property_id: string
+          required_equipment?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          accessibility_notes?: string | null
+          created_at?: string | null
+          dog_notes?: string | null
+          equipment_notes?: string | null
+          gate_access_notes?: string | null
+          hand_shovel_only?: boolean | null
+          has_dog?: boolean | null
+          has_elderly_resident?: boolean | null
+          has_icy_spots?: boolean | null
+          has_locked_gate?: boolean | null
+          has_low_wires?: boolean | null
+          has_mobility_impaired?: boolean | null
+          has_steep_grade?: boolean | null
+          has_wheelchair_ramp?: boolean | null
+          hazard_notes?: string | null
+          id?: string
+          medical_alert?: boolean | null
+          medical_alert_text?: string | null
+          priority_tier?: string | null
+          property_id?: string
+          required_equipment?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_site_alerts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: true
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
