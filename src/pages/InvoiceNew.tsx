@@ -26,7 +26,7 @@ export default function InvoiceNew() {
   const defaultDue = format(addDays(new Date(), 30), 'yyyy-MM-dd');
 
   const [form, setForm] = useState({
-    customer_id: '',
+    customer_id: searchParams.get('customer_id') || '',
     job_id: '',
     property_id: '',
     issue_date: today,

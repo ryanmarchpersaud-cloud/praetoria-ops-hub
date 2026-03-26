@@ -83,7 +83,7 @@ export default function JobNew() {
 
   // Section 1: Basic Info
   const [jobTitle, setJobTitle] = useState('');
-  const [customerId, setCustomerId] = useState('');
+  const [customerId, setCustomerId] = useState(searchParams.get('customer_id') || '');
   const [propertyId, setPropertyId] = useState('');
   const [serviceCategory, setServiceCategory] = useState('');
   const [priority, setPriority] = useState('Normal');
