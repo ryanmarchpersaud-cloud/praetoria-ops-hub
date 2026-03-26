@@ -64,6 +64,29 @@ export default function QuoteDetail() {
 
   const [form, setForm] = useState<any>({});
   const [items, setItems] = useState<LineItemForm[]>([]);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+
+  const { data: catalog = [] } = useQuery({
+    queryKey: ['products_services_active'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products_services')
+        .select('id, name, description, service_category, unit_price, price_type, unit_label')
+        .ilike('status', 'active')
+        .order('service_category')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const catalogGrouped = catalog.reduce((acc: Record<string, any[]>, p: any) => {
+    const cat = p.service_category || 'Other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(p);
+    return acc;
+  }, {});
 
   useEffect(() => { if (quote) setForm(quote); }, [quote]);
   useEffect(() => {
