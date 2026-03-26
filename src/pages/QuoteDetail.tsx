@@ -280,6 +280,21 @@ export default function QuoteDetail() {
           <FileText className="h-4 w-4" />
           <span className="hidden sm:inline">Export PDF</span>
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0">
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleArchiveQuote} className="gap-2">
+              <Archive className="h-4 w-4" /> Archive Quote
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteDialog(true)} className="gap-2 text-destructive focus:text-destructive">
+              <Trash2 className="h-4 w-4" /> Delete Quote
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* ── Mobile: Workflow first, then content ── */}
