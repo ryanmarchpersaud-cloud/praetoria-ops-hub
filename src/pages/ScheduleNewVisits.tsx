@@ -367,9 +367,9 @@ export default function ScheduleNewVisits() {
         </Card>
       </div>
 
-      {/* Create Visits Modal */}
+      {/* Create Visits Modal — rendered via DialogPortal so it's always above everything */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-lg z-[1000]">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create {selectedJobIds.size} Visit{selectedJobIds.size !== 1 ? 's' : ''}</DialogTitle>
           </DialogHeader>
