@@ -3753,17 +3753,32 @@ export type Database = {
       }
       visits: {
         Row: {
+          access_notes: string | null
           arrival_time: string | null
+          assigned_worker_id: string | null
           completion_time: string | null
           created_at: string
           crew_notes: string | null
           customer_id: string | null
           customer_visible_notes: string | null
+          estimated_duration_minutes: number | null
           id: string
-          job_id: string
+          is_recurring: boolean | null
+          job_id: string | null
+          priority: string | null
           property_id: string | null
+          recurrence_end_date: string | null
+          recurrence_frequency: string | null
+          recurrence_parent_id: string | null
+          requires_completion_notes: boolean | null
+          requires_photo_proof: boolean | null
+          safety_notes: string | null
+          scheduled_end_time: string | null
+          scheduled_start_time: string | null
+          service_category: string | null
           service_date: string
           service_summary: string | null
+          site_instructions: string | null
           snow_depth: string | null
           updated_at: string
           visit_number: string
@@ -3772,17 +3787,32 @@ export type Database = {
           weather_notes: string | null
         }
         Insert: {
+          access_notes?: string | null
           arrival_time?: string | null
+          assigned_worker_id?: string | null
           completion_time?: string | null
           created_at?: string
           crew_notes?: string | null
           customer_id?: string | null
           customer_visible_notes?: string | null
+          estimated_duration_minutes?: number | null
           id?: string
-          job_id: string
+          is_recurring?: boolean | null
+          job_id?: string | null
+          priority?: string | null
           property_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_frequency?: string | null
+          recurrence_parent_id?: string | null
+          requires_completion_notes?: boolean | null
+          requires_photo_proof?: boolean | null
+          safety_notes?: string | null
+          scheduled_end_time?: string | null
+          scheduled_start_time?: string | null
+          service_category?: string | null
           service_date?: string
           service_summary?: string | null
+          site_instructions?: string | null
           snow_depth?: string | null
           updated_at?: string
           visit_number: string
@@ -3791,17 +3821,32 @@ export type Database = {
           weather_notes?: string | null
         }
         Update: {
+          access_notes?: string | null
           arrival_time?: string | null
+          assigned_worker_id?: string | null
           completion_time?: string | null
           created_at?: string
           crew_notes?: string | null
           customer_id?: string | null
           customer_visible_notes?: string | null
+          estimated_duration_minutes?: number | null
           id?: string
-          job_id?: string
+          is_recurring?: boolean | null
+          job_id?: string | null
+          priority?: string | null
           property_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_frequency?: string | null
+          recurrence_parent_id?: string | null
+          requires_completion_notes?: boolean | null
+          requires_photo_proof?: boolean | null
+          safety_notes?: string | null
+          scheduled_end_time?: string | null
+          scheduled_start_time?: string | null
+          service_category?: string | null
           service_date?: string
           service_summary?: string | null
+          site_instructions?: string | null
           snow_depth?: string | null
           updated_at?: string
           visit_number?: string
@@ -3829,6 +3874,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_recurrence_parent_id_fkey"
+            columns: ["recurrence_parent_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
             referencedColumns: ["id"]
           },
         ]
