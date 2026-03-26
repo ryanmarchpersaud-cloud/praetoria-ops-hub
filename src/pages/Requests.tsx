@@ -3,20 +3,25 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link, useNavigate } from 'react-router-dom';
-import { MessageSquarePlus, ChevronRight, Search, Inbox } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { MessageSquarePlus, ChevronRight, Search, Inbox, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
+import { CreateRequestDialog } from '@/components/CreateRequestDialog';
 
 const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'];
 
 export default function Requests() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
+  const defaultCustomerId = searchParams.get('customer_id') || undefined;
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['service_requests'],
@@ -54,7 +59,12 @@ export default function Requests() {
           <h1 className="text-xl md:text-2xl font-bold">Service Requests</h1>
           <p className="text-xs md:text-sm text-muted-foreground">{requests.length} total</p>
         </div>
+        <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+          <Plus className="h-4 w-4" /> New Request
+        </Button>
       </div>
+
+      <CreateRequestDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
 
       {/* Status chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">

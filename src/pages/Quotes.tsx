@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useQuotes } from '@/hooks/useQuotes';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight, Plus } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+import { CreateQuoteDialog } from '@/components/CreateQuoteDialog';
 
 const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: string }> = {
   Draft: { icon: FileEdit, color: 'text-muted-foreground', label: 'Drafts' },
@@ -19,7 +21,10 @@ const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: 
 
 export default function Quotes() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
+  const defaultCustomerId = searchParams.get('customer_id') || undefined;
   const { data: quotes = [], isLoading } = useQuotes({
     approval_status: statusFilter || undefined,
   });
@@ -36,10 +41,17 @@ export default function Quotes() {
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold">Quotes</h1>
-        <p className="text-xs md:text-sm text-muted-foreground">{allQuotes.length} total</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold">Quotes</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">{allQuotes.length} total</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+          <Plus className="h-4 w-4" /> New Quote
+        </Button>
       </div>
+
+      <CreateQuoteDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
 
       {/* Status chips — horizontal scroll on mobile */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
