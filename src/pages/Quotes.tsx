@@ -21,7 +21,10 @@ const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: 
 
 export default function Quotes() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
+  const defaultCustomerId = searchParams.get('customer_id') || undefined;
   const { data: quotes = [], isLoading } = useQuotes({
     approval_status: statusFilter || undefined,
   });
