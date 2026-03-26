@@ -11,7 +11,6 @@ import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval, 
 import { DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { DraggableItem, DragOverlayItem, MonthDraggableChip } from '@/components/schedule/DraggableItem';
 import { DroppableDay } from '@/components/schedule/DroppableDay';
-import { Link } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 
 type ViewMode = 'week' | 'month';
