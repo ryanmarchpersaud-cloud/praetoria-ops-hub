@@ -10,12 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
+import { useQuery } from '@tanstack/react-query';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface LineItemForm {
   id?: string;
