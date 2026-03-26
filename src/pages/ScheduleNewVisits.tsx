@@ -344,7 +344,7 @@ export default function ScheduleNewVisits() {
 
       {/* Create Visits Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg z-[1000]">
           <DialogHeader>
             <DialogTitle>Create {selectedJobIds.size} Visit{selectedJobIds.size !== 1 ? 's' : ''}</DialogTitle>
           </DialogHeader>
