@@ -411,9 +411,9 @@ export default function QuoteDetail() {
                   {/* Desktop: grid view */}
                   <div className="hidden md:block space-y-2">
                     <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">
-                      <div className="col-span-4">Item</div>
+                      <div className="col-span-3">Item</div>
                       <div className="col-span-3">Description</div>
-                      <div className="col-span-1 text-center">Qty</div>
+                      <div className="col-span-2 text-center">Qty</div>
                       <div className="col-span-2 text-right">Price</div>
                       <div className="col-span-1 text-right">Total</div>
                       <div className="col-span-1"></div>
