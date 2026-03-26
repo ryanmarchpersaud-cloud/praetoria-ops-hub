@@ -122,12 +122,15 @@ export default function ScheduleNewVisits() {
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    const map = L.map(mapContainerRef.current).setView([50.4452, -104.6189], 11);
+    const map = L.map(mapContainerRef.current, { zoomControl: true }).setView([50.4452, -104.6189], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
     }).addTo(map);
 
     mapRef.current = map;
+
+    // Force size recalculation after render
+    setTimeout(() => map.invalidateSize(), 200);
 
     return () => {
       map.remove();
