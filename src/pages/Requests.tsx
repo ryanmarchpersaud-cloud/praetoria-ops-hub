@@ -59,7 +59,12 @@ export default function Requests() {
           <h1 className="text-xl md:text-2xl font-bold">Service Requests</h1>
           <p className="text-xs md:text-sm text-muted-foreground">{requests.length} total</p>
         </div>
+        <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+          <Plus className="h-4 w-4" /> New Request
+        </Button>
       </div>
+
+      <CreateRequestDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
 
       {/* Status chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
