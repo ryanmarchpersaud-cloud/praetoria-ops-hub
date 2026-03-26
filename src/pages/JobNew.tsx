@@ -130,6 +130,7 @@ export default function JobNew() {
 
   // Saving state
   const [saving, setSaving] = useState(false);
+  const [showWorkerDropdown, setShowWorkerDropdown] = useState(false);
 
   // ═══════════════════════════════════════════
   //  COMPUTED
