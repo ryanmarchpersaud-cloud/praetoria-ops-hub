@@ -368,9 +368,36 @@ export default function QuoteDetail() {
               <CardTitle className="text-sm flex items-center justify-between">
                 Line Items ({validItems.length})
                 {!isSentOrApproved && (
-                  <Button size="sm" variant="outline" onClick={addItem} className="h-8">
-                    <Plus className="h-3 w-3 mr-1" /> Add
-                  </Button>
+                  <div className="flex gap-1.5">
+                    <Popover open={catalogOpen} onOpenChange={setCatalogOpen}>
+                      <PopoverTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-8 gap-1">
+                          <Package className="h-3 w-3" /> Catalog
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-0" align="end">
+                        <Command>
+                          <CommandInput placeholder="Search services..." />
+                          <CommandList className="max-h-64">
+                            <CommandEmpty>No items found.</CommandEmpty>
+                            {Object.entries(catalogGrouped).map(([cat, products]) => (
+                              <CommandGroup key={cat} heading={cat}>
+                                {(products as any[]).map((p: any) => (
+                                  <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between">
+                                    <span className="truncate">{p.name}</span>
+                                    <span className="text-muted-foreground text-xs ml-2">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <Button size="sm" variant="outline" onClick={addItem} className="h-8">
+                      <Plus className="h-3 w-3 mr-1" /> Manual
+                    </Button>
+                  </div>
                 )}
               </CardTitle>
             </CardHeader>
