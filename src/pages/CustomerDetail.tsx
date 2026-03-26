@@ -300,6 +300,8 @@ export default function CustomerDetail() {
             icon={Receipt}
             count={invoices.length}
             emptyText="No invoices"
+            createLink={`/invoices/new?customer_id=${id}`}
+            createLabel="New"
             items={invoices.map((i: any) => ({
               id: i.id,
               link: `/invoices/${i.id}`,
