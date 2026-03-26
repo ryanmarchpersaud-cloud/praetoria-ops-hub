@@ -9,6 +9,7 @@ import { ArrowLeft, Send, RotateCcw, CheckCircle, Ban, AlertCircle, CreditCard }
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
+import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 
 export default function InvoiceDetail() {
   const { id } = useParams();
