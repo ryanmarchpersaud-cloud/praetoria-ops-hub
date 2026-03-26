@@ -177,6 +177,9 @@ export default function PropertyDetail() {
               <div><Label className="text-xs">Verification Notes</Label><Textarea value={form.verification_notes || ''} onChange={e => set('verification_notes', e.target.value)} rows={2} placeholder="Internal notes for field verification" /></div>
             </CardContent>
           </Card>
+
+          {/* Site Alerts & Flags */}
+          {id && <PropertySiteAlertsEditor propertyId={id} />}
         </div>
 
         <div className="space-y-3">

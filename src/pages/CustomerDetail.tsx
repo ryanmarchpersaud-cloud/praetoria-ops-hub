@@ -218,6 +218,9 @@ export default function CustomerDetail() {
               <Textarea value={form?.notes || ''} onChange={e => set('notes', e.target.value)} rows={3} />
             </CardContent>
           </Card>
+
+          {/* Customer Warnings */}
+          {id && <CustomerWarningsEditor customerId={id} />}
         </div>
 
         {/* Sidebar: Related Records */}
