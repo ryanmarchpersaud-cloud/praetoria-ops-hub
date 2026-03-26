@@ -1,0 +1,1 @@
+UPDATE public.properties SET latitude = 49.6942, longitude = -112.8328 WHERE id = '39e2f7f4-bc94-4536-9b39-82abab094805';
