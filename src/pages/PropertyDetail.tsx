@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PropertySiteAlertsEditor } from '@/components/PropertySiteAlertsEditor';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -176,6 +177,9 @@ export default function PropertyDetail() {
               <div><Label className="text-xs">Verification Notes</Label><Textarea value={form.verification_notes || ''} onChange={e => set('verification_notes', e.target.value)} rows={2} placeholder="Internal notes for field verification" /></div>
             </CardContent>
           </Card>
+
+          {/* Site Alerts & Flags */}
+          {id && <PropertySiteAlertsEditor propertyId={id} />}
         </div>
 
         <div className="space-y-3">
