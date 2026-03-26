@@ -572,6 +572,24 @@ export default function QuoteDetail() {
           />
         </div>
       </div>
+
+      {/* Delete confirmation */}
+      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" /> Delete Quote
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete {quote.quote_number}? This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" className="flex-1" onClick={handleDeleteQuote}>Delete</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
