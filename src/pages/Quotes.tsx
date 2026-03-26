@@ -41,10 +41,17 @@ export default function Quotes() {
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold">Quotes</h1>
-        <p className="text-xs md:text-sm text-muted-foreground">{allQuotes.length} total</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold">Quotes</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">{allQuotes.length} total</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+          <Plus className="h-4 w-4" /> New Quote
+        </Button>
       </div>
+
+      <CreateQuoteDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
 
       {/* Status chips — horizontal scroll on mobile */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
