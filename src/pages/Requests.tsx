@@ -17,8 +17,11 @@ const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'
 
 export default function Requests() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
+  const defaultCustomerId = searchParams.get('customer_id') || undefined;
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['service_requests'],
