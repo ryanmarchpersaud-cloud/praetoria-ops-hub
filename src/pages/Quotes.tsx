@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useQuotes } from '@/hooks/useQuotes';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight, Plus } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+import { CreateQuoteDialog } from '@/components/CreateQuoteDialog';
 
 const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: string }> = {
   Draft: { icon: FileEdit, color: 'text-muted-foreground', label: 'Drafts' },
