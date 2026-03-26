@@ -676,16 +676,16 @@ export default function JobNew() {
             )}
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input value={workerSearch} onChange={e => setWorkerSearch(e.target.value)} placeholder="Search team members..." className="h-9 pl-8 text-sm" />
+              <Input value={workerSearch} onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); }} onFocus={() => setShowWorkerDropdown(true)} placeholder="Search team members..." className="h-9 pl-8 text-sm" />
             </div>
-            {workerSearch && (
-              <div className="border rounded-lg mt-1 max-h-40 overflow-y-auto divide-y bg-card">
+            {showWorkerDropdown && (
+              <div className="border rounded-lg mt-1 max-h-48 overflow-y-auto divide-y bg-card shadow-md">
                 {filteredWorkers.filter((e: any) => !assignedWorkers.includes(e.user_id)).length === 0 ? (
-                  <p className="text-xs text-muted-foreground p-3">No matching team members</p>
+                  <p className="text-xs text-muted-foreground p-3">No available team members</p>
                 ) : (
-                  filteredWorkers.filter((e: any) => !assignedWorkers.includes(e.user_id)).slice(0, 10).map((e: any) => (
+                  filteredWorkers.filter((e: any) => !assignedWorkers.includes(e.user_id)).slice(0, 15).map((e: any) => (
                     <button key={e.user_id} type="button" className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors flex items-center justify-between text-sm"
-                      onClick={() => { toggleWorker(e.user_id); setWorkerSearch(''); }}>
+                      onClick={() => { toggleWorker(e.user_id); setWorkerSearch(''); setShowWorkerDropdown(false); }}>
                       <span className="font-medium">{e.full_name}</span>
                       {e.job_title && <span className="text-xs text-muted-foreground">{e.job_title}</span>}
                     </button>
