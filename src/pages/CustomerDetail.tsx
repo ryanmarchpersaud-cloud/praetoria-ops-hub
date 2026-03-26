@@ -8,10 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { PROVINCES } from '@/lib/constants';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function CustomerDetail() {
   const { id } = useParams();
@@ -26,7 +29,6 @@ export default function CustomerDetail() {
   const [invitePassword, setInvitePassword] = useState('');
   const [inviting, setInviting] = useState(false);
 
-  // Initialize form when customer loads
   if (customer && !form) {
     setForm(customer);
     setInviteEmail(customer.email || '');
@@ -36,18 +38,63 @@ export default function CustomerDetail() {
     queryKey: ['customer_properties', id],
     queryFn: async () => {
       if (!id) return [];
-      const { data, error } = await supabase
-        .from('properties')
-        .select('id, property_name, city, status')
-        .eq('customer_id', id)
-        .order('property_name');
+      const { data, error } = await supabase.from('properties').select('id, property_name, city, status').eq('customer_id', id).order('property_name');
       if (error) throw error;
       return data;
     },
     enabled: !!id,
   });
 
-  if (isLoading) return <div className="p-8 text-muted-foreground text-sm">Loading...</div>;
+  const { data: quotes = [] } = useQuery({
+    queryKey: ['customer_quotes', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase.from('quotes').select('id, quote_number, approval_status, total, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+  const { data: jobs = [] } = useQuery({
+    queryKey: ['customer_jobs', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase.from('jobs').select('id, job_number, job_title, status, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+  const { data: invoices = [] } = useQuery({
+    queryKey: ['customer_invoices', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase.from('invoices').select('id, invoice_number, status, total, balance_due, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+  const { data: requests = [] } = useQuery({
+    queryKey: ['customer_requests', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase.from('service_requests').select('id, subject, status, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+  if (isLoading) return (
+    <div className="space-y-4 p-4">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
   if (!customer) return <div className="p-8 text-muted-foreground text-sm">Customer not found</div>;
 
   const set = (key: string, value: any) => setForm((p: any) => ({ ...p, [key]: value }));
@@ -56,17 +103,11 @@ export default function CustomerDetail() {
     if (!id || !form) return;
     try {
       await updateCustomer.mutateAsync({
-        id,
-        first_name: form.first_name,
-        last_name: form.last_name,
-        company_name: form.company_name || null,
-        email: form.email || null,
-        phone: form.phone || null,
-        address_line_1: form.address_line_1 || null,
-        city: form.city || null,
-        province: form.province || null,
-        postal_code: form.postal_code || null,
-        notes: form.notes || null,
+        id, first_name: form.first_name, last_name: form.last_name,
+        company_name: form.company_name || null, email: form.email || null,
+        phone: form.phone || null, address_line_1: form.address_line_1 || null,
+        city: form.city || null, province: form.province || null,
+        postal_code: form.postal_code || null, notes: form.notes || null,
       });
       toast({ title: 'Customer saved' });
     } catch (err: any) {
@@ -88,7 +129,6 @@ export default function CustomerDetail() {
       if (data?.error) throw new Error(data.error);
       toast({ title: 'Portal account created', description: data.message });
       setInviteOpen(false);
-      // Refresh customer data
       window.location.reload();
     } catch (err: any) {
       toast({ title: 'Invitation failed', description: err.message, variant: 'destructive' });
@@ -179,27 +219,84 @@ export default function CustomerDetail() {
           </Card>
         </div>
 
-        {/* Sidebar: Properties */}
+        {/* Sidebar: Related Records */}
         <div className="space-y-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5" /> Properties ({(properties as any[]).length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {(properties as any[]).length === 0 ? (
-                <p className="text-xs text-muted-foreground">No properties linked.</p>
-              ) : (
-                (properties as any[]).map((p: any) => (
-                  <Link key={p.id} to={`/properties/${p.id}`} className="block text-sm text-primary hover:underline">
-                    {p.property_name}
-                    {p.city && <span className="text-xs text-muted-foreground ml-1">({p.city})</span>}
-                  </Link>
-                ))
-              )}
-            </CardContent>
-          </Card>
+          {/* Properties */}
+          <RelatedRecordCard
+            title="Properties"
+            icon={Building2}
+            count={(properties as any[]).length}
+            emptyText="No properties linked"
+            items={(properties as any[]).map((p: any) => ({
+              id: p.id,
+              link: `/properties/${p.id}`,
+              primary: p.property_name,
+              secondary: p.city,
+              badge: <StatusBadge status={p.status || 'Active'} showIcon={false} />,
+            }))}
+          />
+
+          {/* Requests */}
+          <RelatedRecordCard
+            title="Requests"
+            icon={MessageSquarePlus}
+            count={requests.length}
+            emptyText="No requests"
+            items={requests.map((r: any) => ({
+              id: r.id,
+              link: `/requests/${r.id}`,
+              primary: r.subject,
+              secondary: formatDistanceToNow(new Date(r.created_at), { addSuffix: true }),
+              badge: <StatusBadge status={r.status} showIcon={false} />,
+            }))}
+          />
+
+          {/* Quotes */}
+          <RelatedRecordCard
+            title="Quotes"
+            icon={FileText}
+            count={quotes.length}
+            emptyText="No quotes"
+            items={quotes.map((q: any) => ({
+              id: q.id,
+              link: `/quotes/${q.id}`,
+              primary: q.quote_number,
+              secondary: `$${Number(q.total || 0).toLocaleString()}`,
+              badge: <StatusBadge status={q.approval_status} showIcon={false} />,
+              mono: true,
+            }))}
+          />
+
+          {/* Jobs */}
+          <RelatedRecordCard
+            title="Jobs"
+            icon={Briefcase}
+            count={jobs.length}
+            emptyText="No jobs"
+            items={jobs.map((j: any) => ({
+              id: j.id,
+              link: `/jobs/${j.id}`,
+              primary: j.job_title,
+              secondary: j.job_number,
+              badge: <StatusBadge status={j.status} showIcon={false} />,
+            }))}
+          />
+
+          {/* Invoices */}
+          <RelatedRecordCard
+            title="Invoices"
+            icon={Receipt}
+            count={invoices.length}
+            emptyText="No invoices"
+            items={invoices.map((i: any) => ({
+              id: i.id,
+              link: `/invoices/${i.id}`,
+              primary: i.invoice_number,
+              secondary: `$${Number(i.total || 0).toLocaleString()} · Bal: $${Number(i.balance_due || 0).toLocaleString()}`,
+              badge: <StatusBadge status={i.status} showIcon={false} />,
+              mono: true,
+            }))}
+          />
         </div>
       </div>
 
@@ -218,34 +315,66 @@ export default function CustomerDetail() {
             </p>
             <div>
               <Label className="text-xs">Portal Login Email *</Label>
-              <Input
-                type="email"
-                value={inviteEmail}
-                onChange={e => setInviteEmail(e.target.value)}
-                placeholder="customer@example.com"
-              />
+              <Input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="customer@example.com" />
             </div>
             <div>
               <Label className="text-xs">Temporary Password *</Label>
-              <Input
-                type="text"
-                value={invitePassword}
-                onChange={e => setInvitePassword(e.target.value)}
-                placeholder="Min 6 characters"
-                minLength={6}
-              />
+              <Input type="text" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} placeholder="Min 6 characters" minLength={6} />
               <p className="text-[10px] text-muted-foreground mt-1">Share this password with the customer. They can change it later.</p>
             </div>
-            <Button
-              className="w-full h-11"
-              disabled={inviting || !inviteEmail || invitePassword.length < 6}
-              onClick={handleInvite}
-            >
+            <Button className="w-full h-11" disabled={inviting || !inviteEmail || invitePassword.length < 6} onClick={handleInvite}>
               {inviting ? 'Creating account...' : 'Create Portal Account'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/* ─── Reusable sidebar card ──────────────────────────── */
+interface RelatedItem {
+  id: string;
+  link: string;
+  primary: string;
+  secondary?: string;
+  badge?: React.ReactNode;
+  mono?: boolean;
+}
+
+function RelatedRecordCard({
+  title, icon: Icon, count, emptyText, items,
+}: {
+  title: string;
+  icon: React.ElementType;
+  count: number;
+  emptyText: string;
+  items: RelatedItem[];
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <Icon className="h-3.5 w-3.5" /> {title} ({count})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="text-xs text-muted-foreground">{emptyText}</p>
+        ) : (
+          <div className="space-y-1.5">
+            {items.map(item => (
+              <Link key={item.id} to={item.link} className="flex items-center justify-between p-1.5 rounded hover:bg-muted/50 transition-colors group">
+                <div className="min-w-0 flex-1">
+                  <p className={`text-xs font-medium truncate ${item.mono ? 'font-mono' : ''}`}>{item.primary}</p>
+                  {item.secondary && <p className="text-[10px] text-muted-foreground">{item.secondary}</p>}
+                </div>
+                {item.badge}
+              </Link>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

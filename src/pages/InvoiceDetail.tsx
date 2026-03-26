@@ -227,7 +227,7 @@ export default function InvoiceDetail() {
                   <div><span className="text-muted-foreground">Issue Date</span><p className="font-medium">{format(new Date(invoice.issue_date), 'MMM d, yyyy')}</p></div>
                   <div><span className="text-muted-foreground">Due Date</span><p className="font-medium">{format(new Date(invoice.due_date), 'MMM d, yyyy')}</p></div>
                   {invoice.jobs && <div><span className="text-muted-foreground">Job</span><p className="font-medium"><Link to={`/jobs/${invoice.jobs.id}`} className="text-primary hover:underline">{invoice.jobs.job_number} — {invoice.jobs.job_title}</Link></p></div>}
-                  {invoice.properties && <div><span className="text-muted-foreground">Property</span><p className="font-medium">{invoice.properties.property_name}</p></div>}
+                  {invoice.properties && <div><span className="text-muted-foreground">Property</span><p className="font-medium"><Link to={`/properties/${invoice.property_id}`} className="text-primary hover:underline">{invoice.properties.property_name}</Link></p></div>}
                   {invoice.sent_at && <div><span className="text-muted-foreground">Sent</span><p className="font-medium">{format(new Date(invoice.sent_at), 'MMM d, yyyy h:mm a')}</p></div>}
                   {invoice.paid_at && <div><span className="text-muted-foreground">Paid</span><p className="font-medium">{format(new Date(invoice.paid_at), 'MMM d, yyyy h:mm a')}</p></div>}
                 </>
@@ -240,7 +240,9 @@ export default function InvoiceDetail() {
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm">Customer</CardTitle></CardHeader>
               <CardContent className="text-sm space-y-1">
-                <p className="font-medium">{invoice.customers.first_name} {invoice.customers.last_name}</p>
+                <Link to={`/customers/${invoice.customer_id}`} className="font-medium text-primary hover:underline block">
+                  {invoice.customers.first_name} {invoice.customers.last_name}
+                </Link>
                 {invoice.customers.company_name && <p className="text-muted-foreground">{invoice.customers.company_name}</p>}
                 {invoice.customers.email && <p className="text-muted-foreground">{invoice.customers.email}</p>}
                 {invoice.customers.phone && <p className="text-muted-foreground">{invoice.customers.phone}</p>}
