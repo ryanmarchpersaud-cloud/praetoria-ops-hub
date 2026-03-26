@@ -2425,6 +2425,8 @@ export type Database = {
           house_number_location: string | null
           id: string
           landmark_notes: string | null
+          latitude: number | null
+          longitude: number | null
           muster_point_description: string | null
           muster_point_map_notes: string | null
           muster_point_name: string | null
@@ -2458,6 +2460,8 @@ export type Database = {
           house_number_location?: string | null
           id?: string
           landmark_notes?: string | null
+          latitude?: number | null
+          longitude?: number | null
           muster_point_description?: string | null
           muster_point_map_notes?: string | null
           muster_point_name?: string | null
@@ -2491,6 +2495,8 @@ export type Database = {
           house_number_location?: string | null
           id?: string
           landmark_notes?: string | null
+          latitude?: number | null
+          longitude?: number | null
           muster_point_description?: string | null
           muster_point_map_notes?: string | null
           muster_point_name?: string | null
