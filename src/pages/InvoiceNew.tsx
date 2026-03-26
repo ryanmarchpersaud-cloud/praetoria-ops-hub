@@ -16,6 +16,7 @@ import { format, addDays } from 'date-fns';
 
 export default function InvoiceNew() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: customers = [] } = useCustomers();
   const { data: jobs = [] } = useJobs();
   const { data: properties = [] } = useProperties();
