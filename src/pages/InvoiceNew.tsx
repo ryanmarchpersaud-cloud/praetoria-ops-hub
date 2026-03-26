@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useJobs } from '@/hooks/useJobs';
 import { useProperties } from '@/hooks/useProperties';
@@ -16,6 +16,7 @@ import { format, addDays } from 'date-fns';
 
 export default function InvoiceNew() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: customers = [] } = useCustomers();
   const { data: jobs = [] } = useJobs();
   const { data: properties = [] } = useProperties();
@@ -25,7 +26,7 @@ export default function InvoiceNew() {
   const defaultDue = format(addDays(new Date(), 30), 'yyyy-MM-dd');
 
   const [form, setForm] = useState({
-    customer_id: '',
+    customer_id: searchParams.get('customer_id') || '',
     job_id: '',
     property_id: '',
     issue_date: today,

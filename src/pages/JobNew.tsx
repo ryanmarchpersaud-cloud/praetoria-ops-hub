@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +60,7 @@ const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 export default function JobNew() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const qc = useQueryClient();
   const { data: customers = [] } = useCustomers();
@@ -82,7 +83,7 @@ export default function JobNew() {
 
   // Section 1: Basic Info
   const [jobTitle, setJobTitle] = useState('');
-  const [customerId, setCustomerId] = useState('');
+  const [customerId, setCustomerId] = useState(searchParams.get('customer_id') || '');
   const [propertyId, setPropertyId] = useState('');
   const [serviceCategory, setServiceCategory] = useState('');
   const [priority, setPriority] = useState('Normal');

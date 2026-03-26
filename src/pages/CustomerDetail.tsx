@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus } from 'lucide-react';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { PROVINCES } from '@/lib/constants';
@@ -231,6 +231,8 @@ export default function CustomerDetail() {
             icon={Building2}
             count={(properties as any[]).length}
             emptyText="No properties linked"
+            createLink={`/properties?new=1&customer_id=${id}`}
+            createLabel="Add"
             items={(properties as any[]).map((p: any) => ({
               id: p.id,
               link: `/properties/${p.id}`,
@@ -246,6 +248,8 @@ export default function CustomerDetail() {
             icon={MessageSquarePlus}
             count={requests.length}
             emptyText="No requests"
+            createLink={`/requests?new=1&customer_id=${id}`}
+            createLabel="New"
             items={requests.map((r: any) => ({
               id: r.id,
               link: `/requests/${r.id}`,
@@ -261,6 +265,8 @@ export default function CustomerDetail() {
             icon={FileText}
             count={quotes.length}
             emptyText="No quotes"
+            createLink={`/quotes?new=1&customer_id=${id}`}
+            createLabel="New"
             items={quotes.map((q: any) => ({
               id: q.id,
               link: `/quotes/${q.id}`,
@@ -277,6 +283,8 @@ export default function CustomerDetail() {
             icon={Briefcase}
             count={jobs.length}
             emptyText="No jobs"
+            createLink={`/jobs/new?customer_id=${id}`}
+            createLabel="New"
             items={jobs.map((j: any) => ({
               id: j.id,
               link: `/jobs/${j.id}`,
@@ -292,6 +300,8 @@ export default function CustomerDetail() {
             icon={Receipt}
             count={invoices.length}
             emptyText="No invoices"
+            createLink={`/invoices/new?customer_id=${id}`}
+            createLabel="New"
             items={invoices.map((i: any) => ({
               id: i.id,
               link: `/invoices/${i.id}`,
@@ -347,20 +357,31 @@ interface RelatedItem {
 }
 
 function RelatedRecordCard({
-  title, icon: Icon, count, emptyText, items,
+  title, icon: Icon, count, emptyText, items, createLink, createLabel,
 }: {
   title: string;
   icon: React.ElementType;
   count: number;
   emptyText: string;
   items: RelatedItem[];
+  createLink?: string;
+  createLabel?: string;
 }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Icon className="h-3.5 w-3.5" /> {title} ({count})
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Icon className="h-3.5 w-3.5" /> {title} ({count})
+          </CardTitle>
+          {createLink && (
+            <Link to={createLink}>
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1">
+                <Plus className="h-3 w-3" /> {createLabel || 'New'}
+              </Button>
+            </Link>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
