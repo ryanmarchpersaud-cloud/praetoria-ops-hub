@@ -184,6 +184,30 @@ export default function QuoteDetail() {
   const isSentOrApproved = ['Sent', 'Approved'].includes(form.approval_status);
   const validItems = items.filter(i => i.item_name);
 
+  const handleDeleteQuote = async () => {
+    if (!id) return;
+    try {
+      await supabase.from('quote_line_items').delete().eq('quote_id', id);
+      await supabase.from('quotes').delete().eq('id', id);
+      toast({ title: 'Quote deleted' });
+      navigate('/quotes');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setDeleteDialog(false);
+  };
+
+  const handleArchiveQuote = async () => {
+    if (!id) return;
+    try {
+      await updateQuote.mutateAsync({ id, approval_status: 'Archived' as any });
+      toast({ title: 'Quote archived' });
+      navigate('/quotes');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
   const handleConvertToJob = async () => {
     if (!id) return;
     try {
