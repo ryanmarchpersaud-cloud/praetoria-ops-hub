@@ -17,7 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { format } from 'date-fns';
-import { CalendarIcon, ArrowLeft, Check, X, Search, Filter } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, Check, X, Search, Filter, MapPinOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function ScheduleNewVisits() {
