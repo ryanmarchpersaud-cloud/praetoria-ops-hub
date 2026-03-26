@@ -16,9 +16,9 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { supabase } from '@/integrations/supabase/client';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
+import * as L from 'leaflet';
 import { format } from 'date-fns';
-import { CalendarIcon, ArrowLeft, Check, X, MapPin, Search, Filter } from 'lucide-react';
+import { CalendarIcon, ArrowLeft, Check, X, Search, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import 'leaflet/dist/leaflet.css';
 
