@@ -184,7 +184,10 @@ export default function Invoices() {
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:border-primary/30 transition-colors">
+        <Card
+          className="cursor-pointer hover:border-primary/30 transition-colors"
+          onClick={() => { setStatusFilter('Sent,Viewed,Overdue,Partially Paid,Paid'); setDateFilter('last_30'); }}
+        >
           <CardContent className="p-4 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold">Issued</p>
