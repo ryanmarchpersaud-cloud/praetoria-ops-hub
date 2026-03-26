@@ -10,12 +10,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
+import { useQuery } from '@tanstack/react-query';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface LineItemForm {
   id?: string;
@@ -59,6 +64,29 @@ export default function QuoteDetail() {
 
   const [form, setForm] = useState<any>({});
   const [items, setItems] = useState<LineItemForm[]>([]);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+
+  const { data: catalog = [] } = useQuery({
+    queryKey: ['products_services_active'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products_services')
+        .select('id, name, description, service_category, unit_price, price_type, unit_label')
+        .ilike('status', 'active')
+        .order('service_category')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const catalogGrouped = catalog.reduce((acc: Record<string, any[]>, p: any) => {
+    const cat = p.service_category || 'Other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(p);
+    return acc;
+  }, {});
 
   useEffect(() => { if (quote) setForm(quote); }, [quote]);
   useEffect(() => {
@@ -90,6 +118,22 @@ export default function QuoteDetail() {
     }
     setItems(updated);
     recalculate(updated);
+  };
+
+  const addFromCatalog = (product: any) => {
+    const price = Number(product.unit_price) || 0;
+    const newItem: LineItemForm = {
+      item_name: product.name,
+      description: product.description || '',
+      quantity: 1,
+      unit_price: price,
+      line_total: price,
+      sort_order: items.length,
+    };
+    const updated = [...items, newItem];
+    setItems(updated);
+    recalculate(updated);
+    setCatalogOpen(false);
   };
 
   const addItem = () => {
@@ -139,6 +183,30 @@ export default function QuoteDetail() {
   const lead = (quote as any).leads;
   const isSentOrApproved = ['Sent', 'Approved'].includes(form.approval_status);
   const validItems = items.filter(i => i.item_name);
+
+  const handleDeleteQuote = async () => {
+    if (!id) return;
+    try {
+      await supabase.from('quote_line_items').delete().eq('quote_id', id);
+      await supabase.from('quotes').delete().eq('id', id);
+      toast({ title: 'Quote deleted' });
+      navigate('/quotes');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setDeleteDialog(false);
+  };
+
+  const handleArchiveQuote = async () => {
+    if (!id) return;
+    try {
+      await updateQuote.mutateAsync({ id, approval_status: 'Archived' as any });
+      toast({ title: 'Quote archived' });
+      navigate('/quotes');
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
 
   const handleConvertToJob = async () => {
     if (!id) return;
@@ -212,6 +280,21 @@ export default function QuoteDetail() {
           <FileText className="h-4 w-4" />
           <span className="hidden sm:inline">Export PDF</span>
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0">
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleArchiveQuote} className="gap-2">
+              <Archive className="h-4 w-4" /> Archive Quote
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteDialog(true)} className="gap-2 text-destructive focus:text-destructive">
+              <Trash2 className="h-4 w-4" /> Delete Quote
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* ── Mobile: Workflow first, then content ── */}
@@ -285,9 +368,36 @@ export default function QuoteDetail() {
               <CardTitle className="text-sm flex items-center justify-between">
                 Line Items ({validItems.length})
                 {!isSentOrApproved && (
-                  <Button size="sm" variant="outline" onClick={addItem} className="h-8">
-                    <Plus className="h-3 w-3 mr-1" /> Add
-                  </Button>
+                  <div className="flex gap-1.5">
+                    <Popover open={catalogOpen} onOpenChange={setCatalogOpen}>
+                      <PopoverTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-8 gap-1">
+                          <Package className="h-3 w-3" /> Catalog
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-0" align="end">
+                        <Command>
+                          <CommandInput placeholder="Search services..." />
+                          <CommandList className="max-h-64">
+                            <CommandEmpty>No items found.</CommandEmpty>
+                            {Object.entries(catalogGrouped).map(([cat, products]) => (
+                              <CommandGroup key={cat} heading={cat}>
+                                {(products as any[]).map((p: any) => (
+                                  <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between">
+                                    <span className="truncate">{p.name}</span>
+                                    <span className="text-muted-foreground text-xs ml-2">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <Button size="sm" variant="outline" onClick={addItem} className="h-8">
+                      <Plus className="h-3 w-3 mr-1" /> Manual
+                    </Button>
+                  </div>
                 )}
               </CardTitle>
             </CardHeader>
@@ -462,6 +572,24 @@ export default function QuoteDetail() {
           />
         </div>
       </div>
+
+      {/* Delete confirmation */}
+      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" /> Delete Quote
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to permanently delete {quote.quote_number}? This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" className="flex-1" onClick={handleDeleteQuote}>Delete</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
