@@ -32,7 +32,7 @@ import ActivityPage from "./pages/ActivityPage";
 import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
-import ScheduleNewVisits from "./pages/ScheduleNewVisits";
+const ScheduleNewVisits = lazy(() => import("./pages/ScheduleNewVisits"));
 import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import InvoiceNew from "./pages/InvoiceNew";
