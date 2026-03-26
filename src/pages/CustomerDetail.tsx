@@ -347,20 +347,31 @@ interface RelatedItem {
 }
 
 function RelatedRecordCard({
-  title, icon: Icon, count, emptyText, items,
+  title, icon: Icon, count, emptyText, items, createLink, createLabel,
 }: {
   title: string;
   icon: React.ElementType;
   count: number;
   emptyText: string;
   items: RelatedItem[];
+  createLink?: string;
+  createLabel?: string;
 }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <Icon className="h-3.5 w-3.5" /> {title} ({count})
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Icon className="h-3.5 w-3.5" /> {title} ({count})
+          </CardTitle>
+          {createLink && (
+            <Link to={createLink}>
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1">
+                <Plus className="h-3 w-3" /> {createLabel || 'New'}
+              </Button>
+            </Link>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
