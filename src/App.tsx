@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -31,6 +32,7 @@ import ActivityPage from "./pages/ActivityPage";
 import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
+const ScheduleNewVisits = lazy(() => import("./pages/ScheduleNewVisits"));
 import Invoices from "./pages/Invoices";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import InvoiceNew from "./pages/InvoiceNew";
@@ -260,6 +262,7 @@ function AppRoutes() {
       <Route path="/invoices/:id/print" element={<AdminRoute><InvoicePrint /></AdminRoute>} />
       <Route path="/invoices/:id" element={<AdminRoute><InvoiceDetail /></AdminRoute>} />
       <Route path="/schedule" element={<AdminRoute><Schedule /></AdminRoute>} />
+      <Route path="/schedule/new-visits" element={<AdminRoute><Suspense fallback={<RouteLoading />}><ScheduleNewVisits /></Suspense></AdminRoute>} />
       <Route path="/activity" element={<AdminRoute><ActivityPage /></AdminRoute>} />
       <Route path="/requests" element={<AdminRoute><Requests /></AdminRoute>} />
       <Route path="/requests/:id" element={<AdminRoute><RequestDetail /></AdminRoute>} />

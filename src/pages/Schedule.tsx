@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List, MoreHorizontal, CalendarPlus } from 'lucide-react';
 import { useVisits, useUpdateVisit } from '@/hooks/useVisits';
 import { useJobs, useUpdateJob } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +11,6 @@ import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval, 
 import { DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { DraggableItem, DragOverlayItem, MonthDraggableChip } from '@/components/schedule/DraggableItem';
 import { DroppableDay } from '@/components/schedule/DroppableDay';
-import { Link } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 
 type ViewMode = 'week' | 'month';
@@ -127,6 +128,20 @@ export default function Schedule() {
           <Button variant={viewMode === 'month' ? 'default' : 'outline'} size="sm" className="h-8 text-xs px-2.5" onClick={() => setViewMode('month')}>
             <CalendarIcon className="h-3.5 w-3.5 mr-1" /> Month
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 text-xs px-2.5 gap-1">
+                <MoreHorizontal className="h-3.5 w-3.5" /> More Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/schedule/new-visits" className="flex items-center gap-2">
+                  <CalendarPlus className="h-4 w-4" /> Schedule New Visits
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
