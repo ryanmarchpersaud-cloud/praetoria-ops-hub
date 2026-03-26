@@ -53,7 +53,7 @@ export default function ScheduleNewVisits() {
 
   // Load property locations
   useEffect(() => {
-    if (locationsLoaded || recurringJobs.length === 0) return;
+    if (recurringJobs.length === 0) return;
     const propertyIds = [...new Set(recurringJobs.map((j: any) => j.property_id).filter(Boolean))];
     if (propertyIds.length === 0) return;
 
@@ -76,7 +76,7 @@ export default function ScheduleNewVisits() {
         setPropertyLocations(locs);
         setLocationsLoaded(true);
       });
-  }, [recurringJobs, locationsLoaded]);
+  }, [recurringJobs]);
 
   // Filtered list
   const filteredJobs = useMemo(() => {
