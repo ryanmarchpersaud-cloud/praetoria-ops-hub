@@ -59,7 +59,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="space-y-4">
       {/* Mobile/tablet horizontal tab bar */}
-      <div className="lg:hidden flex gap-1 overflow-x-auto border-b border-border pb-2">
+      <div className="md:hidden flex gap-1 overflow-x-auto border-b border-border pb-2">
         {allItems.map((item) => (
           <NavLink
             key={item.url}
