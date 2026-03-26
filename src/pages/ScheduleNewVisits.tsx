@@ -35,6 +35,7 @@ export default function ScheduleNewVisits() {
   const [isCreating, setIsCreating] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [descriptionFilter, setDescriptionFilter] = useState('');
+  const [teamSearch, setTeamSearch] = useState('');
   const [propertyLocations, setPropertyLocations] = useState<Record<string, { lat: number; lng: number; address: string }>>({});
   const [locationsLoaded, setLocationsLoaded] = useState(false);
 
@@ -165,9 +166,11 @@ export default function ScheduleNewVisits() {
       const loc = propertyLocations[j.property_id];
       const isSelected = selectedJobIds.has(j.id);
       const customerName = j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : 'Unknown';
+      const tooltipText = `${customerName} – #${j.job_number}`;
 
       const marker = L.marker([loc.lat, loc.lng], { icon: isSelected ? redIcon : greenIcon })
         .addTo(map)
+        .bindTooltip(tooltipText, { direction: 'top', offset: [0, -35], className: 'leaflet-tooltip-custom' })
         .bindPopup(`<div style="font-size:12px"><strong>${customerName}</strong><br/>${j.job_number} – ${j.job_title}<br/><span style="color:#888">${loc.address}</span></div>`);
 
       marker.on('click', () => toggleJob(j.id));
@@ -395,11 +398,19 @@ export default function ScheduleNewVisits() {
                   })}
                 </div>
               )}
+              <Input
+                placeholder="Search team members..."
+                value={teamSearch}
+                onChange={(e) => setTeamSearch(e.target.value)}
+                className="h-8 text-sm mb-1.5"
+              />
               <div className="border rounded-md max-h-[160px] overflow-y-auto">
                 {(employees as any[]).length === 0 ? (
                   <p className="text-sm text-muted-foreground p-3">No team members found</p>
                 ) : (
-                  (employees as any[]).map((emp: any) => (
+                  (employees as any[])
+                    .filter((emp: any) => !teamSearch || emp.full_name?.toLowerCase().includes(teamSearch.toLowerCase()) || emp.role_title?.toLowerCase().includes(teamSearch.toLowerCase()))
+                    .map((emp: any) => (
                     <label
                       key={emp.user_id}
                       className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 cursor-pointer text-sm border-b last:border-b-0"
@@ -408,7 +419,10 @@ export default function ScheduleNewVisits() {
                         checked={selectedTeam.includes(emp.user_id)}
                         onCheckedChange={() => toggleEmployee(emp.user_id)}
                       />
-                      {emp.full_name || 'Unnamed'}
+                      <div className="min-w-0">
+                        <span className="font-medium">{emp.full_name || 'Unnamed'}</span>
+                        {emp.role_title && <span className="text-muted-foreground ml-1.5 text-xs">· {emp.role_title}</span>}
+                      </div>
                     </label>
                   ))
                 )}
