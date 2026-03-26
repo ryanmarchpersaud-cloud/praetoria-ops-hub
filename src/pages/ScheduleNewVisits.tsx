@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,60 +8,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useJobs } from '@/hooks/useJobs';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { supabase } from '@/integrations/supabase/client';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import * as L from 'leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { format } from 'date-fns';
 import { CalendarIcon, ArrowLeft, Check, X, Search, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import 'leaflet/dist/leaflet.css';
-
-// Fix leaflet default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-const selectedIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-const defaultIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-interface JobWithLocation {
-  id: string;
-  job_number: string;
-  job_title: string;
-  service_frequency: string | null;
-  customer_id: string;
-  property_id: string | null;
-  customers: { first_name: string; last_name: string; company_name: string | null } | null;
-  properties: { property_name: string | null } | null;
-  status: string;
-  lat?: number;
-  lng?: number;
-  propertyAddress?: string;
-}
 
 export default function ScheduleNewVisits() {
   const navigate = useNavigate();
@@ -81,7 +38,11 @@ export default function ScheduleNewVisits() {
   const [propertyLocations, setPropertyLocations] = useState<Record<string, { lat: number; lng: number; address: string }>>({});
   const [locationsLoaded, setLocationsLoaded] = useState(false);
 
-  // Filter recurring jobs only (have service_frequency set and not null, and are active)
+  const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const markersRef = useRef<Record<string, L.Marker>>({});
+
+  // Filter recurring jobs
   const recurringJobs = useMemo(() => {
     return (allJobs as any[]).filter((j) => {
       const isRecurring = j.service_frequency && j.service_frequency !== 'one_time';
@@ -90,9 +51,9 @@ export default function ScheduleNewVisits() {
     });
   }, [allJobs]);
 
-  // Load property locations for map
-  useState(() => {
-    if (locationsLoaded) return;
+  // Load property locations
+  useEffect(() => {
+    if (locationsLoaded || recurringJobs.length === 0) return;
     const propertyIds = [...new Set(recurringJobs.map((j: any) => j.property_id).filter(Boolean))];
     if (propertyIds.length === 0) return;
 
@@ -115,7 +76,7 @@ export default function ScheduleNewVisits() {
         setPropertyLocations(locs);
         setLocationsLoaded(true);
       });
-  });
+  }, [recurringJobs, locationsLoaded]);
 
   // Filtered list
   const filteredJobs = useMemo(() => {
@@ -132,9 +93,9 @@ export default function ScheduleNewVisits() {
     }
     if (descriptionFilter) {
       const d = descriptionFilter.toLowerCase();
-      filtered = filtered.filter((j: any) => {
-        return j.job_title?.toLowerCase().includes(d) || j.scope_of_work?.toLowerCase().includes(d);
-      });
+      filtered = filtered.filter((j: any) =>
+        j.job_title?.toLowerCase().includes(d) || j.scope_of_work?.toLowerCase().includes(d)
+      );
     }
     return filtered;
   }, [recurringJobs, searchFilter, descriptionFilter]);
@@ -148,19 +109,73 @@ export default function ScheduleNewVisits() {
     });
   }, []);
 
-  const selectAll = () => {
-    setSelectedJobIds(new Set(filteredJobs.map((j: any) => j.id)));
-  };
-
-  const selectNone = () => {
-    setSelectedJobIds(new Set());
-  };
+  const selectAll = () => setSelectedJobIds(new Set(filteredJobs.map((j: any) => j.id)));
+  const selectNone = () => setSelectedJobIds(new Set());
 
   const toggleEmployee = (userId: string) => {
     setSelectedTeam((prev) =>
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
     );
   };
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const map = L.map(mapContainerRef.current).setView([53.5461, -113.4938], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+    }).addTo(map);
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // Update markers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Remove old markers
+    Object.values(markersRef.current).forEach((m) => m.remove());
+    markersRef.current = {};
+
+    const greenIcon = new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
+    });
+    const redIcon = new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
+    });
+
+    const bounds: L.LatLngExpression[] = [];
+
+    filteredJobs.forEach((j: any) => {
+      if (!j.property_id || !propertyLocations[j.property_id]) return;
+      const loc = propertyLocations[j.property_id];
+      const isSelected = selectedJobIds.has(j.id);
+      const customerName = j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : 'Unknown';
+
+      const marker = L.marker([loc.lat, loc.lng], { icon: isSelected ? redIcon : greenIcon })
+        .addTo(map)
+        .bindPopup(`<div style="font-size:12px"><strong>${customerName}</strong><br/>${j.job_number} – ${j.job_title}<br/><span style="color:#888">${loc.address}</span></div>`);
+
+      marker.on('click', () => toggleJob(j.id));
+      markersRef.current[j.id] = marker;
+      bounds.push([loc.lat, loc.lng]);
+    });
+
+    if (bounds.length > 0) {
+      map.fitBounds(L.latLngBounds(bounds as any), { padding: [40, 40], maxZoom: 13 });
+    }
+  }, [filteredJobs, propertyLocations, selectedJobIds, toggleJob]);
 
   const handleCreateVisits = async () => {
     if (selectedJobIds.size === 0) return;
@@ -185,7 +200,6 @@ export default function ScheduleNewVisits() {
           assigned_worker_id: selectedTeam.length === 1 ? selectedTeam[0] : null,
           service_category: (job as any).service_category || 'snow_removal',
         };
-
         await createVisit.mutateAsync(visitPayload);
         successCount++;
       } catch (err: any) {
@@ -209,32 +223,6 @@ export default function ScheduleNewVisits() {
       toast({ title: 'Failed to create visits', description: 'Please try again.', variant: 'destructive' });
     }
   };
-
-  // Map center
-  const mapCenter = useMemo(() => {
-    const locs = Object.values(propertyLocations);
-    if (locs.length === 0) return [53.5461, -113.4938] as [number, number]; // Edmonton default
-    const avgLat = locs.reduce((a, l) => a + l.lat, 0) / locs.length;
-    const avgLng = locs.reduce((a, l) => a + l.lng, 0) / locs.length;
-    return [avgLat, avgLng] as [number, number];
-  }, [propertyLocations]);
-
-  // Map markers from recurring jobs
-  const markers = useMemo(() => {
-    return filteredJobs
-      .filter((j: any) => j.property_id && propertyLocations[j.property_id])
-      .map((j: any) => ({
-        jobId: j.id,
-        jobNumber: j.job_number,
-        jobTitle: j.job_title,
-        customerName: j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : 'Unknown',
-        propertyName: j.properties?.property_name || 'Unknown',
-        lat: propertyLocations[j.property_id].lat,
-        lng: propertyLocations[j.property_id].lng,
-        address: propertyLocations[j.property_id].address,
-        isSelected: selectedJobIds.has(j.id),
-      }));
-  }, [filteredJobs, propertyLocations, selectedJobIds]);
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -312,7 +300,6 @@ export default function ScheduleNewVisits() {
                 const customerName = job.customers
                   ? `${job.customers.first_name} ${job.customers.last_name}`
                   : 'Unknown Client';
-                const propertyName = job.properties?.property_name;
 
                 return (
                   <button
@@ -338,7 +325,7 @@ export default function ScheduleNewVisits() {
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {job.job_title}
-                          {propertyName && ` · ${propertyName}`}
+                          {job.properties?.property_name && ` · ${job.properties.property_name}`}
                         </p>
                       </div>
                     </div>
@@ -351,37 +338,7 @@ export default function ScheduleNewVisits() {
 
         {/* Right: Map */}
         <Card className="overflow-hidden">
-          <div className="h-[500px] w-full">
-            <MapContainer
-              center={mapCenter}
-              zoom={11}
-              style={{ height: '100%', width: '100%' }}
-              scrollWheelZoom
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {markers.map((m) => (
-                <Marker
-                  key={m.jobId}
-                  position={[m.lat, m.lng]}
-                  icon={m.isSelected ? selectedIcon : defaultIcon}
-                  eventHandlers={{
-                    click: () => toggleJob(m.jobId),
-                  }}
-                >
-                  <Popup>
-                    <div className="text-xs">
-                      <p className="font-semibold">{m.customerName}</p>
-                      <p>{m.jobNumber} – {m.jobTitle}</p>
-                      <p className="text-muted-foreground">{m.address}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </div>
+          <div ref={mapContainerRef} className="h-[500px] w-full" />
         </Card>
       </div>
 
