@@ -165,9 +165,11 @@ export default function ScheduleNewVisits() {
       const loc = propertyLocations[j.property_id];
       const isSelected = selectedJobIds.has(j.id);
       const customerName = j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : 'Unknown';
+      const tooltipText = `${customerName} – #${j.job_number}`;
 
       const marker = L.marker([loc.lat, loc.lng], { icon: isSelected ? redIcon : greenIcon })
         .addTo(map)
+        .bindTooltip(tooltipText, { direction: 'top', offset: [0, -35], className: 'leaflet-tooltip-custom' })
         .bindPopup(`<div style="font-size:12px"><strong>${customerName}</strong><br/>${j.job_number} – ${j.job_title}<br/><span style="color:#888">${loc.address}</span></div>`);
 
       marker.on('click', () => toggleJob(j.id));
