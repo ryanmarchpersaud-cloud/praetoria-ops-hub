@@ -53,7 +53,7 @@ export default function ScheduleNewVisits() {
 
   // Load property locations
   useEffect(() => {
-    if (locationsLoaded || recurringJobs.length === 0) return;
+    if (recurringJobs.length === 0) return;
     const propertyIds = [...new Set(recurringJobs.map((j: any) => j.property_id).filter(Boolean))];
     if (propertyIds.length === 0) return;
 
@@ -76,7 +76,7 @@ export default function ScheduleNewVisits() {
         setPropertyLocations(locs);
         setLocationsLoaded(true);
       });
-  }, [recurringJobs, locationsLoaded]);
+  }, [recurringJobs]);
 
   // Filtered list
   const filteredJobs = useMemo(() => {
@@ -337,14 +337,14 @@ export default function ScheduleNewVisits() {
         </div>
 
         {/* Right: Map */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden relative z-0">
           <div ref={mapContainerRef} className="h-[500px] w-full" />
         </Card>
       </div>
 
       {/* Create Visits Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg z-[1000]">
           <DialogHeader>
             <DialogTitle>Create {selectedJobIds.size} Visit{selectedJobIds.size !== 1 ? 's' : ''}</DialogTitle>
           </DialogHeader>
