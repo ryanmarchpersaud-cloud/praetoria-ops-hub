@@ -240,7 +240,9 @@ export default function InvoiceDetail() {
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm">Customer</CardTitle></CardHeader>
               <CardContent className="text-sm space-y-1">
-                <p className="font-medium">{invoice.customers.first_name} {invoice.customers.last_name}</p>
+                <Link to={`/customers/${invoice.customer_id}`} className="font-medium text-primary hover:underline block">
+                  {invoice.customers.first_name} {invoice.customers.last_name}
+                </Link>
                 {invoice.customers.company_name && <p className="text-muted-foreground">{invoice.customers.company_name}</p>}
                 {invoice.customers.email && <p className="text-muted-foreground">{invoice.customers.email}</p>}
                 {invoice.customers.phone && <p className="text-muted-foreground">{invoice.customers.phone}</p>}
