@@ -180,6 +180,9 @@ export default function ScheduleNewVisits() {
 
     const bounds: L.LatLngExpression[] = [];
 
+    // Track how many markers share the same coordinates to offset overlaps
+    const coordCounts: Record<string, number> = {};
+
     filteredJobs.forEach((j: any) => {
       if (!j.property_id || !propertyLocations[j.property_id]) return;
       const loc = propertyLocations[j.property_id];
@@ -187,14 +190,21 @@ export default function ScheduleNewVisits() {
       const customerName = j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : 'Unknown';
       const tooltipText = `${customerName} – #${j.job_number}`;
 
-      const marker = L.marker([loc.lat, loc.lng], { icon: isSelected ? redIcon : greenIcon })
+      // Offset co-located markers so they don't stack on top of each other
+      const coordKey = `${loc.lat},${loc.lng}`;
+      const idx = coordCounts[coordKey] || 0;
+      coordCounts[coordKey] = idx + 1;
+      const offsetLat = loc.lat + idx * 0.0008;
+      const offsetLng = loc.lng + idx * 0.0008;
+
+      const marker = L.marker([offsetLat, offsetLng], { icon: isSelected ? redIcon : greenIcon })
         .addTo(map)
-        .bindTooltip(tooltipText, { direction: 'top', offset: [0, -35], className: 'leaflet-tooltip-custom' })
+        .bindTooltip(tooltipText, { permanent: false, direction: 'top', offset: [0, -35], className: 'leaflet-tooltip-custom' })
         .bindPopup(`<div style="font-size:12px"><strong>${customerName}</strong><br/>${j.job_number} – ${j.job_title}<br/><span style="color:#888">${loc.address}</span></div>`);
 
       marker.on('click', () => toggleJob(j.id));
       markersRef.current[j.id] = marker;
-      bounds.push([loc.lat, loc.lng]);
+      bounds.push([offsetLat, offsetLng]);
     });
 
     if (bounds.length > 0) {
