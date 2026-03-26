@@ -36,7 +36,11 @@ export function useCreateVisit() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (visit: any) => {
-      const { data, error } = await supabase.from('visits').insert(visit).select().single();
+      // Clean "none" sentinel values to null
+      const cleaned = { ...visit };
+      if (cleaned.job_id === 'none' || cleaned.job_id === '') cleaned.job_id = null;
+      if (cleaned.assigned_worker_id === 'none' || cleaned.assigned_worker_id === '') cleaned.assigned_worker_id = null;
+      const { data, error } = await supabase.from('visits').insert(cleaned).select().single();
       if (error) throw error;
       return data;
     },
@@ -44,6 +48,7 @@ export function useCreateVisit() {
       qc.invalidateQueries({ queryKey: ['visits'] });
       qc.invalidateQueries({ queryKey: ['job_visits'] });
       qc.invalidateQueries({ queryKey: ['property_visits'] });
+      qc.invalidateQueries({ queryKey: ['employees_admin'] });
     },
   });
 }
