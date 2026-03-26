@@ -487,7 +487,7 @@ export default function JobNew() {
                     <p className="text-xs text-muted-foreground bg-muted/40 border rounded-md px-2 py-1">🔑 {selectedProperty.access_notes}</p>
                   )}
                   {selectedProperty.caution_notes && (
-                    <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-md px-2 py-1 flex items-center gap-1">
+                    <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2 py-1 flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3 shrink-0" /> {selectedProperty.caution_notes}
                     </p>
                   )}
