@@ -104,6 +104,7 @@ serve(async (req) => {
     }
 
     // Create auth user with auto-confirm
+    let newUserId: string;
     const { data: authData, error: authErr } =
       await adminClient.auth.admin.createUser({
         email,
@@ -115,13 +116,26 @@ serve(async (req) => {
       });
 
     if (authErr) {
-      return new Response(JSON.stringify({ error: authErr.message }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // If user already exists, look them up and reuse
+      if (authErr.message?.includes("already been registered")) {
+        const { data: existingUsers } = await adminClient.auth.admin.listUsers();
+        const existingUser = existingUsers?.users?.find((u: any) => u.email === email);
+        if (!existingUser) {
+          return new Response(JSON.stringify({ error: "Email exists but user not found" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        newUserId = existingUser.id;
+      } else {
+        return new Response(JSON.stringify({ error: authErr.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      newUserId = authData.user.id;
     }
-
-    const newUserId = authData.user.id;
 
     // Assign customer role
     const { error: roleErr } = await adminClient
