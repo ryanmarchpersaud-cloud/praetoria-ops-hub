@@ -265,6 +265,8 @@ export default function CustomerDetail() {
             icon={FileText}
             count={quotes.length}
             emptyText="No quotes"
+            createLink={`/quotes?new=1&customer_id=${id}`}
+            createLabel="New"
             items={quotes.map((q: any) => ({
               id: q.id,
               link: `/quotes/${q.id}`,
