@@ -448,7 +448,7 @@ export default function QuoteDetail() {
                         <div className="grid grid-cols-3 gap-2 items-end">
                           <div>
                             <Label className="text-[10px] text-muted-foreground">Qty</Label>
-                            <Input type="number" inputMode="decimal" value={item.quantity} onChange={e => updateItem(idx, 'quantity', Number(e.target.value))} className="h-9 text-center" disabled={isSentOrApproved} />
+                            <Input type="number" inputMode="decimal" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="h-9 text-center" disabled={isSentOrApproved} />
                           </div>
                           <div>
                             <Label className="text-[10px] text-muted-foreground">Price</Label>
