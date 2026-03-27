@@ -143,6 +143,10 @@ const FinanceJobCosting = lazy(() => import("./pages/finance/FinanceJobCosting")
 const FinanceReports = lazy(() => import("./pages/finance/FinanceReports"));
 const FinanceAccounts = lazy(() => import("./pages/finance/FinanceAccounts"));
 const FinanceReconciliation = lazy(() => import("./pages/finance/FinanceReconciliation"));
+const FinancePayroll = lazy(() => import("./pages/finance/FinancePayroll"));
+const FinanceSubcontractorPayouts = lazy(() => import("./pages/finance/FinanceSubcontractorPayouts"));
+const FinanceRemittances = lazy(() => import("./pages/finance/FinanceRemittances"));
+const FinanceTaxSlips = lazy(() => import("./pages/finance/FinanceTaxSlips"));
 
 import WorkSettingsPage from "./pages/WorkSettingsPage";
 import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
