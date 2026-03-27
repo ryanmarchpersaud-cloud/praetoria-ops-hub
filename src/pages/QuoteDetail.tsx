@@ -269,10 +269,12 @@ export default function QuoteDetail() {
 
       {/* ── Save Bar ── */}
       <div className="flex gap-2">
-        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
-          <Save className="h-4 w-4 mr-2" /> Save Quote
-        </Button>
-        {form.approval_status === 'Approved' && !isConverted && (
+        {canManageQuotes && (
+          <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
+            <Save className="h-4 w-4 mr-2" /> Save Quote
+          </Button>
+        )}
+        {form.approval_status === 'Approved' && !isConverted && canManageQuotes && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleConvertToJob}>
             <Briefcase className="h-4 w-4" />
             <span className="hidden sm:inline">Convert to Job</span>
@@ -283,7 +285,7 @@ export default function QuoteDetail() {
             <Briefcase className="h-3.5 w-3.5" /> Converted
           </Badge>
         )}
-        {form.approval_status === 'Approved' && (
+        {form.approval_status === 'Approved' && canManageQuotes && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setInvoiceOpen(true)}>
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Invoice</span>
@@ -293,21 +295,23 @@ export default function QuoteDetail() {
           <FileText className="h-4 w-4" />
           <span className="hidden sm:inline">Export PDF</span>
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0">
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleArchiveQuote} className="gap-2">
-              <Archive className="h-4 w-4" /> Archive Quote
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setDeleteDialog(true)} className="gap-2 text-destructive focus:text-destructive">
-              <Trash2 className="h-4 w-4" /> Delete Quote
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {canManageQuotes && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-11 w-11 shrink-0">
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleArchiveQuote} className="gap-2">
+                <Archive className="h-4 w-4" /> Archive Quote
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setDeleteDialog(true)} className="gap-2 text-destructive focus:text-destructive">
+                <Trash2 className="h-4 w-4" /> Delete Quote
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* ── Mobile: Workflow first, then content ── */}
