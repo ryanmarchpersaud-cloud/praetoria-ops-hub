@@ -29,6 +29,7 @@ export default function Quotes() {
   const { data: quotes = [], isLoading } = useQuotes({
     approval_status: statusFilter || undefined,
   });
+  const { canManageQuotes } = useActionPermissions();
 
   const allQuotes = useQuotes({}).data || [];
   const counts = QUOTE_APPROVAL_STATUSES.reduce((acc, s) => {
