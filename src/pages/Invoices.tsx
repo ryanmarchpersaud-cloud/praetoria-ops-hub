@@ -20,6 +20,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { format, subDays, subMonths, startOfMonth, startOfYear, subWeeks, isAfter, isBefore, parseISO, differenceInDays } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 
 // ── Status mapping: UI labels → backend values ──
 const STATUS_OPTIONS = [
