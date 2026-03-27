@@ -305,6 +305,48 @@ function AppRoutes() {
 
       {/* Messaging */}
       <Route path="/messaging" element={<AdminRoute><ModuleGuard module="messaging"><MessagingPage /></ModuleGuard></AdminRoute>} />
+
+      {/* Finance Hub — full or view-limited */}
+      <Route path="/finance" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><FinanceDashboard /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/invoices" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><FinanceInvoices /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/accounts-receivable" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><FinanceAR /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/statements" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><FinanceStatements /></Suspense></ModuleGuard></AdminRoute>} />
+      {/* Finance full-access only pages */}
+      <Route path="/finance/expenses" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceExpenses /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/receipts" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceReceipts /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/bills" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceBills /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/vendors" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceVendors /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/job-costing" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceJobCosting /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/reports" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceReports /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/accounts" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceAccounts /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/reconciliation" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceReconciliation /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/payroll" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinancePayroll /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/subcontractor-payouts" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceSubcontractorPayouts /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/remittances" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceRemittances /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/tax-slips" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceTaxSlips /></Suspense></ModuleGuard></AdminRoute>} />
+
+      {/* Settings — guarded by settingsKey */}
+      <Route path="/settings" element={<AdminRoute><ModuleGuard settingsKey="companySettings"><CompanySettingsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/integrations" element={<AdminRoute><ModuleGuard settingsKey="integrations"><SettingsIntegrationsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/products" element={<AdminRoute><ModuleGuard settingsKey="productsServices"><ProductsServicesPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/team" element={<AdminRoute><ModuleGuard settingsKey="manageTeam"><ManageTeamPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/roles" element={<AdminRoute><ModuleGuard settingsKey="rolesPermissions"><RolesPermissionsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/audit-log" element={<AdminRoute><ModuleGuard settingsKey="auditLog"><AuditLogPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/connected-apps" element={<AdminRoute><ModuleGuard settingsKey="connectedApps"><ConnectedAppsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/usage" element={<AdminRoute><ModuleGuard settingsKey="seatUsage"><SeatUsagePage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/payments" element={<AdminRoute><ModuleGuard settingsKey="payments"><PaymentsSettingsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/expenses" element={<AdminRoute><ModuleGuard settingsKey="expenseTracking"><ExpenseTrackingPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/automations" element={<AdminRoute><ModuleGuard settingsKey="automations"><AutomationsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/work" element={<AdminRoute><ModuleGuard settingsKey="workSettings"><WorkSettingsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/schedule-settings" element={<AdminRoute><ModuleGuard settingsKey="scheduleSettings"><ScheduleSettingsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/routes" element={<AdminRoute><ModuleGuard settingsKey="routeOptimization"><RouteOptimizationPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/job-forms" element={<AdminRoute><ModuleGuard settingsKey="jobForms"><JobFormsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/client-hub" element={<AdminRoute><ModuleGuard settingsKey="clientHub"><ClientHubPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/messaging" element={<AdminRoute><ModuleGuard settingsKey="emailsTexts"><EmailsTextsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/requests-config" element={<AdminRoute><ModuleGuard settingsKey="requestsBookings"><RequestsBookingsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/portal" element={<AdminRoute><ModuleGuard settingsKey="portalSettings"><PortalSettingsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/settings/announcements" element={<AdminRoute><ModuleGuard settingsKey="systemAnnouncements"><SystemAnnouncementsPage /></ModuleGuard></AdminRoute>} />
+
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
