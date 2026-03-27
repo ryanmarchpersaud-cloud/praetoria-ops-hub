@@ -81,6 +81,18 @@ export default function FinanceReports() {
     { name: '90+ Days', value: billAging['90plus'] },
   ];
 
+  // Payments summary
+  const paymentData = useMemo(() => {
+    const map: Record<string, { in: number; out: number }> = {};
+    (payments ?? []).forEach((p: any) => {
+      const key = p.payment_method || 'Unknown';
+      if (!map[key]) map[key] = { in: 0, out: 0 };
+      if (p.payment_type === 'invoice_payment') map[key].in += Number(p.amount || 0);
+      else map[key].out += Number(p.amount || 0);
+    });
+    return Object.entries(map).map(([name, v]) => ({ name, cashIn: v.in, cashOut: v.out }));
+  }, [payments]);
+
   const exportCurrentTab = () => {
     let csv = '';
     if (tab === 'category') {
@@ -91,6 +103,8 @@ export default function FinanceReports() {
       csv = ['Period,Amount', ...agingData.map(r => `${r.name},${r.value}`)].join('\n');
     } else if (tab === 'bill-aging') {
       csv = ['Period,Amount', ...billAgingData.map(r => `${r.name},${r.value}`)].join('\n');
+    } else if (tab === 'payments') {
+      csv = ['Method,Cash In,Cash Out', ...paymentData.map(r => `${r.name},${r.cashIn},${r.cashOut}`)].join('\n');
     } else {
       csv = `Revenue,${stats?.totalRevenue}\nExpenses,${stats?.totalExpenses}\nNet,${stats?.grossMargin}`;
     }
