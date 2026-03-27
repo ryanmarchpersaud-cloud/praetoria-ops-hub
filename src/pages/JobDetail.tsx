@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
@@ -16,8 +17,9 @@ import { Link } from 'react-router-dom';
 import { JOB_STATUSES, JOB_PRIORITIES, SERVICE_CATEGORIES } from '@/lib/constants';
 import { RecurringPlanCard } from '@/components/RecurringPlanCard';
 import { format, parseISO, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
 
 export default function JobDetail() {
   const { id } = useParams();
