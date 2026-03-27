@@ -30,6 +30,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey }[]
   { title: 'Employees', url: '/employees', icon: HardHat },
   { title: 'Subcontractors', url: '/subcontractors', icon: Users },
   { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages' },
+  { title: 'Finance', url: '/finance', icon: Wallet },
 ];
 
 const systemItems = [
