@@ -244,19 +244,78 @@ export default function FinanceBills() {
         </CardContent>
       </Card>
 
-      {/* Partial Payment Dialog */}
+      {/* Record Payment Dialog */}
       <Dialog open={!!showPayment} onOpenChange={(o) => { if (!o) setShowPayment(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Record Payment</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Bill: <span className="font-medium text-foreground">{showPayment?.bill_number}</span></p>
             <p className="text-sm text-muted-foreground">Balance Due: <span className="font-medium text-foreground">{fmt(Number(showPayment?.balance_due || 0))}</span></p>
-            <div><Label>Payment Amount</Label><Input type="number" step="0.01" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Payment Date</Label><Input type="date" value={paymentForm.payment_date || ''} onChange={e => setPaymentForm({ ...paymentForm, payment_date: e.target.value })} /></div>
+              <div><Label>Amount</Label><Input type="number" step="0.01" value={paymentForm.amount || ''} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Payment Method</Label>
+                <Select value={paymentForm.payment_method || '_none'} onValueChange={v => setPaymentForm({ ...paymentForm, payment_method: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {['Cash', 'Cheque', 'E-Transfer', 'Bank Transfer', 'Credit Card', 'Debit'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Account</Label>
+                <Select value={paymentForm.account_id || '_none'} onValueChange={v => setPaymentForm({ ...paymentForm, account_id: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(accounts ?? []).filter((a: any) => a.is_active).map((a: any) => <SelectItem key={a.id} value={a.id}>{a.account_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div><Label>Reference #</Label><Input value={paymentForm.reference_number || ''} onChange={e => setPaymentForm({ ...paymentForm, reference_number: e.target.value })} /></div>
+            <div><Label>Internal Note</Label><Textarea rows={2} value={paymentForm.internal_note || ''} onChange={e => setPaymentForm({ ...paymentForm, internal_note: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPayment(null)}>Cancel</Button>
-            <Button onClick={handlePartialPayment}>Apply Payment</Button>
+            <Button onClick={handleRecordPayment} disabled={recordPayment.isPending}>Apply Payment</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment History Dialog */}
+      <Dialog open={!!showHistory} onOpenChange={(o) => { if (!o) setShowHistory(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Payment History — {showHistory?.bill_number}</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            {(historyPayments ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No payments recorded</p>
+            ) : (
+              <Table>
+                <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Method</TableHead><TableHead>Ref</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {(historyPayments ?? []).map((p: any) => (
+                    <TableRow key={p.id} className={p.is_reversed ? 'opacity-50 line-through' : ''}>
+                      <TableCell className="text-sm">{p.payment_date ? format(new Date(p.payment_date), 'MMM d, yyyy') : '—'}</TableCell>
+                      <TableCell className="text-sm">{p.payment_method || '—'}</TableCell>
+                      <TableCell className="text-sm font-mono">{p.reference_number || '—'}</TableCell>
+                      <TableCell className="text-right font-semibold">{fmt(Number(p.amount))}</TableCell>
+                      <TableCell>
+                        {p.is_reversed ? <Badge variant="destructive">Reversed</Badge> :
+                         p.reconciled ? <Badge className="bg-accent/10 text-accent">Reconciled</Badge> :
+                         <Badge variant="outline">Active</Badge>}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setShowHistory(null)}>Close</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
