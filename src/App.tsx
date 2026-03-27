@@ -261,75 +261,50 @@ function AppRoutes() {
       <Route path="/access-denied" element={<AccessDenied />} />
 
       {/* Admin-only routes */}
-      <Route path="/" element={<AdminRoute><Dashboard /></AdminRoute>} />
-      <Route path="/leads" element={<AdminRoute><Leads /></AdminRoute>} />
-      <Route path="/leads/:id" element={<AdminRoute><LeadDetail /></AdminRoute>} />
-      <Route path="/quotes" element={<AdminRoute><Quotes /></AdminRoute>} />
-      <Route path="/quotes/:id" element={<AdminRoute><QuoteDetail /></AdminRoute>} />
-      <Route path="/quotes/:id/print" element={<AdminRoute><QuotePrint /></AdminRoute>} />
-      <Route path="/customers" element={<AdminRoute><Customers /></AdminRoute>} />
-      <Route path="/customers/:id" element={<AdminRoute><CustomerDetail /></AdminRoute>} />
-      <Route path="/properties" element={<AdminRoute><Properties /></AdminRoute>} />
-      <Route path="/properties/:id" element={<AdminRoute><PropertyDetail /></AdminRoute>} />
-      <Route path="/jobs" element={<AdminRoute><Jobs /></AdminRoute>} />
-      <Route path="/jobs/new" element={<AdminRoute><JobNew /></AdminRoute>} />
-      <Route path="/jobs/:id" element={<AdminRoute><JobDetail /></AdminRoute>} />
-      <Route path="/visits" element={<AdminRoute><Visits /></AdminRoute>} />
-      <Route path="/visits/:id" element={<AdminRoute><VisitDetail /></AdminRoute>} />
-      <Route path="/invoices" element={<AdminRoute><Invoices /></AdminRoute>} />
-      <Route path="/invoices/new" element={<AdminRoute><InvoiceNew /></AdminRoute>} />
-      <Route path="/invoices/:id/print" element={<AdminRoute><InvoicePrint /></AdminRoute>} />
-      <Route path="/invoices/:id" element={<AdminRoute><InvoiceDetail /></AdminRoute>} />
-      <Route path="/schedule" element={<AdminRoute><Schedule /></AdminRoute>} />
-      <Route path="/schedule/new-visits" element={<AdminRoute><Suspense fallback={<RouteLoading />}><ScheduleNewVisits /></Suspense></AdminRoute>} />
-      <Route path="/activity" element={<AdminRoute><ActivityPage /></AdminRoute>} />
-      <Route path="/requests" element={<AdminRoute><Requests /></AdminRoute>} />
-      <Route path="/requests/:id" element={<AdminRoute><RequestDetail /></AdminRoute>} />
-      <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
-      <Route path="/employees/:id" element={<AdminRoute><EmployeeDetail /></AdminRoute>} />
-      <Route path="/subcontractors" element={<AdminRoute><Subcontractors /></AdminRoute>} />
-      <Route path="/subcontractors/:id" element={<AdminRoute><SubcontractorDetail /></AdminRoute>} />
-      <Route path="/incidents" element={<AdminRoute><AdminIncidentsPage /></AdminRoute>} />
-      <Route path="/incidents/:id" element={<AdminRoute><AdminIncidentDetailPage /></AdminRoute>} />
-      <Route path="/messaging" element={<AdminRoute><MessagingPage /></AdminRoute>} />
+      {/* Dashboard — any admin-portal user */}
+      <Route path="/" element={<AdminRoute><ModuleGuard module="dashboard"><Dashboard /></ModuleGuard></AdminRoute>} />
 
-      {/* Finance Hub routes */}
-      <Route path="/finance" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceDashboard /></Suspense></AdminRoute>} />
-      <Route path="/finance/expenses" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceExpenses /></Suspense></AdminRoute>} />
-      <Route path="/finance/receipts" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReceipts /></Suspense></AdminRoute>} />
-      <Route path="/finance/bills" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceBills /></Suspense></AdminRoute>} />
-      <Route path="/finance/vendors" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceVendors /></Suspense></AdminRoute>} />
-      <Route path="/finance/job-costing" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceJobCosting /></Suspense></AdminRoute>} />
-      <Route path="/finance/reports" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReports /></Suspense></AdminRoute>} />
-      <Route path="/finance/accounts" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceAccounts /></Suspense></AdminRoute>} />
-      <Route path="/finance/reconciliation" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReconciliation /></Suspense></AdminRoute>} />
-      <Route path="/finance/payroll" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinancePayroll /></Suspense></AdminRoute>} />
-      <Route path="/finance/subcontractor-payouts" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceSubcontractorPayouts /></Suspense></AdminRoute>} />
-      <Route path="/finance/remittances" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceRemittances /></Suspense></AdminRoute>} />
-      <Route path="/finance/tax-slips" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceTaxSlips /></Suspense></AdminRoute>} />
-      <Route path="/finance/invoices" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceInvoices /></Suspense></AdminRoute>} />
-      <Route path="/finance/accounts-receivable" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceAR /></Suspense></AdminRoute>} />
-      <Route path="/finance/statements" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceStatements /></Suspense></AdminRoute>} />
-      <Route path="/settings" element={<AdminRoute><CompanySettingsPage /></AdminRoute>} />
-      <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
-      <Route path="/settings/products" element={<AdminRoute><ProductsServicesPage /></AdminRoute>} />
-      <Route path="/settings/team" element={<AdminRoute><ManageTeamPage /></AdminRoute>} />
-      <Route path="/settings/roles" element={<AdminRoute><RolesPermissionsPage /></AdminRoute>} />
-      <Route path="/settings/audit-log" element={<AdminRoute><AuditLogPage /></AdminRoute>} />
-      <Route path="/settings/connected-apps" element={<AdminRoute><ConnectedAppsPage /></AdminRoute>} />
-      <Route path="/settings/usage" element={<AdminRoute><SeatUsagePage /></AdminRoute>} />
-      <Route path="/settings/payments" element={<AdminRoute><PaymentsSettingsPage /></AdminRoute>} />
-      <Route path="/settings/expenses" element={<AdminRoute><ExpenseTrackingPage /></AdminRoute>} />
-      <Route path="/settings/automations" element={<AdminRoute><AutomationsPage /></AdminRoute>} />
-      <Route path="/settings/work" element={<AdminRoute><WorkSettingsPage /></AdminRoute>} />
-      <Route path="/settings/schedule-settings" element={<AdminRoute><ScheduleSettingsPage /></AdminRoute>} />
-      <Route path="/settings/routes" element={<AdminRoute><RouteOptimizationPage /></AdminRoute>} />
-      <Route path="/settings/job-forms" element={<AdminRoute><JobFormsPage /></AdminRoute>} />
-      <Route path="/settings/client-hub" element={<AdminRoute><ClientHubPage /></AdminRoute>} />
-      <Route path="/settings/messaging" element={<AdminRoute><EmailsTextsPage /></AdminRoute>} />
-      <Route path="/settings/requests-config" element={<AdminRoute><RequestsBookingsPage /></AdminRoute>} />
-      <Route path="/settings/portal" element={<AdminRoute><PortalSettingsPage /></AdminRoute>} />
-      <Route path="/settings/announcements" element={<AdminRoute><SystemAnnouncementsPage /></AdminRoute>} />
+      {/* Operations module — ops_manager, owner */}
+      <Route path="/leads" element={<AdminRoute><ModuleGuard module="ops"><Leads /></ModuleGuard></AdminRoute>} />
+      <Route path="/leads/:id" element={<AdminRoute><ModuleGuard module="ops"><LeadDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/quotes" element={<AdminRoute><ModuleGuard module="ops"><Quotes /></ModuleGuard></AdminRoute>} />
+      <Route path="/quotes/:id" element={<AdminRoute><ModuleGuard module="ops"><QuoteDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/quotes/:id/print" element={<AdminRoute><ModuleGuard module="ops"><QuotePrint /></ModuleGuard></AdminRoute>} />
+      <Route path="/customers" element={<AdminRoute><ModuleGuard module="ops"><Customers /></ModuleGuard></AdminRoute>} />
+      <Route path="/customers/:id" element={<AdminRoute><ModuleGuard module="ops"><CustomerDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/properties" element={<AdminRoute><ModuleGuard module="ops"><Properties /></ModuleGuard></AdminRoute>} />
+      <Route path="/properties/:id" element={<AdminRoute><ModuleGuard module="ops"><PropertyDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/jobs" element={<AdminRoute><ModuleGuard module="ops"><Jobs /></ModuleGuard></AdminRoute>} />
+      <Route path="/jobs/new" element={<AdminRoute><ModuleGuard module="ops"><JobNew /></ModuleGuard></AdminRoute>} />
+      <Route path="/jobs/:id" element={<AdminRoute><ModuleGuard module="ops"><JobDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/visits" element={<AdminRoute><ModuleGuard module="ops"><Visits /></ModuleGuard></AdminRoute>} />
+      <Route path="/visits/:id" element={<AdminRoute><ModuleGuard module="ops"><VisitDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/schedule" element={<AdminRoute><ModuleGuard module="ops"><Schedule /></ModuleGuard></AdminRoute>} />
+      <Route path="/schedule/new-visits" element={<AdminRoute><ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><ScheduleNewVisits /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/requests" element={<AdminRoute><ModuleGuard module="ops"><Requests /></ModuleGuard></AdminRoute>} />
+      <Route path="/requests/:id" element={<AdminRoute><ModuleGuard module="ops"><RequestDetail /></ModuleGuard></AdminRoute>} />
+
+      {/* Invoices — ops OR finance */}
+      <Route path="/invoices" element={<AdminRoute><ModuleGuard module="finance"><Invoices /></ModuleGuard></AdminRoute>} />
+      <Route path="/invoices/new" element={<AdminRoute><ModuleGuard module="financeFull"><InvoiceNew /></ModuleGuard></AdminRoute>} />
+      <Route path="/invoices/:id/print" element={<AdminRoute><ModuleGuard module="finance"><InvoicePrint /></ModuleGuard></AdminRoute>} />
+      <Route path="/invoices/:id" element={<AdminRoute><ModuleGuard module="finance"><InvoiceDetail /></ModuleGuard></AdminRoute>} />
+
+      {/* Activity — owner/admin only */}
+      <Route path="/activity" element={<AdminRoute><ModuleGuard module="ownerOnly"><ActivityPage /></ModuleGuard></AdminRoute>} />
+
+      {/* HR / People module */}
+      <Route path="/employees" element={<AdminRoute><ModuleGuard module="hr"><Employees /></ModuleGuard></AdminRoute>} />
+      <Route path="/employees/:id" element={<AdminRoute><ModuleGuard module="hr"><EmployeeDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/subcontractors" element={<AdminRoute><ModuleGuard module="ops"><Subcontractors /></ModuleGuard></AdminRoute>} />
+      <Route path="/subcontractors/:id" element={<AdminRoute><ModuleGuard module="ops"><SubcontractorDetail /></ModuleGuard></AdminRoute>} />
+
+      {/* Incidents — ops access */}
+      <Route path="/incidents" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/incidents/:id" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentDetailPage /></ModuleGuard></AdminRoute>} />
+
+      {/* Messaging */}
+      <Route path="/messaging" element={<AdminRoute><ModuleGuard module="messaging"><MessagingPage /></ModuleGuard></AdminRoute>} />
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
