@@ -75,7 +75,7 @@ export default function InvoiceDetail() {
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
       <div className="flex items-center gap-2">
-        <Link to="/invoices" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link to="/finance/invoices" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl md:text-2xl font-bold">{invoice.invoice_number}</h1>
