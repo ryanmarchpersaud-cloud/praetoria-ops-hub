@@ -20,7 +20,7 @@ import { useModuleAccess, useSettingsAccess } from '@/hooks/useModuleAccess';
 type ModuleType =
   | 'finance' | 'financeFull'
   | 'hr' | 'hrFull'
-  | 'ops'
+  | 'ops' | 'opsOrFinance'
   | 'ownerOnly'
   | 'messaging'
   | 'dashboard';
