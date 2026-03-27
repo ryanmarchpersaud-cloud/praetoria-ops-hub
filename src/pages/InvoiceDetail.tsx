@@ -102,10 +102,10 @@ export default function InvoiceDetail() {
     setPaymentAmount('');
   };
 
-  const canSend = ['Draft'].includes(invoice.status);
-  const canResend = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status);
-  const canRecordPayment = ['Sent', 'Viewed', 'Overdue', 'Partially Paid'].includes(invoice.status);
-  const canVoid = !['Voided', 'Paid'].includes(invoice.status);
+  const canSend = ['Draft'].includes(invoice.status) && canManageInvoices;
+  const canResend = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canManageInvoices;
+  const canRecordPayment = ['Sent', 'Viewed', 'Overdue', 'Partially Paid'].includes(invoice.status) && canRecordPayments;
+  const canVoid = !['Voided', 'Paid'].includes(invoice.status) && canVoidInvoices;
   const billingMode = (invoice as any).billing_mode;
 
   return (
