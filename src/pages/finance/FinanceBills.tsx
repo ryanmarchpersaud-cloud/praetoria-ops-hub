@@ -95,19 +95,21 @@ export default function FinanceBills() {
     }, { onSuccess: () => { setShowCreate(false); setForm({}); } });
   };
 
-  const handlePartialPayment = () => {
+  const handleRecordPayment = () => {
     if (!showPayment) return;
-    const payment = Number(paymentAmount || 0);
+    const payment = Number(paymentForm.amount || 0);
     if (payment <= 0) { toast.error('Enter a valid amount'); return; }
-    const newPaid = Number(showPayment.amount_paid || 0) + payment;
-    const newBalance = Number(showPayment.total || 0) - newPaid;
-    const newStatus = newBalance <= 0 ? 'paid' : 'partial';
-    updateBill.mutate({
-      id: showPayment.id,
-      amount_paid: Math.min(newPaid, Number(showPayment.total)),
-      balance_due: Math.max(newBalance, 0),
-      status: newStatus,
-    }, { onSuccess: () => { setShowPayment(null); setPaymentAmount(''); } });
+    if (payment > Number(showPayment.balance_due)) { toast.error('Payment exceeds balance due'); return; }
+    recordPayment.mutate({
+      payment_type: 'bill_payment',
+      payment_date: paymentForm.payment_date || new Date().toISOString().split('T')[0],
+      amount: payment,
+      payment_method: paymentForm.payment_method || null,
+      account_id: paymentForm.account_id || null,
+      reference_number: paymentForm.reference_number || null,
+      internal_note: paymentForm.internal_note || null,
+      bill_id: showPayment.id,
+    }, { onSuccess: () => { setShowPayment(null); setPaymentForm({}); } });
   };
 
   const exportCSV = () => {
