@@ -561,19 +561,34 @@ export default function QuoteDetail() {
             </Card>
           )}
 
-          {/* Cross-links: Source Request & Created Job */}
-          {((quote as any).request_id) && (
-            <Card className="hidden lg:block">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Source</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <Link to={`/requests/${(quote as any).request_id}`} className="text-primary text-xs hover:underline">
-                  View Original Request →
+          {/* Cross-links: Source Request, Created Job, Invoices */}
+          <Card className="hidden lg:block">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <LinkIcon className="h-3.5 w-3.5" /> Linked Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-2">
+              {(quote as any).request_id && (
+                <Link to={`/requests/${(quote as any).request_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <FileText className="h-3 w-3" /> Original Request →
                 </Link>
-              </CardContent>
-            </Card>
-          )}
+              )}
+              {linkedJob && (
+                <Link to={`/jobs/${linkedJob.id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <Briefcase className="h-3 w-3" /> {linkedJob.job_number} — {linkedJob.job_title} →
+                </Link>
+              )}
+              {linkedInvoices.map((inv: any) => (
+                <Link key={inv.id} to={`/invoices/${inv.id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <Receipt className="h-3 w-3" /> {inv.invoice_number} ({inv.status}) →
+                </Link>
+              ))}
+              {!(quote as any).request_id && !linkedJob && linkedInvoices.length === 0 && (
+                <p className="text-xs text-muted-foreground">No linked records yet</p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Email Quote Panel */}
           <QuoteEmailPreview
@@ -601,6 +616,27 @@ export default function QuoteDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Conversion Wizard */}
+      <ConvertQuoteToJobDialog
+        open={convertOpen}
+        onOpenChange={setConvertOpen}
+        quote={quote}
+        lead={lead}
+        lineItems={lineItems}
+      />
+
+      {/* Invoice from Quote */}
+      <CreateInvoiceFromWorkDialog
+        open={invoiceOpen}
+        onOpenChange={setInvoiceOpen}
+        sourceType="quote"
+        sourceRecord={quote}
+        lineItems={lineItems}
+        customerId={lead?.customer_id || ''}
+        quoteId={id}
+        requestId={(quote as any).request_id}
+      />
     </div>
   );
 }
