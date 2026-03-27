@@ -53,6 +53,10 @@ export default function FinanceBills() {
   const { data: properties } = usePropertiesForLinking();
   const createBill = useCreateFinanceBill();
   const updateBill = useUpdateFinanceBill();
+  const { data: accounts } = useFinanceAccounts();
+  const recordPayment = useRecordPayment();
+  const reversePayment = useReversePayment();
+  const { data: historyPayments } = useFinancePayments(showHistory ? { billId: showHistory.id } : undefined);
 
   const filtered = (bills ?? []).filter((b: any) => {
     if (!search) return true;
