@@ -285,10 +285,10 @@ function AppRoutes() {
       <Route path="/requests/:id" element={<AdminRoute><ModuleGuard module="ops"><RequestDetail /></ModuleGuard></AdminRoute>} />
 
       {/* Invoices — ops OR finance */}
-      <Route path="/invoices" element={<AdminRoute><ModuleGuard module="finance"><Invoices /></ModuleGuard></AdminRoute>} />
-      <Route path="/invoices/new" element={<AdminRoute><ModuleGuard module="financeFull"><InvoiceNew /></ModuleGuard></AdminRoute>} />
-      <Route path="/invoices/:id/print" element={<AdminRoute><ModuleGuard module="finance"><InvoicePrint /></ModuleGuard></AdminRoute>} />
-      <Route path="/invoices/:id" element={<AdminRoute><ModuleGuard module="finance"><InvoiceDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/invoices" element={<AdminRoute><ModuleGuard module="opsOrFinance"><Invoices /></ModuleGuard></AdminRoute>} />
+      <Route path="/invoices/new" element={<AdminRoute><ModuleGuard module="opsOrFinance"><InvoiceNew /></ModuleGuard></AdminRoute>} />
+      <Route path="/invoices/:id/print" element={<AdminRoute><ModuleGuard module="opsOrFinance"><InvoicePrint /></ModuleGuard></AdminRoute>} />
+      <Route path="/invoices/:id" element={<AdminRoute><ModuleGuard module="opsOrFinance"><InvoiceDetail /></ModuleGuard></AdminRoute>} />
 
       {/* Activity — owner/admin only */}
       <Route path="/activity" element={<AdminRoute><ModuleGuard module="ownerOnly"><ActivityPage /></ModuleGuard></AdminRoute>} />
