@@ -5784,7 +5784,25 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
+      is_ops_staff: { Args: { _user_id: string }; Returns: boolean }
       is_staff_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_sub_assigned_to_job: {
+        Args: { _job_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_sub_assigned_to_visit: {
+        Args: { _user_id: string; _visit_id: string }
+        Returns: boolean
+      }
+      is_worker_assigned_to_job: {
+        Args: { _job_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_worker_assigned_to_visit: {
+        Args: { _user_id: string; _visit_id: string }
+        Returns: boolean
+      }
+      is_worker_role: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role:
