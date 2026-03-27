@@ -1140,6 +1140,509 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_bill_attachments: {
+        Row: {
+          bill_id: string
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          bill_id: string
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          bill_id?: string
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_bill_attachments_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "finance_bills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_bills: {
+        Row: {
+          amount_paid: number
+          attachment_count: number | null
+          balance_due: number
+          bill_date: string
+          bill_number: string | null
+          created_at: string
+          created_by: string | null
+          due_date: string
+          id: string
+          internal_notes: string | null
+          linked_customer_id: string | null
+          linked_job_id: string | null
+          linked_property_id: string | null
+          memo: string | null
+          status: string
+          subtotal: number
+          tax: number
+          total: number
+          updated_at: string
+          vendor_id: string | null
+        }
+        Insert: {
+          amount_paid?: number
+          attachment_count?: number | null
+          balance_due?: number
+          bill_date?: string
+          bill_number?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          id?: string
+          internal_notes?: string | null
+          linked_customer_id?: string | null
+          linked_job_id?: string | null
+          linked_property_id?: string | null
+          memo?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          total?: number
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          attachment_count?: number | null
+          balance_due?: number
+          bill_date?: string
+          bill_number?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          id?: string
+          internal_notes?: string | null
+          linked_customer_id?: string | null
+          linked_job_id?: string | null
+          linked_property_id?: string | null
+          memo?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number
+          total?: number
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_bills_linked_customer_id_fkey"
+            columns: ["linked_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_bills_linked_job_id_fkey"
+            columns: ["linked_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_bills_linked_property_id_fkey"
+            columns: ["linked_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_bills_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "finance_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_categories: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          parent_category: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          parent_category?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          parent_category?: string | null
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      finance_expenses: {
+        Row: {
+          amount_subtotal: number
+          amount_tax: number
+          amount_total: number
+          approved_by: string | null
+          category: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          entered_by: string | null
+          expense_date: string
+          expense_number: string | null
+          id: string
+          linked_customer_id: string | null
+          linked_invoice_id: string | null
+          linked_job_id: string | null
+          linked_property_id: string | null
+          linked_subcontractor_user_id: string | null
+          linked_vehicle_id: string | null
+          linked_visit_id: string | null
+          linked_worker_user_id: string | null
+          notes_external: string | null
+          notes_internal: string | null
+          payment_method: string | null
+          receipt_count: number | null
+          service_category: string | null
+          status: string
+          subcategory: string | null
+          updated_at: string
+          vendor_id: string | null
+        }
+        Insert: {
+          amount_subtotal?: number
+          amount_tax?: number
+          amount_total?: number
+          approved_by?: string | null
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          entered_by?: string | null
+          expense_date?: string
+          expense_number?: string | null
+          id?: string
+          linked_customer_id?: string | null
+          linked_invoice_id?: string | null
+          linked_job_id?: string | null
+          linked_property_id?: string | null
+          linked_subcontractor_user_id?: string | null
+          linked_vehicle_id?: string | null
+          linked_visit_id?: string | null
+          linked_worker_user_id?: string | null
+          notes_external?: string | null
+          notes_internal?: string | null
+          payment_method?: string | null
+          receipt_count?: number | null
+          service_category?: string | null
+          status?: string
+          subcategory?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Update: {
+          amount_subtotal?: number
+          amount_tax?: number
+          amount_total?: number
+          approved_by?: string | null
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          entered_by?: string | null
+          expense_date?: string
+          expense_number?: string | null
+          id?: string
+          linked_customer_id?: string | null
+          linked_invoice_id?: string | null
+          linked_job_id?: string | null
+          linked_property_id?: string | null
+          linked_subcontractor_user_id?: string | null
+          linked_vehicle_id?: string | null
+          linked_visit_id?: string | null
+          linked_worker_user_id?: string | null
+          notes_external?: string | null
+          notes_internal?: string | null
+          payment_method?: string | null
+          receipt_count?: number | null
+          service_category?: string | null
+          status?: string
+          subcategory?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_expenses_linked_customer_id_fkey"
+            columns: ["linked_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_linked_invoice_id_fkey"
+            columns: ["linked_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_linked_job_id_fkey"
+            columns: ["linked_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_linked_property_id_fkey"
+            columns: ["linked_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_linked_visit_id_fkey"
+            columns: ["linked_visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "finance_vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_job_cost_snapshots: {
+        Row: {
+          cost_total: number | null
+          created_at: string
+          customer_id: string | null
+          equipment_total: number | null
+          fuel_total: number | null
+          gross_margin: number | null
+          gross_margin_percent: number | null
+          id: string
+          job_id: string
+          labor_total: number | null
+          materials_total: number | null
+          other_total: number | null
+          property_id: string | null
+          revenue_total: number | null
+          service_category: string | null
+          snapshot_date: string
+          subcontractor_total: number | null
+        }
+        Insert: {
+          cost_total?: number | null
+          created_at?: string
+          customer_id?: string | null
+          equipment_total?: number | null
+          fuel_total?: number | null
+          gross_margin?: number | null
+          gross_margin_percent?: number | null
+          id?: string
+          job_id: string
+          labor_total?: number | null
+          materials_total?: number | null
+          other_total?: number | null
+          property_id?: string | null
+          revenue_total?: number | null
+          service_category?: string | null
+          snapshot_date?: string
+          subcontractor_total?: number | null
+        }
+        Update: {
+          cost_total?: number | null
+          created_at?: string
+          customer_id?: string | null
+          equipment_total?: number | null
+          fuel_total?: number | null
+          gross_margin?: number | null
+          gross_margin_percent?: number | null
+          id?: string
+          job_id?: string
+          labor_total?: number | null
+          materials_total?: number | null
+          other_total?: number | null
+          property_id?: string | null
+          revenue_total?: number | null
+          service_category?: string | null
+          snapshot_date?: string
+          subcontractor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_job_cost_snapshots_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_job_cost_snapshots_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_job_cost_snapshots_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_receipts: {
+        Row: {
+          expense_id: string | null
+          file_name: string
+          file_type: string | null
+          file_url: string
+          id: string
+          notes: string | null
+          receipt_date: string | null
+          review_status: string
+          tax_raw: number | null
+          total_raw: number | null
+          uploaded_at: string
+          uploaded_by: string | null
+          vendor_name_raw: string | null
+        }
+        Insert: {
+          expense_id?: string | null
+          file_name: string
+          file_type?: string | null
+          file_url: string
+          id?: string
+          notes?: string | null
+          receipt_date?: string | null
+          review_status?: string
+          tax_raw?: number | null
+          total_raw?: number | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+          vendor_name_raw?: string | null
+        }
+        Update: {
+          expense_id?: string | null
+          file_name?: string
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          notes?: string | null
+          receipt_date?: string | null
+          review_status?: string
+          tax_raw?: number | null
+          total_raw?: number | null
+          uploaded_at?: string
+          uploaded_by?: string | null
+          vendor_name_raw?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_receipts_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "finance_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_vendors: {
+        Row: {
+          address_line_1: string | null
+          city: string | null
+          contact_name: string | null
+          country: string | null
+          created_at: string
+          default_expense_category: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          payment_terms: string | null
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          tax_number: string | null
+          updated_at: string
+          vendor_name: string
+          website: string | null
+        }
+        Insert: {
+          address_line_1?: string | null
+          city?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          default_expense_category?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          tax_number?: string | null
+          updated_at?: string
+          vendor_name: string
+          website?: string | null
+        }
+        Update: {
+          address_line_1?: string | null
+          city?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          default_expense_category?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          tax_number?: string | null
+          updated_at?: string
+          vendor_name?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       form_template_fields: {
         Row: {
           created_at: string

@@ -133,6 +133,15 @@ import MessagingPage from "./pages/MessagingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 import SystemAnnouncementsPage from "./pages/SystemAnnouncementsPage";
 
+// Finance pages
+const FinanceDashboard = lazy(() => import("./pages/finance/FinanceDashboard"));
+const FinanceExpenses = lazy(() => import("./pages/finance/FinanceExpenses"));
+const FinanceReceipts = lazy(() => import("./pages/finance/FinanceReceipts"));
+const FinanceBills = lazy(() => import("./pages/finance/FinanceBills"));
+const FinanceVendors = lazy(() => import("./pages/finance/FinanceVendors"));
+const FinanceJobCosting = lazy(() => import("./pages/finance/FinanceJobCosting"));
+const FinanceReports = lazy(() => import("./pages/finance/FinanceReports"));
+
 import WorkSettingsPage from "./pages/WorkSettingsPage";
 import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
 import RouteOptimizationPage from "./pages/RouteOptimizationPage";
@@ -274,6 +283,14 @@ function AppRoutes() {
       <Route path="/incidents/:id" element={<AdminRoute><AdminIncidentDetailPage /></AdminRoute>} />
       <Route path="/messaging" element={<AdminRoute><MessagingPage /></AdminRoute>} />
 
+      {/* Finance Hub routes */}
+      <Route path="/finance" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceDashboard /></Suspense></AdminRoute>} />
+      <Route path="/finance/expenses" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceExpenses /></Suspense></AdminRoute>} />
+      <Route path="/finance/receipts" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReceipts /></Suspense></AdminRoute>} />
+      <Route path="/finance/bills" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceBills /></Suspense></AdminRoute>} />
+      <Route path="/finance/vendors" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceVendors /></Suspense></AdminRoute>} />
+      <Route path="/finance/job-costing" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceJobCosting /></Suspense></AdminRoute>} />
+      <Route path="/finance/reports" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReports /></Suspense></AdminRoute>} />
       <Route path="/settings" element={<AdminRoute><CompanySettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
       <Route path="/settings/products" element={<AdminRoute><ProductsServicesPage /></AdminRoute>} />

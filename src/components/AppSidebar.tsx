@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
-  MessageSquarePlus, Eye, HardHat, MessageSquare,
+  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet,
 } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
@@ -30,6 +30,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey }[]
   { title: 'Employees', url: '/employees', icon: HardHat },
   { title: 'Subcontractors', url: '/subcontractors', icon: Users },
   { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages' },
+  { title: 'Finance', url: '/finance', icon: Wallet },
 ];
 
 const systemItems = [
