@@ -1,14 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Receipt, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Receipt, Loader2, AlertTriangle, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -29,11 +28,12 @@ interface Props {
   visitId?: string | null;
   quoteId?: string | null;
   requestId?: string | null;
+  billingMode?: string | null;
 }
 
 export function CreateInvoiceFromWorkDialog({
   open, onOpenChange, sourceType, sourceRecord, lineItems = [],
-  customerId, propertyId, jobId, visitId, quoteId, requestId,
+  customerId, propertyId, jobId, visitId, quoteId, requestId, billingMode,
 }: Props) {
   const { toast } = useToast();
   const nav = useNavigate();
@@ -51,6 +51,18 @@ export function CreateInvoiceFromWorkDialog({
   const [duplicate, setDuplicate] = useState<any>(null);
   const [checkingDupe, setCheckingDupe] = useState(false);
 
+  // Billing mode validation
+  const effectiveBillingMode = billingMode || (sourceType === 'quote' ? 'quoted_fixed' : sourceType === 'visit' ? 'per_visit' : 'manual');
+  const billingModeBlocked = (() => {
+    if (effectiveBillingMode === 'quoted_fixed' && sourceType === 'visit') {
+      return 'This job uses quoted fixed-price billing. Create the invoice from the job or quote instead, not individual visits.';
+    }
+    if (effectiveBillingMode === 'per_visit' && sourceType === 'job') {
+      return 'This job uses per-visit billing. Create invoices from individual completed visits instead.';
+    }
+    return null;
+  })();
+
   // Check for duplicates
   useEffect(() => {
     if (!open) return;
@@ -63,7 +75,6 @@ export function CreateInvoiceFromWorkDialog({
       if (visitId) query = query.eq('visit_id', visitId as any);
       if (quoteId) query = query.eq('quote_id', quoteId as any);
 
-      // Only check if we have at least one link
       if (!jobId && !visitId && !quoteId) {
         setCheckingDupe(false);
         return;
@@ -106,7 +117,7 @@ export function CreateInvoiceFromWorkDialog({
         status: 'Draft' as any,
         customer_memo: customerMemo || null,
         internal_notes: internalNotes || null,
-        billing_mode: sourceType === 'quote' ? 'quoted_fixed' : sourceType === 'visit' ? 'per_visit' : 'manual',
+        billing_mode: effectiveBillingMode,
       } as any).select().single();
       if (error) throw error;
 
@@ -134,6 +145,7 @@ export function CreateInvoiceFromWorkDialog({
       qc.invalidateQueries({ queryKey: ['invoices'] });
       qc.invalidateQueries({ queryKey: ['jobs'] });
       qc.invalidateQueries({ queryKey: ['visits'] });
+      qc.invalidateQueries({ queryKey: ['dashboard_invoices'] });
 
       toast({ title: 'Draft invoice created', description: invoice.invoice_number });
       onOpenChange(false);
@@ -162,6 +174,13 @@ export function CreateInvoiceFromWorkDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {billingModeBlocked && (
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-xs">{billingModeBlocked}</AlertDescription>
+          </Alert>
+        )}
+
         {duplicate && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -177,6 +196,10 @@ export function CreateInvoiceFromWorkDialog({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Source</span>
               <Badge variant="outline">{sourceType === 'quote' ? sourceRecord?.quote_number : sourceType === 'job' ? sourceRecord?.job_number : sourceRecord?.visit_number}</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Billing Mode</span>
+              <Badge variant="secondary" className="text-[10px]">{effectiveBillingMode}</Badge>
             </div>
             {lineItems.length > 0 && (
               <>
@@ -202,7 +225,7 @@ export function CreateInvoiceFromWorkDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={saving || checkingDupe} className="gap-1.5">
+          <Button onClick={handleCreate} disabled={saving || checkingDupe || !!billingModeBlocked} className="gap-1.5">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
             Create Draft Invoice
           </Button>
