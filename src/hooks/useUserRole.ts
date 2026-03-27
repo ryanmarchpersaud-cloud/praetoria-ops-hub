@@ -2,9 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
-export type AppRole = 'admin' | 'manager' | 'dispatcher' | 'supervisor' | 'lead_worker' | 'staff' | 'customer' | 'subcontractor';
+export type AppRole =
+  | 'owner' | 'admin' | 'accountant' | 'hr_admin' | 'ops_manager'
+  | 'manager' | 'dispatcher' | 'supervisor' | 'lead_worker' | 'staff'
+  | 'customer' | 'subcontractor';
 
 export type PermissionKey =
+  // Action-level
   | 'can_create_jobs'
   | 'can_add_line_items'
   | 'can_select_catalog_items'
@@ -17,7 +21,14 @@ export type PermissionKey =
   | 'can_view_audit_log'
   | 'can_manage_equipment'
   | 'can_manage_training'
-  | 'can_approve_certificates';
+  | 'can_approve_certificates'
+  // Module-level
+  | 'finance.view' | 'finance.manage' | 'finance.view_limited'
+  | 'hr.view' | 'hr.manage' | 'hr.view_limited'
+  | 'ops.view' | 'ops.manage'
+  | 'settings.company' | 'settings.finance' | 'settings.operations'
+  | 'settings.integrations' | 'settings.roles' | 'settings.audit'
+  | 'messaging.all' | 'messaging.internal';
 
 export function useUserRole() {
   const { user } = useAuth();

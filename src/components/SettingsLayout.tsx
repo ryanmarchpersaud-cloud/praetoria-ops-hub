@@ -1,61 +1,86 @@
 import { NavLink } from '@/components/NavLink';
+import { useSettingsAccess } from '@/hooks/useModuleAccess';
 import {
   Settings, Webhook, Plug, Users, ShieldCheck, ScrollText, Gauge,
   Building2, Package, CreditCard, Receipt, Zap, Briefcase, CalendarCog,
   MapPinned, ClipboardList, MessageSquare, Mail, BookOpen, Globe, Megaphone,
 } from 'lucide-react';
 
-const settingsNav = [
+type SettingsAccessKey =
+  | 'companySettings' | 'productsServices' | 'payments' | 'expenseTracking' | 'automations'
+  | 'manageTeam' | 'rolesPermissions' | 'workSettings' | 'scheduleSettings' | 'routeOptimization' | 'jobForms'
+  | 'clientHub' | 'emailsTexts' | 'requestsBookings' | 'portalSettings'
+  | 'integrations' | 'connectedApps'
+  | 'systemAnnouncements' | 'auditLog' | 'seatUsage';
+
+interface SettingsItem {
+  title: string;
+  url: string;
+  icon: any;
+  accessKey: SettingsAccessKey;
+}
+
+const settingsNav: { group: string; items: SettingsItem[] }[] = [
   {
     group: 'Business Management',
     items: [
-      { title: 'Company Settings', url: '/settings', icon: Building2 },
-      { title: 'Products & Services', url: '/settings/products', icon: Package },
-      { title: 'Payments', url: '/settings/payments', icon: CreditCard },
-      { title: 'Expense Tracking', url: '/settings/expenses', icon: Receipt },
-      { title: 'Automations', url: '/settings/automations', icon: Zap },
+      { title: 'Company Settings', url: '/settings', icon: Building2, accessKey: 'companySettings' },
+      { title: 'Products & Services', url: '/settings/products', icon: Package, accessKey: 'productsServices' },
+      { title: 'Payments', url: '/settings/payments', icon: CreditCard, accessKey: 'payments' },
+      { title: 'Expense Tracking', url: '/settings/expenses', icon: Receipt, accessKey: 'expenseTracking' },
+      { title: 'Automations', url: '/settings/automations', icon: Zap, accessKey: 'automations' },
     ],
   },
   {
     group: 'Team Organization',
     items: [
-      { title: 'Manage Team', url: '/settings/team', icon: Users },
-      { title: 'Roles & Permissions', url: '/settings/roles', icon: ShieldCheck },
-      { title: 'Work Settings', url: '/settings/work', icon: Briefcase },
-      { title: 'Schedule Settings', url: '/settings/schedule-settings', icon: CalendarCog },
-      { title: 'Route Optimization', url: '/settings/routes', icon: MapPinned },
-      { title: 'Job Forms', url: '/settings/job-forms', icon: ClipboardList },
+      { title: 'Manage Team', url: '/settings/team', icon: Users, accessKey: 'manageTeam' },
+      { title: 'Roles & Permissions', url: '/settings/roles', icon: ShieldCheck, accessKey: 'rolesPermissions' },
+      { title: 'Work Settings', url: '/settings/work', icon: Briefcase, accessKey: 'workSettings' },
+      { title: 'Schedule Settings', url: '/settings/schedule-settings', icon: CalendarCog, accessKey: 'scheduleSettings' },
+      { title: 'Route Optimization', url: '/settings/routes', icon: MapPinned, accessKey: 'routeOptimization' },
+      { title: 'Job Forms', url: '/settings/job-forms', icon: ClipboardList, accessKey: 'jobForms' },
     ],
   },
   {
     group: 'Client Communication',
     items: [
-      { title: 'Client Hub', url: '/settings/client-hub', icon: MessageSquare },
-      { title: 'Emails & Texts', url: '/settings/messaging', icon: Mail },
-      { title: 'Requests & Bookings', url: '/settings/requests-config', icon: BookOpen },
-      { title: 'Portal Settings', url: '/settings/portal', icon: Globe },
+      { title: 'Client Hub', url: '/settings/client-hub', icon: MessageSquare, accessKey: 'clientHub' },
+      { title: 'Emails & Texts', url: '/settings/messaging', icon: Mail, accessKey: 'emailsTexts' },
+      { title: 'Requests & Bookings', url: '/settings/requests-config', icon: BookOpen, accessKey: 'requestsBookings' },
+      { title: 'Portal Settings', url: '/settings/portal', icon: Globe, accessKey: 'portalSettings' },
     ],
   },
   {
     group: 'Connected Apps',
     items: [
-      { title: 'Integrations', url: '/settings/integrations', icon: Webhook },
-      { title: 'Connected Apps', url: '/settings/connected-apps', icon: Plug },
+      { title: 'Integrations', url: '/settings/integrations', icon: Webhook, accessKey: 'integrations' },
+      { title: 'Connected Apps', url: '/settings/connected-apps', icon: Plug, accessKey: 'connectedApps' },
     ],
   },
   {
     group: 'Administration',
     items: [
-      { title: 'System Announcements', url: '/settings/announcements', icon: Megaphone },
-      { title: 'Audit Log', url: '/settings/audit-log', icon: ScrollText },
-      { title: 'Seat Usage', url: '/settings/usage', icon: Gauge },
+      { title: 'System Announcements', url: '/settings/announcements', icon: Megaphone, accessKey: 'systemAnnouncements' },
+      { title: 'Audit Log', url: '/settings/audit-log', icon: ScrollText, accessKey: 'auditLog' },
+      { title: 'Seat Usage', url: '/settings/usage', icon: Gauge, accessKey: 'seatUsage' },
     ],
   },
 ];
 
-const allItems = settingsNav.flatMap((g) => g.items);
-
 export function SettingsLayout({ children }: { children: React.ReactNode }) {
+  const access = useSettingsAccess();
+
+  // Filter groups/items by access
+  const visibleNav = settingsNav
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => access[item.accessKey]),
+    }))
+    .filter(group => group.items.length > 0);
+
+  const allItems = visibleNav.flatMap(g => g.items);
+
   return (
     <div className="space-y-4">
       {/* Mobile/tablet horizontal tab bar */}
@@ -79,7 +104,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
         <aside className="hidden md:block w-56 shrink-0">
           <div className="sticky top-6 space-y-5 max-h-[calc(100vh-4rem)] overflow-y-auto pb-8">
             <h2 className="text-sm font-semibold text-foreground px-3">Settings</h2>
-            {settingsNav.map((group) => (
+            {visibleNav.map((group) => (
               <div key={group.group}>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-1.5">
                   {group.group}
