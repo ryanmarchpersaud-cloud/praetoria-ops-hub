@@ -69,7 +69,7 @@ export function useRecordPayment() {
           await supabase.from('invoices').update({
             amount_paid: Math.min(newPaid, Number(inv.total)),
             balance_due: Math.max(newBalance, 0),
-            status: newBalance <= 0 ? 'paid' : 'partial',
+            status: newBalance <= 0 ? 'Paid' : 'Partially Paid',
           }).eq('id', payment.invoice_id);
         }
       }
