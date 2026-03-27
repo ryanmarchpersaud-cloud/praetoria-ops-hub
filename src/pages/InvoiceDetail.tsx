@@ -178,7 +178,7 @@ export default function InvoiceDetail() {
             <CardTitle className="text-base">Line Items</CardTitle>
           </CardHeader>
           <CardContent className={isDraft ? 'p-4' : 'p-0'}>
-            {isDraft ? (
+            {isDraft && canEditInvoiceDrafts ? (
               <InvoiceLineItemEditor invoiceId={invoice.id} existingItems={lineItems} />
             ) : (
               <>
