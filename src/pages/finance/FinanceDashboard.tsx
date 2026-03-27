@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills, useFinanceReceipts } from '@/hooks/useFinance';
-import { DollarSign, TrendingUp, TrendingDown, Receipt, FileText, AlertTriangle, ArrowRight, CreditCard, BarChart3, Calendar, Landmark, Scale, Plus, Upload, CheckCircle, Users, Banknote, FileCheck } from 'lucide-react';
+import { useStep6Metrics } from '@/hooks/useStep6Metrics';
+import { DollarSign, TrendingUp, TrendingDown, Receipt, FileText, AlertTriangle, ArrowRight, CreditCard, BarChart3, Calendar, Landmark, Scale, Plus, Upload, CheckCircle, Users, Banknote, FileCheck, ClipboardList, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, differenceInDays } from 'date-fns';
@@ -244,6 +245,9 @@ export default function FinanceDashboard() {
         </CardContent>
       </Card>
 
+      {/* Step 6 Revenue Ops Metrics */}
+      <Step6MetricsPanel />
+
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
@@ -310,5 +314,34 @@ export default function FinanceDashboard() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function Step6MetricsPanel() {
+  const nav = useNavigate();
+  const { data: m } = useStep6Metrics();
+  if (!m) return null;
+  const items = [
+    { label: 'Quotes Awaiting Conversion', value: m.approvedNotConverted, icon: FileText, color: 'text-warning', link: '/quotes' },
+    { label: 'Jobs from Quotes', value: m.jobsFromQuotes, icon: Briefcase, color: 'text-primary', link: '/jobs' },
+    { label: 'Unbilled Completed Visits', value: m.unbilledVisits, icon: ClipboardList, color: 'text-destructive', link: '/visits' },
+    { label: 'Draft Invoices from Work', value: m.draftInvoicesFromWork, icon: Receipt, color: 'text-accent', link: '/finance/invoices' },
+  ];
+  if (items.every(i => i.value === 0)) return null;
+  return (
+    <Card>
+      <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Revenue Operations</CardTitle></CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {items.map(i => (
+            <div key={i.label} className="cursor-pointer p-3 rounded-lg border hover:bg-muted/50 transition-colors" onClick={() => nav(i.link)}>
+              <i.icon className={`h-4 w-4 ${i.color} mb-1`} />
+              <p className="text-lg font-bold">{i.value}</p>
+              <p className="text-[10px] text-muted-foreground">{i.label}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

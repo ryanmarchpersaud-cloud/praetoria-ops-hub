@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Briefcase, CheckCircle, Calendar, Users, FileText, Loader2, ArrowRight, Sparkles } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Briefcase, CheckCircle, Calendar, FileText, Loader2, ArrowRight, Sparkles, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProperties } from '@/hooks/useProperties';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -18,7 +18,7 @@ import { SERVICE_CATEGORIES, SERVICE_FREQUENCIES } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { format, addDays } from 'date-fns';
+import { format, eachWeekOfInterval, eachMonthOfInterval, parseISO } from 'date-fns';
 
 interface Props {
   open: boolean;
@@ -41,6 +41,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
   const [step, setStep] = useState<Step>('details');
   const [saving, setSaving] = useState(false);
   const [createdJob, setCreatedJob] = useState<any>(null);
+  const [visitCount, setVisitCount] = useState(0);
 
   // Form
   const customerId = lead?.customer_id || null;
@@ -64,11 +65,34 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
     [allProperties, customerId]
   );
 
+  // Compute planned visit dates for recurring
+  const plannedDates = useMemo(() => {
+    if (!isRecurring || !contractStart || !contractEnd) return [];
+    const start = parseISO(contractStart);
+    const end = parseISO(contractEnd);
+    if (start >= end) return [];
+    const freq = frequency;
+    if (freq === 'on-snowfall') return []; // manual
+    let dates: Date[] = [];
+    if (freq === 'weekly') {
+      dates = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+    } else if (freq === 'biweekly') {
+      const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+      dates = weeks.filter((_, i) => i % 2 === 0);
+    } else if (freq === 'monthly') {
+      dates = eachMonthOfInterval({ start, end });
+    } else if (freq === 'custom-seasonal') {
+      dates = eachMonthOfInterval({ start, end });
+    }
+    return dates;
+  }, [isRecurring, contractStart, contractEnd, frequency]);
+
   // Init
   useEffect(() => {
     if (open && quote) {
       setStep('details');
       setCreatedJob(null);
+      setVisitCount(0);
       const customerName = lead ? `${lead.first_name} ${lead.last_name}` : 'Customer';
       setJobTitle(`${quote.service_category || 'Service'} — ${customerName}`);
       setServiceCategory(quote.service_category || '');
@@ -118,7 +142,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
         request_id: quote.request_id || null,
         assigned_to: assignedTo || null,
         scheduled_date: !isRecurring ? scheduledDate : null,
-        service_frequency: isRecurring ? frequency : null,
+        service_frequency: isRecurring ? frequency : 'one-time',
         contract_start_date: isRecurring ? contractStart : null,
         contract_end_date: isRecurring ? contractEnd : null,
         billing_type: 'on_completion',
@@ -153,28 +177,64 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
         converted_by: 'admin',
       } as any).eq('id', quote.id);
 
-      // 4. Generate visit if requested
-      if (generateVisits && !isRecurring) {
-        await createVisit.mutateAsync({
-          visit_number: '',
-          job_id: job.id,
-          customer_id: customerId,
-          property_id: propertyId || null,
-          service_date: scheduledDate,
-          visit_type: 'Routine' as any,
-          visit_status: 'Scheduled' as any,
-          crew_notes: serviceInstructions || scopeOfWork || null,
-          quote_id: quote.id,
-          request_id: quote.request_id || null,
-        } as any);
+      // 4. Generate visits
+      let generatedCount = 0;
+      if (generateVisits) {
+        if (!isRecurring) {
+          // One-time: single visit
+          await createVisit.mutateAsync({
+            visit_number: '',
+            job_id: job.id,
+            customer_id: customerId,
+            property_id: propertyId || null,
+            service_date: scheduledDate,
+            visit_type: 'Routine' as any,
+            visit_status: 'Scheduled' as any,
+            crew_notes: serviceInstructions || scopeOfWork || null,
+            quote_id: quote.id,
+            request_id: quote.request_id || null,
+          } as any);
+          generatedCount = 1;
+        } else if (plannedDates.length > 0) {
+          // Recurring: generate planned visits for full contract period
+          // Check for existing visits in range first
+          const { data: existingVisits } = await supabase
+            .from('visits')
+            .select('id, service_date')
+            .eq('job_id', job.id)
+            .gte('service_date', contractStart)
+            .lte('service_date', contractEnd);
+
+          const existingDates = new Set((existingVisits || []).map((v: any) => v.service_date));
+
+          for (const date of plannedDates) {
+            const dateStr = format(date, 'yyyy-MM-dd');
+            if (existingDates.has(dateStr)) continue; // skip dupes
+            await createVisit.mutateAsync({
+              visit_number: '',
+              job_id: job.id,
+              customer_id: customerId,
+              property_id: propertyId || null,
+              service_date: dateStr,
+              visit_type: 'Routine' as any,
+              visit_status: 'Planned' as any,
+              crew_notes: serviceInstructions || scopeOfWork || null,
+              quote_id: quote.id,
+              request_id: quote.request_id || null,
+            } as any);
+            generatedCount++;
+          }
+        }
       }
 
       qc.invalidateQueries({ queryKey: ['jobs'] });
       qc.invalidateQueries({ queryKey: ['quotes'] });
       qc.invalidateQueries({ queryKey: ['quote', quote.id] });
       qc.invalidateQueries({ queryKey: ['visits'] });
+      qc.invalidateQueries({ queryKey: ['job_visits'] });
 
       setCreatedJob(job);
+      setVisitCount(generatedCount);
       setStep('review');
     } catch (err: any) {
       toast({ title: 'Conversion failed', description: err.message, variant: 'destructive' });
@@ -298,13 +358,33 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
                     <Input type="date" value={contractEnd} onChange={e => setContractEnd(e.target.value)} />
                   </div>
                 </div>
+                {frequency === 'on-snowfall' && (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      Snowfall-triggered visits cannot be auto-generated. Create them manually when snow events occur.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {plannedDates.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {plannedDates.length} planned visits will be generated ({frequency})
+                  </p>
+                )}
               </div>
             )}
 
             <div className="flex items-center gap-3">
-              <Checkbox id="gen-visits" checked={generateVisits} onCheckedChange={(v) => setGenerateVisits(!!v)} />
+              <Checkbox
+                id="gen-visits"
+                checked={generateVisits}
+                onCheckedChange={(v) => setGenerateVisits(!!v)}
+                disabled={isRecurring && frequency === 'on-snowfall'}
+              />
               <Label htmlFor="gen-visits">
-                {isRecurring ? 'Generate visits after job creation (from Job detail)' : 'Create first visit now'}
+                {isRecurring
+                  ? `Generate ${plannedDates.length} planned visits now`
+                  : 'Create first visit now'}
               </Label>
             </div>
           </div>
@@ -339,7 +419,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
           </div>
         )}
 
-        {/* ── STEP: Review / Success ── */}
+        {/* ── STEP: Review (pre-confirm) ── */}
         {step === 'review' && !createdJob && (
           <div className="space-y-3">
             <Card><CardContent className="p-4 space-y-2 text-sm">
@@ -349,11 +429,15 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
               {!isRecurring && <div className="flex justify-between"><span className="text-muted-foreground">Scheduled</span><span>{scheduledDate}</span></div>}
               {isRecurring && <div className="flex justify-between"><span className="text-muted-foreground">Contract</span><span>{contractStart} → {contractEnd}</span></div>}
               <div className="flex justify-between"><span className="text-muted-foreground">Line Items</span><span>{copyLineItems ? `${selectedItems.size} items` : 'None'}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Generate Visit</span><span>{generateVisits && !isRecurring ? 'Yes' : 'No (manual later)'}</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Visits</span>
+                <span>{generateVisits ? (isRecurring ? `${plannedDates.length} planned` : '1 scheduled') : 'Manual later'}</span>
+              </div>
             </CardContent></Card>
           </div>
         )}
 
+        {/* ── Success ── */}
         {step === 'review' && createdJob && (
           <div className="text-center py-6 space-y-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10">
@@ -362,6 +446,9 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
             <div>
               <p className="text-lg font-bold">{createdJob.job_number}</p>
               <p className="text-sm text-muted-foreground">{jobTitle}</p>
+              {visitCount > 0 && (
+                <Badge variant="outline" className="mt-2">{visitCount} visit{visitCount > 1 ? 's' : ''} generated</Badge>
+              )}
             </div>
             <div className="flex flex-wrap gap-2 justify-center">
               <Button onClick={() => { onOpenChange(false); nav(`/jobs/${createdJob.id}`); }} className="gap-1.5">

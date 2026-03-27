@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills } from '@/hooks/useFinance';
 import { useAllFinancePayments } from '@/hooks/useFinancePayments';
 import { usePayrollRuns, usePayrollRunItems, usePayoutRuns, usePayoutItems, useRemittances } from '@/hooks/usePayroll';
+import { useStep6Metrics } from '@/hooks/useStep6Metrics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -150,6 +151,8 @@ export default function FinanceReports() {
           <TabsTrigger value="payroll">Payroll</TabsTrigger>
           <TabsTrigger value="payouts">Subcontractor Payouts</TabsTrigger>
           <TabsTrigger value="remittances">Remittances</TabsTrigger>
+          <TabsTrigger value="conversion">Quote Conversion</TabsTrigger>
+          <TabsTrigger value="unbilled">Unbilled Work</TabsTrigger>
         </TabsList>
 
         <TabsContent value="category">
@@ -379,6 +382,8 @@ export default function FinanceReports() {
         <TabsContent value="payroll"><PayrollReportTab /></TabsContent>
         <TabsContent value="payouts"><PayoutReportTab /></TabsContent>
         <TabsContent value="remittances"><RemittanceReportTab /></TabsContent>
+        <TabsContent value="conversion"><ConversionFunnelTab /></TabsContent>
+        <TabsContent value="unbilled"><UnbilledWorkTab /></TabsContent>
       </Tabs>
     </div>
   );
@@ -468,6 +473,94 @@ function RemittanceReportTab() {
               </TableRow>
             ))}
             {(!rems || rems.length === 0) && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No remittances</TableCell></TableRow>}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Quote Conversion Funnel Tab ── */
+function ConversionFunnelTab() {
+  const { data: m } = useStep6Metrics();
+  const fmt = (n: number) => new Intl.NumberFormat('en-CA').format(n);
+  const funnelData = [
+    { stage: 'Approved Quotes (Not Converted)', count: m?.approvedNotConverted ?? 0 },
+    { stage: 'Converted Quotes', count: m?.convertedQuotes ?? 0 },
+    { stage: 'Jobs from Quotes', count: m?.jobsFromQuotes ?? 0 },
+    { stage: 'Invoiced Jobs', count: m?.invoicedJobs ?? 0 },
+  ];
+
+  const exportCsv = () => {
+    const csv = ['Stage,Count', ...funnelData.map(r => `${r.stage},${r.count}`)].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quote-conversion-funnel.csv'; a.click();
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm">Quote → Job Conversion Funnel</CardTitle>
+        <Button variant="outline" size="sm" onClick={exportCsv}><Download className="h-4 w-4 mr-1" /> CSV</Button>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {funnelData.map((row, i) => (
+            <div key={row.stage} className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">{i + 1}</div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{row.stage}</p>
+                <div className="w-full bg-muted rounded-full h-2 mt-1">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all"
+                    style={{ width: `${funnelData[0].count > 0 ? Math.max(5, (row.count / Math.max(funnelData[0].count, funnelData[1].count, 1)) * 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+              <span className="text-lg font-bold tabular-nums">{fmt(row.count)}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Unbilled Work Tab ── */
+function UnbilledWorkTab() {
+  const { data: m } = useStep6Metrics();
+
+  const rows = [
+    { label: 'Completed Visits (Total)', value: m?.completedVisits ?? 0 },
+    { label: 'Unbilled Completed Visits', value: m?.unbilledVisits ?? 0 },
+    { label: 'Invoiced Visits', value: m?.invoicedVisits ?? 0 },
+    { label: 'Completed Jobs (Total)', value: m?.completedJobs ?? 0 },
+    { label: 'Invoiced Jobs', value: m?.invoicedJobs ?? 0 },
+    { label: 'Draft Invoices from Work', value: m?.draftInvoicesFromWork ?? 0 },
+  ];
+
+  const exportCsv = () => {
+    const csv = ['Metric,Value', ...rows.map(r => `${r.label},${r.value}`)].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'unbilled-work-report.csv'; a.click();
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm">Unbilled / Completed Work Summary</CardTitle>
+        <Button variant="outline" size="sm" onClick={exportCsv}><Download className="h-4 w-4 mr-1" /> CSV</Button>
+      </CardHeader>
+      <CardContent className="p-0 overflow-x-auto">
+        <Table>
+          <TableHeader><TableRow><TableHead>Metric</TableHead><TableHead className="text-right">Count</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {rows.map(r => (
+              <TableRow key={r.label}>
+                <TableCell className="font-medium">{r.label}</TableCell>
+                <TableCell className="text-right font-bold">{r.value}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </CardContent>
