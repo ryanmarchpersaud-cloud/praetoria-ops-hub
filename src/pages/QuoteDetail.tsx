@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { useQuote, useUpdateQuote, useQuoteLineItems, useUpsertLineItems } from '@/hooks/useQuotes';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ApprovalWorkflowPanel } from '@/components/ApprovalWorkflow';

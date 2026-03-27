@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { useInvoice, useInvoiceLineItems, useUpdateInvoice } from '@/hooks/useInvoices';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
