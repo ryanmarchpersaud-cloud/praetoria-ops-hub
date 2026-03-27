@@ -382,6 +382,8 @@ export default function FinanceReports() {
         <TabsContent value="payroll"><PayrollReportTab /></TabsContent>
         <TabsContent value="payouts"><PayoutReportTab /></TabsContent>
         <TabsContent value="remittances"><RemittanceReportTab /></TabsContent>
+        <TabsContent value="conversion"><ConversionFunnelTab /></TabsContent>
+        <TabsContent value="unbilled"><UnbilledWorkTab /></TabsContent>
       </Tabs>
     </div>
   );
