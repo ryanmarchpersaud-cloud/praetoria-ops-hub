@@ -74,6 +74,9 @@ export default function VisitDetail() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg md:text-xl font-bold mono">{visit.visit_number}</h1>
             <StatusBadge status={form.visit_status || 'Scheduled'} />
+            {(form as any).billing_status && (form as any).billing_status !== 'not_billable' && (
+              <Badge variant="outline" className="text-[10px]">{(form as any).billing_status}</Badge>
+            )}
           </div>
       {job && <p className="text-xs text-muted-foreground">{job.job_title} ({job.job_number})</p>}
         </div>

@@ -9,7 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Send, RotateCcw, CheckCircle, Ban, AlertCircle, CreditCard, Printer, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Send, RotateCcw, CheckCircle, Ban, AlertCircle, CreditCard, Printer, Save, Loader2, LinkIcon, Briefcase, FileText, Receipt } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
@@ -75,7 +78,7 @@ export default function InvoiceDetail() {
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
       <div className="flex items-center gap-2">
-        <Link to="/invoices" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link to="/finance/invoices" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl md:text-2xl font-bold">{invoice.invoice_number}</h1>
@@ -249,6 +252,34 @@ export default function InvoiceDetail() {
                 {invoice.customers.address_line_1 && <p className="text-muted-foreground">{invoice.customers.address_line_1}</p>}
                 {(invoice.customers.city || invoice.customers.province) && (
                   <p className="text-muted-foreground">{[invoice.customers.city, invoice.customers.province, invoice.customers.postal_code].filter(Boolean).join(', ')}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Linked Source Records */}
+          {(invoice.job_id || (invoice as any).visit_id || (invoice as any).quote_id) && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <LinkIcon className="h-3.5 w-3.5" /> Source Records
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-2">
+                {(invoice as any).quote_id && (
+                  <Link to={`/quotes/${(invoice as any).quote_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                    <FileText className="h-3 w-3" /> Source Quote →
+                  </Link>
+                )}
+                {invoice.job_id && (
+                  <Link to={`/jobs/${invoice.job_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                    <Briefcase className="h-3 w-3" /> {invoice.jobs?.job_number} — {invoice.jobs?.job_title} →
+                  </Link>
+                )}
+                {(invoice as any).visit_id && (
+                  <Link to={`/visits/${(invoice as any).visit_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                    <Receipt className="h-3 w-3" /> Source Visit →
+                  </Link>
                 )}
               </CardContent>
             </Card>

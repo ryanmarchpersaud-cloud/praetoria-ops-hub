@@ -71,7 +71,7 @@ export function BulkInvoiceDialog({ open, onOpenChange, selectedVisits }: Props)
           due_date: dueDate,
           tax_rate: 0.13,
           status: 'Draft' as any,
-          billing_mode: 'per_visit',
+          billing_mode: 'per_visit' as any,
           internal_notes: `Bulk invoice from ${visits.length} visit(s)`,
         } as any).select().single();
 

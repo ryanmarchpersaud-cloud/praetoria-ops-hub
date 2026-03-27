@@ -140,7 +140,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
         internal_notes: quote.agent_summary ? `Quote notes: ${quote.agent_summary}` : null,
         quote_id: quote.id,
         request_id: quote.request_id || null,
-        assigned_to: assignedTo || null,
+        assigned_to: (assignedTo && assignedTo !== 'unassigned') ? assignedTo : null,
         scheduled_date: !isRecurring ? scheduledDate : null,
         service_frequency: isRecurring ? frequency : 'one-time',
         contract_start_date: isRecurring ? contractStart : null,
@@ -304,7 +304,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
               <Select value={assignedTo} onValueChange={setAssignedTo}>
                 <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— Unassigned —</SelectItem>
+                  <SelectItem value="unassigned">— Unassigned —</SelectItem>
                   {(employees as any[]).map((e: any) => (
                     <SelectItem key={e.user_id} value={e.user_id}>{e.full_name || e.user_id}</SelectItem>
                   ))}
