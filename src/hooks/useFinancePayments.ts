@@ -125,7 +125,7 @@ export function useReversePayment() {
           await supabase.from('invoices').update({
             amount_paid: newPaid,
             balance_due: newBalance,
-            status: newPaid === 0 ? 'sent' : 'partial',
+            status: newPaid === 0 ? 'Sent' : 'Partially Paid',
           }).eq('id', payment.invoice_id);
         }
       }
