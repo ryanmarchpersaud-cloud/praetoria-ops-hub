@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,10 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useFinanceExpenses, useCreateFinanceExpense, useUpdateFinanceExpense, useFinanceCategories, useFinanceVendors } from '@/hooks/useFinance';
-import { Plus, Search, Download, Receipt, MoreHorizontal } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useFinanceExpenses, useCreateFinanceExpense, useUpdateFinanceExpense, useFinanceCategories, useFinanceVendors, useJobsForLinking, useCustomersForLinking, usePropertiesForLinking } from '@/hooks/useFinance';
+import { Plus, Search, Download, Receipt, MoreHorizontal, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 
@@ -28,15 +29,30 @@ const statusColor: Record<string, string> = {
   void: 'bg-destructive/10 text-destructive',
 };
 
+// Valid status transitions
+const TRANSITIONS: Record<string, string[]> = {
+  draft: ['submitted', 'void'],
+  submitted: ['approved', 'draft', 'void'],
+  approved: ['paid', 'reimbursed', 'void'],
+  paid: [],
+  reimbursed: [],
+  void: [],
+};
+
 export default function FinanceExpenses() {
+  const nav = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<any>({});
 
-  const { data: expenses, isLoading } = useFinanceExpenses({ status: statusFilter });
+  const { data: expenses, isLoading } = useFinanceExpenses({ status: statusFilter, category: categoryFilter === 'all' ? undefined : categoryFilter });
   const { data: categories } = useFinanceCategories();
   const { data: vendors } = useFinanceVendors();
+  const { data: jobs } = useJobsForLinking();
+  const { data: customers } = useCustomersForLinking();
+  const { data: properties } = usePropertiesForLinking();
   const createExpense = useCreateFinanceExpense();
   const updateExpense = useUpdateFinanceExpense();
 
@@ -59,6 +75,10 @@ export default function FinanceExpenses() {
       amount_subtotal: subtotal,
       amount_tax: tax,
       amount_total: subtotal + tax,
+      vendor_id: form.vendor_id || null,
+      linked_job_id: form.linked_job_id || null,
+      linked_customer_id: form.linked_customer_id || null,
+      linked_property_id: form.linked_property_id || null,
     }, { onSuccess: () => { setShowCreate(false); setForm({}); } });
   };
 
@@ -70,9 +90,8 @@ export default function FinanceExpenses() {
     const rows = filtered.map((e: any) => [e.expense_number, e.expense_date, (e as any).finance_vendors?.vendor_name || '', e.category, e.amount_subtotal, e.amount_tax, e.amount_total, e.status].join(','));
     const csv = ['Expense #,Date,Vendor,Category,Subtotal,Tax,Total,Status', ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'expenses.csv'; a.click();
+    a.href = URL.createObjectURL(blob); a.download = 'expenses.csv'; a.click();
   };
 
   return (
@@ -108,6 +127,13 @@ export default function FinanceExpenses() {
             {STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s === 'all' ? 'All Statuses' : s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            {(categories ?? []).map((c: any) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Table */}
@@ -130,8 +156,7 @@ export default function FinanceExpenses() {
                     <TableHead>Date</TableHead>
                     <TableHead>Vendor</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead className="text-right">Subtotal</TableHead>
-                    <TableHead className="text-right">Tax</TableHead>
+                    <TableHead>Linked To</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-10"></TableHead>
@@ -144,18 +169,25 @@ export default function FinanceExpenses() {
                       <TableCell>{e.expense_date ? format(new Date(e.expense_date), 'MMM d, yyyy') : '—'}</TableCell>
                       <TableCell>{(e as any).finance_vendors?.vendor_name || '—'}</TableCell>
                       <TableCell>{e.category || '—'}</TableCell>
-                      <TableCell className="text-right">{fmt(Number(e.amount_subtotal))}</TableCell>
-                      <TableCell className="text-right">{fmt(Number(e.amount_tax))}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {e.linked_job_id && <Badge variant="outline" className="text-[10px] cursor-pointer" onClick={() => nav(`/jobs/${e.linked_job_id}`)}>Job <ExternalLink className="h-2.5 w-2.5 ml-0.5" /></Badge>}
+                          {e.linked_property_id && <Badge variant="outline" className="text-[10px] cursor-pointer" onClick={() => nav(`/properties/${e.linked_property_id}`)}>Property <ExternalLink className="h-2.5 w-2.5 ml-0.5" /></Badge>}
+                          {e.linked_customer_id && <Badge variant="outline" className="text-[10px] cursor-pointer" onClick={() => nav(`/customers/${e.linked_customer_id}`)}>Customer <ExternalLink className="h-2.5 w-2.5 ml-0.5" /></Badge>}
+                          {!e.linked_job_id && !e.linked_property_id && !e.linked_customer_id && <span className="text-xs text-muted-foreground">Unlinked</span>}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right font-semibold">{fmt(Number(e.amount_total))}</TableCell>
                       <TableCell><Badge className={statusColor[e.status] || ''}>{e.status}</Badge></TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {e.status === 'draft' && <DropdownMenuItem onClick={() => handleStatusChange(e.id, 'submitted')}>Submit</DropdownMenuItem>}
-                            {e.status === 'submitted' && <DropdownMenuItem onClick={() => handleStatusChange(e.id, 'approved')}>Approve</DropdownMenuItem>}
-                            {e.status === 'approved' && <DropdownMenuItem onClick={() => handleStatusChange(e.id, 'paid')}>Mark Paid</DropdownMenuItem>}
-                            <DropdownMenuItem onClick={() => handleStatusChange(e.id, 'void')}>Void</DropdownMenuItem>
+                            {(TRANSITIONS[e.status] || []).map((next: string) => (
+                              <DropdownMenuItem key={next} onClick={() => handleStatusChange(e.id, next)}>
+                                {next === 'submitted' ? 'Submit' : next === 'approved' ? 'Approve' : next === 'paid' ? 'Mark Paid' : next === 'reimbursed' ? 'Mark Reimbursed' : next === 'draft' ? 'Return to Draft' : 'Void'}
+                              </DropdownMenuItem>
+                            ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -177,31 +209,78 @@ export default function FinanceExpenses() {
               <div><Label>Date</Label><Input type="date" value={form.expense_date || ''} onChange={e => setForm({ ...form, expense_date: e.target.value })} /></div>
               <div>
                 <Label>Vendor</Label>
-                <Select value={form.vendor_id || ''} onValueChange={v => setForm({ ...form, vendor_id: v })}>
+                <Select value={form.vendor_id || '_none'} onValueChange={v => setForm({ ...form, vendor_id: v === '_none' ? null : v })}>
                   <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
-                  <SelectContent>{(vendors ?? []).map((v: any) => <SelectItem key={v.id} value={v.id}>{v.vendor_name}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(vendors ?? []).map((v: any) => <SelectItem key={v.id} value={v.id}>{v.vendor_name}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
             </div>
-            <div>
-              <Label>Category</Label>
-              <Select value={form.category || ''} onValueChange={v => setForm({ ...form, category: v })}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>{(categories ?? []).map((c: any) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Category</Label>
+                <Select value={form.category || '_none'} onValueChange={v => setForm({ ...form, category: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(categories ?? []).map((c: any) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Payment Method</Label>
+                <Select value={form.payment_method || '_none'} onValueChange={v => setForm({ ...form, payment_method: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {PAYMENT_METHODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div><Label>Subtotal</Label><Input type="number" step="0.01" value={form.amount_subtotal || ''} onChange={e => setForm({ ...form, amount_subtotal: e.target.value })} /></div>
               <div><Label>Tax</Label><Input type="number" step="0.01" value={form.amount_tax || ''} onChange={e => setForm({ ...form, amount_tax: e.target.value })} /></div>
               <div><Label>Total</Label><Input type="number" disabled value={(Number(form.amount_subtotal || 0) + Number(form.amount_tax || 0)).toFixed(2)} /></div>
             </div>
-            <div>
-              <Label>Payment Method</Label>
-              <Select value={form.payment_method || ''} onValueChange={v => setForm({ ...form, payment_method: v })}>
-                <SelectTrigger><SelectValue placeholder="Select method" /></SelectTrigger>
-                <SelectContent>{PAYMENT_METHODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-              </Select>
+
+            {/* Entity linking */}
+            <div className="border-t border-border pt-3 space-y-3">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Link to Records</p>
+              <div>
+                <Label>Job</Label>
+                <Select value={form.linked_job_id || '_none'} onValueChange={v => setForm({ ...form, linked_job_id: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select job" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(jobs ?? []).map((j: any) => <SelectItem key={j.id} value={j.id}>{j.job_number} — {j.job_title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Customer</Label>
+                <Select value={form.linked_customer_id || '_none'} onValueChange={v => setForm({ ...form, linked_customer_id: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(customers ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}{c.company_name ? ` (${c.company_name})` : ''}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Property</Label>
+                <Select value={form.linked_property_id || '_none'} onValueChange={v => setForm({ ...form, linked_property_id: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(properties ?? []).map((p: any) => <SelectItem key={p.id} value={p.id}>{p.address_line_1}{p.city ? `, ${p.city}` : ''}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
             <div><Label>Description</Label><Textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
             <div><Label>Internal Notes</Label><Textarea value={form.notes_internal || ''} onChange={e => setForm({ ...form, notes_internal: e.target.value })} rows={2} /></div>
           </div>

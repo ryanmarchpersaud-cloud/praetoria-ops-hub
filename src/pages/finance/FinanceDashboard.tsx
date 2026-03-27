@@ -1,19 +1,40 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills, useFinanceReceipts } from '@/hooks/useFinance';
-import { DollarSign, TrendingUp, TrendingDown, Receipt, FileText, AlertTriangle, ArrowRight, CreditCard, BarChart3 } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Receipt, FileText, AlertTriangle, ArrowRight, CreditCard, BarChart3, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths } from 'date-fns';
 
 const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
-
 const COLORS = ['hsl(215,65%,48%)', 'hsl(158,50%,42%)', 'hsl(38,90%,50%)', 'hsl(0,68%,52%)', 'hsl(270,50%,50%)', 'hsl(180,50%,40%)', 'hsl(30,70%,50%)', 'hsl(340,60%,50%)'];
+
+type DatePreset = 'today' | 'week' | 'month' | 'last_month' | 'custom';
 
 export default function FinanceDashboard() {
   const nav = useNavigate();
-  const { data: stats, isLoading } = useFinanceDashboard();
+  const [preset, setPreset] = useState<DatePreset>('month');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+
+  const getDateRange = () => {
+    const now = new Date();
+    switch (preset) {
+      case 'today': return { from: format(now, 'yyyy-MM-dd'), to: format(now, 'yyyy-MM-dd') };
+      case 'week': return { from: format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd'), to: format(endOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd') };
+      case 'month': return { from: format(startOfMonth(now), 'yyyy-MM-dd'), to: format(endOfMonth(now), 'yyyy-MM-dd') };
+      case 'last_month': { const lm = subMonths(now, 1); return { from: format(startOfMonth(lm), 'yyyy-MM-dd'), to: format(endOfMonth(lm), 'yyyy-MM-dd') }; }
+      case 'custom': return { from: customFrom || undefined, to: customTo || undefined };
+    }
+  };
+
+  const dateRange = getDateRange();
+  const { data: stats, isLoading } = useFinanceDashboard(dateRange);
   const { data: recentExpenses } = useFinanceExpenses();
   const { data: recentBills } = useFinanceBills();
   const { data: recentReceipts } = useFinanceReceipts();
@@ -22,8 +43,8 @@ export default function FinanceDashboard() {
     return (
       <div className="p-6 space-y-6">
         <h1 className="text-2xl font-bold text-foreground">Finance Hub</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
       </div>
     );
@@ -42,7 +63,7 @@ export default function FinanceDashboard() {
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Finance Hub</h1>
           <p className="text-sm text-muted-foreground">Financial overview and operations</p>
@@ -52,6 +73,23 @@ export default function FinanceDashboard() {
             <BarChart3 className="h-4 w-4 mr-1" /> Reports
           </Button>
         </div>
+      </div>
+
+      {/* Date Range Filter */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <Calendar className="h-4 w-4 text-muted-foreground" />
+        {(['today', 'week', 'month', 'last_month', 'custom'] as DatePreset[]).map(p => (
+          <Button key={p} variant={preset === p ? 'default' : 'outline'} size="sm" onClick={() => setPreset(p)}>
+            {p === 'today' ? 'Today' : p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : p === 'last_month' ? 'Last Month' : 'Custom'}
+          </Button>
+        ))}
+        {preset === 'custom' && (
+          <div className="flex gap-2 items-center">
+            <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className="w-[140px] h-8" />
+            <span className="text-muted-foreground text-sm">to</span>
+            <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className="w-[140px] h-8" />
+          </div>
+        )}
       </div>
 
       {/* KPI Cards */}
@@ -74,17 +112,14 @@ export default function FinanceDashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Spend by Category */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Spend by Category</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Spend by Category</CardTitle></CardHeader>
           <CardContent>
             {catData.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={catData} layout="vertical" margin={{ left: 100 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+                  <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={95} />
                   <Tooltip formatter={(v: number) => fmt(v)} />
                   <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
@@ -96,11 +131,8 @@ export default function FinanceDashboard() {
           </CardContent>
         </Card>
 
-        {/* Category Pie */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Expense Distribution</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Expense Distribution</CardTitle></CardHeader>
           <CardContent>
             {catData.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
@@ -132,8 +164,13 @@ export default function FinanceDashboard() {
                 {stats?.receiptsAwaitingReview} unreviewed receipts
               </Badge>
             )}
-            {(stats?.openBills ?? 0) > 0 && (
+            {(stats?.overdueBillCount ?? 0) > 0 && (
               <Badge variant="outline" className="cursor-pointer border-destructive text-destructive" onClick={() => nav('/finance/bills')}>
+                {stats?.overdueBillCount} overdue bills
+              </Badge>
+            )}
+            {(stats?.openBills ?? 0) > 0 && (
+              <Badge variant="outline" className="cursor-pointer border-warning text-warning" onClick={() => nav('/finance/bills')}>
                 {fmt(stats?.openBills ?? 0)} in open bills
               </Badge>
             )}
@@ -151,7 +188,6 @@ export default function FinanceDashboard() {
 
       {/* Recent Activity Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Expenses */}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold">Recent Expenses</CardTitle>
@@ -174,7 +210,6 @@ export default function FinanceDashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Bills */}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold">Recent Bills</CardTitle>
@@ -197,7 +232,6 @@ export default function FinanceDashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Receipts */}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold">Recent Receipts</CardTitle>
