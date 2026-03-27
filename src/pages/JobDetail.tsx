@@ -379,8 +379,42 @@ export default function JobDetail() {
               <Link to={`/visits?job=${id}`} className="text-xs text-primary hover:underline block mt-2">View all visits →</Link>
             </CardContent>
           </Card>
+          {/* Linked Invoices */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Receipt className="h-3.5 w-3.5" /> Invoices ({linkedInvoices.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {linkedInvoices.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No invoices yet</p>
+              ) : linkedInvoices.map((inv: any) => (
+                <Link key={inv.id} to={`/invoices/${inv.id}`} className="block p-2 rounded border hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium">{inv.invoice_number}</p>
+                    <StatusBadge status={inv.status} showIcon={false} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">${Number(inv.total || 0).toFixed(2)}</p>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      <CreateInvoiceFromWorkDialog
+        open={invoiceOpen}
+        onOpenChange={setInvoiceOpen}
+        sourceType="job"
+        sourceRecord={job}
+        lineItems={jobLineItems}
+        customerId={(job as any).customer_id || ''}
+        propertyId={(job as any).property_id}
+        jobId={id}
+        quoteId={(job as any).quote_id}
+        requestId={(job as any).request_id}
+      />
     </div>
   );
 }
