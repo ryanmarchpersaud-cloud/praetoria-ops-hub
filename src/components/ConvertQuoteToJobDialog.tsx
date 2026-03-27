@@ -304,7 +304,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
               <Select value={assignedTo} onValueChange={setAssignedTo}>
                 <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— Unassigned —</SelectItem>
+                  <SelectItem value="unassigned">— Unassigned —</SelectItem>
                   {(employees as any[]).map((e: any) => (
                     <SelectItem key={e.user_id} value={e.user_id}>{e.full_name || e.user_id}</SelectItem>
                   ))}
