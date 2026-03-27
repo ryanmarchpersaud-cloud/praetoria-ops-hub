@@ -223,8 +223,51 @@ export default function VisitDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Linked Records */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <LinkIcon className="h-3.5 w-3.5" /> Linked Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-2">
+              {job && (
+                <Link to={`/jobs/${job.id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <Briefcase className="h-3 w-3" /> {job.job_number} — {job.job_title} →
+                </Link>
+              )}
+              {(visit as any).quote_id && (
+                <Link to={`/quotes/${(visit as any).quote_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <FileText className="h-3 w-3" /> Source Quote →
+                </Link>
+              )}
+              {linkedInvoices.map((inv: any) => (
+                <Link key={inv.id} to={`/invoices/${inv.id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <Receipt className="h-3 w-3" /> {inv.invoice_number} ({inv.status}) →
+                </Link>
+              ))}
+              {!job && !(visit as any).quote_id && linkedInvoices.length === 0 && (
+                <p className="text-xs text-muted-foreground">No linked records</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Invoice from Visit Dialog */}
+      <CreateInvoiceFromWorkDialog
+        open={invoiceOpen}
+        onOpenChange={setInvoiceOpen}
+        sourceType="visit"
+        sourceRecord={visit}
+        lineItems={[]}
+        customerId={(visit as any).customer_id || ''}
+        propertyId={(visit as any).property_id}
+        jobId={(visit as any).job_id}
+        visitId={id}
+        quoteId={(visit as any).quote_id}
+      />
     </div>
   );
 }
