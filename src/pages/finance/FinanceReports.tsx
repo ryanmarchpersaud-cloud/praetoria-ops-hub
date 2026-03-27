@@ -145,6 +145,9 @@ export default function FinanceReports() {
           <TabsTrigger value="bill-aging">Bills Aging</TabsTrigger>
           <TabsTrigger value="revenue-expense">Revenue vs Expense</TabsTrigger>
           <TabsTrigger value="payments">Payment History</TabsTrigger>
+          <TabsTrigger value="payroll">Payroll</TabsTrigger>
+          <TabsTrigger value="payouts">Subcontractor Payouts</TabsTrigger>
+          <TabsTrigger value="remittances">Remittances</TabsTrigger>
         </TabsList>
 
         <TabsContent value="category">
