@@ -245,50 +245,54 @@ export default function Invoices() {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Link to="/invoices/new">
-            <Button className="gap-1.5 shadow-sm">
-              <Plus className="h-4 w-4" /> New Invoice
-            </Button>
-          </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-1.5">
-                <MoreHorizontal className="h-4 w-4" /> More Actions
+          {canEditInvoiceDrafts && (
+            <Link to="/invoices/new">
+              <Button className="gap-1.5 shadow-sm">
+                <Plus className="h-4 w-4" /> New Invoice
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
-              <DropdownMenuItem onClick={() => toast.info('Batch create coming soon')}>
-                <FileStack className="h-4 w-4 mr-2" /> Batch Create Invoices
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.info('Batch deliver coming soon')}>
-                <Send className="h-4 w-4 mr-2" /> Batch Send / Deliver
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => toast.info('Export coming soon')}>
-                <Download className="h-4 w-4 mr-2" /> Export Invoices
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.info('Import coming soon')}>
-                <FileDown className="h-4 w-4 mr-2" /> Import Invoice Data
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleBatchStatus('Sent')}>
-                <Send className="h-4 w-4 mr-2" /> Mark All Draft → Sent
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBatchStatus('Paid')}>
-                <CheckCircle className="h-4 w-4 mr-2" /> Mark All Draft → Paid
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBatchStatus('Voided')}>
-                <XCircle className="h-4 w-4 mr-2" /> Mark All Draft → Void
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => toast.info('Bulk print coming soon')}>
-                <Printer className="h-4 w-4 mr-2" /> Print Selected PDFs
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.info('Bulk download coming soon')}>
-                <Download className="h-4 w-4 mr-2" /> Download Selected PDFs
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </Link>
+          )}
+          {canManageInvoices && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-1.5">
+                  <MoreHorizontal className="h-4 w-4" /> More Actions
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuItem onClick={() => toast.info('Batch create coming soon')}>
+                  <FileStack className="h-4 w-4 mr-2" /> Batch Create Invoices
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast.info('Batch deliver coming soon')}>
+                  <Send className="h-4 w-4 mr-2" /> Batch Send / Deliver
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => toast.info('Export coming soon')}>
+                  <Download className="h-4 w-4 mr-2" /> Export Invoices
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast.info('Import coming soon')}>
+                  <FileDown className="h-4 w-4 mr-2" /> Import Invoice Data
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleBatchStatus('Sent')}>
+                  <Send className="h-4 w-4 mr-2" /> Mark All Draft → Sent
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBatchStatus('Paid')}>
+                  <CheckCircle className="h-4 w-4 mr-2" /> Mark All Draft → Paid
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBatchStatus('Voided')}>
+                  <XCircle className="h-4 w-4 mr-2" /> Mark All Draft → Void
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => toast.info('Bulk print coming soon')}>
+                  <Printer className="h-4 w-4 mr-2" /> Print Selected PDFs
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast.info('Bulk download coming soon')}>
+                  <Download className="h-4 w-4 mr-2" /> Download Selected PDFs
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
