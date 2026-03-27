@@ -133,6 +133,15 @@ import MessagingPage from "./pages/MessagingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 import SystemAnnouncementsPage from "./pages/SystemAnnouncementsPage";
 
+// Finance pages
+const FinanceDashboard = lazy(() => import("./pages/finance/FinanceDashboard"));
+const FinanceExpenses = lazy(() => import("./pages/finance/FinanceExpenses"));
+const FinanceReceipts = lazy(() => import("./pages/finance/FinanceReceipts"));
+const FinanceBills = lazy(() => import("./pages/finance/FinanceBills"));
+const FinanceVendors = lazy(() => import("./pages/finance/FinanceVendors"));
+const FinanceJobCosting = lazy(() => import("./pages/finance/FinanceJobCosting"));
+const FinanceReports = lazy(() => import("./pages/finance/FinanceReports"));
+
 import WorkSettingsPage from "./pages/WorkSettingsPage";
 import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
 import RouteOptimizationPage from "./pages/RouteOptimizationPage";
