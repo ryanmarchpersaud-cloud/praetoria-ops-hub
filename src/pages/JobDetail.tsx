@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
@@ -16,8 +17,9 @@ import { Link } from 'react-router-dom';
 import { JOB_STATUSES, JOB_PRIORITIES, SERVICE_CATEGORIES } from '@/lib/constants';
 import { RecurringPlanCard } from '@/components/RecurringPlanCard';
 import { format, parseISO, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -30,6 +32,29 @@ export default function JobDetail() {
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
   const [generating, setGenerating] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+
+  // Fetch linked invoices
+  const { data: linkedInvoices = [] } = useQuery({
+    queryKey: ['job_linked_invoices', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from('invoices').select('id, invoice_number, status, total').eq('job_id', id);
+      return data || [];
+    },
+    enabled: !!id,
+  });
+
+  // Fetch job line items for invoice creation
+  const { data: jobLineItems = [] } = useQuery({
+    queryKey: ['job_line_items', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from('job_line_items').select('*').eq('job_id', id).order('sort_order');
+      return data || [];
+    },
+    enabled: !!id,
+  });
   const qc = useQueryClient();
 
   useEffect(() => { if (job) setForm(job); }, [job]);
@@ -141,28 +166,11 @@ export default function JobDetail() {
     }
   };
 
-  const handleCreateInvoice = async () => {
-    if (!id) return;
-    try {
-      const { data: invoice, error } = await supabase.from('invoices').insert({
-        invoice_number: '',
-        customer_id: (job as any).customer_id,
-        property_id: (job as any).property_id || null,
-        job_id: id,
-        status: 'Draft' as any,
-        customer_memo: form.job_title || null,
-        internal_notes: `From job ${job.job_number}`,
-      }).select().single();
-      if (error) throw error;
-      toast({ title: 'Invoice created' });
-      navigate(`/invoices/${invoice.id}`);
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
+  const handleCreateInvoice = () => setInvoiceOpen(true);
 
   const isCompleted = form.status === 'Completed';
   const isOneTime = !form.service_frequency || form.service_frequency === 'one-time';
+  const billingStatus = (form as any).billing_status || 'not_billable';
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -174,6 +182,9 @@ export default function JobDetail() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg md:text-xl font-bold truncate">{form.job_title}</h1>
             <StatusBadge status={form.status || 'Draft'} />
+            {billingStatus !== 'not_billable' && (
+              <Badge variant="outline" className="text-[10px]">{billingStatus}</Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground mono">{job.job_number}</p>
         </div>
@@ -368,8 +379,42 @@ export default function JobDetail() {
               <Link to={`/visits?job=${id}`} className="text-xs text-primary hover:underline block mt-2">View all visits →</Link>
             </CardContent>
           </Card>
+          {/* Linked Invoices */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Receipt className="h-3.5 w-3.5" /> Invoices ({linkedInvoices.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {linkedInvoices.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No invoices yet</p>
+              ) : linkedInvoices.map((inv: any) => (
+                <Link key={inv.id} to={`/invoices/${inv.id}`} className="block p-2 rounded border hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium">{inv.invoice_number}</p>
+                    <StatusBadge status={inv.status} showIcon={false} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">${Number(inv.total || 0).toFixed(2)}</p>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      <CreateInvoiceFromWorkDialog
+        open={invoiceOpen}
+        onOpenChange={setInvoiceOpen}
+        sourceType="job"
+        sourceRecord={job}
+        lineItems={jobLineItems}
+        customerId={(job as any).customer_id || ''}
+        propertyId={(job as any).property_id}
+        jobId={id}
+        quoteId={(job as any).quote_id}
+        requestId={(job as any).request_id}
+      />
     </div>
   );
 }

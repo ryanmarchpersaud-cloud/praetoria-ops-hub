@@ -7,13 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
 import { VisitPhotoGallery } from '@/components/VisitPhotoGallery';
 import { supabase } from '@/integrations/supabase/client';
+import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
+import { useQuery } from '@tanstack/react-query';
 
 export default function VisitDetail() {
   const { id } = useParams();
@@ -23,7 +26,18 @@ export default function VisitDetail() {
   const updateVisit = useUpdateVisit();
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
 
+  // Fetch linked invoices for this visit
+  const { data: linkedInvoices = [] } = useQuery({
+    queryKey: ['visit_linked_invoices', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from('invoices').select('id, invoice_number, status, total').eq('visit_id', id as any);
+      return data || [];
+    },
+    enabled: !!id,
+  });
   useEffect(() => { if (visit) setForm(visit); }, [visit]);
 
   if (isLoading) return <div className="p-8 text-muted-foreground text-sm">Loading...</div>;
@@ -70,24 +84,7 @@ export default function VisitDetail() {
           <Save className="h-4 w-4 mr-2" /> Save Visit
         </Button>
         {form.visit_status === 'Completed' && (
-          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={async () => {
-            try {
-              const { data: invoice, error } = await supabase.from('invoices').insert({
-                invoice_number: '',
-                customer_id: (visit as any).customer_id,
-                property_id: (visit as any).property_id || null,
-                job_id: (visit as any).job_id || null,
-                status: 'Draft' as any,
-                customer_memo: form.service_summary || null,
-                internal_notes: `From visit ${visit.visit_number}`,
-              }).select().single();
-              if (error) throw error;
-              toast({ title: 'Invoice created' });
-              navigate(`/invoices/${invoice.id}`);
-            } catch (err: any) {
-              toast({ title: 'Error', description: err.message, variant: 'destructive' });
-            }
-          }}>
+          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setInvoiceOpen(true)}>
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
@@ -226,8 +223,51 @@ export default function VisitDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Linked Records */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <LinkIcon className="h-3.5 w-3.5" /> Linked Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-2">
+              {job && (
+                <Link to={`/jobs/${job.id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <Briefcase className="h-3 w-3" /> {job.job_number} — {job.job_title} →
+                </Link>
+              )}
+              {(visit as any).quote_id && (
+                <Link to={`/quotes/${(visit as any).quote_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <FileText className="h-3 w-3" /> Source Quote →
+                </Link>
+              )}
+              {linkedInvoices.map((inv: any) => (
+                <Link key={inv.id} to={`/invoices/${inv.id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <Receipt className="h-3 w-3" /> {inv.invoice_number} ({inv.status}) →
+                </Link>
+              ))}
+              {!job && !(visit as any).quote_id && linkedInvoices.length === 0 && (
+                <p className="text-xs text-muted-foreground">No linked records</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Invoice from Visit Dialog */}
+      <CreateInvoiceFromWorkDialog
+        open={invoiceOpen}
+        onOpenChange={setInvoiceOpen}
+        sourceType="visit"
+        sourceRecord={visit}
+        lineItems={[]}
+        customerId={(visit as any).customer_id || ''}
+        propertyId={(visit as any).property_id}
+        jobId={(visit as any).job_id}
+        visitId={id}
+        quoteId={(visit as any).quote_id}
+      />
     </div>
   );
 }

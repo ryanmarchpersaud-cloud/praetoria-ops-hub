@@ -10,13 +10,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle, Receipt, LinkIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
 import { useQuery } from '@tanstack/react-query';
+import { ConvertQuoteToJobDialog } from '@/components/ConvertQuoteToJobDialog';
+import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
+import { Badge } from '@/components/ui/badge';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -66,6 +69,30 @@ export default function QuoteDetail() {
   const [items, setItems] = useState<LineItemForm[]>([]);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+
+  // Fetch linked job if converted
+  const { data: linkedJob } = useQuery({
+    queryKey: ['quote_linked_job', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data } = await supabase.from('jobs').select('id, job_number, job_title, status').eq('quote_id', id).maybeSingle();
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Fetch linked invoices
+  const { data: linkedInvoices = [] } = useQuery({
+    queryKey: ['quote_linked_invoices', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from('invoices').select('id, invoice_number, status, total').eq('quote_id', id as any);
+      return data || [];
+    },
+    enabled: !!id,
+  });
 
   const { data: catalog = [] } = useQuery({
     queryKey: ['products_services_active'],
@@ -208,38 +235,11 @@ export default function QuoteDetail() {
     }
   };
 
-  const handleConvertToJob = async () => {
-    if (!id) return;
-    try {
-      // Resolve customer_id from lead or quote
-      const customerId = lead?.customer_id || (quote as any).customer_id;
-      // Try to get the first property for this customer
-      let propertyId: string | null = null;
-      if (customerId) {
-        const { data: props } = await supabase.from('properties').select('id').eq('customer_id', customerId).limit(1);
-        if (props && props.length > 0) propertyId = props[0].id;
-      }
-      const customerName = lead ? `${lead.first_name} ${lead.last_name}` : 'Customer';
-      const { data: job, error } = await supabase.from('jobs').insert({
-        job_number: '',
-        job_title: `${form.service_category} — ${customerName}`,
-        customer_id: customerId,
-        property_id: propertyId,
-        service_category: form.service_category as any,
-        status: 'Scheduled' as any,
-        scope_of_work: form.scope_of_work || null,
-        internal_notes: form.agent_summary ? `Quote notes: ${form.agent_summary}` : (form.internal_notes || null),
-        service_instructions: form.scope_of_work || null,
-        quote_id: id,
-        request_id: (quote as any).request_id || null,
-      } as any).select().single();
-      if (error) throw error;
-      toast({ title: 'Job created from quote' });
-      navigate(`/jobs/${job.id}`);
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
+  const handleConvertToJob = () => {
+    setConvertOpen(true);
   };
+
+  const isConverted = !!(quote as any).converted_job_id || !!linkedJob;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -270,10 +270,21 @@ export default function QuoteDetail() {
         <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
           <Save className="h-4 w-4 mr-2" /> Save Quote
         </Button>
-        {form.approval_status === 'Approved' && (
+        {form.approval_status === 'Approved' && !isConverted && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleConvertToJob}>
             <Briefcase className="h-4 w-4" />
-            <span className="hidden sm:inline">Create Job</span>
+            <span className="hidden sm:inline">Convert to Job</span>
+          </Button>
+        )}
+        {isConverted && (
+          <Badge variant="outline" className="h-11 flex items-center gap-1.5 px-3 text-accent border-accent/30">
+            <Briefcase className="h-3.5 w-3.5" /> Converted
+          </Badge>
+        )}
+        {form.approval_status === 'Approved' && (
+          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setInvoiceOpen(true)}>
+            <Receipt className="h-4 w-4" />
+            <span className="hidden sm:inline">Invoice</span>
           </Button>
         )}
         <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => navigate(`/quotes/${id}/print`)}>
@@ -550,19 +561,34 @@ export default function QuoteDetail() {
             </Card>
           )}
 
-          {/* Cross-links: Source Request & Created Job */}
-          {((quote as any).request_id) && (
-            <Card className="hidden lg:block">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Source</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <Link to={`/requests/${(quote as any).request_id}`} className="text-primary text-xs hover:underline">
-                  View Original Request →
+          {/* Cross-links: Source Request, Created Job, Invoices */}
+          <Card className="hidden lg:block">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <LinkIcon className="h-3.5 w-3.5" /> Linked Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm space-y-2">
+              {(quote as any).request_id && (
+                <Link to={`/requests/${(quote as any).request_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <FileText className="h-3 w-3" /> Original Request →
                 </Link>
-              </CardContent>
-            </Card>
-          )}
+              )}
+              {linkedJob && (
+                <Link to={`/jobs/${linkedJob.id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <Briefcase className="h-3 w-3" /> {linkedJob.job_number} — {linkedJob.job_title} →
+                </Link>
+              )}
+              {linkedInvoices.map((inv: any) => (
+                <Link key={inv.id} to={`/invoices/${inv.id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                  <Receipt className="h-3 w-3" /> {inv.invoice_number} ({inv.status}) →
+                </Link>
+              ))}
+              {!(quote as any).request_id && !linkedJob && linkedInvoices.length === 0 && (
+                <p className="text-xs text-muted-foreground">No linked records yet</p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Email Quote Panel */}
           <QuoteEmailPreview
@@ -590,6 +616,27 @@ export default function QuoteDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Conversion Wizard */}
+      <ConvertQuoteToJobDialog
+        open={convertOpen}
+        onOpenChange={setConvertOpen}
+        quote={quote}
+        lead={lead}
+        lineItems={lineItems}
+      />
+
+      {/* Invoice from Quote */}
+      <CreateInvoiceFromWorkDialog
+        open={invoiceOpen}
+        onOpenChange={setInvoiceOpen}
+        sourceType="quote"
+        sourceRecord={quote}
+        lineItems={lineItems}
+        customerId={lead?.customer_id || ''}
+        quoteId={id}
+        requestId={(quote as any).request_id}
+      />
     </div>
   );
 }

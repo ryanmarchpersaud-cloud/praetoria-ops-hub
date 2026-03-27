@@ -2177,6 +2177,7 @@ export type Database = {
         Row: {
           amount_paid: number
           balance_due: number
+          billing_mode: string | null
           created_at: string
           created_by: string | null
           customer_id: string
@@ -2191,6 +2192,7 @@ export type Database = {
           payment_method: string | null
           processor_payment_id: string | null
           property_id: string | null
+          quote_id: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["invoice_status"]
           subtotal: number
@@ -2199,10 +2201,12 @@ export type Database = {
           total: number
           updated_at: string
           viewed_at: string | null
+          visit_id: string | null
         }
         Insert: {
           amount_paid?: number
           balance_due?: number
+          billing_mode?: string | null
           created_at?: string
           created_by?: string | null
           customer_id: string
@@ -2217,6 +2221,7 @@ export type Database = {
           payment_method?: string | null
           processor_payment_id?: string | null
           property_id?: string | null
+          quote_id?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number
@@ -2225,10 +2230,12 @@ export type Database = {
           total?: number
           updated_at?: string
           viewed_at?: string | null
+          visit_id?: string | null
         }
         Update: {
           amount_paid?: number
           balance_due?: number
+          billing_mode?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string
@@ -2243,6 +2250,7 @@ export type Database = {
           payment_method?: string | null
           processor_payment_id?: string | null
           property_id?: string | null
+          quote_id?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number
@@ -2251,6 +2259,7 @@ export type Database = {
           total?: number
           updated_at?: string
           viewed_at?: string | null
+          visit_id?: string | null
         }
         Relationships: [
           {
@@ -2272,6 +2281,20 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
             referencedColumns: ["id"]
           },
         ]
@@ -2335,6 +2358,7 @@ export type Database = {
           additional_visit_rate: number | null
           assigned_to: string | null
           billing_notes: string | null
+          billing_status: string | null
           billing_type: string | null
           contract_end_date: string | null
           contract_start_date: string | null
@@ -2367,6 +2391,7 @@ export type Database = {
           additional_visit_rate?: number | null
           assigned_to?: string | null
           billing_notes?: string | null
+          billing_status?: string | null
           billing_type?: string | null
           contract_end_date?: string | null
           contract_start_date?: string | null
@@ -2399,6 +2424,7 @@ export type Database = {
           additional_visit_rate?: number | null
           assigned_to?: string | null
           billing_notes?: string | null
+          billing_status?: string | null
           billing_type?: string | null
           contract_end_date?: string | null
           contract_start_date?: string | null
@@ -3699,6 +3725,9 @@ export type Database = {
           agent_summary: string | null
           approval_status: Database["public"]["Enums"]["quote_approval_status"]
           approved_by: string | null
+          converted_at: string | null
+          converted_by: string | null
+          converted_job_id: string | null
           created_at: string
           created_by: string | null
           customer_id: string | null
@@ -3726,6 +3755,9 @@ export type Database = {
           agent_summary?: string | null
           approval_status?: Database["public"]["Enums"]["quote_approval_status"]
           approved_by?: string | null
+          converted_at?: string | null
+          converted_by?: string | null
+          converted_job_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
@@ -3753,6 +3785,9 @@ export type Database = {
           agent_summary?: string | null
           approval_status?: Database["public"]["Enums"]["quote_approval_status"]
           approved_by?: string | null
+          converted_at?: string | null
+          converted_by?: string | null
+          converted_job_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
@@ -3777,6 +3812,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "quotes_converted_job_id_fkey"
+            columns: ["converted_job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "quotes_customer_id_fkey"
             columns: ["customer_id"]
@@ -5095,6 +5137,7 @@ export type Database = {
           access_notes: string | null
           arrival_time: string | null
           assigned_worker_id: string | null
+          billing_status: string | null
           completion_time: string | null
           created_at: string
           crew_notes: string | null
@@ -5106,9 +5149,11 @@ export type Database = {
           job_id: string | null
           priority: string | null
           property_id: string | null
+          quote_id: string | null
           recurrence_end_date: string | null
           recurrence_frequency: string | null
           recurrence_parent_id: string | null
+          request_id: string | null
           requires_completion_notes: boolean | null
           requires_photo_proof: boolean | null
           safety_notes: string | null
@@ -5129,6 +5174,7 @@ export type Database = {
           access_notes?: string | null
           arrival_time?: string | null
           assigned_worker_id?: string | null
+          billing_status?: string | null
           completion_time?: string | null
           created_at?: string
           crew_notes?: string | null
@@ -5140,9 +5186,11 @@ export type Database = {
           job_id?: string | null
           priority?: string | null
           property_id?: string | null
+          quote_id?: string | null
           recurrence_end_date?: string | null
           recurrence_frequency?: string | null
           recurrence_parent_id?: string | null
+          request_id?: string | null
           requires_completion_notes?: boolean | null
           requires_photo_proof?: boolean | null
           safety_notes?: string | null
@@ -5163,6 +5211,7 @@ export type Database = {
           access_notes?: string | null
           arrival_time?: string | null
           assigned_worker_id?: string | null
+          billing_status?: string | null
           completion_time?: string | null
           created_at?: string
           crew_notes?: string | null
@@ -5174,9 +5223,11 @@ export type Database = {
           job_id?: string | null
           priority?: string | null
           property_id?: string | null
+          quote_id?: string | null
           recurrence_end_date?: string | null
           recurrence_frequency?: string | null
           recurrence_parent_id?: string | null
+          request_id?: string | null
           requires_completion_notes?: boolean | null
           requires_photo_proof?: boolean | null
           safety_notes?: string | null
@@ -5216,10 +5267,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "visits_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "visits_recurrence_parent_id_fkey"
             columns: ["recurrence_parent_id"]
             isOneToOne: false
             referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visits_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
             referencedColumns: ["id"]
           },
         ]
