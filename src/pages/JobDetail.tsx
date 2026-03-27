@@ -166,28 +166,11 @@ export default function JobDetail() {
     }
   };
 
-  const handleCreateInvoice = async () => {
-    if (!id) return;
-    try {
-      const { data: invoice, error } = await supabase.from('invoices').insert({
-        invoice_number: '',
-        customer_id: (job as any).customer_id,
-        property_id: (job as any).property_id || null,
-        job_id: id,
-        status: 'Draft' as any,
-        customer_memo: form.job_title || null,
-        internal_notes: `From job ${job.job_number}`,
-      }).select().single();
-      if (error) throw error;
-      toast({ title: 'Invoice created' });
-      navigate(`/invoices/${invoice.id}`);
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
+  const handleCreateInvoice = () => setInvoiceOpen(true);
 
   const isCompleted = form.status === 'Completed';
   const isOneTime = !form.service_frequency || form.service_frequency === 'one-time';
+  const billingStatus = (form as any).billing_status || 'not_billable';
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -199,6 +182,9 @@ export default function JobDetail() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg md:text-xl font-bold truncate">{form.job_title}</h1>
             <StatusBadge status={form.status || 'Draft'} />
+            {billingStatus !== 'not_billable' && (
+              <Badge variant="outline" className="text-[10px]">{billingStatus}</Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground mono">{job.job_number}</p>
         </div>

@@ -84,25 +84,11 @@ export default function VisitDetail() {
           <Save className="h-4 w-4 mr-2" /> Save Visit
         </Button>
         {form.visit_status === 'Completed' && (
-          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={async () => {
-            try {
-              const { data: invoice, error } = await supabase.from('invoices').insert({
-                invoice_number: '',
-                customer_id: (visit as any).customer_id,
-                property_id: (visit as any).property_id || null,
-                job_id: (visit as any).job_id || null,
-                status: 'Draft' as any,
-                customer_memo: form.service_summary || null,
-                internal_notes: `From visit ${visit.visit_number}`,
-              }).select().single();
-              if (error) throw error;
-              toast({ title: 'Invoice created' });
-              navigate(`/invoices/${invoice.id}`);
-            } catch (err: any) {
-              toast({ title: 'Error', description: err.message, variant: 'destructive' });
-            }
-          }}>
+          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setInvoiceOpen(true)}>
             <Receipt className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Invoice</span>
+          </Button>
+        )}
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
         )}
