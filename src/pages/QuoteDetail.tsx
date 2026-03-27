@@ -269,10 +269,21 @@ export default function QuoteDetail() {
         <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
           <Save className="h-4 w-4 mr-2" /> Save Quote
         </Button>
-        {form.approval_status === 'Approved' && (
+        {form.approval_status === 'Approved' && !isConverted && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleConvertToJob}>
             <Briefcase className="h-4 w-4" />
-            <span className="hidden sm:inline">Create Job</span>
+            <span className="hidden sm:inline">Convert to Job</span>
+          </Button>
+        )}
+        {isConverted && (
+          <Badge variant="outline" className="h-11 flex items-center gap-1.5 px-3 text-accent border-accent/30">
+            <Briefcase className="h-3.5 w-3.5" /> Converted
+          </Badge>
+        )}
+        {form.approval_status === 'Approved' && (
+          <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setInvoiceOpen(true)}>
+            <Receipt className="h-4 w-4" />
+            <span className="hidden sm:inline">Invoice</span>
           </Button>
         )}
         <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => navigate(`/quotes/${id}/print`)}>
