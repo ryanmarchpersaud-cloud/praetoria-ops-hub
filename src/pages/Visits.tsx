@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { VISIT_STATUSES } from '@/lib/constants';
 import { format } from 'date-fns';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { BulkInvoiceDialog } from '@/components/BulkInvoiceDialog';
 
 export default function Visits() {
