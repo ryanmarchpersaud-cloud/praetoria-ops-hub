@@ -10,10 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { useJobs } from '@/hooks/useJobs';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateVisit } from '@/hooks/useVisits';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -25,26 +27,40 @@ import {
   CalendarIcon, ArrowLeft, Check, X, Search, Filter, MapPinOff,
   AlertTriangle, Heart, Accessibility, Dog, Lock, Mountain, Zap, Crown,
   Wrench, Snowflake, Shovel, TreePine, Route, DollarSign, Clock,
-  CloudRain, Users, History
+  CloudRain, Users, History, Move, Trash2, MoreVertical, RefreshCw,
+  MapPin, Navigation, Car
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Service category → marker color mapping
-const CATEGORY_COLORS: Record<string, { url: string; label: string; icon: typeof Snowflake }> = {
+// Service category → marker color mapping (Phase 1 complete)
+const CATEGORY_COLORS: Record<string, { url: string; label: string; icon: typeof Snowflake; hex: string }> = {
   'Snow & Ice': {
     url: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-    label: 'Snow & Ice',
-    icon: Snowflake,
+    label: 'Snow & Ice', icon: Snowflake, hex: '#2563eb',
   },
   'Landscaping & Grounds': {
     url: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-    label: 'Landscaping',
-    icon: TreePine,
+    label: 'Landscaping', icon: TreePine, hex: '#16a34a',
   },
   'Maintenance & Repairs': {
     url: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
-    label: 'Maintenance',
-    icon: Wrench,
+    label: 'Maintenance', icon: Wrench, hex: '#ea580c',
+  },
+  'Junk Removal': {
+    url: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    label: 'Junk Removal', icon: Trash2, hex: '#dc2626',
+  },
+  'Cleaning': {
+    url: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+    label: 'Cleaning', icon: Snowflake, hex: '#7c3aed',
+  },
+  'Power Washing': {
+    url: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    label: 'Power Washing', icon: CloudRain, hex: '#0d9488',
+  },
+  'Property Care': {
+    url: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
+    label: 'Property Care', icon: MapPin, hex: '#ca8a04',
   },
 };
 
@@ -134,9 +150,24 @@ function optimizeRoute(points: { id: string; lat: number; lng: number }[]): stri
   return route.map(p => p.id);
 }
 
+// Haversine distance in km
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Estimate travel time at ~40 km/h city avg
+function estimateTravelMinutes(km: number): number {
+  return Math.round(km / 40 * 60);
+}
+
 export default function ScheduleNewVisits() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { data: allJobs = [], isLoading: jobsLoading } = useJobs();
   const { data: employees = [] } = useEmployees();
   const createVisit = useCreateVisit();
@@ -160,12 +191,18 @@ export default function ScheduleNewVisits() {
   const [crewCounts, setCrewCounts] = useState<Record<string, number>>({});
   const [showRouteOptimization, setShowRouteOptimization] = useState(false);
   const [clusteringEnabled, setClusteringEnabled] = useState(true);
+  const [highlightedJobId, setHighlightedJobId] = useState<string | null>(null);
+  const [existingVisits, setExistingVisits] = useState<Record<string, boolean>>({});
+  const [pinCorrectionMode, setPinCorrectionMode] = useState(false);
+  const [bulkAction, setBulkAction] = useState<'reassign' | 'unschedule' | null>(null);
 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const routeLineRef = useRef<L.Polyline | null>(null);
+  const routeNumberMarkersRef = useRef<L.Marker[]>([]);
+  const listItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // Filter recurring jobs
   const recurringJobs = useMemo(() => {
@@ -232,7 +269,6 @@ export default function ScheduleNewVisits() {
         setSiteAlerts(map);
       });
 
-      // Visit history per property
       supabase
         .from('visits')
         .select('property_id, service_date, visit_status')
@@ -282,7 +318,6 @@ export default function ScheduleNewVisits() {
           const forecast = fnData.forecast;
           const dateStr = format(startDate, 'yyyy-MM-dd');
 
-          // Check if selected date has bad weather in forecast
           let dayForecast: any = null;
           if (forecast) {
             dayForecast = forecast.find((f: any) => f.date === dateStr);
@@ -334,6 +369,25 @@ export default function ScheduleNewVisits() {
       });
   }, [startDate]);
 
+  // Check for duplicate visits on the selected date
+  useEffect(() => {
+    const dateStr = format(startDate, 'yyyy-MM-dd');
+    const jobIds = recurringJobs.map((j: any) => j.id);
+    if (jobIds.length === 0) return;
+
+    supabase
+      .from('visits')
+      .select('job_id')
+      .eq('service_date', dateStr)
+      .in('job_id', jobIds)
+      .then(({ data }) => {
+        if (!data) return;
+        const dupes: Record<string, boolean> = {};
+        (data as any[]).forEach((v) => { dupes[v.job_id] = true; });
+        setExistingVisits(dupes);
+      });
+  }, [startDate, recurringJobs]);
+
   // Filtered list
   const filteredJobs = useMemo(() => {
     let filtered = recurringJobs;
@@ -363,6 +417,7 @@ export default function ScheduleNewVisits() {
       else next.add(jobId);
       return next;
     });
+    setHighlightedJobId(jobId);
   }, []);
 
   const selectAll = () => setSelectedJobIds(new Set(filteredJobs.map((j: any) => j.id)));
@@ -380,6 +435,37 @@ export default function ScheduleNewVisits() {
       .filter((j: any) => selectedJobIds.has(j.id))
       .reduce((sum: number, j: any) => sum + (parseFloat(j.estimated_total) || 0), 0);
   }, [filteredJobs, selectedJobIds]);
+
+  // Travel time estimates for optimized route
+  const travelEstimates = useMemo(() => {
+    if (!showRouteOptimization || selectedJobIds.size < 2) return null;
+
+    const routePoints: { id: string; lat: number; lng: number }[] = [];
+    filteredJobs.forEach((j: any) => {
+      if (!selectedJobIds.has(j.id) || !j.property_id || !propertyLocations[j.property_id]) return;
+      const loc = propertyLocations[j.property_id];
+      routePoints.push({ id: j.id, lat: loc.lat, lng: loc.lng });
+    });
+
+    if (routePoints.length < 2) return null;
+
+    const order = optimizeRoute(routePoints);
+    const segments: { from: string; to: string; km: number; minutes: number }[] = [];
+    let totalKm = 0;
+    let totalMin = 0;
+
+    for (let i = 0; i < order.length - 1; i++) {
+      const p1 = routePoints.find(p => p.id === order[i])!;
+      const p2 = routePoints.find(p => p.id === order[i + 1])!;
+      const km = haversineKm(p1.lat, p1.lng, p2.lat, p2.lng);
+      const min = estimateTravelMinutes(km);
+      segments.push({ from: order[i], to: order[i + 1], km, minutes: min });
+      totalKm += km;
+      totalMin += min;
+    }
+
+    return { segments, totalKm, totalMinutes: totalMin, order };
+  }, [showRouteOptimization, selectedJobIds, filteredJobs, propertyLocations]);
 
   // Build alert icons for a job
   const getAlertIcons = (job: any) => {
@@ -432,16 +518,20 @@ export default function ScheduleNewVisits() {
     const hist = job.property_id ? visitHistory[job.property_id] : null;
     const cat = CATEGORY_COLORS[job.service_category];
     const revenue = parseFloat(job.estimated_total) || 0;
+    const hasDupe = existingVisits[job.id];
 
     let html = `<div style="font-size:12px;min-width:200px">`;
     html += `<strong>${customerName}</strong>`;
     if (alert?.priority_tier === 'vip') html += ` <span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600">VIP</span>`;
     html += `<br/>${job.job_number} – ${job.job_title}`;
-    if (cat) html += `<br/><span style="font-size:11px">● ${cat.label}</span>`;
+    if (cat) html += `<br/><span style="font-size:11px;color:${cat.hex}">● ${cat.label}</span>`;
     if (revenue > 0) html += `<br/><span style="color:#16a34a;font-size:11px;font-weight:600">$${revenue.toFixed(2)}</span>`;
     html += `<br/><span style="color:#888">${address}</span>`;
 
-    // Visit history
+    if (hasDupe) {
+      html += `<div style="margin-top:4px;padding:3px 6px;background:#fef2f2;border-radius:4px;color:#dc2626;font-size:11px">⚠ Visit already exists for this date</div>`;
+    }
+
     if (hist) {
       html += `<div style="margin-top:4px;font-size:10px;color:#6b7280">`;
       html += `📋 ${hist.visit_count} visits this season`;
@@ -473,6 +563,31 @@ export default function ScheduleNewVisits() {
 
     html += `</div>`;
     return html;
+  };
+
+  // Handle manual pin correction
+  const handlePinDragEnd = async (jobId: string, propertyId: string, newLat: number, newLng: number) => {
+    // Update local state
+    setPropertyLocations(prev => ({
+      ...prev,
+      [propertyId]: { ...prev[propertyId], lat: newLat, lng: newLng },
+    }));
+
+    // Save to DB
+    await supabase.from('properties').update({ latitude: newLat, longitude: newLng } as any).eq('id', propertyId);
+
+    // Log audit
+    await supabase.from('activities').insert({
+      action_name: 'Pin location manually corrected',
+      workflow_name: 'dispatch',
+      record_type: 'property',
+      record_id: propertyId,
+      user_id: user?.id || null,
+      status: 'completed',
+      payload_summary: { lat: newLat, lng: newLng, job_id: jobId },
+    });
+
+    toast({ title: 'Pin location updated', description: 'Property coordinates saved.' });
   };
 
   // Initialize map
@@ -509,6 +624,8 @@ export default function ScheduleNewVisits() {
       map.removeLayer(routeLineRef.current);
       routeLineRef.current = null;
     }
+    routeNumberMarkersRef.current.forEach(m => m.remove());
+    routeNumberMarkersRef.current = [];
 
     const selectedIcon = new L.Icon({ iconUrl: SELECTED_MARKER_URL, shadowUrl: SHADOW_URL, ...ICON_OPTS });
     const bounds: L.LatLngExpression[] = [];
@@ -529,7 +646,9 @@ export default function ScheduleNewVisits() {
       if (!j.property_id || !propertyLocations[j.property_id]) return;
       const loc = propertyLocations[j.property_id];
       const isSelected = selectedJobIds.has(j.id);
+      const isHighlighted = highlightedJobId === j.id;
       const customerName = j.customers ? `${j.customers.first_name} ${j.customers.last_name}` : 'Unknown';
+      const hasDupe = existingVisits[j.id];
 
       const catColor = CATEGORY_COLORS[j.service_category];
       const normalIcon = new L.Icon({ iconUrl: catColor?.url || DEFAULT_MARKER_URL, shadowUrl: SHADOW_URL, ...ICON_OPTS });
@@ -547,13 +666,35 @@ export default function ScheduleNewVisits() {
       if (warnings && warnings.length > 0) tooltipExtra += ' ⚠️';
       if (alert?.medical_alert) tooltipExtra += ' 🏥';
       if (alert?.has_dog) tooltipExtra += ' 🐕';
+      if (hasDupe) tooltipExtra += ' 🔁';
       const tooltipText = `${customerName} – #${j.job_number}${tooltipExtra}`;
 
-      const marker = L.marker([offsetLat, offsetLng], { icon: isSelected ? selectedIcon : normalIcon })
+      const marker = L.marker([offsetLat, offsetLng], {
+        icon: isSelected ? selectedIcon : normalIcon,
+        draggable: pinCorrectionMode,
+      })
         .bindTooltip(tooltipText, { permanent: false, direction: 'top', offset: [0, -35] })
         .bindPopup(buildPopupHtml(j, loc.address));
 
-      marker.on('click', () => toggleJob(j.id));
+      marker.on('click', () => {
+        toggleJob(j.id);
+        // Scroll list item into view (map→list sync)
+        const el = listItemRefs.current[j.id];
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+
+      if (pinCorrectionMode) {
+        marker.on('dragend', (e: any) => {
+          const newPos = e.target.getLatLng();
+          handlePinDragEnd(j.id, j.property_id, newPos.lat, newPos.lng);
+        });
+      }
+
+      // Pulse effect for highlighted marker
+      if (isHighlighted) {
+        marker.openTooltip();
+      }
+
       markersRef.current[j.id] = marker;
       bounds.push([offsetLat, offsetLng]);
 
@@ -596,7 +737,8 @@ export default function ScheduleNewVisits() {
           iconSize: [20, 20],
           iconAnchor: [10, 10],
         });
-        L.marker(ll, { icon: numberIcon, interactive: false }).addTo(map);
+        const nm = L.marker(ll, { icon: numberIcon, interactive: false }).addTo(map);
+        routeNumberMarkersRef.current.push(nm);
       });
 
       routeLineRef.current = polyline;
@@ -605,10 +747,51 @@ export default function ScheduleNewVisits() {
     if (bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds as any), { padding: [40, 40], maxZoom: 13 });
     }
-  }, [filteredJobs, propertyLocations, selectedJobIds, toggleJob, siteAlerts, customerWarnings, visitHistory, clusteringEnabled, showRouteOptimization]);
+  }, [filteredJobs, propertyLocations, selectedJobIds, toggleJob, siteAlerts, customerWarnings, visitHistory, clusteringEnabled, showRouteOptimization, highlightedJobId, pinCorrectionMode, existingVisits]);
+
+  // Pan map to highlighted job (list→map sync)
+  useEffect(() => {
+    if (!highlightedJobId || !mapRef.current) return;
+    const marker = markersRef.current[highlightedJobId];
+    if (marker) {
+      mapRef.current.panTo(marker.getLatLng(), { animate: true });
+      marker.openTooltip();
+    }
+    const timer = setTimeout(() => setHighlightedJobId(null), 2000);
+    return () => clearTimeout(timer);
+  }, [highlightedJobId]);
+
+  // Duplicate visit count for selected
+  const dupeCount = useMemo(() => {
+    return [...selectedJobIds].filter(id => existingVisits[id]).length;
+  }, [selectedJobIds, existingVisits]);
 
   const handleCreateVisits = async () => {
     if (selectedJobIds.size === 0) return;
+
+    // Warn about duplicates
+    if (dupeCount > 0) {
+      const confirmed = window.confirm(
+        `${dupeCount} of the selected jobs already have visits on ${format(startDate, 'MMM d, yyyy')}. Create duplicates anyway?`
+      );
+      if (!confirmed) return;
+    }
+
+    // Worker conflict check
+    if (selectedTeam.length > 0) {
+      const overloaded = selectedTeam.filter(uid => (crewCounts[uid] || 0) >= 6);
+      if (overloaded.length > 0) {
+        const names = overloaded.map(uid => {
+          const emp = (employees as any[]).find((e: any) => e.user_id === uid);
+          return emp?.full_name || 'Unknown';
+        });
+        const confirmed = window.confirm(
+          `Warning: ${names.join(', ')} already ${overloaded.length > 1 ? 'have' : 'has'} 6+ visits on this date. Assign anyway?`
+        );
+        if (!confirmed) return;
+      }
+    }
+
     setIsCreating(true);
 
     const dateStr = format(startDate, 'yyyy-MM-dd');
@@ -638,6 +821,42 @@ export default function ScheduleNewVisits() {
       }
     }
 
+    // Audit trail
+    await supabase.from('activities').insert({
+      action_name: `Batch created ${successCount} visits`,
+      workflow_name: 'dispatch',
+      record_type: 'visit',
+      user_id: user?.id || null,
+      status: 'completed',
+      payload_summary: {
+        date: dateStr,
+        job_count: selectedJobs.length,
+        success: successCount,
+        errors: errorCount,
+        assigned_team: selectedTeam,
+      },
+    });
+
+    // Send notifications to assigned workers
+    if (selectedTeam.length > 0 && successCount > 0) {
+      for (const workerId of selectedTeam) {
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'visit_scheduled',
+              recipient_id: workerId,
+              audience: 'worker',
+              channels: ['in_app'],
+              variables: {
+                subject: `${successCount} new visit${successCount > 1 ? 's' : ''} assigned`,
+                body: `You have been assigned ${successCount} visit${successCount > 1 ? 's' : ''} for ${format(startDate, 'MMM d, yyyy')}.`,
+              },
+            },
+          });
+        } catch { /* notification failures shouldn't block */ }
+      }
+    }
+
     setIsCreating(false);
     setShowModal(false);
 
@@ -654,10 +873,77 @@ export default function ScheduleNewVisits() {
     }
   };
 
+  // Bulk reassign handler
+  const handleBulkReassign = async (newWorkerId: string) => {
+    if (selectedJobIds.size === 0) return;
+    const dateStr = format(startDate, 'yyyy-MM-dd');
+    const jobIds = [...selectedJobIds];
+
+    const { error } = await supabase
+      .from('visits')
+      .update({ assigned_worker_id: newWorkerId } as any)
+      .eq('service_date', dateStr)
+      .in('job_id', jobIds);
+
+    if (!error) {
+      await supabase.from('activities').insert({
+        action_name: `Bulk reassigned ${jobIds.length} visits`,
+        workflow_name: 'dispatch',
+        record_type: 'visit',
+        user_id: user?.id || null,
+        status: 'completed',
+        payload_summary: { date: dateStr, job_ids: jobIds, new_worker: newWorkerId },
+      });
+
+      toast({ title: 'Visits reassigned', description: `${jobIds.length} visits updated.` });
+      setBulkAction(null);
+    } else {
+      toast({ title: 'Reassignment failed', variant: 'destructive' });
+    }
+  };
+
+  // Bulk unschedule handler
+  const handleBulkUnschedule = async () => {
+    if (selectedJobIds.size === 0) return;
+    const dateStr = format(startDate, 'yyyy-MM-dd');
+    const jobIds = [...selectedJobIds];
+
+    const confirmed = window.confirm(`Unschedule ${jobIds.length} visits for ${format(startDate, 'MMM d')}?`);
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from('visits')
+      .update({ visit_status: 'unscheduled' } as any)
+      .eq('service_date', dateStr)
+      .in('job_id', jobIds);
+
+    if (!error) {
+      await supabase.from('activities').insert({
+        action_name: `Bulk unscheduled ${jobIds.length} visits`,
+        workflow_name: 'dispatch',
+        record_type: 'visit',
+        user_id: user?.id || null,
+        status: 'completed',
+        payload_summary: { date: dateStr, job_ids: jobIds },
+      });
+
+      toast({ title: 'Visits unscheduled', description: `${jobIds.length} visits marked as unscheduled.` });
+      setSelectedJobIds(new Set());
+    } else {
+      toast({ title: 'Failed to unschedule', variant: 'destructive' });
+    }
+  };
+
   const activeCats = useMemo(() => {
     const cats = new Set(filteredJobs.map((j: any) => j.service_category));
     return [...cats].filter(Boolean);
   }, [filteredJobs]);
+
+  // Missing location jobs
+  const missingLocationJobs = useMemo(() => {
+    if (!locationsLoaded) return [];
+    return filteredJobs.filter((j: any) => j.property_id && !propertyLocations[j.property_id]);
+  }, [filteredJobs, propertyLocations, locationsLoaded]);
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -680,6 +966,27 @@ export default function ScheduleNewVisits() {
               ${estimatedRevenue.toFixed(2)}
             </Badge>
           )}
+
+          {/* Bulk actions dropdown */}
+          {selectedJobIds.size > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <MoreVertical className="h-3.5 w-3.5" />
+                  Bulk
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setBulkAction('reassign')}>
+                  <RefreshCw className="h-3.5 w-3.5 mr-2" /> Bulk Reassign
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleBulkUnschedule} className="text-destructive">
+                  <X className="h-3.5 w-3.5 mr-2" /> Bulk Unschedule
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <Button
             disabled={selectedJobIds.size === 0}
             onClick={() => setShowModal(true)}
@@ -704,6 +1011,18 @@ export default function ScheduleNewVisits() {
             <Badge variant="outline" className="text-amber-700 border-amber-300 text-xs shrink-0">
               {weatherData.temperature !== null ? `${weatherData.temperature}°C` : '--'}
             </Badge>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Missing location warning */}
+      {missingLocationJobs.length > 0 && (
+        <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-900/10 dark:border-amber-800">
+          <CardContent className="p-3 flex items-center gap-2">
+            <MapPinOff className="h-4 w-4 text-amber-600 shrink-0" />
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              <strong>{missingLocationJobs.length}</strong> job{missingLocationJobs.length !== 1 ? 's' : ''} missing map coordinates — they won't appear on the map.
+            </p>
           </CardContent>
         </Card>
       )}
@@ -766,10 +1085,55 @@ export default function ScheduleNewVisits() {
                   <TooltipContent>Cluster nearby markers</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={pinCorrectionMode ? 'default' : 'outline'}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setPinCorrectionMode(!pinCorrectionMode)}
+                    >
+                      <Move className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{pinCorrectionMode ? 'Exit pin correction mode' : 'Drag pins to correct location'}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
+          {pinCorrectionMode && (
+            <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
+              <Move className="h-3 w-3" /> Pin correction mode — drag markers to correct positions. Changes save automatically.
+            </p>
+          )}
         </CardContent>
       </Card>
+
+      {/* Travel time summary */}
+      {travelEstimates && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <Car className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Route Summary</span>
+              </div>
+              <Badge variant="outline" className="gap-1 text-xs">
+                <Navigation className="h-3 w-3" />
+                {travelEstimates.totalKm.toFixed(1)} km
+              </Badge>
+              <Badge variant="outline" className="gap-1 text-xs">
+                <Clock className="h-3 w-3" />
+                ~{travelEstimates.totalMinutes} min travel
+              </Badge>
+              <Badge variant="outline" className="gap-1 text-xs">
+                {travelEstimates.order.length} stops
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Main content: List + Map */}
       <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-3 min-h-[400px]">
@@ -792,6 +1156,7 @@ export default function ScheduleNewVisits() {
             ) : (
               filteredJobs.map((job: any) => {
                 const isSelected = selectedJobIds.has(job.id);
+                const isHighlighted = highlightedJobId === job.id;
                 const customerName = job.customers
                   ? `${job.customers.first_name} ${job.customers.last_name}`
                   : 'Unknown Client';
@@ -800,16 +1165,19 @@ export default function ScheduleNewVisits() {
                 const catInfo = CATEGORY_COLORS[job.service_category];
                 const hist = job.property_id ? visitHistory[job.property_id] : null;
                 const revenue = parseFloat(job.estimated_total) || 0;
+                const hasDupe = existingVisits[job.id];
 
                 return (
                   <button
                     key={job.id}
+                    ref={el => { listItemRefs.current[job.id] = el; }}
                     onClick={() => toggleJob(job.id)}
                     className={cn(
                       'w-full text-left p-2.5 rounded-md border transition-all text-sm',
                       isSelected
                         ? 'border-primary bg-primary/10 ring-1 ring-primary/30'
-                        : 'border-border bg-card hover:bg-muted/50'
+                        : 'border-border bg-card hover:bg-muted/50',
+                      isHighlighted && 'ring-2 ring-primary animate-pulse'
                     )}
                   >
                     <div className="flex items-start gap-2">
@@ -833,6 +1201,13 @@ export default function ScheduleNewVisits() {
                         <p className="text-xs text-muted-foreground truncate">{job.job_title}</p>
                         {job.properties?.property_name && (
                           <p className="text-xs text-muted-foreground/70 truncate">📍 {job.properties.property_name}</p>
+                        )}
+
+                        {/* Duplicate warning */}
+                        {hasDupe && (
+                          <p className="text-[10px] text-destructive font-medium mt-0.5 flex items-center gap-1">
+                            <AlertTriangle className="h-2.5 w-2.5" /> Visit already exists for {format(startDate, 'MMM d')}
+                          </p>
                         )}
 
                         {/* Visit history + revenue row */}
@@ -916,6 +1291,45 @@ export default function ScheduleNewVisits() {
         </div>
       </div>
 
+      {/* Bulk Reassign Dialog */}
+      <Dialog open={bulkAction === 'reassign'} onOpenChange={(open) => !open && setBulkAction(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Reassign {selectedJobIds.size} Visits</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Input
+              placeholder="Search workers..."
+              value={teamSearch}
+              onChange={(e) => setTeamSearch(e.target.value)}
+              className="h-9 text-sm"
+            />
+            <div className="border rounded-md max-h-[250px] overflow-y-auto">
+              {(employees as any[])
+                .filter((emp: any) => !teamSearch || emp.full_name?.toLowerCase().includes(teamSearch.toLowerCase()))
+                .map((emp: any) => (
+                  <button
+                    key={emp.user_id}
+                    onClick={() => handleBulkReassign(emp.user_id)}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 text-sm border-b last:border-b-0 text-left"
+                  >
+                    <span className="font-medium">{emp.full_name || 'Unnamed'}</span>
+                    {emp.role_title && <span className="text-muted-foreground text-xs">· {emp.role_title}</span>}
+                    <span className={cn(
+                      'ml-auto text-[10px] px-1.5 py-0.5 rounded-full',
+                      (crewCounts[emp.user_id] || 0) <= 3
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                    )}>
+                      {crewCounts[emp.user_id] || 0} visits
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Create Visits Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
@@ -929,11 +1343,31 @@ export default function ScheduleNewVisits() {
             )}
           </DialogHeader>
 
+          {/* Duplicate warning in modal */}
+          {dupeCount > 0 && (
+            <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                <strong>{dupeCount}</strong> selected job{dupeCount !== 1 ? 's' : ''} already {dupeCount !== 1 ? 'have' : 'has'} visits on this date.
+              </p>
+            </div>
+          )}
+
           {/* Weather warning in modal */}
           {weatherData?.hasWarning && (
             <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-center gap-2">
               <CloudRain className="h-4 w-4 text-amber-600 shrink-0" />
               <p className="text-xs text-amber-700 dark:text-amber-400">{weatherData.warningText}</p>
+            </div>
+          )}
+
+          {/* Travel summary in modal */}
+          {travelEstimates && (
+            <div className="p-2.5 rounded-md bg-primary/5 border border-primary/20 flex items-center gap-3">
+              <Car className="h-4 w-4 text-primary shrink-0" />
+              <div className="text-xs text-foreground">
+                <strong>{travelEstimates.order.length} stops</strong> · {travelEstimates.totalKm.toFixed(1)} km · ~{travelEstimates.totalMinutes} min travel
+              </div>
             </div>
           )}
 
