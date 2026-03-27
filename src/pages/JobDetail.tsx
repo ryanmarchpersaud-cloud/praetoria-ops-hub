@@ -414,6 +414,7 @@ export default function JobDetail() {
         jobId={id}
         quoteId={(job as any).quote_id}
         requestId={(job as any).request_id}
+        billingMode={(form as any).billing_mode || null}
       />
     </div>
   );
