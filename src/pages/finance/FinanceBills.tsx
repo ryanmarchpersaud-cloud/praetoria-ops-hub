@@ -218,8 +218,9 @@ export default function FinanceBills() {
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {b.status !== 'paid' && b.status !== 'void' && (
-                              <DropdownMenuItem onClick={() => { setShowPayment(b); setPaymentAmount(String(b.balance_due)); }}>Record Payment</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setShowPayment(b); setPaymentForm({ amount: String(b.balance_due), payment_date: new Date().toISOString().split('T')[0] }); }}>Record Payment</DropdownMenuItem>
                             )}
+                            <DropdownMenuItem onClick={() => setShowHistory(b)}><History className="h-3.5 w-3.5 mr-1" /> Payment History</DropdownMenuItem>
                             {(TRANSITIONS[b.status] || []).filter((s: string) => s !== 'partial').map((next: string) => (
                               <DropdownMenuItem key={next} onClick={() => {
                                 if (next === 'paid') {
