@@ -326,7 +326,102 @@ export default function FinanceReports() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="payroll"><PayrollReportTab /></TabsContent>
+        <TabsContent value="payouts"><PayoutReportTab /></TabsContent>
+        <TabsContent value="remittances"><RemittanceReportTab /></TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+/* ── Payroll Report Tab ── */
+function PayrollReportTab() {
+  const { data: runs } = usePayrollRuns();
+  const processedRuns = (runs ?? []).filter(r => r.status === 'processed');
+
+  return (
+    <Card>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">Payroll Runs Summary</CardTitle></CardHeader>
+      <CardContent className="p-0 overflow-x-auto">
+        <Table>
+          <TableHeader><TableRow>
+            <TableHead>Run #</TableHead><TableHead>Period</TableHead><TableHead>Pay Date</TableHead><TableHead>Status</TableHead>
+          </TableRow></TableHeader>
+          <TableBody>
+            {processedRuns.map(r => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium">{r.run_number || '—'}</TableCell>
+                <TableCell>{r.pay_period_start} → {r.pay_period_end}</TableCell>
+                <TableCell>{r.pay_date}</TableCell>
+                <TableCell>{r.status}</TableCell>
+              </TableRow>
+            ))}
+            {processedRuns.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No processed payroll runs</TableCell></TableRow>}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Payout Report Tab ── */
+function PayoutReportTab() {
+  const { data: runs } = usePayoutRuns();
+  const processedRuns = (runs ?? []).filter(r => r.status === 'processed');
+
+  return (
+    <Card>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">Subcontractor Payout Runs</CardTitle></CardHeader>
+      <CardContent className="p-0 overflow-x-auto">
+        <Table>
+          <TableHeader><TableRow>
+            <TableHead>Run #</TableHead><TableHead>Period</TableHead><TableHead>Payout Date</TableHead><TableHead>Status</TableHead>
+          </TableRow></TableHeader>
+          <TableBody>
+            {processedRuns.map(r => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium">{r.payout_run_number || '—'}</TableCell>
+                <TableCell>{r.period_start} → {r.period_end}</TableCell>
+                <TableCell>{r.payout_date}</TableCell>
+                <TableCell>{r.status}</TableCell>
+              </TableRow>
+            ))}
+            {processedRuns.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No processed payout runs</TableCell></TableRow>}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ── Remittance Report Tab ── */
+function RemittanceReportTab() {
+  const { data: rems } = useRemittances();
+
+  return (
+    <Card>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">Remittance Summary</CardTitle></CardHeader>
+      <CardContent className="p-0 overflow-x-auto">
+        <Table>
+          <TableHeader><TableRow>
+            <TableHead>Rem #</TableHead><TableHead>Type</TableHead><TableHead>Period</TableHead><TableHead>Due</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead>
+          </TableRow></TableHeader>
+          <TableBody>
+            {(rems ?? []).map(r => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium">{r.remittance_number || '—'}</TableCell>
+                <TableCell>{r.remittance_type}</TableCell>
+                <TableCell>{r.period_start} → {r.period_end}</TableCell>
+                <TableCell>{r.due_date}</TableCell>
+                <TableCell className="text-right">{new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(Number(r.amount))}</TableCell>
+                <TableCell>{r.status}</TableCell>
+              </TableRow>
+            ))}
+            {(!rems || rems.length === 0) && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No remittances</TableCell></TableRow>}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
