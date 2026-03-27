@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { useInvoice, useInvoiceLineItems, useUpdateInvoice } from '@/hooks/useInvoices';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +28,7 @@ export default function InvoiceDetail() {
   const { data: lineItems = [] } = useInvoiceLineItems(id);
   const updateInvoice = useUpdateInvoice();
   const { data: billingProfile } = useBillingProfile(invoice?.customer_id);
+  const { canManageInvoices, canEditInvoiceDrafts, canRecordPayments, canVoidInvoices } = useActionPermissions();
 
   // Editable draft fields
   const [editingMeta, setEditingMeta] = useState(false);
@@ -100,10 +102,10 @@ export default function InvoiceDetail() {
     setPaymentAmount('');
   };
 
-  const canSend = ['Draft'].includes(invoice.status);
-  const canResend = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status);
-  const canRecordPayment = ['Sent', 'Viewed', 'Overdue', 'Partially Paid'].includes(invoice.status);
-  const canVoid = !['Voided', 'Paid'].includes(invoice.status);
+  const canSend = ['Draft'].includes(invoice.status) && canManageInvoices;
+  const canResend = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canManageInvoices;
+  const canRecordPayment = ['Sent', 'Viewed', 'Overdue', 'Partially Paid'].includes(invoice.status) && canRecordPayments;
+  const canVoid = !['Voided', 'Paid'].includes(invoice.status) && canVoidInvoices;
   const billingMode = (invoice as any).billing_mode;
 
   return (
@@ -176,7 +178,7 @@ export default function InvoiceDetail() {
             <CardTitle className="text-base">Line Items</CardTitle>
           </CardHeader>
           <CardContent className={isDraft ? 'p-4' : 'p-0'}>
-            {isDraft ? (
+            {isDraft && canEditInvoiceDrafts ? (
               <InvoiceLineItemEditor invoiceId={invoice.id} existingItems={lineItems} />
             ) : (
               <>

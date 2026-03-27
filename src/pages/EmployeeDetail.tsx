@@ -6,7 +6,7 @@ import {
   useEmployeeEquipment, useIssueEquipment, useUpdateEquipment,
   useEmployeeTrainingRecords, useAssignTraining, useApproveCertificate,
 } from '@/hooks/useEmployees';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -56,7 +56,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 export default function EmployeeDetail() {
   const { id: userId } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const { canManageWorkers } = useUserRole();
+  const { canManageWorkerAdmin: canManageWorkers } = useActionPermissions();
   const { data: emp, isLoading } = useEmployee(userId);
   const { data: certs = [] } = useEmployeeCertifications(userId);
   const { data: docs = [] } = useEmployeeDocuments(userId);

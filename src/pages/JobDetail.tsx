@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { useJob, useJobVisits, useUpdateJob } from '@/hooks/useJobs';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -33,6 +34,7 @@ export default function JobDetail() {
   const [form, setForm] = useState<any>({});
   const [generating, setGenerating] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const { canManageJobs, canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices
   const { data: linkedInvoices = [] } = useQuery({
@@ -191,10 +193,12 @@ export default function JobDetail() {
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateJob.isPending}>
-          <Save className="h-4 w-4 mr-2" /> Save Job
-        </Button>
-        {isCompleted && (
+        {canManageJobs && (
+          <Button onClick={handleSave} className="flex-1 h-11" disabled={updateJob.isPending}>
+            <Save className="h-4 w-4 mr-2" /> Save Job
+          </Button>
+        )}
+        {isCompleted && canManageJobs && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleCreateInvoice}>
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>

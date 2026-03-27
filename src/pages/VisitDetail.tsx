@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { useVisit, useUpdateVisit } from '@/hooks/useVisits';
 import { useEmployees } from '@/hooks/useEmployees';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -27,6 +28,7 @@ export default function VisitDetail() {
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const { canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices for this visit
   const { data: linkedInvoices = [] } = useQuery({
@@ -83,10 +85,12 @@ export default function VisitDetail() {
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        <Button onClick={handleSave} className="flex-1 h-11" disabled={updateVisit.isPending}>
-          <Save className="h-4 w-4 mr-2" /> Save Visit
-        </Button>
-        {form.visit_status === 'Completed' && (
+        {canManageVisits && (
+          <Button onClick={handleSave} className="flex-1 h-11" disabled={updateVisit.isPending}>
+            <Save className="h-4 w-4 mr-2" /> Save Visit
+          </Button>
+        )}
+        {form.visit_status === 'Completed' && canManageVisits && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setInvoiceOpen(true)}>
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>
