@@ -68,6 +68,30 @@ export default function QuoteDetail() {
   const [items, setItems] = useState<LineItemForm[]>([]);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+
+  // Fetch linked job if converted
+  const { data: linkedJob } = useQuery({
+    queryKey: ['quote_linked_job', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data } = await supabase.from('jobs').select('id, job_number, job_title, status').eq('quote_id', id).maybeSingle();
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Fetch linked invoices
+  const { data: linkedInvoices = [] } = useQuery({
+    queryKey: ['quote_linked_invoices', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from('invoices').select('id, invoice_number, status, total').eq('quote_id', id as any);
+      return data || [];
+    },
+    enabled: !!id,
+  });
 
   const { data: catalog = [] } = useQuery({
     queryKey: ['products_services_active'],
