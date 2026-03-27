@@ -56,7 +56,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 export default function EmployeeDetail() {
   const { id: userId } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const { canManageWorkers } = useUserRole();
+  const { canManageWorkerAdmin: canManageWorkers } = useActionPermissions();
   const { data: emp, isLoading } = useEmployee(userId);
   const { data: certs = [] } = useEmployeeCertifications(userId);
   const { data: docs = [] } = useEmployeeDocuments(userId);
