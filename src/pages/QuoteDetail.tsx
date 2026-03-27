@@ -19,6 +19,7 @@ import { SERVICE_CATEGORIES } from '@/lib/constants';
 import { useQuery } from '@tanstack/react-query';
 import { ConvertQuoteToJobDialog } from '@/components/ConvertQuoteToJobDialog';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
+import { Badge } from '@/components/ui/badge';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
