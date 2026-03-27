@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useInvoice, useInvoiceLineItems } from '@/hooks/useInvoices';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ArrowLeft, Printer, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,14 +12,8 @@ function formatCurrency(value: number): string {
 
 function PrintStatusBadge({ status }: { status: string }) {
   const colorMap: Record<string, string> = {
-    Draft: '#6b7280',
-    Sent: '#3b82f6',
-    Viewed: '#3b82f6',
-    Paid: '#059669',
-    'Partially Paid': '#d97706',
-    Overdue: '#dc2626',
-    Failed: '#dc2626',
-    Voided: '#6b7280',
+    Draft: '#6b7280', Sent: '#3b82f6', Viewed: '#3b82f6', Paid: '#059669',
+    'Partially Paid': '#d97706', Overdue: '#dc2626', Failed: '#dc2626', Voided: '#6b7280',
   };
   const color = colorMap[status] || '#6b7280';
   return (
@@ -36,6 +32,16 @@ export default function InvoicePrint() {
   const { data: invoice, isLoading } = useInvoice(id);
   const { data: lineItems = [] } = useInvoiceLineItems(id);
 
+  // Pull company branding from company_settings
+  const { data: company } = useQuery({
+    queryKey: ['company_settings_print'],
+    queryFn: async () => {
+      const { data } = await supabase.from('company_settings').select('*').limit(1).maybeSingle();
+      return data;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   if (isLoading) return <div className="p-8 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="p-8 text-muted-foreground">Invoice not found</div>;
 
@@ -48,6 +54,13 @@ export default function InvoicePrint() {
   const taxRate = Number(invoice.tax_rate || 0.13);
   const amountPaid = Number(invoice.amount_paid || 0);
   const balanceDue = Number(invoice.balance_due || 0);
+
+  const companyName = company?.invoice_header_name || company?.operating_name || company?.display_name || 'Praetoria Group';
+  const companyTagline = company?.description || 'Property Services & Maintenance';
+  const companyEmail = company?.email || company?.billing_email || 'info@praetoriagroup.ca';
+  const companyPhone = company?.phone || '(416) 555-0100';
+  const companyAddress = company?.physical_address || company?.mailing_address || 'Toronto, Ontario, Canada';
+  const accentColor = company?.primary_color || '#3b5bdb';
 
   return (
     <>
@@ -73,19 +86,23 @@ export default function InvoicePrint() {
         {/* Company Header */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#1a1a2e] print:text-3xl" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-              PRAETORIA GROUP
-            </h1>
-            <p className="text-xs text-[#6b7280] mt-0.5 print:text-sm">Property Services & Maintenance</p>
+            {company?.logo_url ? (
+              <img src={company.logo_url} alt={companyName} className="h-10 mb-2 print:h-12" />
+            ) : (
+              <h1 className="text-2xl font-bold tracking-tight text-[#1a1a2e] print:text-3xl uppercase" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                {companyName}
+              </h1>
+            )}
+            <p className="text-xs text-[#6b7280] mt-0.5 print:text-sm">{companyTagline}</p>
             <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
-              <p>Toronto, Ontario, Canada</p>
-              <p>info@praetoriagroup.ca</p>
-              <p>(416) 555-0100</p>
+              <p>{companyAddress}</p>
+              <p>{companyEmail}</p>
+              <p>{companyPhone}</p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-xs font-semibold uppercase tracking-widest text-[#3b5bdb] print:text-sm">Invoice</div>
-            <p className="text-xl font-bold mt-1 print:text-2xl" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <div className="text-xs font-semibold uppercase tracking-widest print:text-sm" style={{ color: accentColor }}>Invoice</div>
+            <p className="text-xl font-bold mt-1 print:text-2xl tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               {invoice.invoice_number}
             </p>
             <div className="mt-2"><PrintStatusBadge status={invoice.status} /></div>
@@ -99,7 +116,7 @@ export default function InvoicePrint() {
         </div>
 
         {/* Accent Bar */}
-        <div className="h-[2px] bg-[#3b5bdb] mb-8 print:mb-10" />
+        <div className="h-[2px] mb-8 print:mb-10" style={{ backgroundColor: accentColor }} />
 
         {/* Bill To */}
         {customer && (
@@ -158,9 +175,9 @@ export default function InvoicePrint() {
                     {item.description && <p className="text-xs text-[#6b7280] mt-0.5 md:hidden print:hidden">{item.description}</p>}
                   </td>
                   <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell">{item.description}</td>
-                  <td className="py-3 px-2 text-center" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{item.quantity}</td>
-                  <td className="py-3 px-2 text-right" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.unit_price))}</td>
-                  <td className="py-3 pl-2 text-right font-medium" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.line_total))}</td>
+                  <td className="py-3 px-2 text-center tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{item.quantity}</td>
+                  <td className="py-3 px-2 text-right tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.unit_price))}</td>
+                  <td className="py-3 pl-2 text-right font-medium tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.line_total))}</td>
                 </tr>
               ))}
               {lineItems.length === 0 && (
@@ -175,26 +192,26 @@ export default function InvoicePrint() {
           <div className="w-64 md:w-72 print:w-72 space-y-2">
             <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
               <span>Subtotal</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(subtotal)}</span>
+              <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
               <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tax)}</span>
+              <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tax)}</span>
             </div>
             <div className="h-[1px] bg-[#d1d5db]" />
             <div className="flex justify-between text-lg font-bold pt-1 text-[#1a1a2e] print:text-xl">
               <span>Total (CAD)</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(total)}</span>
+              <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(total)}</span>
             </div>
             {amountPaid > 0 && (
               <>
                 <div className="flex justify-between text-sm text-[#059669] print:text-base">
                   <span>Paid</span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>-${formatCurrency(amountPaid)}</span>
+                  <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>-${formatCurrency(amountPaid)}</span>
                 </div>
                 <div className="flex justify-between text-base font-bold text-[#dc2626] print:text-lg">
                   <span>Balance Due</span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(balanceDue)}</span>
+                  <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(balanceDue)}</span>
                 </div>
               </>
             )}
@@ -217,14 +234,14 @@ export default function InvoicePrint() {
               <li>Payment is due by the date specified above.</li>
               <li>Late payments may be subject to interest charges.</li>
               <li>Please reference the invoice number with your payment.</li>
-              <li>For questions, contact info@praetoriagroup.ca.</li>
+              <li>For questions, contact {companyEmail}.</li>
             </ol>
           </div>
 
           {/* Footer */}
           <div className="text-center pt-8 text-xs text-[#9ca3af] print:text-sm print:pt-12 pb-4">
-            <p className="font-medium text-[#6b7280]">Praetoria Group</p>
-            <p>info@praetoriagroup.ca · (416) 555-0100</p>
+            <p className="font-medium text-[#6b7280]">{companyName}</p>
+            <p>{companyEmail} · {companyPhone}</p>
             <p className="mt-1">Thank you for your business.</p>
           </div>
         </div>
