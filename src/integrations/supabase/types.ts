@@ -5794,6 +5794,10 @@ export type Database = {
         | "supervisor"
         | "dispatcher"
         | "manager"
+        | "owner"
+        | "accountant"
+        | "hr_admin"
+        | "ops_manager"
       billing_frequency:
         | "per-visit"
         | "weekly"
@@ -6024,6 +6028,10 @@ export const Constants = {
         "supervisor",
         "dispatcher",
         "manager",
+        "owner",
+        "accountant",
+        "hr_admin",
+        "ops_manager",
       ],
       billing_frequency: [
         "per-visit",
