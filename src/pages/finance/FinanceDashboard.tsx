@@ -245,6 +245,9 @@ export default function FinanceDashboard() {
         </CardContent>
       </Card>
 
+      {/* Step 6 Revenue Ops Metrics */}
+      <Step6MetricsPanel />
+
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
