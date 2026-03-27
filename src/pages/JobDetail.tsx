@@ -34,6 +34,7 @@ export default function JobDetail() {
   const [form, setForm] = useState<any>({});
   const [generating, setGenerating] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const { canManageJobs, canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices
   const { data: linkedInvoices = [] } = useQuery({
