@@ -28,6 +28,7 @@ export default function VisitDetail() {
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const { canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices for this visit
   const { data: linkedInvoices = [] } = useQuery({
