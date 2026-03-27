@@ -8,33 +8,33 @@ import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useMessaging';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
+import { useSidebarAccess } from '@/hooks/useModuleAccess';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 
 type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages';
+type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
+  | 'jobs' | 'visits' | 'invoices' | 'schedule' | 'requests'
+  | 'activity' | 'employees' | 'subcontractors' | 'messaging' | 'finance';
 
-const opsItems: { title: string; url: string; icon: any; countKey?: CountKey }[] = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Leads', url: '/leads', icon: Users, countKey: 'leads' },
-  { title: 'Quotes', url: '/quotes', icon: FileText, countKey: 'quotes' },
-  { title: 'Customers', url: '/customers', icon: Building2 },
-  { title: 'Properties', url: '/properties', icon: MapPin },
-  { title: 'Jobs', url: '/jobs', icon: Briefcase, countKey: 'jobs' },
-  { title: 'Visits', url: '/visits', icon: ClipboardCheck, countKey: 'visits' },
-  { title: 'Invoices', url: '/invoices', icon: Receipt, countKey: 'invoices' },
-  { title: 'Schedule', url: '/schedule', icon: CalendarDays },
-  { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests' },
-  { title: 'Activity', url: '/activity', icon: Activity },
-  { title: 'Employees', url: '/employees', icon: HardHat },
-  { title: 'Subcontractors', url: '/subcontractors', icon: Users },
-  { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages' },
-  { title: 'Finance', url: '/finance', icon: Wallet },
-];
-
-const systemItems = [
-  { title: 'Settings', url: '/settings', icon: Settings },
+const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; accessKey: SidebarKey }[] = [
+  { title: 'Dashboard', url: '/', icon: LayoutDashboard, accessKey: 'dashboard' },
+  { title: 'Leads', url: '/leads', icon: Users, countKey: 'leads', accessKey: 'leads' },
+  { title: 'Quotes', url: '/quotes', icon: FileText, countKey: 'quotes', accessKey: 'quotes' },
+  { title: 'Customers', url: '/customers', icon: Building2, accessKey: 'customers' },
+  { title: 'Properties', url: '/properties', icon: MapPin, accessKey: 'properties' },
+  { title: 'Jobs', url: '/jobs', icon: Briefcase, countKey: 'jobs', accessKey: 'jobs' },
+  { title: 'Visits', url: '/visits', icon: ClipboardCheck, countKey: 'visits', accessKey: 'visits' },
+  { title: 'Invoices', url: '/invoices', icon: Receipt, countKey: 'invoices', accessKey: 'invoices' },
+  { title: 'Schedule', url: '/schedule', icon: CalendarDays, accessKey: 'schedule' },
+  { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests' },
+  { title: 'Activity', url: '/activity', icon: Activity, accessKey: 'activity' },
+  { title: 'Employees', url: '/employees', icon: HardHat, accessKey: 'employees' },
+  { title: 'Subcontractors', url: '/subcontractors', icon: Users, accessKey: 'subcontractors' },
+  { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages', accessKey: 'messaging' },
+  { title: 'Finance', url: '/finance', icon: Wallet, accessKey: 'finance' },
 ];
 
 const viewAsItems = [
@@ -57,12 +57,19 @@ export function AppSidebar() {
   const { signOut, user } = useAuth();
   const { data: unreadCount } = useUnreadCount();
   const { data: sidebarCounts } = useSidebarCounts();
+  const access = useSidebarAccess();
 
   const getBadgeCount = (key?: CountKey): number => {
     if (!key) return 0;
     if (key === 'messages') return unreadCount ?? 0;
     return sidebarCounts?.[key] ?? 0;
   };
+
+  // Filter items by role-based access
+  const visibleOpsItems = opsItems.filter(item => access[item.accessKey]);
+  // Only owner/admin can view-as other portals
+  const visibleViewAs = access.dashboard ? viewAsItems : [];
+  const showSettings = access.settings;
 
   return (
     <Sidebar collapsible="icon">
@@ -89,7 +96,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Admin Portal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {opsItems.map((item) => {
+              {visibleOpsItems.map((item) => {
                 const count = getBadgeCount(item.countKey);
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -123,56 +130,58 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>View As</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {viewAsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && (
-                        <span className="flex items-center gap-2">
-                          {item.title}
-                          <span className="text-[9px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            {item.badge}
+        {visibleViewAs.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>View As</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleViewAs.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        className="hover:bg-sidebar-accent/50"
+                        activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {!collapsed && (
+                          <span className="flex items-center gap-2">
+                            {item.title}
+                            <span className="text-[9px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                              {item.badge}
+                            </span>
                           </span>
-                        </span>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel>System</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {systemItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+        {showSettings && (
+          <SidebarGroup>
+            <SidebarGroupLabel>System</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink
-                      to={item.url}
+                      to="/settings"
                       className="hover:bg-sidebar-accent/50"
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <Settings className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Settings</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>
