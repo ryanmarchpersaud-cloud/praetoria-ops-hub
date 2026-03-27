@@ -73,6 +73,7 @@ export default function Invoices() {
   const navigate = useNavigate();
   const { data: allInvoices = [], isLoading } = useInvoices({});
   const updateInvoice = useUpdateInvoice();
+  const { canManageInvoices, canEditInvoiceDrafts } = useActionPermissions();
 
   // ── Filters ──
   const [statusFilter, setStatusFilter] = useState('');
