@@ -654,22 +654,22 @@ export default function ExpenseTrackingPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card><CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground">This Month</p>
-            <p className="text-2xl font-bold text-foreground">${thisMonthTotal.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card><CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">This Month</p>
+            <p className="text-lg md:text-xl font-bold text-foreground truncate">${thisMonthTotal.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</p>
           </CardContent></Card>
-          <Card><CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground">All Time</p>
-            <p className="text-2xl font-bold text-foreground">${allTotal.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</p>
+          <Card><CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">All Time</p>
+            <p className="text-lg md:text-xl font-bold text-foreground truncate">${allTotal.toLocaleString('en-CA', { minimumFractionDigits: 2 })}</p>
           </CardContent></Card>
-          <Card><CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground">Top Category</p>
-            <p className="text-lg font-semibold text-foreground">{topCatName}</p>
+          <Card><CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Top Category</p>
+            <p className="text-sm md:text-base font-semibold text-foreground truncate">{topCatName}</p>
           </CardContent></Card>
-          <Card><CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground">Total Records</p>
-            <p className="text-2xl font-bold text-foreground">{expenses.length}</p>
+          <Card><CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Total Records</p>
+            <p className="text-lg md:text-xl font-bold text-foreground">{expenses.length}</p>
           </CardContent></Card>
         </div>
 
