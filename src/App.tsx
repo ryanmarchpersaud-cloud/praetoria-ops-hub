@@ -147,6 +147,9 @@ const FinancePayroll = lazy(() => import("./pages/finance/FinancePayroll"));
 const FinanceSubcontractorPayouts = lazy(() => import("./pages/finance/FinanceSubcontractorPayouts"));
 const FinanceRemittances = lazy(() => import("./pages/finance/FinanceRemittances"));
 const FinanceTaxSlips = lazy(() => import("./pages/finance/FinanceTaxSlips"));
+const FinanceInvoices = lazy(() => import("./pages/finance/FinanceInvoices"));
+const FinanceAR = lazy(() => import("./pages/finance/FinanceAR"));
+const FinanceStatements = lazy(() => import("./pages/finance/FinanceStatements"));
 
 import WorkSettingsPage from "./pages/WorkSettingsPage";
 import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
@@ -303,6 +306,9 @@ function AppRoutes() {
       <Route path="/finance/subcontractor-payouts" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceSubcontractorPayouts /></Suspense></AdminRoute>} />
       <Route path="/finance/remittances" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceRemittances /></Suspense></AdminRoute>} />
       <Route path="/finance/tax-slips" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceTaxSlips /></Suspense></AdminRoute>} />
+      <Route path="/finance/invoices" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceInvoices /></Suspense></AdminRoute>} />
+      <Route path="/finance/accounts-receivable" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceAR /></Suspense></AdminRoute>} />
+      <Route path="/finance/statements" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceStatements /></Suspense></AdminRoute>} />
       <Route path="/settings" element={<AdminRoute><CompanySettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
       <Route path="/settings/products" element={<AdminRoute><ProductsServicesPage /></AdminRoute>} />

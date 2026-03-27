@@ -138,15 +138,19 @@ export default function FinanceDashboard() {
         <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Quick Actions</CardTitle></CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => nav('/invoices/new')}><Plus className="h-3.5 w-3.5 mr-1" /> New Invoice</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/invoices')}><FileText className="h-3.5 w-3.5 mr-1" /> Invoice Hub</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/accounts-receivable')}><DollarSign className="h-3.5 w-3.5 mr-1" /> A/R Aging</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/statements')}><FileText className="h-3.5 w-3.5 mr-1" /> Statements</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/expenses')}><Plus className="h-3.5 w-3.5 mr-1" /> Add Expense</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/bills')}><Plus className="h-3.5 w-3.5 mr-1" /> Add Bill</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/receipts')}><Upload className="h-3.5 w-3.5 mr-1" /> Upload Receipt</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/vendors')}><Plus className="h-3.5 w-3.5 mr-1" /> Add Vendor</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/reconciliation')}><Scale className="h-3.5 w-3.5 mr-1" /> Reconcile</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/accounts')}><Landmark className="h-3.5 w-3.5 mr-1" /> Manage Accounts</Button>
-            <Button variant="outline" size="sm" onClick={() => nav('/finance/payroll')}><Users className="h-3.5 w-3.5 mr-1" /> New Payroll Run</Button>
-            <Button variant="outline" size="sm" onClick={() => nav('/finance/subcontractor-payouts')}><Banknote className="h-3.5 w-3.5 mr-1" /> New Payout Run</Button>
-            <Button variant="outline" size="sm" onClick={() => nav('/finance/remittances')}><FileCheck className="h-3.5 w-3.5 mr-1" /> New Remittance</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/payroll')}><Users className="h-3.5 w-3.5 mr-1" /> Payroll</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/subcontractor-payouts')}><Banknote className="h-3.5 w-3.5 mr-1" /> Payouts</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/remittances')}><FileCheck className="h-3.5 w-3.5 mr-1" /> Remittances</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/tax-slips')}><FileText className="h-3.5 w-3.5 mr-1" /> Tax Slips</Button>
           </div>
         </CardContent>

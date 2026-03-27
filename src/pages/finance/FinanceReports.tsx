@@ -145,6 +145,8 @@ export default function FinanceReports() {
           <TabsTrigger value="bill-aging">Bills Aging</TabsTrigger>
           <TabsTrigger value="revenue-expense">Revenue vs Expense</TabsTrigger>
           <TabsTrigger value="payments">Payment History</TabsTrigger>
+          <TabsTrigger value="inv-summary">Invoice Summary</TabsTrigger>
+          <TabsTrigger value="collections">Collections</TabsTrigger>
           <TabsTrigger value="payroll">Payroll</TabsTrigger>
           <TabsTrigger value="payouts">Subcontractor Payouts</TabsTrigger>
           <TabsTrigger value="remittances">Remittances</TabsTrigger>
@@ -323,6 +325,53 @@ export default function FinanceReports() {
                   </Table>
                 </div>
               ) : <p className="text-center text-muted-foreground py-12">No payment data</p>}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="inv-summary">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Invoice Summary</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow><TableHead>Status</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Total</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {['Draft','Sent','Viewed','Partially Paid','Paid','Overdue','Voided','Failed'].map(st => {
+                    const group = (invoices ?? []).filter((i: any) => i.status === st);
+                    if (!group.length) return null;
+                    return (
+                      <TableRow key={st}>
+                        <TableCell className="font-medium">{st}</TableCell>
+                        <TableCell className="text-right">{group.length}</TableCell>
+                        <TableCell className="text-right">{fmt(group.reduce((s: number, i: any) => s + Number(i.total || 0), 0))}</TableCell>
+                        <TableCell className="text-right">{fmt(group.reduce((s: number, i: any) => s + Number(i.balance_due || 0), 0))}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="collections">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Overdue / Collections</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow><TableHead>Invoice</TableHead><TableHead>Customer</TableHead><TableHead>Due Date</TableHead><TableHead className="text-right">Balance</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {(invoices ?? []).filter((i: any) => i.status === 'overdue' || (Number(i.balance_due) > 0 && new Date(i.issue_date) < new Date(Date.now() - 30*86400000))).slice(0, 20).map((i: any) => (
+                    <TableRow key={i.total + i.issue_date}>
+                      <TableCell className="font-medium">—</TableCell>
+                      <TableCell>—</TableCell>
+                      <TableCell>{i.issue_date}</TableCell>
+                      <TableCell className="text-right">{fmt(Number(i.balance_due || 0))}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(invoices ?? []).filter((i: any) => Number(i.balance_due) > 0).length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No overdue invoices</TableCell></TableRow>}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
