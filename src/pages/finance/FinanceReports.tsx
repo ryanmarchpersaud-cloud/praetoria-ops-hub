@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills } from '@/hooks/useFinance';
 import { useAllFinancePayments } from '@/hooks/useFinancePayments';
+import { usePayrollRuns, usePayrollRunItems, usePayoutRuns, usePayoutItems, useRemittances } from '@/hooks/usePayroll';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
