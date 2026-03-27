@@ -6,7 +6,7 @@ import {
   useEmployeeEquipment, useIssueEquipment, useUpdateEquipment,
   useEmployeeTrainingRecords, useAssignTraining, useApproveCertificate,
 } from '@/hooks/useEmployees';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
