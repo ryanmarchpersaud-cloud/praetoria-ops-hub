@@ -48,9 +48,11 @@ export default function Quotes() {
           <h1 className="text-xl md:text-2xl font-bold">Quotes</h1>
           <p className="text-xs md:text-sm text-muted-foreground">{allQuotes.length} total</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
-          <Plus className="h-4 w-4" /> New Quote
-        </Button>
+        {canManageQuotes && (
+          <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+            <Plus className="h-4 w-4" /> New Quote
+          </Button>
+        )}
       </div>
 
       <CreateQuoteDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
