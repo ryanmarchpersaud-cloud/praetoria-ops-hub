@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Search, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { JOB_STATUSES } from '@/lib/constants';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { format } from 'date-fns';
 
 export default function Jobs() {
