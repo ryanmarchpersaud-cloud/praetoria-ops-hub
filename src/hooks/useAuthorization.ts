@@ -82,8 +82,12 @@ export function useAuthorization(): AuthorizationState {
     staleTime: 5 * 60 * 1000,
   });
 
+  const isOwner = roles.includes('owner' as AppRole);
   const isAdmin = roles.includes('admin');
   const isManager = roles.includes('manager');
+  const isAccountant = roles.includes('accountant' as AppRole);
+  const isHrAdmin = roles.includes('hr_admin' as AppRole);
+  const isOpsManager = roles.includes('ops_manager' as AppRole);
   const isCustomer = roles.includes('customer');
   const isSubcontractor = roles.includes('subcontractor');
   // staff = any non-customer, non-subcontractor role holder with at least one role
@@ -100,14 +104,13 @@ export function useAuthorization(): AuthorizationState {
         : true; // no team_member record but has roles (legacy) = allow
 
   // Portal access: role sets the ceiling, portal flags act as switches within that ceiling
-  // Admin/manager: always get admin portal; portal flags can additionally grant worker/sub access
-  const canAccessAdminPortal = isAdmin || isManager;
+  const canAccessAdminPortal = isOwner || isAdmin || isManager || isAccountant || isHrAdmin || isOpsManager;
   // Worker portal: staff by role, OR admin/manager always, OR explicit flag
-  const canAccessWorkerPortal = isStaff || isAdmin || isManager || (teamMember?.portal_worker ?? false);
+  const canAccessWorkerPortal = isStaff || isOwner || isAdmin || isManager || isOpsManager || (teamMember?.portal_worker ?? false);
   // Subcontractor portal: subcontractor by role, OR admin (for oversight)
-  const canAccessSubcontractorPortal = isSubcontractor || isAdmin;
+  const canAccessSubcontractorPortal = isSubcontractor || isOwner || isAdmin;
   // Customer portal: customer by role, OR admin/manager for preview — plain staff CANNOT access
-  const canAccessCustomerPortal = isCustomer || isAdmin || isManager;
+  const canAccessCustomerPortal = isCustomer || isOwner || isAdmin || isManager;
 
   return {
     roles,
