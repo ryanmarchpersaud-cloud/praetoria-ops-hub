@@ -42,7 +42,8 @@ export default function FinanceBills() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
   const [showPayment, setShowPayment] = useState<any>(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentForm, setPaymentForm] = useState<any>({});
+  const [showHistory, setShowHistory] = useState<any>(null);
   const [form, setForm] = useState<any>({});
 
   const { data: bills, isLoading } = useFinanceBills({ status: statusFilter });
