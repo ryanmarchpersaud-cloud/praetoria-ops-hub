@@ -10,6 +10,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 import { CreateQuoteDialog } from '@/components/CreateQuoteDialog';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 
 const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: string }> = {
   Draft: { icon: FileEdit, color: 'text-muted-foreground', label: 'Drafts' },

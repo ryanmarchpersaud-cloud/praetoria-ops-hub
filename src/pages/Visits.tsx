@@ -58,15 +58,17 @@ export default function Visits() {
           <p className="text-xs md:text-sm text-muted-foreground">{visits.length} total</p>
         </div>
         <div className="flex gap-2">
-          {hasSelection && (
+          {hasSelection && canManageInvoices && (
             <Button size="sm" variant="outline" onClick={() => setBulkInvoiceOpen(true)} className="gap-1.5">
               <Receipt className="h-4 w-4" />
               <span className="hidden sm:inline">Invoice</span> ({selected.size})
             </Button>
           )}
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Schedule </span>Visit
-          </Button>
+          {canManageVisits && (
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Schedule </span>Visit
+            </Button>
+          )}
         </div>
       </div>
 
