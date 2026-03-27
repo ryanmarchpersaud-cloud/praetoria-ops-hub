@@ -140,7 +140,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
         internal_notes: quote.agent_summary ? `Quote notes: ${quote.agent_summary}` : null,
         quote_id: quote.id,
         request_id: quote.request_id || null,
-        assigned_to: assignedTo || null,
+        assigned_to: (assignedTo && assignedTo !== 'unassigned') ? assignedTo : null,
         scheduled_date: !isRecurring ? scheduledDate : null,
         service_frequency: isRecurring ? frequency : 'one-time',
         contract_start_date: isRecurring ? contractStart : null,

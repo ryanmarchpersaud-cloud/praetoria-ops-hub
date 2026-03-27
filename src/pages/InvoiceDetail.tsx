@@ -257,6 +257,34 @@ export default function InvoiceDetail() {
             </Card>
           )}
 
+          {/* Linked Source Records */}
+          {(invoice.job_id || (invoice as any).visit_id || (invoice as any).quote_id) && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <LinkIcon className="h-3.5 w-3.5" /> Source Records
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-2">
+                {(invoice as any).quote_id && (
+                  <Link to={`/quotes/${(invoice as any).quote_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                    <FileText className="h-3 w-3" /> Source Quote →
+                  </Link>
+                )}
+                {invoice.job_id && (
+                  <Link to={`/jobs/${invoice.job_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                    <Briefcase className="h-3 w-3" /> {invoice.jobs?.job_number} — {invoice.jobs?.job_title} →
+                  </Link>
+                )}
+                {(invoice as any).visit_id && (
+                  <Link to={`/visits/${(invoice as any).visit_id}`} className="text-primary text-xs hover:underline flex items-center gap-1">
+                    <Receipt className="h-3 w-3" /> Source Visit →
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {billingProfile && (
             <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Payment Method</CardTitle></CardHeader>

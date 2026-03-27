@@ -562,7 +562,7 @@ export default function QuoteDetail() {
           )}
 
           {/* Cross-links: Source Request, Created Job, Invoices */}
-          <Card className="hidden lg:block">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <LinkIcon className="h-3.5 w-3.5" /> Linked Records
