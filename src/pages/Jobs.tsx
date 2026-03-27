@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Search, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { JOB_STATUSES } from '@/lib/constants';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { format } from 'date-fns';
 
 export default function Jobs() {
@@ -16,6 +17,7 @@ export default function Jobs() {
   const [statusFilter, setStatusFilter] = useState('');
 
   const { data: jobs = [], isLoading } = useJobs({ status: statusFilter || undefined, search: search || undefined });
+  const { canManageJobs } = useActionPermissions();
 
   const priorityColor = (p: string) => {
     if (p === 'Urgent') return 'text-destructive font-semibold';
@@ -30,9 +32,11 @@ export default function Jobs() {
           <h1 className="text-xl md:text-2xl font-bold">Jobs</h1>
           <p className="text-xs md:text-sm text-muted-foreground">{jobs.length} total</p>
         </div>
-        <Button size="sm" onClick={() => navigate('/jobs/new')}>
-          <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">New </span>Job
-        </Button>
+        {canManageJobs && (
+          <Button size="sm" onClick={() => navigate('/jobs/new')}>
+            <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">New </span>Job
+          </Button>
+        )}
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">

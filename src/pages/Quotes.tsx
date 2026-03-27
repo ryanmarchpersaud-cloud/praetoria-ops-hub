@@ -10,6 +10,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 import { CreateQuoteDialog } from '@/components/CreateQuoteDialog';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 
 const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: string }> = {
   Draft: { icon: FileEdit, color: 'text-muted-foreground', label: 'Drafts' },
@@ -28,6 +29,7 @@ export default function Quotes() {
   const { data: quotes = [], isLoading } = useQuotes({
     approval_status: statusFilter || undefined,
   });
+  const { canManageQuotes } = useActionPermissions();
 
   const allQuotes = useQuotes({}).data || [];
   const counts = QUOTE_APPROVAL_STATUSES.reduce((acc, s) => {
@@ -46,9 +48,11 @@ export default function Quotes() {
           <h1 className="text-xl md:text-2xl font-bold">Quotes</h1>
           <p className="text-xs md:text-sm text-muted-foreground">{allQuotes.length} total</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
-          <Plus className="h-4 w-4" /> New Quote
-        </Button>
+        {canManageQuotes && (
+          <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+            <Plus className="h-4 w-4" /> New Quote
+          </Button>
+        )}
       </div>
 
       <CreateQuoteDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />

@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { VISIT_STATUSES } from '@/lib/constants';
 import { format } from 'date-fns';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { BulkInvoiceDialog } from '@/components/BulkInvoiceDialog';
 
 export default function Visits() {
@@ -23,6 +24,7 @@ export default function Visits() {
   const [bulkInvoiceOpen, setBulkInvoiceOpen] = useState(false);
 
   const { data: visits = [], isLoading } = useVisits({ visit_status: statusFilter || undefined, search: search || undefined });
+  const { canManageVisits, canManageInvoices } = useActionPermissions();
 
   const getPriorityIcon = (p: string) => {
     if (p === 'Urgent' || p === 'High') return <AlertTriangle className="h-3 w-3 text-destructive" />;
@@ -56,15 +58,17 @@ export default function Visits() {
           <p className="text-xs md:text-sm text-muted-foreground">{visits.length} total</p>
         </div>
         <div className="flex gap-2">
-          {hasSelection && (
+          {hasSelection && canManageInvoices && (
             <Button size="sm" variant="outline" onClick={() => setBulkInvoiceOpen(true)} className="gap-1.5">
               <Receipt className="h-4 w-4" />
               <span className="hidden sm:inline">Invoice</span> ({selected.size})
             </Button>
           )}
-          <Button size="sm" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Schedule </span>Visit
-          </Button>
+          {canManageVisits && (
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Schedule </span>Visit
+            </Button>
+          )}
         </div>
       </div>
 
