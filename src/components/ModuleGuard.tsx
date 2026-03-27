@@ -69,6 +69,9 @@ export function ModuleGuard({ children, module, settingsKey }: ModuleGuardProps)
       case 'ops':
         allowed = access.opsFullAccess;
         break;
+      case 'opsOrFinance':
+        allowed = access.opsFullAccess || access.financeFullAccess || access.financeViewLimited;
+        break;
       case 'ownerOnly':
         allowed = access.isOwnerOrAdmin;
         break;
