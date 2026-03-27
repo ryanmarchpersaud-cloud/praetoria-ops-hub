@@ -299,6 +299,10 @@ function AppRoutes() {
       <Route path="/finance/reports" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReports /></Suspense></AdminRoute>} />
       <Route path="/finance/accounts" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceAccounts /></Suspense></AdminRoute>} />
       <Route path="/finance/reconciliation" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReconciliation /></Suspense></AdminRoute>} />
+      <Route path="/finance/payroll" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinancePayroll /></Suspense></AdminRoute>} />
+      <Route path="/finance/subcontractor-payouts" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceSubcontractorPayouts /></Suspense></AdminRoute>} />
+      <Route path="/finance/remittances" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceRemittances /></Suspense></AdminRoute>} />
+      <Route path="/finance/tax-slips" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceTaxSlips /></Suspense></AdminRoute>} />
       <Route path="/settings" element={<AdminRoute><CompanySettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
       <Route path="/settings/products" element={<AdminRoute><ProductsServicesPage /></AdminRoute>} />
