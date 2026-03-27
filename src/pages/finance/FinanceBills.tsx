@@ -11,7 +11,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useFinanceBills, useCreateFinanceBill, useUpdateFinanceBill, useFinanceVendors, useJobsForLinking, useCustomersForLinking, usePropertiesForLinking } from '@/hooks/useFinance';
-import { Plus, Search, FileText, MoreHorizontal, Download, ExternalLink, AlertTriangle } from 'lucide-react';
+import { useFinancePayments, useRecordPayment, useReversePayment } from '@/hooks/useFinancePayments';
+import { useFinanceAccounts } from '@/hooks/useFinanceAccounts';
+import { Plus, Search, FileText, MoreHorizontal, Download, ExternalLink, AlertTriangle, History } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -40,7 +42,8 @@ export default function FinanceBills() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
   const [showPayment, setShowPayment] = useState<any>(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentForm, setPaymentForm] = useState<any>({});
+  const [showHistory, setShowHistory] = useState<any>(null);
   const [form, setForm] = useState<any>({});
 
   const { data: bills, isLoading } = useFinanceBills({ status: statusFilter });
@@ -50,6 +53,10 @@ export default function FinanceBills() {
   const { data: properties } = usePropertiesForLinking();
   const createBill = useCreateFinanceBill();
   const updateBill = useUpdateFinanceBill();
+  const { data: accounts } = useFinanceAccounts();
+  const recordPayment = useRecordPayment();
+  const reversePayment = useReversePayment();
+  const { data: historyPayments } = useFinancePayments(showHistory ? { billId: showHistory.id } : undefined);
 
   const filtered = (bills ?? []).filter((b: any) => {
     if (!search) return true;
@@ -88,19 +95,21 @@ export default function FinanceBills() {
     }, { onSuccess: () => { setShowCreate(false); setForm({}); } });
   };
 
-  const handlePartialPayment = () => {
+  const handleRecordPayment = () => {
     if (!showPayment) return;
-    const payment = Number(paymentAmount || 0);
+    const payment = Number(paymentForm.amount || 0);
     if (payment <= 0) { toast.error('Enter a valid amount'); return; }
-    const newPaid = Number(showPayment.amount_paid || 0) + payment;
-    const newBalance = Number(showPayment.total || 0) - newPaid;
-    const newStatus = newBalance <= 0 ? 'paid' : 'partial';
-    updateBill.mutate({
-      id: showPayment.id,
-      amount_paid: Math.min(newPaid, Number(showPayment.total)),
-      balance_due: Math.max(newBalance, 0),
-      status: newStatus,
-    }, { onSuccess: () => { setShowPayment(null); setPaymentAmount(''); } });
+    if (payment > Number(showPayment.balance_due)) { toast.error('Payment exceeds balance due'); return; }
+    recordPayment.mutate({
+      payment_type: 'bill_payment',
+      payment_date: paymentForm.payment_date || new Date().toISOString().split('T')[0],
+      amount: payment,
+      payment_method: paymentForm.payment_method || null,
+      account_id: paymentForm.account_id || null,
+      reference_number: paymentForm.reference_number || null,
+      internal_note: paymentForm.internal_note || null,
+      bill_id: showPayment.id,
+    }, { onSuccess: () => { setShowPayment(null); setPaymentForm({}); } });
   };
 
   const exportCSV = () => {
@@ -209,8 +218,9 @@ export default function FinanceBills() {
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {b.status !== 'paid' && b.status !== 'void' && (
-                              <DropdownMenuItem onClick={() => { setShowPayment(b); setPaymentAmount(String(b.balance_due)); }}>Record Payment</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setShowPayment(b); setPaymentForm({ amount: String(b.balance_due), payment_date: new Date().toISOString().split('T')[0] }); }}>Record Payment</DropdownMenuItem>
                             )}
+                            <DropdownMenuItem onClick={() => setShowHistory(b)}><History className="h-3.5 w-3.5 mr-1" /> Payment History</DropdownMenuItem>
                             {(TRANSITIONS[b.status] || []).filter((s: string) => s !== 'partial').map((next: string) => (
                               <DropdownMenuItem key={next} onClick={() => {
                                 if (next === 'paid') {
@@ -234,19 +244,78 @@ export default function FinanceBills() {
         </CardContent>
       </Card>
 
-      {/* Partial Payment Dialog */}
+      {/* Record Payment Dialog */}
       <Dialog open={!!showPayment} onOpenChange={(o) => { if (!o) setShowPayment(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Record Payment</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Bill: <span className="font-medium text-foreground">{showPayment?.bill_number}</span></p>
             <p className="text-sm text-muted-foreground">Balance Due: <span className="font-medium text-foreground">{fmt(Number(showPayment?.balance_due || 0))}</span></p>
-            <div><Label>Payment Amount</Label><Input type="number" step="0.01" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Payment Date</Label><Input type="date" value={paymentForm.payment_date || ''} onChange={e => setPaymentForm({ ...paymentForm, payment_date: e.target.value })} /></div>
+              <div><Label>Amount</Label><Input type="number" step="0.01" value={paymentForm.amount || ''} onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Payment Method</Label>
+                <Select value={paymentForm.payment_method || '_none'} onValueChange={v => setPaymentForm({ ...paymentForm, payment_method: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {['Cash', 'Cheque', 'E-Transfer', 'Bank Transfer', 'Credit Card', 'Debit'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Account</Label>
+                <Select value={paymentForm.account_id || '_none'} onValueChange={v => setPaymentForm({ ...paymentForm, account_id: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(accounts ?? []).filter((a: any) => a.is_active).map((a: any) => <SelectItem key={a.id} value={a.id}>{a.account_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div><Label>Reference #</Label><Input value={paymentForm.reference_number || ''} onChange={e => setPaymentForm({ ...paymentForm, reference_number: e.target.value })} /></div>
+            <div><Label>Internal Note</Label><Textarea rows={2} value={paymentForm.internal_note || ''} onChange={e => setPaymentForm({ ...paymentForm, internal_note: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPayment(null)}>Cancel</Button>
-            <Button onClick={handlePartialPayment}>Apply Payment</Button>
+            <Button onClick={handleRecordPayment} disabled={recordPayment.isPending}>Apply Payment</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment History Dialog */}
+      <Dialog open={!!showHistory} onOpenChange={(o) => { if (!o) setShowHistory(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Payment History — {showHistory?.bill_number}</DialogTitle></DialogHeader>
+          <div className="space-y-2">
+            {(historyPayments ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No payments recorded</p>
+            ) : (
+              <Table>
+                <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Method</TableHead><TableHead>Ref</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {(historyPayments ?? []).map((p: any) => (
+                    <TableRow key={p.id} className={p.is_reversed ? 'opacity-50 line-through' : ''}>
+                      <TableCell className="text-sm">{p.payment_date ? format(new Date(p.payment_date), 'MMM d, yyyy') : '—'}</TableCell>
+                      <TableCell className="text-sm">{p.payment_method || '—'}</TableCell>
+                      <TableCell className="text-sm font-mono">{p.reference_number || '—'}</TableCell>
+                      <TableCell className="text-right font-semibold">{fmt(Number(p.amount))}</TableCell>
+                      <TableCell>
+                        {p.is_reversed ? <Badge variant="destructive">Reversed</Badge> :
+                         p.reconciled ? <Badge className="bg-accent/10 text-accent">Reconciled</Badge> :
+                         <Badge variant="outline">Active</Badge>}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setShowHistory(null)}>Close</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 

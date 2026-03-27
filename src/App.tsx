@@ -141,6 +141,8 @@ const FinanceBills = lazy(() => import("./pages/finance/FinanceBills"));
 const FinanceVendors = lazy(() => import("./pages/finance/FinanceVendors"));
 const FinanceJobCosting = lazy(() => import("./pages/finance/FinanceJobCosting"));
 const FinanceReports = lazy(() => import("./pages/finance/FinanceReports"));
+const FinanceAccounts = lazy(() => import("./pages/finance/FinanceAccounts"));
+const FinanceReconciliation = lazy(() => import("./pages/finance/FinanceReconciliation"));
 
 import WorkSettingsPage from "./pages/WorkSettingsPage";
 import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
@@ -291,6 +293,8 @@ function AppRoutes() {
       <Route path="/finance/vendors" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceVendors /></Suspense></AdminRoute>} />
       <Route path="/finance/job-costing" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceJobCosting /></Suspense></AdminRoute>} />
       <Route path="/finance/reports" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReports /></Suspense></AdminRoute>} />
+      <Route path="/finance/accounts" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceAccounts /></Suspense></AdminRoute>} />
+      <Route path="/finance/reconciliation" element={<AdminRoute><Suspense fallback={<RouteLoading />}><FinanceReconciliation /></Suspense></AdminRoute>} />
       <Route path="/settings" element={<AdminRoute><CompanySettingsPage /></AdminRoute>} />
       <Route path="/settings/integrations" element={<AdminRoute><SettingsIntegrationsPage /></AdminRoute>} />
       <Route path="/settings/products" element={<AdminRoute><ProductsServicesPage /></AdminRoute>} />

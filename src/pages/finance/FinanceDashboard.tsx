@@ -3,13 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills, useFinanceReceipts } from '@/hooks/useFinance';
-import { DollarSign, TrendingUp, TrendingDown, Receipt, FileText, AlertTriangle, ArrowRight, CreditCard, BarChart3, Calendar } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Receipt, FileText, AlertTriangle, ArrowRight, CreditCard, BarChart3, Calendar, Landmark, Scale, Plus, Upload, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, differenceInDays } from 'date-fns';
 
 const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 const COLORS = ['hsl(215,65%,48%)', 'hsl(158,50%,42%)', 'hsl(38,90%,50%)', 'hsl(0,68%,52%)', 'hsl(270,50%,50%)', 'hsl(180,50%,40%)', 'hsl(30,70%,50%)', 'hsl(340,60%,50%)'];
@@ -38,6 +37,15 @@ export default function FinanceDashboard() {
   const { data: recentExpenses } = useFinanceExpenses();
   const { data: recentBills } = useFinanceBills();
   const { data: recentReceipts } = useFinanceReceipts();
+
+  // Compute extra warnings
+  const pendingApprovalExpenses = (recentExpenses ?? []).filter((e: any) => e.status === 'submitted').length;
+  const pendingReimbursements = (recentExpenses ?? []).filter((e: any) => e.status === 'approved').length;
+  const billsDueSoon = (recentBills ?? []).filter((b: any) => {
+    if (!b.due_date || b.status === 'paid' || b.status === 'void') return false;
+    const days = differenceInDays(new Date(b.due_date), new Date());
+    return days >= 0 && days <= 3;
+  }).length;
 
   if (isLoading) {
     return (
@@ -69,13 +77,19 @@ export default function FinanceDashboard() {
           <p className="text-sm text-muted-foreground">Financial overview and operations</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => nav('/finance/accounts')}>
+            <Landmark className="h-4 w-4 mr-1" /> Accounts
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => nav('/finance/reconciliation')}>
+            <Scale className="h-4 w-4 mr-1" /> Reconcile
+          </Button>
           <Button variant="outline" size="sm" onClick={() => nav('/finance/reports')}>
             <BarChart3 className="h-4 w-4 mr-1" /> Reports
           </Button>
         </div>
       </div>
 
-      {/* Date Range Filter */}
+      {/* Date Range */}
       <div className="flex flex-wrap gap-2 items-center">
         <Calendar className="h-4 w-4 text-muted-foreground" />
         {(['today', 'week', 'month', 'last_month', 'custom'] as DatePreset[]).map(p => (
@@ -109,6 +123,21 @@ export default function FinanceDashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Quick Actions</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/expenses')}><Plus className="h-3.5 w-3.5 mr-1" /> Add Expense</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/bills')}><Plus className="h-3.5 w-3.5 mr-1" /> Add Bill</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/receipts')}><Upload className="h-3.5 w-3.5 mr-1" /> Upload Receipt</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/vendors')}><Plus className="h-3.5 w-3.5 mr-1" /> Add Vendor</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/reconciliation')}><Scale className="h-3.5 w-3.5 mr-1" /> Reconcile</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/accounts')}><Landmark className="h-3.5 w-3.5 mr-1" /> Manage Accounts</Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -169,9 +198,19 @@ export default function FinanceDashboard() {
                 {stats?.overdueBillCount} overdue bills
               </Badge>
             )}
-            {(stats?.openBills ?? 0) > 0 && (
+            {billsDueSoon > 0 && (
               <Badge variant="outline" className="cursor-pointer border-warning text-warning" onClick={() => nav('/finance/bills')}>
-                {fmt(stats?.openBills ?? 0)} in open bills
+                {billsDueSoon} bills due in 3 days
+              </Badge>
+            )}
+            {pendingApprovalExpenses > 0 && (
+              <Badge variant="outline" className="cursor-pointer border-primary text-primary" onClick={() => nav('/finance/expenses')}>
+                {pendingApprovalExpenses} expenses awaiting approval
+              </Badge>
+            )}
+            {pendingReimbursements > 0 && (
+              <Badge variant="outline" className="cursor-pointer border-accent text-accent" onClick={() => nav('/finance/expenses')}>
+                {pendingReimbursements} pending reimbursements
               </Badge>
             )}
             {(stats?.outstandingInvoices ?? 0) > 0 && (
@@ -179,14 +218,16 @@ export default function FinanceDashboard() {
                 {fmt(stats?.outstandingInvoices ?? 0)} outstanding AR
               </Badge>
             )}
-            {(stats?.receiptsAwaitingReview ?? 0) === 0 && (stats?.openBills ?? 0) === 0 && (stats?.outstandingInvoices ?? 0) === 0 && (
-              <p className="text-sm text-muted-foreground">No alerts — everything looks good ✓</p>
+            {(stats?.receiptsAwaitingReview ?? 0) === 0 && (stats?.overdueBillCount ?? 0) === 0 && (stats?.outstandingInvoices ?? 0) === 0 && billsDueSoon === 0 && pendingApprovalExpenses === 0 && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <CheckCircle className="h-4 w-4 text-accent" /> No alerts — everything looks good
+              </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Recent Activity Tables */}
+      {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">

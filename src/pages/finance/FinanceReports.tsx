@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills } from '@/hooks/useFinance';
+import { useAllFinancePayments } from '@/hooks/useFinancePayments';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Download, Printer } from 'lucide-react';
+import { format } from 'date-fns';
 
 const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 const COLORS = ['hsl(215,65%,48%)', 'hsl(158,50%,42%)', 'hsl(38,90%,50%)', 'hsl(0,68%,52%)', 'hsl(270,50%,50%)', 'hsl(180,50%,40%)', 'hsl(30,70%,50%)', 'hsl(340,60%,50%)'];
@@ -23,6 +25,7 @@ export default function FinanceReports() {
   const { data: stats, isLoading } = useFinanceDashboard(dateRange);
   const { data: expenses } = useFinanceExpenses({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
   const { data: bills } = useFinanceBills();
+  const { data: payments } = useAllFinancePayments({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
 
   const { data: invoices } = useQuery({
     queryKey: ['finance_reports_invoices', dateFrom, dateTo],
@@ -78,6 +81,18 @@ export default function FinanceReports() {
     { name: '90+ Days', value: billAging['90plus'] },
   ];
 
+  // Payments summary
+  const paymentData = useMemo(() => {
+    const map: Record<string, { in: number; out: number }> = {};
+    (payments ?? []).forEach((p: any) => {
+      const key = p.payment_method || 'Unknown';
+      if (!map[key]) map[key] = { in: 0, out: 0 };
+      if (p.payment_type === 'invoice_payment') map[key].in += Number(p.amount || 0);
+      else map[key].out += Number(p.amount || 0);
+    });
+    return Object.entries(map).map(([name, v]) => ({ name, cashIn: v.in, cashOut: v.out }));
+  }, [payments]);
+
   const exportCurrentTab = () => {
     let csv = '';
     if (tab === 'category') {
@@ -88,6 +103,8 @@ export default function FinanceReports() {
       csv = ['Period,Amount', ...agingData.map(r => `${r.name},${r.value}`)].join('\n');
     } else if (tab === 'bill-aging') {
       csv = ['Period,Amount', ...billAgingData.map(r => `${r.name},${r.value}`)].join('\n');
+    } else if (tab === 'payments') {
+      csv = ['Method,Cash In,Cash Out', ...paymentData.map(r => `${r.name},${r.cashIn},${r.cashOut}`)].join('\n');
     } else {
       csv = `Revenue,${stats?.totalRevenue}\nExpenses,${stats?.totalExpenses}\nNet,${stats?.grossMargin}`;
     }
@@ -126,6 +143,7 @@ export default function FinanceReports() {
           <TabsTrigger value="inv-aging">Invoice Aging</TabsTrigger>
           <TabsTrigger value="bill-aging">Bills Aging</TabsTrigger>
           <TabsTrigger value="revenue-expense">Revenue vs Expense</TabsTrigger>
+          <TabsTrigger value="payments">Payment History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="category">
@@ -267,6 +285,40 @@ export default function FinanceReports() {
                   <Tooltip formatter={(v: number) => fmt(v)} />
                 </PieChart>
               </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Payment History by Method</CardTitle></CardHeader>
+            <CardContent>
+              {paymentData.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={paymentData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis tickFormatter={(v) => fmt(v)} />
+                      <Tooltip formatter={(v: number) => fmt(v)} />
+                      <Bar dataKey="cashIn" fill="hsl(var(--accent))" name="Cash In" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="cashOut" fill="hsl(var(--destructive))" name="Cash Out" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Method</TableHead><TableHead className="text-right">Cash In</TableHead><TableHead className="text-right">Cash Out</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {paymentData.map(r => (
+                        <TableRow key={r.name}>
+                          <TableCell className="font-medium">{r.name}</TableCell>
+                          <TableCell className="text-right text-accent">{fmt(r.cashIn)}</TableCell>
+                          <TableCell className="text-right text-destructive">{fmt(r.cashOut)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : <p className="text-center text-muted-foreground py-12">No payment data</p>}
             </CardContent>
           </Card>
         </TabsContent>
