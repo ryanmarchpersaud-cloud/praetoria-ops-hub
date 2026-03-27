@@ -28,6 +28,7 @@ export default function InvoiceDetail() {
   const { data: lineItems = [] } = useInvoiceLineItems(id);
   const updateInvoice = useUpdateInvoice();
   const { data: billingProfile } = useBillingProfile(invoice?.customer_id);
+  const { canManageInvoices, canEditInvoiceDrafts, canRecordPayments, canVoidInvoices } = useActionPermissions();
 
   // Editable draft fields
   const [editingMeta, setEditingMeta] = useState(false);
