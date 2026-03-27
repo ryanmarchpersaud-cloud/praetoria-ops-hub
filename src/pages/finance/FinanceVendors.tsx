@@ -8,19 +8,35 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useFinanceVendors, useCreateFinanceVendor, useUpdateFinanceVendor } from '@/hooks/useFinance';
-import { Plus, Search, Store, Mail, Phone, MoreHorizontal } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useFinanceVendors, useCreateFinanceVendor, useUpdateFinanceVendor, useFinanceExpenses, useFinanceBills } from '@/hooks/useFinance';
+import { Plus, Search, Store, Mail, Phone, MoreHorizontal, DollarSign, FileText, Receipt } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
+const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 
 export default function FinanceVendors() {
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<any>({});
   const [showInactive, setShowInactive] = useState(false);
+  const [detailVendor, setDetailVendor] = useState<any>(null);
 
   const { data: vendors, isLoading } = useFinanceVendors();
+  const { data: expenses } = useFinanceExpenses();
+  const { data: bills } = useFinanceBills();
   const createVendor = useCreateFinanceVendor();
   const updateVendor = useUpdateFinanceVendor();
+
+  // Compute spend per vendor
+  const vendorSpend: Record<string, number> = {};
+  (expenses ?? []).forEach((e: any) => {
+    if (e.vendor_id) vendorSpend[e.vendor_id] = (vendorSpend[e.vendor_id] || 0) + Number(e.amount_total || 0);
+  });
+  const vendorBillTotal: Record<string, number> = {};
+  (bills ?? []).forEach((b: any) => {
+    if (b.vendor_id) vendorBillTotal[b.vendor_id] = (vendorBillTotal[b.vendor_id] || 0) + Number(b.total || 0);
+  });
 
   const filtered = (vendors ?? []).filter((v: any) => {
     if (!showInactive && !v.is_active) return false;
@@ -33,6 +49,9 @@ export default function FinanceVendors() {
     createVendor.mutate(form, { onSuccess: () => { setShowCreate(false); setForm({}); } });
   };
 
+  const vendorExpenses = detailVendor ? (expenses ?? []).filter((e: any) => e.vendor_id === detailVendor.id) : [];
+  const vendorBills = detailVendor ? (bills ?? []).filter((b: any) => b.vendor_id === detailVendor.id) : [];
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -41,6 +60,13 @@ export default function FinanceVendors() {
           <p className="text-sm text-muted-foreground">Manage your supplier and vendor directory</p>
         </div>
         <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-1" /> New Vendor</Button>
+      </div>
+
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Active Vendors</p><p className="text-lg font-bold">{(vendors ?? []).filter((v: any) => v.is_active).length}</p></CardContent></Card>
+        <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Total Expense Spend</p><p className="text-lg font-bold">{fmt(Object.values(vendorSpend).reduce((a, b) => a + b, 0))}</p></CardContent></Card>
+        <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Total Bill Volume</p><p className="text-lg font-bold">{fmt(Object.values(vendorBillTotal).reduce((a, b) => a + b, 0))}</p></CardContent></Card>
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">
@@ -72,6 +98,7 @@ export default function FinanceVendors() {
                     <TableHead>Contact</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
+                    <TableHead className="text-right">Total Spend</TableHead>
                     <TableHead>Terms</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-10"></TableHead>
@@ -79,18 +106,19 @@ export default function FinanceVendors() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((v: any) => (
-                    <TableRow key={v.id}>
+                    <TableRow key={v.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setDetailVendor(v)}>
                       <TableCell className="font-medium">{v.vendor_name}</TableCell>
                       <TableCell>{v.contact_name || '—'}</TableCell>
                       <TableCell>{v.email ? <span className="flex items-center gap-1 text-sm"><Mail className="h-3 w-3" />{v.email}</span> : '—'}</TableCell>
                       <TableCell>{v.phone ? <span className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3" />{v.phone}</span> : '—'}</TableCell>
+                      <TableCell className="text-right font-medium">{fmt((vendorSpend[v.id] || 0) + (vendorBillTotal[v.id] || 0))}</TableCell>
                       <TableCell className="text-sm">{v.payment_terms || '—'}</TableCell>
                       <TableCell><Badge variant={v.is_active ? 'default' : 'secondary'}>{v.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
                       <TableCell>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => e.stopPropagation()}><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => updateVendor.mutate({ id: v.id, is_active: !v.is_active })}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateVendor.mutate({ id: v.id, is_active: !v.is_active }); }}>
                               {v.is_active ? 'Deactivate' : 'Activate'}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -104,6 +132,64 @@ export default function FinanceVendors() {
           )}
         </CardContent>
       </Card>
+
+      {/* Vendor Detail Dialog */}
+      <Dialog open={!!detailVendor} onOpenChange={(o) => { if (!o) setDetailVendor(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5" /> {detailVendor?.vendor_name}
+              <Badge variant={detailVendor?.is_active ? 'default' : 'secondary'}>{detailVendor?.is_active ? 'Active' : 'Inactive'}</Badge>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Expenses</p><p className="text-lg font-bold">{fmt(vendorSpend[detailVendor?.id] || 0)}</p></CardContent></Card>
+            <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Bills</p><p className="text-lg font-bold">{fmt(vendorBillTotal[detailVendor?.id] || 0)}</p></CardContent></Card>
+            <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Total</p><p className="text-lg font-bold">{fmt((vendorSpend[detailVendor?.id] || 0) + (vendorBillTotal[detailVendor?.id] || 0))}</p></CardContent></Card>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+            <div><span className="text-muted-foreground">Contact:</span> {detailVendor?.contact_name || '—'}</div>
+            <div><span className="text-muted-foreground">Email:</span> {detailVendor?.email || '—'}</div>
+            <div><span className="text-muted-foreground">Phone:</span> {detailVendor?.phone || '—'}</div>
+            <div><span className="text-muted-foreground">Terms:</span> {detailVendor?.payment_terms || '—'}</div>
+            <div className="col-span-2"><span className="text-muted-foreground">Address:</span> {[detailVendor?.address_line_1, detailVendor?.city, detailVendor?.province, detailVendor?.postal_code].filter(Boolean).join(', ') || '—'}</div>
+            {detailVendor?.notes && <div className="col-span-2"><span className="text-muted-foreground">Notes:</span> {detailVendor.notes}</div>}
+          </div>
+
+          <Tabs defaultValue="expenses">
+            <TabsList>
+              <TabsTrigger value="expenses">Expenses ({vendorExpenses.length})</TabsTrigger>
+              <TabsTrigger value="bills">Bills ({vendorBills.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="expenses">
+              {vendorExpenses.length === 0 ? <p className="text-sm text-muted-foreground py-4 text-center">No expenses for this vendor</p> : (
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  {vendorExpenses.slice(0, 20).map((e: any) => (
+                    <div key={e.id} className="flex justify-between items-center text-sm py-1.5 border-b border-border">
+                      <div><span className="font-medium">{e.expense_number}</span> <span className="text-muted-foreground ml-1">{e.category}</span></div>
+                      <div className="text-right"><span className="font-medium">{fmt(Number(e.amount_total))}</span> <Badge variant="outline" className="ml-1 text-[10px]">{e.status}</Badge></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="bills">
+              {vendorBills.length === 0 ? <p className="text-sm text-muted-foreground py-4 text-center">No bills for this vendor</p> : (
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  {vendorBills.slice(0, 20).map((b: any) => (
+                    <div key={b.id} className="flex justify-between items-center text-sm py-1.5 border-b border-border">
+                      <span className="font-medium">{b.bill_number}</span>
+                      <div className="text-right"><span className="font-medium">{fmt(Number(b.total))}</span> <Badge variant="outline" className="ml-1 text-[10px]">{b.status}</Badge></div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>

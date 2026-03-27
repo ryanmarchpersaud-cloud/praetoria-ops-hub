@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills } from '@/hooks/useFinance';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Download, Printer } from 'lucide-react';
 
 const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
@@ -14,14 +16,21 @@ const COLORS = ['hsl(215,65%,48%)', 'hsl(158,50%,42%)', 'hsl(38,90%,50%)', 'hsl(
 
 export default function FinanceReports() {
   const [tab, setTab] = useState('category');
-  const { data: stats, isLoading } = useFinanceDashboard();
-  const { data: expenses } = useFinanceExpenses();
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+
+  const dateRange = (dateFrom || dateTo) ? { from: dateFrom || undefined, to: dateTo || undefined } : undefined;
+  const { data: stats, isLoading } = useFinanceDashboard(dateRange);
+  const { data: expenses } = useFinanceExpenses({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
   const { data: bills } = useFinanceBills();
 
   const { data: invoices } = useQuery({
-    queryKey: ['finance_reports_invoices'],
+    queryKey: ['finance_reports_invoices', dateFrom, dateTo],
     queryFn: async () => {
-      const { data } = await supabase.from('invoices').select('total, balance_due, status, issue_date');
+      let q = supabase.from('invoices').select('total, balance_due, status, issue_date');
+      if (dateFrom) q = q.gte('issue_date', dateFrom);
+      if (dateTo) q = q.lte('issue_date', dateTo);
+      const { data } = await q;
       return data || [];
     },
   });
@@ -56,7 +65,7 @@ export default function FinanceReports() {
   // Bills aging
   const billAging = { current: 0, '30days': 0, '60days': 0, '90plus': 0 };
   (bills ?? []).filter((b: any) => ['open', 'partial', 'overdue'].includes(b.status)).forEach((b: any) => {
-    const days = Math.floor((Date.now() - new Date(b.bill_date).getTime()) / 86400000);
+    const days = Math.floor((Date.now() - new Date(b.bill_date || b.due_date).getTime()) / 86400000);
     if (days <= 30) billAging.current += Number(b.balance_due);
     else if (days <= 60) billAging['30days'] += Number(b.balance_due);
     else if (days <= 90) billAging['60days'] += Number(b.balance_due);
@@ -69,6 +78,23 @@ export default function FinanceReports() {
     { name: '90+ Days', value: billAging['90plus'] },
   ];
 
+  const exportCurrentTab = () => {
+    let csv = '';
+    if (tab === 'category') {
+      csv = ['Category,Amount', ...catData.map(r => `${r.name},${r.value}`)].join('\n');
+    } else if (tab === 'vendor') {
+      csv = ['Vendor,Amount', ...vendorData.map(r => `${r.name},${r.value}`)].join('\n');
+    } else if (tab === 'inv-aging') {
+      csv = ['Period,Amount', ...agingData.map(r => `${r.name},${r.value}`)].join('\n');
+    } else if (tab === 'bill-aging') {
+      csv = ['Period,Amount', ...billAgingData.map(r => `${r.name},${r.value}`)].join('\n');
+    } else {
+      csv = `Revenue,${stats?.totalRevenue}\nExpenses,${stats?.totalExpenses}\nNet,${stats?.grossMargin}`;
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `finance-report-${tab}.csv`; a.click();
+  };
+
   if (isLoading) return <div className="p-6"><Skeleton className="h-96" /></div>;
 
   return (
@@ -78,7 +104,19 @@ export default function FinanceReports() {
           <h1 className="text-2xl font-bold text-foreground">Finance Reports</h1>
           <p className="text-sm text-muted-foreground">Preset financial reports and analysis</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportCurrentTab}><Download className="h-4 w-4 mr-1" /> Export CSV</Button>
+          <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" /> Print</Button>
+        </div>
+      </div>
+
+      {/* Date Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <span className="text-sm text-muted-foreground">Date Range:</span>
+        <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-[150px] h-8" placeholder="From" />
+        <span className="text-muted-foreground text-sm">to</span>
+        <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-[150px] h-8" placeholder="To" />
+        {(dateFrom || dateTo) && <Button variant="ghost" size="sm" onClick={() => { setDateFrom(''); setDateTo(''); }}>Clear</Button>}
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
@@ -95,15 +133,32 @@ export default function FinanceReports() {
             <CardHeader><CardTitle className="text-sm">Expense by Category</CardTitle></CardHeader>
             <CardContent>
               {catData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={catData} layout="vertical" margin={{ left: 120 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tickFormatter={(v) => fmt(v)} />
-                    <YAxis type="category" dataKey="name" width={115} tick={{ fontSize: 11 }} />
-                    <Tooltip formatter={(v: number) => fmt(v)} />
-                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={catData} layout="vertical" margin={{ left: 120 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tickFormatter={(v) => fmt(v)} />
+                      <YAxis type="category" dataKey="name" width={115} tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={(v: number) => fmt(v)} />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">%</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {catData.map(r => {
+                        const total = catData.reduce((s, c) => s + c.value, 0);
+                        return (
+                          <TableRow key={r.name}>
+                            <TableCell className="font-medium">{r.name}</TableCell>
+                            <TableCell className="text-right">{fmt(r.value)}</TableCell>
+                            <TableCell className="text-right">{total > 0 ? ((r.value / total) * 100).toFixed(1) : '0'}%</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               ) : <p className="text-center text-muted-foreground py-12">No data available</p>}
             </CardContent>
           </Card>
@@ -114,15 +169,25 @@ export default function FinanceReports() {
             <CardHeader><CardTitle className="text-sm">Top Vendors by Spend</CardTitle></CardHeader>
             <CardContent>
               {vendorData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={vendorData} layout="vertical" margin={{ left: 120 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tickFormatter={(v) => fmt(v)} />
-                    <YAxis type="category" dataKey="name" width={115} tick={{ fontSize: 11 }} />
-                    <Tooltip formatter={(v: number) => fmt(v)} />
-                    <Bar dataKey="value" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={vendorData} layout="vertical" margin={{ left: 120 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tickFormatter={(v) => fmt(v)} />
+                      <YAxis type="category" dataKey="name" width={115} tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={(v: number) => fmt(v)} />
+                      <Bar dataKey="value" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Vendor</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {vendorData.map(r => (
+                        <TableRow key={r.name}><TableCell className="font-medium">{r.name}</TableCell><TableCell className="text-right">{fmt(r.value)}</TableCell></TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               ) : <p className="text-center text-muted-foreground py-12">No data available</p>}
             </CardContent>
           </Card>
@@ -132,15 +197,26 @@ export default function FinanceReports() {
           <Card>
             <CardHeader><CardTitle className="text-sm">Invoices Aging (Accounts Receivable)</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={agingData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" />
-                  <YAxis tickFormatter={(v) => fmt(v)} />
-                  <Tooltip formatter={(v: number) => fmt(v)} />
-                  <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={agingData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" />
+                    <YAxis tickFormatter={(v) => fmt(v)} />
+                    <Tooltip formatter={(v: number) => fmt(v)} />
+                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Period</TableHead><TableHead className="text-right">Outstanding</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {agingData.map(r => (
+                      <TableRow key={r.name}><TableCell className="font-medium">{r.name}</TableCell><TableCell className="text-right">{fmt(r.value)}</TableCell></TableRow>
+                    ))}
+                    <TableRow className="font-bold border-t-2"><TableCell>Total</TableCell><TableCell className="text-right">{fmt(agingData.reduce((s, r) => s + r.value, 0))}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -149,15 +225,26 @@ export default function FinanceReports() {
           <Card>
             <CardHeader><CardTitle className="text-sm">Bills Aging (Accounts Payable)</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={billAgingData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" />
-                  <YAxis tickFormatter={(v) => fmt(v)} />
-                  <Tooltip formatter={(v: number) => fmt(v)} />
-                  <Bar dataKey="value" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={billAgingData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" />
+                    <YAxis tickFormatter={(v) => fmt(v)} />
+                    <Tooltip formatter={(v: number) => fmt(v)} />
+                    <Bar dataKey="value" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Period</TableHead><TableHead className="text-right">Outstanding</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {billAgingData.map(r => (
+                      <TableRow key={r.name}><TableCell className="font-medium">{r.name}</TableCell><TableCell className="text-right">{fmt(r.value)}</TableCell></TableRow>
+                    ))}
+                    <TableRow className="font-bold border-t-2"><TableCell>Total</TableCell><TableCell className="text-right">{fmt(billAgingData.reduce((s, r) => s + r.value, 0))}</TableCell></TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
