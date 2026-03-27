@@ -17,6 +17,7 @@ export default function Jobs() {
   const [statusFilter, setStatusFilter] = useState('');
 
   const { data: jobs = [], isLoading } = useJobs({ status: statusFilter || undefined, search: search || undefined });
+  const { canManageJobs } = useActionPermissions();
 
   const priorityColor = (p: string) => {
     if (p === 'Urgent') return 'text-destructive font-semibold';
