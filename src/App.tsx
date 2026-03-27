@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { PreviewModeBanner } from "@/components/PreviewModeBanner";
+import { ModuleGuard } from "@/components/ModuleGuard";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAuthorization } from "@/hooks/useAuthorization";
 import { AppLayout } from "@/components/AppLayout";
