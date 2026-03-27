@@ -89,9 +89,6 @@ export default function VisitDetail() {
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
         )}
-            <span className="hidden sm:inline">Create Invoice</span>
-          </Button>
-        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
