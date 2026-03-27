@@ -151,6 +151,8 @@ export default function FinanceReports() {
           <TabsTrigger value="payroll">Payroll</TabsTrigger>
           <TabsTrigger value="payouts">Subcontractor Payouts</TabsTrigger>
           <TabsTrigger value="remittances">Remittances</TabsTrigger>
+          <TabsTrigger value="conversion">Quote Conversion</TabsTrigger>
+          <TabsTrigger value="unbilled">Unbilled Work</TabsTrigger>
         </TabsList>
 
         <TabsContent value="category">
