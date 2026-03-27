@@ -65,6 +65,7 @@ export default function QuoteDetail() {
   const updateQuote = useUpdateQuote();
   const upsertItems = useUpsertLineItems();
   const { toast } = useToast();
+  const { canManageQuotes } = useActionPermissions();
 
   const [form, setForm] = useState<any>({});
   const [items, setItems] = useState<LineItemForm[]>([]);
