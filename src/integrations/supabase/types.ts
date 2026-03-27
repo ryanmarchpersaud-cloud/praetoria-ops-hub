@@ -1140,6 +1140,48 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_accounts: {
+        Row: {
+          account_name: string
+          account_type: string
+          created_at: string
+          current_balance_manual: number
+          id: string
+          institution_name: string | null
+          is_active: boolean
+          masked_account_number: string | null
+          notes: string | null
+          opening_balance: number
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          account_type?: string
+          created_at?: string
+          current_balance_manual?: number
+          id?: string
+          institution_name?: string | null
+          is_active?: boolean
+          masked_account_number?: string | null
+          notes?: string | null
+          opening_balance?: number
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          account_type?: string
+          created_at?: string
+          current_balance_manual?: number
+          id?: string
+          institution_name?: string | null
+          is_active?: boolean
+          masked_account_number?: string | null
+          notes?: string | null
+          opening_balance?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       finance_bill_attachments: {
         Row: {
           bill_id: string
@@ -1329,6 +1371,10 @@ export type Database = {
           notes_internal: string | null
           payment_method: string | null
           receipt_count: number | null
+          reimbursement_account_id: string | null
+          reimbursement_date: string | null
+          reimbursement_method: string | null
+          reimbursement_reference: string | null
           service_category: string | null
           status: string
           subcategory: string | null
@@ -1360,6 +1406,10 @@ export type Database = {
           notes_internal?: string | null
           payment_method?: string | null
           receipt_count?: number | null
+          reimbursement_account_id?: string | null
+          reimbursement_date?: string | null
+          reimbursement_method?: string | null
+          reimbursement_reference?: string | null
           service_category?: string | null
           status?: string
           subcategory?: string | null
@@ -1391,6 +1441,10 @@ export type Database = {
           notes_internal?: string | null
           payment_method?: string | null
           receipt_count?: number | null
+          reimbursement_account_id?: string | null
+          reimbursement_date?: string | null
+          reimbursement_method?: string | null
+          reimbursement_reference?: string | null
           service_category?: string | null
           status?: string
           subcategory?: string | null
@@ -1431,6 +1485,13 @@ export type Database = {
             columns: ["linked_visit_id"]
             isOneToOne: false
             referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_expenses_reimbursement_account_id_fkey"
+            columns: ["reimbursement_account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
             referencedColumns: ["id"]
           },
           {
@@ -1524,6 +1585,101 @@ export type Database = {
           },
         ]
       }
+      finance_payments: {
+        Row: {
+          account_id: string | null
+          amount: number
+          bill_id: string | null
+          created_at: string
+          entered_by: string | null
+          expense_id: string | null
+          id: string
+          internal_note: string | null
+          invoice_id: string | null
+          is_reversed: boolean
+          payment_date: string
+          payment_method: string | null
+          payment_type: string
+          reconciled: boolean
+          reconciled_at: string | null
+          reconciled_by: string | null
+          reference_number: string | null
+          reversed_at: string | null
+          reversed_reason: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          amount?: number
+          bill_id?: string | null
+          created_at?: string
+          entered_by?: string | null
+          expense_id?: string | null
+          id?: string
+          internal_note?: string | null
+          invoice_id?: string | null
+          is_reversed?: boolean
+          payment_date?: string
+          payment_method?: string | null
+          payment_type?: string
+          reconciled?: boolean
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reference_number?: string | null
+          reversed_at?: string | null
+          reversed_reason?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          bill_id?: string | null
+          created_at?: string
+          entered_by?: string | null
+          expense_id?: string | null
+          id?: string
+          internal_note?: string | null
+          invoice_id?: string | null
+          is_reversed?: boolean
+          payment_date?: string
+          payment_method?: string | null
+          payment_type?: string
+          reconciled?: boolean
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reference_number?: string | null
+          reversed_at?: string | null
+          reversed_reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_payments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_payments_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "finance_bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_payments_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "finance_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finance_receipts: {
         Row: {
           expense_id: string | null
@@ -1531,9 +1687,13 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
+          matched_at: string | null
+          matched_by: string | null
           notes: string | null
           receipt_date: string | null
           review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           tax_raw: number | null
           total_raw: number | null
           uploaded_at: string
@@ -1546,9 +1706,13 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
+          matched_at?: string | null
+          matched_by?: string | null
           notes?: string | null
           receipt_date?: string | null
           review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           tax_raw?: number | null
           total_raw?: number | null
           uploaded_at?: string
@@ -1561,9 +1725,13 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
+          matched_at?: string | null
+          matched_by?: string | null
           notes?: string | null
           receipt_date?: string | null
           review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           tax_raw?: number | null
           total_raw?: number | null
           uploaded_at?: string
@@ -1576,6 +1744,65 @@ export type Database = {
             columns: ["expense_id"]
             isOneToOne: false
             referencedRelation: "finance_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_reconciliation_statements: {
+        Row: {
+          account_id: string
+          calculated_balance: number
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          difference: number
+          id: string
+          period_end: string
+          period_start: string
+          statement_closing_balance: number
+          statement_opening_balance: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          calculated_balance?: number
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference?: number
+          id?: string
+          period_end: string
+          period_start: string
+          statement_closing_balance?: number
+          statement_opening_balance?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          calculated_balance?: number
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference?: number
+          id?: string
+          period_end?: string
+          period_start?: string
+          statement_closing_balance?: number
+          statement_opening_balance?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_reconciliation_statements_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
             referencedColumns: ["id"]
           },
         ]
