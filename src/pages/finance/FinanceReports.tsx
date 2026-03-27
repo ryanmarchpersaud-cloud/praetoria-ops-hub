@@ -288,6 +288,40 @@ export default function FinanceReports() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="payments">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Payment History by Method</CardTitle></CardHeader>
+            <CardContent>
+              {paymentData.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={paymentData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis tickFormatter={(v) => fmt(v)} />
+                      <Tooltip formatter={(v: number) => fmt(v)} />
+                      <Bar dataKey="cashIn" fill="hsl(var(--accent))" name="Cash In" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="cashOut" fill="hsl(var(--destructive))" name="Cash Out" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Method</TableHead><TableHead className="text-right">Cash In</TableHead><TableHead className="text-right">Cash Out</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {paymentData.map(r => (
+                        <TableRow key={r.name}>
+                          <TableCell className="font-medium">{r.name}</TableCell>
+                          <TableCell className="text-right text-accent">{fmt(r.cashIn)}</TableCell>
+                          <TableCell className="text-right text-destructive">{fmt(r.cashOut)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : <p className="text-center text-muted-foreground py-12">No payment data</p>}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
