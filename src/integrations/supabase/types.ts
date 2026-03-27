@@ -2969,6 +2969,278 @@ export type Database = {
         }
         Relationships: []
       }
+      payroll_deduction_rules: {
+        Row: {
+          calculation_mode: string | null
+          created_at: string
+          fixed_amount: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          percent_rate: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          calculation_mode?: string | null
+          created_at?: string
+          fixed_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          percent_rate?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          calculation_mode?: string | null
+          created_at?: string
+          fixed_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          percent_rate?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payroll_remittances: {
+        Row: {
+          account_id: string | null
+          amount: number
+          created_at: string
+          created_by: string | null
+          due_date: string
+          filed_at: string | null
+          filed_by: string | null
+          id: string
+          locked_at: string | null
+          notes: string | null
+          override_reason: string | null
+          paid_at: string | null
+          paid_by: string | null
+          payment_date: string | null
+          period_end: string
+          period_start: string
+          reference_number: string | null
+          remittance_number: string | null
+          remittance_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          due_date: string
+          filed_at?: string | null
+          filed_by?: string | null
+          id?: string
+          locked_at?: string | null
+          notes?: string | null
+          override_reason?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_date?: string | null
+          period_end: string
+          period_start: string
+          reference_number?: string | null
+          remittance_number?: string | null
+          remittance_type: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          filed_at?: string | null
+          filed_by?: string | null
+          id?: string
+          locked_at?: string | null
+          notes?: string | null
+          override_reason?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_date?: string | null
+          period_end?: string
+          period_start?: string
+          reference_number?: string | null
+          remittance_number?: string | null
+          remittance_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_remittances_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_run_items: {
+        Row: {
+          allowance_amount: number | null
+          bonus_amount: number | null
+          cpp_amount: number | null
+          created_at: string
+          ei_amount: number | null
+          employee_name: string | null
+          gross_pay: number | null
+          holiday_hours: number | null
+          hourly_rate: number | null
+          id: string
+          income_tax_amount: number | null
+          memo: string | null
+          net_pay: number | null
+          other_deductions_amount: number | null
+          overtime_hours: number | null
+          payout_account_id: string | null
+          payroll_run_id: string
+          regular_hours: number | null
+          salary_override: number | null
+          sick_hours: number | null
+          status: string | null
+          total_deductions: number | null
+          user_id: string | null
+          vacation_hours: number | null
+        }
+        Insert: {
+          allowance_amount?: number | null
+          bonus_amount?: number | null
+          cpp_amount?: number | null
+          created_at?: string
+          ei_amount?: number | null
+          employee_name?: string | null
+          gross_pay?: number | null
+          holiday_hours?: number | null
+          hourly_rate?: number | null
+          id?: string
+          income_tax_amount?: number | null
+          memo?: string | null
+          net_pay?: number | null
+          other_deductions_amount?: number | null
+          overtime_hours?: number | null
+          payout_account_id?: string | null
+          payroll_run_id: string
+          regular_hours?: number | null
+          salary_override?: number | null
+          sick_hours?: number | null
+          status?: string | null
+          total_deductions?: number | null
+          user_id?: string | null
+          vacation_hours?: number | null
+        }
+        Update: {
+          allowance_amount?: number | null
+          bonus_amount?: number | null
+          cpp_amount?: number | null
+          created_at?: string
+          ei_amount?: number | null
+          employee_name?: string | null
+          gross_pay?: number | null
+          holiday_hours?: number | null
+          hourly_rate?: number | null
+          id?: string
+          income_tax_amount?: number | null
+          memo?: string | null
+          net_pay?: number | null
+          other_deductions_amount?: number | null
+          overtime_hours?: number | null
+          payout_account_id?: string | null
+          payroll_run_id?: string
+          regular_hours?: number | null
+          salary_override?: number | null
+          sick_hours?: number | null
+          status?: string | null
+          total_deductions?: number | null
+          user_id?: string | null
+          vacation_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_run_items_payout_account_id_fkey"
+            columns: ["payout_account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_items_payroll_run_id_fkey"
+            columns: ["payroll_run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_runs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          locked_at: string | null
+          notes: string | null
+          override_reason: string | null
+          pay_date: string
+          pay_period_end: string
+          pay_period_start: string
+          processed_at: string | null
+          processed_by: string | null
+          run_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          notes?: string | null
+          override_reason?: string | null
+          pay_date: string
+          pay_period_end: string
+          pay_period_start: string
+          processed_at?: string | null
+          processed_by?: string | null
+          run_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          notes?: string | null
+          override_reason?: string | null
+          pay_date?: string
+          pay_period_end?: string
+          pay_period_start?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          run_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       portal_settings: {
         Row: {
           allow_approve_quotes: boolean | null
@@ -4177,6 +4449,144 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subcontractor_payout_items: {
+        Row: {
+          account_id: string | null
+          adjustment_amount: number | null
+          amount_due: number | null
+          company_name: string | null
+          created_at: string
+          holdback_amount: number | null
+          id: string
+          linked_invoice_id: string | null
+          linked_job_id: string | null
+          linked_visit_id: string | null
+          notes: string | null
+          payout_run_id: string
+          reference_number: string | null
+          service_date: string | null
+          service_description: string | null
+          status: string | null
+          subcontractor_id: string | null
+          subcontractor_name: string | null
+          total_payable: number | null
+        }
+        Insert: {
+          account_id?: string | null
+          adjustment_amount?: number | null
+          amount_due?: number | null
+          company_name?: string | null
+          created_at?: string
+          holdback_amount?: number | null
+          id?: string
+          linked_invoice_id?: string | null
+          linked_job_id?: string | null
+          linked_visit_id?: string | null
+          notes?: string | null
+          payout_run_id: string
+          reference_number?: string | null
+          service_date?: string | null
+          service_description?: string | null
+          status?: string | null
+          subcontractor_id?: string | null
+          subcontractor_name?: string | null
+          total_payable?: number | null
+        }
+        Update: {
+          account_id?: string | null
+          adjustment_amount?: number | null
+          amount_due?: number | null
+          company_name?: string | null
+          created_at?: string
+          holdback_amount?: number | null
+          id?: string
+          linked_invoice_id?: string | null
+          linked_job_id?: string | null
+          linked_visit_id?: string | null
+          notes?: string | null
+          payout_run_id?: string
+          reference_number?: string | null
+          service_date?: string | null
+          service_description?: string | null
+          status?: string | null
+          subcontractor_id?: string | null
+          subcontractor_name?: string | null
+          total_payable?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_payout_items_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "finance_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subcontractor_payout_items_payout_run_id_fkey"
+            columns: ["payout_run_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractor_payout_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractor_payout_runs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          locked_at: string | null
+          notes: string | null
+          override_reason: string | null
+          payout_date: string
+          payout_run_number: string | null
+          period_end: string
+          period_start: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          notes?: string | null
+          override_reason?: string | null
+          payout_date: string
+          payout_run_number?: string | null
+          period_end: string
+          period_start: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          notes?: string | null
+          override_reason?: string | null
+          payout_date?: string
+          payout_run_number?: string | null
+          period_end?: string
+          period_start?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       subcontractor_service_categories: {
         Row: {
