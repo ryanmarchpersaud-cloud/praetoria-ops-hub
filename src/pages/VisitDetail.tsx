@@ -26,7 +26,18 @@ export default function VisitDetail() {
   const updateVisit = useUpdateVisit();
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
 
+  // Fetch linked invoices for this visit
+  const { data: linkedInvoices = [] } = useQuery({
+    queryKey: ['visit_linked_invoices', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from('invoices').select('id, invoice_number, status, total').eq('visit_id', id as any);
+      return data || [];
+    },
+    enabled: !!id,
+  });
   useEffect(() => { if (visit) setForm(visit); }, [visit]);
 
   if (isLoading) return <div className="p-8 text-muted-foreground text-sm">Loading...</div>;

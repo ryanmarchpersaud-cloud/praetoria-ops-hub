@@ -32,6 +32,29 @@ export default function JobDetail() {
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
   const [generating, setGenerating] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+
+  // Fetch linked invoices
+  const { data: linkedInvoices = [] } = useQuery({
+    queryKey: ['job_linked_invoices', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from('invoices').select('id, invoice_number, status, total').eq('job_id', id);
+      return data || [];
+    },
+    enabled: !!id,
+  });
+
+  // Fetch job line items for invoice creation
+  const { data: jobLineItems = [] } = useQuery({
+    queryKey: ['job_line_items', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from('job_line_items').select('*').eq('job_id', id).order('sort_order');
+      return data || [];
+    },
+    enabled: !!id,
+  });
   const qc = useQueryClient();
 
   useEffect(() => { if (job) setForm(job); }, [job]);
