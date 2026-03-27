@@ -86,7 +86,11 @@ export function useCreateFinanceExpense() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['finance_expenses'] }); toast.success('Expense created'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['finance_expenses'] });
+      qc.invalidateQueries({ queryKey: ['finance_dashboard'] });
+      toast.success('Expense created');
+    },
     onError: (e: any) => toast.error(e.message),
   });
 }
@@ -98,7 +102,11 @@ export function useUpdateFinanceExpense() {
       const { error } = await supabase.from('finance_expenses').update(updates).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['finance_expenses'] }); toast.success('Expense updated'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['finance_expenses'] });
+      qc.invalidateQueries({ queryKey: ['finance_dashboard'] });
+      toast.success('Expense updated');
+    },
     onError: (e: any) => toast.error(e.message),
   });
 }
@@ -126,7 +134,27 @@ export function useCreateFinanceReceipt() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['finance_receipts'] }); toast.success('Receipt uploaded'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['finance_receipts'] });
+      qc.invalidateQueries({ queryKey: ['finance_dashboard'] });
+      toast.success('Receipt uploaded');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+export function useUpdateFinanceReceipt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: any) => {
+      const { error } = await supabase.from('finance_receipts').update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['finance_receipts'] });
+      qc.invalidateQueries({ queryKey: ['finance_dashboard'] });
+      toast.success('Receipt updated');
+    },
     onError: (e: any) => toast.error(e.message),
   });
 }
@@ -155,7 +183,11 @@ export function useCreateFinanceBill() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['finance_bills'] }); toast.success('Bill created'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['finance_bills'] });
+      qc.invalidateQueries({ queryKey: ['finance_dashboard'] });
+      toast.success('Bill created');
+    },
     onError: (e: any) => toast.error(e.message),
   });
 }
@@ -167,8 +199,46 @@ export function useUpdateFinanceBill() {
       const { error } = await supabase.from('finance_bills').update(updates).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['finance_bills'] }); toast.success('Bill updated'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['finance_bills'] });
+      qc.invalidateQueries({ queryKey: ['finance_dashboard'] });
+      toast.success('Bill updated');
+    },
     onError: (e: any) => toast.error(e.message),
+  });
+}
+
+/* ── Jobs (for linking) ── */
+export function useJobsForLinking() {
+  return useQuery({
+    queryKey: ['jobs_for_linking'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('jobs').select('id, job_number, job_title').order('created_at', { ascending: false }).limit(200);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useCustomersForLinking() {
+  return useQuery({
+    queryKey: ['customers_for_linking'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('id, first_name, last_name, company_name').order('first_name').limit(200);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function usePropertiesForLinking() {
+  return useQuery({
+    queryKey: ['properties_for_linking'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('properties').select('id, address_line_1, city').order('address_line_1').limit(200);
+      if (error) throw error;
+      return data;
+    },
   });
 }
 
@@ -188,16 +258,27 @@ export function useJobCostSnapshots() {
 }
 
 /* ── Dashboard Stats ── */
-export function useFinanceDashboard() {
+export function useFinanceDashboard(dateRange?: { from?: string; to?: string }) {
   return useQuery({
-    queryKey: ['finance_dashboard'],
+    queryKey: ['finance_dashboard', dateRange],
     queryFn: async () => {
-      const [expRes, billRes, recRes, invRes] = await Promise.all([
-        supabase.from('finance_expenses').select('amount_total, status, category'),
-        supabase.from('finance_bills').select('total, balance_due, status'),
-        supabase.from('finance_receipts').select('review_status'),
-        supabase.from('invoices').select('total, balance_due, status'),
-      ]);
+      let expQ = supabase.from('finance_expenses').select('amount_total, status, category, vendor_id, expense_date');
+      let billQ = supabase.from('finance_bills').select('total, balance_due, status, due_date');
+      const recQ = supabase.from('finance_receipts').select('review_status');
+      let invQ = supabase.from('invoices').select('total, balance_due, status, issue_date');
+
+      if (dateRange?.from) {
+        expQ = expQ.gte('expense_date', dateRange.from);
+        billQ = billQ.gte('bill_date', dateRange.from);
+        invQ = invQ.gte('issue_date', dateRange.from);
+      }
+      if (dateRange?.to) {
+        expQ = expQ.lte('expense_date', dateRange.to);
+        billQ = billQ.lte('bill_date', dateRange.to);
+        invQ = invQ.lte('issue_date', dateRange.to);
+      }
+
+      const [expRes, billRes, recRes, invRes] = await Promise.all([expQ, billQ, recQ, invQ]);
 
       const expenses = expRes.data || [];
       const bills = billRes.data || [];
@@ -209,6 +290,7 @@ export function useFinanceDashboard() {
       const outstandingInvoices = invoices.filter(i => ['sent', 'overdue'].includes(i.status)).reduce((s, i) => s + Number(i.balance_due || 0), 0);
       const openBills = bills.filter(b => ['open', 'partial', 'overdue'].includes(b.status)).reduce((s, b) => s + Number(b.balance_due || 0), 0);
       const receiptsAwaitingReview = receipts.filter(r => r.review_status === 'unreviewed').length;
+      const overdueBills = bills.filter(b => b.status === 'overdue' || (b.due_date && new Date(b.due_date) < new Date() && ['open', 'partial'].includes(b.status)));
 
       const categoryBreakdown: Record<string, number> = {};
       expenses.forEach(e => {
@@ -226,6 +308,7 @@ export function useFinanceDashboard() {
         categoryBreakdown,
         expenseCount: expenses.length,
         billCount: bills.length,
+        overdueBillCount: overdueBills.length,
       };
     },
   });

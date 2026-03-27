@@ -10,9 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useFinanceBills, useCreateFinanceBill, useUpdateFinanceBill, useFinanceVendors } from '@/hooks/useFinance';
-import { Plus, Search, FileText, MoreHorizontal, Download } from 'lucide-react';
-import { format } from 'date-fns';
+import { useFinanceBills, useCreateFinanceBill, useUpdateFinanceBill, useFinanceVendors, useJobsForLinking, useCustomersForLinking, usePropertiesForLinking } from '@/hooks/useFinance';
+import { Plus, Search, FileText, MoreHorizontal, Download, ExternalLink, AlertTriangle } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 
@@ -23,14 +25,29 @@ const statusColor: Record<string, string> = {
   overdue: 'bg-destructive/10 text-destructive', void: 'bg-muted text-muted-foreground',
 };
 
+const TRANSITIONS: Record<string, string[]> = {
+  draft: ['open', 'void'],
+  open: ['partial', 'paid', 'void'],
+  partial: ['paid', 'void'],
+  overdue: ['partial', 'paid', 'void'],
+  paid: [],
+  void: [],
+};
+
 export default function FinanceBills() {
+  const nav = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreate, setShowCreate] = useState(false);
+  const [showPayment, setShowPayment] = useState<any>(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
   const [form, setForm] = useState<any>({});
 
   const { data: bills, isLoading } = useFinanceBills({ status: statusFilter });
   const { data: vendors } = useFinanceVendors();
+  const { data: jobs } = useJobsForLinking();
+  const { data: customers } = useCustomersForLinking();
+  const { data: properties } = usePropertiesForLinking();
   const createBill = useCreateFinanceBill();
   const updateBill = useUpdateFinanceBill();
 
@@ -42,8 +59,16 @@ export default function FinanceBills() {
 
   const summary = {
     open: filtered.filter((b: any) => ['open', 'partial'].includes(b.status)).reduce((s: number, b: any) => s + Number(b.balance_due || 0), 0),
-    overdue: filtered.filter((b: any) => b.status === 'overdue').reduce((s: number, b: any) => s + Number(b.balance_due || 0), 0),
+    overdue: filtered.filter((b: any) => {
+      if (b.status === 'overdue') return true;
+      return b.due_date && new Date(b.due_date) < new Date() && ['open', 'partial'].includes(b.status);
+    }).reduce((s: number, b: any) => s + Number(b.balance_due || 0), 0),
     paidThisMonth: filtered.filter((b: any) => b.status === 'paid').reduce((s: number, b: any) => s + Number(b.total || 0), 0),
+    dueSoon: filtered.filter((b: any) => {
+      if (!b.due_date || b.status === 'paid' || b.status === 'void') return false;
+      const days = differenceInDays(new Date(b.due_date), new Date());
+      return days >= 0 && days <= 7;
+    }).length,
   };
 
   const handleCreate = () => {
@@ -51,8 +76,31 @@ export default function FinanceBills() {
     const tax = Number(form.tax || 0);
     const total = subtotal + tax;
     createBill.mutate({
-      ...form, subtotal, tax, total, balance_due: total, amount_paid: 0, status: 'open',
+      ...form,
+      subtotal, tax, total,
+      balance_due: total,
+      amount_paid: 0,
+      status: 'open',
+      vendor_id: form.vendor_id || null,
+      linked_job_id: form.linked_job_id || null,
+      linked_customer_id: form.linked_customer_id || null,
+      linked_property_id: form.linked_property_id || null,
     }, { onSuccess: () => { setShowCreate(false); setForm({}); } });
+  };
+
+  const handlePartialPayment = () => {
+    if (!showPayment) return;
+    const payment = Number(paymentAmount || 0);
+    if (payment <= 0) { toast.error('Enter a valid amount'); return; }
+    const newPaid = Number(showPayment.amount_paid || 0) + payment;
+    const newBalance = Number(showPayment.total || 0) - newPaid;
+    const newStatus = newBalance <= 0 ? 'paid' : 'partial';
+    updateBill.mutate({
+      id: showPayment.id,
+      amount_paid: Math.min(newPaid, Number(showPayment.total)),
+      balance_due: Math.max(newBalance, 0),
+      status: newStatus,
+    }, { onSuccess: () => { setShowPayment(null); setPaymentAmount(''); } });
   };
 
   const exportCSV = () => {
@@ -60,6 +108,17 @@ export default function FinanceBills() {
     const csv = ['Bill #,Vendor,Bill Date,Due Date,Total,Paid,Balance,Status', ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'bills.csv'; a.click();
+  };
+
+  const isDueSoon = (b: any) => {
+    if (!b.due_date || b.status === 'paid' || b.status === 'void') return false;
+    const days = differenceInDays(new Date(b.due_date), new Date());
+    return days >= 0 && days <= 7;
+  };
+
+  const isOverdue = (b: any) => {
+    if (b.status === 'overdue') return true;
+    return b.due_date && new Date(b.due_date) < new Date() && ['open', 'partial'].includes(b.status);
   };
 
   return (
@@ -76,9 +135,10 @@ export default function FinanceBills() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Open Bills</p><p className="text-lg font-bold text-primary">{fmt(summary.open)}</p></CardContent></Card>
         <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Overdue</p><p className="text-lg font-bold text-destructive">{fmt(summary.overdue)}</p></CardContent></Card>
+        <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Due This Week</p><p className="text-lg font-bold text-warning">{summary.dueSoon}</p></CardContent></Card>
         <Card><CardContent className="p-3 text-center"><p className="text-xs text-muted-foreground">Paid This Month</p><p className="text-lg font-bold text-accent">{fmt(summary.paidThisMonth)}</p></CardContent></Card>
       </div>
 
@@ -112,8 +172,8 @@ export default function FinanceBills() {
                   <TableRow>
                     <TableHead>Bill #</TableHead>
                     <TableHead>Vendor</TableHead>
-                    <TableHead>Bill Date</TableHead>
                     <TableHead>Due Date</TableHead>
+                    <TableHead>Linked To</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead className="text-right">Paid</TableHead>
                     <TableHead className="text-right">Balance</TableHead>
@@ -126,18 +186,42 @@ export default function FinanceBills() {
                     <TableRow key={b.id}>
                       <TableCell className="font-medium">{b.bill_number}</TableCell>
                       <TableCell>{(b as any).finance_vendors?.vendor_name || '—'}</TableCell>
-                      <TableCell>{b.bill_date ? format(new Date(b.bill_date), 'MMM d, yyyy') : '—'}</TableCell>
-                      <TableCell>{b.due_date ? format(new Date(b.due_date), 'MMM d, yyyy') : '—'}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {b.due_date ? format(new Date(b.due_date), 'MMM d, yyyy') : '—'}
+                          {isOverdue(b) && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                          {isDueSoon(b) && !isOverdue(b) && <AlertTriangle className="h-3.5 w-3.5 text-warning" />}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {b.linked_job_id && <Badge variant="outline" className="text-[10px] cursor-pointer" onClick={() => nav(`/jobs/${b.linked_job_id}`)}>Job <ExternalLink className="h-2.5 w-2.5 ml-0.5" /></Badge>}
+                          {b.linked_property_id && <Badge variant="outline" className="text-[10px] cursor-pointer" onClick={() => nav(`/properties/${b.linked_property_id}`)}>Property</Badge>}
+                          {!b.linked_job_id && !b.linked_property_id && <span className="text-xs text-muted-foreground">—</span>}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right">{fmt(Number(b.total))}</TableCell>
                       <TableCell className="text-right">{fmt(Number(b.amount_paid))}</TableCell>
                       <TableCell className="text-right font-semibold">{fmt(Number(b.balance_due))}</TableCell>
-                      <TableCell><Badge className={statusColor[b.status] || ''}>{b.status}</Badge></TableCell>
+                      <TableCell><Badge className={statusColor[b.status] || ''}>{isOverdue(b) && b.status !== 'overdue' ? 'overdue' : b.status}</Badge></TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {b.status !== 'paid' && <DropdownMenuItem onClick={() => updateBill.mutate({ id: b.id, status: 'paid', amount_paid: b.total, balance_due: 0 })}>Mark Paid</DropdownMenuItem>}
-                            {b.status !== 'void' && <DropdownMenuItem onClick={() => updateBill.mutate({ id: b.id, status: 'void' })}>Void</DropdownMenuItem>}
+                            {b.status !== 'paid' && b.status !== 'void' && (
+                              <DropdownMenuItem onClick={() => { setShowPayment(b); setPaymentAmount(String(b.balance_due)); }}>Record Payment</DropdownMenuItem>
+                            )}
+                            {(TRANSITIONS[b.status] || []).filter((s: string) => s !== 'partial').map((next: string) => (
+                              <DropdownMenuItem key={next} onClick={() => {
+                                if (next === 'paid') {
+                                  updateBill.mutate({ id: b.id, status: 'paid', amount_paid: b.total, balance_due: 0 });
+                                } else {
+                                  updateBill.mutate({ id: b.id, status: next });
+                                }
+                              }}>
+                                {next === 'open' ? 'Mark Open' : next === 'paid' ? 'Mark Fully Paid' : 'Void'}
+                              </DropdownMenuItem>
+                            ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -150,6 +234,22 @@ export default function FinanceBills() {
         </CardContent>
       </Card>
 
+      {/* Partial Payment Dialog */}
+      <Dialog open={!!showPayment} onOpenChange={(o) => { if (!o) setShowPayment(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Record Payment</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Bill: <span className="font-medium text-foreground">{showPayment?.bill_number}</span></p>
+            <p className="text-sm text-muted-foreground">Balance Due: <span className="font-medium text-foreground">{fmt(Number(showPayment?.balance_due || 0))}</span></p>
+            <div><Label>Payment Amount</Label><Input type="number" step="0.01" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPayment(null)}>Cancel</Button>
+            <Button onClick={handlePartialPayment}>Apply Payment</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
@@ -157,9 +257,12 @@ export default function FinanceBills() {
           <div className="space-y-4">
             <div>
               <Label>Vendor</Label>
-              <Select value={form.vendor_id || ''} onValueChange={v => setForm({ ...form, vendor_id: v })}>
+              <Select value={form.vendor_id || '_none'} onValueChange={v => setForm({ ...form, vendor_id: v === '_none' ? null : v })}>
                 <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
-                <SelectContent>{(vendors ?? []).map((v: any) => <SelectItem key={v.id} value={v.id}>{v.vendor_name}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  <SelectItem value="_none">None</SelectItem>
+                  {(vendors ?? []).map((v: any) => <SelectItem key={v.id} value={v.id}>{v.vendor_name}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -171,7 +274,44 @@ export default function FinanceBills() {
               <div><Label>Tax</Label><Input type="number" step="0.01" value={form.tax || ''} onChange={e => setForm({ ...form, tax: e.target.value })} /></div>
               <div><Label>Total</Label><Input disabled value={(Number(form.subtotal || 0) + Number(form.tax || 0)).toFixed(2)} /></div>
             </div>
+
+            {/* Linking */}
+            <div className="border-t border-border pt-3 space-y-3">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Link to Records</p>
+              <div>
+                <Label>Job</Label>
+                <Select value={form.linked_job_id || '_none'} onValueChange={v => setForm({ ...form, linked_job_id: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select job" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(jobs ?? []).map((j: any) => <SelectItem key={j.id} value={j.id}>{j.job_number} — {j.job_title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Customer</Label>
+                <Select value={form.linked_customer_id || '_none'} onValueChange={v => setForm({ ...form, linked_customer_id: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(customers ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Property</Label>
+                <Select value={form.linked_property_id || '_none'} onValueChange={v => setForm({ ...form, linked_property_id: v === '_none' ? null : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {(properties ?? []).map((p: any) => <SelectItem key={p.id} value={p.id}>{p.address_line_1}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div><Label>Memo</Label><Textarea value={form.memo || ''} onChange={e => setForm({ ...form, memo: e.target.value })} /></div>
+            <div><Label>Internal Notes</Label><Textarea value={form.internal_notes || ''} onChange={e => setForm({ ...form, internal_notes: e.target.value })} rows={2} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
