@@ -270,8 +270,8 @@ function AppRoutes() {
       <Route path="/quotes" element={<AdminRoute><ModuleGuard module="ops"><Quotes /></ModuleGuard></AdminRoute>} />
       <Route path="/quotes/:id" element={<AdminRoute><ModuleGuard module="ops"><QuoteDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/quotes/:id/print" element={<AdminRoute><ModuleGuard module="ops"><QuotePrint /></ModuleGuard></AdminRoute>} />
-      <Route path="/customers" element={<AdminRoute><ModuleGuard module="ops"><Customers /></ModuleGuard></AdminRoute>} />
-      <Route path="/customers/:id" element={<AdminRoute><ModuleGuard module="ops"><CustomerDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/customers" element={<AdminRoute><ModuleGuard module="opsOrFinance"><Customers /></ModuleGuard></AdminRoute>} />
+      <Route path="/customers/:id" element={<AdminRoute><ModuleGuard module="opsOrFinance"><CustomerDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/properties" element={<AdminRoute><ModuleGuard module="ops"><Properties /></ModuleGuard></AdminRoute>} />
       <Route path="/properties/:id" element={<AdminRoute><ModuleGuard module="ops"><PropertyDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/jobs" element={<AdminRoute><ModuleGuard module="ops"><Jobs /></ModuleGuard></AdminRoute>} />
