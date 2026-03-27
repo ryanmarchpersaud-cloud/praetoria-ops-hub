@@ -24,6 +24,7 @@ export default function Visits() {
   const [bulkInvoiceOpen, setBulkInvoiceOpen] = useState(false);
 
   const { data: visits = [], isLoading } = useVisits({ visit_status: statusFilter || undefined, search: search || undefined });
+  const { canManageVisits, canManageInvoices } = useActionPermissions();
 
   const getPriorityIcon = (p: string) => {
     if (p === 'Urgent' || p === 'High') return <AlertTriangle className="h-3 w-3 text-destructive" />;
