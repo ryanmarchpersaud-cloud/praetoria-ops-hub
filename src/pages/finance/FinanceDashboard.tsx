@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills, useFinanceReceipts } from '@/hooks/useFinance';
-import { DollarSign, TrendingUp, TrendingDown, Receipt, FileText, AlertTriangle, ArrowRight, CreditCard, BarChart3, Calendar, Landmark, Scale, Plus, Upload, CheckCircle } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Receipt, FileText, AlertTriangle, ArrowRight, CreditCard, BarChart3, Calendar, Landmark, Scale, Plus, Upload, CheckCircle, Users, Banknote, FileCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, differenceInDays } from 'date-fns';
@@ -76,12 +76,21 @@ export default function FinanceDashboard() {
           <h1 className="text-2xl font-bold text-foreground">Finance Hub</h1>
           <p className="text-sm text-muted-foreground">Financial overview and operations</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={() => nav('/finance/accounts')}>
             <Landmark className="h-4 w-4 mr-1" /> Accounts
           </Button>
           <Button variant="outline" size="sm" onClick={() => nav('/finance/reconciliation')}>
             <Scale className="h-4 w-4 mr-1" /> Reconcile
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => nav('/finance/payroll')}>
+            <Users className="h-4 w-4 mr-1" /> Payroll
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => nav('/finance/subcontractor-payouts')}>
+            <Banknote className="h-4 w-4 mr-1" /> Payouts
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => nav('/finance/remittances')}>
+            <FileCheck className="h-4 w-4 mr-1" /> Remittances
           </Button>
           <Button variant="outline" size="sm" onClick={() => nav('/finance/reports')}>
             <BarChart3 className="h-4 w-4 mr-1" /> Reports
@@ -135,6 +144,10 @@ export default function FinanceDashboard() {
             <Button variant="outline" size="sm" onClick={() => nav('/finance/vendors')}><Plus className="h-3.5 w-3.5 mr-1" /> Add Vendor</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/reconciliation')}><Scale className="h-3.5 w-3.5 mr-1" /> Reconcile</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/accounts')}><Landmark className="h-3.5 w-3.5 mr-1" /> Manage Accounts</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/payroll')}><Users className="h-3.5 w-3.5 mr-1" /> New Payroll Run</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/subcontractor-payouts')}><Banknote className="h-3.5 w-3.5 mr-1" /> New Payout Run</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/remittances')}><FileCheck className="h-3.5 w-3.5 mr-1" /> New Remittance</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/finance/tax-slips')}><FileText className="h-3.5 w-3.5 mr-1" /> Tax Slips</Button>
           </div>
         </CardContent>
       </Card>
