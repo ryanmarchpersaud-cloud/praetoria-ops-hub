@@ -31,9 +31,11 @@ export default function Jobs() {
           <h1 className="text-xl md:text-2xl font-bold">Jobs</h1>
           <p className="text-xs md:text-sm text-muted-foreground">{jobs.length} total</p>
         </div>
-        <Button size="sm" onClick={() => navigate('/jobs/new')}>
-          <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">New </span>Job
-        </Button>
+        {canManageJobs && (
+          <Button size="sm" onClick={() => navigate('/jobs/new')}>
+            <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">New </span>Job
+          </Button>
+        )}
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
