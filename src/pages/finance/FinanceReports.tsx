@@ -25,6 +25,7 @@ export default function FinanceReports() {
   const { data: stats, isLoading } = useFinanceDashboard(dateRange);
   const { data: expenses } = useFinanceExpenses({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
   const { data: bills } = useFinanceBills();
+  const { data: payments } = useAllFinancePayments({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
 
   const { data: invoices } = useQuery({
     queryKey: ['finance_reports_invoices', dateFrom, dateTo],
