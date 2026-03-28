@@ -587,7 +587,13 @@ export default function Invoices() {
                       <p className="text-[11px] text-muted-foreground truncate">{inv.customers.company_name}</p>
                     )}
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">{inv.invoice_number}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Due {format(new Date(inv.due_date), 'MMM d, yyyy')}</p>
+                    <p className={cn("text-[11px] mt-0.5", inv.status === 'Overdue' ? 'text-destructive font-medium' : 'text-muted-foreground')}>
+                      Due {format(new Date(inv.due_date), 'MMM d, yyyy')}
+                      {inv.status === 'Overdue' && (() => {
+                        const days = differenceInDays(new Date(), parseISO(inv.due_date));
+                        return days > 0 ? ` · ${days}d late` : '';
+                      })()}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="text-right">
