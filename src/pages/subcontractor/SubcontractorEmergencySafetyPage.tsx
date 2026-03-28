@@ -68,6 +68,8 @@ export default function SubcontractorEmergencySafetyPage() {
         adminPhone="306-555-0100"
         onReportIncident={() => navigate('/subcontractor/incidents/new')}
         highRisk={propertyInfo?.high_risk_flag}
+        reporterName={profile?.company_name || 'Subcontractor'}
+        reporterRole="subcontractor"
       />
 
       {propertyInfo && (

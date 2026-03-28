@@ -57,6 +57,8 @@ export default function WorkerEmergencySafetyPage() {
         siteContactPhone={(currentVisit?.customers as any)?.phone}
         onReportIncident={() => navigate('/worker/incidents/new')}
         highRisk={property?.high_risk_flag}
+        reporterName={user?.email || 'Unknown Worker'}
+        reporterRole="worker"
       />
 
       {/* Current Site Safety */}
