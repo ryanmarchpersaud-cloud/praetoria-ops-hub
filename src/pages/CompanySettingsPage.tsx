@@ -16,25 +16,25 @@ import { toast } from 'sonner';
 
 type CompanySettings = Record<string, any>;
 
-function Field({ label, field, type = 'text', placeholder = '', value, onChange }: {
+function Field({ label, field, type = 'text', placeholder = '', form, update }: {
   label: string; field: string; type?: string; placeholder?: string;
-  value: string; onChange: (field: string, value: string) => void;
+  form: CompanySettings; update: (key: string, value: any) => void;
 }) {
   return (
     <div className="space-y-1.5">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       {type === 'textarea' ? (
-        <Textarea value={value} onChange={e => onChange(field, e.target.value)} placeholder={placeholder} rows={3} />
+        <Textarea value={form[field] || ''} onChange={e => update(field, e.target.value)} placeholder={placeholder} rows={3} />
       ) : (
-        <Input type={type} value={value} onChange={e => onChange(field, e.target.value)} placeholder={placeholder} />
+        <Input type={type} value={form[field] || ''} onChange={e => update(field, e.target.value)} placeholder={placeholder} />
       )}
     </div>
   );
 }
 
-function Toggle({ label, field, desc, checked, onChange }: {
+function Toggle({ label, field, desc, form, update }: {
   label: string; field: string; desc?: string;
-  checked: boolean; onChange: (field: string, value: boolean) => void;
+  form: CompanySettings; update: (key: string, value: any) => void;
 }) {
   return (
     <div className="flex items-center justify-between py-2">
@@ -42,7 +42,7 @@ function Toggle({ label, field, desc, checked, onChange }: {
         <p className="text-sm font-medium text-foreground">{label}</p>
         {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
       </div>
-      <Switch checked={checked} onCheckedChange={v => onChange(field, v)} />
+      <Switch checked={!!form[field]} onCheckedChange={v => update(field, v)} />
     </div>
   );
 }
