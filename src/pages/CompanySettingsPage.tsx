@@ -60,6 +60,32 @@ export default function CompanySettingsPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState<CompanySettings>({});
   const [dirty, setDirty] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Logo must be under 2 MB');
+      return;
+    }
+    setLogoUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `company-logo-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('attachments').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      update('logo_url', urlData.publicUrl);
+      toast.success('Logo uploaded');
+    } catch (err: any) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setLogoUploading(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['company_settings'],
