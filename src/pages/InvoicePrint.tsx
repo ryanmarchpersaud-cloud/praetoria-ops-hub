@@ -203,7 +203,7 @@ export default function InvoicePrint() {
               <span>Total (CAD)</span>
               <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(total)}</span>
             </div>
-            {amountPaid > 0 && (
+            {amountPaid > 0 && balanceDue > 0.005 && (
               <>
                 <div className="flex justify-between text-sm text-[#059669] print:text-base">
                   <span>Paid</span>
@@ -212,6 +212,18 @@ export default function InvoicePrint() {
                 <div className="flex justify-between text-base font-bold text-[#dc2626] print:text-lg">
                   <span>Balance Due</span>
                   <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(balanceDue)}</span>
+                </div>
+              </>
+            )}
+            {amountPaid > 0 && balanceDue <= 0.005 && (
+              <>
+                <div className="flex justify-between text-sm text-[#059669] print:text-base">
+                  <span>Paid</span>
+                  <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>-${formatCurrency(amountPaid)}</span>
+                </div>
+                <div className="flex justify-between text-base font-bold text-[#059669] print:text-lg">
+                  <span>Balance Due</span>
+                  <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>$0.00</span>
                 </div>
               </>
             )}

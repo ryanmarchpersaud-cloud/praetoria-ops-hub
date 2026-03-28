@@ -587,7 +587,13 @@ export default function Invoices() {
                       <p className="text-[11px] text-muted-foreground truncate">{inv.customers.company_name}</p>
                     )}
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">{inv.invoice_number}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Due {format(new Date(inv.due_date), 'MMM d, yyyy')}</p>
+                    <p className={cn("text-[11px] mt-0.5", inv.status === 'Overdue' ? 'text-destructive font-medium' : 'text-muted-foreground')}>
+                      Due {format(new Date(inv.due_date), 'MMM d, yyyy')}
+                      {inv.status === 'Overdue' && (() => {
+                        const days = differenceInDays(new Date(), parseISO(inv.due_date));
+                        return days > 0 ? ` · ${days}d late` : '';
+                      })()}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="text-right">
@@ -684,10 +690,18 @@ export default function Invoices() {
                     {format(new Date(inv.issue_date), 'MMM d, yyyy')}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {format(new Date(inv.due_date), 'MMM d, yyyy')}
+                    <span className={cn(
+                      inv.status === 'Overdue' && 'text-destructive font-medium'
+                    )}>
+                      {format(new Date(inv.due_date), 'MMM d, yyyy')}
+                      {inv.status === 'Overdue' && (() => {
+                        const days = differenceInDays(new Date(), parseISO(inv.due_date));
+                        return days > 0 ? <span className="ml-1 text-[10px]">({days}d late)</span> : null;
+                      })()}
+                    </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">
-                    {inv.customer_memo || inv.jobs?.job_title || '—'}
+                    {inv.jobs?.job_title || inv.properties?.property_name || inv.customer_memo || '—'}
                   </TableCell>
                   <TableCell><StatusBadge status={inv.status} /></TableCell>
                   <TableCell className="text-sm font-medium text-right font-mono">
