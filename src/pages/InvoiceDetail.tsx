@@ -440,6 +440,14 @@ export default function InvoiceDetail() {
                 Full Balance (${balanceDue.toFixed(2)})
               </Button>
             </div>
+            {parseFloat(paymentAmount) > 0 && parseFloat(paymentAmount) < balanceDue - 0.005 && (
+              <p className="text-xs text-muted-foreground">
+                Remaining balance after payment: <span className="font-medium text-foreground">${(balanceDue - parseFloat(paymentAmount)).toFixed(2)}</span> — invoice will be marked as <span className="font-medium">Partially Paid</span>.
+              </p>
+            )}
+            {parseFloat(paymentAmount) >= balanceDue - 0.005 && parseFloat(paymentAmount) > 0 && (
+              <p className="text-xs text-success">Invoice will be marked as <span className="font-medium">Paid</span>.</p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaymentOpen(false)}>Cancel</Button>
