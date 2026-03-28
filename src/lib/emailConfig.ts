@@ -7,13 +7,12 @@ export const APP_EMAIL_CONFIG = {
   noReplyInbox: "noreply@praetoriagroup.ca",
 
   serviceInboxes: {
-    snow_ice: "snow@praetoriagroup.ca",
+    snow_ice: "info@praetoriasnowandice.ca",
     landscaping: "landscaping@praetoriagroup.ca",
     junk_removal: "junk@praetoriagroup.ca",
     property_maintenance: "maintenance@praetoriagroup.ca",
     cleaning: "cleaning@praetoriagroup.ca",
-    power_washing: "powerwash@praetoriagroup.ca",
-    property_management: "propertymanagement@praetoriagroup.ca",
+    power_washing: "powerwashing@praetoriagroup.ca",
   },
 } as const;
 
@@ -42,10 +41,6 @@ export const SERVICE_NOTIFICATION_RULES = {
     internalNotify: [APP_EMAIL_CONFIG.opsInbox, APP_EMAIL_CONFIG.serviceInboxes.power_washing],
     customerReplyFrom: APP_EMAIL_CONFIG.serviceInboxes.power_washing,
   },
-  property_management: {
-    internalNotify: [APP_EMAIL_CONFIG.opsInbox, APP_EMAIL_CONFIG.serviceInboxes.property_management],
-    customerReplyFrom: APP_EMAIL_CONFIG.serviceInboxes.property_management,
-  },
 } as const;
 
 /** Map service_category enum values to notification rule keys */
@@ -56,5 +51,4 @@ export const SERVICE_CATEGORY_TO_KEY: Record<string, keyof typeof SERVICE_NOTIFI
   "Property Care & Maintenance": "property_maintenance",
   "Cleaning Services": "cleaning",
   "Power Washing": "power_washing",
-  "Property Management": "property_management",
 };
