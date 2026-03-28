@@ -15,6 +15,55 @@ function json(body: Record<string, unknown>, status = 200) {
 
 const SENDER = "Praetoria Group <noreply@praetoriagroup.ca>";
 
+// ── Email routing config (mirrors src/lib/emailConfig.ts) ─────────
+const EMAIL_CONFIG = {
+  opsInbox: "ops@praetoriagroup.ca",
+  supportInbox: "support@praetoriagroup.ca",
+  adminInbox: "admin@praetoriagroup.ca",
+  serviceInboxes: {
+    snow_ice: "info@praetoriasnowandice.ca",
+    landscaping: "landscaping@praetoriagroup.ca",
+    junk_removal: "junk@praetoriagroup.ca",
+    property_maintenance: "maintenance@praetoriagroup.ca",
+    cleaning: "cleaning@praetoriagroup.ca",
+    power_washing: "powerwashing@praetoriagroup.ca",
+  } as Record<string, string>,
+};
+
+const CATEGORY_TO_KEY: Record<string, string> = {
+  "Snow & Ice": "snow_ice",
+  "Landscaping & Grounds": "landscaping",
+  "Junk Removal": "junk_removal",
+  "Property Care & Maintenance": "property_maintenance",
+  "Cleaning Services": "cleaning",
+  "Power Washing": "power_washing",
+};
+
+function resolveReplyTo(serviceCategory?: string, context: "operational" | "general" = "operational"): string {
+  if (serviceCategory) {
+    const key = CATEGORY_TO_KEY[serviceCategory];
+    if (key && EMAIL_CONFIG.serviceInboxes[key]) {
+      return EMAIL_CONFIG.serviceInboxes[key];
+    }
+  }
+  return context === "operational" ? EMAIL_CONFIG.opsInbox : EMAIL_CONFIG.supportInbox;
+}
+
+function resolveOpsRecipients(serviceCategory?: string): string[] {
+  const recipients = [EMAIL_CONFIG.opsInbox];
+  if (serviceCategory) {
+    const key = CATEGORY_TO_KEY[serviceCategory];
+    if (key && EMAIL_CONFIG.serviceInboxes[key]) {
+      const serviceInbox = EMAIL_CONFIG.serviceInboxes[key];
+      if (!recipients.includes(serviceInbox)) {
+        recipients.push(serviceInbox);
+      }
+    }
+  }
+  return recipients;
+}
+
+// ── Supabase client ───────────────────────────────────────────────
 function getServiceClient() {
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -22,6 +71,7 @@ function getServiceClient() {
   );
 }
 
+// ── Integration logging ──────────────────────────────────────────
 interface IntegrationEntry {
   provider: string;
   event_name: string;
@@ -49,16 +99,21 @@ async function logIntegration(entry: IntegrationEntry) {
   }
 }
 
-// ── n8n Event Handoff ──────────────────────────────────────────
+// ── n8n Event Handoff ────────────────────────────────────────────
 const N8N_NOTIFY_EVENTS = new Set([
   "email.request_confirmation",
   "email.ops_notification",
+  "email.quote_sent",
+  "email.invoice_sent",
+  "email.visit_completed",
+  "email.incident_report",
+  "email.emergency_sos",
 ]);
 
 async function notifyN8n(entry: IntegrationEntry) {
   if (!N8N_NOTIFY_EVENTS.has(entry.event_name)) return;
   const url = Deno.env.get("N8N_WEBHOOK_URL");
-  if (!url) return; // n8n not configured — skip silently
+  if (!url) return;
 
   const payload = {
     event: entry.event_name,
@@ -105,6 +160,7 @@ async function notifyN8n(entry: IntegrationEntry) {
   }
 }
 
+// ── Resend sender ────────────────────────────────────────────────
 interface EmailPayload {
   to: string | string[];
   subject: string;
@@ -136,6 +192,7 @@ async function sendViaResend(payload: EmailPayload): Promise<{ ok: boolean; id?:
   return { ok: true, id: data.id };
 }
 
+// ── HTML wrapper ─────────────────────────────────────────────────
 function wrapHtml(title: string, body: string): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -162,6 +219,7 @@ function wrapHtml(title: string, body: string): string {
 </body></html>`;
 }
 
+// ── Main handler ─────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -170,6 +228,7 @@ Deno.serve(async (req) => {
   try {
     const { action, ...params } = await req.json();
 
+    // ─── Test email ───
     if (action === "test") {
       const { to } = params;
       if (!to) return json({ error: "Missing 'to' email address" }, 400);
@@ -194,9 +253,13 @@ Deno.serve(async (req) => {
       return json(result);
     }
 
+    // ─── Request Confirmation (customer-facing) ───
     if (action === "request_confirmation") {
       const { customer_email, customer_name, request_subject, service_type, request_id } = params;
       if (!customer_email) return json({ error: "Missing customer_email" }, 400);
+
+      const replyTo = resolveReplyTo(service_type, "operational");
+
       const result = await sendViaResend({
         to: customer_email,
         subject: `Request Received: ${request_subject || "Service Request"}`,
@@ -208,7 +271,7 @@ Deno.serve(async (req) => {
           <p>Our team will review your request and follow up shortly. You can track the status of your request in your <a href="https://praetoria-ops-hub.lovable.app/portal/requests">customer portal</a>.</p>
           <p>Thank you,<br/>The Praetoria Team</p>
         `),
-        reply_to: "ops@praetoriagroup.ca",
+        reply_to: replyTo,
       });
       const logEntry: IntegrationEntry = {
         provider: "resend",
@@ -220,17 +283,125 @@ Deno.serve(async (req) => {
         record_id: request_id,
         provider_response_id: result.id,
         error_message: result.error,
-        metadata: { customer_name, service_type },
+        metadata: { customer_name, service_type, reply_to: replyTo },
       };
       await logIntegration(logEntry);
       await notifyN8n(logEntry);
+
+      // Also send internal ops notification
+      const opsRecipients = resolveOpsRecipients(service_type);
+      const opsResult = await sendViaResend({
+        to: opsRecipients,
+        subject: `[New Request] ${request_subject || "Service Request"} — ${service_type || "General"}`,
+        html: wrapHtml("New Service Request", `
+          <p>A new service request has been submitted:</p>
+          <p><strong>Customer:</strong> ${customer_name || "Unknown"} (${customer_email})</p>
+          <p><strong>Subject:</strong> ${request_subject || "N/A"}</p>
+          <p><strong>Service:</strong> <span class="badge">${service_type || "General"}</span></p>
+          <p><a href="https://praetoria-ops-hub.lovable.app/requests/${request_id || ""}">View Request →</a></p>
+        `),
+      });
+      await logIntegration({
+        provider: "resend",
+        event_name: "email.ops_notification",
+        channel: "email",
+        status: opsResult.ok ? "success" : "failed",
+        recipient: opsRecipients.join(", "),
+        record_type: "service_request",
+        record_id: request_id,
+        provider_response_id: opsResult.id,
+        error_message: opsResult.error,
+        metadata: { trigger: "request_confirmation", service_type },
+      });
+
       return json({ ...result, action: "request_confirmation" });
     }
 
+    // ─── Quote Sent (customer-facing) ───
+    if (action === "quote_sent") {
+      const { customer_email, customer_name, quote_number, service_category, total, quote_id, custom_message } = params;
+      if (!customer_email) return json({ error: "Missing customer_email" }, 400);
+
+      const replyTo = resolveReplyTo(service_category, "operational");
+
+      const result = await sendViaResend({
+        to: customer_email,
+        subject: `Quote ${quote_number || ""} — ${service_category || "Service"} — $${total || "0.00"} CAD`,
+        html: wrapHtml("Your Quote is Ready", `
+          <p>Dear ${customer_name || "Valued Customer"},</p>
+          <p>Please find your quote <strong>${quote_number || ""}</strong> for <strong>${service_category || "services"}</strong>, totalling <strong>$${total || "0.00"} CAD</strong> (incl. tax).</p>
+          ${custom_message ? `<p style="background:#f0f9ff;padding:12px;border-radius:6px;font-style:italic;">${custom_message}</p>` : ""}
+          <p>This quote is valid for 30 days from the issued date. Please reply to this email or call us to proceed.</p>
+          <p>You can also view your quotes in your <a href="https://praetoria-ops-hub.lovable.app/portal/quotes">customer portal</a>.</p>
+          <p>Best regards,<br/>Praetoria Group</p>
+        `),
+        reply_to: replyTo,
+      });
+
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.quote_sent",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: customer_email,
+        record_type: "quote",
+        record_id: quote_id,
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: { quote_number, service_category, total, reply_to: replyTo },
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
+      return json({ ...result, action: "quote_sent" });
+    }
+
+    // ─── Invoice Sent (customer-facing) ───
+    if (action === "invoice_sent") {
+      const { customer_email, customer_name, invoice_number, service_category, total, balance_due, due_date, invoice_id } = params;
+      if (!customer_email) return json({ error: "Missing customer_email" }, 400);
+
+      const replyTo = resolveReplyTo(service_category, "operational");
+
+      const result = await sendViaResend({
+        to: customer_email,
+        subject: `Invoice ${invoice_number || ""} — $${balance_due || total || "0.00"} CAD Due ${due_date || ""}`,
+        html: wrapHtml("Invoice from Praetoria Group", `
+          <p>Dear ${customer_name || "Valued Customer"},</p>
+          <p>Please find your invoice <strong>${invoice_number || ""}</strong>.</p>
+          <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+            <tr><td style="padding:6px 0;color:#71717a;">Total</td><td style="padding:6px 0;text-align:right;font-weight:600;">$${total || "0.00"} CAD</td></tr>
+            <tr><td style="padding:6px 0;color:#71717a;">Balance Due</td><td style="padding:6px 0;text-align:right;font-weight:600;color:#dc2626;">$${balance_due || total || "0.00"} CAD</td></tr>
+            <tr><td style="padding:6px 0;color:#71717a;">Due Date</td><td style="padding:6px 0;text-align:right;font-weight:600;">${due_date || "Upon receipt"}</td></tr>
+          </table>
+          <p>You can view and pay this invoice in your <a href="https://praetoria-ops-hub.lovable.app/portal/billing">customer portal</a>.</p>
+          <p>Thank you for your business,<br/>Praetoria Group</p>
+        `),
+        reply_to: replyTo,
+      });
+
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.invoice_sent",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: customer_email,
+        record_type: "invoice",
+        record_id: invoice_id,
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: { invoice_number, service_category, total, balance_due, due_date, reply_to: replyTo },
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
+      return json({ ...result, action: "invoice_sent" });
+    }
+
+    // ─── Internal Ops Notification (generic) ───
     if (action === "ops_notification") {
-      const { subject, body_html, to_addresses } = params;
+      const { subject, body_html, to_addresses, service_category } = params;
       if (!subject) return json({ error: "Missing subject" }, 400);
-      const recipients = to_addresses || ["ops@praetoriagroup.ca"];
+
+      const recipients = to_addresses || resolveOpsRecipients(service_category);
       const result = await sendViaResend({
         to: recipients,
         subject: `[Praetoria Group] ${subject}`,
@@ -244,13 +415,139 @@ Deno.serve(async (req) => {
         recipient: Array.isArray(recipients) ? recipients.join(", ") : recipients,
         provider_response_id: result.id,
         error_message: result.error,
-        metadata: { subject },
+        metadata: { subject, service_category },
       };
       await logIntegration(logEntry);
       await notifyN8n(logEntry);
       return json({ ...result, action: "ops_notification" });
     }
 
+    // ─── Visit Completed (internal ops) ───
+    if (action === "visit_completed") {
+      const { visit_number, job_title, property_name, worker_name, service_category, visit_id, completed_at } = params;
+
+      const recipients = resolveOpsRecipients(service_category);
+      const result = await sendViaResend({
+        to: recipients,
+        subject: `[Visit Completed] ${visit_number || "Visit"} — ${property_name || ""}`,
+        html: wrapHtml("Visit Completed", `
+          <p>A visit has been completed:</p>
+          <p><strong>Visit:</strong> ${visit_number || "N/A"}</p>
+          <p><strong>Job:</strong> ${job_title || "N/A"}</p>
+          <p><strong>Property:</strong> ${property_name || "N/A"}</p>
+          <p><strong>Completed by:</strong> ${worker_name || "N/A"}</p>
+          <p><strong>Service:</strong> <span class="badge">${service_category || "General"}</span></p>
+          <p><strong>Completed at:</strong> ${completed_at || new Date().toISOString()}</p>
+          <p><a href="https://praetoria-ops-hub.lovable.app/visits/${visit_id || ""}">View Visit →</a></p>
+        `),
+      });
+
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.visit_completed",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: recipients.join(", "),
+        record_type: "visit",
+        record_id: visit_id,
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: { visit_number, service_category, worker_name },
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
+      return json({ ...result, action: "visit_completed" });
+    }
+
+    // ─── Incident Report (internal ops + admin) ───
+    if (action === "incident_report") {
+      const { report_number, incident_type, severity, description, reporter_name, service_category, incident_id } = params;
+
+      const recipients = [...resolveOpsRecipients(service_category)];
+      // High severity also notifies admin
+      if (severity === "critical" || severity === "high") {
+        if (!recipients.includes(EMAIL_CONFIG.adminInbox)) {
+          recipients.push(EMAIL_CONFIG.adminInbox);
+        }
+      }
+
+      const result = await sendViaResend({
+        to: recipients,
+        subject: `[Incident ${report_number || ""}] ${severity?.toUpperCase() || "ALERT"} — ${incident_type || "Incident"}`,
+        html: wrapHtml("Incident Report Filed", `
+          <p>An incident report has been filed:</p>
+          <p><strong>Report:</strong> ${report_number || "N/A"}</p>
+          <p><strong>Type:</strong> ${incident_type || "N/A"}</p>
+          <p><strong>Severity:</strong> <span class="badge" style="${severity === "critical" ? "background:#fef2f2;color:#dc2626;" : ""}">${severity || "Unknown"}</span></p>
+          <p><strong>Reported by:</strong> ${reporter_name || "N/A"}</p>
+          ${description ? `<p><strong>Description:</strong> ${description}</p>` : ""}
+          <p><a href="https://praetoria-ops-hub.lovable.app/admin/incidents/${incident_id || ""}">View Incident →</a></p>
+        `),
+      });
+
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.incident_report",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: recipients.join(", "),
+        record_type: "incident_report",
+        record_id: incident_id,
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: { report_number, incident_type, severity, service_category },
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
+      return json({ ...result, action: "incident_report" });
+    }
+
+    // ─── Emergency SOS (ops + admin always) ───
+    if (action === "emergency_sos") {
+      const { reporter_name, reporter_role, location, message, service_category } = params;
+
+      const recipients = [EMAIL_CONFIG.opsInbox, EMAIL_CONFIG.adminInbox];
+      // Also add service inbox if known
+      if (service_category) {
+        const key = CATEGORY_TO_KEY[service_category];
+        if (key && EMAIL_CONFIG.serviceInboxes[key]) {
+          recipients.push(EMAIL_CONFIG.serviceInboxes[key]);
+        }
+      }
+
+      const result = await sendViaResend({
+        to: [...new Set(recipients)],
+        subject: `🚨 [EMERGENCY SOS] ${reporter_name || "Unknown"} — Immediate Attention Required`,
+        html: wrapHtml("🚨 Emergency SOS Triggered", `
+          <div style="background:#fef2f2;border:2px solid #dc2626;border-radius:8px;padding:16px;margin-bottom:16px;">
+            <p style="color:#dc2626;font-weight:700;font-size:16px;margin:0 0 8px;">EMERGENCY — Immediate Response Required</p>
+            <p><strong>Person:</strong> ${reporter_name || "Unknown"}</p>
+            <p><strong>Role:</strong> ${reporter_role || "N/A"}</p>
+            ${location ? `<p><strong>Location:</strong> ${location}</p>` : ""}
+            ${message ? `<p><strong>Message:</strong> ${message}</p>` : ""}
+            <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+          </div>
+          <p>This SOS was triggered from the Praetoria Group platform. Please respond immediately.</p>
+        `),
+      });
+
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.emergency_sos",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: recipients.join(", "),
+        record_type: "emergency_sos",
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: { reporter_name, reporter_role, location, service_category },
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
+      return json({ ...result, action: "emergency_sos" });
+    }
+
+    // ─── Health check ───
     if (action === "health") {
       const hasKey = !!Deno.env.get("RESEND_API_KEY");
       return json({ ok: true, resend_configured: hasKey });

@@ -52,3 +52,31 @@ export const SERVICE_CATEGORY_TO_KEY: Record<string, keyof typeof SERVICE_NOTIFI
   "Cleaning Services": "cleaning",
   "Power Washing": "power_washing",
 };
+
+/**
+ * Resolve the correct reply-to address for a given service category.
+ * Falls back to ops@ for operational contexts, support@ for general/unknown.
+ */
+export function getReplyToForCategory(serviceCategory?: string | null, context: 'operational' | 'general' = 'operational'): string {
+  if (serviceCategory) {
+    const key = SERVICE_CATEGORY_TO_KEY[serviceCategory];
+    if (key) {
+      return SERVICE_NOTIFICATION_RULES[key].customerReplyFrom;
+    }
+  }
+  return context === 'operational' ? APP_EMAIL_CONFIG.opsInbox : APP_EMAIL_CONFIG.supportInbox;
+}
+
+/**
+ * Resolve the internal notification recipients for a given service category.
+ * Always includes ops@; also includes service inbox when category is known.
+ */
+export function getOpsRecipientsForCategory(serviceCategory?: string | null): string[] {
+  if (serviceCategory) {
+    const key = SERVICE_CATEGORY_TO_KEY[serviceCategory];
+    if (key) {
+      return [...SERVICE_NOTIFICATION_RULES[key].internalNotify];
+    }
+  }
+  return [APP_EMAIL_CONFIG.opsInbox];
+}
