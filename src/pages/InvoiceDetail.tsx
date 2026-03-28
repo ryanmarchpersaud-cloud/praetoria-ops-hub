@@ -392,7 +392,31 @@ export default function InvoiceDetail() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmSend(false)}>Cancel</Button>
-            <Button onClick={() => { handleStatusChange('Sent', { sent_at: new Date().toISOString() }); setConfirmSend(false); }}>
+            <Button onClick={async () => {
+              // Send email via edge function
+              const customerEmail = invoice.customers?.email;
+              if (customerEmail) {
+                try {
+                  await supabase.functions.invoke('send-email', {
+                    body: {
+                      action: 'invoice_sent',
+                      customer_email: customerEmail,
+                      customer_name: `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim(),
+                      invoice_number: invoice.invoice_number,
+                      service_category: invoice.jobs?.service_category || (invoice as any).service_category,
+                      total: total.toFixed(2),
+                      balance_due: balanceDue.toFixed(2),
+                      due_date: format(new Date(invoice.due_date), 'MMM d, yyyy'),
+                      invoice_id: invoice.id,
+                    },
+                  });
+                } catch (e) {
+                  console.error('Invoice email send failed:', e);
+                }
+              }
+              handleStatusChange('Sent', { sent_at: new Date().toISOString() });
+              setConfirmSend(false);
+            }}>
               <Send className="h-3.5 w-3.5 mr-1.5" /> {canResend ? 'Resend' : 'Send'}
             </Button>
           </DialogFooter>
