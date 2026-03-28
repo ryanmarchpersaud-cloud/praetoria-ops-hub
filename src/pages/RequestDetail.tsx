@@ -124,16 +124,20 @@ export default function RequestDetail() {
 
       {/* Status + Actions */}
       <div className="flex flex-wrap items-center gap-3">
-        <Select value={request.status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-40 h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map(s => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {canManageRequests ? (
+          <Select value={request.status} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-40 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map(s => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <StatusBadge status={request.status} />
+        )}
         {request.customer_id && (
           <Link to={`/customers/${request.customer_id}`}>
             <Button variant="outline" size="sm" className="text-xs h-8">
