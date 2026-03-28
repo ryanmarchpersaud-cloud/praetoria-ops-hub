@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 
 const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'];
 
@@ -21,7 +22,7 @@ export default function RequestDetail() {
   const [internalNotes, setInternalNotes] = useState('');
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
-
+  const { canManageQuotes, canManageRequests } = useActionPermissions();
   const { data: request, isLoading } = useQuery({
     queryKey: ['service_request', id],
     queryFn: async () => {
@@ -123,16 +124,20 @@ export default function RequestDetail() {
 
       {/* Status + Actions */}
       <div className="flex flex-wrap items-center gap-3">
-        <Select value={request.status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-40 h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map(s => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {canManageRequests ? (
+          <Select value={request.status} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-40 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map(s => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <StatusBadge status={request.status} />
+        )}
         {request.customer_id && (
           <Link to={`/customers/${request.customer_id}`}>
             <Button variant="outline" size="sm" className="text-xs h-8">
@@ -140,7 +145,7 @@ export default function RequestDetail() {
             </Button>
           </Link>
         )}
-        {request.status !== 'Closed' && request.status !== 'Cancelled' && (
+        {canManageQuotes && request.status !== 'Closed' && request.status !== 'Cancelled' && (
           <Button
             size="sm"
             className="text-xs h-8"

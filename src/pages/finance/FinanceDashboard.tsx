@@ -60,10 +60,10 @@ export default function FinanceDashboard() {
   }
 
   const kpis = [
-    { label: 'Total Revenue', value: fmt(stats?.totalRevenue ?? 0), icon: TrendingUp, color: 'text-accent', link: '/invoices' },
+    { label: 'Total Revenue', value: fmt(stats?.totalRevenue ?? 0), icon: TrendingUp, color: 'text-accent', link: '/finance/invoices' },
     { label: 'Total Expenses', value: fmt(stats?.totalExpenses ?? 0), icon: TrendingDown, color: 'text-destructive', link: '/finance/expenses' },
     { label: 'Gross Margin', value: fmt(stats?.grossMargin ?? 0), icon: DollarSign, color: (stats?.grossMargin ?? 0) >= 0 ? 'text-accent' : 'text-destructive', link: '/finance/job-costing' },
-    { label: 'Outstanding Invoices', value: fmt(stats?.outstandingInvoices ?? 0), icon: FileText, color: 'text-primary', link: '/invoices' },
+    { label: 'Outstanding Invoices', value: fmt(stats?.outstandingInvoices ?? 0), icon: FileText, color: 'text-primary', link: '/finance/invoices' },
     { label: 'Open Bills', value: fmt(stats?.openBills ?? 0), icon: CreditCard, color: 'text-warning', link: '/finance/bills' },
     { label: 'Receipts to Review', value: String(stats?.receiptsAwaitingReview ?? 0), icon: Receipt, color: 'text-warning', link: '/finance/receipts' },
   ];

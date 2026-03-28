@@ -12,6 +12,7 @@ import { MessageSquarePlus, ChevronRight, Search, Inbox, Plus } from 'lucide-rea
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { CreateRequestDialog } from '@/components/CreateRequestDialog';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 
 const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'];
 
@@ -22,6 +23,7 @@ export default function Requests() {
   const [statusFilter, setStatusFilter] = useState('');
   const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
   const defaultCustomerId = searchParams.get('customer_id') || undefined;
+  const { canManageRequests } = useActionPermissions();
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['service_requests'],
@@ -59,9 +61,11 @@ export default function Requests() {
           <h1 className="text-xl md:text-2xl font-bold">Service Requests</h1>
           <p className="text-xs md:text-sm text-muted-foreground">{requests.length} total</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
-          <Plus className="h-4 w-4" /> New Request
-        </Button>
+        {canManageRequests && (
+          <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+            <Plus className="h-4 w-4" /> New Request
+          </Button>
+        )}
       </div>
 
       <CreateRequestDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
