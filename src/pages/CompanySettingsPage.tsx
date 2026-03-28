@@ -16,6 +16,37 @@ import { toast } from 'sonner';
 
 type CompanySettings = Record<string, any>;
 
+function Field({ label, field, type = 'text', placeholder = '', value, onChange }: {
+  label: string; field: string; type?: string; placeholder?: string;
+  value: string; onChange: (field: string, value: string) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      {type === 'textarea' ? (
+        <Textarea value={value} onChange={e => onChange(field, e.target.value)} placeholder={placeholder} rows={3} />
+      ) : (
+        <Input type={type} value={value} onChange={e => onChange(field, e.target.value)} placeholder={placeholder} />
+      )}
+    </div>
+  );
+}
+
+function Toggle({ label, field, desc, checked, onChange }: {
+  label: string; field: string; desc?: string;
+  checked: boolean; onChange: (field: string, value: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-2">
+      <div>
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
+      </div>
+      <Switch checked={checked} onCheckedChange={v => onChange(field, v)} />
+    </div>
+  );
+}
+
 const TIMEZONES = [
   'America/Edmonton', 'America/Vancouver', 'America/Toronto', 'America/Winnipeg',
   'America/Halifax', 'America/St_Johns', 'America/New_York', 'America/Chicago',
