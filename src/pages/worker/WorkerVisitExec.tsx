@@ -308,6 +308,22 @@ export default function WorkerVisitExec() {
           });
         } catch { /* non-critical */ }
 
+        // Send internal ops email notification
+        try {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              action: 'visit_completed',
+              visit_number: visit.visit_number,
+              job_title: job?.job_title,
+              property_name: property?.property_name,
+              worker_name: user?.email,
+              service_category: job?.service_category,
+              visit_id: id,
+              completed_at: new Date().toISOString(),
+            },
+          });
+        } catch { /* non-critical */ }
+
         if (isOneTime && job) {
           await supabase.from('jobs').update({ status: 'Completed' }).eq('id', job.id);
         }
