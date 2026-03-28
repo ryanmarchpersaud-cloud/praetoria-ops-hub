@@ -12,6 +12,7 @@ import { MessageSquarePlus, ChevronRight, Search, Inbox, Plus } from 'lucide-rea
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { CreateRequestDialog } from '@/components/CreateRequestDialog';
+import { useActionPermissions } from '@/hooks/useActionPermissions';
 
 const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'];
 
