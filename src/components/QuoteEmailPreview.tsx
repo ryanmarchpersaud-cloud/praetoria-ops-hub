@@ -75,17 +75,32 @@ export function QuoteEmailPreview({ quote, lineItems, onEmailStatusChange }: Quo
     }
   };
 
-  // ─── Simulate sending (placeholder for external provider) ───
+  // ─── Send quote email via edge function ───
   const handleSendEmail = async () => {
     if (!canSend) return;
     setIsSending(true);
     try {
-      // PLACEHOLDER: This is where an external email provider (e.g. via edge function)
-      // would be invoked. For now we update the status fields to track the intent.
+      // Send via edge function with proper routing
+      const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          action: 'quote_sent',
+          customer_email: exportData.client?.email,
+          customer_name: exportData.client?.name,
+          quote_number: exportData.quoteNumber,
+          service_category: exportData.serviceCategory,
+          total: exportData.total?.toFixed(2),
+          quote_id: quote.id,
+          custom_message: customMessage || undefined,
+        },
+      });
+
+      if (emailError) throw emailError;
+
+      // Update quote status fields
       const { error } = await supabase
         .from('quotes')
         .update({
-          email_delivery_status: 'sent',
+          email_delivery_status: emailResult?.ok ? 'sent' : 'failed',
           email_sent_at: new Date().toISOString(),
           sent_status: 'Sent',
           sent_at: new Date().toISOString(),
@@ -104,10 +119,16 @@ export function QuoteEmailPreview({ quote, lineItems, onEmailStatusChange }: Quo
           quote_number: quote.quote_number,
           recipient: exportData.client?.email,
           custom_message: customMessage || null,
+          email_sent: emailResult?.ok ?? false,
         },
       });
 
-      toast({ title: 'Quote email recorded as sent', description: 'Connect an email provider to send automatically.' });
+      toast({
+        title: emailResult?.ok ? 'Quote email sent successfully' : 'Quote status updated',
+        description: emailResult?.ok
+          ? `Sent to ${exportData.client?.email}`
+          : 'Email provider reported an issue — check integration logs.',
+      });
       setShowPreview(false);
       onEmailStatusChange();
     } catch (err: any) {
