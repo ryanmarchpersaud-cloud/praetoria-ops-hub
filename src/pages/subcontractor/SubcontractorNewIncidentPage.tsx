@@ -58,6 +58,21 @@ export default function SubcontractorNewIncidentPage() {
         status: 'completed',
       });
 
+      // Send internal ops + admin email notification
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            action: 'incident_report',
+            report_number: (data as any).report_number,
+            incident_type: type,
+            severity: medicalAttention ? 'high' : 'medium',
+            description: description.trim(),
+            reporter_name: user.email,
+            incident_id: data.id,
+          },
+        });
+      } catch { /* non-critical */ }
+
       qc.invalidateQueries({ queryKey: ['incident_reports_sub'] });
       setSubmitted({ id: data.id, report_number: (data as any).report_number });
     } catch (e: any) {
