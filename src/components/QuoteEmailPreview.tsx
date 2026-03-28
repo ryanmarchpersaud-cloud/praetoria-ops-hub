@@ -274,7 +274,7 @@ export function QuoteEmailPreview({ quote, lineItems, onEmailStatusChange }: Quo
             </Button>
 
             <p className="text-[10px] text-muted-foreground text-center">
-              Email provider not yet connected — this will record the action and update the quote status.
+              Email will be sent via Resend from noreply@praetoriagroup.ca with service-specific reply-to routing.
             </p>
           </div>
         )}
