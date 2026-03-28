@@ -58,8 +58,9 @@ export function getStatusClass(status: string): string {
   if (['reviewing', 'awaiting info', 'quote drafting', 'needs review', 'en route', 'on hold', 'pending', 'planned', 'rescheduled'].includes(s)) return 'status-reviewing';
   if (['won', 'approved', 'quote ready', 'completed', 'active', 'paid'].includes(s)) return 'status-approved';
   if (['lost', 'declined', 'cancelled', 'missed', 'skipped', 'inactive', 'voided', 'failed'].includes(s)) return 'status-declined';
-  if (['quote sent', 'sent', 'in progress', 'viewed', 'partially paid'].includes(s)) return 'status-sent';
-  if (['overdue'].includes(s)) return 'status-reviewing';
+  if (['quote sent', 'sent', 'in progress', 'viewed'].includes(s)) return 'status-sent';
+  if (['partially paid'].includes(s)) return 'status-partial';
+  if (['overdue', 'past due'].includes(s)) return 'status-overdue';
   if (['archived', 'seasonal'].includes(s)) return 'status-archived';
   return 'status-draft';
 }

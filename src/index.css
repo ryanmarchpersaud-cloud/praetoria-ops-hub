@@ -137,6 +137,8 @@
   .status-sent { @apply bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300; }
   .status-declined { @apply bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300; }
   .status-archived { @apply bg-slate-50 text-slate-500 dark:bg-gray-800/50 dark:text-gray-400; }
+  .status-overdue { @apply bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300 font-semibold; }
+  .status-partial { @apply bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300; }
 
   /* Action tile system — color-coded shortcut tiles */
   .action-tile {

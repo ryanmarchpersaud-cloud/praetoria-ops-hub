@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { getStatusClass } from '@/lib/constants';
-import { FileEdit, Eye, CheckCircle, Send, XCircle, Inbox, Search, Clock, Trophy, Archive, Ban } from 'lucide-react';
+import { FileEdit, Eye, CheckCircle, Send, XCircle, Inbox, Search, Clock, Trophy, Archive, Ban, AlertTriangle, DollarSign, CreditCard } from 'lucide-react';
 
 const statusIcons: Record<string, typeof FileEdit> = {
   'draft': FileEdit,
@@ -17,6 +17,12 @@ const statusIcons: Record<string, typeof FileEdit> = {
   'lost': Ban,
   'declined': XCircle,
   'archived': Archive,
+  'paid': CheckCircle,
+  'partially paid': CreditCard,
+  'overdue': AlertTriangle,
+  'viewed': Eye,
+  'voided': Ban,
+  'failed': XCircle,
 };
 
 export const StatusBadge = forwardRef<HTMLSpanElement, { status: string; showIcon?: boolean }>(
