@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Phone, Navigation, AlertTriangle, FileWarning, Radio, MapPin } from 'lucide-react';
+import { Phone, Navigation, AlertTriangle, FileWarning, Radio, MapPin, Siren } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface EmergencySOSPanelProps {
   siteAddress?: string;
@@ -13,6 +16,10 @@ interface EmergencySOSPanelProps {
   onReportIncident?: () => void;
   highRisk?: boolean;
   className?: string;
+  // SOS context
+  reporterName?: string;
+  reporterRole?: string;
+  serviceCategory?: string;
 }
 
 export function EmergencySOSPanel({
@@ -26,7 +33,12 @@ export function EmergencySOSPanel({
   onReportIncident,
   highRisk,
   className,
+  reporterName,
+  reporterRole,
+  serviceCategory,
 }: EmergencySOSPanelProps) {
+  const [sosSending, setSosSending] = useState(false);
+
   const directionsUrl = siteAddress
     ? `https://maps.google.com/maps?daddr=${encodeURIComponent([siteAddress, siteCity].filter(Boolean).join(', '))}`
     : undefined;
@@ -34,6 +46,40 @@ export function EmergencySOSPanel({
   const musterUrl = musterPointMapNotes
     ? `https://maps.google.com/maps?q=${encodeURIComponent(musterPointMapNotes)}`
     : undefined;
+
+  const handleSendSOS = async () => {
+    if (sosSending) return;
+    const confirmed = window.confirm(
+      'This will send an emergency SOS alert to dispatch and admin. Are you sure?'
+    );
+    if (!confirmed) return;
+
+    setSosSending(true);
+    try {
+      const location = [siteAddress, siteCity].filter(Boolean).join(', ') || undefined;
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          action: 'emergency_sos',
+          reporter_name: reporterName || 'Unknown',
+          reporter_role: reporterRole || 'field_user',
+          location,
+          message: `Emergency SOS triggered from ${location || 'unknown location'}`,
+          service_category: serviceCategory,
+        },
+      });
+      if (error) throw error;
+      if (data?.ok) {
+        toast.success('SOS alert sent to dispatch and admin');
+      } else {
+        throw new Error(data?.error || 'Failed to send SOS');
+      }
+    } catch (err: any) {
+      console.error('SOS send failed:', err);
+      toast.error('Failed to send SOS alert. Call dispatch directly.');
+    } finally {
+      setSosSending(false);
+    }
+  };
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -59,6 +105,21 @@ export function EmergencySOSPanel({
           </CardContent>
         </Card>
       </a>
+
+      {/* Send SOS Alert */}
+      <button onClick={handleSendSOS} disabled={sosSending} className="block w-full text-left">
+        <Card className={cn(
+          "active:scale-[0.98] transition-all border-orange-500 bg-orange-600 hover:bg-orange-500",
+          sosSending && "opacity-60 pointer-events-none"
+        )}>
+          <CardContent className="p-3 flex items-center justify-center gap-3">
+            <Siren className="h-5 w-5 text-white" />
+            <span className="text-sm font-bold text-white">
+              {sosSending ? 'Sending SOS…' : 'Send SOS Alert to Dispatch'}
+            </span>
+          </CardContent>
+        </Card>
+      </button>
 
       {/* Action grid */}
       <div className="grid grid-cols-2 gap-2">
