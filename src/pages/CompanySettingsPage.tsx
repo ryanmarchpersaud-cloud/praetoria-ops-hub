@@ -135,6 +135,54 @@ export default function CompanySettingsPage() {
             <Card>
               <CardHeader><CardTitle className="text-base">Business Identity</CardTitle></CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Company Logo</Label>
+                  <p className="text-[11px] text-muted-foreground">This logo will appear on invoices, quotes, and customer-facing documents.</p>
+                  <div className="flex items-start gap-4 pt-1">
+                    <div className="h-24 w-24 rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+                      {form.logo_url ? (
+                        <img src={form.logo_url} alt="Company logo" className="h-full w-full object-contain" />
+                      ) : (
+                        <Image className="h-8 w-8 text-muted-foreground/40" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          disabled={logoUploading}
+                          onClick={() => logoInputRef.current?.click()}
+                        >
+                          {logoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          {form.logo_url ? 'Replace' : 'Upload'}
+                        </Button>
+                        {form.logo_url && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1.5 text-destructive hover:text-destructive"
+                            onClick={() => update('logo_url', null)}
+                          >
+                            <X className="h-3.5 w-3.5" /> Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">PNG, JPG, or SVG. Max 2 MB. Square or landscape recommended.</p>
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Separator />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field {...f} label="Legal Company Name" field="legal_name" placeholder="Praetoria Group Inc." />
                   <Field {...f} label="Operating Name" field="operating_name" placeholder="Praetoria Snow & Ice" />
