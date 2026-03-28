@@ -65,7 +65,7 @@ export default function SubcontractorNewIncidentPage() {
             action: 'incident_report',
             report_number: (data as any).report_number,
             incident_type: type,
-            severity: medicalAttention ? 'high' : 'medium',
+            severity: 'medium',
             description: description.trim(),
             reporter_name: user.email,
             incident_id: data.id,
