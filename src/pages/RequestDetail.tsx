@@ -145,7 +145,7 @@ export default function RequestDetail() {
             </Button>
           </Link>
         )}
-        {request.status !== 'Closed' && request.status !== 'Cancelled' && (
+        {canManageQuotes && request.status !== 'Closed' && request.status !== 'Cancelled' && (
           <Button
             size="sm"
             className="text-xs h-8"
