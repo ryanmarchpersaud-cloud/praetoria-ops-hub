@@ -98,6 +98,7 @@ export default function CompanySettingsPage() {
     onError: (err: any) => toast.error(err.message || 'Failed to save'),
   });
 
+  const f = { form, update };
 
   if (isLoading) return <SettingsLayout><div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div></SettingsLayout>;
 
@@ -135,28 +136,28 @@ export default function CompanySettingsPage() {
               <CardHeader><CardTitle className="text-base">Business Identity</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field form={form} update={update} label="Legal Company Name" field="legal_name" placeholder="Praetoria Group Inc." />
-                  <Field form={form} update={update} label="Operating Name" field="operating_name" placeholder="Praetoria Snow & Ice" />
-                  <Field form={form} update={update} label="Display Name" field="display_name" placeholder="Praetoria" />
-                  <Field form={form} update={update} label="Business Number" field="business_number" placeholder="123456789RC0001" />
-                  <Field form={form} update={update} label="GST Number" field="gst_number" placeholder="123456789RT0001" />
-                  <Field form={form} update={update} label="PST Number" field="pst_number" />
+                  <Field {...f} label="Legal Company Name" field="legal_name" placeholder="Praetoria Group Inc." />
+                  <Field {...f} label="Operating Name" field="operating_name" placeholder="Praetoria Snow & Ice" />
+                  <Field {...f} label="Display Name" field="display_name" placeholder="Praetoria" />
+                  <Field {...f} label="Business Number" field="business_number" placeholder="123456789RC0001" />
+                  <Field {...f} label="GST Number" field="gst_number" placeholder="123456789RT0001" />
+                  <Field {...f} label="PST Number" field="pst_number" />
                 </div>
-                <Field form={form} update={update} label="Company Description" field="description" type="textarea" placeholder="A brief description of your company..." />
+                <Field {...f} label="Company Description" field="description" type="textarea" placeholder="A brief description of your company..." />
                 <Separator />
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Contact</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field form={form} update={update} label="Phone" field="phone" type="tel" placeholder="+1 (780) 555-0100" />
-                  <Field form={form} update={update} label="Email" field="email" type="email" placeholder="info@praetoriagroup.ca" />
-                  <Field form={form} update={update} label="Website" field="website" type="url" placeholder="https://praetoriagroup.ca" />
-                  <Field form={form} update={update} label="Support Email" field="support_email" type="email" />
-                  <Field form={form} update={update} label="Billing Email" field="billing_email" type="email" />
+                  <Field {...f} label="Phone" field="phone" type="tel" placeholder="+1 (780) 555-0100" />
+                  <Field {...f} label="Email" field="email" type="email" placeholder="info@praetoriagroup.ca" />
+                  <Field {...f} label="Website" field="website" type="url" placeholder="https://praetoriagroup.ca" />
+                  <Field {...f} label="Support Email" field="support_email" type="email" />
+                  <Field {...f} label="Billing Email" field="billing_email" type="email" />
                 </div>
                 <Separator />
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Addresses</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Field form={form} update={update} label="Physical Address" field="physical_address" type="textarea" placeholder="123 Main St, Edmonton, AB T5A 0A1" />
-                  <Field form={form} update={update} label="Mailing Address" field="mailing_address" type="textarea" placeholder="Same as physical or PO Box..." />
+                  <Field {...f} label="Physical Address" field="physical_address" type="textarea" placeholder="123 Main St, Edmonton, AB T5A 0A1" />
+                  <Field {...f} label="Mailing Address" field="mailing_address" type="textarea" placeholder="Same as physical or PO Box..." />
                 </div>
               </CardContent>
             </Card>
@@ -170,30 +171,30 @@ export default function CompanySettingsPage() {
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Primary Brand Color</Label>
                     <div className="flex items-center gap-2">
-                      <input type="color" value={form.primary_color || '#1e3a5f'} onChange={e => update('primary_color', e.target.value)} className="h-10 w-10 rounded border cursor-pointer" />
+                      <input type="color" value={form.primary_color || '#1e3a5f'} onChange={e => update('primary_color', e.target.value)} className="h-10 w-10 rounded border border-input cursor-pointer" />
                       <Input value={form.primary_color || ''} onChange={e => update('primary_color', e.target.value)} className="flex-1" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Secondary Color</Label>
                     <div className="flex items-center gap-2">
-                      <input type="color" value={form.secondary_color || '#2563eb'} onChange={e => update('secondary_color', e.target.value)} className="h-10 w-10 rounded border cursor-pointer" />
+                      <input type="color" value={form.secondary_color || '#2563eb'} onChange={e => update('secondary_color', e.target.value)} className="h-10 w-10 rounded border border-input cursor-pointer" />
                       <Input value={form.secondary_color || ''} onChange={e => update('secondary_color', e.target.value)} className="flex-1" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Accent Color</Label>
                     <div className="flex items-center gap-2">
-                      <input type="color" value={form.accent_color || '#f59e0b'} onChange={e => update('accent_color', e.target.value)} className="h-10 w-10 rounded border cursor-pointer" />
+                      <input type="color" value={form.accent_color || '#f59e0b'} onChange={e => update('accent_color', e.target.value)} className="h-10 w-10 rounded border border-input cursor-pointer" />
                       <Input value={form.accent_color || ''} onChange={e => update('accent_color', e.target.value)} className="flex-1" />
                     </div>
                   </div>
                 </div>
                 <Separator />
-                <Field form={form} update={update} label="Invoice Header Name" field="invoice_header_name" placeholder="Praetoria Snow & Ice Management" />
-                <Field form={form} update={update} label="Quote Footer Text" field="quote_footer_text" type="textarea" placeholder="Thank you for choosing Praetoria..." />
-                <Field form={form} update={update} label="Default Email Signature" field="email_signature" type="textarea" placeholder="Best regards,\nPraetoria Group" />
-                <Field form={form} update={update} label="Internal Brand Notes" field="brand_notes" type="textarea" placeholder="Guidelines for logo use, voice & tone..." />
+                <Field {...f} label="Invoice Header Name" field="invoice_header_name" placeholder="Praetoria Snow & Ice Management" />
+                <Field {...f} label="Quote Footer Text" field="quote_footer_text" type="textarea" placeholder="Thank you for choosing Praetoria..." />
+                <Field {...f} label="Default Email Signature" field="email_signature" type="textarea" placeholder="Best regards,\nPraetoria Group" />
+                <Field {...f} label="Internal Brand Notes" field="brand_notes" type="textarea" placeholder="Guidelines for logo use, voice & tone..." />
               </CardContent>
             </Card>
           </TabsContent>
@@ -226,11 +227,11 @@ export default function CompanySettingsPage() {
                   </div>
                 </div>
                 <Separator />
-                <Field form={form} update={update} label="Default Service Area / Region" field="default_service_area" placeholder="Greater Edmonton Area" />
-                <Field form={form} update={update} label="Operating Hours" field="operating_hours" placeholder="7:00 AM - 6:00 PM" />
-                <Toggle form={form} update={update} label="After-Hours Service" field="after_hours_enabled" desc="Allow scheduling outside operating hours" />
-                <Toggle form={form} update={update} label="Weekend Service" field="weekend_service_enabled" desc="Enable weekend service availability" />
-                <Toggle form={form} update={update} label="Emergency Service" field="emergency_service_enabled" desc="Enable emergency/urgent service requests" />
+                <Field {...f} label="Default Service Area / Region" field="default_service_area" placeholder="Greater Edmonton Area" />
+                <Field {...f} label="Operating Hours" field="operating_hours" placeholder="7:00 AM - 6:00 PM" />
+                <Toggle {...f} label="After-Hours Service" field="after_hours_enabled" desc="Allow scheduling outside operating hours" />
+                <Toggle {...f} label="Weekend Service" field="weekend_service_enabled" desc="Enable weekend service availability" />
+                <Toggle {...f} label="Emergency Service" field="emergency_service_enabled" desc="Enable emergency/urgent service requests" />
               </CardContent>
             </Card>
           </TabsContent>
@@ -241,10 +242,10 @@ export default function CompanySettingsPage() {
               <CardContent className="space-y-4">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Numbering Prefixes</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Field form={form} update={update} label="Quote Prefix" field="quote_prefix" placeholder="PQ" />
-                  <Field form={form} update={update} label="Invoice Prefix" field="invoice_prefix" placeholder="INV" />
-                  <Field form={form} update={update} label="Request Prefix" field="request_prefix" placeholder="SR" />
-                  <Field form={form} update={update} label="Job Prefix" field="job_prefix" placeholder="PJ" />
+                  <Field {...f} label="Quote Prefix" field="quote_prefix" placeholder="PQ" />
+                  <Field {...f} label="Invoice Prefix" field="invoice_prefix" placeholder="INV" />
+                  <Field {...f} label="Request Prefix" field="request_prefix" placeholder="SR" />
+                  <Field {...f} label="Job Prefix" field="job_prefix" placeholder="PJ" />
                 </div>
                 <Separator />
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Payment Defaults</p>
@@ -256,12 +257,12 @@ export default function CompanySettingsPage() {
                       <SelectContent>{PAYMENT_TERMS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <Field form={form} update={update} label="Default Due Days" field="default_due_days" type="number" placeholder="30" />
+                  <Field {...f} label="Default Due Days" field="default_due_days" type="number" placeholder="30" />
                 </div>
-                <Toggle form={form} update={update} label="Deposit Required by Default" field="deposit_required" desc="Require deposits on new quotes" />
-                <Toggle form={form} update={update} label="Tax Enabled by Default" field="default_tax_enabled" desc="Apply tax to new items by default" />
-                <Field form={form} update={update} label="Default Tax Rate" field="default_tax_rate" type="number" placeholder="0.05" />
-                <Toggle form={form} update={update} label="Internal Notes Visible by Default" field="internal_notes_visible_default" desc="Show internal notes to staff on new records" />
+                <Toggle {...f} label="Deposit Required by Default" field="deposit_required" desc="Require deposits on new quotes" />
+                <Toggle {...f} label="Tax Enabled by Default" field="default_tax_enabled" desc="Apply tax to new items by default" />
+                <Field {...f} label="Default Tax Rate" field="default_tax_rate" type="number" placeholder="0.05" />
+                <Toggle {...f} label="Internal Notes Visible by Default" field="internal_notes_visible_default" desc="Show internal notes to staff on new records" />
               </CardContent>
             </Card>
           </TabsContent>
@@ -270,7 +271,7 @@ export default function CompanySettingsPage() {
             <Card>
               <CardHeader><CardTitle className="text-base">Multi-Location & Service Area</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <Field form={form} update={update} label="Default Service Area" field="default_service_area" placeholder="Greater Edmonton Area" />
+                <Field {...f} label="Default Service Area" field="default_service_area" placeholder="Greater Edmonton Area" />
                 <div className="rounded-lg border border-dashed border-muted-foreground/20 p-6 text-center">
                   <MapPinned className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
                   <p className="text-sm text-muted-foreground">Multi-location and dispatch region management is planned for a future update.</p>
