@@ -22,7 +22,7 @@ export default function RequestDetail() {
   const [internalNotes, setInternalNotes] = useState('');
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
-
+  const { canManageQuotes, canManageRequests } = useActionPermissions();
   const { data: request, isLoading } = useQuery({
     queryKey: ['service_request', id],
     queryFn: async () => {
