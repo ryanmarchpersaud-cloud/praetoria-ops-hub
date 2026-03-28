@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Building2, Palette, Settings, FileText, MapPinned, Save, Loader2 } from 'lucide-react';
+import { Building2, Palette, Settings, FileText, MapPinned, Save, Loader2, Upload, X, Image } from 'lucide-react';
 import { toast } from 'sonner';
 
 type CompanySettings = Record<string, any>;
