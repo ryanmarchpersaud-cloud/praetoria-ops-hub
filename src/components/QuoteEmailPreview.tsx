@@ -206,7 +206,11 @@ export function QuoteEmailPreview({ quote, lineItems, onEmailStatusChange }: Quo
               </div>
               <div className="flex gap-2">
                 <span className="text-muted-foreground w-10 shrink-0">From:</span>
-                <span>quotes@praetoriagroup.ca</span>
+                <span>noreply@praetoriagroup.ca</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="text-muted-foreground w-10 shrink-0">Reply-To:</span>
+                <span className="text-primary">{exportData.serviceCategory ? `Service inbox for ${exportData.serviceCategory}` : 'ops@praetoriagroup.ca'}</span>
               </div>
               <div className="flex gap-2">
                 <span className="text-muted-foreground w-10 shrink-0">Subject:</span>
