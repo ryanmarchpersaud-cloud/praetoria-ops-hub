@@ -23,6 +23,7 @@ export default function Requests() {
   const [statusFilter, setStatusFilter] = useState('');
   const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
   const defaultCustomerId = searchParams.get('customer_id') || undefined;
+  const { canManageRequests } = useActionPermissions();
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['service_requests'],
