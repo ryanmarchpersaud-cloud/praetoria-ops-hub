@@ -158,6 +158,21 @@ export default function InvoiceDetail() {
         )}
       </div>
 
+      {/* Overdue alert */}
+      {invoice.status === 'Overdue' && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="p-4 flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-destructive">Past Due</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                This invoice was due {format(new Date(invoice.due_date), 'MMM d, yyyy')} and is now overdue. Consider sending a reminder or recording a payment.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Failed payment alert */}
       {invoice.status === 'Failed' && (
         <Card className="border-destructive/30 bg-destructive/5">
