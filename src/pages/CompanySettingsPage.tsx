@@ -98,26 +98,6 @@ export default function CompanySettingsPage() {
     onError: (err: any) => toast.error(err.message || 'Failed to save'),
   });
 
-  const Field = ({ label, field, type = 'text', placeholder = '' }: { label: string; field: string; type?: string; placeholder?: string }) => (
-    <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      {type === 'textarea' ? (
-        <Textarea value={form[field] || ''} onChange={e => update(field, e.target.value)} placeholder={placeholder} rows={3} />
-      ) : (
-        <Input type={type} value={form[field] || ''} onChange={e => update(field, e.target.value)} placeholder={placeholder} />
-      )}
-    </div>
-  );
-
-  const Toggle = ({ label, field, desc }: { label: string; field: string; desc?: string }) => (
-    <div className="flex items-center justify-between py-2">
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
-      </div>
-      <Switch checked={!!form[field]} onCheckedChange={v => update(field, v)} />
-    </div>
-  );
 
   if (isLoading) return <SettingsLayout><div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div></SettingsLayout>;
 
