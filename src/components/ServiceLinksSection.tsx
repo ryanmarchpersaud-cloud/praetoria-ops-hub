@@ -40,10 +40,32 @@ const serviceLinks = [
 ];
 
 interface ServiceLinksSectionProps {
-  variant?: 'login' | 'sidebar' | 'portal';
+  variant?: 'login' | 'sidebar' | 'portal' | 'compact';
 }
 
 export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionProps) {
+  if (variant === 'compact') {
+    return (
+      <div className="border-t border-border pt-3 mt-4 px-4 pb-2">
+        <p className="text-[10px] font-medium text-muted-foreground mb-2 uppercase tracking-wider">Explore Our Services</p>
+        <div className="flex flex-wrap gap-1.5">
+          {serviceLinks.map((s) => (
+            <a
+              key={s.name}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-card hover:bg-muted transition-colors group"
+            >
+              <s.icon className={cn('h-3 w-3 shrink-0', s.color)} />
+              <span className="text-[10px] font-medium text-foreground">{s.name}</span>
+              <ExternalLink className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (variant === 'sidebar') {
     return (
       <div className="space-y-0.5">
