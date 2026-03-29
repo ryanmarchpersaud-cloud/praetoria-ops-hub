@@ -119,6 +119,7 @@ export function PortalLayout({ children }: { children: ReactNode }) {
       {/* Content */}
       <main className="max-w-5xl mx-auto p-4 md:p-6">
         {children}
+        <ServiceLinksSection variant="portal" />
       </main>
 
       {/* Customer Quick Actions FAB */}
