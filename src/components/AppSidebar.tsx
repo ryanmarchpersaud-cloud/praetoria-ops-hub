@@ -13,6 +13,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
+import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 
 type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages';
 type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
