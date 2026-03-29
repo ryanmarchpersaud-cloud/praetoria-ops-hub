@@ -13,6 +13,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
+import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 
 type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages';
 type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
@@ -183,6 +184,15 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
       </SidebarContent>
+
+      {!collapsed && (
+        <SidebarGroup>
+          <SidebarGroupLabel>Service Hub</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <ServiceLinksSection variant="sidebar" />
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
 
       <SidebarFooter>
         <div className="px-3 py-2">

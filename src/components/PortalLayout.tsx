@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { PortalFAB } from '@/components/portal/PortalFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
+import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 
 const portalNav = [
   { title: 'Home', to: '/portal', icon: Home, tileColor: 'action-tile-green', iconColor: 'text-emerald-600', exact: true },
@@ -118,6 +119,7 @@ export function PortalLayout({ children }: { children: ReactNode }) {
       {/* Content */}
       <main className="max-w-5xl mx-auto p-4 md:p-6">
         {children}
+        <ServiceLinksSection variant="portal" />
       </main>
 
       {/* Customer Quick Actions FAB */}
