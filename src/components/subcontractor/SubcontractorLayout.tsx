@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { SubcontractorBottomNav } from './SubcontractorBottomNav';
 import { SubcontractorFAB } from './SubcontractorFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
+import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 
 export function SubcontractorLayout({ children }: { children: ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export function SubcontractorLayout({ children }: { children: ReactNode }) {
       <AnnouncementBanner />
       <div className="max-w-lg mx-auto">
         {children}
+        <ServiceLinksSection variant="compact" />
       </div>
       <SubcontractorFAB />
       <SubcontractorBottomNav />
