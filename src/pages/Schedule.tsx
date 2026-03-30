@@ -20,6 +20,7 @@ export default function Schedule() {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeItem, setActiveItem] = useState<{ type: 'visit' | 'job'; data: any } | null>(null);
+  const [selectedVisit, setSelectedVisit] = useState<any>(null);
 
   const { data: visits = [] } = useVisits();
   const { data: jobs = [] } = useJobs();
