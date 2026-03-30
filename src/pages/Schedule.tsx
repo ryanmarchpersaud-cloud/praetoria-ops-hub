@@ -294,6 +294,12 @@ export default function Schedule() {
           )}
         </DragOverlay>
       </DndContext>
+
+      <ScheduleVisitPopover
+        visit={selectedVisit}
+        open={!!selectedVisit}
+        onOpenChange={(open) => { if (!open) setSelectedVisit(null); }}
+      />
     </div>
   );
 }
