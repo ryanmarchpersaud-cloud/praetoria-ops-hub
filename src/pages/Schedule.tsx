@@ -12,6 +12,7 @@ import { DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSens
 import { DraggableItem, DragOverlayItem, MonthDraggableChip } from '@/components/schedule/DraggableItem';
 import { DroppableDay } from '@/components/schedule/DroppableDay';
 import { StatusBadge } from '@/components/StatusBadge';
+import { ScheduleVisitPopover } from '@/components/schedule/ScheduleVisitPopover';
 
 type ViewMode = 'week' | 'month';
 
