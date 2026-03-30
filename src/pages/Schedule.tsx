@@ -236,7 +236,7 @@ export default function Schedule() {
                             <DraggableItem key={j.id} id={j.id} type="job" data={j} />
                           ))}
                           {dayVisits.map((v: any) => (
-                            <DraggableItem key={v.id} id={v.id} type="visit" data={v} />
+                            <DraggableItem key={v.id} id={v.id} type="visit" data={v} onVisitClick={setSelectedVisit} />
                           ))}
                         </div>
                       )}
