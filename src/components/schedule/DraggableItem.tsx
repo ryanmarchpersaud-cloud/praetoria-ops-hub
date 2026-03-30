@@ -10,9 +10,10 @@ interface DraggableItemProps {
   type: 'visit' | 'job';
   data: any;
   isDragDisabled?: boolean;
+  onVisitClick?: (visit: any) => void;
 }
 
-export function DraggableItem({ id, type, data, isDragDisabled }: DraggableItemProps) {
+export function DraggableItem({ id, type, data, isDragDisabled, onVisitClick }: DraggableItemProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `${type}-${id}`,
     data: { type, id, item: data },
@@ -49,6 +50,13 @@ export function DraggableItem({ id, type, data, isDragDisabled }: DraggableItemP
     );
   }
 
+  const customerName = data.customers
+    ? `${data.customers.first_name} ${data.customers.last_name}`
+    : null;
+  const displayTitle = customerName
+    ? `${customerName} – ${data.jobs?.job_title || data.visit_type || 'Visit'}`
+    : `${data.visit_number} — ${data.jobs?.job_title || 'Unknown'}`;
+
   return (
     <div ref={setNodeRef} style={style} className="flex items-center gap-1.5">
       <button
@@ -59,13 +67,16 @@ export function DraggableItem({ id, type, data, isDragDisabled }: DraggableItemP
       >
         <GripVertical className="h-3.5 w-3.5" />
       </button>
-      <Link
-        to={`/visits/${data.id}`}
-        className="flex-1 flex items-center gap-2 p-2 rounded-md border hover:bg-muted/50 transition-colors min-w-0"
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          onVisitClick?.(data);
+        }}
+        className="flex-1 flex items-center gap-2 p-2 rounded-md border hover:bg-muted/50 transition-colors min-w-0 text-left"
       >
         <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium truncate">{data.visit_number} — {data.jobs?.job_title || 'Unknown'}</p>
+          <p className="text-xs font-medium truncate">{displayTitle}</p>
           <p className="text-[10px] text-muted-foreground">
             {data.visit_type}
             {data.arrival_time && ` · ${format(parseISO(data.arrival_time), 'h:mm a')}`}
@@ -73,13 +84,13 @@ export function DraggableItem({ id, type, data, isDragDisabled }: DraggableItemP
           </p>
         </div>
         <StatusBadge status={data.visit_status} showIcon={false} />
-      </Link>
+      </button>
     </div>
   );
 }
 
-/** Compact chip for month grid cells — draggable */
-export function MonthDraggableChip({ id, type, data }: { id: string; type: 'visit' | 'job'; data: any }) {
+/** Compact chip for month grid cells — draggable + clickable */
+export function MonthDraggableChip({ id, type, data, onVisitClick }: { id: string; type: 'visit' | 'job'; data: any; onVisitClick?: (visit: any) => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `${type}-${id}`,
     data: { type, id, item: data },
@@ -89,8 +100,35 @@ export function MonthDraggableChip({ id, type, data }: { id: string; type: 'visi
     ? { transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.3 : 1 }
     : undefined;
 
-  const label = type === 'visit' ? data.visit_number : data.job_number;
   const isVisit = type === 'visit';
+  const customerName = isVisit && data.customers
+    ? `${data.customers.first_name} ${data.customers.last_name}`
+    : null;
+  const label = isVisit
+    ? (customerName ? `${customerName}` : data.visit_number)
+    : data.job_number;
+
+  if (isVisit && onVisitClick) {
+    return (
+      <div className="flex items-center gap-0">
+        <div
+          ref={setNodeRef}
+          style={style}
+          {...listeners}
+          {...attributes}
+          className="shrink-0 cursor-grab active:cursor-grabbing touch-none px-0.5"
+        >
+          <GripVertical className="h-2.5 w-2.5 text-muted-foreground/40" />
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onVisitClick(data); }}
+          className="text-[9px] leading-tight truncate px-1 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer flex-1 text-left"
+        >
+          {label}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div ref={setNodeRef} style={style} {...listeners} {...attributes}
