@@ -273,7 +273,7 @@ export default function Schedule() {
                       {format(day, 'd')}
                     </p>
                     {dayVisits.slice(0, 2).map((v: any) => (
-                      <MonthDraggableChip key={v.id} id={v.id} type="visit" data={v} />
+                      <MonthDraggableChip key={v.id} id={v.id} type="visit" data={v} onVisitClick={setSelectedVisit} />
                     ))}
                     {dayJobs.slice(0, 1).map((j: any) => (
                       <MonthDraggableChip key={j.id} id={j.id} type="job" data={j} />
