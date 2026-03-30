@@ -12,6 +12,7 @@ import { DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSens
 import { DraggableItem, DragOverlayItem, MonthDraggableChip } from '@/components/schedule/DraggableItem';
 import { DroppableDay } from '@/components/schedule/DroppableDay';
 import { StatusBadge } from '@/components/StatusBadge';
+import { ScheduleVisitPopover } from '@/components/schedule/ScheduleVisitPopover';
 
 type ViewMode = 'week' | 'month';
 
@@ -19,6 +20,7 @@ export default function Schedule() {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeItem, setActiveItem] = useState<{ type: 'visit' | 'job'; data: any } | null>(null);
+  const [selectedVisit, setSelectedVisit] = useState<any>(null);
 
   const { data: visits = [] } = useVisits();
   const { data: jobs = [] } = useJobs();
@@ -234,7 +236,7 @@ export default function Schedule() {
                             <DraggableItem key={j.id} id={j.id} type="job" data={j} />
                           ))}
                           {dayVisits.map((v: any) => (
-                            <DraggableItem key={v.id} id={v.id} type="visit" data={v} />
+                            <DraggableItem key={v.id} id={v.id} type="visit" data={v} onVisitClick={setSelectedVisit} />
                           ))}
                         </div>
                       )}
@@ -271,7 +273,7 @@ export default function Schedule() {
                       {format(day, 'd')}
                     </p>
                     {dayVisits.slice(0, 2).map((v: any) => (
-                      <MonthDraggableChip key={v.id} id={v.id} type="visit" data={v} />
+                      <MonthDraggableChip key={v.id} id={v.id} type="visit" data={v} onVisitClick={setSelectedVisit} />
                     ))}
                     {dayJobs.slice(0, 1).map((j: any) => (
                       <MonthDraggableChip key={j.id} id={j.id} type="job" data={j} />
@@ -292,6 +294,12 @@ export default function Schedule() {
           )}
         </DragOverlay>
       </DndContext>
+
+      <ScheduleVisitPopover
+        visit={selectedVisit}
+        open={!!selectedVisit}
+        onOpenChange={(open) => { if (!open) setSelectedVisit(null); }}
+      />
     </div>
   );
 }
