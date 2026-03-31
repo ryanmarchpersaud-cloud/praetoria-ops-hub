@@ -189,7 +189,7 @@ export default function HRDashboardPage() {
       )}
 
       {/* Alerts section */}
-      {(compliance && (compliance.overdue > 0 || compliance.expiringSoon > 0 || compliance.failed > 0)) || expiringCerts.length > 0 || expiredCerts.length > 0 || missingEmergencyContacts.length > 0 || openWCB.length > 0 || expiredLicences.length > 0 || expiringLicences.length > 0 || pendingEnrollments.length > 0 ? (
+      {(compliance && (compliance.overdue > 0 || compliance.expiringSoon > 0 || compliance.failed > 0)) || expiringCerts.length > 0 || expiredCerts.length > 0 || missingEmergencyContacts.length > 0 || openWCB.length > 0 || expiredLicences.length > 0 || expiringLicences.length > 0 || pendingEnrollments.length > 0 || benefitChanges.length > 0 ? (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
