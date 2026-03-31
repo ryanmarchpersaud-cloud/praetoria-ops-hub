@@ -190,14 +190,29 @@ export default function HRComplianceWorkflowsPage() {
               <TableHead>Employee</TableHead><TableHead>Claim #</TableHead><TableHead>Injury Date</TableHead><TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>RTW Date</TableHead>
             </TableRow></TableHeader><TableBody>
               {wcbClaims.map((c: any) => (
-                <TableRow key={c.id}>
-                  <TableCell><Link to={`/employees/${c.employee_user_id}`} className="hover:underline font-medium">{getEmpName(c.employee_user_id)}</Link></TableCell>
-                  <TableCell className="font-mono text-sm">{c.claim_number || '—'}</TableCell>
-                  <TableCell className="text-sm">{format(new Date(c.injury_date), 'MMM d, yyyy')}</TableCell>
-                  <TableCell><Badge variant="outline" className="capitalize text-xs">{c.injury_type?.replace('_', ' ')}</Badge></TableCell>
-                  <TableCell><Badge variant="outline" className={`capitalize text-xs ${claimStatusColors[c.claim_status] || ''}`}>{c.claim_status?.replace('_', ' ')}</Badge></TableCell>
-                  <TableCell className="text-sm">{c.return_to_work_date ? format(new Date(c.return_to_work_date), 'MMM d, yyyy') : '—'}</TableCell>
-                </TableRow>
+                <>
+                  <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedWCB(selectedWCB === c.id ? null : c.id)}>
+                    <TableCell><Link to={`/employees/${c.employee_user_id}`} className="hover:underline font-medium" onClick={e => e.stopPropagation()}>{getEmpName(c.employee_user_id)}</Link></TableCell>
+                    <TableCell className="font-mono text-sm">{c.claim_number || '—'}</TableCell>
+                    <TableCell className="text-sm">{format(new Date(c.injury_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell><Badge variant="outline" className="capitalize text-xs">{c.injury_type?.replace('_', ' ')}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={`capitalize text-xs ${claimStatusColors[c.claim_status] || ''}`}>{c.claim_status?.replace('_', ' ')}</Badge></TableCell>
+                    <TableCell className="text-sm">{c.return_to_work_date ? format(new Date(c.return_to_work_date), 'MMM d, yyyy') : '—'}</TableCell>
+                  </TableRow>
+                  {selectedWCB === c.id && (
+                    <TableRow key={`${c.id}-docs`}>
+                      <TableCell colSpan={6} className="bg-muted/20 p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            {c.restrictions && <div><span className="text-xs font-medium text-muted-foreground">Restrictions / Notes:</span><p className="text-sm mt-0.5">{c.restrictions}</p></div>}
+                            {c.follow_up_notes && <div><span className="text-xs font-medium text-muted-foreground">Follow-up:</span><p className="text-sm mt-0.5">{c.follow_up_notes}</p></div>}
+                          </div>
+                          <HRFileAttachments recordType="hr_wcb_claim" recordId={c.id} label="WCB Documents" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               ))}
             </TableBody></Table></Card>
           )}
