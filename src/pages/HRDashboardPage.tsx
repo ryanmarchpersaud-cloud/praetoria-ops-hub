@@ -79,6 +79,7 @@ export default function HRDashboardPage() {
   const expiredLicences = sgiRecords.filter((r: any) => r.licence_expiry && new Date(r.licence_expiry) < today);
   const expiringLicences = sgiRecords.filter((r: any) => r.licence_expiry && new Date(r.licence_expiry) >= today && new Date(r.licence_expiry) <= in30);
   const pendingEnrollments = enrollments.filter((e: any) => e.enrollment_status === 'pending');
+  const benefitChanges = enrollments.filter((e: any) => e.change_type && e.change_type !== 'new_enrollment' && e.enrollment_status === 'pending');
 
   const overallRate = compliance
     ? compliance.mandatoryTotal > 0
