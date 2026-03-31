@@ -310,13 +310,17 @@ export default function WorkerHome() {
       {/* Daily Route Map */}
       {todayVisits.length > 0 && (
         <DailyRouteMap
-          stops={todayVisits.map((v): RouteStop => ({
-            id: v.id,
-            label: `${v.visit_number} — ${(v.properties as any)?.property_name || 'Visit'}`,
-            address: (v.properties as any)?.address_line_1 || '',
-            city: (v.properties as any)?.city,
-            status: v.visit_status,
-          }))}
+          stops={todayVisits.map((v): RouteStop => {
+            const props = v.properties as any;
+            const fullAddress = [props?.address_line_1, props?.city, props?.province || 'ON', 'Canada'].filter(Boolean).join(', ');
+            return {
+              id: v.id,
+              label: `${v.visit_number} — ${props?.property_name || 'Visit'}`,
+              address: fullAddress,
+              city: props?.city,
+              status: v.visit_status,
+            };
+          })}
         />
       )}
 
