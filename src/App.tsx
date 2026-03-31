@@ -138,6 +138,7 @@ import SystemAnnouncementsPage from "./pages/SystemAnnouncementsPage";
 import HRDashboardPage from "./pages/HRDashboardPage";
 import TrainingCatalogPage from "./pages/TrainingCatalogPage";
 import TrainingCourseDetailPage from "./pages/TrainingCourseDetailPage";
+import ComplianceOverviewPage from "./pages/ComplianceOverviewPage";
 import WorkerCoursesPage from "./pages/worker/WorkerCoursesPage";
 import WorkerCourseDetailPage from "./pages/worker/WorkerCourseDetailPage";
 import SubcontractorTrainingPage from "./pages/subcontractor/SubcontractorTrainingPage";
@@ -311,6 +312,7 @@ function AppRoutes() {
       <Route path="/hr" element={<AdminRoute><ModuleGuard module="hr"><HRDashboardPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/training" element={<AdminRoute><ModuleGuard module="hr"><TrainingCatalogPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/training/:id" element={<AdminRoute><ModuleGuard module="hr"><TrainingCourseDetailPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/compliance" element={<AdminRoute><ModuleGuard module="hr"><ComplianceOverviewPage /></ModuleGuard></AdminRoute>} />
 
       {/* Incidents — ops access */}
       <Route path="/incidents" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentsPage /></ModuleGuard></AdminRoute>} />

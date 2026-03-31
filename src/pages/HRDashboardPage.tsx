@@ -39,7 +39,7 @@ export default function HRDashboardPage() {
   const quickLinks = [
     { icon: Users, label: 'Employee Directory', to: '/employees', desc: 'View all worker profiles' },
     { icon: BookOpen, label: 'Training Catalog', to: '/hr/training', desc: 'Manage courses & assignments' },
-    { icon: ShieldCheck, label: 'Compliance Overview', to: '/hr/training', desc: 'Certifications & mandatory training' },
+    { icon: ShieldCheck, label: 'Compliance Overview', to: '/hr/compliance', desc: 'Certifications & mandatory training' },
     { icon: CalendarDays, label: 'Time Off Requests', to: '/employees', desc: 'Review pending leave requests' },
     { icon: HardHat, label: 'PPE Management', to: '/employees', desc: 'Equipment issuance & tracking' },
     { icon: FileText, label: 'Worker Documents', to: '/employees', desc: 'Certificates, policies & uploads' },
