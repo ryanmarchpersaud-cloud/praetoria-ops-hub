@@ -134,6 +134,14 @@ import MessagingPage from "./pages/MessagingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 import SystemAnnouncementsPage from "./pages/SystemAnnouncementsPage";
 
+// HR / Training pages
+import HRDashboardPage from "./pages/HRDashboardPage";
+import TrainingCatalogPage from "./pages/TrainingCatalogPage";
+import TrainingCourseDetailPage from "./pages/TrainingCourseDetailPage";
+import WorkerCoursesPage from "./pages/worker/WorkerCoursesPage";
+import WorkerCourseDetailPage from "./pages/worker/WorkerCourseDetailPage";
+import SubcontractorTrainingPage from "./pages/subcontractor/SubcontractorTrainingPage";
+
 // Finance pages
 const FinanceDashboard = lazy(() => import("./pages/finance/FinanceDashboard"));
 const FinanceExpenses = lazy(() => import("./pages/finance/FinanceExpenses"));
