@@ -17,15 +17,15 @@ function StatCard({ icon: Icon, label, value, color, to, alert }: {
 }) {
   const content = (
     <Card className={`hover:shadow-md transition-shadow ${alert ? 'border-destructive/30' : ''}`}>
-      <CardContent className="p-4 flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
-          <Icon className="h-5 w-5" />
+      <CardContent className="p-3 flex items-center gap-2.5">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+          <Icon className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-2xl font-bold text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-xl font-bold text-foreground tabular-nums">{value}</p>
+          <p className="text-[10px] leading-tight text-muted-foreground truncate">{label}</p>
         </div>
-        {to && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+        {to && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
       </CardContent>
     </Card>
   );
