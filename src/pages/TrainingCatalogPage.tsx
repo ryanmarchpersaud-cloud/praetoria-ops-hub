@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTrainingCourses, useCreateCourse, useAllAssignments, useAssignCourseToUsers } from '@/hooks/useTraining';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,8 +50,18 @@ export default function TrainingCatalogPage() {
   const { data: courses = [], isLoading } = useTrainingCourses();
   const { data: allAssignments = [] } = useAllAssignments();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
   const createCourse = useCreateCourse();
   const assignCourse = useAssignCourseToUsers();
+
+  // Unified person lookup
+  const getPersonName = (userId: string) => {
+    const emp = employees.find(e => e.user_id === userId);
+    if (emp) return emp.full_name;
+    const sub = subcontractors.find((s: any) => s.user_id === userId);
+    if (sub) return (sub as any).contact_name || (sub as any).company_name || 'Subcontractor';
+    return 'Unknown';
+  };
 
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -203,6 +214,7 @@ export default function TrainingCatalogPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Person</TableHead>
                       <TableHead>Course</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
@@ -213,7 +225,8 @@ export default function TrainingCatalogPage() {
                   <TableBody>
                     {allAssignments.slice(0, 100).map((a: any) => (
                       <TableRow key={a.id}>
-                        <TableCell className="text-sm font-medium">{(a as any).training_courses?.title || '—'}</TableCell>
+                        <TableCell className="text-sm font-medium">{getPersonName(a.user_id)}</TableCell>
+                        <TableCell className="text-sm">{(a as any).training_courses?.title || '—'}</TableCell>
                         <TableCell><ContentBadge type={(a as any).training_courses?.content_type || 'document'} /></TableCell>
                         <TableCell>
                           <Badge variant={a.status === 'passed' ? 'default' : a.status === 'failed' ? 'destructive' : 'secondary'} className="text-[10px] capitalize">
@@ -295,13 +308,16 @@ export default function TrainingCatalogPage() {
       <Dialog open={!!showAssign} onOpenChange={() => setShowAssign(null)}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Assign Course to Workers</DialogTitle>
+            <DialogTitle>Assign Course to Personnel</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div><Label>Due Date (optional)</Label><Input type="date" value={assignDueDate} onChange={e => setAssignDueDate(e.target.value)} /></div>
             <div>
-              <Label>Select Workers ({selectedUsers.length} selected)</Label>
+              <Label>Select Personnel ({selectedUsers.length} selected)</Label>
               <div className="max-h-60 overflow-y-auto border rounded-md mt-1 divide-y">
+                {employees.filter(e => e.employment_status === 'active').length > 0 && (
+                  <div className="px-3 py-1.5 bg-muted/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Employees</div>
+                )}
                 {employees.filter(e => e.employment_status === 'active').map(emp => (
                   <label key={emp.user_id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/50 cursor-pointer">
                     <Checkbox
@@ -315,6 +331,25 @@ export default function TrainingCatalogPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{emp.full_name}</p>
                       <p className="text-xs text-muted-foreground">{emp.role_title || emp.primary_service_category || '—'}</p>
+                    </div>
+                  </label>
+                ))}
+                {subcontractors.filter((s: any) => s.user_id).length > 0 && (
+                  <div className="px-3 py-1.5 bg-muted/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Subcontractors</div>
+                )}
+                {subcontractors.filter((s: any) => s.user_id).map((sub: any) => (
+                  <label key={sub.user_id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/50 cursor-pointer">
+                    <Checkbox
+                      checked={selectedUsers.includes(sub.user_id)}
+                      onCheckedChange={checked => {
+                        setSelectedUsers(prev =>
+                          checked ? [...prev, sub.user_id] : prev.filter(id => id !== sub.user_id)
+                        );
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{sub.contact_name || sub.company_name}</p>
+                      <p className="text-xs text-muted-foreground">{sub.company_name || 'Subcontractor'}</p>
                     </div>
                   </label>
                 ))}
