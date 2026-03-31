@@ -29,6 +29,7 @@ export default function SubcontractorNewIncidentPage() {
   const [dateTime, setDateTime] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string; report_number: string } | null>(null);
 
