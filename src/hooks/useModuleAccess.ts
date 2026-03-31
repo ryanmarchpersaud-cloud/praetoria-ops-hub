@@ -145,7 +145,8 @@ export function useSidebarAccess(): Record<SidebarItemKey, boolean> {
     subcontractors: m.opsFullAccess || m.hrFullAccess,
     messaging: !m.messagingDisabled,
     finance: m.financeFullAccess || m.financeViewLimited,
-    incidents: m.opsFullAccess || m.isOwnerOrAdmin,
+    incidents: m.opsFullAccess || m.isOwnerOrAdmin || m.hrFullAccess,
+    hr: m.hrFullAccess,
     settings: m.settingsAny,
   }), [m]);
 }
