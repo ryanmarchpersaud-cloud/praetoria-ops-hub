@@ -155,6 +155,16 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
       map.fitBounds(L.latLngBounds(markers), { padding: [30, 30] });
     }
 
+    // Force Leaflet to recalculate container size after paint
+    setTimeout(() => {
+      map.invalidateSize();
+      if (markers.length === 1) {
+        map.setView(markers[0], 14);
+      } else {
+        map.fitBounds(L.latLngBounds(markers), { padding: [30, 30] });
+      }
+    }, 200);
+
     return () => {
       map.remove();
       mapInstance.current = null;
