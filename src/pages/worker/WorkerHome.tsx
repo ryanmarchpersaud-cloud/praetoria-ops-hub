@@ -123,6 +123,7 @@ export default function WorkerHome() {
 
   return (
     <div className="space-y-3 px-4 pt-3 pb-4">
+      <TodayWorkOverviewDialog visitCount={todayVisits.length} scheduleRoute="/worker/schedule" storageKey="worker_work_overview" />
       {/* Welcome Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
         <div className="flex items-center justify-between">
