@@ -32,6 +32,7 @@ export default function WorkerNewIncidentPage() {
   const [witnesses, setWitnesses] = useState('');
   const [medicalAttention, setMedicalAttention] = useState(false);
   const [reportedTo, setReportedTo] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string; report_number: string } | null>(null);
 
