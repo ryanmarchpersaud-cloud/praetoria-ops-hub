@@ -82,7 +82,6 @@ export default function WorkerHome() {
         .eq('service_date', todayStr)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      console.log('[WorkerHome] Raw visits for today:', JSON.stringify(data?.map(d => ({ id: d.id, customers: d.customers, properties: d.properties }))));
       // Filter client-side: assigned_worker_id matches OR job.assigned_to matches
       return (data || []).filter(v => 
         v.assigned_worker_id === user!.id || 
