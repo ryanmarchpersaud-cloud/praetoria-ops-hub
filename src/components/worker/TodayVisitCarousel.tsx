@@ -62,6 +62,8 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
   }, [visits]);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse') return;
+
     const container = scrollRef.current;
     if (!container) return;
 
@@ -73,10 +75,11 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
     };
 
     setIsDragging(false);
-    container.setPointerCapture?.(event.pointerId);
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse') return;
+
     const container = scrollRef.current;
     if (!container || !dragState.current.isPointerDown) return;
 
@@ -90,17 +93,10 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
   };
 
   const endDrag = (event?: React.PointerEvent<HTMLDivElement>) => {
-    const container = scrollRef.current;
-    if (event && container) {
-      try {
-        container.releasePointerCapture?.(event.pointerId);
-      } catch {
-        // ignore release errors
-      }
-    }
+    if (event && event.pointerType !== 'mouse') return;
 
     dragState.current.isPointerDown = false;
-    window.setTimeout(() => setIsDragging(false), 0);
+    setIsDragging(false);
   };
 
   if (visits.length === 0) return null;
@@ -167,7 +163,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
           return (
             <Link
               key={visit.id}
-              to={isDragging ? '#' : `/worker/visit/${visit.id}`}
+              to={`/worker/visit/${visit.id}`}
               onClick={(event) => {
                 if (dragState.current.moved || isDragging) {
                   event.preventDefault();
@@ -248,7 +244,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
         })}
 
         <Link
-          to={isDragging ? '#' : '/worker/schedule'}
+          to="/worker/schedule"
           onClick={(event) => {
             if (dragState.current.moved || isDragging) {
               event.preventDefault();
