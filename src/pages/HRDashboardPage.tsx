@@ -74,6 +74,12 @@ export default function HRDashboardPage() {
     return new Date(c.expiry_date) < today && c.status !== 'revoked';
   });
 
+  // SK compliance stats
+  const openWCB = wcbClaims.filter((c: any) => c.claim_status !== 'closed' && c.claim_status !== 'denied');
+  const expiredLicences = sgiRecords.filter((r: any) => r.licence_expiry && new Date(r.licence_expiry) < today);
+  const expiringLicences = sgiRecords.filter((r: any) => r.licence_expiry && new Date(r.licence_expiry) >= today && new Date(r.licence_expiry) <= in30);
+  const pendingEnrollments = enrollments.filter((e: any) => e.enrollment_status === 'pending');
+
   const overallRate = compliance
     ? compliance.mandatoryTotal > 0
       ? Math.round((compliance.mandatoryCompleted / compliance.mandatoryTotal) * 100)
@@ -82,6 +88,7 @@ export default function HRDashboardPage() {
 
   const quickLinks = [
     { icon: Users, label: 'Employee Directory', to: '/employees', desc: 'View all worker profiles' },
+    { icon: MapPin, label: 'SK Compliance & Carriers', to: '/hr/sk-compliance', desc: 'WCB claims, SGI drivers, benefit enrollments' },
     { icon: Shield, label: 'Benefits & Insurance', to: '/hr/benefits', desc: 'SGI, Blue Cross, Sun Life, WCB' },
     { icon: ClipboardList, label: 'Onboarding / Offboarding', to: '/hr/checklists', desc: 'Lifecycle checklists & progress' },
     { icon: StickyNote, label: 'HR Notes & Case Log', to: '/hr/case-notes', desc: 'Private per-employee notes' },
