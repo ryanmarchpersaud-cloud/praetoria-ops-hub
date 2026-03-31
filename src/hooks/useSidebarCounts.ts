@@ -9,6 +9,7 @@ export interface SidebarCounts {
   visits: number;
   invoices: number;
   requests: number;
+  incidents: number;
 }
 
 async function countRows(table: string, column: string, values: string[]): Promise<number> {
