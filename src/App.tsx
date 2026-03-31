@@ -147,6 +147,7 @@ import HRBenefitsPage from "./pages/hr/HRBenefitsPage";
 import HRChecklistsPage from "./pages/hr/HRChecklistsPage";
 import HRCaseNotesPage from "./pages/hr/HRCaseNotesPage";
 import HRCompensationPage from "./pages/hr/HRCompensationPage";
+import HRComplianceWorkflowsPage from "./pages/hr/HRComplianceWorkflowsPage";
 import WorkerCoursesPage from "./pages/worker/WorkerCoursesPage";
 import WorkerCourseDetailPage from "./pages/worker/WorkerCourseDetailPage";
 import SubcontractorTrainingPage from "./pages/subcontractor/SubcontractorTrainingPage";
