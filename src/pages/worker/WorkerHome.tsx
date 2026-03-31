@@ -89,9 +89,6 @@ export default function WorkerHome() {
 
   const completedVisits = todayVisits.filter(v => v.visit_status === 'Completed');
   const inProgressVisit = todayVisits.find(v => v.visit_status === 'In Progress' || v.visit_status === 'En Route');
-  const nextVisit = todayVisits.find(v => v.visit_status === 'Scheduled' || v.visit_status === 'Planned');
-  const highlightVisit = inProgressVisit || nextVisit;
-  const lastCompleted = completedVisits[completedVisits.length - 1];
 
   const firstName = workerProfile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
   const initials = (workerProfile?.full_name || user?.user_metadata?.full_name || user?.email || '?')
