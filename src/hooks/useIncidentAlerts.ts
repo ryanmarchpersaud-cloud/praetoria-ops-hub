@@ -43,15 +43,12 @@ export function useIncidentAlerts() {
             description: `${report.incident_type} — ${report.reporter_type === 'worker' ? 'Worker' : 'Subcontractor'} reported${report.location ? ` at ${report.location}` : ''}. ${isHighSeverity ? 'HIGH SEVERITY — Immediate attention required.' : 'Tap to review.'}`,
             variant: 'destructive',
             duration: isHighSeverity ? 30000 : 15000,
-            action: report.id ? (
-              <button
-                className="shrink-0 rounded-md bg-white/20 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/30 transition-colors"
-                onClick={() => navigate(`/incidents/${report.id}`)}
-              >
-                View Now
-              </button>
-            ) : undefined,
           });
+
+          // Auto-navigate for high severity
+          if (isHighSeverity && report.id) {
+            navigate(`/incidents/${report.id}`);
+          }
         }
       )
       .subscribe();
