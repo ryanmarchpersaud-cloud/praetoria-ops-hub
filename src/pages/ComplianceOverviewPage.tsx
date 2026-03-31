@@ -1,6 +1,6 @@
 import { useComplianceSummary, useAllAssignments, useTrainingCourses } from '@/hooks/useTraining';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useSubcontractors } from '@/hooks/useSubcontractor';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
