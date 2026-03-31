@@ -68,7 +68,7 @@ export default function HRComplianceWorkflowsPage() {
   // SGI form
   const [sgiForm, setSgiForm] = useState({ employee_user_id: '', drivers_licence_number: '', licence_class: '5', licence_expiry: '', abstract_status: 'not_obtained', authorization_signed: false, fleet_vehicle_assigned: '', notes: '' });
   // Enrollment form
-  const [enrForm, setEnrForm] = useState({ employee_user_id: '', provider_id: '', enrollment_status: 'pending', effective_date: '', plan_type: '', dependent_count: 0, notes: '' });
+  const [enrForm, setEnrForm] = useState({ employee_user_id: '', provider_id: '', enrollment_status: 'pending', effective_date: '', plan_type: '', dependent_count: 0, notes: '', change_type: 'new_enrollment', change_reason: '', termination_date: '' });
 
   const handleWCBSave = async () => {
     if (!wcbForm.employee_user_id || !wcbForm.injury_date) return;

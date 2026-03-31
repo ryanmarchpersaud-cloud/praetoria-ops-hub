@@ -209,6 +209,40 @@ export default function AdminIncidentDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {r.incident_type?.toLowerCase().includes('injur') || r.incident_type?.toLowerCase().includes('slip') || r.incident_type?.toLowerCase().includes('fall') || r.severity === 'high' || r.severity === 'critical' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-orange-300 text-orange-700 hover:bg-orange-50"
+              disabled={creatingWCB}
+              onClick={async () => {
+                setCreatingWCB(true);
+                try {
+                  const injuryType = r.incident_type?.toLowerCase().includes('slip') || r.incident_type?.toLowerCase().includes('fall')
+                    ? 'slip_fall'
+                    : r.incident_type?.toLowerCase().includes('cut') ? 'cut'
+                    : r.incident_type?.toLowerCase().includes('burn') ? 'burn'
+                    : 'other';
+                  await upsertWCB.mutateAsync({
+                    employee_user_id: r.reporter_user_id,
+                    injury_date: format(new Date(r.date_time), 'yyyy-MM-dd'),
+                    injury_type: injuryType,
+                    body_part: '',
+                    claim_status: 'pending',
+                    restrictions: `Auto-created from incident ${r.report_number || ''}. Location: ${r.location || 'N/A'}. Description: ${(r.description || '').slice(0, 200)}`,
+                  });
+                  toast({ title: 'WCB claim draft created', description: 'Go to HR → SK Compliance to complete the claim details.' });
+                } catch {
+                  toast({ title: 'Failed to create WCB claim', variant: 'destructive' });
+                } finally {
+                  setCreatingWCB(false);
+                }
+              }}
+            >
+              <HardHat className="h-4 w-4" />
+              {creatingWCB ? 'Creating...' : 'Create WCB Claim'}
+            </Button>
+          ) : null}
           <IncidentPrintButton report={r} />
           <Button variant="outline" size="sm" className="gap-2" onClick={() => setShareOpen(true)}>
             <Share2 className="h-4 w-4" />
