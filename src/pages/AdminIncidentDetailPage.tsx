@@ -8,11 +8,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, MapPin, Clock, Users, Eye, Stethoscope, User } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, Eye, Stethoscope, User, Send, Share2, Image } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { ShareIncidentDialog } from '@/components/ShareIncidentDialog';
 
 const statusColors: Record<string, string> = {
   open: 'bg-amber-500/10 text-amber-700 border-amber-200',
@@ -28,6 +29,16 @@ const severityColors: Record<string, string> = {
   critical: 'bg-destructive/10 text-destructive border-destructive/30',
 };
 
+const recipientTypeLabels: Record<string, string> = {
+  hr: 'Human Resources',
+  ohs: 'OHS / Health & Safety',
+  police: 'Police',
+  fire: 'Fire Department',
+  ems: 'EMS / Ambulance',
+  government: 'Government / WCB',
+  custom: 'Custom',
+};
+
 export default function AdminIncidentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
@@ -37,6 +48,7 @@ export default function AdminIncidentDetailPage() {
   const [severity, setSeverity] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [correctiveNotes, setCorrectiveNotes] = useState('');
+  const [shareOpen, setShareOpen] = useState(false);
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['incident_report', id],
@@ -48,6 +60,20 @@ export default function AdminIncidentDetailPage() {
         .maybeSingle();
       if (error) throw error;
       return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: shares } = useQuery({
+    queryKey: ['incident_shares', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('incident_shares' as any)
+        .select('*')
+        .eq('incident_id', id!)
+        .order('shared_at', { ascending: false });
+      if (error) throw error;
+      return data as any[];
     },
     enabled: !!id,
   });
@@ -76,7 +102,6 @@ export default function AdminIncidentDetailPage() {
         .eq('id', id);
       if (error) throw error;
 
-      // Log to activity feed
       await supabase.from('activities').insert({
         action_name: `Incident ${(report as any)?.report_number || id.slice(0, 8)} updated — status: ${status}, severity: ${severity}`,
         record_type: 'incident_report',
@@ -96,7 +121,6 @@ export default function AdminIncidentDetailPage() {
 
   const handleClose = async () => {
     setStatus('closed');
-    // Will be saved when user clicks Save
     toast({ title: 'Status set to closed — click Save to confirm' });
   };
 
@@ -140,6 +164,10 @@ export default function AdminIncidentDetailPage() {
             </Badge>
           </div>
         </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => setShareOpen(true)}>
+          <Share2 className="h-4 w-4" />
+          Share Report
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -210,6 +238,24 @@ export default function AdminIncidentDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Photos */}
+          {r.photos?.length > 0 && (
+            <Card>
+              <CardContent className="p-5">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Image className="h-4 w-4" /> Photos ({r.photos.length})
+                </h2>
+                <div className="grid grid-cols-3 gap-2">
+                  {r.photos.map((url: string, i: number) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-lg overflow-hidden border hover:ring-2 ring-primary transition-all">
+                      <img src={url} alt={`Incident photo ${i + 1}`} className="w-full h-24 object-cover" />
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right column — Admin actions */}
@@ -277,6 +323,45 @@ export default function AdminIncidentDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Share / Forward section */}
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Share History</h2>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setShareOpen(true)}>
+                  <Send className="h-3.5 w-3.5" />
+                  Forward Report
+                </Button>
+              </div>
+              {shares && shares.length > 0 ? (
+                <div className="space-y-2">
+                  {shares.map((s: any) => (
+                    <div key={s.id} className="flex items-start gap-3 rounded-lg border p-3">
+                      <Send className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium truncate">{s.recipient_name || s.recipient_email}</p>
+                          <Badge variant="secondary" className="text-[10px] capitalize">
+                            {recipientTypeLabels[s.recipient_type] || s.recipient_type}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{s.recipient_email}</p>
+                        {s.cover_note && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 italic">"{s.cover_note}"</p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {format(new Date(s.shared_at), 'MMM d, yyyy · h:mm a')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Not shared yet. Use "Forward Report" to email this to HR, OHS, police, or other parties.</p>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="p-5">
               <p className="text-xs text-muted-foreground">
@@ -291,6 +376,9 @@ export default function AdminIncidentDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Share dialog */}
+      <ShareIncidentDialog open={shareOpen} onOpenChange={setShareOpen} report={r} />
     </div>
   );
 }

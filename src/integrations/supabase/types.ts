@@ -2071,6 +2071,50 @@ export type Database = {
           },
         ]
       }
+      incident_shares: {
+        Row: {
+          cover_note: string | null
+          id: string
+          incident_id: string
+          include_photos: boolean | null
+          recipient_email: string
+          recipient_name: string | null
+          recipient_type: string
+          shared_at: string | null
+          shared_by: string | null
+        }
+        Insert: {
+          cover_note?: string | null
+          id?: string
+          incident_id: string
+          include_photos?: boolean | null
+          recipient_email: string
+          recipient_name?: string | null
+          recipient_type: string
+          shared_at?: string | null
+          shared_by?: string | null
+        }
+        Update: {
+          cover_note?: string | null
+          id?: string
+          incident_id?: string
+          include_photos?: boolean | null
+          recipient_email?: string
+          recipient_name?: string | null
+          recipient_type?: string
+          shared_at?: string | null
+          shared_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_shares_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incident_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_logs: {
         Row: {
           channel: string | null
