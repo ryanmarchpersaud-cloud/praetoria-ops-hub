@@ -54,6 +54,7 @@ export default function WorkerNewIncidentPage() {
         witnesses: witnesses.trim() || null,
         medical_attention: medicalAttention,
         reported_to: reportedTo.trim() || null,
+        photos: photos.length > 0 ? photos : null,
       }]).select('id, report_number').single();
       if (error) throw error;
 
