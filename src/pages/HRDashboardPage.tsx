@@ -8,7 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import {
   Users, BookOpen, ShieldCheck, AlertTriangle, Clock, Award,
   CalendarDays, HardHat, ChevronRight, FileText, UserCheck,
-  Phone, ShieldAlert, UserX, UserPlus, Heart,
+  Phone, ShieldAlert, UserX, UserPlus, Heart, Shield, ClipboardList,
+  DollarSign, StickyNote,
 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 
@@ -77,6 +78,10 @@ export default function HRDashboardPage() {
 
   const quickLinks = [
     { icon: Users, label: 'Employee Directory', to: '/employees', desc: 'View all worker profiles' },
+    { icon: Shield, label: 'Benefits & Insurance', to: '/hr/benefits', desc: 'SGI, Blue Cross, Sun Life, WCB' },
+    { icon: ClipboardList, label: 'Onboarding / Offboarding', to: '/hr/checklists', desc: 'Lifecycle checklists & progress' },
+    { icon: StickyNote, label: 'HR Notes & Case Log', to: '/hr/case-notes', desc: 'Private per-employee notes' },
+    { icon: DollarSign, label: 'Compensation & Reviews', to: '/hr/compensation', desc: 'Pay rates, raises & review schedule' },
     { icon: BookOpen, label: 'Training Catalog', to: '/hr/training', desc: 'Manage courses & assignments' },
     { icon: ShieldCheck, label: 'Compliance Overview', to: '/hr/compliance', desc: 'Certifications & mandatory training' },
     { icon: Phone, label: 'Contact Hub', to: '/hr/contacts', desc: 'Emergency contacts & escalation' },

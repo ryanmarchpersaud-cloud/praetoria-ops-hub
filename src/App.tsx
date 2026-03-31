@@ -143,6 +143,10 @@ import HRContactHubPage from "./pages/hr/HRContactHubPage";
 import HRTimeOffPage from "./pages/hr/HRTimeOffPage";
 import HREquipmentPage from "./pages/hr/HREquipmentPage";
 import HRDocumentsPage from "./pages/hr/HRDocumentsPage";
+import HRBenefitsPage from "./pages/hr/HRBenefitsPage";
+import HRChecklistsPage from "./pages/hr/HRChecklistsPage";
+import HRCaseNotesPage from "./pages/hr/HRCaseNotesPage";
+import HRCompensationPage from "./pages/hr/HRCompensationPage";
 import WorkerCoursesPage from "./pages/worker/WorkerCoursesPage";
 import WorkerCourseDetailPage from "./pages/worker/WorkerCourseDetailPage";
 import SubcontractorTrainingPage from "./pages/subcontractor/SubcontractorTrainingPage";
@@ -321,6 +325,10 @@ function AppRoutes() {
       <Route path="/hr/time-off" element={<AdminRoute><ModuleGuard module="hr"><HRTimeOffPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/equipment" element={<AdminRoute><ModuleGuard module="hr"><HREquipmentPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/documents" element={<AdminRoute><ModuleGuard module="hr"><HRDocumentsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/benefits" element={<AdminRoute><ModuleGuard module="hr"><HRBenefitsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/checklists" element={<AdminRoute><ModuleGuard module="hr"><HRChecklistsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/case-notes" element={<AdminRoute><ModuleGuard module="hr"><HRCaseNotesPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/compensation" element={<AdminRoute><ModuleGuard module="hr"><HRCompensationPage /></ModuleGuard></AdminRoute>} />
 
       {/* Incidents — ops access */}
       <Route path="/incidents" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentsPage /></ModuleGuard></AdminRoute>} />
