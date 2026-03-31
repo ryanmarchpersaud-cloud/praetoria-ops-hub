@@ -317,6 +317,10 @@ function AppRoutes() {
       <Route path="/hr/training" element={<AdminRoute><ModuleGuard module="hr"><TrainingCatalogPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/training/:id" element={<AdminRoute><ModuleGuard module="hr"><TrainingCourseDetailPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/compliance" element={<AdminRoute><ModuleGuard module="hr"><ComplianceOverviewPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/contacts" element={<AdminRoute><ModuleGuard module="hr"><HRContactHubPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/time-off" element={<AdminRoute><ModuleGuard module="hr"><HRTimeOffPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/equipment" element={<AdminRoute><ModuleGuard module="hr"><HREquipmentPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/documents" element={<AdminRoute><ModuleGuard module="hr"><HRDocumentsPage /></ModuleGuard></AdminRoute>} />
 
       {/* Incidents — ops access */}
       <Route path="/incidents" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentsPage /></ModuleGuard></AdminRoute>} />
