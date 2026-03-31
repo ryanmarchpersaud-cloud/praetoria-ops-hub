@@ -17,15 +17,15 @@ function StatCard({ icon: Icon, label, value, color, to, alert }: {
 }) {
   const content = (
     <Card className={`hover:shadow-md transition-shadow ${alert ? 'border-destructive/30' : ''}`}>
-      <CardContent className="p-4 flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
-          <Icon className="h-5 w-5" />
+      <CardContent className="p-3 flex items-center gap-2.5">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+          <Icon className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-2xl font-bold text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-xl font-bold text-foreground tabular-nums">{value}</p>
+          <p className="text-[10px] leading-tight text-muted-foreground truncate">{label}</p>
         </div>
-        {to && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+        {to && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
       </CardContent>
     </Card>
   );
@@ -104,11 +104,11 @@ export default function HRDashboardPage() {
       </div>
 
       {/* Key metrics - Row 1: People */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatCard icon={Users} label="Active" value={active.length} color="bg-primary/10 text-primary" to="/employees" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard icon={Users} label="Active Employees" value={active.length} color="bg-primary/10 text-primary" to="/employees" />
         <StatCard icon={UserCheck} label="On Leave" value={onLeave.length} color="bg-amber-500/10 text-amber-600" />
-        <StatCard icon={UserPlus} label="New (30d)" value={onboarding.length} color="bg-blue-500/10 text-blue-600" />
-        <StatCard icon={CalendarDays} label="Pending Time Off" value={pendingTimeOff.length} color="bg-purple-500/10 text-purple-600" to="/hr/time-off" alert={pendingTimeOff.length > 0} />
+        <StatCard icon={UserPlus} label="New Hires (30d)" value={onboarding.length} color="bg-blue-500/10 text-blue-600" />
+        <StatCard icon={CalendarDays} label="Pending Leave" value={pendingTimeOff.length} color="bg-purple-500/10 text-purple-600" to="/hr/time-off" alert={pendingTimeOff.length > 0} />
         <StatCard icon={ShieldAlert} label="Open Incidents" value={openIncidents.length} color="bg-destructive/10 text-destructive" to="/incidents" alert={openIncidents.length > 0} />
         <StatCard icon={Heart} label="No Emerg. Contact" value={missingEmergencyContacts.length} color="bg-destructive/10 text-destructive" to="/hr/contacts" alert={missingEmergencyContacts.length > 0} />
       </div>
