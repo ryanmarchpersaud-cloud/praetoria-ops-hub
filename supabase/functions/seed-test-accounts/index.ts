@@ -187,6 +187,158 @@ Deno.serve(async (req) => {
           }
         }
       }
+
+      // For worker, seed worker profile name + demo visits for today
+      if (account.role === "staff") {
+        // Ensure worker_profile has correct name
+        const { data: existingProfile } = await supabaseAdmin
+          .from("worker_profiles")
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (existingProfile) {
+          await supabaseAdmin
+            .from("worker_profiles")
+            .update({ full_name: account.displayName })
+            .eq("user_id", userId);
+        } else {
+          await supabaseAdmin.from("worker_profiles").insert({
+            user_id: userId,
+            full_name: account.displayName,
+            employment_status: "active",
+          });
+        }
+
+        // Seed demo customers, properties, jobs, and visits for today
+        const todayStr = new Date().toISOString().split("T")[0];
+
+        // Create demo customers if not exist
+        const demoCustomers = [
+          { first_name: "Troy", last_name: "Spanier", company_name: "Oleet Processing LTD", phone: "306-555-0201", address_line_1: "450 Broad Street", city: "Regina", province: "SK", postal_code: "S4R 1X3" },
+          { first_name: "John", last_name: "Wall", company_name: null, phone: "306-555-0202", address_line_1: "921 Broad Street", city: "Regina", province: "SK", postal_code: "S4R 1Y1" },
+          { first_name: "Sarah", last_name: "Chen", company_name: "Greenway Construction", phone: "306-555-0203", address_line_1: "175 Albert Street", city: "Regina", province: "SK", postal_code: "S4R 2N2" },
+        ];
+
+        const customerIds: string[] = [];
+        for (const cust of demoCustomers) {
+          const { data: existing } = await supabaseAdmin
+            .from("customers")
+            .select("id")
+            .eq("first_name", cust.first_name)
+            .eq("last_name", cust.last_name)
+            .maybeSingle();
+
+          if (existing) {
+            customerIds.push(existing.id);
+          } else {
+            const { data: created } = await supabaseAdmin
+              .from("customers")
+              .insert(cust)
+              .select("id")
+              .single();
+            if (created) customerIds.push(created.id);
+          }
+        }
+
+        // Create demo properties
+        const demoProperties = [
+          { property_name: "Oleet Processing LTD", address_line_1: "450 Broad Street", city: "Regina", province: "SK", postal_code: "S4R 1X3", customer_id: customerIds[0] },
+          { property_name: "921 Broad Street", address_line_1: "921 Broad Street", city: "Regina", province: "SK", postal_code: "S4R 1Y1", customer_id: customerIds[1] },
+          { property_name: "Sherwin-Williams Paints", address_line_1: "175 Albert Street", city: "Regina", province: "SK", postal_code: "S4R 2N2", customer_id: customerIds[2] },
+        ];
+
+        const propertyIds: string[] = [];
+        for (const prop of demoProperties) {
+          if (!prop.customer_id) continue;
+          const { data: existing } = await supabaseAdmin
+            .from("properties")
+            .select("id")
+            .eq("property_name", prop.property_name)
+            .eq("customer_id", prop.customer_id)
+            .maybeSingle();
+
+          if (existing) {
+            propertyIds.push(existing.id);
+          } else {
+            const { data: created } = await supabaseAdmin
+              .from("properties")
+              .insert(prop)
+              .select("id")
+              .single();
+            if (created) propertyIds.push(created.id);
+          }
+        }
+
+        // Create demo jobs
+        const demoJobs = [
+          { job_title: "Snow Removal - Oleet", job_number: "JOB-DEMO-001", customer_id: customerIds[0], property_id: propertyIds[0], assigned_to: userId, status: "Active", service_category: "Snow removal", priority: "Normal" },
+          { job_title: "Daily Litter Services", job_number: "JOB-DEMO-002", customer_id: customerIds[1], property_id: propertyIds[1], assigned_to: userId, status: "Active", service_category: "Property maintenance", priority: "Normal" },
+          { job_title: "Snow Removal - Greenway", job_number: "JOB-DEMO-003", customer_id: customerIds[2], property_id: propertyIds[2], assigned_to: userId, status: "Active", service_category: "Snow removal", priority: "Normal" },
+        ];
+
+        const jobIds: string[] = [];
+        for (const job of demoJobs) {
+          if (!job.customer_id || !job.property_id) continue;
+          const { data: existing } = await supabaseAdmin
+            .from("jobs")
+            .select("id")
+            .eq("job_number", job.job_number)
+            .maybeSingle();
+
+          if (existing) {
+            jobIds.push(existing.id);
+          } else {
+            const { data: created } = await supabaseAdmin
+              .from("jobs")
+              .insert(job)
+              .select("id")
+              .single();
+            if (created) jobIds.push(created.id);
+          }
+        }
+
+        // Create demo visits for today
+        const demoVisits = [
+          {
+            visit_number: "VIS-DEMO-001",
+            job_id: jobIds[0], customer_id: customerIds[0], property_id: propertyIds[0],
+            assigned_worker_id: userId,
+            service_date: todayStr, visit_status: "In Progress", visit_type: "Service",
+            arrival_time: new Date(Date.now() - 83 * 60000).toISOString(),
+            service_summary: "Snow removal and de-icing for commercial lot",
+          },
+          {
+            visit_number: "VIS-DEMO-002",
+            job_id: jobIds[1], customer_id: customerIds[1], property_id: propertyIds[1],
+            assigned_worker_id: userId,
+            service_date: todayStr, visit_status: "Scheduled", visit_type: "Service",
+            service_summary: "Daily litter pickup and grounds maintenance",
+          },
+          {
+            visit_number: "VIS-DEMO-003",
+            job_id: jobIds[2], customer_id: customerIds[2], property_id: propertyIds[2],
+            assigned_worker_id: userId,
+            service_date: todayStr, visit_status: "Completed", visit_type: "Service",
+            arrival_time: new Date(Date.now() - 180 * 60000).toISOString(),
+            completion_time: new Date(Date.now() - 117 * 60000).toISOString(),
+            service_summary: "Snow removal for commercial parking",
+          },
+        ];
+
+        for (const visit of demoVisits) {
+          if (!visit.job_id || !visit.customer_id || !visit.property_id) continue;
+          const { data: existing } = await supabaseAdmin
+            .from("visits")
+            .select("id")
+            .eq("visit_number", visit.visit_number)
+            .maybeSingle();
+
+          if (!existing) {
+            await supabaseAdmin.from("visits").insert(visit);
+          }
+        }
+      }
     }
 
     return new Response(JSON.stringify({ success: true, results }), {
