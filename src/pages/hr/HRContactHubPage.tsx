@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useAllEmergencyContacts } from '@/hooks/useHRData';
+import { useAllEmergencyContacts, useAllIncidentReports } from '@/hooks/useHRData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Phone, Users, AlertTriangle, UserCheck, ShieldAlert, Building2,
-  ChevronRight, PhoneCall, Mail,
+  ChevronRight, PhoneCall, Mail, FileWarning,
 } from 'lucide-react';
 
 const ESCALATION_CONTACTS = [
@@ -32,6 +32,9 @@ const SK_EXTERNAL_CONTACTS = [
 export default function HRContactHubPage() {
   const { data: employees = [] } = useEmployees();
   const { data: allContacts = [] } = useAllEmergencyContacts();
+  const { data: incidents = [] } = useAllIncidentReports();
+
+  const openIncidents = incidents.filter((i: any) => i.follow_up_status !== 'resolved' && i.follow_up_status !== 'closed');
 
   const activeEmployees = employees.filter(e => e.employment_status === 'active');
 
@@ -109,6 +112,7 @@ export default function HRContactHubPage() {
           <TabsTrigger value="missing"><AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> Missing ({withoutContacts.length})</TabsTrigger>
           <TabsTrigger value="supervisors"><Building2 className="h-3.5 w-3.5 mr-1.5" /> Supervisors ({supervisors.length})</TabsTrigger>
           <TabsTrigger value="sk-external"><Phone className="h-3.5 w-3.5 mr-1.5" /> SK External</TabsTrigger>
+          <TabsTrigger value="incidents"><FileWarning className="h-3.5 w-3.5 mr-1.5" /> Incidents ({openIncidents.length})</TabsTrigger>
         </TabsList>
 
         {/* Escalation contacts */}
@@ -163,7 +167,9 @@ export default function HRContactHubPage() {
                       <TableHead>Contact Name</TableHead>
                       <TableHead>Relationship</TableHead>
                       <TableHead>Phone</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead>Primary</TableHead>
+                      <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -186,7 +192,24 @@ export default function HRContactHubPage() {
                             ) : <span className="text-sm text-muted-foreground">—</span>}
                           </TableCell>
                           <TableCell>
+                            {c.email ? (
+                              <a href={`mailto:${c.email}`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                                <Mail className="h-3 w-3" /> {c.email}
+                              </a>
+                            ) : <span className="text-sm text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell>
                             {c.is_primary ? <Badge className="text-[10px] bg-emerald-500 hover:bg-emerald-600">Primary</Badge> : <span className="text-xs text-muted-foreground">Alt</span>}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              {c.phone_primary && (
+                                <a href={`tel:${c.phone_primary}`}><Button size="icon" variant="ghost" className="h-7 w-7"><PhoneCall className="h-3 w-3" /></Button></a>
+                              )}
+                              {c.email && (
+                                <a href={`mailto:${c.email}`}><Button size="icon" variant="ghost" className="h-7 w-7"><Mail className="h-3 w-3" /></Button></a>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -312,6 +335,59 @@ export default function HRContactHubPage() {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        {/* Incident Follow-up */}
+        <TabsContent value="incidents" className="mt-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <FileWarning className="h-4 w-4 text-destructive" /> Open Incidents Needing HR Follow-up
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {openIncidents.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">No open incidents requiring follow-up 🎉</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Report #</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Severity</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Follow-up Status</TableHead>
+                      <TableHead className="w-[80px]">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {openIncidents.slice(0, 20).map((inc: any) => (
+                      <TableRow key={inc.id}>
+                        <TableCell className="text-sm font-medium">{inc.report_number || '—'}</TableCell>
+                        <TableCell className="text-sm">{inc.incident_type || '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant={inc.severity === 'high' || inc.severity === 'critical' ? 'destructive' : 'secondary'} className="text-[10px] capitalize">
+                            {inc.severity || 'unknown'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{inc.date_time ? new Date(inc.date_time).toLocaleDateString() : '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px] capitalize">{inc.follow_up_status || 'open'}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Link to={`/incidents/${inc.id}`}>
+                            <Button size="sm" variant="outline" className="text-xs gap-1">
+                              View <ChevronRight className="h-3 w-3" />
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
