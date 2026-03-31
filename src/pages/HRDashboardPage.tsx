@@ -41,6 +41,9 @@ export default function HRDashboardPage() {
   const { data: emergencyContacts = [] } = useAllEmergencyContacts();
   const { data: incidents = [] } = useAllIncidentReports();
   const { data: certs = [] } = useAllCertifications();
+  const { data: wcbClaims = [] } = useWCBClaims();
+  const { data: sgiRecords = [] } = useSGIDriverRecords();
+  const { data: enrollments = [] } = useBenefitEnrollments();
 
   const active = employees.filter(e => e.employment_status === 'active');
   const onLeave = employees.filter(e => e.employment_status === 'on-leave');
