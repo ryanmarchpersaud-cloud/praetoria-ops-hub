@@ -5020,6 +5020,251 @@ export type Database = {
         }
         Relationships: []
       }
+      training_assignments: {
+        Row: {
+          acknowledged_at: string | null
+          assigned_by: string | null
+          attempts: number
+          certificate_url: string | null
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          due_date: string | null
+          expiry_date: string | null
+          id: string
+          notes: string | null
+          score: number | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          assigned_by?: string | null
+          attempts?: number
+          certificate_url?: string | null
+          completed_at?: string | null
+          course_id: string
+          created_at?: string
+          due_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          score?: number | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          assigned_by?: string | null
+          attempts?: number
+          certificate_url?: string | null
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string
+          due_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          score?: number | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_assignments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_courses: {
+        Row: {
+          category: string
+          content_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          document_urls: string[] | null
+          estimated_duration_minutes: number | null
+          id: string
+          is_active: boolean
+          is_mandatory: boolean
+          mandatory_for_roles: string[] | null
+          mandatory_for_service_lines: string[] | null
+          max_retakes: number | null
+          pass_mark: number | null
+          renewal_period_days: number | null
+          sort_order: number | null
+          target_audience: string
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          category?: string
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          document_urls?: string[] | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_active?: boolean
+          is_mandatory?: boolean
+          mandatory_for_roles?: string[] | null
+          mandatory_for_service_lines?: string[] | null
+          max_retakes?: number | null
+          pass_mark?: number | null
+          renewal_period_days?: number | null
+          sort_order?: number | null
+          target_audience?: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          category?: string
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          document_urls?: string[] | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_active?: boolean
+          is_mandatory?: boolean
+          mandatory_for_roles?: string[] | null
+          mandatory_for_service_lines?: string[] | null
+          max_retakes?: number | null
+          pass_mark?: number | null
+          renewal_period_days?: number | null
+          sort_order?: number | null
+          target_audience?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      training_policy_signoffs: {
+        Row: {
+          course_id: string
+          id: string
+          ip_address: string | null
+          signed_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          id?: string
+          ip_address?: string | null
+          signed_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          id?: string
+          ip_address?: string | null
+          signed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_policy_signoffs_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_quiz_attempts: {
+        Row: {
+          answers: Json
+          assignment_id: string
+          attempted_at: string
+          id: string
+          passed: boolean
+          score: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          assignment_id: string
+          attempted_at?: string
+          id?: string
+          passed?: boolean
+          score?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          assignment_id?: string
+          attempted_at?: string
+          id?: string
+          passed?: boolean
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_quiz_attempts_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "training_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_quiz_questions: {
+        Row: {
+          correct_answer: string
+          course_id: string
+          created_at: string
+          id: string
+          options: Json
+          question_text: string
+          question_type: string
+          sort_order: number | null
+        }
+        Insert: {
+          correct_answer: string
+          course_id: string
+          created_at?: string
+          id?: string
+          options?: Json
+          question_text: string
+          question_type?: string
+          sort_order?: number | null
+        }
+        Update: {
+          correct_answer?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          options?: Json
+          question_text?: string
+          question_type?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_quiz_questions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
