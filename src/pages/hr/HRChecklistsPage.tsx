@@ -171,6 +171,9 @@ export default function HRChecklistsPage() {
                       </label>
                     ))}
                   </div>
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <HRFileAttachments recordType="hr_checklist_assignment" recordId={a.id} label="Supporting Documents" compact />
+                  </div>
                 </CardContent>
               </Card>
             );
