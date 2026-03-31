@@ -163,7 +163,9 @@ export default function HRContactHubPage() {
                       <TableHead>Contact Name</TableHead>
                       <TableHead>Relationship</TableHead>
                       <TableHead>Phone</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead>Primary</TableHead>
+                      <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -186,7 +188,24 @@ export default function HRContactHubPage() {
                             ) : <span className="text-sm text-muted-foreground">—</span>}
                           </TableCell>
                           <TableCell>
+                            {c.email ? (
+                              <a href={`mailto:${c.email}`} className="text-sm text-primary hover:underline flex items-center gap-1">
+                                <Mail className="h-3 w-3" /> {c.email}
+                              </a>
+                            ) : <span className="text-sm text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell>
                             {c.is_primary ? <Badge className="text-[10px] bg-emerald-500 hover:bg-emerald-600">Primary</Badge> : <span className="text-xs text-muted-foreground">Alt</span>}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              {c.phone_primary && (
+                                <a href={`tel:${c.phone_primary}`}><Button size="icon" variant="ghost" className="h-7 w-7"><PhoneCall className="h-3 w-3" /></Button></a>
+                              )}
+                              {c.email && (
+                                <a href={`mailto:${c.email}`}><Button size="icon" variant="ghost" className="h-7 w-7"><Mail className="h-3 w-3" /></Button></a>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );

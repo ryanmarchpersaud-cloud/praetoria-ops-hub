@@ -138,6 +138,16 @@ export default function HRDashboardPage() {
         <StatCard icon={Clock} label="Failed / Retakes" value={compliance?.failed ?? 0} color="bg-amber-500/10 text-amber-600" alert={(compliance?.failed ?? 0) > 0} />
       </div>
 
+      {/* Row 3: SK Compliance & Benefits */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard icon={Shield} label="Open WCB Claims" value={openWCB.length} color="bg-destructive/10 text-destructive" to="/hr/sk-compliance" alert={openWCB.length > 0} />
+        <StatCard icon={Car} label="Expired Licences" value={expiredLicences.length} color="bg-destructive/10 text-destructive" to="/hr/sk-compliance" alert={expiredLicences.length > 0} />
+        <StatCard icon={Car} label="Licences Expiring 30d" value={expiringLicences.length} color="bg-amber-500/10 text-amber-600" to="/hr/sk-compliance" alert={expiringLicences.length > 0} />
+        <StatCard icon={Heart} label="Pending Enrollments" value={pendingEnrollments.length} color="bg-purple-500/10 text-purple-600" to="/hr/sk-compliance" alert={pendingEnrollments.length > 0} />
+        <StatCard icon={Heart} label="Benefit Changes" value={benefitChanges.length} color="bg-blue-500/10 text-blue-600" to="/hr/sk-compliance" alert={benefitChanges.length > 0} />
+        <StatCard icon={Award} label="Expiring Certs (30d)" value={expiringCerts.length} color="bg-amber-500/10 text-amber-600" to="/hr/compliance" alert={expiringCerts.length > 0} />
+      </div>
+
       {/* Onboarding / Offboarding mini-sections */}
       {(recentHires.length > 0 || recentTerminations.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
