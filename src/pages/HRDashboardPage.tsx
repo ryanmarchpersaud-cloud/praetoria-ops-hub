@@ -178,7 +178,7 @@ export default function HRDashboardPage() {
       )}
 
       {/* Alerts section */}
-      {(compliance && (compliance.overdue > 0 || compliance.expiringSoon > 0 || compliance.failed > 0)) || expiringCerts.length > 0 || expiredCerts.length > 0 || missingEmergencyContacts.length > 0 ? (
+      {(compliance && (compliance.overdue > 0 || compliance.expiringSoon > 0 || compliance.failed > 0)) || expiringCerts.length > 0 || expiredCerts.length > 0 || missingEmergencyContacts.length > 0 || openWCB.length > 0 || expiredLicences.length > 0 || expiringLicences.length > 0 || pendingEnrollments.length > 0 ? (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -186,6 +186,34 @@ export default function HRDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">
+            {openWCB.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge variant="destructive" className="text-xs">{openWCB.length}</Badge>
+                <span className="text-sm text-foreground">Open WCB claims needing follow-up</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
+            {expiredLicences.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge variant="destructive" className="text-xs">{expiredLicences.length}</Badge>
+                <span className="text-sm text-foreground">Expired driver licences (SGI)</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
+            {expiringLicences.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge className="text-xs bg-amber-500 hover:bg-amber-600">{expiringLicences.length}</Badge>
+                <span className="text-sm text-foreground">Driver licences expiring within 30 days</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
+            {pendingEnrollments.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge className="text-xs bg-purple-500 hover:bg-purple-600">{pendingEnrollments.length}</Badge>
+                <span className="text-sm text-foreground">Pending benefit enrollments</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
             {(compliance?.overdue ?? 0) > 0 && (
               <Link to="/hr/compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
                 <Badge variant="destructive" className="text-xs">{compliance!.overdue}</Badge>
