@@ -157,12 +157,7 @@ export default function SubcontractorNewIncidentPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-dashed">
-        <CardContent className="p-4 text-center">
-          <Camera className="h-6 w-6 mx-auto text-muted-foreground/40 mb-1" />
-          <p className="text-xs text-muted-foreground">Photo upload coming soon</p>
-        </CardContent>
-      </Card>
+      <IncidentPhotoUpload photos={photos} onPhotosChange={setPhotos} />
 
       <Button className="w-full" variant="destructive" onClick={handleSubmit} disabled={submitting || !description.trim()}>
         {submitting ? 'Submitting…' : 'Submit Incident Report'}
