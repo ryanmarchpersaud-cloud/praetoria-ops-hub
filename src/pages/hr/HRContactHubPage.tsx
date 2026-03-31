@@ -336,6 +336,59 @@ export default function HRContactHubPage() {
             ))}
           </div>
         </TabsContent>
+
+        {/* Incident Follow-up */}
+        <TabsContent value="incidents" className="mt-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <FileWarning className="h-4 w-4 text-destructive" /> Open Incidents Needing HR Follow-up
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {openIncidents.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">No open incidents requiring follow-up 🎉</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Report #</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Severity</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Follow-up Status</TableHead>
+                      <TableHead className="w-[80px]">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {openIncidents.slice(0, 20).map((inc: any) => (
+                      <TableRow key={inc.id}>
+                        <TableCell className="text-sm font-medium">{inc.report_number || '—'}</TableCell>
+                        <TableCell className="text-sm">{inc.incident_type || '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant={inc.severity === 'high' || inc.severity === 'critical' ? 'destructive' : 'secondary'} className="text-[10px] capitalize">
+                            {inc.severity || 'unknown'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{inc.date_time ? new Date(inc.date_time).toLocaleDateString() : '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px] capitalize">{inc.follow_up_status || 'open'}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Link to={`/incidents/${inc.id}`}>
+                            <Button size="sm" variant="outline" className="text-xs gap-1">
+                              View <ChevronRight className="h-3 w-3" />
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
