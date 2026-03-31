@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useAllEmergencyContacts } from '@/hooks/useHRData';
+import { useAllEmergencyContacts, useAllIncidentReports } from '@/hooks/useHRData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Phone, Users, AlertTriangle, UserCheck, ShieldAlert, Building2,
-  ChevronRight, PhoneCall, Mail,
+  ChevronRight, PhoneCall, Mail, FileWarning,
 } from 'lucide-react';
 
 const ESCALATION_CONTACTS = [
