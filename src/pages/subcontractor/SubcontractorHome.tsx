@@ -12,6 +12,7 @@ import {
   Navigation, Phone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TodayWorkOverviewDialog } from '@/components/TodayWorkOverviewDialog';
 
 function getGreeting() {
   const h = new Date().getHours();
