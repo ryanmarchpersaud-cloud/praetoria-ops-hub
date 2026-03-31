@@ -81,7 +81,7 @@ export default function WorkerCourseDetailPage({ backTo }: { backTo?: string }) 
   return (
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
       <div className="flex items-center gap-3">
-        <Link to="/worker/courses" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link to={backLink} className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-lg font-bold text-foreground truncate">{course?.title || 'Course'}</h1>
           <p className="text-xs text-muted-foreground capitalize">{course?.category} · {course?.content_type}</p>
