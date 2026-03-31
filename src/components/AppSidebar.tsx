@@ -32,6 +32,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
   { title: 'Schedule', url: '/schedule', icon: CalendarDays, accessKey: 'schedule' },
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests' },
   { title: 'Activity', url: '/activity', icon: Activity, accessKey: 'activity' },
+  { title: 'Incidents', url: '/incidents', icon: ShieldAlert, countKey: 'incidents' as CountKey, accessKey: 'incidents' as SidebarKey },
   { title: 'Employees', url: '/employees', icon: HardHat, accessKey: 'employees' },
   { title: 'Subcontractors', url: '/subcontractors', icon: Users, accessKey: 'subcontractors' },
   { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages', accessKey: 'messaging' },
