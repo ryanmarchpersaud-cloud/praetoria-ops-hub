@@ -50,6 +50,7 @@ export default function AdminIncidentDetailPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [correctiveNotes, setCorrectiveNotes] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
+  const [selectedShare, setSelectedShare] = useState<any>(null);
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['incident_report', id],
