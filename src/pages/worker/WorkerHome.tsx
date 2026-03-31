@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { differenceInDays } from 'date-fns';
+import { TodayWorkOverviewDialog } from '@/components/TodayWorkOverviewDialog';
 
 function formatElapsed(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -122,6 +123,7 @@ export default function WorkerHome() {
 
   return (
     <div className="space-y-3 px-4 pt-3 pb-4">
+      <TodayWorkOverviewDialog visitCount={todayVisits.length} scheduleRoute="/worker/schedule" storageKey="worker_work_overview" />
       {/* Welcome Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
         <div className="flex items-center justify-between">

@@ -12,6 +12,7 @@ import {
   Navigation, Phone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TodayWorkOverviewDialog } from '@/components/TodayWorkOverviewDialog';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -77,6 +78,7 @@ export default function SubcontractorHome() {
 
   return (
     <div className="space-y-3 px-4 pt-6 pb-4">
+      <TodayWorkOverviewDialog visitCount={todayAssignments.length} scheduleRoute="/subcontractor/schedule" storageKey="sub_work_overview" />
       {/* Welcome Banner */}
       <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-5 text-primary-foreground">
         <div className="flex items-center gap-3 mb-1">
