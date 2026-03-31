@@ -386,6 +386,12 @@ export default function AdminIncidentDetailPage() {
 
       {/* Share dialog */}
       <ShareIncidentDialog open={shareOpen} onOpenChange={setShareOpen} report={r} />
+      <ShareHistoryDetailDialog
+        open={!!selectedShare}
+        onOpenChange={(open) => { if (!open) setSelectedShare(null); }}
+        share={selectedShare}
+        reportNumber={r.report_number}
+      />
     </div>
   );
 }
