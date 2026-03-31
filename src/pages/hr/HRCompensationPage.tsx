@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCompensationRecords, useAddCompensationRecord, useReviewSchedules, useUpsertReview } from '@/hooks/useHRModules';
+import { HRFileAttachments } from '@/components/hr/HRFileAttachments';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ export default function HRCompensationPage() {
 
   const [compOpen, setCompOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [selectedComp, setSelectedComp] = useState<string | null>(null);
   const [compForm, setCompForm] = useState({ employee_user_id: '', record_type: 'pay_rate', effective_date: new Date().toISOString().split('T')[0], pay_rate: '', pay_type: 'hourly', notes: '' });
   const [revForm, setRevForm] = useState({ employee_user_id: '', review_type: 'annual', scheduled_date: '', notes: '' });
 
@@ -154,14 +156,23 @@ export default function HRCompensationPage() {
                 </TableRow></TableHeader>
                 <TableBody>
                   {records.map((r: any) => (
-                    <TableRow key={r.id}>
-                      <TableCell><Link to={`/employees/${r.employee_user_id}`} className="hover:underline font-medium">{getEmpName(r.employee_user_id)}</Link></TableCell>
-                      <TableCell><Badge variant="outline" className="capitalize text-xs">{r.record_type?.replace('_', ' ')}</Badge></TableCell>
-                      <TableCell className="font-mono">{r.pay_rate ? `$${Number(r.pay_rate).toFixed(2)}` : '—'}</TableCell>
-                      <TableCell className="capitalize text-sm">{r.pay_type}</TableCell>
-                      <TableCell className="text-sm">{format(new Date(r.effective_date), 'MMM d, yyyy')}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.notes || '—'}</TableCell>
-                    </TableRow>
+                    <>
+                      <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedComp(selectedComp === r.id ? null : r.id)}>
+                        <TableCell><Link to={`/employees/${r.employee_user_id}`} className="hover:underline font-medium" onClick={e => e.stopPropagation()}>{getEmpName(r.employee_user_id)}</Link></TableCell>
+                        <TableCell><Badge variant="outline" className="capitalize text-xs">{r.record_type?.replace('_', ' ')}</Badge></TableCell>
+                        <TableCell className="font-mono">{r.pay_rate ? `$${Number(r.pay_rate).toFixed(2)}` : '—'}</TableCell>
+                        <TableCell className="capitalize text-sm">{r.pay_type}</TableCell>
+                        <TableCell className="text-sm">{format(new Date(r.effective_date), 'MMM d, yyyy')}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.notes || '—'}</TableCell>
+                      </TableRow>
+                      {selectedComp === r.id && (
+                        <TableRow key={`${r.id}-docs`}>
+                          <TableCell colSpan={6} className="bg-muted/20 p-4">
+                            <HRFileAttachments recordType="hr_compensation_record" recordId={r.id} label="Supporting Documents" />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
                   ))}
                 </TableBody>
               </Table>

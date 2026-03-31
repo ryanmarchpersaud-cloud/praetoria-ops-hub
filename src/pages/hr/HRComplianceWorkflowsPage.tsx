@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWCBClaims, useUpsertWCBClaim, useSGIDriverRecords, useUpsertSGIRecord, useBenefitEnrollments, useUpsertEnrollment, useInsuranceProviders } from '@/hooks/useHRModules';
 import { useEmployees } from '@/hooks/useEmployees';
+import { HRFileAttachments } from '@/components/hr/HRFileAttachments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, HardHat, Car, Heart, AlertTriangle, ExternalLink, ShieldCheck, FileText, ChevronRight } from 'lucide-react';
+import { Plus, HardHat, Car, Heart, AlertTriangle, ExternalLink, ShieldCheck, FileText, ChevronRight, Paperclip } from 'lucide-react';
 import { format, isPast, differenceInDays } from 'date-fns';
 
 const claimStatusColors: Record<string, string> = {
@@ -47,6 +48,9 @@ export default function HRComplianceWorkflowsPage() {
   const [wcbOpen, setWcbOpen] = useState(false);
   const [sgiOpen, setSgiOpen] = useState(false);
   const [enrollOpen, setEnrollOpen] = useState(false);
+  const [selectedWCB, setSelectedWCB] = useState<string | null>(null);
+  const [selectedSGI, setSelectedSGI] = useState<string | null>(null);
+  const [selectedEnroll, setSelectedEnroll] = useState<string | null>(null);
 
   const activeEmps = employees.filter(e => e.employment_status === 'active');
   const getEmpName = (uid: string) => employees.find(e => e.user_id === uid)?.full_name ?? 'Unknown';
@@ -186,14 +190,29 @@ export default function HRComplianceWorkflowsPage() {
               <TableHead>Employee</TableHead><TableHead>Claim #</TableHead><TableHead>Injury Date</TableHead><TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>RTW Date</TableHead>
             </TableRow></TableHeader><TableBody>
               {wcbClaims.map((c: any) => (
-                <TableRow key={c.id}>
-                  <TableCell><Link to={`/employees/${c.employee_user_id}`} className="hover:underline font-medium">{getEmpName(c.employee_user_id)}</Link></TableCell>
-                  <TableCell className="font-mono text-sm">{c.claim_number || '—'}</TableCell>
-                  <TableCell className="text-sm">{format(new Date(c.injury_date), 'MMM d, yyyy')}</TableCell>
-                  <TableCell><Badge variant="outline" className="capitalize text-xs">{c.injury_type?.replace('_', ' ')}</Badge></TableCell>
-                  <TableCell><Badge variant="outline" className={`capitalize text-xs ${claimStatusColors[c.claim_status] || ''}`}>{c.claim_status?.replace('_', ' ')}</Badge></TableCell>
-                  <TableCell className="text-sm">{c.return_to_work_date ? format(new Date(c.return_to_work_date), 'MMM d, yyyy') : '—'}</TableCell>
-                </TableRow>
+                <>
+                  <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedWCB(selectedWCB === c.id ? null : c.id)}>
+                    <TableCell><Link to={`/employees/${c.employee_user_id}`} className="hover:underline font-medium" onClick={e => e.stopPropagation()}>{getEmpName(c.employee_user_id)}</Link></TableCell>
+                    <TableCell className="font-mono text-sm">{c.claim_number || '—'}</TableCell>
+                    <TableCell className="text-sm">{format(new Date(c.injury_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell><Badge variant="outline" className="capitalize text-xs">{c.injury_type?.replace('_', ' ')}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={`capitalize text-xs ${claimStatusColors[c.claim_status] || ''}`}>{c.claim_status?.replace('_', ' ')}</Badge></TableCell>
+                    <TableCell className="text-sm">{c.return_to_work_date ? format(new Date(c.return_to_work_date), 'MMM d, yyyy') : '—'}</TableCell>
+                  </TableRow>
+                  {selectedWCB === c.id && (
+                    <TableRow key={`${c.id}-docs`}>
+                      <TableCell colSpan={6} className="bg-muted/20 p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            {c.restrictions && <div><span className="text-xs font-medium text-muted-foreground">Restrictions / Notes:</span><p className="text-sm mt-0.5">{c.restrictions}</p></div>}
+                            {c.follow_up_notes && <div><span className="text-xs font-medium text-muted-foreground">Follow-up:</span><p className="text-sm mt-0.5">{c.follow_up_notes}</p></div>}
+                          </div>
+                          <HRFileAttachments recordType="hr_wcb_claim" recordId={c.id} label="WCB Documents" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               ))}
             </TableBody></Table></Card>
           )}
@@ -242,41 +261,55 @@ export default function HRComplianceWorkflowsPage() {
                 const expiring = r.licence_expiry && !expired && differenceInDays(new Date(r.licence_expiry), new Date()) <= 30;
                 const needsAbstractRenewal = r.abstract_status === 'not_obtained' || r.abstract_status === 'expired' || (r.abstract_last_obtained && differenceInDays(new Date(), new Date(r.abstract_last_obtained)) > 365);
                 return (
-                  <TableRow key={r.id} className={expired ? 'bg-destructive/5' : expiring ? 'bg-amber-500/5' : ''}>
-                    <TableCell><Link to={`/employees/${r.employee_user_id}`} className="hover:underline font-medium">{getEmpName(r.employee_user_id)}</Link></TableCell>
-                    <TableCell className="font-mono text-sm">{r.drivers_licence_number || '—'}</TableCell>
-                    <TableCell>Class {r.licence_class}</TableCell>
-                    <TableCell className="text-sm">{r.licence_expiry ? format(new Date(r.licence_expiry), 'MMM d, yyyy') : '—'}{expired && <Badge variant="destructive" className="ml-1 text-[10px]">Expired</Badge>}{expiring && <Badge className="ml-1 text-[10px] bg-amber-500">Soon</Badge>}</TableCell>
-                    <TableCell><Badge variant="outline" className={`capitalize text-xs ${abstractStatusColors[r.abstract_status] || ''}`}>{r.abstract_status?.replace('_', ' ')}</Badge></TableCell>
-                    <TableCell>{r.authorization_signed ? <ShieldCheck className="h-4 w-4 text-emerald-600" /> : <span className="text-xs text-muted-foreground">No</span>}</TableCell>
-                    <TableCell className="text-sm max-w-[150px] truncate">{r.fleet_vehicle_assigned || '—'}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {(expired || expiring) && (
-                          <Button variant="outline" size="sm" className="text-xs h-7 border-amber-300 text-amber-700 hover:bg-amber-50"
-                            onClick={async () => {
-                              try {
-                                await upsertSGI.mutateAsync({ ...r, renewal_reminder_sent: true, last_reminder_date: new Date().toISOString().split('T')[0] });
-                                toast.success(`Renewal reminder flagged for ${getEmpName(r.employee_user_id)}`);
-                              } catch { toast.error('Failed'); }
-                            }}>
-                            {r.renewal_reminder_sent ? '✓ Reminded' : 'Flag Renewal'}
-                          </Button>
-                        )}
-                        {needsAbstractRenewal && (
-                          <Button variant="outline" size="sm" className="text-xs h-7"
-                            onClick={async () => {
-                              try {
-                                await upsertSGI.mutateAsync({ ...r, abstract_status: 'not_obtained' });
-                                toast.success('Abstract marked for renewal');
-                              } catch { toast.error('Failed'); }
-                            }}>
-                            Renew Abstract
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={r.id} className={`cursor-pointer hover:bg-muted/50 ${expired ? 'bg-destructive/5' : expiring ? 'bg-amber-500/5' : ''}`} onClick={() => setSelectedSGI(selectedSGI === r.id ? null : r.id)}>
+                      <TableCell><Link to={`/employees/${r.employee_user_id}`} className="hover:underline font-medium" onClick={e => e.stopPropagation()}>{getEmpName(r.employee_user_id)}</Link></TableCell>
+                      <TableCell className="font-mono text-sm">{r.drivers_licence_number || '—'}</TableCell>
+                      <TableCell>Class {r.licence_class}</TableCell>
+                      <TableCell className="text-sm">{r.licence_expiry ? format(new Date(r.licence_expiry), 'MMM d, yyyy') : '—'}{expired && <Badge variant="destructive" className="ml-1 text-[10px]">Expired</Badge>}{expiring && <Badge className="ml-1 text-[10px] bg-amber-500">Soon</Badge>}</TableCell>
+                      <TableCell><Badge variant="outline" className={`capitalize text-xs ${abstractStatusColors[r.abstract_status] || ''}`}>{r.abstract_status?.replace('_', ' ')}</Badge></TableCell>
+                      <TableCell>{r.authorization_signed ? <ShieldCheck className="h-4 w-4 text-emerald-600" /> : <span className="text-xs text-muted-foreground">No</span>}</TableCell>
+                      <TableCell className="text-sm max-w-[150px] truncate">{r.fleet_vehicle_assigned || '—'}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                          {(expired || expiring) && (
+                            <Button variant="outline" size="sm" className="text-xs h-7 border-amber-300 text-amber-700 hover:bg-amber-50"
+                              onClick={async () => {
+                                try {
+                                  await upsertSGI.mutateAsync({ ...r, renewal_reminder_sent: true, last_reminder_date: new Date().toISOString().split('T')[0] });
+                                  toast.success(`Renewal reminder flagged for ${getEmpName(r.employee_user_id)}`);
+                                } catch { toast.error('Failed'); }
+                              }}>
+                              {r.renewal_reminder_sent ? '✓ Reminded' : 'Flag Renewal'}
+                            </Button>
+                          )}
+                          {needsAbstractRenewal && (
+                            <Button variant="outline" size="sm" className="text-xs h-7"
+                              onClick={async () => {
+                                try {
+                                  await upsertSGI.mutateAsync({ ...r, abstract_status: 'not_obtained' });
+                                  toast.success('Abstract marked for renewal');
+                                } catch { toast.error('Failed'); }
+                              }}>
+                              Renew Abstract
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {selectedSGI === r.id && (
+                      <TableRow key={`${r.id}-docs`}>
+                        <TableCell colSpan={8} className="bg-muted/20 p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              {r.notes && <div><span className="text-xs font-medium text-muted-foreground">Notes:</span><p className="text-sm mt-0.5">{r.notes}</p></div>}
+                            </div>
+                            <HRFileAttachments recordType="hr_sgi_driver_record" recordId={r.id} label="Driver Documents" />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 );
               })}
             </TableBody></Table></Card>
@@ -338,15 +371,31 @@ export default function HRComplianceWorkflowsPage() {
                 const changeLabels: Record<string, string> = { new_enrollment: 'New', life_event: 'Life Event', plan_change: 'Plan Change', termination: 'Termination' };
                 const changeColors: Record<string, string> = { new_enrollment: 'bg-emerald-500/10 text-emerald-600 border-emerald-200', life_event: 'bg-blue-500/10 text-blue-600 border-blue-200', plan_change: 'bg-purple-500/10 text-purple-600 border-purple-200', termination: 'bg-destructive/10 text-destructive border-destructive/20' };
                 return (
-                  <TableRow key={e.id}>
-                    <TableCell><Link to={`/employees/${e.employee_user_id}`} className="hover:underline font-medium">{getEmpName(e.employee_user_id)}</Link></TableCell>
-                    <TableCell className="text-sm">{(e.hr_insurance_providers as any)?.provider_name ?? '—'}</TableCell>
-                    <TableCell><Badge variant="outline" className={`text-xs ${changeColors[e.change_type] || ''}`}>{changeLabels[e.change_type] || e.change_type}</Badge></TableCell>
-                    <TableCell className="text-sm">{e.plan_type || '—'}</TableCell>
-                    <TableCell><Badge variant="outline" className={`capitalize text-xs ${e.enrollment_status === 'enrolled' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' : e.enrollment_status === 'pending' ? 'bg-amber-500/10 text-amber-700 border-amber-200' : e.enrollment_status === 'terminated' ? 'bg-destructive/10 text-destructive' : ''}`}>{e.enrollment_status}</Badge></TableCell>
-                    <TableCell className="text-sm">{e.effective_date ? format(new Date(e.effective_date), 'MMM d, yyyy') : '—'}</TableCell>
-                    <TableCell className="text-sm text-center">{e.dependent_count ?? 0}</TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={e.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedEnroll(selectedEnroll === e.id ? null : e.id)}>
+                      <TableCell><Link to={`/employees/${e.employee_user_id}`} className="hover:underline font-medium" onClick={ev => ev.stopPropagation()}>{getEmpName(e.employee_user_id)}</Link></TableCell>
+                      <TableCell className="text-sm">{(e.hr_insurance_providers as any)?.provider_name ?? '—'}</TableCell>
+                      <TableCell><Badge variant="outline" className={`text-xs ${changeColors[e.change_type] || ''}`}>{changeLabels[e.change_type] || e.change_type}</Badge></TableCell>
+                      <TableCell className="text-sm">{e.plan_type || '—'}</TableCell>
+                      <TableCell><Badge variant="outline" className={`capitalize text-xs ${e.enrollment_status === 'enrolled' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' : e.enrollment_status === 'pending' ? 'bg-amber-500/10 text-amber-700 border-amber-200' : e.enrollment_status === 'terminated' ? 'bg-destructive/10 text-destructive' : ''}`}>{e.enrollment_status}</Badge></TableCell>
+                      <TableCell className="text-sm">{e.effective_date ? format(new Date(e.effective_date), 'MMM d, yyyy') : '—'}</TableCell>
+                      <TableCell className="text-sm text-center">{e.dependent_count ?? 0}</TableCell>
+                    </TableRow>
+                    {selectedEnroll === e.id && (
+                      <TableRow key={`${e.id}-docs`}>
+                        <TableCell colSpan={7} className="bg-muted/20 p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              {e.change_reason && <div><span className="text-xs font-medium text-muted-foreground">Change Reason:</span><p className="text-sm mt-0.5">{e.change_reason}</p></div>}
+                              {e.notes && <div><span className="text-xs font-medium text-muted-foreground">Notes:</span><p className="text-sm mt-0.5">{e.notes}</p></div>}
+                              {e.termination_date && <div><span className="text-xs font-medium text-muted-foreground">Termination Date:</span><p className="text-sm mt-0.5">{format(new Date(e.termination_date), 'MMM d, yyyy')}</p></div>}
+                            </div>
+                            <HRFileAttachments recordType="hr_benefit_enrollment" recordId={e.id} label="Enrollment Documents" />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 );
               })}
             </TableBody></Table></Card>

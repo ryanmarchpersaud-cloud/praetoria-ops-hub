@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useChecklistTemplates, useChecklistAssignments, useUpsertTemplate, useAssignChecklist, useUpdateChecklistProgress } from '@/hooks/useHRModules';
+import { HRFileAttachments } from '@/components/hr/HRFileAttachments';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -169,6 +170,9 @@ export default function HRChecklistsPage() {
                         <span className={completed.includes(item) ? 'line-through text-muted-foreground' : 'text-foreground'}>{item}</span>
                       </label>
                     ))}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <HRFileAttachments recordType="hr_checklist_assignment" recordId={a.id} label="Supporting Documents" compact />
                   </div>
                 </CardContent>
               </Card>

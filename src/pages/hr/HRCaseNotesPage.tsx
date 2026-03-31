@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCaseNotes, useCreateCaseNote } from '@/hooks/useHRModules';
+import { HRFileAttachments } from '@/components/hr/HRFileAttachments';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -139,6 +140,9 @@ export default function HRCaseNotesPage() {
                     </div>
                     <p className="text-sm font-medium text-foreground mt-1">{n.subject}</p>
                     {n.body && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap line-clamp-3">{n.body}</p>}
+                    <div className="mt-2 pt-2 border-t border-border">
+                      <HRFileAttachments recordType="hr_case_note" recordId={n.id} label="Attachments" compact />
+                    </div>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0">{format(new Date(n.created_at), 'MMM d, yyyy')}</span>
                 </div>

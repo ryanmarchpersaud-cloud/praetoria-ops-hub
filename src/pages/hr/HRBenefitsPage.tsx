@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useInsuranceProviders, useUpsertProvider } from '@/hooks/useHRModules';
+import { HRFileAttachments } from '@/components/hr/HRFileAttachments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -176,6 +177,9 @@ export default function HRBenefitsPage() {
                     )}
                   </div>
                   {p.notes && <p className="text-xs text-muted-foreground pt-1 border-t border-border">{p.notes}</p>}
+                  <div className="pt-2 border-t border-border">
+                    <HRFileAttachments recordType="hr_insurance_provider" recordId={p.id} label="Policy Documents" compact />
+                  </div>
                 </CardContent>
               </Card>
             );
