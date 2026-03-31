@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useComplianceSummary } from '@/hooks/useTraining';
 import { useAllTimeOffRequests, useAllEmergencyContacts, useAllIncidentReports, useAllCertifications } from '@/hooks/useHRData';
+import { useWCBClaims, useSGIDriverRecords, useBenefitEnrollments } from '@/hooks/useHRModules';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
