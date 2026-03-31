@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { ShareIncidentDialog } from '@/components/ShareIncidentDialog';
+import { ShareHistoryDetailDialog } from '@/components/ShareHistoryDetailDialog';
 
 const statusColors: Record<string, string> = {
   open: 'bg-amber-500/10 text-amber-700 border-amber-200',
