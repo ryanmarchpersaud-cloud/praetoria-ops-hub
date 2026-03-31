@@ -112,10 +112,6 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
   useEffect(() => {
     if (!mapRef.current || geocoded.length === 0) return;
 
-    // Delay initialization to ensure the DOM element is fully laid out
-    const timerId = setTimeout(() => {
-      if (!mapRef.current) return;
-
     // Clean up old map
     if (mapInstance.current) {
       mapInstance.current.remove();
@@ -132,19 +128,18 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
       maxZoom: 18,
     }).addTo(map);
 
-    const markers: L.LatLng[] = [];
+    const latlngs: L.LatLng[] = [];
 
     geocoded.forEach((stop, i) => {
       const latlng = L.latLng(stop.lat, stop.lng);
-      markers.push(latlng);
+      latlngs.push(latlng);
       L.marker(latlng, { icon: createNumberedIcon(i, stop.status) })
         .bindPopup(`<b>${i + 1}. ${stop.label}</b><br/>${stop.address}`)
         .addTo(map);
     });
 
-    // Draw route line
-    if (markers.length > 1) {
-      L.polyline(markers, {
+    if (latlngs.length > 1) {
+      L.polyline(latlngs, {
         color: 'hsl(215,65%,48%)',
         weight: 3,
         opacity: 0.5,
@@ -152,24 +147,24 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
       }).addTo(map);
     }
 
-    // Fit bounds
-    if (markers.length === 1) {
-      map.setView(markers[0], 14);
+    if (latlngs.length === 1) {
+      map.setView(latlngs[0], 14);
     } else {
-      map.fitBounds(L.latLngBounds(markers), { padding: [30, 30] });
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
     }
 
-    // Force Leaflet to recalculate container size after paint
-    setTimeout(() => {
+    // Force recalculate after layout settles
+    const tid = setTimeout(() => {
       map.invalidateSize();
-      if (markers.length === 1) {
-        map.setView(markers[0], 14);
-      } else {
-        map.fitBounds(L.latLngBounds(markers), { padding: [30, 30] });
+      if (latlngs.length === 1) {
+        map.setView(latlngs[0], 14);
+      } else if (latlngs.length > 1) {
+        map.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
       }
-    }, 200);
+    }, 300);
 
     return () => {
+      clearTimeout(tid);
       map.remove();
       mapInstance.current = null;
     };
