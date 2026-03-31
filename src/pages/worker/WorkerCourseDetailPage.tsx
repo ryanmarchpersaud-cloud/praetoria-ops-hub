@@ -11,9 +11,10 @@ import { ArrowLeft, BookOpen, Video, FileText, CheckCircle2, XCircle, Clock, Pla
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
-export default function WorkerCourseDetailPage() {
+export default function WorkerCourseDetailPage({ backTo }: { backTo?: string }) {
   const { id: assignmentId } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const backLink = backTo || '/worker/courses';
   const { toast } = useToast();
   const { data: assignments = [] } = useMyAssignments();
   const submitQuiz = useSubmitQuiz();
