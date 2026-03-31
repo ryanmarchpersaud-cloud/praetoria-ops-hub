@@ -183,8 +183,8 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
       </div>
 
       {/* Map */}
-      <Card className="overflow-hidden mb-2">
-        <div className="relative">
+      <Card className="mb-2">
+        <div className="relative" style={{ isolation: 'isolate' }}>
           {loading && (
             <div className="absolute inset-0 z-10 bg-muted/80 flex items-center justify-center">
               <div className="flex flex-col items-center gap-2">
@@ -195,8 +195,8 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
           )}
           <div
             ref={mapRef}
-            className="h-[200px] w-full rounded-t-lg"
-            style={{ zIndex: 0 }}
+            className="w-full rounded-t-lg"
+            style={{ height: '200px', zIndex: 0, position: 'relative' }}
           />
         </div>
       </Card>
