@@ -214,6 +214,7 @@ export default function TrainingCatalogPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Person</TableHead>
                       <TableHead>Course</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
@@ -224,7 +225,8 @@ export default function TrainingCatalogPage() {
                   <TableBody>
                     {allAssignments.slice(0, 100).map((a: any) => (
                       <TableRow key={a.id}>
-                        <TableCell className="text-sm font-medium">{(a as any).training_courses?.title || '—'}</TableCell>
+                        <TableCell className="text-sm font-medium">{getPersonName(a.user_id)}</TableCell>
+                        <TableCell className="text-sm">{(a as any).training_courses?.title || '—'}</TableCell>
                         <TableCell><ContentBadge type={(a as any).training_courses?.content_type || 'document'} /></TableCell>
                         <TableCell>
                           <Badge variant={a.status === 'passed' ? 'default' : a.status === 'failed' ? 'destructive' : 'secondary'} className="text-[10px] capitalize">
