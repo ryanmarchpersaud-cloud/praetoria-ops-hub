@@ -108,7 +108,7 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
     return () => { cancelled = true; };
   }, [stops]);
 
-  // Render map
+  // Render map after geocoding completes
   useEffect(() => {
     if (!mapRef.current || geocoded.length === 0) return;
 
@@ -128,19 +128,18 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
       maxZoom: 18,
     }).addTo(map);
 
-    const markers: L.LatLng[] = [];
+    const latlngs: L.LatLng[] = [];
 
     geocoded.forEach((stop, i) => {
       const latlng = L.latLng(stop.lat, stop.lng);
-      markers.push(latlng);
+      latlngs.push(latlng);
       L.marker(latlng, { icon: createNumberedIcon(i, stop.status) })
         .bindPopup(`<b>${i + 1}. ${stop.label}</b><br/>${stop.address}`)
         .addTo(map);
     });
 
-    // Draw route line
-    if (markers.length > 1) {
-      L.polyline(markers, {
+    if (latlngs.length > 1) {
+      L.polyline(latlngs, {
         color: 'hsl(215,65%,48%)',
         weight: 3,
         opacity: 0.5,
@@ -148,14 +147,24 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
       }).addTo(map);
     }
 
-    // Fit bounds
-    if (markers.length === 1) {
-      map.setView(markers[0], 14);
+    if (latlngs.length === 1) {
+      map.setView(latlngs[0], 14);
     } else {
-      map.fitBounds(L.latLngBounds(markers), { padding: [30, 30] });
+      map.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
     }
 
+    // Force recalculate after layout settles
+    const tid = setTimeout(() => {
+      map.invalidateSize();
+      if (latlngs.length === 1) {
+        map.setView(latlngs[0], 14);
+      } else if (latlngs.length > 1) {
+        map.fitBounds(L.latLngBounds(latlngs), { padding: [30, 30] });
+      }
+    }, 300);
+
     return () => {
+      clearTimeout(tid);
       map.remove();
       mapInstance.current = null;
     };
@@ -173,8 +182,8 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
       </div>
 
       {/* Map */}
-      <Card className="overflow-hidden mb-2">
-        <div className="relative">
+      <Card className="mb-2">
+        <div className="relative" style={{ isolation: 'isolate' }}>
           {loading && (
             <div className="absolute inset-0 z-10 bg-muted/80 flex items-center justify-center">
               <div className="flex flex-col items-center gap-2">
@@ -185,8 +194,8 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
           )}
           <div
             ref={mapRef}
-            className="h-[200px] w-full rounded-t-lg"
-            style={{ zIndex: 0 }}
+            className="w-full rounded-t-lg"
+            style={{ height: '200px', zIndex: 0, position: 'relative' }}
           />
         </div>
       </Card>
