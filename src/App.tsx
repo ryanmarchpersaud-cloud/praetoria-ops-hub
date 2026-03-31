@@ -330,6 +330,7 @@ function AppRoutes() {
       <Route path="/hr/checklists" element={<AdminRoute><ModuleGuard module="hr"><HRChecklistsPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/case-notes" element={<AdminRoute><ModuleGuard module="hr"><HRCaseNotesPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/compensation" element={<AdminRoute><ModuleGuard module="hr"><HRCompensationPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/sk-compliance" element={<AdminRoute><ModuleGuard module="hr"><HRComplianceWorkflowsPage /></ModuleGuard></AdminRoute>} />
 
       {/* Incidents — ops access */}
       <Route path="/incidents" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentsPage /></ModuleGuard></AdminRoute>} />
