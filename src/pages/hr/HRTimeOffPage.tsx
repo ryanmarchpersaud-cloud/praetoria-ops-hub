@@ -1,12 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAllTimeOffRequests } from '@/hooks/useHRData';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CalendarDays, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 const statusBadge: Record<string, { variant: any; label: string }> = {
   pending: { variant: 'secondary', label: 'Pending' },
@@ -14,9 +19,33 @@ const statusBadge: Record<string, { variant: any; label: string }> = {
   denied: { variant: 'destructive', label: 'Denied' },
 };
 
+function useUpdateTimeOffStatus() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ id, status, adminNotes }: { id: string; status: 'approved' | 'denied'; adminNotes?: string }) => {
+      const { error } = await supabase
+        .from('employee_time_off_requests')
+        .update({
+          status,
+          approved_by: user?.id || null,
+          reviewed_at: new Date().toISOString(),
+          admin_notes: adminNotes || null,
+        })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['all_time_off_requests'] });
+    },
+  });
+}
+
 export default function HRTimeOffPage() {
   const { data: employees = [] } = useEmployees();
   const { data: requests = [] } = useAllTimeOffRequests();
+  const { toast } = useToast();
+  const updateStatus = useUpdateTimeOffStatus();
 
   const pending = requests.filter(r => r.status === 'pending');
   const approved = requests.filter(r => r.status === 'approved');
@@ -24,7 +53,14 @@ export default function HRTimeOffPage() {
 
   const getEmpName = (userId: string) => employees.find(e => e.user_id === userId)?.full_name || 'Unknown';
 
-  const RequestTable = ({ items }: { items: typeof requests }) => (
+  const handleAction = (id: string, status: 'approved' | 'denied') => {
+    updateStatus.mutate({ id, status }, {
+      onSuccess: () => toast({ title: `Request ${status}` }),
+      onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    });
+  };
+
+  const RequestTable = ({ items, showActions }: { items: typeof requests; showActions?: boolean }) => (
     <Card>
       <CardContent className="p-0">
         {items.length === 0 ? (
@@ -39,6 +75,7 @@ export default function HRTimeOffPage() {
                 <TableHead>Days</TableHead>
                 <TableHead>Reason</TableHead>
                 <TableHead>Status</TableHead>
+                {showActions && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -52,14 +89,38 @@ export default function HRTimeOffPage() {
                       </Link>
                     </TableCell>
                     <TableCell className="text-sm capitalize">{r.request_type?.replace('_', ' ')}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-muted-foreground tabular-nums">
                       {format(new Date(r.start_date), 'MMM d')} – {format(new Date(r.end_date), 'MMM d, yyyy')}
                     </TableCell>
-                    <TableCell className="text-sm font-medium">{r.days_requested}d</TableCell>
+                    <TableCell className="text-sm font-medium tabular-nums">{r.days_requested}d</TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.reason || '—'}</TableCell>
                     <TableCell>
                       <Badge variant={badge.variant} className="text-[10px]">{badge.label}</Badge>
                     </TableCell>
+                    {showActions && (
+                      <TableCell className="text-right">
+                        <div className="flex gap-1.5 justify-end">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 text-xs gap-1"
+                            disabled={updateStatus.isPending}
+                            onClick={() => handleAction(r.id, 'approved')}
+                          >
+                            <CheckCircle2 className="h-3 w-3" /> Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-7 text-xs gap-1"
+                            disabled={updateStatus.isPending}
+                            onClick={() => handleAction(r.id, 'denied')}
+                          >
+                            <XCircle className="h-3 w-3" /> Deny
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })}
@@ -83,7 +144,7 @@ export default function HRTimeOffPage() {
             <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
-            <div><p className="text-2xl font-bold text-foreground">{pending.length}</p><p className="text-xs text-muted-foreground">Pending</p></div>
+            <div><p className="text-2xl font-bold text-foreground tabular-nums">{pending.length}</p><p className="text-xs text-muted-foreground">Pending</p></div>
           </CardContent>
         </Card>
         <Card>
@@ -91,7 +152,7 @@ export default function HRTimeOffPage() {
             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             </div>
-            <div><p className="text-2xl font-bold text-foreground">{approved.length}</p><p className="text-xs text-muted-foreground">Approved</p></div>
+            <div><p className="text-2xl font-bold text-foreground tabular-nums">{approved.length}</p><p className="text-xs text-muted-foreground">Approved</p></div>
           </CardContent>
         </Card>
         <Card>
@@ -99,7 +160,7 @@ export default function HRTimeOffPage() {
             <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
               <XCircle className="h-5 w-5 text-destructive" />
             </div>
-            <div><p className="text-2xl font-bold text-foreground">{denied.length}</p><p className="text-xs text-muted-foreground">Denied</p></div>
+            <div><p className="text-2xl font-bold text-foreground tabular-nums">{denied.length}</p><p className="text-xs text-muted-foreground">Denied</p></div>
           </CardContent>
         </Card>
       </div>
@@ -111,7 +172,7 @@ export default function HRTimeOffPage() {
           <TabsTrigger value="denied">Denied ({denied.length})</TabsTrigger>
           <TabsTrigger value="all">All ({requests.length})</TabsTrigger>
         </TabsList>
-        <TabsContent value="pending" className="mt-4"><RequestTable items={pending} /></TabsContent>
+        <TabsContent value="pending" className="mt-4"><RequestTable items={pending} showActions /></TabsContent>
         <TabsContent value="approved" className="mt-4"><RequestTable items={approved} /></TabsContent>
         <TabsContent value="denied" className="mt-4"><RequestTable items={denied} /></TabsContent>
         <TabsContent value="all" className="mt-4"><RequestTable items={requests} /></TabsContent>

@@ -104,11 +104,11 @@ export default function HRDashboardPage() {
       </div>
 
       {/* Key metrics - Row 1: People */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatCard icon={Users} label="Active" value={active.length} color="bg-primary/10 text-primary" to="/employees" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard icon={Users} label="Active Employees" value={active.length} color="bg-primary/10 text-primary" to="/employees" />
         <StatCard icon={UserCheck} label="On Leave" value={onLeave.length} color="bg-amber-500/10 text-amber-600" />
-        <StatCard icon={UserPlus} label="New (30d)" value={onboarding.length} color="bg-blue-500/10 text-blue-600" />
-        <StatCard icon={CalendarDays} label="Pending Time Off" value={pendingTimeOff.length} color="bg-purple-500/10 text-purple-600" to="/hr/time-off" alert={pendingTimeOff.length > 0} />
+        <StatCard icon={UserPlus} label="New Hires (30d)" value={onboarding.length} color="bg-blue-500/10 text-blue-600" />
+        <StatCard icon={CalendarDays} label="Pending Leave" value={pendingTimeOff.length} color="bg-purple-500/10 text-purple-600" to="/hr/time-off" alert={pendingTimeOff.length > 0} />
         <StatCard icon={ShieldAlert} label="Open Incidents" value={openIncidents.length} color="bg-destructive/10 text-destructive" to="/incidents" alert={openIncidents.length > 0} />
         <StatCard icon={Heart} label="No Emerg. Contact" value={missingEmergencyContacts.length} color="bg-destructive/10 text-destructive" to="/hr/contacts" alert={missingEmergencyContacts.length > 0} />
       </div>
