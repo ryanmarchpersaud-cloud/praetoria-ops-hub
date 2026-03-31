@@ -177,6 +177,9 @@ export default function HRBenefitsPage() {
                     )}
                   </div>
                   {p.notes && <p className="text-xs text-muted-foreground pt-1 border-t border-border">{p.notes}</p>}
+                  <div className="pt-2 border-t border-border">
+                    <HRFileAttachments recordType="hr_insurance_provider" recordId={p.id} label="Policy Documents" compact />
+                  </div>
                 </CardContent>
               </Card>
             );
