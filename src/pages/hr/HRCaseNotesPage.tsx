@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCaseNotes, useCreateCaseNote } from '@/hooks/useHRModules';
+import { HRFileAttachments } from '@/components/hr/HRFileAttachments';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
