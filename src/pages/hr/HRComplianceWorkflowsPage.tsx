@@ -286,12 +286,20 @@ export default function HRComplianceWorkflowsPage() {
         {/* Benefit Enrollments Tab */}
         <TabsContent value="enrollments" className="mt-4 space-y-4">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">Track employee enrollments across benefit providers</p>
+            <p className="text-sm text-muted-foreground">Track employee enrollments, life-event changes, and terminations</p>
             <Dialog open={enrollOpen} onOpenChange={setEnrollOpen}>
-              <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New Enrollment</Button></DialogTrigger>
+              <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" /> New Enrollment / Change</Button></DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>Benefit Enrollment</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>Benefit Enrollment / Change</DialogTitle></DialogHeader>
                 <div className="space-y-3">
+                  <div><Label>Change Type</Label>
+                    <Select value={enrForm.change_type} onValueChange={v => setEnrForm({...enrForm, change_type: v})}><SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new_enrollment">New Enrollment</SelectItem>
+                        <SelectItem value="life_event">Life Event Change</SelectItem>
+                        <SelectItem value="plan_change">Plan Change</SelectItem>
+                        <SelectItem value="termination">Termination / Removal</SelectItem>
+                      </SelectContent></Select></div>
                   <div><Label>Employee</Label>
                     <Select value={enrForm.employee_user_id} onValueChange={v => setEnrForm({...enrForm, employee_user_id: v})}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                       <SelectContent>{activeEmps.map(e => <SelectItem key={e.user_id} value={e.user_id}>{e.full_name}</SelectItem>)}</SelectContent></Select></div>
@@ -304,6 +312,12 @@ export default function HRComplianceWorkflowsPage() {
                         <SelectContent><SelectItem value="pending">Pending</SelectItem><SelectItem value="enrolled">Enrolled</SelectItem><SelectItem value="waived">Waived</SelectItem><SelectItem value="terminated">Terminated</SelectItem></SelectContent></Select></div>
                     <div><Label>Effective Date</Label><Input type="date" value={enrForm.effective_date} onChange={e => setEnrForm({...enrForm, effective_date: e.target.value})} /></div>
                   </div>
+                  {enrForm.change_type === 'termination' && (
+                    <div><Label>Termination Date</Label><Input type="date" value={enrForm.termination_date} onChange={e => setEnrForm({...enrForm, termination_date: e.target.value})} /></div>
+                  )}
+                  {(enrForm.change_type === 'life_event' || enrForm.change_type === 'plan_change') && (
+                    <div><Label>Reason for Change</Label><Input value={enrForm.change_reason} onChange={e => setEnrForm({...enrForm, change_reason: e.target.value})} placeholder="e.g. Marriage, new dependent, address change" /></div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <div><Label>Plan Type</Label><Input value={enrForm.plan_type} onChange={e => setEnrForm({...enrForm, plan_type: e.target.value})} placeholder="e.g. Family, Single" /></div>
                     <div><Label>Dependents</Label><Input type="number" value={enrForm.dependent_count} onChange={e => setEnrForm({...enrForm, dependent_count: Number(e.target.value)})} /></div>
@@ -318,18 +332,23 @@ export default function HRComplianceWorkflowsPage() {
             <Card className="border-dashed"><CardContent className="p-8 text-center text-muted-foreground"><Heart className="h-10 w-10 mx-auto mb-3 opacity-40" /><p>No benefit enrollments recorded</p></CardContent></Card>
           ) : (
             <Card><Table><TableHeader><TableRow>
-              <TableHead>Employee</TableHead><TableHead>Provider</TableHead><TableHead>Plan</TableHead><TableHead>Status</TableHead><TableHead>Effective</TableHead><TableHead>Dependents</TableHead>
+              <TableHead>Employee</TableHead><TableHead>Provider</TableHead><TableHead>Change</TableHead><TableHead>Plan</TableHead><TableHead>Status</TableHead><TableHead>Effective</TableHead><TableHead>Dependents</TableHead>
             </TableRow></TableHeader><TableBody>
-              {enrollments.map((e: any) => (
-                <TableRow key={e.id}>
-                  <TableCell><Link to={`/employees/${e.employee_user_id}`} className="hover:underline font-medium">{getEmpName(e.employee_user_id)}</Link></TableCell>
-                  <TableCell className="text-sm">{(e.hr_insurance_providers as any)?.provider_name ?? '—'}</TableCell>
-                  <TableCell className="text-sm">{e.plan_type || '—'}</TableCell>
-                  <TableCell><Badge variant="outline" className={`capitalize text-xs ${e.enrollment_status === 'enrolled' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' : e.enrollment_status === 'pending' ? 'bg-amber-500/10 text-amber-700 border-amber-200' : ''}`}>{e.enrollment_status}</Badge></TableCell>
-                  <TableCell className="text-sm">{e.effective_date ? format(new Date(e.effective_date), 'MMM d, yyyy') : '—'}</TableCell>
-                  <TableCell className="text-sm text-center">{e.dependent_count ?? 0}</TableCell>
-                </TableRow>
-              ))}
+              {enrollments.map((e: any) => {
+                const changeLabels: Record<string, string> = { new_enrollment: 'New', life_event: 'Life Event', plan_change: 'Plan Change', termination: 'Termination' };
+                const changeColors: Record<string, string> = { new_enrollment: 'bg-emerald-500/10 text-emerald-600 border-emerald-200', life_event: 'bg-blue-500/10 text-blue-600 border-blue-200', plan_change: 'bg-purple-500/10 text-purple-600 border-purple-200', termination: 'bg-destructive/10 text-destructive border-destructive/20' };
+                return (
+                  <TableRow key={e.id}>
+                    <TableCell><Link to={`/employees/${e.employee_user_id}`} className="hover:underline font-medium">{getEmpName(e.employee_user_id)}</Link></TableCell>
+                    <TableCell className="text-sm">{(e.hr_insurance_providers as any)?.provider_name ?? '—'}</TableCell>
+                    <TableCell><Badge variant="outline" className={`text-xs ${changeColors[e.change_type] || ''}`}>{changeLabels[e.change_type] || e.change_type}</Badge></TableCell>
+                    <TableCell className="text-sm">{e.plan_type || '—'}</TableCell>
+                    <TableCell><Badge variant="outline" className={`capitalize text-xs ${e.enrollment_status === 'enrolled' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' : e.enrollment_status === 'pending' ? 'bg-amber-500/10 text-amber-700 border-amber-200' : e.enrollment_status === 'terminated' ? 'bg-destructive/10 text-destructive' : ''}`}>{e.enrollment_status}</Badge></TableCell>
+                    <TableCell className="text-sm">{e.effective_date ? format(new Date(e.effective_date), 'MMM d, yyyy') : '—'}</TableCell>
+                    <TableCell className="text-sm text-center">{e.dependent_count ?? 0}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody></Table></Card>
           )}
         </TabsContent>
