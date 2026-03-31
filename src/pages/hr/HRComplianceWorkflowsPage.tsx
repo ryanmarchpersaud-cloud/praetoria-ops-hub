@@ -48,6 +48,9 @@ export default function HRComplianceWorkflowsPage() {
   const [wcbOpen, setWcbOpen] = useState(false);
   const [sgiOpen, setSgiOpen] = useState(false);
   const [enrollOpen, setEnrollOpen] = useState(false);
+  const [selectedWCB, setSelectedWCB] = useState<string | null>(null);
+  const [selectedSGI, setSelectedSGI] = useState<string | null>(null);
+  const [selectedEnroll, setSelectedEnroll] = useState<string | null>(null);
 
   const activeEmps = employees.filter(e => e.employment_status === 'active');
   const getEmpName = (uid: string) => employees.find(e => e.user_id === uid)?.full_name ?? 'Unknown';
