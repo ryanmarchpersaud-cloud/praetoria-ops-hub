@@ -235,11 +235,12 @@ export default function HRComplianceWorkflowsPage() {
             <Card className="border-dashed"><CardContent className="p-8 text-center text-muted-foreground"><Car className="h-10 w-10 mx-auto mb-3 opacity-40" /><p>No driver records yet</p></CardContent></Card>
           ) : (
             <Card><Table><TableHeader><TableRow>
-              <TableHead>Employee</TableHead><TableHead>Licence #</TableHead><TableHead>Class</TableHead><TableHead>Expiry</TableHead><TableHead>Abstract</TableHead><TableHead>Auth</TableHead><TableHead>Vehicle</TableHead>
+              <TableHead>Employee</TableHead><TableHead>Licence #</TableHead><TableHead>Class</TableHead><TableHead>Expiry</TableHead><TableHead>Abstract</TableHead><TableHead>Auth</TableHead><TableHead>Vehicle</TableHead><TableHead className="text-right">Actions</TableHead>
             </TableRow></TableHeader><TableBody>
               {sgiRecords.map((r: any) => {
                 const expired = r.licence_expiry && isPast(new Date(r.licence_expiry));
                 const expiring = r.licence_expiry && !expired && differenceInDays(new Date(r.licence_expiry), new Date()) <= 30;
+                const needsAbstractRenewal = r.abstract_status === 'not_obtained' || r.abstract_status === 'expired' || (r.abstract_last_obtained && differenceInDays(new Date(), new Date(r.abstract_last_obtained)) > 365);
                 return (
                   <TableRow key={r.id} className={expired ? 'bg-destructive/5' : expiring ? 'bg-amber-500/5' : ''}>
                     <TableCell><Link to={`/employees/${r.employee_user_id}`} className="hover:underline font-medium">{getEmpName(r.employee_user_id)}</Link></TableCell>
@@ -249,6 +250,32 @@ export default function HRComplianceWorkflowsPage() {
                     <TableCell><Badge variant="outline" className={`capitalize text-xs ${abstractStatusColors[r.abstract_status] || ''}`}>{r.abstract_status?.replace('_', ' ')}</Badge></TableCell>
                     <TableCell>{r.authorization_signed ? <ShieldCheck className="h-4 w-4 text-emerald-600" /> : <span className="text-xs text-muted-foreground">No</span>}</TableCell>
                     <TableCell className="text-sm max-w-[150px] truncate">{r.fleet_vehicle_assigned || '—'}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {(expired || expiring) && (
+                          <Button variant="outline" size="sm" className="text-xs h-7 border-amber-300 text-amber-700 hover:bg-amber-50"
+                            onClick={async () => {
+                              try {
+                                await upsertSGI.mutateAsync({ ...r, renewal_reminder_sent: true, last_reminder_date: new Date().toISOString().split('T')[0] });
+                                toast.success(`Renewal reminder flagged for ${getEmpName(r.employee_user_id)}`);
+                              } catch { toast.error('Failed'); }
+                            }}>
+                            {r.renewal_reminder_sent ? '✓ Reminded' : 'Flag Renewal'}
+                          </Button>
+                        )}
+                        {needsAbstractRenewal && (
+                          <Button variant="outline" size="sm" className="text-xs h-7"
+                            onClick={async () => {
+                              try {
+                                await upsertSGI.mutateAsync({ ...r, abstract_status: 'not_obtained' });
+                                toast.success('Abstract marked for renewal');
+                              } catch { toast.error('Failed'); }
+                            }}>
+                            Renew Abstract
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 );
               })}
