@@ -26,6 +26,7 @@ export default function HRCompensationPage() {
 
   const [compOpen, setCompOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [selectedComp, setSelectedComp] = useState<string | null>(null);
   const [compForm, setCompForm] = useState({ employee_user_id: '', record_type: 'pay_rate', effective_date: new Date().toISOString().split('T')[0], pay_rate: '', pay_type: 'hourly', notes: '' });
   const [revForm, setRevForm] = useState({ employee_user_id: '', review_type: 'annual', scheduled_date: '', notes: '' });
 
