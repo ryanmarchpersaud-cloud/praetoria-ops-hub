@@ -54,7 +54,7 @@ export type SidebarItemKey =
   | 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
   | 'jobs' | 'visits' | 'invoices' | 'schedule' | 'requests'
   | 'activity' | 'employees' | 'subcontractors' | 'messaging'
-  | 'finance' | 'settings' | 'incidents';
+  | 'finance' | 'settings' | 'incidents' | 'hr';
 
 export function useModuleAccess(): ModuleAccess {
   const { permissions, isLoading: permLoading } = usePermissions();
@@ -145,7 +145,8 @@ export function useSidebarAccess(): Record<SidebarItemKey, boolean> {
     subcontractors: m.opsFullAccess || m.hrFullAccess,
     messaging: !m.messagingDisabled,
     finance: m.financeFullAccess || m.financeViewLimited,
-    incidents: m.opsFullAccess || m.isOwnerOrAdmin,
+    incidents: m.opsFullAccess || m.isOwnerOrAdmin || m.hrFullAccess,
+    hr: m.hrFullAccess,
     settings: m.settingsAny,
   }), [m]);
 }

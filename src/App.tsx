@@ -134,6 +134,14 @@ import MessagingPage from "./pages/MessagingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 import SystemAnnouncementsPage from "./pages/SystemAnnouncementsPage";
 
+// HR / Training pages
+import HRDashboardPage from "./pages/HRDashboardPage";
+import TrainingCatalogPage from "./pages/TrainingCatalogPage";
+import TrainingCourseDetailPage from "./pages/TrainingCourseDetailPage";
+import WorkerCoursesPage from "./pages/worker/WorkerCoursesPage";
+import WorkerCourseDetailPage from "./pages/worker/WorkerCourseDetailPage";
+import SubcontractorTrainingPage from "./pages/subcontractor/SubcontractorTrainingPage";
+
 // Finance pages
 const FinanceDashboard = lazy(() => import("./pages/finance/FinanceDashboard"));
 const FinanceExpenses = lazy(() => import("./pages/finance/FinanceExpenses"));
@@ -299,6 +307,11 @@ function AppRoutes() {
       <Route path="/subcontractors" element={<AdminRoute><ModuleGuard module="ops"><Subcontractors /></ModuleGuard></AdminRoute>} />
       <Route path="/subcontractors/:id" element={<AdminRoute><ModuleGuard module="ops"><SubcontractorDetail /></ModuleGuard></AdminRoute>} />
 
+      {/* HR Workspace */}
+      <Route path="/hr" element={<AdminRoute><ModuleGuard module="hr"><HRDashboardPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/training" element={<AdminRoute><ModuleGuard module="hr"><TrainingCatalogPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/hr/training/:id" element={<AdminRoute><ModuleGuard module="hr"><TrainingCourseDetailPage /></ModuleGuard></AdminRoute>} />
+
       {/* Incidents — ops access */}
       <Route path="/incidents" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentsPage /></ModuleGuard></AdminRoute>} />
       <Route path="/incidents/:id" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentDetailPage /></ModuleGuard></AdminRoute>} />
@@ -389,6 +402,8 @@ function AppRoutes() {
       <Route path="/worker/tax-documents" element={<WorkerRoute><WorkerLayout><WorkerTaxDocsPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/training-safety" element={<WorkerRoute><WorkerLayout><WorkerTrainingSafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/ppe" element={<WorkerRoute><WorkerLayout><WorkerPPEPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/courses" element={<WorkerRoute><WorkerLayout><WorkerCoursesPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/courses/:id" element={<WorkerRoute><WorkerLayout><WorkerCourseDetailPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/expenses" element={<WorkerRoute><WorkerLayout><WorkerExpensesPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/emergency-safety" element={<WorkerRoute><WorkerLayout><WorkerEmergencySafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
@@ -416,6 +431,8 @@ function AppRoutes() {
       <Route path="/subcontractor/tax-documents" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorTaxDocsPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/emergency-safety" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorEmergencySafetyPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/messages" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorMessagesPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/training" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorTrainingPage /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/training/:id" element={<SubcontractorRoute><SubcontractorLayout><WorkerCourseDetailPage /></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

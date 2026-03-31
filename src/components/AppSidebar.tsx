@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
-  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert,
+  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen,
 } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
@@ -18,7 +18,7 @@ import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages' | 'incidents';
 type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
   | 'jobs' | 'visits' | 'invoices' | 'schedule' | 'requests'
-  | 'activity' | 'employees' | 'subcontractors' | 'messaging' | 'finance' | 'incidents';
+  | 'activity' | 'employees' | 'subcontractors' | 'messaging' | 'finance' | 'incidents' | 'hr';
 
 const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; accessKey: SidebarKey }[] = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard, accessKey: 'dashboard' },
@@ -33,6 +33,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests' },
   { title: 'Activity', url: '/activity', icon: Activity, accessKey: 'activity' },
   { title: 'Incidents', url: '/incidents', icon: ShieldAlert, countKey: 'incidents' as CountKey, accessKey: 'incidents' as SidebarKey },
+  { title: 'HR Workspace', url: '/hr', icon: BookOpen, accessKey: 'hr' as SidebarKey },
   { title: 'Employees', url: '/employees', icon: HardHat, accessKey: 'employees' },
   { title: 'Subcontractors', url: '/subcontractors', icon: Users, accessKey: 'subcontractors' },
   { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages', accessKey: 'messaging' },
