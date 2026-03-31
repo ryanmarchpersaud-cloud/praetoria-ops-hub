@@ -1976,6 +1976,8 @@ export type Database = {
       }
       hr_benefit_enrollments: {
         Row: {
+          change_reason: string | null
+          change_type: string
           created_at: string
           created_by: string | null
           dependent_count: number | null
@@ -1990,6 +1992,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          change_reason?: string | null
+          change_type?: string
           created_at?: string
           created_by?: string | null
           dependent_count?: number | null
@@ -2004,6 +2008,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          change_reason?: string | null
+          change_type?: string
           created_at?: string
           created_by?: string | null
           dependent_count?: number | null
@@ -2275,9 +2281,11 @@ export type Database = {
           employee_user_id: string
           fleet_vehicle_assigned: string | null
           id: string
+          last_reminder_date: string | null
           licence_class: string | null
           licence_expiry: string | null
           notes: string | null
+          renewal_reminder_sent: boolean
           updated_at: string
           violations_on_record: string | null
         }
@@ -2292,9 +2300,11 @@ export type Database = {
           employee_user_id: string
           fleet_vehicle_assigned?: string | null
           id?: string
+          last_reminder_date?: string | null
           licence_class?: string | null
           licence_expiry?: string | null
           notes?: string | null
+          renewal_reminder_sent?: boolean
           updated_at?: string
           violations_on_record?: string | null
         }
@@ -2309,9 +2319,11 @@ export type Database = {
           employee_user_id?: string
           fleet_vehicle_assigned?: string | null
           id?: string
+          last_reminder_date?: string | null
           licence_class?: string | null
           licence_expiry?: string | null
           notes?: string | null
+          renewal_reminder_sent?: boolean
           updated_at?: string
           violations_on_record?: string | null
         }

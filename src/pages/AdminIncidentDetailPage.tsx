@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, MapPin, Clock, Users, Eye, Stethoscope, User, Send, Share2, Image, Search } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, Eye, Stethoscope, User, Send, Share2, Image, Search, HardHat } from 'lucide-react';
+import { useUpsertWCBClaim } from '@/hooks/useHRModules';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -58,6 +59,7 @@ const ROOT_CAUSE_CATEGORIES = [
 
 export default function AdminIncidentDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -69,6 +71,8 @@ export default function AdminIncidentDetailPage() {
   const [rootCauseDescription, setRootCauseDescription] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
   const [selectedShare, setSelectedShare] = useState<any>(null);
+  const [creatingWCB, setCreatingWCB] = useState(false);
+  const upsertWCB = useUpsertWCBClaim();
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['incident_report', id],
@@ -205,6 +209,40 @@ export default function AdminIncidentDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {r.incident_type?.toLowerCase().includes('injur') || r.incident_type?.toLowerCase().includes('slip') || r.incident_type?.toLowerCase().includes('fall') || r.severity === 'high' || r.severity === 'critical' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-orange-300 text-orange-700 hover:bg-orange-50"
+              disabled={creatingWCB}
+              onClick={async () => {
+                setCreatingWCB(true);
+                try {
+                  const injuryType = r.incident_type?.toLowerCase().includes('slip') || r.incident_type?.toLowerCase().includes('fall')
+                    ? 'slip_fall'
+                    : r.incident_type?.toLowerCase().includes('cut') ? 'cut'
+                    : r.incident_type?.toLowerCase().includes('burn') ? 'burn'
+                    : 'other';
+                  await upsertWCB.mutateAsync({
+                    employee_user_id: r.reporter_user_id,
+                    injury_date: format(new Date(r.date_time), 'yyyy-MM-dd'),
+                    injury_type: injuryType,
+                    body_part: '',
+                    claim_status: 'pending',
+                    restrictions: `Auto-created from incident ${r.report_number || ''}. Location: ${r.location || 'N/A'}. Description: ${(r.description || '').slice(0, 200)}`,
+                  });
+                  toast({ title: 'WCB claim draft created', description: 'Go to HR → SK Compliance to complete the claim details.' });
+                } catch {
+                  toast({ title: 'Failed to create WCB claim', variant: 'destructive' });
+                } finally {
+                  setCreatingWCB(false);
+                }
+              }}
+            >
+              <HardHat className="h-4 w-4" />
+              {creatingWCB ? 'Creating...' : 'Create WCB Claim'}
+            </Button>
+          ) : null}
           <IncidentPrintButton report={r} />
           <Button variant="outline" size="sm" className="gap-2" onClick={() => setShareOpen(true)}>
             <Share2 className="h-4 w-4" />
