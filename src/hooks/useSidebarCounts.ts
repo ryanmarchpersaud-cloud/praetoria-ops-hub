@@ -9,6 +9,7 @@ export interface SidebarCounts {
   visits: number;
   invoices: number;
   requests: number;
+  incidents: number;
 }
 
 async function countRows(table: string, column: string, values: string[]): Promise<number> {
@@ -39,16 +40,17 @@ export function useSidebarCounts() {
   return useQuery({
     queryKey: ['sidebar_counts', userId],
     queryFn: async (): Promise<SidebarCounts> => {
-      const [leads, quotes, jobs, visits, invoices, requests] = await Promise.all([
+      const [leads, quotes, jobs, visits, invoices, requests, incidents] = await Promise.all([
         countRows('leads', 'status', ['New']),
         countRows('quotes', 'sent_status', ['Not sent']),
         countRows('jobs', 'status', ['Draft', 'Scheduled']),
         countRows('visits', 'visit_status', ['Scheduled', 'In Progress']),
         countRows('invoices', 'status', ['Sent', 'Overdue', 'Partially Paid']),
         countRows('service_requests', 'status', ['New', 'Pending']),
+        countRows('incident_reports', 'follow_up_status', ['open']),
       ]);
 
-      return { leads, quotes, jobs, visits, invoices, requests };
+      return { leads, quotes, jobs, visits, invoices, requests, incidents };
     },
     enabled: !!userId,
     refetchInterval: 30000,

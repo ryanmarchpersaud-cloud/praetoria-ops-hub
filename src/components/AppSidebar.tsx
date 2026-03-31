@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
-  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet,
+  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert,
 } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
@@ -15,10 +15,10 @@ import {
 } from '@/components/ui/sidebar';
 import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 
-type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages';
+type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages' | 'incidents';
 type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
   | 'jobs' | 'visits' | 'invoices' | 'schedule' | 'requests'
-  | 'activity' | 'employees' | 'subcontractors' | 'messaging' | 'finance';
+  | 'activity' | 'employees' | 'subcontractors' | 'messaging' | 'finance' | 'incidents';
 
 const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; accessKey: SidebarKey }[] = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard, accessKey: 'dashboard' },
@@ -32,6 +32,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
   { title: 'Schedule', url: '/schedule', icon: CalendarDays, accessKey: 'schedule' },
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests' },
   { title: 'Activity', url: '/activity', icon: Activity, accessKey: 'activity' },
+  { title: 'Incidents', url: '/incidents', icon: ShieldAlert, countKey: 'incidents' as CountKey, accessKey: 'incidents' as SidebarKey },
   { title: 'Employees', url: '/employees', icon: HardHat, accessKey: 'employees' },
   { title: 'Subcontractors', url: '/subcontractors', icon: Users, accessKey: 'subcontractors' },
   { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages', accessKey: 'messaging' },
