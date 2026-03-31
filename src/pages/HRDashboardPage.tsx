@@ -10,7 +10,7 @@ import {
   CalendarDays, HardHat, ChevronRight, FileText, UserCheck,
   Phone, ShieldAlert, UserX, UserPlus, Heart,
 } from 'lucide-react';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 
 function StatCard({ icon: Icon, label, value, color, to, alert }: {
   icon: any; label: string; value: number | string; color: string; to?: string; alert?: boolean;

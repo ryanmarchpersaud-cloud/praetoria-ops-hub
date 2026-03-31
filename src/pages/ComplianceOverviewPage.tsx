@@ -53,7 +53,7 @@ export default function ComplianceOverviewPage() {
   const { data: allAssignments = [] } = useAllAssignments();
   const { data: courses = [] } = useTrainingCourses();
   const { data: employees = [] } = useEmployees();
-  const { data: subcontractors = [] } = useSubcontractors();
+  const { data: subcontractors = [] } = useAllSubcontractors();
 
   const today = new Date().toISOString().split('T')[0];
 
