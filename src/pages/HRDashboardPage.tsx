@@ -10,7 +10,7 @@ import {
   Users, BookOpen, ShieldCheck, AlertTriangle, Clock, Award,
   CalendarDays, HardHat, ChevronRight, FileText, UserCheck,
   Phone, ShieldAlert, UserX, UserPlus, Heart, Shield, ClipboardList,
-  DollarSign, StickyNote,
+  DollarSign, StickyNote, Car, MapPin,
 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 
