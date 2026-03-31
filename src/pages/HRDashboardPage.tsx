@@ -218,6 +218,13 @@ export default function HRDashboardPage() {
                 <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
               </Link>
             )}
+            {benefitChanges.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge className="text-xs bg-blue-500 hover:bg-blue-600">{benefitChanges.length}</Badge>
+                <span className="text-sm text-foreground">Benefit changes pending (life event / plan change)</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
             {pendingEnrollments.length > 0 && (
               <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
                 <Badge className="text-xs bg-purple-500 hover:bg-purple-600">{pendingEnrollments.length}</Badge>
