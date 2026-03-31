@@ -86,6 +86,16 @@ export default function HRDashboardPage() {
     { icon: ShieldAlert, label: 'Incident Follow-up', to: '/incidents', desc: 'Open incidents needing HR action' },
   ];
 
+  // Onboarding detail (recent hires within 30 days)
+  const recentHires = employees.filter(e =>
+    e.hire_date && differenceInDays(new Date(), new Date(e.hire_date)) <= 30 && e.employment_status === 'active'
+  );
+  // Offboarding (terminated in last 30 days)
+  const recentTerminations = employees.filter(e =>
+    (e.employment_status === 'terminated' || e.employment_status === 'inactive') &&
+    e.updated_at && differenceInDays(new Date(), new Date(e.updated_at)) <= 30
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -110,6 +120,46 @@ export default function HRDashboardPage() {
         <StatCard icon={AlertTriangle} label="Overdue Training" value={compliance?.overdue ?? 0} color="bg-destructive/10 text-destructive" to="/hr/compliance" alert={(compliance?.overdue ?? 0) > 0} />
         <StatCard icon={Clock} label="Failed / Retakes" value={compliance?.failed ?? 0} color="bg-amber-500/10 text-amber-600" alert={(compliance?.failed ?? 0) > 0} />
       </div>
+
+      {/* Onboarding / Offboarding mini-sections */}
+      {(recentHires.length > 0 || recentTerminations.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {recentHires.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-blue-600" /> Onboarding ({recentHires.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {recentHires.map(emp => (
+                  <Link key={emp.user_id} to={`/employees/${emp.user_id}`} className="flex items-center gap-2 px-1 py-1 hover:bg-muted/50 rounded text-sm">
+                    <span className="font-medium text-foreground">{emp.full_name}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">{emp.hire_date ? `Hired ${format(new Date(emp.hire_date), 'MMM d')}` : ''}</span>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+          {recentTerminations.length > 0 && (
+            <Card className="border-muted">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <UserX className="h-4 w-4 text-muted-foreground" /> Recent Offboarding ({recentTerminations.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {recentTerminations.map(emp => (
+                  <Link key={emp.user_id} to={`/employees/${emp.user_id}`} className="flex items-center gap-2 px-1 py-1 hover:bg-muted/50 rounded text-sm">
+                    <span className="font-medium text-muted-foreground">{emp.full_name}</span>
+                    <Badge variant="secondary" className="text-[10px] ml-auto capitalize">{emp.employment_status}</Badge>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Alerts section */}
       {(compliance && (compliance.overdue > 0 || compliance.expiringSoon > 0 || compliance.failed > 0)) || expiringCerts.length > 0 || expiredCerts.length > 0 || missingEmergencyContacts.length > 0 ? (
