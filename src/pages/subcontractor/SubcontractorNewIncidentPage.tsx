@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShieldAlert, ArrowLeft, CheckCircle2, Camera } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import IncidentPhotoUpload from '@/components/IncidentPhotoUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -28,6 +29,7 @@ export default function SubcontractorNewIncidentPage() {
   const [dateTime, setDateTime] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string; report_number: string } | null>(null);
 
@@ -46,6 +48,7 @@ export default function SubcontractorNewIncidentPage() {
         date_time: dateTime || new Date().toISOString(),
         location: location.trim() || null,
         description: description.trim(),
+        photos: photos.length > 0 ? photos : null,
       }]).select('id, report_number').single();
       if (error) throw error;
 
@@ -154,12 +157,7 @@ export default function SubcontractorNewIncidentPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-dashed">
-        <CardContent className="p-4 text-center">
-          <Camera className="h-6 w-6 mx-auto text-muted-foreground/40 mb-1" />
-          <p className="text-xs text-muted-foreground">Photo upload coming soon</p>
-        </CardContent>
-      </Card>
+      <IncidentPhotoUpload photos={photos} onPhotosChange={setPhotos} />
 
       <Button className="w-full" variant="destructive" onClick={handleSubmit} disabled={submitting || !description.trim()}>
         {submitting ? 'Submitting…' : 'Submit Incident Report'}

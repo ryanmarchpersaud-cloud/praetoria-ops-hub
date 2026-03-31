@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { ShieldAlert, ArrowLeft, CheckCircle2, Camera } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import IncidentPhotoUpload from '@/components/IncidentPhotoUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -31,6 +32,7 @@ export default function WorkerNewIncidentPage() {
   const [witnesses, setWitnesses] = useState('');
   const [medicalAttention, setMedicalAttention] = useState(false);
   const [reportedTo, setReportedTo] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string; report_number: string } | null>(null);
 
@@ -52,6 +54,7 @@ export default function WorkerNewIncidentPage() {
         witnesses: witnesses.trim() || null,
         medical_attention: medicalAttention,
         reported_to: reportedTo.trim() || null,
+        photos: photos.length > 0 ? photos : null,
       }]).select('id, report_number').single();
       if (error) throw error;
 
@@ -185,12 +188,7 @@ export default function WorkerNewIncidentPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-dashed">
-        <CardContent className="p-4 text-center">
-          <Camera className="h-6 w-6 mx-auto text-muted-foreground/40 mb-1" />
-          <p className="text-xs text-muted-foreground">Photo upload coming soon</p>
-        </CardContent>
-      </Card>
+      <IncidentPhotoUpload photos={photos} onPhotosChange={setPhotos} />
 
       <Button className="w-full" variant="destructive" onClick={handleSubmit} disabled={submitting || !description.trim()}>
         {submitting ? 'Submitting…' : 'Submit Incident Report'}
