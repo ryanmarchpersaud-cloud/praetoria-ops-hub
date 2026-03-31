@@ -54,7 +54,7 @@ export type SidebarItemKey =
   | 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
   | 'jobs' | 'visits' | 'invoices' | 'schedule' | 'requests'
   | 'activity' | 'employees' | 'subcontractors' | 'messaging'
-  | 'finance' | 'settings';
+  | 'finance' | 'settings' | 'incidents';
 
 export function useModuleAccess(): ModuleAccess {
   const { permissions, isLoading: permLoading } = usePermissions();
