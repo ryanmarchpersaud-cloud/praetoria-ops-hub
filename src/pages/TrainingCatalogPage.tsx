@@ -50,8 +50,18 @@ export default function TrainingCatalogPage() {
   const { data: courses = [], isLoading } = useTrainingCourses();
   const { data: allAssignments = [] } = useAllAssignments();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
   const createCourse = useCreateCourse();
   const assignCourse = useAssignCourseToUsers();
+
+  // Unified person lookup
+  const getPersonName = (userId: string) => {
+    const emp = employees.find(e => e.user_id === userId);
+    if (emp) return emp.full_name;
+    const sub = subcontractors.find((s: any) => s.user_id === userId);
+    if (sub) return (sub as any).contact_name || (sub as any).company_name || 'Subcontractor';
+    return 'Unknown';
+  };
 
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
