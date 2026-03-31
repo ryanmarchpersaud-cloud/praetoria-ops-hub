@@ -59,6 +59,7 @@ const ROOT_CAUSE_CATEGORIES = [
 
 export default function AdminIncidentDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -70,6 +71,8 @@ export default function AdminIncidentDetailPage() {
   const [rootCauseDescription, setRootCauseDescription] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
   const [selectedShare, setSelectedShare] = useState<any>(null);
+  const [creatingWCB, setCreatingWCB] = useState(false);
+  const upsertWCB = useUpsertWCBClaim();
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['incident_report', id],
