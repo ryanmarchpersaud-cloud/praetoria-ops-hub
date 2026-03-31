@@ -138,6 +138,7 @@ import SystemAnnouncementsPage from "./pages/SystemAnnouncementsPage";
 import HRDashboardPage from "./pages/HRDashboardPage";
 import TrainingCatalogPage from "./pages/TrainingCatalogPage";
 import TrainingCourseDetailPage from "./pages/TrainingCourseDetailPage";
+import ComplianceOverviewPage from "./pages/ComplianceOverviewPage";
 import WorkerCoursesPage from "./pages/worker/WorkerCoursesPage";
 import WorkerCourseDetailPage from "./pages/worker/WorkerCourseDetailPage";
 import SubcontractorTrainingPage from "./pages/subcontractor/SubcontractorTrainingPage";
