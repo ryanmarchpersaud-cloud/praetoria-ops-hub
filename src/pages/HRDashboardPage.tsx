@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useComplianceSummary } from '@/hooks/useTraining';
 import { useAllTimeOffRequests, useAllEmergencyContacts, useAllIncidentReports, useAllCertifications } from '@/hooks/useHRData';
+import { useWCBClaims, useSGIDriverRecords, useBenefitEnrollments } from '@/hooks/useHRModules';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -9,7 +10,7 @@ import {
   Users, BookOpen, ShieldCheck, AlertTriangle, Clock, Award,
   CalendarDays, HardHat, ChevronRight, FileText, UserCheck,
   Phone, ShieldAlert, UserX, UserPlus, Heart, Shield, ClipboardList,
-  DollarSign, StickyNote,
+  DollarSign, StickyNote, Car, MapPin,
 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 
@@ -40,6 +41,9 @@ export default function HRDashboardPage() {
   const { data: emergencyContacts = [] } = useAllEmergencyContacts();
   const { data: incidents = [] } = useAllIncidentReports();
   const { data: certs = [] } = useAllCertifications();
+  const { data: wcbClaims = [] } = useWCBClaims();
+  const { data: sgiRecords = [] } = useSGIDriverRecords();
+  const { data: enrollments = [] } = useBenefitEnrollments();
 
   const active = employees.filter(e => e.employment_status === 'active');
   const onLeave = employees.filter(e => e.employment_status === 'on-leave');
@@ -70,6 +74,12 @@ export default function HRDashboardPage() {
     return new Date(c.expiry_date) < today && c.status !== 'revoked';
   });
 
+  // SK compliance stats
+  const openWCB = wcbClaims.filter((c: any) => c.claim_status !== 'closed' && c.claim_status !== 'denied');
+  const expiredLicences = sgiRecords.filter((r: any) => r.licence_expiry && new Date(r.licence_expiry) < today);
+  const expiringLicences = sgiRecords.filter((r: any) => r.licence_expiry && new Date(r.licence_expiry) >= today && new Date(r.licence_expiry) <= in30);
+  const pendingEnrollments = enrollments.filter((e: any) => e.enrollment_status === 'pending');
+
   const overallRate = compliance
     ? compliance.mandatoryTotal > 0
       ? Math.round((compliance.mandatoryCompleted / compliance.mandatoryTotal) * 100)
@@ -78,6 +88,7 @@ export default function HRDashboardPage() {
 
   const quickLinks = [
     { icon: Users, label: 'Employee Directory', to: '/employees', desc: 'View all worker profiles' },
+    { icon: MapPin, label: 'SK Compliance & Carriers', to: '/hr/sk-compliance', desc: 'WCB claims, SGI drivers, benefit enrollments' },
     { icon: Shield, label: 'Benefits & Insurance', to: '/hr/benefits', desc: 'SGI, Blue Cross, Sun Life, WCB' },
     { icon: ClipboardList, label: 'Onboarding / Offboarding', to: '/hr/checklists', desc: 'Lifecycle checklists & progress' },
     { icon: StickyNote, label: 'HR Notes & Case Log', to: '/hr/case-notes', desc: 'Private per-employee notes' },
@@ -167,7 +178,7 @@ export default function HRDashboardPage() {
       )}
 
       {/* Alerts section */}
-      {(compliance && (compliance.overdue > 0 || compliance.expiringSoon > 0 || compliance.failed > 0)) || expiringCerts.length > 0 || expiredCerts.length > 0 || missingEmergencyContacts.length > 0 ? (
+      {(compliance && (compliance.overdue > 0 || compliance.expiringSoon > 0 || compliance.failed > 0)) || expiringCerts.length > 0 || expiredCerts.length > 0 || missingEmergencyContacts.length > 0 || openWCB.length > 0 || expiredLicences.length > 0 || expiringLicences.length > 0 || pendingEnrollments.length > 0 ? (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -175,6 +186,34 @@ export default function HRDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">
+            {openWCB.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge variant="destructive" className="text-xs">{openWCB.length}</Badge>
+                <span className="text-sm text-foreground">Open WCB claims needing follow-up</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
+            {expiredLicences.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge variant="destructive" className="text-xs">{expiredLicences.length}</Badge>
+                <span className="text-sm text-foreground">Expired driver licences (SGI)</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
+            {expiringLicences.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge className="text-xs bg-amber-500 hover:bg-amber-600">{expiringLicences.length}</Badge>
+                <span className="text-sm text-foreground">Driver licences expiring within 30 days</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
+            {pendingEnrollments.length > 0 && (
+              <Link to="/hr/sk-compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
+                <Badge className="text-xs bg-purple-500 hover:bg-purple-600">{pendingEnrollments.length}</Badge>
+                <span className="text-sm text-foreground">Pending benefit enrollments</span>
+                <ChevronRight className="h-3 w-3 ml-auto text-muted-foreground" />
+              </Link>
+            )}
             {(compliance?.overdue ?? 0) > 0 && (
               <Link to="/hr/compliance" className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5">
                 <Badge variant="destructive" className="text-xs">{compliance!.overdue}</Badge>

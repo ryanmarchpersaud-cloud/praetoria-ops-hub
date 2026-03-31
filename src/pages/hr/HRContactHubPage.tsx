@@ -20,6 +20,15 @@ const ESCALATION_CONTACTS = [
   { role: 'Emergency', name: '911 Emergency', phone: '911', email: '', desc: 'Life-threatening emergencies only' },
 ];
 
+const SK_EXTERNAL_CONTACTS = [
+  { org: 'WCB Saskatchewan', phone: '1-800-667-7590', url: 'https://www.wcbsask.com', desc: 'Workers\' Compensation Board — employer claims & injury reporting' },
+  { org: 'SK Blue Cross', phone: '1-800-667-6853', url: 'https://www.sk.bluecross.ca', desc: 'Benefits plan administration & claims' },
+  { org: 'SGI Saskatchewan', phone: '1-844-855-2744', url: 'https://www.sgi.sk.ca', desc: 'Driver licensing, abstracts & fleet insurance' },
+  { org: 'SK OHS Division', phone: '1-800-567-7233', url: 'https://www.worksafesask.ca', desc: 'Occupational Health & Safety — workplace safety reporting' },
+  { org: 'Poison Control SK', phone: '1-866-454-1212', url: '', desc: 'Chemical exposure & hazardous material incidents' },
+  { org: 'SK Human Rights Commission', phone: '1-800-667-9249', url: 'https://saskatchewanhumanrights.ca', desc: 'Discrimination, harassment & accommodation complaints' },
+];
+
 export default function HRContactHubPage() {
   const { data: employees = [] } = useEmployees();
   const { data: allContacts = [] } = useAllEmergencyContacts();
@@ -99,6 +108,7 @@ export default function HRContactHubPage() {
           <TabsTrigger value="emergency"><Phone className="h-3.5 w-3.5 mr-1.5" /> Emergency Contacts ({allContacts.length})</TabsTrigger>
           <TabsTrigger value="missing"><AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> Missing ({withoutContacts.length})</TabsTrigger>
           <TabsTrigger value="supervisors"><Building2 className="h-3.5 w-3.5 mr-1.5" /> Supervisors ({supervisors.length})</TabsTrigger>
+          <TabsTrigger value="sk-external"><Phone className="h-3.5 w-3.5 mr-1.5" /> SK External</TabsTrigger>
         </TabsList>
 
         {/* Escalation contacts */}
@@ -272,6 +282,36 @@ export default function HRContactHubPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* SK External Contacts Tab */}
+        <TabsContent value="sk-external" className="mt-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {SK_EXTERNAL_CONTACTS.map(c => (
+              <Card key={c.org} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground text-sm">{c.org}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{c.desc}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {c.phone && (
+                      <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 text-foreground">
+                        <Phone className="h-3 w-3" /> {c.phone}
+                      </a>
+                    )}
+                    {c.url && (
+                      <a href={c.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary font-medium">
+                        <ChevronRight className="h-3 w-3" /> Website
+                      </a>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

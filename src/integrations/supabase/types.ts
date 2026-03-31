@@ -1974,6 +1974,59 @@ export type Database = {
         }
         Relationships: []
       }
+      hr_benefit_enrollments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dependent_count: number | null
+          effective_date: string | null
+          employee_user_id: string
+          enrollment_status: string
+          id: string
+          notes: string | null
+          plan_type: string | null
+          provider_id: string | null
+          termination_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dependent_count?: number | null
+          effective_date?: string | null
+          employee_user_id: string
+          enrollment_status?: string
+          id?: string
+          notes?: string | null
+          plan_type?: string | null
+          provider_id?: string | null
+          termination_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dependent_count?: number | null
+          effective_date?: string | null
+          employee_user_id?: string
+          enrollment_status?: string
+          id?: string
+          notes?: string | null
+          plan_type?: string | null
+          provider_id?: string | null
+          termination_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_benefit_enrollments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "hr_insurance_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_case_notes: {
         Row: {
           body: string | null
@@ -2209,6 +2262,128 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      hr_sgi_driver_records: {
+        Row: {
+          abstract_clear: boolean | null
+          abstract_last_obtained: string | null
+          abstract_status: string | null
+          authorization_date: string | null
+          authorization_signed: boolean | null
+          created_at: string
+          drivers_licence_number: string | null
+          employee_user_id: string
+          fleet_vehicle_assigned: string | null
+          id: string
+          licence_class: string | null
+          licence_expiry: string | null
+          notes: string | null
+          updated_at: string
+          violations_on_record: string | null
+        }
+        Insert: {
+          abstract_clear?: boolean | null
+          abstract_last_obtained?: string | null
+          abstract_status?: string | null
+          authorization_date?: string | null
+          authorization_signed?: boolean | null
+          created_at?: string
+          drivers_licence_number?: string | null
+          employee_user_id: string
+          fleet_vehicle_assigned?: string | null
+          id?: string
+          licence_class?: string | null
+          licence_expiry?: string | null
+          notes?: string | null
+          updated_at?: string
+          violations_on_record?: string | null
+        }
+        Update: {
+          abstract_clear?: boolean | null
+          abstract_last_obtained?: string | null
+          abstract_status?: string | null
+          authorization_date?: string | null
+          authorization_signed?: boolean | null
+          created_at?: string
+          drivers_licence_number?: string | null
+          employee_user_id?: string
+          fleet_vehicle_assigned?: string | null
+          id?: string
+          licence_class?: string | null
+          licence_expiry?: string | null
+          notes?: string | null
+          updated_at?: string
+          violations_on_record?: string | null
+        }
+        Relationships: []
+      }
+      hr_wcb_claims: {
+        Row: {
+          body_part: string | null
+          claim_number: string | null
+          claim_status: string
+          created_at: string
+          created_by: string | null
+          documents_reference: string | null
+          employee_user_id: string
+          employer_account_number: string | null
+          follow_up_notes: string | null
+          id: string
+          incident_report_id: string | null
+          injury_date: string
+          injury_type: string
+          modified_duties: boolean | null
+          restrictions: string | null
+          return_to_work_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_part?: string | null
+          claim_number?: string | null
+          claim_status?: string
+          created_at?: string
+          created_by?: string | null
+          documents_reference?: string | null
+          employee_user_id: string
+          employer_account_number?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          incident_report_id?: string | null
+          injury_date: string
+          injury_type?: string
+          modified_duties?: boolean | null
+          restrictions?: string | null
+          return_to_work_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_part?: string | null
+          claim_number?: string | null
+          claim_status?: string
+          created_at?: string
+          created_by?: string | null
+          documents_reference?: string | null
+          employee_user_id?: string
+          employer_account_number?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          incident_report_id?: string | null
+          injury_date?: string
+          injury_type?: string
+          modified_duties?: boolean | null
+          restrictions?: string | null
+          return_to_work_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_wcb_claims_incident_report_id_fkey"
+            columns: ["incident_report_id"]
+            isOneToOne: false
+            referencedRelation: "incident_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       incident_reports: {
         Row: {
