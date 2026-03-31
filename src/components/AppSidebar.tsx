@@ -18,7 +18,7 @@ import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages' | 'incidents';
 type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
   | 'jobs' | 'visits' | 'invoices' | 'schedule' | 'requests'
-  | 'activity' | 'employees' | 'subcontractors' | 'messaging' | 'finance' | 'incidents';
+  | 'activity' | 'employees' | 'subcontractors' | 'messaging' | 'finance' | 'incidents' | 'hr';
 
 const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; accessKey: SidebarKey }[] = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard, accessKey: 'dashboard' },
