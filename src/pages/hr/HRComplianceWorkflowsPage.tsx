@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWCBClaims, useUpsertWCBClaim, useSGIDriverRecords, useUpsertSGIRecord, useBenefitEnrollments, useUpsertEnrollment, useInsuranceProviders } from '@/hooks/useHRModules';
 import { useEmployees } from '@/hooks/useEmployees';
+import { HRFileAttachments } from '@/components/hr/HRFileAttachments';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, HardHat, Car, Heart, AlertTriangle, ExternalLink, ShieldCheck, FileText, ChevronRight } from 'lucide-react';
+import { Plus, HardHat, Car, Heart, AlertTriangle, ExternalLink, ShieldCheck, FileText, ChevronRight, Paperclip } from 'lucide-react';
 import { format, isPast, differenceInDays } from 'date-fns';
 
 const claimStatusColors: Record<string, string> = {
