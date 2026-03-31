@@ -1,0 +1,1 @@
+UPDATE visits SET completion_time = (CURRENT_DATE + interval '8 hours 23 minutes')::timestamp WHERE id = '88abe589-8ac7-4dc1-91d0-504c928ad40b';
