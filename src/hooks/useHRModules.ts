@@ -180,3 +180,91 @@ export function useUpsertReview() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['hr_review_schedules'] }),
   });
 }
+
+/* ─── WCB Claims ─── */
+export function useWCBClaims() {
+  return useQuery({
+    queryKey: ['hr_wcb_claims'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('hr_wcb_claims')
+        .select('*')
+        .order('injury_date', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useUpsertWCBClaim() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (claim: any) => {
+      const payload = { ...claim, created_by: claim.created_by || user?.id };
+      const { error } = claim.id
+        ? await supabase.from('hr_wcb_claims').update(payload).eq('id', claim.id)
+        : await supabase.from('hr_wcb_claims').insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['hr_wcb_claims'] }),
+  });
+}
+
+/* ─── SGI Driver Records ─── */
+export function useSGIDriverRecords() {
+  return useQuery({
+    queryKey: ['hr_sgi_driver_records'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('hr_sgi_driver_records')
+        .select('*')
+        .order('licence_expiry', { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useUpsertSGIRecord() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (rec: any) => {
+      const { error } = rec.id
+        ? await supabase.from('hr_sgi_driver_records').update(rec).eq('id', rec.id)
+        : await supabase.from('hr_sgi_driver_records').insert(rec);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['hr_sgi_driver_records'] }),
+  });
+}
+
+/* ─── Benefit Enrollments ─── */
+export function useBenefitEnrollments() {
+  return useQuery({
+    queryKey: ['hr_benefit_enrollments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('hr_benefit_enrollments')
+        .select('*, hr_insurance_providers(provider_name, provider_type)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useUpsertEnrollment() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (enr: any) => {
+      const payload = { ...enr, created_by: enr.created_by || user?.id };
+      const { error } = enr.id
+        ? await supabase.from('hr_benefit_enrollments').update(payload).eq('id', enr.id)
+        : await supabase.from('hr_benefit_enrollments').insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['hr_benefit_enrollments'] }),
+  });
+}
