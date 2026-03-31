@@ -3,8 +3,11 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { NotificationCenter } from './NotificationCenter';
 import { AnnouncementBanner } from './AnnouncementBanner';
+import { useIncidentAlerts } from '@/hooks/useIncidentAlerts';
 
 export function AppLayout({ children }: { children: ReactNode }) {
+  // Subscribe to realtime incident alerts for admins
+  useIncidentAlerts();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
