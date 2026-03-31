@@ -108,9 +108,13 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
     return () => { cancelled = true; };
   }, [stops]);
 
-  // Render map
+  // Render map after geocoding completes
   useEffect(() => {
     if (!mapRef.current || geocoded.length === 0) return;
+
+    // Delay initialization to ensure the DOM element is fully laid out
+    const timerId = setTimeout(() => {
+      if (!mapRef.current) return;
 
     // Clean up old map
     if (mapInstance.current) {
