@@ -48,7 +48,7 @@ export default function SubcontractorNewIncidentPage() {
         date_time: dateTime || new Date().toISOString(),
         location: location.trim() || null,
         description: description.trim(),
-      }]).select('id, report_number').single();
+        photos: photos.length > 0 ? photos : null,
       if (error) throw error;
 
       // Log to activity feed
