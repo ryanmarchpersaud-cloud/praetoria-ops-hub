@@ -1974,6 +1974,242 @@ export type Database = {
         }
         Relationships: []
       }
+      hr_case_notes: {
+        Row: {
+          body: string | null
+          created_at: string
+          created_by: string
+          employee_user_id: string
+          id: string
+          is_confidential: boolean
+          note_type: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          created_by: string
+          employee_user_id: string
+          id?: string
+          is_confidential?: boolean
+          note_type?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          created_by?: string
+          employee_user_id?: string
+          id?: string
+          is_confidential?: boolean
+          note_type?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_checklist_assignments: {
+        Row: {
+          assigned_by: string | null
+          checklist_type: string
+          completed_at: string | null
+          completed_items: Json
+          created_at: string
+          id: string
+          status: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          checklist_type?: string
+          completed_at?: string | null
+          completed_items?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          checklist_type?: string
+          completed_at?: string | null
+          completed_items?: Json
+          created_at?: string
+          id?: string
+          status?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_checklist_assignments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "hr_checklist_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_checklist_templates: {
+        Row: {
+          checklist_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          items: Json
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          checklist_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          items?: Json
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          checklist_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          items?: Json
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_compensation_records: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          employee_user_id: string
+          id: string
+          notes: string | null
+          pay_rate: number | null
+          pay_type: string | null
+          record_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          employee_user_id: string
+          id?: string
+          notes?: string | null
+          pay_rate?: number | null
+          pay_type?: string | null
+          record_type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          employee_user_id?: string
+          id?: string
+          notes?: string | null
+          pay_rate?: number | null
+          pay_type?: string | null
+          record_type?: string
+        }
+        Relationships: []
+      }
+      hr_insurance_providers: {
+        Row: {
+          account_number: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          group_policy_number: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          portal_url: string | null
+          provider_name: string
+          provider_type: string
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          account_number?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          group_policy_number?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          portal_url?: string | null
+          provider_name: string
+          provider_type?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          account_number?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          group_policy_number?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          portal_url?: string | null
+          provider_name?: string
+          provider_type?: string
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      hr_review_schedules: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          employee_user_id: string
+          id: string
+          notes: string | null
+          review_type: string
+          reviewer_user_id: string | null
+          scheduled_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          employee_user_id: string
+          id?: string
+          notes?: string | null
+          review_type?: string
+          reviewer_user_id?: string | null
+          scheduled_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          employee_user_id?: string
+          id?: string
+          notes?: string | null
+          review_type?: string
+          reviewer_user_id?: string | null
+          scheduled_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       incident_reports: {
         Row: {
           admin_notes: string | null
