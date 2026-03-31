@@ -547,6 +547,34 @@ Deno.serve(async (req) => {
       return json({ ...result, action: "emergency_sos" });
     }
 
+    // ─── Incident Report Share (external forward) ───
+    if (action === "incident_share") {
+      const { to, subject, html, reply_to } = params;
+      if (!to) return json({ error: "Missing 'to' email address" }, 400);
+
+      const result = await sendViaResend({
+        to,
+        subject: subject || "Incident Report — Praetoria Group",
+        html: html || "<p>Incident report attached.</p>",
+        reply_to: reply_to || EMAIL_CONFIG.opsInbox,
+      });
+
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.incident_report",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: Array.isArray(to) ? to.join(", ") : to,
+        record_type: "incident_report",
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: { subject },
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
+      return json({ ...result, action: "incident_share" });
+    }
+
     // ─── Health check ───
     if (action === "health") {
       const hasKey = !!Deno.env.get("RESEND_API_KEY");
