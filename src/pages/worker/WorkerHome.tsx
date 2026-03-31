@@ -12,6 +12,7 @@ import { AvatarUpload } from '@/components/AvatarUpload';
 import { WeatherCard } from '@/components/WeatherCard';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { DailyRouteMap, type RouteStop } from '@/components/DailyRouteMap';
+import { TodayVisitCarousel } from '@/components/worker/TodayVisitCarousel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
@@ -88,9 +89,6 @@ export default function WorkerHome() {
 
   const completedVisits = todayVisits.filter(v => v.visit_status === 'Completed');
   const inProgressVisit = todayVisits.find(v => v.visit_status === 'In Progress' || v.visit_status === 'En Route');
-  const nextVisit = todayVisits.find(v => v.visit_status === 'Scheduled' || v.visit_status === 'Planned');
-  const highlightVisit = inProgressVisit || nextVisit;
-  const lastCompleted = completedVisits[completedVisits.length - 1];
 
   const firstName = workerProfile?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
   const initials = (workerProfile?.full_name || user?.user_metadata?.full_name || user?.email || '?')
@@ -291,93 +289,8 @@ export default function WorkerHome() {
         </Link>
       </div>
 
-      {/* Current/Next Visit */}
-      {highlightVisit && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-foreground">
-              {inProgressVisit ? 'Current Visit' : 'Next Visit'}
-            </h2>
-            <Link to="/worker/schedule" className="text-[11px] text-primary font-medium flex items-center gap-0.5">
-              View all <ChevronRight className="h-3 w-3" />
-            </Link>
-          </div>
-
-          <Link to={`/worker/visit/${highlightVisit.id}`}>
-            <Card className={cn(
-              'transition-shadow active:shadow-md overflow-hidden',
-              inProgressVisit && 'ring-2 ring-primary/30'
-            )}>
-              {inProgressVisit && (
-                <div className="bg-primary/10 px-4 py-1.5 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  <span className="text-[11px] font-semibold text-primary">In Progress</span>
-                </div>
-              )}
-              <CardContent className="pt-3 pb-3 px-4 space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-medium">{highlightVisit.visit_number}</span>
-                    {(highlightVisit as any).jobs?.service_category && (
-                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                        {(highlightVisit as any).jobs.service_category}
-                      </span>
-                    )}
-                  </div>
-                  <StatusBadge status={highlightVisit.visit_status} showIcon={false} />
-                </div>
-                {highlightVisit.customers && (
-                  <p className="text-sm font-medium text-foreground">
-                    {(highlightVisit.customers as any).first_name} {(highlightVisit.customers as any).last_name}
-                  </p>
-                )}
-                {highlightVisit.properties && (
-                  <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground text-xs">{(highlightVisit.properties as any).property_name}</p>
-                      {(highlightVisit.properties as any).address_line_1 && (
-                        <p className="text-[10px]">
-                          {(highlightVisit.properties as any).address_line_1}
-                          {(highlightVisit.properties as any).city && `, ${(highlightVisit.properties as any).city}`}
-                        </p>
-                      )}
-                    </div>
-                    <DirectionsButton
-                      address={(highlightVisit.properties as any).address_line_1}
-                      city={(highlightVisit.properties as any).city}
-                      variant="icon"
-                    />
-                  </div>
-                )}
-                {/* Quick action row */}
-                <div className="flex gap-2 pt-1">
-                  {highlightVisit.properties && (
-                    <a
-                      href={`https://maps.google.com/maps?daddr=${encodeURIComponent([(highlightVisit.properties as any).address_line_1, (highlightVisit.properties as any).city].filter(Boolean).join(', '))}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/10 text-[11px] font-medium text-primary active:scale-95 transition-transform"
-                    >
-                      <Navigation className="h-3 w-3" /> Navigate
-                    </a>
-                  )}
-                  {(highlightVisit.customers as any)?.phone && (
-                    <a
-                      href={`tel:${(highlightVisit.customers as any).phone}`}
-                      onClick={e => e.stopPropagation()}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted text-[11px] font-medium text-foreground active:scale-95 transition-transform"
-                    >
-                      <Phone className="h-3 w-3" /> Call
-                    </a>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-      )}
+      {/* Today's Visits Carousel (Jobber-style) */}
+      <TodayVisitCarousel visits={todayVisits as any} workerInitials={initials} />
 
       {/* Empty state when no visits today */}
       {todayVisits.length === 0 && (
@@ -388,31 +301,6 @@ export default function WorkerHome() {
             <Link to="/worker/schedule" className="text-xs text-primary mt-1 inline-block">View schedule →</Link>
           </CardContent>
         </Card>
-      )}
-
-      {/* Last Completed */}
-      {lastCompleted && !inProgressVisit && nextVisit && (
-        <div>
-          <h2 className="text-sm font-semibold text-foreground mb-2">Last Completed</h2>
-          <Link to={`/worker/visit/${lastCompleted.id}`}>
-            <Card className="active:shadow-sm transition-shadow bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30">
-              <CardContent className="py-3 px-4 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
-                    <span className="font-mono text-[11px]">{lastCompleted.visit_number}</span>
-                  </div>
-                  {lastCompleted.properties && (
-                    <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                      <MapPin className="h-3 w-3 shrink-0" /> {(lastCompleted.properties as any).property_name}
-                    </p>
-                  )}
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
       )}
 
       {/* Daily Route Map */}
