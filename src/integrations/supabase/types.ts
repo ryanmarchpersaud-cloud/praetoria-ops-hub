@@ -1981,6 +1981,7 @@ export type Database = {
           created_at: string
           date_time: string
           description: string | null
+          first_responded_at: string | null
           follow_up_status: string
           id: string
           incident_type: string
@@ -1992,6 +1993,9 @@ export type Database = {
           report_number: string | null
           reported_to: string | null
           reporter_type: string
+          resolved_at: string | null
+          root_cause_category: string | null
+          root_cause_description: string | null
           severity: string
           subcontractor_id: string | null
           updated_at: string
@@ -2005,6 +2009,7 @@ export type Database = {
           created_at?: string
           date_time?: string
           description?: string | null
+          first_responded_at?: string | null
           follow_up_status?: string
           id?: string
           incident_type?: string
@@ -2016,6 +2021,9 @@ export type Database = {
           report_number?: string | null
           reported_to?: string | null
           reporter_type?: string
+          resolved_at?: string | null
+          root_cause_category?: string | null
+          root_cause_description?: string | null
           severity?: string
           subcontractor_id?: string | null
           updated_at?: string
@@ -2029,6 +2037,7 @@ export type Database = {
           created_at?: string
           date_time?: string
           description?: string | null
+          first_responded_at?: string | null
           follow_up_status?: string
           id?: string
           incident_type?: string
@@ -2040,6 +2049,9 @@ export type Database = {
           report_number?: string | null
           reported_to?: string | null
           reporter_type?: string
+          resolved_at?: string | null
+          root_cause_category?: string | null
+          root_cause_description?: string | null
           severity?: string
           subcontractor_id?: string | null
           updated_at?: string

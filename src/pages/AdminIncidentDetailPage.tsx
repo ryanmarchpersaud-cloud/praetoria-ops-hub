@@ -8,13 +8,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, MapPin, Clock, Users, Eye, Stethoscope, User, Send, Share2, Image } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, Eye, Stethoscope, User, Send, Share2, Image, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { ShareIncidentDialog } from '@/components/ShareIncidentDialog';
 import { ShareHistoryDetailDialog } from '@/components/ShareHistoryDetailDialog';
+import { IncidentResponseMetrics } from '@/components/incident/IncidentResponseMetrics';
+import { IncidentTimeline } from '@/components/incident/IncidentTimeline';
+import { IncidentPrintButton } from '@/components/incident/IncidentPrintButton';
 
 const statusColors: Record<string, string> = {
   open: 'bg-amber-500/10 text-amber-700 border-amber-200',
@@ -40,6 +43,19 @@ const recipientTypeLabels: Record<string, string> = {
   custom: 'Custom',
 };
 
+const ROOT_CAUSE_CATEGORIES = [
+  'Human Error',
+  'Equipment Failure',
+  'Lack of Training',
+  'Environmental / Weather',
+  'Procedural Gap',
+  'Insufficient PPE',
+  'Communication Breakdown',
+  'Third-Party Negligence',
+  'Material Defect',
+  'Other',
+];
+
 export default function AdminIncidentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
@@ -49,6 +65,8 @@ export default function AdminIncidentDetailPage() {
   const [severity, setSeverity] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [correctiveNotes, setCorrectiveNotes] = useState('');
+  const [rootCauseCategory, setRootCauseCategory] = useState('');
+  const [rootCauseDescription, setRootCauseDescription] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
   const [selectedShare, setSelectedShare] = useState<any>(null);
 
@@ -82,10 +100,13 @@ export default function AdminIncidentDetailPage() {
 
   useEffect(() => {
     if (report) {
+      const r = report as any;
       setStatus(report.follow_up_status);
-      setSeverity((report as any).severity || 'medium');
+      setSeverity(r.severity || 'medium');
       setAdminNotes(report.admin_notes || '');
-      setCorrectiveNotes((report as any).corrective_action_notes || '');
+      setCorrectiveNotes(r.corrective_action_notes || '');
+      setRootCauseCategory(r.root_cause_category || '');
+      setRootCauseDescription(r.root_cause_description || '');
     }
   }, [report]);
 
@@ -93,14 +114,31 @@ export default function AdminIncidentDetailPage() {
     if (!id) return;
     setSaving(true);
     try {
+      const wasOpen = report?.follow_up_status === 'open';
+      const isNowActive = status === 'investigating' || status === 'resolved' || status === 'closed';
+
+      const updatePayload: any = {
+        follow_up_status: status,
+        admin_notes: adminNotes.trim() || null,
+        severity,
+        corrective_action_notes: correctiveNotes.trim() || null,
+        root_cause_category: rootCauseCategory || null,
+        root_cause_description: rootCauseDescription.trim() || null,
+      };
+
+      // Track first response
+      if (wasOpen && isNowActive && !(report as any).first_responded_at) {
+        updatePayload.first_responded_at = new Date().toISOString();
+      }
+
+      // Track resolution
+      if ((status === 'resolved' || status === 'closed') && !(report as any).resolved_at) {
+        updatePayload.resolved_at = new Date().toISOString();
+      }
+
       const { error } = await supabase
         .from('incident_reports')
-        .update({
-          follow_up_status: status,
-          admin_notes: adminNotes.trim() || null,
-          severity,
-          corrective_action_notes: correctiveNotes.trim() || null,
-        } as any)
+        .update(updatePayload)
         .eq('id', id);
       if (error) throw error;
 
@@ -166,11 +204,17 @@ export default function AdminIncidentDetailPage() {
             </Badge>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={() => setShareOpen(true)}>
-          <Share2 className="h-4 w-4" />
-          Share Report
-        </Button>
+        <div className="flex items-center gap-2">
+          <IncidentPrintButton report={r} />
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setShareOpen(true)}>
+            <Share2 className="h-4 w-4" />
+            Share Report
+          </Button>
+        </div>
       </div>
+
+      {/* Response Metrics */}
+      <IncidentResponseMetrics report={r} />
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Left column — Report details */}
@@ -258,6 +302,9 @@ export default function AdminIncidentDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Investigation Timeline */}
+          <IncidentTimeline report={r} shares={shares} />
         </div>
 
         {/* Right column — Admin actions */}
@@ -325,6 +372,42 @@ export default function AdminIncidentDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Root Cause Analysis */}
+          <Card>
+            <CardContent className="p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                Root Cause Analysis
+              </h2>
+
+              <div>
+                <Label className="text-xs">Root Cause Category</Label>
+                <Select value={rootCauseCategory} onValueChange={setRootCauseCategory}>
+                  <SelectTrigger><SelectValue placeholder="Select root cause…" /></SelectTrigger>
+                  <SelectContent>
+                    {ROOT_CAUSE_CATEGORIES.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-xs">Root Cause Description</Label>
+                <Textarea
+                  placeholder="Detail the underlying cause, contributing factors, and conditions that led to this incident…"
+                  value={rootCauseDescription}
+                  onChange={e => setRootCauseDescription(e.target.value)}
+                  rows={4}
+                />
+              </div>
+
+              <p className="text-[10px] text-muted-foreground">
+                Root cause data is included in printed reports and shared emails. Saved with "Save Changes" above.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Share / Forward section */}
           <Card>
             <CardContent className="p-5">
@@ -384,7 +467,7 @@ export default function AdminIncidentDetailPage() {
         </div>
       </div>
 
-      {/* Share dialog */}
+      {/* Dialogs */}
       <ShareIncidentDialog open={shareOpen} onOpenChange={setShareOpen} report={r} />
       <ShareHistoryDetailDialog
         open={!!selectedShare}
