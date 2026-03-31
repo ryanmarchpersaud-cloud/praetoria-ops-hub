@@ -81,7 +81,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
     if (!container || !dragState.current.isPointerDown) return;
 
     const deltaX = event.clientX - dragState.current.startX;
-    if (Math.abs(deltaX) > 6) {
+    if (Math.abs(deltaX) > 12) {
       dragState.current.moved = true;
       setIsDragging(true);
     }
