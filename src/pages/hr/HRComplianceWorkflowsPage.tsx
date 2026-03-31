@@ -261,41 +261,55 @@ export default function HRComplianceWorkflowsPage() {
                 const expiring = r.licence_expiry && !expired && differenceInDays(new Date(r.licence_expiry), new Date()) <= 30;
                 const needsAbstractRenewal = r.abstract_status === 'not_obtained' || r.abstract_status === 'expired' || (r.abstract_last_obtained && differenceInDays(new Date(), new Date(r.abstract_last_obtained)) > 365);
                 return (
-                  <TableRow key={r.id} className={expired ? 'bg-destructive/5' : expiring ? 'bg-amber-500/5' : ''}>
-                    <TableCell><Link to={`/employees/${r.employee_user_id}`} className="hover:underline font-medium">{getEmpName(r.employee_user_id)}</Link></TableCell>
-                    <TableCell className="font-mono text-sm">{r.drivers_licence_number || '—'}</TableCell>
-                    <TableCell>Class {r.licence_class}</TableCell>
-                    <TableCell className="text-sm">{r.licence_expiry ? format(new Date(r.licence_expiry), 'MMM d, yyyy') : '—'}{expired && <Badge variant="destructive" className="ml-1 text-[10px]">Expired</Badge>}{expiring && <Badge className="ml-1 text-[10px] bg-amber-500">Soon</Badge>}</TableCell>
-                    <TableCell><Badge variant="outline" className={`capitalize text-xs ${abstractStatusColors[r.abstract_status] || ''}`}>{r.abstract_status?.replace('_', ' ')}</Badge></TableCell>
-                    <TableCell>{r.authorization_signed ? <ShieldCheck className="h-4 w-4 text-emerald-600" /> : <span className="text-xs text-muted-foreground">No</span>}</TableCell>
-                    <TableCell className="text-sm max-w-[150px] truncate">{r.fleet_vehicle_assigned || '—'}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {(expired || expiring) && (
-                          <Button variant="outline" size="sm" className="text-xs h-7 border-amber-300 text-amber-700 hover:bg-amber-50"
-                            onClick={async () => {
-                              try {
-                                await upsertSGI.mutateAsync({ ...r, renewal_reminder_sent: true, last_reminder_date: new Date().toISOString().split('T')[0] });
-                                toast.success(`Renewal reminder flagged for ${getEmpName(r.employee_user_id)}`);
-                              } catch { toast.error('Failed'); }
-                            }}>
-                            {r.renewal_reminder_sent ? '✓ Reminded' : 'Flag Renewal'}
-                          </Button>
-                        )}
-                        {needsAbstractRenewal && (
-                          <Button variant="outline" size="sm" className="text-xs h-7"
-                            onClick={async () => {
-                              try {
-                                await upsertSGI.mutateAsync({ ...r, abstract_status: 'not_obtained' });
-                                toast.success('Abstract marked for renewal');
-                              } catch { toast.error('Failed'); }
-                            }}>
-                            Renew Abstract
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={r.id} className={`cursor-pointer hover:bg-muted/50 ${expired ? 'bg-destructive/5' : expiring ? 'bg-amber-500/5' : ''}`} onClick={() => setSelectedSGI(selectedSGI === r.id ? null : r.id)}>
+                      <TableCell><Link to={`/employees/${r.employee_user_id}`} className="hover:underline font-medium" onClick={e => e.stopPropagation()}>{getEmpName(r.employee_user_id)}</Link></TableCell>
+                      <TableCell className="font-mono text-sm">{r.drivers_licence_number || '—'}</TableCell>
+                      <TableCell>Class {r.licence_class}</TableCell>
+                      <TableCell className="text-sm">{r.licence_expiry ? format(new Date(r.licence_expiry), 'MMM d, yyyy') : '—'}{expired && <Badge variant="destructive" className="ml-1 text-[10px]">Expired</Badge>}{expiring && <Badge className="ml-1 text-[10px] bg-amber-500">Soon</Badge>}</TableCell>
+                      <TableCell><Badge variant="outline" className={`capitalize text-xs ${abstractStatusColors[r.abstract_status] || ''}`}>{r.abstract_status?.replace('_', ' ')}</Badge></TableCell>
+                      <TableCell>{r.authorization_signed ? <ShieldCheck className="h-4 w-4 text-emerald-600" /> : <span className="text-xs text-muted-foreground">No</span>}</TableCell>
+                      <TableCell className="text-sm max-w-[150px] truncate">{r.fleet_vehicle_assigned || '—'}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                          {(expired || expiring) && (
+                            <Button variant="outline" size="sm" className="text-xs h-7 border-amber-300 text-amber-700 hover:bg-amber-50"
+                              onClick={async () => {
+                                try {
+                                  await upsertSGI.mutateAsync({ ...r, renewal_reminder_sent: true, last_reminder_date: new Date().toISOString().split('T')[0] });
+                                  toast.success(`Renewal reminder flagged for ${getEmpName(r.employee_user_id)}`);
+                                } catch { toast.error('Failed'); }
+                              }}>
+                              {r.renewal_reminder_sent ? '✓ Reminded' : 'Flag Renewal'}
+                            </Button>
+                          )}
+                          {needsAbstractRenewal && (
+                            <Button variant="outline" size="sm" className="text-xs h-7"
+                              onClick={async () => {
+                                try {
+                                  await upsertSGI.mutateAsync({ ...r, abstract_status: 'not_obtained' });
+                                  toast.success('Abstract marked for renewal');
+                                } catch { toast.error('Failed'); }
+                              }}>
+                              Renew Abstract
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {selectedSGI === r.id && (
+                      <TableRow key={`${r.id}-docs`}>
+                        <TableCell colSpan={8} className="bg-muted/20 p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              {r.notes && <div><span className="text-xs font-medium text-muted-foreground">Notes:</span><p className="text-sm mt-0.5">{r.notes}</p></div>}
+                            </div>
+                            <HRFileAttachments recordType="hr_sgi_driver_record" recordId={r.id} label="Driver Documents" />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 );
               })}
             </TableBody></Table></Card>
