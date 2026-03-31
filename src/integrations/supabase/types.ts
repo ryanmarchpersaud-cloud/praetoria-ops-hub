@@ -2073,6 +2073,8 @@ export type Database = {
       }
       incident_shares: {
         Row: {
+          attachment_name: string | null
+          attachment_url: string | null
           cover_note: string | null
           id: string
           incident_id: string
@@ -2084,6 +2086,8 @@ export type Database = {
           shared_by: string | null
         }
         Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
           cover_note?: string | null
           id?: string
           incident_id: string
@@ -2095,6 +2099,8 @@ export type Database = {
           shared_by?: string | null
         }
         Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
           cover_note?: string | null
           id?: string
           incident_id?: string

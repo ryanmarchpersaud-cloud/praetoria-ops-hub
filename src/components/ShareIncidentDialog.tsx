@@ -1,15 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { Send, Building2, ShieldAlert, Flame, Cross, Landmark, UserCog, Mail } from 'lucide-react';
+import { Send, Building2, ShieldAlert, Flame, Cross, Landmark, UserCog, Mail, Paperclip, X, FileText } from 'lucide-react';
 
 interface Recipient {
   type: string;
@@ -36,6 +35,7 @@ interface ShareIncidentDialogProps {
 export function ShareIncidentDialog({ open, onOpenChange, report }: ShareIncidentDialogProps) {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [sending, setSending] = useState(false);
   const [selectedType, setSelectedType] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -43,6 +43,8 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
   const [coverNote, setCoverNote] = useState('');
   const [includePhotos, setIncludePhotos] = useState(false);
   const [customEmail, setCustomEmail] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleSelectRecipient = (r: Recipient) => {
     setSelectedType(r.type);
@@ -58,6 +60,37 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
     setCustomEmail(true);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast({ title: 'File too large', description: 'Maximum file size is 10MB', variant: 'destructive' });
+      return;
+    }
+    setAttachedFile(file);
+  };
+
+  const handleRemoveFile = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const uploadAttachment = async (): Promise<string | null> => {
+    if (!attachedFile) return null;
+    setUploading(true);
+    try {
+      const ext = attachedFile.name.split('.').pop() || 'pdf';
+      const path = `incident-shares/${report.id}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('attachments').upload(path, attachedFile);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      return urlData.publicUrl;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!recipientEmail.trim()) {
       toast({ title: 'Please enter recipient email', variant: 'destructive' });
@@ -66,6 +99,9 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
     setSending(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+
+      // Upload attachment if present
+      const attachmentUrl = await uploadAttachment();
 
       // Record the share
       const { error: shareError } = await supabase.from('incident_shares' as any).insert({
@@ -76,16 +112,19 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
         recipient_name: recipientName.trim() || null,
         cover_note: coverNote.trim() || null,
         include_photos: includePhotos,
+        attachment_url: attachmentUrl,
+        attachment_name: attachedFile?.name || null,
       });
       if (shareError) throw shareError;
 
-      // Send email via edge function
+      // Send email via edge function with correct action format
       const r = report;
       await supabase.functions.invoke('send-email', {
         body: {
+          action: 'incident_share',
           to: recipientEmail.trim(),
           subject: `Incident Report ${r.report_number || r.id.slice(0, 8).toUpperCase()} — ${r.incident_type}`,
-          html: buildIncidentEmailHtml(r, coverNote, recipientName),
+          html: buildIncidentEmailHtml(r, coverNote, recipientName, attachmentUrl, attachedFile?.name),
         },
       });
 
@@ -116,6 +155,8 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
     setCoverNote('');
     setIncludePhotos(false);
     setCustomEmail(false);
+    setAttachedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -195,6 +236,42 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
                   rows={3}
                 />
               </div>
+
+              {/* File attachment */}
+              <div>
+                <Label className="text-xs">Attach Document (optional)</Label>
+                {attachedFile ? (
+                  <div className="flex items-center gap-2 mt-1.5 rounded-lg border bg-muted/40 p-2.5">
+                    <FileText className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-sm truncate flex-1">{attachedFile.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {(attachedFile.size / 1024).toFixed(0)} KB
+                    </span>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleRemoveFile}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-1.5 gap-2 text-xs"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Paperclip className="h-3.5 w-3.5" />
+                    Attach PDF or Document
+                  </Button>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                  onChange={handleFileSelect}
+                />
+              </div>
+
               {report?.photos?.length > 0 && (
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -220,12 +297,13 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
                   <li>• Current investigation status</li>
                   {includePhotos && <li>• Photo links</li>}
                   {coverNote && <li>• Your cover note</li>}
+                  {attachedFile && <li>• Attached document: {attachedFile.name}</li>}
                 </ul>
               </div>
 
-              <Button onClick={handleSend} disabled={sending} className="w-full gap-2">
+              <Button onClick={handleSend} disabled={sending || uploading} className="w-full gap-2">
                 <Send className="h-4 w-4" />
-                {sending ? 'Sending…' : `Send to ${recipientName || recipientEmail || 'recipient'}`}
+                {uploading ? 'Uploading…' : sending ? 'Sending…' : `Send to ${recipientName || recipientEmail || 'recipient'}`}
               </Button>
             </div>
           )}
@@ -235,7 +313,7 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
   );
 }
 
-function buildIncidentEmailHtml(r: any, coverNote: string, recipientName: string): string {
+function buildIncidentEmailHtml(r: any, coverNote: string, recipientName: string, attachmentUrl?: string | null, attachmentName?: string | null): string {
   const reportNum = r.report_number || r.id.slice(0, 8).toUpperCase();
   const dateStr = new Date(r.date_time).toLocaleString('en-CA', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -315,6 +393,13 @@ function buildIncidentEmailHtml(r: any, coverNote: string, recipientName: string
           <h3 style="margin: 0 0 8px; font-size: 14px; color: #374151;">Attached Photos</h3>
           <div style="margin-bottom: 16px;">
             ${r.photos.map((url: string, i: number) => `<a href="${url}" style="display: inline-block; margin: 4px 8px 4px 0; color: #2563eb; font-size: 13px;">📷 Photo ${i + 1}</a>`).join('')}
+          </div>
+        ` : ''}
+
+        ${attachmentUrl ? `
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px;">
+            <p style="margin: 0 0 4px; font-size: 12px; font-weight: 600; color: #166534;">📎 Attached Document</p>
+            <a href="${attachmentUrl}" style="color: #2563eb; font-size: 14px; font-weight: 500;">${attachmentName || 'Download Document'}</a>
           </div>
         ` : ''}
 

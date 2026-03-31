@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { ShareIncidentDialog } from '@/components/ShareIncidentDialog';
+import { ShareHistoryDetailDialog } from '@/components/ShareHistoryDetailDialog';
 
 const statusColors: Record<string, string> = {
   open: 'bg-amber-500/10 text-amber-700 border-amber-200',
@@ -49,6 +50,7 @@ export default function AdminIncidentDetailPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [correctiveNotes, setCorrectiveNotes] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
+  const [selectedShare, setSelectedShare] = useState<any>(null);
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['incident_report', id],
@@ -336,7 +338,11 @@ export default function AdminIncidentDetailPage() {
               {shares && shares.length > 0 ? (
                 <div className="space-y-2">
                   {shares.map((s: any) => (
-                    <div key={s.id} className="flex items-start gap-3 rounded-lg border p-3">
+                    <button
+                      key={s.id}
+                      className="w-full text-left flex items-start gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => setSelectedShare(s)}
+                    >
                       <Send className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -344,6 +350,7 @@ export default function AdminIncidentDetailPage() {
                           <Badge variant="secondary" className="text-[10px] capitalize">
                             {recipientTypeLabels[s.recipient_type] || s.recipient_type}
                           </Badge>
+                          {s.attachment_url && <Badge variant="outline" className="text-[10px]">📎 Attachment</Badge>}
                         </div>
                         <p className="text-xs text-muted-foreground truncate">{s.recipient_email}</p>
                         {s.cover_note && (
@@ -353,7 +360,7 @@ export default function AdminIncidentDetailPage() {
                           {format(new Date(s.shared_at), 'MMM d, yyyy · h:mm a')}
                         </p>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               ) : (
@@ -379,6 +386,12 @@ export default function AdminIncidentDetailPage() {
 
       {/* Share dialog */}
       <ShareIncidentDialog open={shareOpen} onOpenChange={setShareOpen} report={r} />
+      <ShareHistoryDetailDialog
+        open={!!selectedShare}
+        onOpenChange={(open) => { if (!open) setSelectedShare(null); }}
+        share={selectedShare}
+        reportNumber={r.report_number}
+      />
     </div>
   );
 }
