@@ -75,14 +75,18 @@ export default function WorkerHome() {
   const { data: todayVisits = [] } = useQuery({
     queryKey: ['worker_today_visits', todayStr, user?.id],
     queryFn: async () => {
+      // Fetch visits assigned to this worker either directly or via the job
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs!inner(assigned_to, service_category)')
+        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, completion_time, service_summary, assigned_worker_id, properties(property_name, address_line_1, city, province, postal_code), customers(first_name, last_name, phone), jobs(assigned_to, service_category)')
         .eq('service_date', todayStr)
-        .eq('jobs.assigned_to', user!.id)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return data || [];
+      // Filter client-side: assigned_worker_id matches OR job.assigned_to matches
+      return (data || []).filter(v => 
+        v.assigned_worker_id === user!.id || 
+        (v.jobs as any)?.assigned_to === user!.id
+      );
     },
     enabled: !!user,
   });
