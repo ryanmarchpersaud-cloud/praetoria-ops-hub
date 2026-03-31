@@ -371,15 +371,31 @@ export default function HRComplianceWorkflowsPage() {
                 const changeLabels: Record<string, string> = { new_enrollment: 'New', life_event: 'Life Event', plan_change: 'Plan Change', termination: 'Termination' };
                 const changeColors: Record<string, string> = { new_enrollment: 'bg-emerald-500/10 text-emerald-600 border-emerald-200', life_event: 'bg-blue-500/10 text-blue-600 border-blue-200', plan_change: 'bg-purple-500/10 text-purple-600 border-purple-200', termination: 'bg-destructive/10 text-destructive border-destructive/20' };
                 return (
-                  <TableRow key={e.id}>
-                    <TableCell><Link to={`/employees/${e.employee_user_id}`} className="hover:underline font-medium">{getEmpName(e.employee_user_id)}</Link></TableCell>
-                    <TableCell className="text-sm">{(e.hr_insurance_providers as any)?.provider_name ?? '—'}</TableCell>
-                    <TableCell><Badge variant="outline" className={`text-xs ${changeColors[e.change_type] || ''}`}>{changeLabels[e.change_type] || e.change_type}</Badge></TableCell>
-                    <TableCell className="text-sm">{e.plan_type || '—'}</TableCell>
-                    <TableCell><Badge variant="outline" className={`capitalize text-xs ${e.enrollment_status === 'enrolled' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' : e.enrollment_status === 'pending' ? 'bg-amber-500/10 text-amber-700 border-amber-200' : e.enrollment_status === 'terminated' ? 'bg-destructive/10 text-destructive' : ''}`}>{e.enrollment_status}</Badge></TableCell>
-                    <TableCell className="text-sm">{e.effective_date ? format(new Date(e.effective_date), 'MMM d, yyyy') : '—'}</TableCell>
-                    <TableCell className="text-sm text-center">{e.dependent_count ?? 0}</TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={e.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedEnroll(selectedEnroll === e.id ? null : e.id)}>
+                      <TableCell><Link to={`/employees/${e.employee_user_id}`} className="hover:underline font-medium" onClick={ev => ev.stopPropagation()}>{getEmpName(e.employee_user_id)}</Link></TableCell>
+                      <TableCell className="text-sm">{(e.hr_insurance_providers as any)?.provider_name ?? '—'}</TableCell>
+                      <TableCell><Badge variant="outline" className={`text-xs ${changeColors[e.change_type] || ''}`}>{changeLabels[e.change_type] || e.change_type}</Badge></TableCell>
+                      <TableCell className="text-sm">{e.plan_type || '—'}</TableCell>
+                      <TableCell><Badge variant="outline" className={`capitalize text-xs ${e.enrollment_status === 'enrolled' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200' : e.enrollment_status === 'pending' ? 'bg-amber-500/10 text-amber-700 border-amber-200' : e.enrollment_status === 'terminated' ? 'bg-destructive/10 text-destructive' : ''}`}>{e.enrollment_status}</Badge></TableCell>
+                      <TableCell className="text-sm">{e.effective_date ? format(new Date(e.effective_date), 'MMM d, yyyy') : '—'}</TableCell>
+                      <TableCell className="text-sm text-center">{e.dependent_count ?? 0}</TableCell>
+                    </TableRow>
+                    {selectedEnroll === e.id && (
+                      <TableRow key={`${e.id}-docs`}>
+                        <TableCell colSpan={7} className="bg-muted/20 p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              {e.change_reason && <div><span className="text-xs font-medium text-muted-foreground">Change Reason:</span><p className="text-sm mt-0.5">{e.change_reason}</p></div>}
+                              {e.notes && <div><span className="text-xs font-medium text-muted-foreground">Notes:</span><p className="text-sm mt-0.5">{e.notes}</p></div>}
+                              {e.termination_date && <div><span className="text-xs font-medium text-muted-foreground">Termination Date:</span><p className="text-sm mt-0.5">{format(new Date(e.termination_date), 'MMM d, yyyy')}</p></div>}
+                            </div>
+                            <HRFileAttachments recordType="hr_benefit_enrollment" recordId={e.id} label="Enrollment Documents" />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 );
               })}
             </TableBody></Table></Card>
