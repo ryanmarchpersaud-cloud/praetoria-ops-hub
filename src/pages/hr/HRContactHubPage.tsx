@@ -20,6 +20,15 @@ const ESCALATION_CONTACTS = [
   { role: 'Emergency', name: '911 Emergency', phone: '911', email: '', desc: 'Life-threatening emergencies only' },
 ];
 
+const SK_EXTERNAL_CONTACTS = [
+  { org: 'WCB Saskatchewan', phone: '1-800-667-7590', url: 'https://www.wcbsask.com', desc: 'Workers\' Compensation Board — employer claims & injury reporting' },
+  { org: 'SK Blue Cross', phone: '1-800-667-6853', url: 'https://www.sk.bluecross.ca', desc: 'Benefits plan administration & claims' },
+  { org: 'SGI Saskatchewan', phone: '1-844-855-2744', url: 'https://www.sgi.sk.ca', desc: 'Driver licensing, abstracts & fleet insurance' },
+  { org: 'SK OHS Division', phone: '1-800-567-7233', url: 'https://www.worksafesask.ca', desc: 'Occupational Health & Safety — workplace safety reporting' },
+  { org: 'Poison Control SK', phone: '1-866-454-1212', url: '', desc: 'Chemical exposure & hazardous material incidents' },
+  { org: 'SK Human Rights Commission', phone: '1-800-667-9249', url: 'https://saskatchewanhumanrights.ca', desc: 'Discrimination, harassment & accommodation complaints' },
+];
+
 export default function HRContactHubPage() {
   const { data: employees = [] } = useEmployees();
   const { data: allContacts = [] } = useAllEmergencyContacts();
