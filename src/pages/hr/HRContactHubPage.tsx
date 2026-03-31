@@ -32,6 +32,9 @@ const SK_EXTERNAL_CONTACTS = [
 export default function HRContactHubPage() {
   const { data: employees = [] } = useEmployees();
   const { data: allContacts = [] } = useAllEmergencyContacts();
+  const { data: incidents = [] } = useAllIncidentReports();
+
+  const openIncidents = incidents.filter((i: any) => i.follow_up_status !== 'resolved' && i.follow_up_status !== 'closed');
 
   const activeEmployees = employees.filter(e => e.employment_status === 'active');
 
