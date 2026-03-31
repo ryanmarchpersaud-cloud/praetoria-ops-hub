@@ -108,6 +108,7 @@ export default function HRContactHubPage() {
           <TabsTrigger value="emergency"><Phone className="h-3.5 w-3.5 mr-1.5" /> Emergency Contacts ({allContacts.length})</TabsTrigger>
           <TabsTrigger value="missing"><AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> Missing ({withoutContacts.length})</TabsTrigger>
           <TabsTrigger value="supervisors"><Building2 className="h-3.5 w-3.5 mr-1.5" /> Supervisors ({supervisors.length})</TabsTrigger>
+          <TabsTrigger value="sk-external"><Phone className="h-3.5 w-3.5 mr-1.5" /> SK External</TabsTrigger>
         </TabsList>
 
         {/* Escalation contacts */}
