@@ -308,13 +308,16 @@ export default function TrainingCatalogPage() {
       <Dialog open={!!showAssign} onOpenChange={() => setShowAssign(null)}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Assign Course to Workers</DialogTitle>
+            <DialogTitle>Assign Course to Personnel</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div><Label>Due Date (optional)</Label><Input type="date" value={assignDueDate} onChange={e => setAssignDueDate(e.target.value)} /></div>
             <div>
-              <Label>Select Workers ({selectedUsers.length} selected)</Label>
+              <Label>Select Personnel ({selectedUsers.length} selected)</Label>
               <div className="max-h-60 overflow-y-auto border rounded-md mt-1 divide-y">
+                {employees.filter(e => e.employment_status === 'active').length > 0 && (
+                  <div className="px-3 py-1.5 bg-muted/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Employees</div>
+                )}
                 {employees.filter(e => e.employment_status === 'active').map(emp => (
                   <label key={emp.user_id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/50 cursor-pointer">
                     <Checkbox
@@ -328,6 +331,25 @@ export default function TrainingCatalogPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{emp.full_name}</p>
                       <p className="text-xs text-muted-foreground">{emp.role_title || emp.primary_service_category || '—'}</p>
+                    </div>
+                  </label>
+                ))}
+                {subcontractors.filter((s: any) => s.user_id).length > 0 && (
+                  <div className="px-3 py-1.5 bg-muted/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Subcontractors</div>
+                )}
+                {subcontractors.filter((s: any) => s.user_id).map((sub: any) => (
+                  <label key={sub.user_id} className="flex items-center gap-2 px-3 py-2 hover:bg-muted/50 cursor-pointer">
+                    <Checkbox
+                      checked={selectedUsers.includes(sub.user_id)}
+                      onCheckedChange={checked => {
+                        setSelectedUsers(prev =>
+                          checked ? [...prev, sub.user_id] : prev.filter(id => id !== sub.user_id)
+                        );
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{sub.contact_name || sub.company_name}</p>
+                      <p className="text-xs text-muted-foreground">{sub.company_name || 'Subcontractor'}</p>
                     </div>
                   </label>
                 ))}
