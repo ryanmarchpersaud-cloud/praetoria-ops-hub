@@ -1,5 +1,6 @@
 import { useComplianceSummary, useAllAssignments, useTrainingCourses } from '@/hooks/useTraining';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -7,9 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ShieldCheck, AlertTriangle, Clock, Award, RefreshCw, Users,
-  CheckCircle2, XCircle, Calendar,
+  CheckCircle2, XCircle, Calendar, HardHat,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 function MetricCard({ icon: Icon, label, value, color }: {
   icon: any; label: string; value: number | string; color: string;
@@ -51,8 +53,32 @@ export default function ComplianceOverviewPage() {
   const { data: allAssignments = [] } = useAllAssignments();
   const { data: courses = [] } = useTrainingCourses();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
 
   const today = new Date().toISOString().split('T')[0];
+
+  // Build user lookup (employees + subcontractors)
+  const getUserName = (userId: string) => {
+    const emp = employees.find(e => e.user_id === userId);
+    if (emp) return emp.full_name;
+    const sub = subcontractors.find((s: any) => s.user_id === userId);
+    if (sub) return (sub as any).contact_name || (sub as any).company_name || 'Subcontractor';
+    return 'Unknown';
+  };
+  const getUserType = (userId: string): 'employee' | 'subcontractor' | 'unknown' => {
+    if (employees.find(e => e.user_id === userId)) return 'employee';
+    if (subcontractors.find((s: any) => s.user_id === userId)) return 'subcontractor';
+    return 'unknown';
+  };
+  const getUserLink = (userId: string) => {
+    const type = getUserType(userId);
+    if (type === 'employee') return `/employees/${userId}`;
+    if (type === 'subcontractor') {
+      const sub = subcontractors.find((s: any) => s.user_id === userId);
+      return sub ? `/subcontractors/${(sub as any).id}` : '#';
+    }
+    return '#';
+  };
 
   // Filter views
   const mandatoryAssignments = allAssignments.filter((a: any) => a.training_courses?.is_mandatory);
@@ -70,20 +96,25 @@ export default function ComplianceOverviewPage() {
 
   const mandatoryCourses = courses.filter((c: any) => c.is_mandatory);
 
-  // Per-employee compliance rate
-  const employeeCompliance = employees
-    .filter(e => e.employment_status === 'active')
-    .map(emp => {
-      const empAssignments = allAssignments.filter((a: any) => a.user_id === emp.user_id);
-      const empMandatory = empAssignments.filter((a: any) => a.training_courses?.is_mandatory);
-      const empPassed = empMandatory.filter((a: any) => a.status === 'passed').length;
+  // Per-person compliance (employees + subcontractors)
+  const allPeople = [
+    ...employees.filter(e => e.employment_status === 'active').map(e => ({ userId: e.user_id, name: e.full_name, role: e.role_title || '—', type: 'Employee' as const })),
+    ...subcontractors.filter((s: any) => (s as any).status === 'active' || !(s as any).status).map((s: any) => ({ userId: s.user_id, name: s.contact_name || s.company_name || 'Subcontractor', role: s.company_name || '—', type: 'Subcontractor' as const })),
+  ];
+
+  const personCompliance = allPeople
+    .filter(p => p.userId)
+    .map(person => {
+      const personAssignments = allAssignments.filter((a: any) => a.user_id === person.userId);
+      const personMandatory = personAssignments.filter((a: any) => a.training_courses?.is_mandatory);
+      const personPassed = personMandatory.filter((a: any) => a.status === 'passed').length;
       return {
-        ...emp,
-        totalAssigned: empAssignments.length,
-        mandatoryTotal: empMandatory.length,
-        mandatoryPassed: empPassed,
-        complianceRate: empMandatory.length > 0 ? Math.round((empPassed / empMandatory.length) * 100) : 100,
-        hasOverdue: empAssignments.some((a: any) => a.due_date && a.due_date < today && a.status !== 'passed'),
+        ...person,
+        totalAssigned: personAssignments.length,
+        mandatoryTotal: personMandatory.length,
+        mandatoryPassed: personPassed,
+        complianceRate: personMandatory.length > 0 ? Math.round((personPassed / personMandatory.length) * 100) : 100,
+        hasOverdue: personAssignments.some((a: any) => a.due_date && a.due_date < today && a.status !== 'passed'),
       };
     })
     .sort((a, b) => a.complianceRate - b.complianceRate);
@@ -98,7 +129,7 @@ export default function ComplianceOverviewPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Compliance Overview</h1>
-        <p className="text-sm text-muted-foreground">Certifications, mandatory training status & expiry tracking</p>
+        <p className="text-sm text-muted-foreground">Certifications, mandatory training status & expiry tracking for all personnel</p>
       </div>
 
       {/* Key metrics */}
@@ -120,15 +151,15 @@ export default function ComplianceOverviewPage() {
             <span className="text-sm font-bold text-foreground">{overallRate}%</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            {compliance?.mandatoryCompleted ?? 0} of {compliance?.mandatoryTotal ?? 0} mandatory assignments completed across all employees
+            {compliance?.mandatoryCompleted ?? 0} of {compliance?.mandatoryTotal ?? 0} mandatory assignments completed across all personnel
           </p>
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="employees">
-        <TabsList>
-          <TabsTrigger value="employees">
-            <Users className="h-3.5 w-3.5 mr-1.5" /> Employee Compliance ({employeeCompliance.length})
+      <Tabs defaultValue="personnel">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="personnel">
+            <Users className="h-3.5 w-3.5 mr-1.5" /> All Personnel ({personCompliance.length})
           </TabsTrigger>
           <TabsTrigger value="mandatory">
             <ShieldCheck className="h-3.5 w-3.5 mr-1.5" /> Mandatory Courses ({mandatoryCourses.length})
@@ -141,14 +172,15 @@ export default function ComplianceOverviewPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Employee compliance tab */}
-        <TabsContent value="employees" className="mt-4">
+        {/* Personnel compliance tab */}
+        <TabsContent value="personnel" className="mt-4">
           <Card>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Employee</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Mandatory</TableHead>
                     <TableHead>Compliance</TableHead>
@@ -156,23 +188,33 @@ export default function ComplianceOverviewPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {employeeCompliance.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No active employees</TableCell></TableRow>
-                  ) : employeeCompliance.map(emp => (
-                    <TableRow key={emp.user_id}>
-                      <TableCell className="text-sm font-medium">{emp.full_name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{emp.role_title || '—'}</TableCell>
-                      <TableCell className="text-sm">{emp.mandatoryPassed}/{emp.mandatoryTotal}</TableCell>
+                  {personCompliance.length === 0 ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No active personnel</TableCell></TableRow>
+                  ) : personCompliance.map(person => (
+                    <TableRow key={person.userId}>
+                      <TableCell>
+                        <Link to={getUserLink(person.userId)} className="text-sm font-medium text-primary hover:underline">
+                          {person.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-[10px] ${person.type === 'Subcontractor' ? 'bg-blue-500/10 text-blue-700' : ''}`}>
+                          {person.type === 'Employee' ? <HardHat className="h-3 w-3 mr-1 inline" /> : null}
+                          {person.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{person.role}</TableCell>
+                      <TableCell className="text-sm">{person.mandatoryPassed}/{person.mandatoryTotal}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Progress value={emp.complianceRate} className="w-20 h-1.5" />
-                          <span className="text-xs font-medium">{emp.complianceRate}%</span>
+                          <Progress value={person.complianceRate} className="w-20 h-1.5" />
+                          <span className="text-xs font-medium">{person.complianceRate}%</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {emp.hasOverdue ? (
+                        {person.hasOverdue ? (
                           <Badge variant="destructive" className="text-[10px]">Overdue</Badge>
-                        ) : emp.complianceRate === 100 ? (
+                        ) : person.complianceRate === 100 ? (
                           <Badge className="text-[10px] bg-emerald-500 hover:bg-emerald-600">Compliant</Badge>
                         ) : (
                           <Badge variant="secondary" className="text-[10px]">In Progress</Badge>
@@ -240,6 +282,7 @@ export default function ComplianceOverviewPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Person</TableHead>
                     <TableHead>Course</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Due Date</TableHead>
@@ -248,9 +291,15 @@ export default function ComplianceOverviewPage() {
                 </TableHeader>
                 <TableBody>
                   {overdueAssignments.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No overdue assignments 🎉</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No overdue assignments 🎉</TableCell></TableRow>
                   ) : overdueAssignments.map((a: any) => (
                     <TableRow key={a.id}>
+                      <TableCell>
+                        <Link to={getUserLink(a.user_id)} className="text-sm font-medium text-primary hover:underline">
+                          {getUserName(a.user_id)}
+                        </Link>
+                        <Badge variant="outline" className="text-[9px] ml-1.5">{getUserType(a.user_id) === 'subcontractor' ? 'Sub' : 'Emp'}</Badge>
+                      </TableCell>
                       <TableCell className="text-sm font-medium">{a.training_courses?.title || '—'}</TableCell>
                       <TableCell><div className="flex items-center gap-1.5"><StatusIcon status={a.status} /><span className="text-sm capitalize">{a.status?.replace('_', ' ')}</span></div></TableCell>
                       <TableCell className="text-sm text-muted-foreground">{a.due_date ? format(new Date(a.due_date), 'MMM d, yyyy') : '—'}</TableCell>
@@ -270,6 +319,7 @@ export default function ComplianceOverviewPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Person</TableHead>
                     <TableHead>Course</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Expiry Date</TableHead>
@@ -278,9 +328,15 @@ export default function ComplianceOverviewPage() {
                 </TableHeader>
                 <TableBody>
                   {(expiringAssignments.length + expiredAssignments.length) === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No expiring or expired certifications</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No expiring or expired certifications</TableCell></TableRow>
                   ) : [...expiredAssignments, ...expiringAssignments].map((a: any) => (
                     <TableRow key={a.id}>
+                      <TableCell>
+                        <Link to={getUserLink(a.user_id)} className="text-sm font-medium text-primary hover:underline">
+                          {getUserName(a.user_id)}
+                        </Link>
+                        <Badge variant="outline" className="text-[9px] ml-1.5">{getUserType(a.user_id) === 'subcontractor' ? 'Sub' : 'Emp'}</Badge>
+                      </TableCell>
                       <TableCell className="text-sm font-medium">{a.training_courses?.title || '—'}</TableCell>
                       <TableCell><div className="flex items-center gap-1.5"><StatusIcon status={a.status} /><span className="text-sm capitalize">{a.status?.replace('_', ' ')}</span></div></TableCell>
                       <TableCell className="text-sm">{a.expiry_date ? format(new Date(a.expiry_date), 'MMM d, yyyy') : '—'}</TableCell>

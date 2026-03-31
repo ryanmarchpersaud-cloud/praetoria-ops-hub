@@ -1,17 +1,18 @@
 import { Link } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useAllWorkerDocuments, useAllCertifications } from '@/hooks/useHRData';
+import { useAllWorkerDocuments, useAllCertifications, useAllPolicySignoffs } from '@/hooks/useHRData';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, Award, AlertTriangle } from 'lucide-react';
+import { FileText, Award, AlertTriangle, ClipboardCheck } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 
 export default function HRDocumentsPage() {
   const { data: employees = [] } = useEmployees();
   const { data: docs = [] } = useAllWorkerDocuments();
   const { data: certs = [] } = useAllCertifications();
+  const { data: signoffs = [] } = useAllPolicySignoffs();
 
   const getEmpName = (userId: string) => employees.find(e => e.user_id === userId)?.full_name || 'Unknown';
 
@@ -28,10 +29,10 @@ export default function HRDocumentsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Documents & Certifications</h1>
-        <p className="text-sm text-muted-foreground">Worker documents, certificates & expiry tracking</p>
+        <p className="text-sm text-muted-foreground">Worker documents, certificates, policy sign-offs & expiry tracking</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <FileText className="h-5 w-5 text-primary" />
@@ -56,12 +57,19 @@ export default function HRDocumentsPage() {
             <div><p className="text-xl font-bold">{expiredCerts.length}</p><p className="text-[10px] text-muted-foreground">Expired</p></div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <ClipboardCheck className="h-5 w-5 text-emerald-600" />
+            <div><p className="text-xl font-bold">{signoffs.length}</p><p className="text-[10px] text-muted-foreground">Policy Sign-offs</p></div>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="certs">
         <TabsList>
           <TabsTrigger value="certs">Certifications ({certs.length})</TabsTrigger>
           <TabsTrigger value="expiring">Expiring ({expiringCerts.length})</TabsTrigger>
+          <TabsTrigger value="signoffs">Policy Sign-offs ({signoffs.length})</TabsTrigger>
           <TabsTrigger value="documents">Documents ({docs.length})</TabsTrigger>
         </TabsList>
 
@@ -153,6 +161,43 @@ export default function HRDocumentsPage() {
                           <Badge className="text-[10px] bg-amber-500 hover:bg-amber-600">
                             {differenceInDays(new Date(c.expiry_date), today)}d left
                           </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="signoffs" className="mt-4">
+          <Card>
+            <CardContent className="p-0">
+              {signoffs.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">No policy sign-offs recorded yet.</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Policy</TableHead>
+                      <TableHead>Version</TableHead>
+                      <TableHead>Signed At</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {signoffs.map((s: any) => (
+                      <TableRow key={s.id}>
+                        <TableCell>
+                          <Link to={`/employees/${s.user_id}`} className="text-sm font-medium text-primary hover:underline">
+                            {getEmpName(s.user_id)}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-sm font-medium">{s.policy_name || '—'}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{s.policy_version || '—'}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {s.signed_at ? format(new Date(s.signed_at), 'MMM d, yyyy h:mm a') : '—'}
                         </TableCell>
                       </TableRow>
                     ))}
