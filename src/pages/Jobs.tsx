@@ -54,19 +54,6 @@ export default function Jobs() {
         </Select>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-        <div className="relative flex-1 min-w-[140px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
-        </div>
-        <Select value={statusFilter} onValueChange={v => setStatusFilter(v === 'all' ? '' : v)}>
-          <SelectTrigger className="w-[130px] h-9 text-xs md:text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {JOB_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-2">
