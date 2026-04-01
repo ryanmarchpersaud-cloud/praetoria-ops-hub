@@ -129,7 +129,16 @@ export default function Jobs() {
                 <TableCell className="text-sm">{j.service_category}</TableCell>
                 <TableCell className={`text-sm ${priorityColor(j.priority)}`}>{j.priority}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{j.scheduled_date ? format(new Date(j.scheduled_date), 'MMM d, yyyy') : '—'}</TableCell>
-                <TableCell><StatusBadge status={j.status} /></TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1.5">
+                    {(j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced' && (
+                      <Badge variant="outline" className="text-[9px] border-warning text-warning bg-warning/5 gap-0.5">
+                        <AlertCircle className="h-2.5 w-2.5" /> Requires Invoicing
+                      </Badge>
+                    )}
+                    <StatusBadge status={j.status} />
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
