@@ -32,6 +32,7 @@ export default function CustomerDetail() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePassword, setInvitePassword] = useState('');
   const [inviting, setInviting] = useState(false);
+  const [invoiceSelectOpen, setInvoiceSelectOpen] = useState(false);
 
   if (customer && !form) {
     setForm(customer);
