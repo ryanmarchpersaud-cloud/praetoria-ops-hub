@@ -355,6 +355,16 @@ export default function CustomerDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Select Jobs to Invoice Dialog */}
+      {id && (
+        <SelectJobsToInvoiceDialog
+          open={invoiceSelectOpen}
+          onOpenChange={setInvoiceSelectOpen}
+          customerId={id}
+          customerName={`${customer.first_name} ${customer.last_name}`}
+        />
+      )}
     </div>
   );
 }
