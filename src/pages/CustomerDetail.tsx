@@ -13,6 +13,9 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus } from 'lucide-react';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
+import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
+import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedger';
+import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInvoiceDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
@@ -29,6 +32,7 @@ export default function CustomerDetail() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePassword, setInvitePassword] = useState('');
   const [inviting, setInviting] = useState(false);
+  const [invoiceSelectOpen, setInvoiceSelectOpen] = useState(false);
 
   if (customer && !form) {
     setForm(customer);
@@ -152,9 +156,12 @@ export default function CustomerDetail() {
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={handleSave} className="flex-1 h-11" disabled={updateCustomer.isPending}>
           <Save className="h-4 w-4 mr-2" /> Save
+        </Button>
+        <Button variant="outline" className="h-11 gap-2" onClick={() => setInvoiceSelectOpen(true)}>
+          <Receipt className="h-4 w-4" /> Invoice from Jobs
         </Button>
         {!hasPortalAccess ? (
           <Button variant="outline" className="h-11 gap-2" onClick={() => setInviteOpen(true)}>
@@ -221,6 +228,12 @@ export default function CustomerDetail() {
 
           {/* Customer Warnings */}
           {id && <CustomerWarningsEditor customerId={id} />}
+
+          {/* Work Overview */}
+          {id && <CustomerWorkOverview customerId={id} />}
+
+          {/* Billing Ledger */}
+          {id && <CustomerBillingLedger customerId={id} />}
         </div>
 
         {/* Sidebar: Related Records */}
@@ -342,6 +355,16 @@ export default function CustomerDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Select Jobs to Invoice Dialog */}
+      {id && (
+        <SelectJobsToInvoiceDialog
+          open={invoiceSelectOpen}
+          onOpenChange={setInvoiceSelectOpen}
+          customerId={id}
+          customerName={`${customer.first_name} ${customer.last_name}`}
+        />
+      )}
     </div>
   );
 }

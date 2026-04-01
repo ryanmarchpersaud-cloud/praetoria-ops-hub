@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search, ChevronRight } from 'lucide-react';
+import { Plus, Search, ChevronRight, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
 import { JOB_STATUSES } from '@/lib/constants';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
@@ -53,19 +54,6 @@ export default function Jobs() {
         </Select>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-        <div className="relative flex-1 min-w-[140px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
-        </div>
-        <Select value={statusFilter} onValueChange={v => setStatusFilter(v === 'all' ? '' : v)}>
-          <SelectTrigger className="w-[130px] h-9 text-xs md:text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {JOB_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-2">
@@ -85,6 +73,11 @@ export default function Jobs() {
                 {j.properties && <p className="text-[11px] text-muted-foreground mt-0.5">{j.properties.property_name}</p>}
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {(j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced' && (
+                  <Badge variant="outline" className="text-[9px] border-warning text-warning bg-warning/5 gap-0.5">
+                    <AlertCircle className="h-2.5 w-2.5" /> Requires Invoicing
+                  </Badge>
+                )}
                 <StatusBadge status={j.status} showIcon={false} />
                 <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
               </div>
@@ -123,7 +116,16 @@ export default function Jobs() {
                 <TableCell className="text-sm">{j.service_category}</TableCell>
                 <TableCell className={`text-sm ${priorityColor(j.priority)}`}>{j.priority}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{j.scheduled_date ? format(new Date(j.scheduled_date), 'MMM d, yyyy') : '—'}</TableCell>
-                <TableCell><StatusBadge status={j.status} /></TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1.5">
+                    {(j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced' && (
+                      <Badge variant="outline" className="text-[9px] border-warning text-warning bg-warning/5 gap-0.5">
+                        <AlertCircle className="h-2.5 w-2.5" /> Requires Invoicing
+                      </Badge>
+                    )}
+                    <StatusBadge status={j.status} />
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

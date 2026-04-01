@@ -44,7 +44,7 @@ export function CreateInvoiceFromWorkDialog({
 
   const [issueDate, setIssueDate] = useState(today);
   const [dueDate, setDueDate] = useState(defaultDue);
-  const [taxRate, setTaxRate] = useState('0.13');
+  const [taxRate, setTaxRate] = useState('0.05'); // SK GST default
   const [customerMemo, setCustomerMemo] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [saving, setSaving] = useState(false);
