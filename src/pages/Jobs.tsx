@@ -86,6 +86,11 @@ export default function Jobs() {
                 {j.properties && <p className="text-[11px] text-muted-foreground mt-0.5">{j.properties.property_name}</p>}
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {(j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced' && (
+                  <Badge variant="outline" className="text-[9px] border-warning text-warning bg-warning/5 gap-0.5">
+                    <AlertCircle className="h-2.5 w-2.5" /> Requires Invoicing
+                  </Badge>
+                )}
                 <StatusBadge status={j.status} showIcon={false} />
                 <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
               </div>
