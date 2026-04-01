@@ -225,6 +225,12 @@ export default function CustomerDetail() {
 
           {/* Customer Warnings */}
           {id && <CustomerWarningsEditor customerId={id} />}
+
+          {/* Work Overview */}
+          {id && <CustomerWorkOverview customerId={id} />}
+
+          {/* Billing Ledger */}
+          {id && <CustomerBillingLedger customerId={id} />}
         </div>
 
         {/* Sidebar: Related Records */}
