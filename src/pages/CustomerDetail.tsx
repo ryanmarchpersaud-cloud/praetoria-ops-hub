@@ -156,9 +156,12 @@ export default function CustomerDetail() {
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button onClick={handleSave} className="flex-1 h-11" disabled={updateCustomer.isPending}>
           <Save className="h-4 w-4 mr-2" /> Save
+        </Button>
+        <Button variant="outline" className="h-11 gap-2" onClick={() => setInvoiceSelectOpen(true)}>
+          <Receipt className="h-4 w-4" /> Invoice from Jobs
         </Button>
         {!hasPortalAccess ? (
           <Button variant="outline" className="h-11 gap-2" onClick={() => setInviteOpen(true)}>
