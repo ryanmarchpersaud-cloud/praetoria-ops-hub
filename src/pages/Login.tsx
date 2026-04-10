@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LoginPromoPanel } from '@/components/LoginPromoPanel';
-import { DevTestPanel } from '@/components/DevTestPanel';
+
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { ServiceLinksSection } from '@/components/ServiceLinksSection';
@@ -171,10 +171,6 @@ export default function Login() {
             )}
           </div>
 
-          {/* Dev testing panel */}
-          <div className="mt-6">
-            <DevTestPanel />
-          </div>
 
           {/* Service Links */}
           <ServiceLinksSection variant="login" />
