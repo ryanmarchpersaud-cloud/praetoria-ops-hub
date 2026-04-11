@@ -67,8 +67,8 @@ interface WorkflowCardsProps {
 }
 
 export function WorkflowCards({ requests, quotes, jobs, invoices, isLoading }: WorkflowCardsProps) {
-  const reqNew = requests.filter(r => r.status === 'New' || r.status === 'new').length;
-  const reqReview = requests.filter(r => ['In Review', 'in_review', 'Pending', 'pending', 'Assessment Complete', 'assessment_complete'].includes(r.status)).length;
+  const reqNew = requests.filter(r => ['New', 'new', 'Open', 'open', 'Pending', 'pending'].includes(r.status)).length;
+  const reqReview = requests.filter(r => ['In Review', 'in_review', 'In Progress', 'in_progress', 'Assessment Complete', 'assessment_complete'].includes(r.status)).length;
 
   const qApproved = quotes.filter(q => q.approval_status === 'Approved');
   const qDraft = quotes.filter(q => q.approval_status === 'Draft' || q.approval_status === 'Needs review');
