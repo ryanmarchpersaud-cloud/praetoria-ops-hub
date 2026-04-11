@@ -147,15 +147,26 @@ export default function InvoicePrint() {
                 <span className="font-bold text-[#1a1a2e]">Due:</span>{' '}
                 {format(new Date(invoice.due_date), 'MMMM d, yyyy')}
               </p>
-              {invoice.paid_at && (
+              {amountPaid > 0 && (
                 <p>
                   <span className="font-bold text-[#059669]">Paid:</span>{' '}
+                  ${formatCurrency(amountPaid)}
+                </p>
+              )}
+              {invoice.paid_at && (
+                <p>
+                  <span className="font-bold text-[#059669]">Date Paid:</span>{' '}
                   {format(new Date(invoice.paid_at), 'MMMM d, yyyy')}
                 </p>
               )}
               <p className="text-base font-extrabold text-[#1a1a2e] pt-1 print:text-lg">
                 Total: ${formatCurrency(total)}
               </p>
+              {balanceDue > 0.005 && balanceDue < total && (
+                <p className="text-base font-extrabold text-[#dc2626] print:text-lg">
+                  Balance Due: ${formatCurrency(balanceDue)}
+                </p>
+              )}
             </div>
           </div>
         </div>
