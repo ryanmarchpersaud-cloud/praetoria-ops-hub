@@ -187,7 +187,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
           <TableRow>
             <TableHead className="w-[35%]">Product & Service</TableHead>
             <TableHead className="w-24">Date</TableHead>
-            <TableHead className="w-24">Time</TableHead>
+            
             <TableHead className="text-right w-20">Qty</TableHead>
             <TableHead className="text-right w-28">Price</TableHead>
             <TableHead className="text-right w-28">Total</TableHead>
@@ -197,7 +197,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
         <TableBody>
           {items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
                 No line items — use "Add from Catalog" to get started
               </TableCell>
             </TableRow>
