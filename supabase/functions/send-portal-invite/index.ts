@@ -179,15 +179,25 @@ Deno.serve(async (req) => {
     }
 
     // Update password if provided
-    const targetUserId = portal_type === "customer" ? null : user_id;
-    if (temporary_password && temporary_password.length >= 8 && targetUserId) {
-      await adminClient.auth.admin.updateUser(targetUserId, { password: temporary_password });
-    }
-    // For customer, find user_id from customer record
-    if (portal_type === "customer" && temporary_password && temporary_password.length >= 8) {
-      const { data: cust } = await adminClient.from("customers").select("user_id").eq("id", customer_id).single();
-      if (cust?.user_id) {
-        await adminClient.auth.admin.updateUser(cust.user_id, { password: temporary_password });
+    const updatePasswordForUser = async (targetId: string, password: string) => {
+      const { error: passwordError } = await adminClient.auth.admin.updateUserById(targetId, {
+        password,
+      });
+
+      if (passwordError) {
+        throw new Error(`Failed to set temporary password: ${passwordError.message}`);
+      }
+    };
+
+    const shouldUpdatePassword = typeof temporary_password === "string" && temporary_password.length >= 8;
+    if (shouldUpdatePassword) {
+      if (portal_type === "customer") {
+        const { data: cust } = await adminClient.from("customers").select("user_id").eq("id", customer_id).single();
+        if (cust?.user_id) {
+          await updatePasswordForUser(cust.user_id, temporary_password);
+        }
+      } else if (user_id) {
+        await updatePasswordForUser(user_id, temporary_password);
       }
     }
 
