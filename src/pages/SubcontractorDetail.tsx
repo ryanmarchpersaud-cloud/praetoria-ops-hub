@@ -164,6 +164,12 @@ export default function SubcontractorDetail() {
       pay_schedule: sub.pay_schedule || '',
       referral_source: sub.referral_source || '',
       notes_admin_only: sub.notes_admin_only || '',
+      bank_name: sub.bank_name || '',
+      bank_institution_number: sub.bank_institution_number || '',
+      bank_transit_number: sub.bank_transit_number || '',
+      bank_account_number: sub.bank_account_number || '',
+      e_transfer_email: sub.e_transfer_email || '',
+      preferred_payment_method: sub.preferred_payment_method || 'e-transfer',
     });
     setEditOpen(true);
   };
