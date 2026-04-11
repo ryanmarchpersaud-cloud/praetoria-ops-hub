@@ -819,6 +819,42 @@ export default function SubcontractorDetail() {
               <Input value={ef('referral_source')} onChange={e => setEf('referral_source', e.target.value)} />
             </div>
 
+            <div className="col-span-full border-t border-border pt-3 mt-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Banking Information</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Preferred Payment Method</Label>
+              <Select value={ef('preferred_payment_method')} onValueChange={v => setEf('preferred_payment_method', v)}>
+                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="e-transfer">E-Transfer</SelectItem>
+                  <SelectItem value="direct-deposit">Direct Deposit</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="wire">Wire Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>E-Transfer Email</Label>
+              <Input type="email" value={ef('e_transfer_email')} onChange={e => setEf('e_transfer_email', e.target.value)} placeholder="payments@company.ca" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Bank Name</Label>
+              <Input value={ef('bank_name')} onChange={e => setEf('bank_name', e.target.value)} placeholder="e.g. TD Bank" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Institution #</Label>
+              <Input value={ef('bank_institution_number')} onChange={e => setEf('bank_institution_number', e.target.value)} placeholder="3 digits" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Transit #</Label>
+              <Input value={ef('bank_transit_number')} onChange={e => setEf('bank_transit_number', e.target.value)} placeholder="5 digits" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Account #</Label>
+              <Input value={ef('bank_account_number')} onChange={e => setEf('bank_account_number', e.target.value)} placeholder="Account number" />
+            </div>
+
             <div className="col-span-full space-y-1.5">
               <Label>Admin Notes</Label>
               <Textarea value={ef('notes_admin_only')} onChange={e => setEf('notes_admin_only', e.target.value)} rows={3} />
