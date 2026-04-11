@@ -2,10 +2,12 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Truck, ChevronRight } from 'lucide-react';
+import { Search, Truck, ChevronRight, UserPlus } from 'lucide-react';
+import CreateSubcontractorDialog from '@/components/CreateSubcontractorDialog';
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -21,6 +23,7 @@ export default function Subcontractors() {
   const { data: subs = [], isLoading } = useAllSubcontractors();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const filtered = useMemo(() => {
     return subs.filter(s => {
@@ -36,10 +39,17 @@ export default function Subcontractors() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Subcontractors</h1>
-        <p className="text-sm text-muted-foreground">Manage external contractors, compliance, assignments, and invoices</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Subcontractors</h1>
+          <p className="text-sm text-muted-foreground">Manage external contractors, compliance, assignments, and invoices</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>
+          <UserPlus className="h-4 w-4 mr-2" /> Add Subcontractor
+        </Button>
       </div>
+
+      <CreateSubcontractorDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardContent className="p-4 flex items-center gap-3">
