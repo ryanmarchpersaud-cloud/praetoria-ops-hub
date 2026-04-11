@@ -97,13 +97,7 @@ export default function InvoicePrint() {
         {/* Company Header */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div>
-            {company?.logo_url ? (
-              <img src={company.logo_url} alt={companyName} className="h-16 mb-2 print:h-20" />
-            ) : (
-              <h1 className="text-2xl font-bold tracking-tight text-[#1a1a2e] print:text-3xl uppercase" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                {companyName}
-              </h1>
-            )}
+            <img src={company?.logo_url || '/invoice-logo.png'} alt={companyName} className="h-16 mb-2 print:h-20 rounded" />
             <p className="text-xs text-[#6b7280] mt-0.5 print:text-sm">{companyTagline}</p>
             <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
               <p>{companyAddress}</p>
