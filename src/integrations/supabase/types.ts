@@ -6614,6 +6614,7 @@ export type Database = {
         | "Completed"
         | "Cancelled"
         | "On Hold"
+        | "Closed"
       lead_status:
         | "New"
         | "Reviewing"
@@ -6851,6 +6852,7 @@ export const Constants = {
         "Completed",
         "Cancelled",
         "On Hold",
+        "Closed",
       ],
       lead_status: [
         "New",
