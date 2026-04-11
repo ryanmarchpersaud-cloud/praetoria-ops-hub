@@ -26,6 +26,14 @@ function PrintStatusBadge({ status }: { status: string }) {
   );
 }
 
+const SERVICE_CARDS = [
+  { label: 'Property Management', img: '/images/service-property-management.png' },
+  { label: 'Snow Removal', img: '/images/service-snow-removal.png' },
+  { label: 'Landscaping', img: '/images/service-landscaping.png' },
+  { label: 'Maintenance & Repair', img: '/images/service-maintenance.png' },
+  { label: 'Junk Removal', img: '/images/service-junk-removal.png' },
+];
+
 export default function InvoicePrint() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -61,18 +69,6 @@ export default function InvoicePrint() {
   const companyAddress = company?.physical_address || company?.mailing_address || 'Toronto, Ontario, Canada';
   const accentColor = company?.primary_color || '#3b5bdb';
 
-  const formatServiceTime = (time: string | null) => {
-    if (!time) return null;
-    try {
-      const [h, m] = time.split(':').map(Number);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const hour12 = h % 12 || 12;
-      return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
-    } catch {
-      return time;
-    }
-  };
-
   return (
     <>
       {/* Toolbar (hidden when printing) */}
@@ -93,11 +89,11 @@ export default function InvoicePrint() {
       </div>
 
       {/* Printable Document */}
-      <div className="print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen">
+      <div className="print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen flex flex-col">
         {/* Company Header */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div>
-            <img src={company?.logo_url || '/invoice-logo.png'} alt={companyName} className="h-16 mb-2 print:h-20 rounded" />
+            <img src={company?.logo_url || '/invoice-logo.png'} alt={companyName} className="h-20 mb-2 print:h-24 rounded" />
             <p className="text-xs text-[#6b7280] mt-0.5 print:text-sm">{companyTagline}</p>
             <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
               <p>{companyAddress}</p>
@@ -107,26 +103,26 @@ export default function InvoicePrint() {
           </div>
           <div className="text-right">
             <div className="text-xs font-semibold uppercase tracking-widest print:text-sm" style={{ color: accentColor }}>Invoice</div>
-            <p className="text-xl font-extrabold mt-1 print:text-2xl tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <p className="text-2xl font-extrabold mt-1 print:text-3xl tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               {invoice.invoice_number}
             </p>
             <div className="mt-2"><PrintStatusBadge status={invoice.status} /></div>
             <div className="mt-3 text-xs text-[#6b7280] print:text-sm space-y-0.5">
               <p>
-                <span className="font-semibold text-[#374151]">Issued:</span>{' '}
+                <span className="font-bold text-[#1a1a2e]">Issued:</span>{' '}
                 {format(new Date(invoice.issue_date), 'MMMM d, yyyy')}
               </p>
               <p>
-                <span className="font-semibold text-[#374151]">Due:</span>{' '}
+                <span className="font-bold text-[#1a1a2e]">Due:</span>{' '}
                 {format(new Date(invoice.due_date), 'MMMM d, yyyy')}
               </p>
               {invoice.paid_at && (
                 <p>
-                  <span className="font-semibold text-[#059669]">Paid:</span>{' '}
+                  <span className="font-bold text-[#059669]">Paid:</span>{' '}
                   {format(new Date(invoice.paid_at), 'MMMM d, yyyy')}
                 </p>
               )}
-              <p className="text-sm font-bold text-[#1a1a2e] pt-1 print:text-base">
+              <p className="text-base font-extrabold text-[#1a1a2e] pt-1 print:text-lg">
                 Total: ${formatCurrency(total)}
               </p>
             </div>
@@ -134,14 +130,14 @@ export default function InvoicePrint() {
         </div>
 
         {/* Accent Bar */}
-        <div className="h-[2px] mb-8 print:mb-10" style={{ backgroundColor: accentColor }} />
+        <div className="h-[3px] mb-8 print:mb-10" style={{ backgroundColor: accentColor }} />
 
         {/* Bill To */}
         {customer && (
           <div className="mb-8 print:mb-10">
             <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">Bill To</p>
-            <p className="font-semibold text-sm print:text-base">{customer.first_name} {customer.last_name}</p>
-            {customer.company_name && <p className="text-sm text-[#374151] print:text-base">{customer.company_name}</p>}
+            <p className="font-bold text-base print:text-lg">{customer.first_name} {customer.last_name}</p>
+            {customer.company_name && <p className="text-sm font-semibold text-[#374151] print:text-base">{customer.company_name}</p>}
             <div className="text-xs text-[#6b7280] mt-1 space-y-0.5 print:text-sm">
               {customer.address_line_1 && <p>{customer.address_line_1}</p>}
               {(customer.city || customer.province || customer.postal_code) && (
@@ -158,14 +154,14 @@ export default function InvoicePrint() {
           {property && (
             <div>
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">Service Property</p>
-              <p className="text-sm font-medium print:text-base">{property.property_name}</p>
+              <p className="text-sm font-bold print:text-base">{property.property_name}</p>
               {property.address_line_1 && <p className="text-xs text-[#6b7280] print:text-sm">{property.address_line_1}</p>}
             </div>
           )}
           {job && (
             <div>
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">Job Reference</p>
-              <p className="text-sm font-medium print:text-base">{job.job_number} — {job.job_title}</p>
+              <p className="text-sm font-bold print:text-base">{job.job_number} — {job.job_title}</p>
             </div>
           )}
         </div>
@@ -179,7 +175,7 @@ export default function InvoicePrint() {
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-8">#</th>
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs">Product & Service</th>
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs hidden md:table-cell print:table-cell">Description</th>
-                <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-32">Date & Time</th>
+                <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-28">Date</th>
                 <th className="text-center py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-16">Qty</th>
                 <th className="text-right py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">Unit Price</th>
                 <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">Total</th>
@@ -190,23 +186,16 @@ export default function InvoicePrint() {
                 <tr key={item.id} className="border-b border-[#f3f4f6]">
                   <td className="py-3 pr-2 text-[#9ca3af]">{idx + 1}</td>
                   <td className="py-3 pr-2">
-                    <p className="font-medium">{item.item_name}</p>
+                    <p className="font-semibold">{item.item_name}</p>
                     {item.description && <p className="text-xs text-[#6b7280] mt-0.5 md:hidden print:hidden">{item.description}</p>}
                   </td>
                   <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell">{item.description}</td>
                   <td className="py-3 pr-2 text-xs text-[#374151]">
-                    {item.service_date ? (
-                      <div>
-                        <p>{format(new Date(item.service_date + 'T00:00:00'), 'MMM d, yyyy')}</p>
-                        {item.service_time && (
-                          <p className="text-[#6b7280]">{formatServiceTime(item.service_time)}</p>
-                        )}
-                      </div>
-                    ) : '—'}
+                    {item.service_date ? format(new Date(item.service_date + 'T00:00:00'), 'MMM d, yyyy') : '—'}
                   </td>
                   <td className="py-3 px-2 text-center tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{item.quantity}</td>
                   <td className="py-3 px-2 text-right tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.unit_price))}</td>
-                  <td className="py-3 pl-2 text-right font-medium tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.line_total))}</td>
+                  <td className="py-3 pl-2 text-right font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.line_total))}</td>
                 </tr>
               ))}
               {lineItems.length === 0 && (
@@ -227,8 +216,8 @@ export default function InvoicePrint() {
               <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
               <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tax)}</span>
             </div>
-            <div className="h-[1px] bg-[#d1d5db]" />
-            <div className="flex justify-between text-lg font-bold pt-1 text-[#1a1a2e] print:text-xl">
+            <div className="h-[2px] bg-[#1a1a2e]" />
+            <div className="flex justify-between text-lg font-extrabold pt-1 text-[#1a1a2e] print:text-xl">
               <span>Total (CAD)</span>
               <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(total)}</span>
             </div>
@@ -238,7 +227,7 @@ export default function InvoicePrint() {
                   <span>Paid</span>
                   <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>-${formatCurrency(amountPaid)}</span>
                 </div>
-                <div className="flex justify-between text-base font-bold text-[#dc2626] print:text-lg">
+                <div className="flex justify-between text-base font-extrabold text-[#dc2626] print:text-lg">
                   <span>Balance Due</span>
                   <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(balanceDue)}</span>
                 </div>
@@ -250,7 +239,7 @@ export default function InvoicePrint() {
                   <span>Paid</span>
                   <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>-${formatCurrency(amountPaid)}</span>
                 </div>
-                <div className="flex justify-between text-base font-bold text-[#059669] print:text-lg">
+                <div className="flex justify-between text-base font-extrabold text-[#059669] print:text-lg">
                   <span>Balance Due</span>
                   <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>$0.00</span>
                 </div>
@@ -259,7 +248,7 @@ export default function InvoicePrint() {
           </div>
         </div>
 
-        {/* Customer Memo — moved to bottom */}
+        {/* Customer Memo */}
         {invoice.customer_memo && (
           <div className="mb-8 print:mb-10 bg-[#f9fafb] rounded-lg p-4 print:bg-[#f9fafb] border border-[#e5e7eb]">
             <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">Notes</p>
@@ -278,12 +267,32 @@ export default function InvoicePrint() {
               <li>For questions, contact {companyEmail}.</li>
             </ol>
           </div>
+        </div>
 
-          {/* Footer */}
-          <div className="text-center pt-8 text-xs text-[#9ca3af] print:text-sm print:pt-12 pb-4">
-            <p className="font-medium text-[#6b7280]">{companyName}</p>
+        {/* Spacer to push footer down */}
+        <div className="flex-grow" />
+
+        {/* Service Cards Footer */}
+        <div className="border-t border-[#e5e7eb] mt-10 pt-6 print:mt-8 print:pt-6">
+          <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-4 print:text-xs text-center">Our Services</p>
+          <div className="flex justify-center items-center gap-3 flex-wrap print:gap-2">
+            {SERVICE_CARDS.map((svc) => (
+              <div key={svc.label} className="flex flex-col items-center">
+                <img
+                  src={svc.img}
+                  alt={svc.label}
+                  className="h-16 w-auto object-contain print:h-14 rounded"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Company Footer */}
+          <div className="text-center pt-6 text-xs text-[#9ca3af] print:text-sm print:pt-4 pb-4">
+            <p className="font-bold text-[#374151]">{companyName}</p>
+            <p>{companyAddress}</p>
             <p>{companyEmail} · {companyPhone}</p>
-            <p className="mt-1">Thank you for your business.</p>
+            <p className="mt-1 text-[10px] print:text-xs">Thank you for your business.</p>
           </div>
         </div>
       </div>

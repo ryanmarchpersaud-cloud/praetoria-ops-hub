@@ -13,6 +13,68 @@ import { useUpsertInvoiceLineItems } from '@/hooks/useInvoices';
 import { format, parse } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+function ProductNameAutocomplete({
+  value,
+  catalog,
+  onChange,
+  onSelectProduct,
+}: {
+  value: string;
+  catalog: any[];
+  onChange: (v: string) => void;
+  onSelectProduct: (p: any) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState(value);
+
+  useEffect(() => { setSearch(value); }, [value]);
+
+  const filtered = search.trim().length > 0
+    ? catalog.filter((p: any) => p.name.toLowerCase().includes(search.toLowerCase())).slice(0, 8)
+    : [];
+
+  return (
+    <Popover open={open && filtered.length > 0} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Input
+          value={search}
+          onChange={e => {
+            setSearch(e.target.value);
+            onChange(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder="Product / service name"
+          className="h-8 text-sm"
+          autoComplete="off"
+        />
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-0" align="start" onOpenAutoFocus={e => e.preventDefault()}>
+        <div className="max-h-48 overflow-y-auto">
+          {filtered.map((p: any) => (
+            <button
+              key={p.id}
+              type="button"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-accent flex justify-between items-center"
+              onMouseDown={e => {
+                e.preventDefault();
+                onSelectProduct(p);
+                setSearch(p.name);
+                setOpen(false);
+              }}
+            >
+              <span className="truncate">{p.name}</span>
+              <span className="text-xs text-muted-foreground ml-2 shrink-0">
+                {p.unit_price ? `$${Number(p.unit_price).toFixed(2)}` : '—'}
+              </span>
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 interface LineItem {
   id?: string;
   item_name: string;
