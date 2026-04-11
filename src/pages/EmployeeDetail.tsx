@@ -143,6 +143,7 @@ export default function EmployeeDetail() {
   const openEditDialog = () => {
     setEditForm({
       full_name: emp.full_name || '',
+      employee_id: emp.employee_id || '',
       work_email: emp.work_email || '',
       phone: emp.phone || '',
       role_title: emp.role_title || '',
