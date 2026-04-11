@@ -201,7 +201,8 @@ export default function InvoiceDetail() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
+                      <TableHead>Product & Service</TableHead>
+                      <TableHead>Date & Time</TableHead>
                       <TableHead className="text-right">Qty</TableHead>
                       <TableHead className="text-right">Price</TableHead>
                       <TableHead className="text-right">Total</TableHead>
@@ -209,13 +210,17 @@ export default function InvoiceDetail() {
                   </TableHeader>
                   <TableBody>
                     {lineItems.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-6">No line items — add items while in Draft status</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">No line items — add items while in Draft status</TableCell></TableRow>
                     ) : (
                       lineItems.map((item: any) => (
                         <TableRow key={item.id}>
                           <TableCell>
                             <p className="text-sm font-medium">{item.item_name}</p>
                             {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {item.service_date ? format(new Date(item.service_date + 'T00:00:00'), 'MMM d, yyyy') : '—'}
+                            {item.service_time && <span className="text-xs text-muted-foreground ml-1">{item.service_time}</span>}
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums">{item.quantity}</TableCell>
                           <TableCell className="text-right text-sm tabular-nums">${Number(item.unit_price).toFixed(2)}</TableCell>
