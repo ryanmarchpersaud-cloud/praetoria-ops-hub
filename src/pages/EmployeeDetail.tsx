@@ -125,7 +125,18 @@ export default function EmployeeDetail() {
           <h1 className="text-2xl font-bold text-foreground truncate">{emp.full_name || 'Employee'}</h1>
           <p className="text-sm text-muted-foreground">{emp.role_title || 'No role'} · {emp.employee_id || 'No ID'}</p>
         </div>
+        {emp.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> Blocked</Badge>}
         <StatusChip status={emp.employment_status} />
+        {canManageWorkers && (
+          <Button
+            size="sm"
+            variant={emp.is_blocked ? 'outline' : 'destructive'}
+            className="gap-1.5"
+            onClick={() => { if (emp.is_blocked) { handleToggleBlock(); } else { setBlockOpen(true); } }}
+          >
+            {emp.is_blocked ? <><ShieldOff className="h-3.5 w-3.5" /> Unblock</> : <><Ban className="h-3.5 w-3.5" /> Block</>}
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
