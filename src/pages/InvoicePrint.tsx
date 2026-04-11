@@ -306,11 +306,11 @@ export default function InvoicePrint() {
           <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-4 print:text-xs text-center">Our Services</p>
           <div className="flex justify-center items-center gap-3 flex-wrap print:gap-2">
             {SERVICE_CARDS.map((svc) => (
-              <div key={svc.label} className="flex flex-col items-center">
+              <div key={svc.label} className="flex flex-col items-center w-[90px] print:w-[80px]">
                 <img
                   src={svc.img}
                   alt={svc.label}
-                  className="h-14 w-auto object-contain print:h-12 rounded"
+                  className="h-16 w-16 object-contain print:h-14 print:w-14 rounded"
                 />
               </div>
             ))}
