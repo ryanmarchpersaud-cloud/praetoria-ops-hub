@@ -5,6 +5,7 @@ export const SERVICE_CATEGORIES = [
   'Property Care & Maintenance',
   'Cleaning Services',
   'Power Washing',
+  'Gutter Cleaning',
   'Property Inspection',
   'Bylaw / Compliance',
   'Property Management',
