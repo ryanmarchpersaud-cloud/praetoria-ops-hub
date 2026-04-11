@@ -81,7 +81,135 @@ const PPE_SUGGESTIONS = [
   { name: 'Snow Blower', type: 'tool' },
 ];
 
-function StatusChip({ status }: { status: string }) {
+const PLAN_TYPES = ['Health', 'Dental', 'Vision', 'Life / Disability', 'Group Benefits', 'Other'];
+const CHANGE_TYPES = ['new_enrollment', 'life_event', 'plan_change', 'termination'];
+const ENROLLMENT_STATUSES = ['active', 'pending', 'terminated', 'on_hold'];
+
+function EmployeeBenefitsTab({ userId, canManage }: { userId: string; canManage: boolean }) {
+  const { data: allEnrollments = [] } = useBenefitEnrollments();
+  const { data: providers = [] } = useInsuranceProviders();
+  const upsertEnrollment = useUpsertEnrollment();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState<Record<string, any>>({});
+
+  const enrollments = allEnrollments.filter((e: any) => e.employee_user_id === userId);
+
+  const openNew = () => {
+    setForm({
+      employee_user_id: userId,
+      enrollment_status: 'active',
+      change_type: 'new_enrollment',
+      plan_type: '',
+      provider_id: '',
+      effective_date: '',
+      dependent_count: 0,
+      notes: '',
+      change_reason: '',
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      const payload = { ...form };
+      if (!payload.provider_id) delete payload.provider_id;
+      if (!payload.effective_date) delete payload.effective_date;
+      await upsertEnrollment.mutateAsync(payload);
+      setDialogOpen(false);
+    } catch (err: any) {
+      // error handled by hook
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Benefit Enrollments ({enrollments.length})</h3>
+        {canManage && (
+          <Button size="sm" onClick={openNew}><Plus className="h-3.5 w-3.5 mr-1" /> Enroll in Benefits</Button>
+        )}
+      </div>
+
+      {enrollments.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-center text-sm text-muted-foreground">
+            No benefit enrollments yet.{canManage ? ' Click "Enroll in Benefits" to add one.' : ''}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {enrollments.map((enr: any) => (
+            <Card key={enr.id}>
+              <CardContent className="p-4 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">{enr.plan_type || 'Benefit Plan'}</span>
+                  <StatusChip status={enr.enrollment_status} />
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 text-sm text-muted-foreground">
+                  <span>Provider: {enr.hr_insurance_providers?.provider_name || '—'}</span>
+                  <span>Change: <span className="capitalize">{enr.change_type?.replace(/_/g, ' ')}</span></span>
+                  <span>Effective: {enr.effective_date ? format(new Date(enr.effective_date), 'MMM d, yyyy') : '—'}</span>
+                  <span>Dependents: {enr.dependent_count ?? 0}</span>
+                </div>
+                {enr.notes && <p className="text-xs text-muted-foreground mt-1">{enr.notes}</p>}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Enroll in Benefits</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Plan Type</Label>
+              <Select value={form.plan_type || ''} onValueChange={v => setForm({ ...form, plan_type: v })}>
+                <SelectTrigger><SelectValue placeholder="Select plan type" /></SelectTrigger>
+                <SelectContent>{PLAN_TYPES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Provider</Label>
+              <Select value={form.provider_id || ''} onValueChange={v => setForm({ ...form, provider_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select provider" /></SelectTrigger>
+                <SelectContent>
+                  {providers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.provider_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Change Type</Label>
+                <Select value={form.change_type || 'new_enrollment'} onValueChange={v => setForm({ ...form, change_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{CHANGE_TYPES.map(c => <SelectItem key={c} value={c} className="capitalize">{c.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={form.enrollment_status || 'active'} onValueChange={v => setForm({ ...form, enrollment_status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{ENROLLMENT_STATUSES.map(s => <SelectItem key={s} value={s} className="capitalize">{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Effective Date</Label><Input type="date" value={form.effective_date || ''} onChange={e => setForm({ ...form, effective_date: e.target.value })} /></div>
+              <div><Label>Dependents</Label><Input type="number" min={0} value={form.dependent_count ?? 0} onChange={e => setForm({ ...form, dependent_count: parseInt(e.target.value) || 0 })} /></div>
+            </div>
+            <div><Label>Change Reason</Label><Input value={form.change_reason || ''} onChange={e => setForm({ ...form, change_reason: e.target.value })} placeholder="e.g. New hire, marriage, etc." /></div>
+            <div><Label>Notes</Label><Textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
+            <Button className="w-full" onClick={handleSave} disabled={upsertEnrollment.isPending}>
+              {upsertEnrollment.isPending ? 'Saving...' : 'Save Enrollment'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
   const colors: Record<string, string> = {
     active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     valid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
