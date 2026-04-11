@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
