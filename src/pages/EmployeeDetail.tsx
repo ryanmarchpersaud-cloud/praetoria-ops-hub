@@ -73,6 +73,10 @@ export default function EmployeeDetail() {
   const approveCert = useApproveCertificate();
   const [showIssueDialog, setShowIssueDialog] = useState(false);
   const [showTrainingDialog, setShowTrainingDialog] = useState(false);
+  const queryClient = useQueryClient();
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockSaving, setBlockSaving] = useState(false);
+  const [blockReason, setBlockReason] = useState('');
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   if (!emp) return <div className="p-8 text-center text-muted-foreground">Employee not found.</div>;
