@@ -957,6 +957,38 @@ export default function SubcontractorDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── SEND INVITE DIALOG ── */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5" /> Send Subcontractor Invite</DialogTitle>
+            <DialogDescription>Send login credentials to <strong>{sub.contact_name}</strong> at <strong>{sub.email || 'no email set'}</strong>.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label>Set / Reset Temporary Password (optional)</Label>
+              <Input type="password" placeholder="Min 8 characters" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Leave blank to keep the existing password.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-1">
+              <p className="text-xs font-medium text-foreground">What the subcontractor will receive:</p>
+              <ul className="text-xs text-muted-foreground list-disc list-inside space-y-0.5">
+                <li>Welcome email with login instructions</li>
+                <li>Their email address for login</li>
+                {invitePassword && <li>The temporary password you set above</li>}
+                <li>Link to the Subcontractor Portal + Google Play app link</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
+            <Button onClick={handleSendInvite} disabled={inviteSending || !sub.email || (invitePassword.length > 0 && invitePassword.length < 8)}>
+              {inviteSending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Sending...</> : 'Send Invite Email'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
