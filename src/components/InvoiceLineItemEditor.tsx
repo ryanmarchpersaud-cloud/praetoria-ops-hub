@@ -31,7 +31,7 @@ function ProductNameAutocomplete({
 
   const filtered = search.trim().length > 0
     ? catalog.filter((p: any) => p.name.toLowerCase().includes(search.toLowerCase())).slice(0, 8)
-    : [];
+    : catalog.slice(0, 8);
 
   return (
     <Popover open={open && filtered.length > 0} onOpenChange={setOpen}>
