@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquarePlus, Plus, Image as ImageIcon, ChevronRight, RefreshCw } from 'lucide-react';
+import { MessageSquarePlus, Plus, Image as ImageIcon, ChevronRight, RefreshCw, Loader2 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
+import { toast } from 'sonner';
 
 /** Resolve attachment strings to signed URLs. */
 async function resolveAttachmentUrls(paths: string[]): Promise<string[]> {
@@ -59,14 +60,36 @@ export default function PortalRequests() {
     if (requests.length > 0) resolve();
   }, [requests]);
 
-  const handleReorder = (r: any, e: React.MouseEvent) => {
+  const queryClient = useQueryClient();
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
+
+  const handleReorder = async (r: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    const params = new URLSearchParams();
-    if (r.property_id) params.set('property_id', r.property_id);
-    if (r.service_type) params.set('service_category', r.service_type);
-    if (r.specific_request_type) params.set('specific_request_type', r.specific_request_type);
-    if (r.requested_timing) params.set('requested_timing', r.requested_timing);
-    navigate(`/portal/requests/new?${params.toString()}`);
+    if (reorderingId) return;
+    setReorderingId(r.id);
+    try {
+      const { error } = await supabase.from('service_requests').insert({
+        customer_id: r.customer_id,
+        property_id: r.property_id,
+        subject: r.subject,
+        service_type: r.service_type,
+        specific_request_type: r.specific_request_type,
+        description: r.description,
+        urgency: r.urgency,
+        status: 'open',
+        requested_timing: r.requested_timing,
+        area_of_property: r.area_of_property,
+        access_notes: r.access_notes,
+        preferred_contact_method: r.preferred_contact_method,
+      });
+      if (error) throw error;
+      toast.success('Request resubmitted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['portal_requests'] });
+    } catch (err: any) {
+      toast.error('Failed to resubmit request');
+    } finally {
+      setReorderingId(null);
+    }
   };
 
   return (
@@ -141,9 +164,11 @@ export default function PortalRequests() {
                       size="sm"
                       variant="ghost"
                       className="h-7 text-xs gap-1 text-primary hover:text-primary"
+                      disabled={reorderingId === r.id}
                       onClick={(e) => handleReorder(r, e)}
                     >
-                      <RefreshCw className="h-3 w-3" /> Request Again
+                      {reorderingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                      {reorderingId === r.id ? 'Submitting…' : 'Request Again'}
                     </Button>
                   </div>
                 </CardContent>
