@@ -1,5 +1,5 @@
-import { useState, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,18 +29,25 @@ import {
 
 export default function PortalRequestWizard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { data: customer } = useCustomerProfile();
   const { toast } = useToast();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Prefill from query params (reorder flow)
+  const prefillPropertyId = searchParams.get('property_id') || '';
+  const prefillCategory = searchParams.get('service_category') || '';
+  const prefillSpecific = searchParams.get('specific_request_type') || '';
+  const prefillTiming = searchParams.get('requested_timing') || 'Routine';
+
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
-    property_id: '',
-    service_category: '' as CatalogKey | '',
-    specific_request_type: '',
-    requested_timing: 'Routine',
+    property_id: prefillPropertyId,
+    service_category: (prefillCategory || '') as CatalogKey | '',
+    specific_request_type: prefillSpecific,
+    requested_timing: prefillTiming,
     area_of_property: '',
     access_notes: '',
     customer_notes: '',
