@@ -184,6 +184,7 @@ export default function EmployeeDetail() {
         date_of_birth: editForm.date_of_birth || null,
         driver_license_expiry: editForm.driver_license_expiry || null,
         hire_date: editForm.hire_date || null,
+        employee_id: editForm.employee_id || null,
       }).eq('user_id', userId);
       if (error) throw error;
       toast({ title: 'Employee updated successfully.' });
