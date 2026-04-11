@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
-import { useJob, useJobVisits, useUpdateJob } from '@/hooks/useJobs';
+import { useJob, useJobVisits, useUpdateJob, useDeleteJob } from '@/hooks/useJobs';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { useEmployees } from '@/hooks/useEmployees';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck, Trash2 } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -29,6 +29,7 @@ export default function JobDetail() {
   const { data: visits = [] } = useJobVisits(id);
   const { data: employees = [] } = useEmployees();
   const updateJob = useUpdateJob();
+  const deleteJob = useDeleteJob();
   const createVisit = useCreateVisit();
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
@@ -202,6 +203,28 @@ export default function JobDetail() {
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleCreateInvoice}>
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>
+          </Button>
+        )}
+        {canManageJobs && (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-11 shrink-0 gap-1.5"
+            disabled={deleteJob.isPending}
+            onClick={async () => {
+              if (!id) return;
+              if (!window.confirm('Are you sure you want to delete this job? This cannot be undone.')) return;
+              try {
+                await deleteJob.mutateAsync(id);
+                toast({ title: 'Job deleted' });
+                navigate('/jobs');
+              } catch (err: any) {
+                toast({ title: 'Error', description: err.message, variant: 'destructive' });
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Delete</span>
           </Button>
         )}
       </div>
