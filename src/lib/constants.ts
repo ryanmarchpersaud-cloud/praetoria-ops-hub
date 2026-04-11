@@ -5,6 +5,7 @@ export const SERVICE_CATEGORIES = [
   'Property Care & Maintenance',
   'Cleaning Services',
   'Power Washing',
+  'Gutter Cleaning',
   'Property Inspection',
   'Bylaw / Compliance',
   'Property Management',
@@ -54,9 +55,9 @@ export const INVOICE_STATUSES = ['Draft', 'Sent', 'Viewed', 'Paid', 'Partially P
 
 export function getStatusClass(status: string): string {
   const s = status.toLowerCase();
-  if (s === 'new' || s === 'scheduled') return 'status-new';
+  if (s === 'new' || s === 'scheduled' || s === 'open') return 'status-new';
   if (['reviewing', 'awaiting info', 'quote drafting', 'needs review', 'en route', 'on hold', 'pending', 'planned', 'rescheduled'].includes(s)) return 'status-reviewing';
-  if (['won', 'approved', 'quote ready', 'completed', 'active', 'paid'].includes(s)) return 'status-approved';
+  if (['won', 'approved', 'quote ready', 'completed', 'active', 'paid', 'resolved', 'closed'].includes(s)) return 'status-approved';
   if (['lost', 'declined', 'cancelled', 'missed', 'skipped', 'inactive', 'voided', 'failed'].includes(s)) return 'status-declined';
   if (['quote sent', 'sent', 'in progress', 'viewed'].includes(s)) return 'status-sent';
   if (['partially paid'].includes(s)) return 'status-partial';

@@ -5,21 +5,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquarePlus, Plus, Image as ImageIcon } from 'lucide-react';
+import { MessageSquarePlus, Plus, Image as ImageIcon, ChevronRight, RefreshCw } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 
-/** Resolve attachment strings to signed URLs.
- *  Handles both legacy full URLs and new storage paths. */
+/** Resolve attachment strings to signed URLs. */
 async function resolveAttachmentUrls(paths: string[]): Promise<string[]> {
   const results: string[] = [];
   for (const p of paths) {
     if (p.startsWith('http')) {
-      // Legacy public URL — use as-is (will 403 if bucket went private, but keeps backwards compat)
       results.push(p);
     } else {
       const { data } = await supabase.storage
         .from('request-attachments')
-        .createSignedUrl(p, 3600); // 1 hour
+        .createSignedUrl(p, 3600);
       if (data?.signedUrl) results.push(data.signedUrl);
     }
   }
@@ -47,7 +45,6 @@ export default function PortalRequests() {
     enabled: !!customer,
   });
 
-  // Resolve signed URLs for all request attachments
   useEffect(() => {
     async function resolve() {
       const map: Record<string, string[]> = {};
@@ -61,6 +58,16 @@ export default function PortalRequests() {
     }
     if (requests.length > 0) resolve();
   }, [requests]);
+
+  const handleReorder = (r: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const params = new URLSearchParams();
+    if (r.property_id) params.set('property_id', r.property_id);
+    if (r.service_type) params.set('service_category', r.service_type);
+    if (r.specific_request_type) params.set('specific_request_type', r.specific_request_type);
+    if (r.requested_timing) params.set('requested_timing', r.requested_timing);
+    navigate(`/portal/requests/new?${params.toString()}`);
+  };
 
   return (
     <div className="space-y-4">
@@ -88,16 +95,23 @@ export default function PortalRequests() {
           {requests.map((r: any) => {
             const attachments: string[] = signedUrlMap[r.id] || [];
             return (
-              <Card key={r.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={r.id}
+                className="hover:shadow-md transition-shadow cursor-pointer active:scale-[0.99]"
+                onClick={() => navigate(`/portal/requests/${r.id}`)}
+              >
                 <CardContent className="pt-4 space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-sm">{r.subject}</span>
-                    <StatusBadge status={r.status} />
+                    <span className="font-semibold text-sm truncate">{r.subject}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <StatusBadge status={r.status} />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>{r.service_type}</span>
                     <span>·</span>
-                    <span>{r.urgency}</span>
+                    <span className="capitalize">{r.urgency}</span>
                     {(r as any).properties?.property_name && (
                       <>
                         <span>·</span>
@@ -107,13 +121,13 @@ export default function PortalRequests() {
                   </div>
                   {r.description && <p className="text-xs text-muted-foreground line-clamp-2">{r.description}</p>}
 
-                  {/* Attachment thumbnails (signed URLs) */}
+                  {/* Attachment thumbnails */}
                   {attachments.length > 0 && (
                     <div className="flex items-center gap-1.5 pt-1">
                       <ImageIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <div className="flex gap-1.5 overflow-x-auto">
                         {attachments.map((url, i) => (
-                          <button key={i} onClick={() => setPreviewImg(url)} className="shrink-0 w-10 h-10 rounded-md overflow-hidden border border-border hover:ring-2 hover:ring-primary/40 transition-all">
+                          <button key={i} onClick={(e) => { e.stopPropagation(); setPreviewImg(url); }} className="shrink-0 w-10 h-10 rounded-md overflow-hidden border border-border hover:ring-2 hover:ring-primary/40 transition-all">
                             <img src={url} alt={`Attachment ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                           </button>
                         ))}
@@ -121,7 +135,17 @@ export default function PortalRequests() {
                     </div>
                   )}
 
-                  <p className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs gap-1 text-primary hover:text-primary"
+                      onClick={(e) => handleReorder(r, e)}
+                    >
+                      <RefreshCw className="h-3 w-3" /> Request Again
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );

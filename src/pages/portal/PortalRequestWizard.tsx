@@ -1,5 +1,5 @@
-import { useState, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,18 +29,25 @@ import {
 
 export default function PortalRequestWizard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { data: customer } = useCustomerProfile();
   const { toast } = useToast();
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Prefill from query params (reorder flow)
+  const prefillPropertyId = searchParams.get('property_id') || '';
+  const prefillCategory = searchParams.get('service_category') || '';
+  const prefillSpecific = searchParams.get('specific_request_type') || '';
+  const prefillTiming = searchParams.get('requested_timing') || 'Routine';
+
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
-    property_id: '',
-    service_category: '' as CatalogKey | '',
-    specific_request_type: '',
-    requested_timing: 'Routine',
+    property_id: prefillPropertyId,
+    service_category: (prefillCategory || '') as CatalogKey | '',
+    specific_request_type: prefillSpecific,
+    requested_timing: prefillTiming,
     area_of_property: '',
     access_notes: '',
     customer_notes: '',
@@ -169,7 +176,7 @@ export default function PortalRequestWizard() {
       } as any);
       if (error) throw error;
 
-      // Notify admin/ops staff about the new request
+      // Notify admin/ops staff about the new request (in-app + email)
       try {
         await supabase.functions.invoke('send-notification', {
           body: {
@@ -180,8 +187,10 @@ export default function PortalRequestWizard() {
               subject: `New Request: ${subject}`,
               body: `${customer.first_name} ${customer.last_name} submitted a service request: ${subject}`,
               customer_name: `${customer.first_name} ${customer.last_name}`,
+              to_email: 'ops@praetoriagroup.ca',
+              reply_to: 'ops@praetoriagroup.ca',
             },
-            channels: ['in_app'],
+            channels: ['in_app', 'email'],
             audience: 'admin',
           },
         });
@@ -211,7 +220,7 @@ export default function PortalRequestWizard() {
 
   const renderStep0 = () => (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Which property is this request for?</p>
+      <p className="text-sm sm:text-base font-medium text-foreground">Which property is this request for?</p>
       {properties.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">No properties found on your account.</p>
       ) : (
@@ -244,7 +253,7 @@ export default function PortalRequestWizard() {
 
   const renderStep1 = () => (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">What type of service do you need?</p>
+      <p className="text-sm sm:text-base font-medium text-foreground">What type of service do you need?</p>
       {availableCategories.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">No services are currently available for online booking.</p>
       ) : (
@@ -279,7 +288,7 @@ export default function PortalRequestWizard() {
     if (!form.service_category) return null;
     return (
       <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">What specifically do you need?</p>
+        <p className="text-sm sm:text-base font-medium text-foreground">What specifically do you need?</p>
         <div className="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1">
           {mergedItems.map(item => (
             <button
@@ -301,7 +310,7 @@ export default function PortalRequestWizard() {
 
   const renderStep3 = () => (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">How soon do you need this done?</p>
+      <p className="text-sm sm:text-base font-medium text-foreground">How soon do you need this done?</p>
       <div className="space-y-2">
         {PRIORITY_OPTIONS.map(opt => {
           const Icon = opt.icon;

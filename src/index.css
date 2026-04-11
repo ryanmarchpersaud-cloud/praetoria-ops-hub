@@ -135,7 +135,7 @@
   }
 
   .status-badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide;
   }
 
   .status-new { @apply bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300; }
@@ -171,6 +171,29 @@
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+}
+
+/* ── Mobile readability enhancements ──────────────────── */
+@media (max-width: 640px) {
+  /* Page headings — slightly larger and bolder */
+  h1 { font-size: 1.35rem !important; font-weight: 700 !important; letter-spacing: -0.01em; }
+  h2 { font-size: 1.15rem !important; font-weight: 700 !important; }
+  h3 { font-size: 1.05rem !important; font-weight: 600 !important; }
+
+  /* Form labels — easier to read */
+  label, .label { font-size: 0.8125rem !important; font-weight: 600 !important; color: hsl(var(--foreground)) !important; }
+
+  /* Status badges — slightly larger tap targets */
+  .status-badge { font-size: 0.75rem !important; padding: 0.3rem 0.65rem !important; }
+
+  /* Muted text — improve contrast */
+  .text-muted-foreground { color: hsl(215 12% 40%) !important; }
+
+  /* Button labels — ensure readable */
+  button, [role="button"] { font-size: max(0.8125rem, inherit); }
+
+  /* Card content text */
+  .card-content p, [class*="CardContent"] p { font-size: 0.875rem; line-height: 1.5; }
 }
 
 /* Leaflet marker pulse */

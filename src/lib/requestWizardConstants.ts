@@ -1,6 +1,6 @@
 import {
   Snowflake, Trees, Trash2, Wrench, Sparkles, Droplets,
-  ClipboardCheck, Scale, Clock, AlertTriangle, Building2,
+  ClipboardCheck, Scale, Clock, AlertTriangle, Building2, Waves,
 } from 'lucide-react';
 
 export const SERVICE_CATALOG = {
@@ -60,6 +60,9 @@ export const SERVICE_CATALOG = {
     items: [
       'Driveway washing', 'Sidewalk washing', 'Deck washing', 'Fence washing',
       'Exterior wall washing', 'Garage floor washing', 'Dumpster pad / garbage area washing',
+      'Patio / stone washing', 'Retaining wall washing', 'Stairway / step washing',
+      'Parking pad / parking lot washing', 'Building entrance washing', 'Awning / canopy washing',
+      'Pool deck washing', 'Graffiti removal / pressure wash',
     ],
   },
   'Property Inspection': {
@@ -89,6 +92,15 @@ export const SERVICE_CATALOG = {
       'Vendor coordination', 'Maintenance dispatch',
       'Emergency callout coordination', 'Owner report / update',
       'Custom property management request',
+    ],
+  },
+  'Gutter Cleaning': {
+    icon: Waves,
+    color: 'bg-cyan-600',
+    items: [
+      'Gutter cleaning — full house', 'Gutter cleaning — front only', 'Gutter cleaning — rear only',
+      'Gutter flush / downspout clearing', 'Gutter guard installation request',
+      'Gutter inspection / condition report', 'Gutter debris removal — seasonal',
     ],
   },
 } as const;
