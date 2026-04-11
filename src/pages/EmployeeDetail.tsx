@@ -268,7 +268,8 @@ export default function EmployeeDetail() {
     if (!userId) return;
     setInviteSending(true);
     try {
-      const result = await callEdgeFunction('send-worker-invite', {
+      const result = await callEdgeFunction('send-portal-invite', {
+        portal_type: 'worker',
         user_id: userId,
         temporary_password: invitePassword || undefined,
       });
