@@ -68,7 +68,10 @@ export default function PortalRequests() {
     if (reorderingId) return;
     setReorderingId(r.id);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
       const { error } = await supabase.from('service_requests').insert({
+        user_id: user.id,
         customer_id: r.customer_id,
         property_id: r.property_id,
         subject: r.subject,
