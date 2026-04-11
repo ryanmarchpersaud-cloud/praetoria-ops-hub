@@ -3,12 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Save, Package, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Save, Package, Loader2, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUpsertInvoiceLineItems } from '@/hooks/useInvoices';
+import { format, parse } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface LineItem {
   id?: string;
