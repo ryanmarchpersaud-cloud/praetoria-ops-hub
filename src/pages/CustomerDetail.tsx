@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2 } from 'lucide-react';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
 import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedger';
@@ -33,6 +34,7 @@ export default function CustomerDetail() {
   const [invitePassword, setInvitePassword] = useState('');
   const [inviting, setInviting] = useState(false);
   const [invoiceSelectOpen, setInvoiceSelectOpen] = useState(false);
+  const [resending, setResending] = useState(false);
 
   if (customer && !form) {
     setForm(customer);
@@ -132,13 +134,37 @@ export default function CustomerDetail() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: 'Portal account created', description: data.message });
+      // Now send the welcome email
+      try {
+        await callEdgeFunction('send-portal-invite', {
+          portal_type: 'customer',
+          customer_id: id,
+          temporary_password: invitePassword,
+        });
+      } catch { /* email send is best-effort */ }
+      toast({ title: 'Portal account created & invite sent', description: data.message });
       setInviteOpen(false);
       window.location.reload();
     } catch (err: any) {
       toast({ title: 'Invitation failed', description: err.message, variant: 'destructive' });
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleResendInvite = async () => {
+    setResending(true);
+    try {
+      const result = await callEdgeFunction('send-portal-invite', {
+        portal_type: 'customer',
+        customer_id: id,
+      });
+      if (result?.error) throw new Error(result.error);
+      toast({ title: result.message || 'Invite re-sent!' });
+    } catch (err: any) {
+      toast({ title: err.message || 'Failed to resend invite', variant: 'destructive' });
+    } finally {
+      setResending(false);
     }
   };
 
@@ -168,9 +194,15 @@ export default function CustomerDetail() {
             <UserPlus className="h-4 w-4" /> Invite to Portal
           </Button>
         ) : (
-          <div className="flex items-center gap-1.5 px-3 h-11 rounded-md border bg-muted/50 text-xs text-muted-foreground">
-            <Check className="h-3.5 w-3.5 text-accent" /> Portal active
-          </div>
+          <>
+            <div className="flex items-center gap-1.5 px-3 h-11 rounded-md border bg-muted/50 text-xs text-muted-foreground">
+              <Check className="h-3.5 w-3.5 text-accent" /> Portal active
+            </div>
+            <Button variant="outline" className="h-11 gap-2" onClick={handleResendInvite} disabled={resending}>
+              {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Resend Invite
+            </Button>
+          </>
         )}
       </div>
 

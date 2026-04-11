@@ -16,7 +16,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Building2, ShieldCheck, FileText, Receipt, DollarSign, Briefcase, Pencil, Upload, Plus, Save, Loader2, ClipboardCheck, Ban, ShieldOff, Landmark } from 'lucide-react';
+import { ArrowLeft, Building2, ShieldCheck, FileText, Receipt, DollarSign, Briefcase, Pencil, Upload, Plus, Save, Loader2, ClipboardCheck, Ban, ShieldOff, Landmark, Send } from 'lucide-react';
+import { DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { useState, useRef } from 'react';
@@ -127,6 +129,31 @@ export default function SubcontractorDetail() {
   const [blockOpen, setBlockOpen] = useState(false);
   const [blockSaving, setBlockSaving] = useState(false);
   const [blockReason, setBlockReason] = useState('');
+
+  // ── Invite State ──
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteSending, setInviteSending] = useState(false);
+  const [invitePassword, setInvitePassword] = useState('');
+
+  const handleSendInvite = async () => {
+    if (!sub?.user_id) return;
+    setInviteSending(true);
+    try {
+      const result = await callEdgeFunction('send-portal-invite', {
+        portal_type: 'subcontractor',
+        user_id: sub.user_id,
+        temporary_password: invitePassword || undefined,
+      });
+      if (result?.error) throw new Error(result.error);
+      toast.success(result.message || 'Invite sent!');
+      setInviteOpen(false);
+      setInvitePassword('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send invite');
+    } finally {
+      setInviteSending(false);
+    }
+  };
 
   // Assessment list stored as documents with type "assessment"
   const assessments = docs.filter((d: any) => d.document_type === 'assessment');
@@ -335,6 +362,11 @@ export default function SubcontractorDetail() {
         </div>
         {sub.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> Blocked</Badge>}
         <StatusChip status={sub.status} />
+        {sub.user_id && (
+          <Button size="sm" variant="default" className="gap-1.5" onClick={() => setInviteOpen(true)}>
+            <Send className="h-3.5 w-3.5" /> Send Invite
+          </Button>
+        )}
         <Button size="sm" variant="outline" className="gap-1.5" onClick={openEdit}>
           <Pencil className="h-3.5 w-3.5" /> Edit
         </Button>
@@ -923,6 +955,38 @@ export default function SubcontractorDetail() {
               {blockSaving ? 'Blocking...' : 'Block'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── SEND INVITE DIALOG ── */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5" /> Send Subcontractor Invite</DialogTitle>
+            <DialogDescription>Send login credentials to <strong>{sub.contact_name}</strong> at <strong>{sub.email || 'no email set'}</strong>.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label>Set / Reset Temporary Password (optional)</Label>
+              <Input type="password" placeholder="Min 8 characters" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Leave blank to keep the existing password.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-1">
+              <p className="text-xs font-medium text-foreground">What the subcontractor will receive:</p>
+              <ul className="text-xs text-muted-foreground list-disc list-inside space-y-0.5">
+                <li>Welcome email with login instructions</li>
+                <li>Their email address for login</li>
+                {invitePassword && <li>The temporary password you set above</li>}
+                <li>Link to the Subcontractor Portal + Google Play app link</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
+            <Button onClick={handleSendInvite} disabled={inviteSending || !sub.email || (invitePassword.length > 0 && invitePassword.length < 8)}>
+              {inviteSending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Sending...</> : 'Send Invite Email'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
