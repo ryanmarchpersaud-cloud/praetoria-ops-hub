@@ -666,13 +666,50 @@ export default function EmployeeDetail() {
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div><Label>Full Name</Label><Input value={ef('full_name')} onChange={e => setEf('full_name', e.target.value)} /></div>
+            <div><Label>Employee ID</Label><Input value={ef('employee_id')} onChange={e => setEf('employee_id', e.target.value)} placeholder="e.g. EMP-001" /></div>
             <div><Label>Work Email</Label><Input value={ef('work_email')} onChange={e => setEf('work_email', e.target.value)} /></div>
             <div><Label>Phone</Label><Input value={ef('phone')} onChange={e => setEf('phone', e.target.value)} /></div>
-            <div><Label>Role Title</Label><Input value={ef('role_title')} onChange={e => setEf('role_title', e.target.value)} /></div>
-            <div><Label>Team</Label><Input value={ef('team')} onChange={e => setEf('team', e.target.value)} /></div>
+            <div><Label>Role Title</Label>
+              <Select value={ef('role_title')} onValueChange={v => setEf('role_title', v)}>
+                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectContent>
+                  {['Field Technician', 'Lead Worker', 'Crew Lead', 'Supervisor', 'Dispatcher', 'Equipment Operator', 'Snow Plow Driver', 'Landscaper', 'General Labourer', 'Cleaner', 'Site Inspector', 'Safety Officer', 'Maintenance Worker', 'Driver', 'Foreman', 'Operations Manager', 'Admin Assistant', 'Estimator'].map(r => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Team / Strengths</Label>
+              <Select value={ef('team')} onValueChange={v => setEf('team', v)}>
+                <SelectTrigger><SelectValue placeholder="Select team / strength" /></SelectTrigger>
+                <SelectContent>
+                  {['Snow & Ice Crew', 'Landscaping Crew', 'Maintenance Crew', 'Cleaning Crew', 'Junk Removal Crew', 'Inspection Team', 'Communication', 'Collaboration', 'Reliable & Accountable', 'Problem Solver', 'Active Listener', 'Flexible & Adaptable', 'Proactive', 'Positive Attitude', 'Leadership'].map(t => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Branch</Label><Input value={ef('branch_location')} onChange={e => setEf('branch_location', e.target.value)} /></div>
-            <div><Label>Primary Service</Label><Input value={ef('primary_service_category')} onChange={e => setEf('primary_service_category', e.target.value)} /></div>
-            <div><Label>Secondary Service</Label><Input value={ef('secondary_service_category')} onChange={e => setEf('secondary_service_category', e.target.value)} /></div>
+            <div><Label>Primary Service</Label>
+              <Select value={ef('primary_service_category')} onValueChange={v => setEf('primary_service_category', v)}>
+                <SelectTrigger><SelectValue placeholder="Select service" /></SelectTrigger>
+                <SelectContent>
+                  {['Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance', 'Cleaning Services', 'Power Washing', 'Gutter Cleaning', 'Property Inspection', 'Bylaw / Compliance', 'Property Management'].map(s => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Secondary Service</Label>
+              <Select value={ef('secondary_service_category')} onValueChange={v => setEf('secondary_service_category', v)}>
+                <SelectTrigger><SelectValue placeholder="Select service" /></SelectTrigger>
+                <SelectContent>
+                  {['Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance', 'Cleaning Services', 'Power Washing', 'Gutter Cleaning', 'Property Inspection', 'Bylaw / Compliance', 'Property Management'].map(s => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Employment Type</Label>
               <Select value={ef('employment_type')} onValueChange={v => setEf('employment_type', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
