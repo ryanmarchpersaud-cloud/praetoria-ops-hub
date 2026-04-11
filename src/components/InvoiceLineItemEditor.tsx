@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -185,7 +186,8 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[40%]">Item</TableHead>
+            <TableHead className="w-[30%]">Item</TableHead>
+            <TableHead className="w-28">Service Date</TableHead>
             <TableHead className="text-right w-20">Qty</TableHead>
             <TableHead className="text-right w-28">Price</TableHead>
             <TableHead className="text-right w-28">Total</TableHead>
@@ -195,7 +197,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
         <TableBody>
           {items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
+            <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
                 No line items — use "Add from Catalog" to get started
               </TableCell>
             </TableRow>
@@ -214,6 +216,14 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
                     onChange={e => updateItem(idx, 'description', e.target.value)}
                     placeholder="Description (optional)"
                     className="h-7 text-xs mt-1 text-muted-foreground border-dashed"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="date"
+                    value={item.service_date}
+                    onChange={e => updateItem(idx, 'service_date', e.target.value)}
+                    className="h-8 text-sm w-32"
                   />
                 </TableCell>
                 <TableCell>
