@@ -146,7 +146,7 @@ export default function ManageTeamPage() {
 
       const tmData: any[] = (tmRes as any).data || [];
       const roles: any[] = rolesRes.data || [];
-      const statuses: any[] = statusesData?.statuses || [];
+      const statuses: any[] = statusesRes?.statuses || [];
 
       const roleMap: Record<string, string[]> = {};
       roles.forEach((r: any) => {
