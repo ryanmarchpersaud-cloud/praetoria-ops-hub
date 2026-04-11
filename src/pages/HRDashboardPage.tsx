@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useComplianceSummary } from '@/hooks/useTraining';
 import { useAllTimeOffRequests, useAllEmergencyContacts, useAllIncidentReports, useAllCertifications } from '@/hooks/useHRData';
 import { useWCBClaims, useSGIDriverRecords, useBenefitEnrollments } from '@/hooks/useHRModules';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -13,6 +15,7 @@ import {
   DollarSign, StickyNote, Car, MapPin,
 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
+import CreateEmployeeDialog from '@/components/CreateEmployeeDialog';
 
 function StatCard({ icon: Icon, label, value, color, to, alert }: {
   icon: any; label: string; value: number | string; color: string; to?: string; alert?: boolean;
@@ -35,6 +38,7 @@ function StatCard({ icon: Icon, label, value, color, to, alert }: {
 }
 
 export default function HRDashboardPage() {
+  const [createEmpOpen, setCreateEmpOpen] = useState(false);
   const { data: employees = [] } = useEmployees();
   const { data: compliance } = useComplianceSummary();
   const { data: timeOffRequests = [] } = useAllTimeOffRequests();
@@ -115,10 +119,22 @@ export default function HRDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">HR Workspace</h1>
-        <p className="text-sm text-muted-foreground">People management, training, compliance & safety coordination</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">HR Workspace</h1>
+          <p className="text-sm text-muted-foreground">People management, training, compliance & safety coordination</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/employees"><Users className="h-4 w-4 mr-1.5" /> View Team</Link>
+          </Button>
+          <Button size="sm" onClick={() => setCreateEmpOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-1.5" /> Add Employee
+          </Button>
+        </div>
       </div>
+
+      <CreateEmployeeDialog open={createEmpOpen} onOpenChange={setCreateEmpOpen} />
 
       {/* Key metrics - Row 1: People */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3">

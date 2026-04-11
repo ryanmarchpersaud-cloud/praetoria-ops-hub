@@ -2,11 +2,13 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Users, ChevronRight } from 'lucide-react';
+import { Search, Users, ChevronRight, UserPlus } from 'lucide-react';
+import CreateEmployeeDialog from '@/components/CreateEmployeeDialog';
 
 const statusOptions = ['all', 'active', 'inactive', 'on-leave', 'terminated'] as const;
 const serviceOptions = ['all', 'Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance', 'Cleaning Services', 'Power Washing'] as const;
@@ -28,6 +30,7 @@ function StatusBadge({ status }: { status: string }) {
 export default function Employees() {
   const navigate = useNavigate();
   const { data: employees = [], isLoading } = useEmployees();
+  const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [serviceFilter, setServiceFilter] = useState('all');
@@ -54,10 +57,17 @@ export default function Employees() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Employees</h1>
-        <p className="text-sm text-muted-foreground">Manage worker profiles, HR records, and employment details</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Employees</h1>
+          <p className="text-sm text-muted-foreground">Manage worker profiles, HR records, and employment details</p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>
+          <UserPlus className="h-4 w-4 mr-2" /> Add Employee
+        </Button>
       </div>
+
+      <CreateEmployeeDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
