@@ -2700,6 +2700,41 @@ export type Database = {
           },
         ]
       }
+      invoice_views: {
+        Row: {
+          id: string
+          invoice_id: string
+          viewed_at: string
+          viewer_ip: string | null
+          viewer_user_agent: string | null
+          viewer_user_id: string
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          viewed_at?: string
+          viewer_ip?: string | null
+          viewer_user_agent?: string | null
+          viewer_user_id: string
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          viewed_at?: string
+          viewer_ip?: string | null
+          viewer_user_agent?: string | null
+          viewer_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_views_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount_paid: number
