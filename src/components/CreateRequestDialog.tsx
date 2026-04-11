@@ -82,8 +82,10 @@ export function CreateRequestDialog({ open, onOpenChange, defaultCustomerId }: P
               subject: `New Request: ${form.subject}`,
               body: `${custName} — ${form.subject}`,
               customer_name: custName,
+              to_email: 'ops@praetoriagroup.ca',
+              reply_to: 'ops@praetoriagroup.ca',
             },
-            channels: ['in_app'],
+            channels: ['in_app', 'email'],
             audience: 'admin',
           },
         });
