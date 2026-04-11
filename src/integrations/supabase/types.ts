@@ -5273,6 +5273,12 @@ export type Database = {
           active_flag: boolean
           agreement_signed_status: string
           allergies: string | null
+          bank_account_number: string | null
+          bank_institution_number: string | null
+          bank_name: string | null
+          bank_transit_number: string | null
+          blocked_at: string | null
+          blocked_reason: string | null
           blood_pressure_alert: boolean | null
           business_license_expiry: string | null
           business_license_status: string
@@ -5287,6 +5293,7 @@ export type Database = {
           driver_license_class: string | null
           driver_license_expiry: string | null
           driver_license_number: string | null
+          e_transfer_email: string | null
           email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
@@ -5298,6 +5305,7 @@ export type Database = {
           id: string
           insurance_expiry: string | null
           insurance_status: string
+          is_blocked: boolean | null
           mailing_address: string | null
           medical_info_consent: boolean | null
           medical_info_last_updated_at: string | null
@@ -5307,6 +5315,7 @@ export type Database = {
           pay_schedule: string | null
           pay_type: string | null
           phone: string | null
+          preferred_payment_method: string | null
           profile_photo_url: string | null
           referral_source: string | null
           religion: string | null
@@ -5327,6 +5336,12 @@ export type Database = {
           active_flag?: boolean
           agreement_signed_status?: string
           allergies?: string | null
+          bank_account_number?: string | null
+          bank_institution_number?: string | null
+          bank_name?: string | null
+          bank_transit_number?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           blood_pressure_alert?: boolean | null
           business_license_expiry?: string | null
           business_license_status?: string
@@ -5341,6 +5356,7 @@ export type Database = {
           driver_license_class?: string | null
           driver_license_expiry?: string | null
           driver_license_number?: string | null
+          e_transfer_email?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -5352,6 +5368,7 @@ export type Database = {
           id?: string
           insurance_expiry?: string | null
           insurance_status?: string
+          is_blocked?: boolean | null
           mailing_address?: string | null
           medical_info_consent?: boolean | null
           medical_info_last_updated_at?: string | null
@@ -5361,6 +5378,7 @@ export type Database = {
           pay_schedule?: string | null
           pay_type?: string | null
           phone?: string | null
+          preferred_payment_method?: string | null
           profile_photo_url?: string | null
           referral_source?: string | null
           religion?: string | null
@@ -5381,6 +5399,12 @@ export type Database = {
           active_flag?: boolean
           agreement_signed_status?: string
           allergies?: string | null
+          bank_account_number?: string | null
+          bank_institution_number?: string | null
+          bank_name?: string | null
+          bank_transit_number?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           blood_pressure_alert?: boolean | null
           business_license_expiry?: string | null
           business_license_status?: string
@@ -5395,6 +5419,7 @@ export type Database = {
           driver_license_class?: string | null
           driver_license_expiry?: string | null
           driver_license_number?: string | null
+          e_transfer_email?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -5406,6 +5431,7 @@ export type Database = {
           id?: string
           insurance_expiry?: string | null
           insurance_status?: string
+          is_blocked?: boolean | null
           mailing_address?: string | null
           medical_info_consent?: boolean | null
           medical_info_last_updated_at?: string | null
@@ -5415,6 +5441,7 @@ export type Database = {
           pay_schedule?: string | null
           pay_type?: string | null
           phone?: string | null
+          preferred_payment_method?: string | null
           profile_photo_url?: string | null
           referral_source?: string | null
           religion?: string | null
@@ -6391,10 +6418,16 @@ export type Database = {
           address_postal_code: string | null
           address_province: string | null
           allergies: string | null
+          bank_account_number: string | null
+          bank_institution_number: string | null
+          bank_name: string | null
+          bank_transit_number: string | null
           benefits_effective_date: string | null
           benefits_plan_summary: string | null
           benefits_provider: string | null
           benefits_status: string | null
+          blocked_at: string | null
+          blocked_reason: string | null
           blood_pressure_alert: boolean | null
           branch_location: string | null
           carries_epipen: boolean | null
@@ -6405,6 +6438,7 @@ export type Database = {
           driver_license_class: string | null
           driver_license_expiry: string | null
           driver_license_number: string | null
+          e_transfer_email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
@@ -6419,6 +6453,7 @@ export type Database = {
           hire_date: string | null
           hourly_rate: number | null
           id: string
+          is_blocked: boolean | null
           license_verified: boolean | null
           manager_name: string | null
           medical_info_consent: boolean | null
@@ -6427,6 +6462,7 @@ export type Database = {
           pay_type: string | null
           personal_days_balance: number | null
           phone: string | null
+          preferred_payment_method: string | null
           primary_service_category: string | null
           profile_photo_url: string | null
           referral_source: string | null
@@ -6449,10 +6485,16 @@ export type Database = {
           address_postal_code?: string | null
           address_province?: string | null
           allergies?: string | null
+          bank_account_number?: string | null
+          bank_institution_number?: string | null
+          bank_name?: string | null
+          bank_transit_number?: string | null
           benefits_effective_date?: string | null
           benefits_plan_summary?: string | null
           benefits_provider?: string | null
           benefits_status?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           blood_pressure_alert?: boolean | null
           branch_location?: string | null
           carries_epipen?: boolean | null
@@ -6463,6 +6505,7 @@ export type Database = {
           driver_license_class?: string | null
           driver_license_expiry?: string | null
           driver_license_number?: string | null
+          e_transfer_email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
@@ -6477,6 +6520,7 @@ export type Database = {
           hire_date?: string | null
           hourly_rate?: number | null
           id?: string
+          is_blocked?: boolean | null
           license_verified?: boolean | null
           manager_name?: string | null
           medical_info_consent?: boolean | null
@@ -6485,6 +6529,7 @@ export type Database = {
           pay_type?: string | null
           personal_days_balance?: number | null
           phone?: string | null
+          preferred_payment_method?: string | null
           primary_service_category?: string | null
           profile_photo_url?: string | null
           referral_source?: string | null
@@ -6507,10 +6552,16 @@ export type Database = {
           address_postal_code?: string | null
           address_province?: string | null
           allergies?: string | null
+          bank_account_number?: string | null
+          bank_institution_number?: string | null
+          bank_name?: string | null
+          bank_transit_number?: string | null
           benefits_effective_date?: string | null
           benefits_plan_summary?: string | null
           benefits_provider?: string | null
           benefits_status?: string | null
+          blocked_at?: string | null
+          blocked_reason?: string | null
           blood_pressure_alert?: boolean | null
           branch_location?: string | null
           carries_epipen?: boolean | null
@@ -6521,6 +6572,7 @@ export type Database = {
           driver_license_class?: string | null
           driver_license_expiry?: string | null
           driver_license_number?: string | null
+          e_transfer_email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
@@ -6535,6 +6587,7 @@ export type Database = {
           hire_date?: string | null
           hourly_rate?: number | null
           id?: string
+          is_blocked?: boolean | null
           license_verified?: boolean | null
           manager_name?: string | null
           medical_info_consent?: boolean | null
@@ -6543,6 +6596,7 @@ export type Database = {
           pay_type?: string | null
           personal_days_balance?: number | null
           phone?: string | null
+          preferred_payment_method?: string | null
           primary_service_category?: string | null
           profile_photo_url?: string | null
           referral_source?: string | null
