@@ -44,7 +44,7 @@ export const PROVINCES = [
 
 export const PROPERTY_STATUSES = ['Active', 'Inactive', 'Seasonal', 'Pending'] as const;
 export const PROPERTY_TYPES = ['Residential', 'Commercial', 'Industrial', 'Municipal', 'Strata', 'Other'] as const;
-export const JOB_STATUSES = ['Draft', 'Scheduled', 'In Progress', 'Completed', 'Cancelled', 'On Hold'] as const;
+export const JOB_STATUSES = ['Draft', 'Scheduled', 'In Progress', 'Completed', 'Closed', 'Cancelled', 'On Hold'] as const;
 export const JOB_PRIORITIES = ['Low', 'Normal', 'High', 'Urgent'] as const;
 export const VISIT_STATUSES = ['Planned', 'Scheduled', 'Assigned', 'En Route', 'In Progress', 'Completed', 'Skipped', 'Rescheduled', 'Missed', 'Cancelled', 'Needs Follow-up'] as const;
 export const VISIT_TYPES = ['Routine', 'Initial Visit', 'Follow-up', 'Emergency', 'Inspection', 'Service Call', 'Delivery', 'Other'] as const;
