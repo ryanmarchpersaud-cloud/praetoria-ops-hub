@@ -362,6 +362,11 @@ export default function SubcontractorDetail() {
         </div>
         {sub.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> Blocked</Badge>}
         <StatusChip status={sub.status} />
+        {sub.user_id && (
+          <Button size="sm" variant="default" className="gap-1.5" onClick={() => setInviteOpen(true)}>
+            <Send className="h-3.5 w-3.5" /> Send Invite
+          </Button>
+        )}
         <Button size="sm" variant="outline" className="gap-1.5" onClick={openEdit}>
           <Pencil className="h-3.5 w-3.5" /> Edit
         </Button>
