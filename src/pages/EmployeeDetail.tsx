@@ -227,6 +227,8 @@ function StatusChip({ status }: { status: string }) {
     denied: 'bg-destructive/10 text-destructive',
     'on-leave': 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     'not-enrolled': 'bg-muted text-muted-foreground',
+    terminated: 'bg-destructive/10 text-destructive',
+    on_hold: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
   };
   return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${colors[status] || colors.inactive}`}>{status}</span>;
 }
