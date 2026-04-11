@@ -295,6 +295,9 @@ export default function EmployeeDetail() {
         <StatusChip status={emp.employment_status} />
         {canManageWorkers && (
           <>
+            <Button size="sm" variant="default" className="gap-1.5" onClick={() => setInviteOpen(true)}>
+              <Send className="h-3.5 w-3.5" /> Send Invite
+            </Button>
             <Button size="sm" variant="outline" className="gap-1.5" onClick={openEditDialog}>
               <Pencil className="h-3.5 w-3.5" /> Edit
             </Button>
