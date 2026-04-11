@@ -57,8 +57,8 @@ const SERVICE_CARDS = [
   { label: 'Landscaping', img: '/images/service-landscaping.png' },
   { label: 'Maintenance & Repair', img: '/images/service-maintenance.png' },
   { label: 'Junk Removal', img: '/images/service-junk-removal.png' },
-  { label: 'Cleaning Services', img: '/images/service-cleaning.png' },
-  { label: 'Power Washing', img: '/images/service-power-washing.png' },
+  { label: 'Cleaning Services', img: '/images/service-cleaning.png?v=2' },
+  { label: 'Power Washing', img: '/images/service-power-washing.png?v=2' },
 ];
 
 export default function InvoicePrint() {
