@@ -222,12 +222,33 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
                   />
                 </TableCell>
                 <TableCell>
-                  <Input
-                    type="date"
-                    value={item.service_date}
-                    onChange={e => updateItem(idx, 'service_date', e.target.value)}
-                    className="h-8 text-sm w-32"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-8 w-32 justify-start text-left text-sm font-normal px-2",
+                          !item.service_date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                        {item.service_date
+                          ? format(parse(item.service_date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')
+                          : 'Pick date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={item.service_date ? parse(item.service_date, 'yyyy-MM-dd', new Date()) : undefined}
+                        onSelect={(date) => {
+                          updateItem(idx, 'service_date', date ? format(date, 'yyyy-MM-dd') : '');
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </TableCell>
                 <TableCell>
                   <Input
