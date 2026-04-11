@@ -98,8 +98,7 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: Props) {
   const mutation = useMutation({
     mutationFn: async () => {
       const full_name = `${form.first_name.trim()} ${form.last_name.trim()}`.trim();
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: {
+      const data = await callEdgeFunction('manage-team', {
           action: 'create_user',
           email: form.email.trim(),
           password: form.password,

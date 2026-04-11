@@ -82,8 +82,7 @@ export default function CreateSubcontractorDialog({ open, onOpenChange }: Props)
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: {
+      const data = await callEdgeFunction('manage-team', {
           action: 'create_subcontractor',
           email: form.email.trim(),
           password: form.password,
