@@ -118,7 +118,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       line_total: Number(item.quantity) * Number(item.unit_price),
       sort_order: idx,
       service_date: item.service_date || null,
-      service_time: item.service_time || null,
+      service_time: null,
     }));
     try {
       await upsertItems.mutateAsync({ invoiceId, items: payload });
@@ -185,7 +185,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[28%]">Product & Service</TableHead>
+            <TableHead className="w-[35%]">Product & Service</TableHead>
             <TableHead className="w-24">Date</TableHead>
             <TableHead className="w-24">Time</TableHead>
             <TableHead className="text-right w-20">Qty</TableHead>
