@@ -32,7 +32,6 @@ export default function InvoicePrint() {
   const { data: invoice, isLoading } = useInvoice(id);
   const { data: lineItems = [] } = useInvoiceLineItems(id);
 
-  // Pull company branding from company_settings
   const { data: company } = useQuery({
     queryKey: ['company_settings_print'],
     queryFn: async () => {
@@ -62,6 +61,18 @@ export default function InvoicePrint() {
   const companyAddress = company?.physical_address || company?.mailing_address || 'Toronto, Ontario, Canada';
   const accentColor = company?.primary_color || '#3b5bdb';
 
+  const formatServiceTime = (time: string | null) => {
+    if (!time) return null;
+    try {
+      const [h, m] = time.split(':').map(Number);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const hour12 = h % 12 || 12;
+      return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+    } catch {
+      return time;
+    }
+  };
+
   return (
     <>
       {/* Toolbar (hidden when printing) */}
@@ -87,7 +98,7 @@ export default function InvoicePrint() {
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div>
             {company?.logo_url ? (
-              <img src={company.logo_url} alt={companyName} className="h-10 mb-2 print:h-12" />
+              <img src={company.logo_url} alt={companyName} className="h-16 mb-2 print:h-20" />
             ) : (
               <h1 className="text-2xl font-bold tracking-tight text-[#1a1a2e] print:text-3xl uppercase" style={{ fontFamily: "'DM Sans', sans-serif" }}>
                 {companyName}
@@ -102,16 +113,29 @@ export default function InvoicePrint() {
           </div>
           <div className="text-right">
             <div className="text-xs font-semibold uppercase tracking-widest print:text-sm" style={{ color: accentColor }}>Invoice</div>
-            <p className="text-xl font-bold mt-1 print:text-2xl tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <p className="text-xl font-extrabold mt-1 print:text-2xl tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               {invoice.invoice_number}
             </p>
             <div className="mt-2"><PrintStatusBadge status={invoice.status} /></div>
-            <p className="text-xs text-[#6b7280] mt-2 print:text-sm">
-              Issued: {format(new Date(invoice.issue_date), 'MMMM d, yyyy')}
-            </p>
-            <p className="text-xs text-[#6b7280] print:text-sm">
-              Due: {format(new Date(invoice.due_date), 'MMMM d, yyyy')}
-            </p>
+            <div className="mt-3 text-xs text-[#6b7280] print:text-sm space-y-0.5">
+              <p>
+                <span className="font-semibold text-[#374151]">Issued:</span>{' '}
+                {format(new Date(invoice.issue_date), 'MMMM d, yyyy')}
+              </p>
+              <p>
+                <span className="font-semibold text-[#374151]">Due:</span>{' '}
+                {format(new Date(invoice.due_date), 'MMMM d, yyyy')}
+              </p>
+              {invoice.paid_at && (
+                <p>
+                  <span className="font-semibold text-[#059669]">Paid:</span>{' '}
+                  {format(new Date(invoice.paid_at), 'MMMM d, yyyy')}
+                </p>
+              )}
+              <p className="text-sm font-bold text-[#1a1a2e] pt-1 print:text-base">
+                Total: ${formatCurrency(total)}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -159,9 +183,9 @@ export default function InvoicePrint() {
             <thead>
               <tr className="border-b-2 border-[#d1d5db]">
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-8">#</th>
-                <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs">Item</th>
+                <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs">Product & Service</th>
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs hidden md:table-cell print:table-cell">Description</th>
-                <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">Date</th>
+                <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-32">Date & Time</th>
                 <th className="text-center py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-16">Qty</th>
                 <th className="text-right py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">Unit Price</th>
                 <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">Total</th>
@@ -177,7 +201,14 @@ export default function InvoicePrint() {
                   </td>
                   <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell">{item.description}</td>
                   <td className="py-3 pr-2 text-xs text-[#374151]">
-                    {item.service_date ? format(new Date(item.service_date + 'T00:00:00'), 'MMM d, yyyy') : '—'}
+                    {item.service_date ? (
+                      <div>
+                        <p>{format(new Date(item.service_date + 'T00:00:00'), 'MMM d, yyyy')}</p>
+                        {item.service_time && (
+                          <p className="text-[#6b7280]">{formatServiceTime(item.service_time)}</p>
+                        )}
+                      </div>
+                    ) : '—'}
                   </td>
                   <td className="py-3 px-2 text-center tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{item.quantity}</td>
                   <td className="py-3 px-2 text-right tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.unit_price))}</td>
@@ -234,7 +265,7 @@ export default function InvoicePrint() {
           </div>
         </div>
 
-        {/* Customer Memo */}
+        {/* Customer Memo — moved to bottom */}
         {invoice.customer_memo && (
           <div className="mb-8 print:mb-10 bg-[#f9fafb] rounded-lg p-4 print:bg-[#f9fafb] border border-[#e5e7eb]">
             <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">Notes</p>
