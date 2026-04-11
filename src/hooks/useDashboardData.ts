@@ -22,7 +22,7 @@ export function useDashboardQuotes() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quotes')
-        .select('id, approval_status, total, created_at')
+        .select('id, approval_status, total, created_at, quote_number, follow_up_due_at, sent_status, leads(first_name, last_name, company_name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data ?? [];
