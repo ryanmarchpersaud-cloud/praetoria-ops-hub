@@ -264,6 +264,25 @@ export default function EmployeeDetail() {
   const ef = (field: string) => editForm[field] ?? '';
   const setEf = (field: string, val: any) => setEditForm(prev => ({ ...prev, [field]: val }));
 
+  const handleSendInvite = async () => {
+    if (!userId) return;
+    setInviteSending(true);
+    try {
+      const result = await callEdgeFunction('send-worker-invite', {
+        user_id: userId,
+        temporary_password: invitePassword || undefined,
+      });
+      if (result?.error) throw new Error(result.error);
+      toast({ title: result.message || 'Invite sent successfully!' });
+      setInviteOpen(false);
+      setInvitePassword('');
+    } catch (err: any) {
+      toast({ title: err.message || 'Failed to send invite', variant: 'destructive' });
+    } finally {
+      setInviteSending(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
