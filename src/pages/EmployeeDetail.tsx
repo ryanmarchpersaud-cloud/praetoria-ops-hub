@@ -19,10 +19,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw, Ban, ShieldOff, Landmark, Loader2, Pencil } from 'lucide-react';
+import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw, Ban, ShieldOff, Landmark, Loader2, Pencil, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { useQueryClient } from '@tanstack/react-query';
 
 /* ── Predefined PPE / Safety item suggestions ── */
@@ -136,6 +137,9 @@ export default function EmployeeDetail() {
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [editEquipOpen, setEditEquipOpen] = useState(false);
   const [editEquipItem, setEditEquipItem] = useState<any>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteSending, setInviteSending] = useState(false);
+  const [invitePassword, setInvitePassword] = useState('');
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   if (!emp) return <div className="p-8 text-center text-muted-foreground">Employee not found.</div>;
@@ -260,6 +264,25 @@ export default function EmployeeDetail() {
   const ef = (field: string) => editForm[field] ?? '';
   const setEf = (field: string, val: any) => setEditForm(prev => ({ ...prev, [field]: val }));
 
+  const handleSendInvite = async () => {
+    if (!userId) return;
+    setInviteSending(true);
+    try {
+      const result = await callEdgeFunction('send-worker-invite', {
+        user_id: userId,
+        temporary_password: invitePassword || undefined,
+      });
+      if (result?.error) throw new Error(result.error);
+      toast({ title: result.message || 'Invite sent successfully!' });
+      setInviteOpen(false);
+      setInvitePassword('');
+    } catch (err: any) {
+      toast({ title: err.message || 'Failed to send invite', variant: 'destructive' });
+    } finally {
+      setInviteSending(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -272,6 +295,9 @@ export default function EmployeeDetail() {
         <StatusChip status={emp.employment_status} />
         {canManageWorkers && (
           <>
+            <Button size="sm" variant="default" className="gap-1.5" onClick={() => setInviteOpen(true)}>
+              <Send className="h-3.5 w-3.5" /> Send Invite
+            </Button>
             <Button size="sm" variant="outline" className="gap-1.5" onClick={openEditDialog}>
               <Pencil className="h-3.5 w-3.5" /> Edit
             </Button>
@@ -833,6 +859,38 @@ export default function EmployeeDetail() {
               {blockSaving ? 'Blocking...' : 'Block'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Invite Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Send className="h-5 w-5" /> Send Worker Invite</DialogTitle>
+            <DialogDescription>Send login credentials to <strong>{emp.full_name}</strong> via email at <strong>{emp.work_email || 'no email set'}</strong>.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label>Set / Reset Temporary Password (optional)</Label>
+              <Input type="password" placeholder="Min 8 characters" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Leave blank to keep the existing password. If set, this will update their password.</p>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-1">
+              <p className="text-xs font-medium text-foreground">What the worker will receive:</p>
+              <ul className="text-xs text-muted-foreground list-disc list-inside space-y-0.5">
+                <li>Welcome email with login instructions</li>
+                <li>Their email address for login</li>
+                {invitePassword && <li>The temporary password you set above</li>}
+                <li>Link to log into the Worker Portal</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
+            <Button onClick={handleSendInvite} disabled={inviteSending || !emp.work_email || (invitePassword.length > 0 && invitePassword.length < 8)}>
+              {inviteSending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Sending...</> : 'Send Invite Email'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
