@@ -121,7 +121,9 @@ export default function InvoicePrint() {
         {/* Company Header */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div>
-            <img src={company?.logo_url || '/icons/icon-192x192.png'} alt={companyName} className="h-16 mb-1 print:h-20 rounded" />
+            <div className="bg-[#1a1a2e] rounded-lg px-4 py-3 mb-2 inline-block print:px-5 print:py-4">
+              <img src="/images/praetoria-logo-white.png" alt={companyName} className="h-16 print:h-24" />
+            </div>
             <p className="font-bold text-sm text-[#1a1a2e] print:text-base">{companyName}</p>
             <p className="text-[10px] text-[#6b7280] italic print:text-xs">{companyTagline}</p>
             <div className="mt-2 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
