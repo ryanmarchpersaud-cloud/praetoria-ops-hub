@@ -183,6 +183,8 @@ export default function SubcontractorDetail() {
         .update({
           ...editForm,
           hourly_rate: editForm.hourly_rate ? Number(editForm.hourly_rate) : null,
+          date_of_birth: editForm.date_of_birth || null,
+          driver_license_expiry: editForm.driver_license_expiry || null,
         })
         .eq('id', id);
       if (error) throw error;
