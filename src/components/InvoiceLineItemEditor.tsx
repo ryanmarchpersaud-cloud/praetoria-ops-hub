@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ interface LineItem {
   line_total: number;
   sort_order: number;
   service_date: string;
+  service_time: string;
 }
 
 interface Props {
@@ -59,6 +59,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
         line_total: Number(i.line_total),
         sort_order: i.sort_order,
         service_date: i.service_date || '',
+        service_time: i.service_time || '',
       })));
     }
   }, [existingItems]);
@@ -73,6 +74,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       line_total: price,
       sort_order: prev.length,
       service_date: '',
+      service_time: '',
     }]);
     setPickerOpen(false);
     setDirty(true);
@@ -87,6 +89,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       line_total: 0,
       sort_order: prev.length,
       service_date: '',
+      service_time: '',
     }]);
     setDirty(true);
   };
@@ -119,6 +122,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       line_total: Number(item.quantity) * Number(item.unit_price),
       sort_order: idx,
       service_date: item.service_date || null,
+      service_time: item.service_time || null,
     }));
     try {
       await upsertItems.mutateAsync({ invoiceId, items: payload });
@@ -132,7 +136,6 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
 
   const subtotal = items.reduce((s, i) => s + (Number(i.quantity) * Number(i.unit_price)), 0);
 
-  // Group catalog by service_category
   const grouped = catalog.reduce((acc: Record<string, any[]>, p: any) => {
     const cat = p.service_category || 'Other';
     if (!acc[cat]) acc[cat] = [];
@@ -186,8 +189,9 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[30%]">Item</TableHead>
-            <TableHead className="w-28">Service Date</TableHead>
+            <TableHead className="w-[28%]">Product & Service</TableHead>
+            <TableHead className="w-24">Date</TableHead>
+            <TableHead className="w-24">Time</TableHead>
             <TableHead className="text-right w-20">Qty</TableHead>
             <TableHead className="text-right w-28">Price</TableHead>
             <TableHead className="text-right w-28">Total</TableHead>
@@ -197,7 +201,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
         <TableBody>
           {items.length === 0 ? (
             <TableRow>
-            <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+              <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
                 No line items — use "Add from Catalog" to get started
               </TableCell>
             </TableRow>
@@ -208,7 +212,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
                   <Input
                     value={item.item_name}
                     onChange={e => updateItem(idx, 'item_name', e.target.value)}
-                    placeholder="Item name"
+                    placeholder="Product / service name"
                     className="h-8 text-sm"
                   />
                   <Input
@@ -224,6 +228,14 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
                     value={item.service_date}
                     onChange={e => updateItem(idx, 'service_date', e.target.value)}
                     className="h-8 text-sm w-32"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="time"
+                    value={item.service_time}
+                    onChange={e => updateItem(idx, 'service_time', e.target.value)}
+                    className="h-8 text-sm w-28"
                   />
                 </TableCell>
                 <TableCell>
