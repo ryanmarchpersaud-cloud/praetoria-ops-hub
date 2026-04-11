@@ -53,8 +53,18 @@ export default function PortalBilling() {
   const handleExpand = async (inv: any) => {
     const next = expandedId === inv.id ? null : inv.id;
     setExpandedId(next);
-    if (next && inv.status === 'Sent' && !inv.viewed_at) {
-      await supabase.from('invoices').update({ viewed_at: new Date().toISOString(), status: 'Viewed' as any }).eq('id', inv.id);
+    if (next) {
+      // Log view to invoice_views table
+      if (user?.id) {
+        supabase.from('invoice_views').insert({
+          invoice_id: inv.id,
+          viewer_user_id: user.id,
+        } as any).then(() => {});
+      }
+      // Mark as Viewed if first time
+      if (inv.status === 'Sent' && !inv.viewed_at) {
+        await supabase.from('invoices').update({ viewed_at: new Date().toISOString(), status: 'Viewed' as any }).eq('id', inv.id);
+      }
     }
   };
 

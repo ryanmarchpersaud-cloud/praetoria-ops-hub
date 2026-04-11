@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { useInvoice, useInvoiceLineItems, useUpdateInvoice } from '@/hooks/useInvoices';
@@ -30,6 +31,22 @@ export default function InvoiceDetail() {
   const updateInvoice = useUpdateInvoice();
   const { data: billingProfile } = useBillingProfile(invoice?.customer_id);
   const { canManageInvoices, canEditInvoiceDrafts, canRecordPayments, canVoidInvoices } = useActionPermissions();
+
+  // Fetch invoice view tracking
+  const { data: invoiceViews = [] } = useQuery({
+    queryKey: ['invoice_views', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase
+        .from('invoice_views')
+        .select('*')
+        .eq('invoice_id', id)
+        .order('viewed_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
 
   // Editable draft fields
   const [editingMeta, setEditingMeta] = useState(false);
@@ -294,7 +311,13 @@ export default function InvoiceDetail() {
                   {invoice.jobs && <div><span className="text-muted-foreground">Job</span><p className="font-medium"><Link to={`/jobs/${invoice.jobs.id}`} className="text-primary hover:underline">{invoice.jobs.job_number} — {invoice.jobs.job_title}</Link></p></div>}
                   {invoice.properties && <div><span className="text-muted-foreground">Property</span><p className="font-medium"><Link to={`/properties/${invoice.property_id}`} className="text-primary hover:underline">{invoice.properties.property_name}</Link></p></div>}
                   {invoice.sent_at && <div><span className="text-muted-foreground">Sent</span><p className="font-medium">{format(new Date(invoice.sent_at), 'MMM d, yyyy h:mm a')}</p></div>}
-                  {invoice.paid_at && <div><span className="text-muted-foreground">Paid</span><p className="font-medium">{format(new Date(invoice.paid_at), 'MMM d, yyyy h:mm a')}</p></div>}
+                  {amountPaid > 0 && (
+                    <div><span className="text-muted-foreground">Amount Paid</span><p className="font-medium text-emerald-600">${amountPaid.toFixed(2)}</p></div>
+                  )}
+                  {invoice.paid_at && <div><span className="text-muted-foreground">Date Paid</span><p className="font-medium text-emerald-600">{format(new Date(invoice.paid_at), 'MMM d, yyyy h:mm a')}</p></div>}
+                  {balanceDue > 0.005 && (
+                    <div><span className="text-muted-foreground">Balance Due</span><p className="font-medium text-destructive">${balanceDue.toFixed(2)}</p></div>
+                  )}
                 </>
               )}
             </CardContent>
@@ -356,6 +379,29 @@ export default function InvoiceDetail() {
                   <div><span className="text-muted-foreground">Card on File</span><p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p></div>
                 )}
                 <div><span className="text-muted-foreground">Auto-pay</span><p className={`font-medium ${billingProfile.autopay_enabled ? 'text-success' : 'text-muted-foreground'}`}>{billingProfile.autopay_enabled ? 'Enabled' : 'Disabled'}</p></div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Customer View Tracking */}
+          {(invoiceViews as any[]).length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <Eye className="h-3.5 w-3.5 text-blue-500" /> Customer Views
+                  <Badge variant="secondary" className="text-[10px] ml-auto">{(invoiceViews as any[]).length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs space-y-1.5">
+                {(invoiceViews as any[]).slice(0, 5).map((v: any) => (
+                  <div key={v.id} className="flex items-center gap-1.5 text-muted-foreground">
+                    <Eye className="h-3 w-3 text-blue-400 shrink-0" />
+                    <span>{format(new Date(v.viewed_at), 'MMM d, yyyy h:mm a')}</span>
+                  </div>
+                ))}
+                {(invoiceViews as any[]).length > 5 && (
+                  <p className="text-muted-foreground text-[10px]">+ {(invoiceViews as any[]).length - 5} more views</p>
+                )}
               </CardContent>
             </Card>
           )}
