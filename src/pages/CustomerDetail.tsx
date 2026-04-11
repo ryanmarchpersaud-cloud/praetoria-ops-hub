@@ -31,7 +31,7 @@ export default function CustomerDetail() {
   const [form, setForm] = useState<any>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [invitePassword, setInvitePassword] = useState('');
+  // Password is always "praetoria" — handled server-side
   const [inviting, setInviting] = useState(false);
   const [invoiceSelectOpen, setInvoiceSelectOpen] = useState(false);
   const [resending, setResending] = useState(false);
@@ -123,14 +123,14 @@ export default function CustomerDetail() {
   };
 
   const handleInvite = async () => {
-    if (!inviteEmail || !invitePassword || invitePassword.length < 6) {
-      toast({ title: 'Error', description: 'Email and password (min 6 chars) are required', variant: 'destructive' });
+    if (!inviteEmail) {
+      toast({ title: 'Error', description: 'Email is required', variant: 'destructive' });
       return;
     }
     setInviting(true);
     try {
       const { data, error } = await supabase.functions.invoke('invite-customer', {
-        body: { customer_id: id, email: inviteEmail, password: invitePassword },
+        body: { customer_id: id, email: inviteEmail, password: 'praetoria' },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -139,7 +139,6 @@ export default function CustomerDetail() {
         await callEdgeFunction('send-portal-invite', {
           portal_type: 'customer',
           customer_id: id,
-          temporary_password: invitePassword,
         });
       } catch { /* email send is best-effort */ }
       toast({ title: 'Portal account created & invite sent', description: data.message });
@@ -377,11 +376,9 @@ export default function CustomerDetail() {
               <Input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="customer@example.com" />
             </div>
             <div>
-              <Label className="text-xs">Temporary Password *</Label>
-              <Input type="text" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} placeholder="Min 6 characters" minLength={6} />
-              <p className="text-[10px] text-muted-foreground mt-1">Share this password with the customer. They can change it later.</p>
+              <p className="text-xs text-muted-foreground">Temporary password: <strong>praetoria</strong> — they will be asked to change it after first login.</p>
             </div>
-            <Button className="w-full h-11" disabled={inviting || !inviteEmail || invitePassword.length < 6} onClick={handleInvite}>
+            <Button className="w-full h-11" disabled={inviting || !inviteEmail} onClick={handleInvite}>
               {inviting ? 'Creating account...' : 'Create Portal Account'}
             </Button>
           </div>

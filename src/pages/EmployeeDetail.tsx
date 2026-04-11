@@ -139,7 +139,7 @@ export default function EmployeeDetail() {
   const [editEquipItem, setEditEquipItem] = useState<any>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteSending, setInviteSending] = useState(false);
-  const [invitePassword, setInvitePassword] = useState('');
+  // Password is always "praetoria" — handled server-side
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   if (!emp) return <div className="p-8 text-center text-muted-foreground">Employee not found.</div>;
@@ -271,12 +271,10 @@ export default function EmployeeDetail() {
       const result = await callEdgeFunction('send-portal-invite', {
         portal_type: 'worker',
         user_id: userId,
-        temporary_password: invitePassword || undefined,
       });
       if (result?.error) throw new Error(result.error);
       toast({ title: result.message || 'Invite sent successfully!' });
       setInviteOpen(false);
-      setInvitePassword('');
     } catch (err: any) {
       toast({ title: err.message || 'Failed to send invite', variant: 'destructive' });
     } finally {
@@ -871,24 +869,20 @@ export default function EmployeeDetail() {
             <DialogDescription>Send login credentials to <strong>{emp.full_name}</strong> via email at <strong>{emp.work_email || 'no email set'}</strong>.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label>Set / Reset Temporary Password (optional)</Label>
-              <Input type="password" placeholder="Min 8 characters" value={invitePassword} onChange={e => setInvitePassword(e.target.value)} />
-              <p className="text-xs text-muted-foreground">Leave blank to keep the existing password. If set, this will update their password.</p>
-            </div>
             <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-1">
               <p className="text-xs font-medium text-foreground">What the worker will receive:</p>
               <ul className="text-xs text-muted-foreground list-disc list-inside space-y-0.5">
                 <li>Welcome email with login instructions</li>
                 <li>Their email address for login</li>
-                {invitePassword && <li>The temporary password you set above</li>}
-                <li>Link to log into the Worker Portal</li>
+                <li>Temporary password: <strong>praetoria</strong></li>
+                <li>Link to log into the Worker Portal + app download</li>
               </ul>
+              <p className="text-xs text-muted-foreground mt-2">They will be asked to change their password after first login.</p>
             </div>
           </div>
           <DialogFooter className="gap-2 pt-2">
             <Button variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
-            <Button onClick={handleSendInvite} disabled={inviteSending || !emp.work_email || (invitePassword.length > 0 && invitePassword.length < 8)}>
+            <Button onClick={handleSendInvite} disabled={inviteSending || !emp.work_email}>
               {inviteSending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Sending...</> : 'Send Invite Email'}
             </Button>
           </DialogFooter>
