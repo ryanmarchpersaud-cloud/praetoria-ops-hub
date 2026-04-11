@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck, Trash2, XCircle } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -172,6 +172,7 @@ export default function JobDetail() {
   const handleCreateInvoice = () => setInvoiceOpen(true);
 
   const isCompleted = form.status === 'Completed';
+  const isClosed = form.status === 'Closed';
   const isOneTime = !form.service_frequency || form.service_frequency === 'one-time';
   const billingStatus = (form as any).billing_status || 'not_billable';
 
@@ -205,6 +206,28 @@ export default function JobDetail() {
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
         )}
+        {canManageJobs && !isClosed && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-11 shrink-0 gap-1.5"
+            disabled={updateJob.isPending}
+            onClick={async () => {
+              if (!id) return;
+              if (!window.confirm('Are you sure you want to close this job?')) return;
+              try {
+                await updateJob.mutateAsync({ id, status: 'Closed' });
+                set('status', 'Closed');
+                toast({ title: 'Job closed' });
+              } catch (err: any) {
+                toast({ title: 'Error', description: err.message, variant: 'destructive' });
+              }
+            }}
+          >
+            <XCircle className="h-4 w-4" />
+            <span className="hidden sm:inline">Close Job</span>
+          </Button>
+        )}
         {canManageJobs && (
           <Button
             variant="destructive"
@@ -219,7 +242,7 @@ export default function JobDetail() {
                 toast({ title: 'Job deleted' });
                 navigate('/jobs');
               } catch (err: any) {
-                toast({ title: 'Error', description: err.message, variant: 'destructive' });
+                toast({ title: 'Cannot delete', description: 'This job has linked visits, invoices, or other records. Try closing it instead.', variant: 'destructive' });
               }
             }}
           >
