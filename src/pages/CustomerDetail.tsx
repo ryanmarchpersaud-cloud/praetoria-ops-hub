@@ -134,13 +134,37 @@ export default function CustomerDetail() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast({ title: 'Portal account created', description: data.message });
+      // Now send the welcome email
+      try {
+        await callEdgeFunction('send-portal-invite', {
+          portal_type: 'customer',
+          customer_id: id,
+          temporary_password: invitePassword,
+        });
+      } catch { /* email send is best-effort */ }
+      toast({ title: 'Portal account created & invite sent', description: data.message });
       setInviteOpen(false);
       window.location.reload();
     } catch (err: any) {
       toast({ title: 'Invitation failed', description: err.message, variant: 'destructive' });
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleResendInvite = async () => {
+    setResending(true);
+    try {
+      const result = await callEdgeFunction('send-portal-invite', {
+        portal_type: 'customer',
+        customer_id: id,
+      });
+      if (result?.error) throw new Error(result.error);
+      toast({ title: result.message || 'Invite re-sent!' });
+    } catch (err: any) {
+      toast({ title: err.message || 'Failed to resend invite', variant: 'destructive' });
+    } finally {
+      setResending(false);
     }
   };
 
