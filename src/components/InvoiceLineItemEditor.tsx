@@ -18,6 +18,7 @@ interface LineItem {
   unit_price: number;
   line_total: number;
   sort_order: number;
+  service_date: string;
 }
 
 interface Props {
@@ -56,6 +57,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
         unit_price: Number(i.unit_price),
         line_total: Number(i.line_total),
         sort_order: i.sort_order,
+        service_date: i.service_date || '',
       })));
     }
   }, [existingItems]);
@@ -69,6 +71,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       unit_price: price,
       line_total: price,
       sort_order: prev.length,
+      service_date: '',
     }]);
     setPickerOpen(false);
     setDirty(true);
@@ -82,6 +85,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       unit_price: 0,
       line_total: 0,
       sort_order: prev.length,
+      service_date: '',
     }]);
     setDirty(true);
   };
@@ -113,6 +117,7 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       unit_price: Number(item.unit_price) || 0,
       line_total: Number(item.quantity) * Number(item.unit_price),
       sort_order: idx,
+      service_date: item.service_date || null,
     }));
     try {
       await upsertItems.mutateAsync({ invoiceId, items: payload });
