@@ -304,7 +304,7 @@ export default function InvoicePrint() {
         {/* Service Cards Footer */}
         <div className="border-t border-[#e5e7eb] mt-10 pt-6 print:mt-8 print:pt-6">
           <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-4 print:text-xs text-center">Our Services</p>
-          <div className="flex justify-center items-center gap-3 flex-wrap print:gap-2">
+          <div className="flex justify-center items-center gap-1.5 flex-wrap print:gap-1">
             {SERVICE_CARDS.map((svc) => (
               <div key={svc.label} className="flex flex-col items-center w-[90px] print:w-[80px]">
                 <img
