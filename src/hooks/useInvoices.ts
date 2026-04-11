@@ -83,16 +83,18 @@ export function useUpsertInvoiceLineItems() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ invoiceId, items }: { invoiceId: string; items: any[] }) => {
-      await supabase.from('invoice_line_items').delete().eq('invoice_id', invoiceId);
+      const { error: delError } = await supabase.from('invoice_line_items').delete().eq('invoice_id', invoiceId);
+      if (delError) throw delError;
       if (items.length > 0) {
         const { error } = await supabase.from('invoice_line_items').insert(items);
         if (error) throw error;
       }
     },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ['invoice_line_items', vars.invoiceId] });
-      qc.invalidateQueries({ queryKey: ['invoice', vars.invoiceId] });
+    onSuccess: async (_, vars) => {
+      await qc.invalidateQueries({ queryKey: ['invoice_line_items', vars.invoiceId] });
+      await qc.invalidateQueries({ queryKey: ['invoice', vars.invoiceId] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
+      qc.invalidateQueries({ queryKey: ['dashboard_invoices'] });
     },
   });
 }
