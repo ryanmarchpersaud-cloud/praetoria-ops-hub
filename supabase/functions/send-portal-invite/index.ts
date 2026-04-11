@@ -136,7 +136,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { portal_type, user_id, customer_id, temporary_password } = await req.json();
+    const { portal_type, user_id, customer_id } = await req.json();
+    const DEFAULT_TEMP_PASSWORD = "praetoria";
+    const temporary_password = DEFAULT_TEMP_PASSWORD;
 
     if (!portal_type || !["worker", "subcontractor", "customer"].includes(portal_type)) {
       return new Response(JSON.stringify({ error: "portal_type must be worker, subcontractor, or customer" }), {
@@ -189,16 +191,14 @@ Deno.serve(async (req) => {
       }
     };
 
-    const shouldUpdatePassword = typeof temporary_password === "string" && temporary_password.length >= 8;
-    if (shouldUpdatePassword) {
-      if (portal_type === "customer") {
-        const { data: cust } = await adminClient.from("customers").select("user_id").eq("id", customer_id).single();
-        if (cust?.user_id) {
-          await updatePasswordForUser(cust.user_id, temporary_password);
-        }
-      } else if (user_id) {
-        await updatePasswordForUser(user_id, temporary_password);
+    // Always set the default temporary password
+    if (portal_type === "customer") {
+      const { data: cust } = await adminClient.from("customers").select("user_id").eq("id", customer_id).single();
+      if (cust?.user_id) {
+        await updatePasswordForUser(cust.user_id, temporary_password);
       }
+    } else if (user_id) {
+      await updatePasswordForUser(user_id, temporary_password);
     }
 
     const emailHtml = buildEmailHtml(portal_type, recipientName, recipientEmail, temporary_password || null, loginPath);
