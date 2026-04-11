@@ -681,5 +681,24 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+      {/* ── BLOCK CONFIRMATION DIALOG ── */}
+      <Dialog open={blockOpen} onOpenChange={setBlockOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2 text-destructive"><Ban className="h-5 w-5" /> Block Employee</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">This will deactivate <strong>{emp.full_name}</strong> and prevent them from accessing the worker portal. You can unblock them later.</p>
+          <div className="space-y-1.5 pt-2">
+            <Label>Reason for blocking</Label>
+            <Textarea value={blockReason} onChange={e => setBlockReason(e.target.value)} placeholder="e.g. Misconduct, policy violation..." rows={3} />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setBlockOpen(false)}>Cancel</Button>
+            <Button variant="destructive" className="flex-1 gap-1.5" onClick={handleToggleBlock} disabled={blockSaving}>
+              {blockSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+              {blockSaving ? 'Blocking...' : 'Block'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
   );
 }
