@@ -93,6 +93,30 @@ export default function EmployeeDetail() {
     });
   };
 
+  const handleToggleBlock = async () => {
+    if (!userId) return;
+    setBlockSaving(true);
+    try {
+      const isCurrentlyBlocked = emp.is_blocked;
+      const updates: Record<string, any> = {
+        is_blocked: !isCurrentlyBlocked,
+        blocked_reason: isCurrentlyBlocked ? null : (blockReason || 'Blocked by admin'),
+        blocked_at: isCurrentlyBlocked ? null : new Date().toISOString(),
+        employment_status: isCurrentlyBlocked ? 'active' : 'inactive',
+      };
+      const { error } = await supabase.from('worker_profiles').update(updates).eq('user_id', userId);
+      if (error) throw error;
+      toast({ title: isCurrentlyBlocked ? 'Employee unblocked.' : 'Employee blocked.' });
+      queryClient.invalidateQueries({ queryKey: ['employee'] });
+      setBlockOpen(false);
+      setBlockReason('');
+    } catch (err: any) {
+      toast({ title: err.message || 'Action failed.', variant: 'destructive' });
+    } finally {
+      setBlockSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
