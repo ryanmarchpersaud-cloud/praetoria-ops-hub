@@ -81,8 +81,14 @@ Deno.serve(async (req) => {
     }
 
     // If a temporary password was provided, update the user's password
-    if (temporary_password && temporary_password.length >= 8) {
-      await adminClient.auth.admin.updateUser(user_id, { password: temporary_password });
+    if (typeof temporary_password === "string" && temporary_password.length >= 8) {
+      const { error: passwordError } = await adminClient.auth.admin.updateUserById(user_id, {
+        password: temporary_password,
+      });
+
+      if (passwordError) {
+        throw new Error(`Failed to set temporary password: ${passwordError.message}`);
+      }
     }
 
     const appUrl = "https://praetoria-ops-hub.lovable.app";
