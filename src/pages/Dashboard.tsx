@@ -2,7 +2,7 @@ import { useLeads } from '@/hooks/useLeads';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useActivities } from '@/hooks/useActivities';
 import { StatusBadge } from '@/components/StatusBadge';
-import { WeatherCard } from '@/components/WeatherCard';
+import { OperationsMap } from '@/components/dashboard/OperationsMap';
 import { ServiceCarousel } from '@/components/ServiceCarousel';
 import { WorkflowCards } from '@/components/dashboard/WorkflowCards';
 import { TodayAppointments } from '@/components/dashboard/TodayAppointments';
@@ -87,8 +87,14 @@ export default function Dashboard() {
         isLoading={isWorkflowLoading}
       />
 
-      {/* Weather */}
-      <WeatherCard city="regina" />
+      {/* Operations Control */}
+      <OperationsMap
+        visits={visits}
+        jobs={jobs}
+        employees={employees}
+        requests={requests}
+        isLoading={loadVisits || loadJobs || loadEmp || loadReq}
+      />
 
       {/* Service Carousel */}
       <ServiceCarousel />
