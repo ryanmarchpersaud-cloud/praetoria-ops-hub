@@ -288,7 +288,7 @@ export default function PortalRequestWizard() {
     if (!form.service_category) return null;
     return (
       <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">What specifically do you need?</p>
+        <p className="text-sm sm:text-base font-medium text-foreground">What specifically do you need?</p>
         <div className="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1">
           {mergedItems.map(item => (
             <button
@@ -310,7 +310,7 @@ export default function PortalRequestWizard() {
 
   const renderStep3 = () => (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">How soon do you need this done?</p>
+      <p className="text-sm sm:text-base font-medium text-foreground">How soon do you need this done?</p>
       <div className="space-y-2">
         {PRIORITY_OPTIONS.map(opt => {
           const Icon = opt.icon;
