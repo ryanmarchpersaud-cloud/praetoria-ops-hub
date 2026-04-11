@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,12 +141,12 @@ export default function ManageTeamPage() {
       const [tmRes, rolesRes, statusesRes] = await Promise.all([
         supabase.from('team_members' as any).select('*'),
         supabase.from('user_roles').select('user_id, role'),
-        supabase.functions.invoke('manage-team', { body: { action: 'get_user_statuses' } }),
+        callEdgeFunction('manage-team', { action: 'get_user_statuses' }),
       ]);
 
       const tmData: any[] = (tmRes as any).data || [];
       const roles: any[] = rolesRes.data || [];
-      const statuses: any[] = statusesRes.data?.statuses || [];
+      const statuses: any[] = statusesData?.statuses || [];
 
       const roleMap: Record<string, string[]> = {};
       roles.forEach((r: any) => {
