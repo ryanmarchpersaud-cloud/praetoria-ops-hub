@@ -253,7 +253,7 @@ export default function PortalRequestWizard() {
 
   const renderStep1 = () => (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">What type of service do you need?</p>
+      <p className="text-sm sm:text-base font-medium text-foreground">What type of service do you need?</p>
       {availableCategories.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">No services are currently available for online booking.</p>
       ) : (
