@@ -5282,12 +5282,19 @@ export type Database = {
           company_name: string
           contact_name: string
           created_at: string
+          date_of_birth: string | null
           diabetes_alert: boolean | null
+          driver_license_class: string | null
+          driver_license_expiry: string | null
+          driver_license_number: string | null
           email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
           emergency_medical_notes: string | null
+          ethnicity: string | null
+          gender: string | null
+          hourly_rate: number | null
           id: string
           insurance_expiry: string | null
           insurance_status: string
@@ -5297,14 +5304,19 @@ export type Database = {
           notes_admin_only: string | null
           onboarding_status: string
           operating_name: string | null
+          pay_schedule: string | null
+          pay_type: string | null
           phone: string | null
           profile_photo_url: string | null
+          referral_source: string | null
+          religion: string | null
           safety_doc_status: string
           secondary_emergency_contact_name: string | null
           secondary_emergency_contact_phone: string | null
           secondary_emergency_contact_relationship: string | null
           seizure_or_fainting_alert: boolean | null
           service_area_summary: string | null
+          sin_encrypted: string | null
           status: string
           updated_at: string
           user_id: string
@@ -5324,12 +5336,19 @@ export type Database = {
           company_name: string
           contact_name: string
           created_at?: string
+          date_of_birth?: string | null
           diabetes_alert?: boolean | null
+          driver_license_class?: string | null
+          driver_license_expiry?: string | null
+          driver_license_number?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
           emergency_medical_notes?: string | null
+          ethnicity?: string | null
+          gender?: string | null
+          hourly_rate?: number | null
           id?: string
           insurance_expiry?: string | null
           insurance_status?: string
@@ -5339,14 +5358,19 @@ export type Database = {
           notes_admin_only?: string | null
           onboarding_status?: string
           operating_name?: string | null
+          pay_schedule?: string | null
+          pay_type?: string | null
           phone?: string | null
           profile_photo_url?: string | null
+          referral_source?: string | null
+          religion?: string | null
           safety_doc_status?: string
           secondary_emergency_contact_name?: string | null
           secondary_emergency_contact_phone?: string | null
           secondary_emergency_contact_relationship?: string | null
           seizure_or_fainting_alert?: boolean | null
           service_area_summary?: string | null
+          sin_encrypted?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -5366,12 +5390,19 @@ export type Database = {
           company_name?: string
           contact_name?: string
           created_at?: string
+          date_of_birth?: string | null
           diabetes_alert?: boolean | null
+          driver_license_class?: string | null
+          driver_license_expiry?: string | null
+          driver_license_number?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
           emergency_medical_notes?: string | null
+          ethnicity?: string | null
+          gender?: string | null
+          hourly_rate?: number | null
           id?: string
           insurance_expiry?: string | null
           insurance_status?: string
@@ -5381,14 +5412,19 @@ export type Database = {
           notes_admin_only?: string | null
           onboarding_status?: string
           operating_name?: string | null
+          pay_schedule?: string | null
+          pay_type?: string | null
           phone?: string | null
           profile_photo_url?: string | null
+          referral_source?: string | null
+          religion?: string | null
           safety_doc_status?: string
           secondary_emergency_contact_name?: string | null
           secondary_emergency_contact_phone?: string | null
           secondary_emergency_contact_relationship?: string | null
           seizure_or_fainting_alert?: boolean | null
           service_area_summary?: string | null
+          sin_encrypted?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -6350,6 +6386,10 @@ export type Database = {
       }
       worker_profiles: {
         Row: {
+          address_city: string | null
+          address_line_1: string | null
+          address_postal_code: string | null
+          address_province: string | null
           allergies: string | null
           benefits_effective_date: string | null
           benefits_plan_summary: string | null
@@ -6360,15 +6400,22 @@ export type Database = {
           carries_epipen: boolean | null
           carries_inhaler: boolean | null
           created_at: string
+          date_of_birth: string | null
           diabetes_alert: boolean | null
           driver_license_class: string | null
           driver_license_expiry: string | null
+          driver_license_number: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
           emergency_medical_notes: string | null
           employee_id: string | null
           employment_status: string
           employment_type: string | null
           equipment_permissions: string[] | null
+          ethnicity: string | null
           full_name: string | null
+          gender: string | null
           hire_date: string | null
           hourly_rate: number | null
           id: string
@@ -6376,15 +6423,19 @@ export type Database = {
           manager_name: string | null
           medical_info_consent: boolean | null
           medical_info_last_updated_at: string | null
+          pay_schedule: string | null
           pay_type: string | null
           personal_days_balance: number | null
           phone: string | null
           primary_service_category: string | null
           profile_photo_url: string | null
+          referral_source: string | null
+          religion: string | null
           role_title: string | null
           secondary_service_category: string | null
           seizure_or_fainting_alert: boolean | null
           sick_balance: number | null
+          sin_encrypted: string | null
           supervisor_name: string | null
           team: string | null
           updated_at: string
@@ -6393,6 +6444,10 @@ export type Database = {
           work_email: string | null
         }
         Insert: {
+          address_city?: string | null
+          address_line_1?: string | null
+          address_postal_code?: string | null
+          address_province?: string | null
           allergies?: string | null
           benefits_effective_date?: string | null
           benefits_plan_summary?: string | null
@@ -6403,15 +6458,22 @@ export type Database = {
           carries_epipen?: boolean | null
           carries_inhaler?: boolean | null
           created_at?: string
+          date_of_birth?: string | null
           diabetes_alert?: boolean | null
           driver_license_class?: string | null
           driver_license_expiry?: string | null
+          driver_license_number?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           emergency_medical_notes?: string | null
           employee_id?: string | null
           employment_status?: string
           employment_type?: string | null
           equipment_permissions?: string[] | null
+          ethnicity?: string | null
           full_name?: string | null
+          gender?: string | null
           hire_date?: string | null
           hourly_rate?: number | null
           id?: string
@@ -6419,15 +6481,19 @@ export type Database = {
           manager_name?: string | null
           medical_info_consent?: boolean | null
           medical_info_last_updated_at?: string | null
+          pay_schedule?: string | null
           pay_type?: string | null
           personal_days_balance?: number | null
           phone?: string | null
           primary_service_category?: string | null
           profile_photo_url?: string | null
+          referral_source?: string | null
+          religion?: string | null
           role_title?: string | null
           secondary_service_category?: string | null
           seizure_or_fainting_alert?: boolean | null
           sick_balance?: number | null
+          sin_encrypted?: string | null
           supervisor_name?: string | null
           team?: string | null
           updated_at?: string
@@ -6436,6 +6502,10 @@ export type Database = {
           work_email?: string | null
         }
         Update: {
+          address_city?: string | null
+          address_line_1?: string | null
+          address_postal_code?: string | null
+          address_province?: string | null
           allergies?: string | null
           benefits_effective_date?: string | null
           benefits_plan_summary?: string | null
@@ -6446,15 +6516,22 @@ export type Database = {
           carries_epipen?: boolean | null
           carries_inhaler?: boolean | null
           created_at?: string
+          date_of_birth?: string | null
           diabetes_alert?: boolean | null
           driver_license_class?: string | null
           driver_license_expiry?: string | null
+          driver_license_number?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           emergency_medical_notes?: string | null
           employee_id?: string | null
           employment_status?: string
           employment_type?: string | null
           equipment_permissions?: string[] | null
+          ethnicity?: string | null
           full_name?: string | null
+          gender?: string | null
           hire_date?: string | null
           hourly_rate?: number | null
           id?: string
@@ -6462,15 +6539,19 @@ export type Database = {
           manager_name?: string | null
           medical_info_consent?: boolean | null
           medical_info_last_updated_at?: string | null
+          pay_schedule?: string | null
           pay_type?: string | null
           personal_days_balance?: number | null
           phone?: string | null
           primary_service_category?: string | null
           profile_photo_url?: string | null
+          referral_source?: string | null
+          religion?: string | null
           role_title?: string | null
           secondary_service_category?: string | null
           seizure_or_fainting_alert?: boolean | null
           sick_balance?: number | null
+          sin_encrypted?: string | null
           supervisor_name?: string | null
           team?: string | null
           updated_at?: string
