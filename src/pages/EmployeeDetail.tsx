@@ -23,6 +23,7 @@ import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, Calenda
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { useQueryClient } from '@tanstack/react-query';
 
 /* ── Predefined PPE / Safety item suggestions ── */
