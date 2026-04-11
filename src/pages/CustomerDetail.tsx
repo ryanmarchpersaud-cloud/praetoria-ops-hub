@@ -194,9 +194,15 @@ export default function CustomerDetail() {
             <UserPlus className="h-4 w-4" /> Invite to Portal
           </Button>
         ) : (
-          <div className="flex items-center gap-1.5 px-3 h-11 rounded-md border bg-muted/50 text-xs text-muted-foreground">
-            <Check className="h-3.5 w-3.5 text-accent" /> Portal active
-          </div>
+          <>
+            <div className="flex items-center gap-1.5 px-3 h-11 rounded-md border bg-muted/50 text-xs text-muted-foreground">
+              <Check className="h-3.5 w-3.5 text-accent" /> Portal active
+            </div>
+            <Button variant="outline" className="h-11 gap-2" onClick={handleResendInvite} disabled={resending}>
+              {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              Resend Invite
+            </Button>
+          </>
         )}
       </div>
 
