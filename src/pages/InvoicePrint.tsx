@@ -32,6 +32,8 @@ const SERVICE_CARDS = [
   { label: 'Landscaping', img: '/images/service-landscaping.png' },
   { label: 'Maintenance & Repair', img: '/images/service-maintenance.png' },
   { label: 'Junk Removal', img: '/images/service-junk-removal.png' },
+  { label: 'Cleaning Services', img: '/images/service-cleaning.png' },
+  { label: 'Power Washing', img: '/images/service-power-washing.png' },
 ];
 
 export default function InvoicePrint() {
@@ -63,8 +65,8 @@ export default function InvoicePrint() {
   const balanceDue = Number(invoice.balance_due || 0);
 
   const companyName = company?.invoice_header_name || company?.operating_name || company?.display_name || 'Praetoria Group';
-  const companyTagline = company?.description || 'Property Services & Maintenance';
-  const companyEmail = company?.email || company?.billing_email || 'info@praetoriagroup.ca';
+  const companyTagline = 'Residential & Commercial Property Services';
+  const companyEmail = company?.support_email || company?.email || company?.billing_email || 'info@praetoriagroup.ca';
   const companyPhone = company?.phone || '(416) 555-0100';
   const companyAddress = company?.physical_address || company?.mailing_address || 'Toronto, Ontario, Canada';
   const accentColor = company?.primary_color || '#3b5bdb';
@@ -93,9 +95,10 @@ export default function InvoicePrint() {
         {/* Company Header */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div>
-            <img src={company?.logo_url || '/invoice-logo.png'} alt={companyName} className="h-20 mb-2 print:h-24 rounded" />
-            <p className="text-xs text-[#6b7280] mt-0.5 print:text-sm">{companyTagline}</p>
-            <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
+            <img src={company?.logo_url || '/icons/icon-192x192.png'} alt={companyName} className="h-16 mb-1 print:h-20 rounded" />
+            <p className="font-bold text-sm text-[#1a1a2e] print:text-base">{companyName}</p>
+            <p className="text-[10px] text-[#6b7280] italic print:text-xs">{companyTagline}</p>
+            <div className="mt-2 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
               <p>{companyAddress}</p>
               <p>{companyEmail}</p>
               <p>{companyPhone}</p>
@@ -281,14 +284,19 @@ export default function InvoicePrint() {
                 <img
                   src={svc.img}
                   alt={svc.label}
-                  className="h-16 w-auto object-contain print:h-14 rounded"
+                  className="h-14 w-auto object-contain print:h-12 rounded"
                 />
               </div>
             ))}
           </div>
 
+          {/* Company description */}
+          <p className="text-[10px] text-[#9ca3af] text-center mt-4 max-w-lg mx-auto leading-relaxed print:text-xs">
+            Praetoria Group provides snow &amp; ice management, landscaping &amp; grounds care, junk removal, property maintenance, cleaning services, power washing, and property management.
+          </p>
+
           {/* Company Footer */}
-          <div className="text-center pt-6 text-xs text-[#9ca3af] print:text-sm print:pt-4 pb-4">
+          <div className="text-center pt-4 text-xs text-[#9ca3af] print:text-sm print:pt-3 pb-4">
             <p className="font-bold text-[#374151]">{companyName}</p>
             <p>{companyAddress}</p>
             <p>{companyEmail} · {companyPhone}</p>
