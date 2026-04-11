@@ -467,6 +467,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AppUpdateBanner />
           <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>
