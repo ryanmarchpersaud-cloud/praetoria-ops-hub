@@ -198,6 +198,17 @@ export default function EmployeeDetail() {
                 <InfoRow label="Equipment" value={emp.equipment_permissions?.length ? emp.equipment_permissions.join(', ') : '—'} />
               </CardContent>
             </Card>
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Landmark className="h-4 w-4" /> Banking Information</CardTitle></CardHeader>
+              <CardContent>
+                <InfoRow label="Preferred Payment" value={emp.preferred_payment_method} />
+                <InfoRow label="E-Transfer Email" value={emp.e_transfer_email} />
+                <InfoRow label="Bank Name" value={emp.bank_name} />
+                <InfoRow label="Institution #" value={emp.bank_institution_number} />
+                <InfoRow label="Transit #" value={emp.bank_transit_number} />
+                <InfoRow label="Account #" value={emp.bank_account_number ? '••••' + emp.bank_account_number.slice(-4) : null} />
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
