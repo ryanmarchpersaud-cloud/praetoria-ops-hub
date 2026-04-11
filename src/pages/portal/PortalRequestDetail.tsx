@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
-import { ArrowLeft, MapPin, Clock, FileText, ImageIcon, RefreshCw } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, FileText, ImageIcon, RefreshCw, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 async function resolveAttachmentUrls(paths: string[]): Promise<string[]> {
   const results: string[] = [];
@@ -26,8 +27,10 @@ export default function PortalRequestDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: customer } = useCustomerProfile();
+  const queryClient = useQueryClient();
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
+  const [reordering, setReordering] = useState(false);
 
   const { data: request, isLoading } = useQuery({
     queryKey: ['portal_request_detail', id],
@@ -55,13 +58,36 @@ export default function PortalRequestDetail() {
 
   const property = request.properties as any;
 
-  const handleReorder = () => {
-    const params = new URLSearchParams();
-    if (request.property_id) params.set('property_id', request.property_id);
-    if (request.service_type) params.set('service_category', request.service_type);
-    if (request.specific_request_type) params.set('specific_request_type', request.specific_request_type as string);
-    if (request.requested_timing) params.set('requested_timing', request.requested_timing as string);
-    navigate(`/portal/requests/new?${params.toString()}`);
+  const handleReorder = async () => {
+    if (reordering) return;
+    setReordering(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { error } = await supabase.from('service_requests').insert({
+        user_id: user.id,
+        customer_id: request.customer_id,
+        property_id: request.property_id,
+        subject: request.subject,
+        service_type: request.service_type,
+        specific_request_type: request.specific_request_type as string | null,
+        description: request.description,
+        urgency: request.urgency,
+        status: 'open',
+        requested_timing: request.requested_timing as string | null,
+        area_of_property: request.area_of_property as string | null,
+        access_notes: request.access_notes as string | null,
+        preferred_contact_method: request.preferred_contact_method as string | null,
+      });
+      if (error) throw error;
+      toast.success('Request resubmitted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['portal_requests'] });
+      navigate('/portal/requests');
+    } catch {
+      toast.error('Failed to resubmit request');
+    } finally {
+      setReordering(false);
+    }
   };
 
   return (
@@ -82,8 +108,9 @@ export default function PortalRequestDetail() {
       {/* Status + Reorder */}
       <div className="flex items-center gap-3 flex-wrap">
         <StatusBadge status={request.status} />
-        <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleReorder}>
-          <RefreshCw className="h-3.5 w-3.5" /> Request Again
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={handleReorder} disabled={reordering}>
+          {reordering ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+          {reordering ? 'Submitting…' : 'Request Again'}
         </Button>
       </div>
 
