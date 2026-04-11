@@ -210,6 +210,7 @@ function EmployeeBenefitsTab({ userId, canManage }: { userId: string; canManage:
   );
 }
 
+function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
     active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
     valid: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
