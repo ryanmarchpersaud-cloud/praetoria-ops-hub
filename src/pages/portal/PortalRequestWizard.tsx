@@ -220,7 +220,7 @@ export default function PortalRequestWizard() {
 
   const renderStep0 = () => (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">Which property is this request for?</p>
+      <p className="text-sm sm:text-base font-medium text-foreground">Which property is this request for?</p>
       {properties.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">No properties found on your account.</p>
       ) : (
