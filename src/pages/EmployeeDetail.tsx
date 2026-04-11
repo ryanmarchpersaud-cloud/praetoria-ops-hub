@@ -137,6 +137,9 @@ export default function EmployeeDetail() {
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [editEquipOpen, setEditEquipOpen] = useState(false);
   const [editEquipItem, setEditEquipItem] = useState<any>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteSending, setInviteSending] = useState(false);
+  const [invitePassword, setInvitePassword] = useState('');
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   if (!emp) return <div className="p-8 text-center text-muted-foreground">Employee not found.</div>;
