@@ -168,6 +168,24 @@ export default function PortalRequestWizard() {
         attachments: attachmentUrls.length > 0 ? attachmentUrls : [],
       } as any);
       if (error) throw error;
+
+      // Notify admin/ops staff about the new request
+      try {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            event: 'new_service_request',
+            customer_id: customer.id,
+            record_type: 'service_request',
+            variables: {
+              subject: `New Request: ${subject}`,
+              body: `${customer.first_name} ${customer.last_name} submitted a service request: ${subject}`,
+              customer_name: `${customer.first_name} ${customer.last_name}`,
+            },
+            channels: ['in_app'],
+            audience: 'admin',
+          },
+        });
+      } catch (_) { /* non-blocking */ }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['portal_requests'] });

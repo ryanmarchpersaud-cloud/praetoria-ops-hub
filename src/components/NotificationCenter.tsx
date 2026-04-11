@@ -1,11 +1,13 @@
 import { useUnreadNotifications, useMarkNotificationRead, Notification } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bell, CheckCircle, FileText, Truck, CreditCard, Calendar, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const EVENT_ICONS: Record<string, React.ElementType> = {
+  new_service_request: FileText,
   quote_sent: FileText,
   visit_scheduled: Calendar,
   worker_assigned: Truck,
@@ -19,7 +21,8 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
 
 export function NotificationCenter() {
   const { user } = useAuth();
-  const { data: notifications = [] } = useUnreadNotifications(user?.id);
+  const { isStaff, isAdmin } = useUserRole();
+  const { data: notifications = [] } = useUnreadNotifications(user?.id, isStaff || isAdmin);
   const markRead = useMarkNotificationRead();
 
   const handleRead = (id: string) => {
