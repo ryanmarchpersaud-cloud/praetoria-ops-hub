@@ -196,6 +196,32 @@ export default function SubcontractorDetail() {
     }
   };
 
+  // ── Block/Unblock Handler ──
+  const handleToggleBlock = async () => {
+    if (!id) return;
+    setBlockSaving(true);
+    try {
+      const isCurrentlyBlocked = sub.is_blocked;
+      const updates: Record<string, any> = {
+        is_blocked: !isCurrentlyBlocked,
+        blocked_reason: isCurrentlyBlocked ? null : (blockReason || 'Blocked by admin'),
+        blocked_at: isCurrentlyBlocked ? null : new Date().toISOString(),
+        active_flag: isCurrentlyBlocked ? true : false,
+        status: isCurrentlyBlocked ? 'active' : 'inactive',
+      };
+      const { error } = await supabase.from('subcontractors').update(updates).eq('id', id);
+      if (error) throw error;
+      toast.success(isCurrentlyBlocked ? 'Subcontractor unblocked.' : 'Subcontractor blocked.');
+      queryClient.invalidateQueries({ queryKey: ['subcontractor_by_id', id] });
+      setBlockOpen(false);
+      setBlockReason('');
+    } catch (err: any) {
+      toast.error(err.message || 'Action failed.');
+    } finally {
+      setBlockSaving(false);
+    }
+  };
+
   // ── Compliance Handlers ──
   const openCompEdit = () => {
     const f: Record<string, any> = {};
