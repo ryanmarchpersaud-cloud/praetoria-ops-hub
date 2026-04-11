@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   useEmployee, useEmployeeCertifications, useEmployeeDocuments,
@@ -19,9 +19,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw, Ban, ShieldOff, Landmark, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -71,6 +73,10 @@ export default function EmployeeDetail() {
   const approveCert = useApproveCertificate();
   const [showIssueDialog, setShowIssueDialog] = useState(false);
   const [showTrainingDialog, setShowTrainingDialog] = useState(false);
+  const queryClient = useQueryClient();
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockSaving, setBlockSaving] = useState(false);
+  const [blockReason, setBlockReason] = useState('');
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   if (!emp) return <div className="p-8 text-center text-muted-foreground">Employee not found.</div>;
@@ -87,6 +93,30 @@ export default function EmployeeDetail() {
     });
   };
 
+  const handleToggleBlock = async () => {
+    if (!userId) return;
+    setBlockSaving(true);
+    try {
+      const isCurrentlyBlocked = emp.is_blocked;
+      const updates: Record<string, any> = {
+        is_blocked: !isCurrentlyBlocked,
+        blocked_reason: isCurrentlyBlocked ? null : (blockReason || 'Blocked by admin'),
+        blocked_at: isCurrentlyBlocked ? null : new Date().toISOString(),
+        employment_status: isCurrentlyBlocked ? 'active' : 'inactive',
+      };
+      const { error } = await supabase.from('worker_profiles').update(updates).eq('user_id', userId);
+      if (error) throw error;
+      toast({ title: isCurrentlyBlocked ? 'Employee unblocked.' : 'Employee blocked.' });
+      queryClient.invalidateQueries({ queryKey: ['employee'] });
+      setBlockOpen(false);
+      setBlockReason('');
+    } catch (err: any) {
+      toast({ title: err.message || 'Action failed.', variant: 'destructive' });
+    } finally {
+      setBlockSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -95,7 +125,18 @@ export default function EmployeeDetail() {
           <h1 className="text-2xl font-bold text-foreground truncate">{emp.full_name || 'Employee'}</h1>
           <p className="text-sm text-muted-foreground">{emp.role_title || 'No role'} · {emp.employee_id || 'No ID'}</p>
         </div>
+        {emp.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> Blocked</Badge>}
         <StatusChip status={emp.employment_status} />
+        {canManageWorkers && (
+          <Button
+            size="sm"
+            variant={emp.is_blocked ? 'outline' : 'destructive'}
+            className="gap-1.5"
+            onClick={() => { if (emp.is_blocked) { handleToggleBlock(); } else { setBlockOpen(true); } }}
+          >
+            {emp.is_blocked ? <><ShieldOff className="h-3.5 w-3.5" /> Unblock</> : <><Ban className="h-3.5 w-3.5" /> Block</>}
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
@@ -155,6 +196,17 @@ export default function EmployeeDetail() {
                 <InfoRow label="Pay Type" value={emp.pay_type} />
                 <InfoRow label="Hourly Rate" value={emp.hourly_rate != null ? `$${Number(emp.hourly_rate).toFixed(2)}/hr` : null} />
                 <InfoRow label="Equipment" value={emp.equipment_permissions?.length ? emp.equipment_permissions.join(', ') : '—'} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Landmark className="h-4 w-4" /> Banking Information</CardTitle></CardHeader>
+              <CardContent>
+                <InfoRow label="Preferred Payment" value={emp.preferred_payment_method} />
+                <InfoRow label="E-Transfer Email" value={emp.e_transfer_email} />
+                <InfoRow label="Bank Name" value={emp.bank_name} />
+                <InfoRow label="Institution #" value={emp.bank_institution_number} />
+                <InfoRow label="Transit #" value={emp.bank_transit_number} />
+                <InfoRow label="Account #" value={emp.bank_account_number ? '••••' + emp.bank_account_number.slice(-4) : null} />
               </CardContent>
             </Card>
           </div>
@@ -452,6 +504,25 @@ export default function EmployeeDetail() {
         onAssign={assignTraining}
         toast={toast}
       />
+
+      {/* ── BLOCK CONFIRMATION DIALOG ── */}
+      <Dialog open={blockOpen} onOpenChange={setBlockOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2 text-destructive"><Ban className="h-5 w-5" /> Block Employee</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">This will deactivate <strong>{emp.full_name}</strong> and prevent them from accessing the worker portal. You can unblock them later.</p>
+          <div className="space-y-1.5 pt-2">
+            <Label>Reason for blocking</Label>
+            <Textarea value={blockReason} onChange={e => setBlockReason(e.target.value)} placeholder="e.g. Misconduct, policy violation..." rows={3} />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setBlockOpen(false)}>Cancel</Button>
+            <Button variant="destructive" className="flex-1 gap-1.5" onClick={handleToggleBlock} disabled={blockSaving}>
+              {blockSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+              {blockSaving ? 'Blocking...' : 'Block'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

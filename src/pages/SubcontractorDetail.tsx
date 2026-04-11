@@ -16,7 +16,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ArrowLeft, Building2, ShieldCheck, FileText, Receipt, DollarSign, Briefcase, Pencil, Upload, Plus, Save, Loader2, ClipboardCheck } from 'lucide-react';
+import { ArrowLeft, Building2, ShieldCheck, FileText, Receipt, DollarSign, Briefcase, Pencil, Upload, Plus, Save, Loader2, ClipboardCheck, Ban, ShieldOff, Landmark } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
@@ -122,6 +123,11 @@ export default function SubcontractorDetail() {
   const [assessResult, setAssessResult] = useState('');
   const [assessNotes, setAssessNotes] = useState('');
 
+  // ── Block/Unblock State ──
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockSaving, setBlockSaving] = useState(false);
+  const [blockReason, setBlockReason] = useState('');
+
   // Assessment list stored as documents with type "assessment"
   const assessments = docs.filter((d: any) => d.document_type === 'assessment');
   const regularDocs = docs.filter((d: any) => d.document_type !== 'assessment');
@@ -158,6 +164,12 @@ export default function SubcontractorDetail() {
       pay_schedule: sub.pay_schedule || '',
       referral_source: sub.referral_source || '',
       notes_admin_only: sub.notes_admin_only || '',
+      bank_name: sub.bank_name || '',
+      bank_institution_number: sub.bank_institution_number || '',
+      bank_transit_number: sub.bank_transit_number || '',
+      bank_account_number: sub.bank_account_number || '',
+      e_transfer_email: sub.e_transfer_email || '',
+      preferred_payment_method: sub.preferred_payment_method || 'e-transfer',
     });
     setEditOpen(true);
   };
@@ -181,6 +193,32 @@ export default function SubcontractorDetail() {
       toast.error(err.message || 'Save failed.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ── Block/Unblock Handler ──
+  const handleToggleBlock = async () => {
+    if (!id) return;
+    setBlockSaving(true);
+    try {
+      const isCurrentlyBlocked = sub.is_blocked;
+      const updates: Record<string, any> = {
+        is_blocked: !isCurrentlyBlocked,
+        blocked_reason: isCurrentlyBlocked ? null : (blockReason || 'Blocked by admin'),
+        blocked_at: isCurrentlyBlocked ? null : new Date().toISOString(),
+        active_flag: isCurrentlyBlocked ? true : false,
+        status: isCurrentlyBlocked ? 'active' : 'inactive',
+      };
+      const { error } = await supabase.from('subcontractors').update(updates).eq('id', id);
+      if (error) throw error;
+      toast.success(isCurrentlyBlocked ? 'Subcontractor unblocked.' : 'Subcontractor blocked.');
+      queryClient.invalidateQueries({ queryKey: ['subcontractor_by_id', id] });
+      setBlockOpen(false);
+      setBlockReason('');
+    } catch (err: any) {
+      toast.error(err.message || 'Action failed.');
+    } finally {
+      setBlockSaving(false);
     }
   };
 
@@ -293,9 +331,18 @@ export default function SubcontractorDetail() {
           <h1 className="text-2xl font-bold text-foreground truncate">{sub.company_name}</h1>
           <p className="text-sm text-muted-foreground">{sub.contact_name} · {sub.email}</p>
         </div>
+        {sub.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> Blocked</Badge>}
         <StatusChip status={sub.status} />
         <Button size="sm" variant="outline" className="gap-1.5" onClick={openEdit}>
           <Pencil className="h-3.5 w-3.5" /> Edit
+        </Button>
+        <Button
+          size="sm"
+          variant={sub.is_blocked ? 'outline' : 'destructive'}
+          className="gap-1.5"
+          onClick={() => { if (sub.is_blocked) { handleToggleBlock(); } else { setBlockOpen(true); } }}
+        >
+          {sub.is_blocked ? <><ShieldOff className="h-3.5 w-3.5" /> Unblock</> : <><Ban className="h-3.5 w-3.5" /> Block</>}
         </Button>
       </div>
 
@@ -343,6 +390,17 @@ export default function SubcontractorDetail() {
                 <InfoRow label="Hourly Rate" value={sub.hourly_rate ? `$${Number(sub.hourly_rate).toFixed(2)}` : null} />
                 <InfoRow label="Pay Schedule" value={sub.pay_schedule} />
                 <InfoRow label="Referral Source" value={sub.referral_source} />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Landmark className="h-4 w-4" /> Banking Information</CardTitle></CardHeader>
+              <CardContent>
+                <InfoRow label="Preferred Payment" value={sub.preferred_payment_method} />
+                <InfoRow label="E-Transfer Email" value={sub.e_transfer_email} />
+                <InfoRow label="Bank Name" value={sub.bank_name} />
+                <InfoRow label="Institution #" value={sub.bank_institution_number} />
+                <InfoRow label="Transit #" value={sub.bank_transit_number} />
+                <InfoRow label="Account #" value={sub.bank_account_number ? '••••' + sub.bank_account_number.slice(-4) : null} />
               </CardContent>
             </Card>
             <Card>
@@ -761,6 +819,42 @@ export default function SubcontractorDetail() {
               <Input value={ef('referral_source')} onChange={e => setEf('referral_source', e.target.value)} />
             </div>
 
+            <div className="col-span-full border-t border-border pt-3 mt-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Banking Information</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Preferred Payment Method</Label>
+              <Select value={ef('preferred_payment_method')} onValueChange={v => setEf('preferred_payment_method', v)}>
+                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="e-transfer">E-Transfer</SelectItem>
+                  <SelectItem value="direct-deposit">Direct Deposit</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="wire">Wire Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>E-Transfer Email</Label>
+              <Input type="email" value={ef('e_transfer_email')} onChange={e => setEf('e_transfer_email', e.target.value)} placeholder="payments@company.ca" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Bank Name</Label>
+              <Input value={ef('bank_name')} onChange={e => setEf('bank_name', e.target.value)} placeholder="e.g. TD Bank" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Institution #</Label>
+              <Input value={ef('bank_institution_number')} onChange={e => setEf('bank_institution_number', e.target.value)} placeholder="3 digits" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Transit #</Label>
+              <Input value={ef('bank_transit_number')} onChange={e => setEf('bank_transit_number', e.target.value)} placeholder="5 digits" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Account #</Label>
+              <Input value={ef('bank_account_number')} onChange={e => setEf('bank_account_number', e.target.value)} placeholder="Account number" />
+            </div>
+
             <div className="col-span-full space-y-1.5">
               <Label>Admin Notes</Label>
               <Textarea value={ef('notes_admin_only')} onChange={e => setEf('notes_admin_only', e.target.value)} rows={3} />
@@ -806,6 +900,25 @@ export default function SubcontractorDetail() {
             <Button onClick={handleSaveCompliance} disabled={compSaving} className="w-full gap-2">
               {compSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {compSaving ? 'Saving...' : 'Save Compliance'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── BLOCK CONFIRMATION DIALOG ── */}
+      <Dialog open={blockOpen} onOpenChange={setBlockOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2 text-destructive"><Ban className="h-5 w-5" /> Block Subcontractor</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">This will deactivate <strong>{sub.company_name}</strong> and prevent them from accessing the portal. You can unblock them later.</p>
+          <div className="space-y-1.5 pt-2">
+            <Label>Reason for blocking</Label>
+            <Textarea value={blockReason} onChange={e => setBlockReason(e.target.value)} placeholder="e.g. Repeated no-shows, safety violations..." rows={3} />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setBlockOpen(false)}>Cancel</Button>
+            <Button variant="destructive" className="flex-1 gap-1.5" onClick={handleToggleBlock} disabled={blockSaving}>
+              {blockSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+              {blockSaving ? 'Blocking...' : 'Block'}
             </Button>
           </div>
         </DialogContent>
