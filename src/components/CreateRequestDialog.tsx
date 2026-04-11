@@ -68,6 +68,26 @@ export function CreateRequestDialog({ open, onOpenChange, defaultCustomerId }: P
         status: 'Open',
       } as any);
       if (error) throw error;
+
+      // Notify admin/ops about the new request
+      const cust = customers.find((c: any) => c.id === form.customer_id);
+      const custName = cust ? `${cust.first_name} ${cust.last_name}` : 'A customer';
+      try {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            event: 'new_service_request',
+            customer_id: form.customer_id,
+            record_type: 'service_request',
+            variables: {
+              subject: `New Request: ${form.subject}`,
+              body: `${custName} — ${form.subject}`,
+              customer_name: custName,
+            },
+            channels: ['in_app'],
+            audience: 'admin',
+          },
+        });
+      } catch (_) { /* non-blocking */ }
       toast({ title: 'Request created' });
       qc.invalidateQueries({ queryKey: ['service_requests'] });
       qc.invalidateQueries({ queryKey: ['customer_requests'] });
