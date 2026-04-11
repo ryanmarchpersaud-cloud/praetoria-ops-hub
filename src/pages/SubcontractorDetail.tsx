@@ -393,6 +393,17 @@ export default function SubcontractorDetail() {
               </CardContent>
             </Card>
             <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Landmark className="h-4 w-4" /> Banking Information</CardTitle></CardHeader>
+              <CardContent>
+                <InfoRow label="Preferred Payment" value={sub.preferred_payment_method} />
+                <InfoRow label="E-Transfer Email" value={sub.e_transfer_email} />
+                <InfoRow label="Bank Name" value={sub.bank_name} />
+                <InfoRow label="Institution #" value={sub.bank_institution_number} />
+                <InfoRow label="Transit #" value={sub.bank_transit_number} />
+                <InfoRow label="Account #" value={sub.bank_account_number ? '••••' + sub.bank_account_number.slice(-4) : null} />
+              </CardContent>
+            </Card>
+            <Card>
               <CardHeader className="pb-2"><CardTitle className="text-sm">Emergency Contact</CardTitle></CardHeader>
               <CardContent>
                 <InfoRow label="Name" value={sub.emergency_contact_name} />
