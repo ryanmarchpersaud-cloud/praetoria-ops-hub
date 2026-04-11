@@ -16,13 +16,38 @@ function PrintStatusBadge({ status }: { status: string }) {
     'Partially Paid': '#d97706', Overdue: '#dc2626', Failed: '#dc2626', Voided: '#6b7280',
   };
   const color = colorMap[status] || '#6b7280';
+  const isUrgent = status === 'Overdue';
+  const isPaid = status === 'Paid';
   return (
     <span
-      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
-      style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}40` }}
+      className={`inline-flex items-center rounded-full font-extrabold uppercase tracking-wide ${
+        isUrgent ? 'px-4 py-1.5 text-sm print:text-base' : isPaid ? 'px-4 py-1.5 text-sm print:text-base' : 'px-2.5 py-0.5 text-xs'
+      }`}
+      style={{ backgroundColor: `${color}18`, color, border: `2px solid ${color}60` }}
     >
       {status}
     </span>
+  );
+}
+
+function StatusWatermark({ status }: { status: string }) {
+  if (status !== 'Overdue' && status !== 'Paid') return null;
+  const color = status === 'Overdue' ? '#dc2626' : '#059669';
+  return (
+    <div
+      className="absolute top-32 right-6 print:top-24 print:right-8 pointer-events-none select-none"
+      style={{
+        color: `${color}20`,
+        fontSize: '72px',
+        fontWeight: 900,
+        letterSpacing: '4px',
+        transform: 'rotate(-18deg)',
+        textTransform: 'uppercase',
+        lineHeight: 1,
+      }}
+    >
+      {status}
+    </div>
   );
 }
 
@@ -91,7 +116,8 @@ export default function InvoicePrint() {
       </div>
 
       {/* Printable Document */}
-      <div className="print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen flex flex-col">
+      <div className="print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen flex flex-col relative overflow-hidden">
+        <StatusWatermark status={invoice.status} />
         {/* Company Header */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div>
@@ -280,11 +306,11 @@ export default function InvoicePrint() {
           <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-4 print:text-xs text-center">Our Services</p>
           <div className="flex justify-center items-center gap-3 flex-wrap print:gap-2">
             {SERVICE_CARDS.map((svc) => (
-              <div key={svc.label} className="flex flex-col items-center">
+              <div key={svc.label} className="flex flex-col items-center w-[90px] print:w-[80px]">
                 <img
                   src={svc.img}
                   alt={svc.label}
-                  className="h-14 w-auto object-contain print:h-12 rounded"
+                  className="h-16 w-16 object-contain print:h-14 print:w-14 rounded"
                 />
               </div>
             ))}
