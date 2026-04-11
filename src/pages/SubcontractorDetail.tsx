@@ -123,6 +123,11 @@ export default function SubcontractorDetail() {
   const [assessResult, setAssessResult] = useState('');
   const [assessNotes, setAssessNotes] = useState('');
 
+  // ── Block/Unblock State ──
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockSaving, setBlockSaving] = useState(false);
+  const [blockReason, setBlockReason] = useState('');
+
   // Assessment list stored as documents with type "assessment"
   const assessments = docs.filter((d: any) => d.document_type === 'assessment');
   const regularDocs = docs.filter((d: any) => d.document_type !== 'assessment');
