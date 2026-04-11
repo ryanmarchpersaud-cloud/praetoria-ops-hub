@@ -2613,6 +2613,7 @@ export type Database = {
           item_name: string
           line_total: number
           quantity: number
+          service_date: string | null
           sort_order: number
           unit_price: number
           visit_id: string | null
@@ -2625,6 +2626,7 @@ export type Database = {
           item_name: string
           line_total?: number
           quantity?: number
+          service_date?: string | null
           sort_order?: number
           unit_price?: number
           visit_id?: string | null
@@ -2637,6 +2639,7 @@ export type Database = {
           item_name?: string
           line_total?: number
           quantity?: number
+          service_date?: string | null
           sort_order?: number
           unit_price?: number
           visit_id?: string | null

@@ -161,6 +161,7 @@ export default function InvoicePrint() {
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-8">#</th>
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs">Item</th>
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs hidden md:table-cell print:table-cell">Description</th>
+                <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">Date</th>
                 <th className="text-center py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-16">Qty</th>
                 <th className="text-right py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">Unit Price</th>
                 <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">Total</th>
@@ -175,13 +176,16 @@ export default function InvoicePrint() {
                     {item.description && <p className="text-xs text-[#6b7280] mt-0.5 md:hidden print:hidden">{item.description}</p>}
                   </td>
                   <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell">{item.description}</td>
+                  <td className="py-3 pr-2 text-xs text-[#374151]">
+                    {item.service_date ? format(new Date(item.service_date + 'T00:00:00'), 'MMM d, yyyy') : '—'}
+                  </td>
                   <td className="py-3 px-2 text-center tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{item.quantity}</td>
                   <td className="py-3 px-2 text-right tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.unit_price))}</td>
                   <td className="py-3 pl-2 text-right font-medium tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.line_total))}</td>
                 </tr>
               ))}
               {lineItems.length === 0 && (
-                <tr><td colSpan={6} className="py-8 text-center text-[#9ca3af] italic">No line items</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-[#9ca3af] italic">No line items</td></tr>
               )}
             </tbody>
           </table>
