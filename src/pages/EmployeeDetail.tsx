@@ -702,4 +702,3 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
     </Dialog>
   );
 }
-}
