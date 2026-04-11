@@ -116,7 +116,7 @@ export default function InvoicePrint() {
       </div>
 
       {/* Printable Document */}
-      <div className="print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen flex flex-col relative overflow-hidden">
+      <div className="print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:w-full print:bg-white min-h-screen flex flex-col relative print:overflow-visible overflow-hidden">
         <StatusWatermark status={invoice.status} />
         {/* Company Header */}
         <div className="flex justify-between items-start mb-8 print:mb-10">

@@ -205,10 +205,14 @@
 
 /* Print styles */
 @media print {
-  body {
+  html, body {
     background: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
   }
 
   .print\:hidden {
@@ -225,10 +229,13 @@
   main {
     padding: 0 !important;
     margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
   }
 
   @page {
-    margin: 0.75in;
+    margin: 0.5in 0.6in;
     size: letter;
   }
 }
