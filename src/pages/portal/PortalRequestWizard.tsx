@@ -176,7 +176,7 @@ export default function PortalRequestWizard() {
       } as any);
       if (error) throw error;
 
-      // Notify admin/ops staff about the new request
+      // Notify admin/ops staff about the new request (in-app + email)
       try {
         await supabase.functions.invoke('send-notification', {
           body: {
@@ -187,8 +187,10 @@ export default function PortalRequestWizard() {
               subject: `New Request: ${subject}`,
               body: `${customer.first_name} ${customer.last_name} submitted a service request: ${subject}`,
               customer_name: `${customer.first_name} ${customer.last_name}`,
+              to_email: 'ops@praetoriagroup.ca',
+              reply_to: 'ops@praetoriagroup.ca',
             },
-            channels: ['in_app'],
+            channels: ['in_app', 'email'],
             audience: 'admin',
           },
         });
