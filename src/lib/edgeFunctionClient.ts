@@ -5,26 +5,36 @@ export async function callEdgeFunction(functionName: string, payload: any) {
   const accessToken = sessionData?.session?.access_token;
 
   if (!accessToken) {
-    throw new Error("No active session. Please sign in again.");
+    throw new Error("Your session has expired. Please sign in again.");
   }
 
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      },
-      body: JSON.stringify(payload),
-    }
-  );
+  let response: Response;
+  try {
+    response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+  } catch (networkErr) {
+    throw new Error("Network error. Please check your connection and try again.");
+  }
 
-  const data = await response.json();
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`Server returned an unexpected response (${response.status}).`);
+  }
 
   if (!response.ok) {
-    throw new Error(data?.error || `Function failed: ${response.status}`);
+    throw new Error(data?.error || `Request failed (${response.status}).`);
   }
 
   return data;
