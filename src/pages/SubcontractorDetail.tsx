@@ -130,6 +130,31 @@ export default function SubcontractorDetail() {
   const [blockSaving, setBlockSaving] = useState(false);
   const [blockReason, setBlockReason] = useState('');
 
+  // ── Invite State ──
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteSending, setInviteSending] = useState(false);
+  const [invitePassword, setInvitePassword] = useState('');
+
+  const handleSendInvite = async () => {
+    if (!sub?.user_id) return;
+    setInviteSending(true);
+    try {
+      const result = await callEdgeFunction('send-portal-invite', {
+        portal_type: 'subcontractor',
+        user_id: sub.user_id,
+        temporary_password: invitePassword || undefined,
+      });
+      if (result?.error) throw new Error(result.error);
+      toast.success(result.message || 'Invite sent!');
+      setInviteOpen(false);
+      setInvitePassword('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send invite');
+    } finally {
+      setInviteSending(false);
+    }
+  };
+
   // Assessment list stored as documents with type "assessment"
   const assessments = docs.filter((d: any) => d.document_type === 'assessment');
   const regularDocs = docs.filter((d: any) => d.document_type !== 'assessment');
