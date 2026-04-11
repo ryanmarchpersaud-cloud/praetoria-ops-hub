@@ -19,7 +19,6 @@ interface LineItem {
   line_total: number;
   sort_order: number;
   service_date: string;
-  service_time: string;
 }
 
 interface Props {
