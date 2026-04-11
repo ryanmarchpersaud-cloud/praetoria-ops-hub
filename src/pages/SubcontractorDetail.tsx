@@ -331,9 +331,18 @@ export default function SubcontractorDetail() {
           <h1 className="text-2xl font-bold text-foreground truncate">{sub.company_name}</h1>
           <p className="text-sm text-muted-foreground">{sub.contact_name} · {sub.email}</p>
         </div>
+        {sub.is_blocked && <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" /> Blocked</Badge>}
         <StatusChip status={sub.status} />
         <Button size="sm" variant="outline" className="gap-1.5" onClick={openEdit}>
           <Pencil className="h-3.5 w-3.5" /> Edit
+        </Button>
+        <Button
+          size="sm"
+          variant={sub.is_blocked ? 'outline' : 'destructive'}
+          className="gap-1.5"
+          onClick={() => { if (sub.is_blocked) { handleToggleBlock(); } else { setBlockOpen(true); } }}
+        >
+          {sub.is_blocked ? <><ShieldOff className="h-3.5 w-3.5" /> Unblock</> : <><Ban className="h-3.5 w-3.5" /> Block</>}
         </Button>
       </div>
 
