@@ -208,11 +208,25 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
             items.map((item, idx) => (
               <TableRow key={idx}>
                 <TableCell>
-                  <Input
+                  <ProductNameAutocomplete
                     value={item.item_name}
-                    onChange={e => updateItem(idx, 'item_name', e.target.value)}
-                    placeholder="Product / service name"
-                    className="h-8 text-sm"
+                    catalog={catalog}
+                    onChange={(name) => updateItem(idx, 'item_name', name)}
+                    onSelectProduct={(product) => {
+                      setItems(prev => {
+                        const updated = [...prev];
+                        const price = Number(product.unit_price) || 0;
+                        updated[idx] = {
+                          ...updated[idx],
+                          item_name: product.name,
+                          description: product.description || '',
+                          unit_price: price,
+                          line_total: Number(updated[idx].quantity) * price,
+                        };
+                        return updated;
+                      });
+                      setDirty(true);
+                    }}
                   />
                   <Input
                     value={item.description}
