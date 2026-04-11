@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   useEmployee, useEmployeeCertifications, useEmployeeDocuments,
@@ -19,9 +19,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw, Ban, ShieldOff, Landmark, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
