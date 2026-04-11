@@ -88,6 +88,42 @@ export type Database = {
           },
         ]
       }
+      app_versions: {
+        Row: {
+          created_at: string
+          current_version: string
+          force_update: boolean
+          id: string
+          minimum_version: string
+          platform: string
+          release_notes: string | null
+          store_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_version?: string
+          force_update?: boolean
+          id?: string
+          minimum_version?: string
+          platform?: string
+          release_notes?: string | null
+          store_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_version?: string
+          force_update?: boolean
+          id?: string
+          minimum_version?: string
+          platform?: string
+          release_notes?: string | null
+          store_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       automation_logs: {
         Row: {
           created_at: string
