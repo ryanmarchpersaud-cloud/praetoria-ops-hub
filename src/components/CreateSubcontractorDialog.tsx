@@ -112,7 +112,6 @@ export default function CreateSubcontractorDialog({ open, onOpenChange }: Props)
       });
       if (data?.error) throw new Error(data.error);
       return data;
-      return data;
     },
     onSuccess: async (data) => {
       if (pendingFiles.length && data?.user_id) {
