@@ -5,6 +5,7 @@ import { FileEdit, Eye, CheckCircle, Send, XCircle, Inbox, Search, Clock, Trophy
 const statusIcons: Record<string, typeof FileEdit> = {
   'draft': FileEdit,
   'new': Inbox,
+  'open': Inbox,
   'reviewing': Search,
   'awaiting info': Clock,
   'quote drafting': FileEdit,
@@ -13,6 +14,7 @@ const statusIcons: Record<string, typeof FileEdit> = {
   'approved': CheckCircle,
   'quote sent': Send,
   'sent': Send,
+  'in progress': Clock,
   'won': Trophy,
   'lost': Ban,
   'declined': XCircle,
@@ -23,6 +25,10 @@ const statusIcons: Record<string, typeof FileEdit> = {
   'viewed': Eye,
   'voided': Ban,
   'failed': XCircle,
+  'resolved': CheckCircle,
+  'closed': Archive,
+  'cancelled': Ban,
+  'completed': CheckCircle,
 };
 
 export const StatusBadge = forwardRef<HTMLSpanElement, { status: string; showIcon?: boolean }>(
