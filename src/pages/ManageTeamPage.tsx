@@ -225,8 +225,7 @@ export default function ManageTeamPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const role = ROLE_FOR_TYPE[form.team_type] || 'staff';
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: {
+      const data = await callEdgeFunction('manage-team', {
           action: 'create_user',
           email: form.email,
           password: form.password,
@@ -239,9 +238,7 @@ export default function ManageTeamPage() {
           portal_admin: form.portal_admin,
           portal_worker: form.portal_worker,
           portal_subcontractor: form.portal_subcontractor,
-        },
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
     },
@@ -257,8 +254,7 @@ export default function ManageTeamPage() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!editingUserId) throw new Error('No user selected');
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: {
+      const data = await callEdgeFunction('manage-team', {
           action: 'update_team_member',
           user_id: editingUserId,
           updates: {
@@ -273,9 +269,7 @@ export default function ManageTeamPage() {
             portal_worker: form.portal_worker,
             portal_subcontractor: form.portal_subcontractor,
           },
-        },
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
     },
@@ -290,10 +284,7 @@ export default function ManageTeamPage() {
   /* ── Status mutations ── */
   const statusAction = useMutation({
     mutationFn: async ({ userId, action }: { userId: string; action: string }) => {
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: { action, user_id: userId },
-      });
-      if (error) throw error;
+      const data = await callEdgeFunction('manage-team', { action, user_id: userId });
       if (data?.error) throw new Error(data.error);
       return data;
     },
