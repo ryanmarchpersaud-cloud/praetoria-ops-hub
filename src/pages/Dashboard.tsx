@@ -1,6 +1,3 @@
-import { useLeads } from '@/hooks/useLeads';
-import { useQuotes } from '@/hooks/useQuotes';
-import { useActivities } from '@/hooks/useActivities';
 import { StatusBadge } from '@/components/StatusBadge';
 import { OperationsMap } from '@/components/dashboard/OperationsMap';
 import { ServiceCarousel } from '@/components/ServiceCarousel';
@@ -17,6 +14,8 @@ import {
   useDashboardEmployees,
   useDashboardIncidents,
   useDashboardCertifications,
+  useDashboardLeads,
+  useDashboardActivities,
 } from '@/hooks/useDashboardData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Clock, CheckCircle, AlertCircle, Activity, ChevronRight } from 'lucide-react';
@@ -25,12 +24,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
-  // Legacy data
-  const { data: leads = [] } = useLeads();
-  const { data: quotes = [] } = useQuotes();
-  const { data: activities = [] } = useActivities({ limit: 10 });
-
-  // New ops data
+  // All dashboard data from lightweight hooks
   const { data: requests = [], isLoading: loadReq } = useDashboardRequests();
   const { data: dashQuotes = [], isLoading: loadQuotes } = useDashboardQuotes();
   const { data: jobs = [], isLoading: loadJobs } = useDashboardJobs();
@@ -39,16 +33,18 @@ export default function Dashboard() {
   const { data: employees = [], isLoading: loadEmp } = useDashboardEmployees();
   const { data: incidents = [], isLoading: loadInc } = useDashboardIncidents();
   const { data: certs = [], isLoading: loadCerts } = useDashboardCertifications();
+  const { data: leads = [], isLoading: loadLeads } = useDashboardLeads();
+  const { data: activities = [], isLoading: loadAct } = useDashboardActivities();
 
   const isWorkflowLoading = loadReq || loadQuotes || loadJobs || loadInv;
   const isAlertsLoading = loadInv || loadJobs || loadVisits || loadInc || loadCerts;
 
-  // Legacy computed
+  // Computed from lightweight data
   const newLeads = leads.filter(l => l.status === 'New');
-  const reviewLeads = leads.filter(l => ['Reviewing', 'Awaiting info'].includes(l.status));
-  const draftQuotes = quotes.filter(q => q.approval_status === 'Draft' || q.approval_status === 'Needs review');
-  const sentQuotes = quotes.filter(q => q.approval_status === 'Sent');
-  const followUps = quotes.filter(q => q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date());
+  const reviewLeads = leads.filter(l => ['Reviewing', 'Awaiting info'].includes(l.status ?? ''));
+  const draftQuotes = dashQuotes.filter(q => q.approval_status === 'Draft' || q.approval_status === 'Needs review');
+  const sentQuotes = dashQuotes.filter(q => q.approval_status === 'Sent');
+  const followUps = dashQuotes.filter((q: any) => q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date());
 
   const stats = [
     { label: 'New Leads', value: newLeads.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100 dark:bg-blue-950/30 dark:border-blue-900/40', link: '/leads' },
