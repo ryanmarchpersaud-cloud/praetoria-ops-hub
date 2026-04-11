@@ -38,13 +38,13 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check caller is admin
+    // Check caller is admin/owner
     const { data: callerRoles } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", callingUser.id);
 
-    const isAdmin = callerRoles?.some((r: any) => r.role === "admin");
+    const isAdmin = callerRoles?.some((r: any) => ["admin", "owner"].includes(r.role));
     if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: "Only admins can manage team members" }),
@@ -55,9 +55,15 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
-    // ── CREATE USER ──
+    // ── CREATE USER (Employee/Worker) ──
     if (action === "create_user") {
-      const { email, password, full_name, role, phone, team_type, service_categories, notes, portal_admin, portal_worker, portal_subcontractor } = body;
+      const {
+        email, password, full_name, role, phone, team_type,
+        service_categories, notes, portal_admin, portal_worker, portal_subcontractor,
+        // Extended employee fields
+        role_title, department, employment_type, branch_location, primary_service_category,
+        hire_date,
+      } = body;
       if (!email || !password || !role) {
         return new Response(
           JSON.stringify({ error: "email, password, and role are required" }),
@@ -100,26 +106,102 @@ Deno.serve(async (req) => {
         portal_subcontractor: portal_subcontractor || role === 'subcontractor',
       });
 
-      // If staff, create employee record
-      if (role === "staff" || role === "lead_worker" || role === "supervisor" || role === "dispatcher" || role === "manager") {
-        const { data: existingEmp } = await adminClient
-          .from("employees")
+      // If staff/worker role, create worker_profiles record
+      if (["staff", "lead_worker", "supervisor", "dispatcher", "manager"].includes(role)) {
+        const { data: existingWp } = await adminClient
+          .from("worker_profiles")
           .select("id")
           .eq("user_id", newUserId)
           .maybeSingle();
 
-        if (!existingEmp) {
-          await adminClient.from("employees").insert({
+        if (!existingWp) {
+          await adminClient.from("worker_profiles").insert({
             user_id: newUserId,
             full_name: full_name || email,
             work_email: email,
+            phone: phone || null,
             employment_status: "active",
+            employment_type: employment_type || "full-time",
+            role_title: role_title || null,
+            team: department || null,
+            branch_location: branch_location || null,
+            primary_service_category: primary_service_category || (service_categories?.[0] || null),
+            hire_date: hire_date || new Date().toISOString().split('T')[0],
           });
         }
       }
 
       return new Response(
         JSON.stringify({ success: true, user_id: newUserId, message: `Account created for ${full_name || email}` }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── CREATE SUBCONTRACTOR ──
+    if (action === "create_subcontractor") {
+      const {
+        email, password, company_name, contact_name, phone,
+        service_area_summary, notes, business_number,
+      } = body;
+      if (!email || !password || !company_name || !contact_name) {
+        return new Response(
+          JSON.stringify({ error: "email, password, company_name, and contact_name are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Create auth user
+      const { data: authData, error: authErr } = await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: contact_name },
+      });
+
+      if (authErr) {
+        return new Response(JSON.stringify({ error: authErr.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const newUserId = authData.user.id;
+
+      // Assign subcontractor role
+      await adminClient.from("user_roles").insert({ user_id: newUserId, role: "subcontractor" });
+
+      // Create team_member record
+      await adminClient.from("team_members").insert({
+        user_id: newUserId,
+        full_name: contact_name,
+        email,
+        phone: phone || null,
+        team_type: "Subcontractor",
+        status: "Active",
+        is_active: true,
+        service_categories: [],
+        notes: notes || null,
+        portal_admin: false,
+        portal_worker: false,
+        portal_subcontractor: true,
+      });
+
+      // Create subcontractors record
+      await adminClient.from("subcontractors").insert({
+        user_id: newUserId,
+        company_name,
+        contact_name,
+        email,
+        phone: phone || null,
+        service_area_summary: service_area_summary || null,
+        business_number: business_number || null,
+        notes_admin_only: notes || null,
+        status: "active",
+        onboarding_status: "pending",
+      });
+
+      return new Response(
+        JSON.stringify({ success: true, user_id: newUserId, message: `Subcontractor "${company_name}" created` }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -172,7 +254,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Upsert team_member record
       const { data: existing } = await adminClient
         .from("team_members")
         .select("id")
@@ -192,7 +273,6 @@ Deno.serve(async (req) => {
         if (error) throw error;
       }
 
-      // Sync display_name to profiles
       if (updates.display_name !== undefined || updates.full_name !== undefined) {
         await adminClient
           .from("profiles")
@@ -232,14 +312,13 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Update team_members status
       await adminClient
         .from("team_members")
         .update({ status: "Inactive", is_active: false })
         .eq("user_id", user_id);
 
       await adminClient
-        .from("employees")
+        .from("worker_profiles")
         .update({ employment_status: "inactive" })
         .eq("user_id", user_id);
 
@@ -274,7 +353,7 @@ Deno.serve(async (req) => {
         .eq("user_id", user_id);
 
       await adminClient
-        .from("employees")
+        .from("worker_profiles")
         .update({ employment_status: "active" })
         .eq("user_id", user_id);
 
@@ -294,7 +373,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Ban + archive
       await adminClient.auth.admin.updateUserById(user_id, {
         ban_duration: "876000h",
       });
