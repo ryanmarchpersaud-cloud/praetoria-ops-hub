@@ -45,10 +45,23 @@ export function useNotifications(filters?: { audience?: string; customer_id?: st
   });
 }
 
-export function useUnreadNotifications(recipientId?: string) {
+export function useUnreadNotifications(recipientId?: string, isOpsStaff?: boolean) {
   return useQuery({
-    queryKey: ['notifications_unread', recipientId],
+    queryKey: ['notifications_unread', recipientId, isOpsStaff],
     queryFn: async () => {
+      // For ops staff, fetch both their personal notifications AND admin-audience notifications
+      if (isOpsStaff) {
+        const { data, error } = await (supabase.from('notifications' as any) as any)
+          .select('*')
+          .eq('status', 'sent')
+          .is('read_at', null)
+          .or(`recipient_id.eq.${recipientId},audience.eq.admin`)
+          .order('created_at', { ascending: false })
+          .limit(30);
+        if (error) throw error;
+        return (data || []) as unknown as Notification[];
+      }
+      // For non-ops, only personal notifications
       let query = (supabase.from('notifications' as any) as any)
         .select('*')
         .eq('status', 'sent')
