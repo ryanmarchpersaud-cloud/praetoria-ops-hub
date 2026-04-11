@@ -16,13 +16,38 @@ function PrintStatusBadge({ status }: { status: string }) {
     'Partially Paid': '#d97706', Overdue: '#dc2626', Failed: '#dc2626', Voided: '#6b7280',
   };
   const color = colorMap[status] || '#6b7280';
+  const isUrgent = status === 'Overdue';
+  const isPaid = status === 'Paid';
   return (
     <span
-      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
-      style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}40` }}
+      className={`inline-flex items-center rounded-full font-extrabold uppercase tracking-wide ${
+        isUrgent ? 'px-4 py-1.5 text-sm print:text-base' : isPaid ? 'px-4 py-1.5 text-sm print:text-base' : 'px-2.5 py-0.5 text-xs'
+      }`}
+      style={{ backgroundColor: `${color}18`, color, border: `2px solid ${color}60` }}
     >
       {status}
     </span>
+  );
+}
+
+function StatusWatermark({ status }: { status: string }) {
+  if (status !== 'Overdue' && status !== 'Paid') return null;
+  const color = status === 'Overdue' ? '#dc2626' : '#059669';
+  return (
+    <div
+      className="absolute top-32 right-6 print:top-24 print:right-8 pointer-events-none select-none"
+      style={{
+        color: `${color}20`,
+        fontSize: '72px',
+        fontWeight: 900,
+        letterSpacing: '4px',
+        transform: 'rotate(-18deg)',
+        textTransform: 'uppercase',
+        lineHeight: 1,
+      }}
+    >
+      {status}
+    </div>
   );
 }
 
