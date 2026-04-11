@@ -7,6 +7,7 @@ import { Bell, CheckCircle, FileText, Truck, CreditCard, Calendar, AlertCircle }
 import { formatDistanceToNow } from 'date-fns';
 
 const EVENT_ICONS: Record<string, React.ElementType> = {
+  new_service_request: FileText,
   quote_sent: FileText,
   visit_scheduled: Calendar,
   worker_assigned: Truck,
