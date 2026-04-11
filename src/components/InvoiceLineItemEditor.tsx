@@ -228,14 +228,6 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
                 </TableCell>
                 <TableCell>
                   <Input
-                    type="time"
-                    value={item.service_time}
-                    onChange={e => updateItem(idx, 'service_time', e.target.value)}
-                    className="h-8 text-sm w-28"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
                     type="number"
                     min="0"
                     step="0.01"
