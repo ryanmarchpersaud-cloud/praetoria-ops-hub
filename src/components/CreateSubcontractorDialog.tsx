@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,8 +83,7 @@ export default function CreateSubcontractorDialog({ open, onOpenChange }: Props)
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: {
+      const data = await callEdgeFunction('manage-team', {
           action: 'create_subcontractor',
           email: form.email.trim(),
           password: form.password,
@@ -109,15 +109,14 @@ export default function CreateSubcontractorDialog({ open, onOpenChange }: Props)
           emergency_contact_phone: form.emergency_contact_phone || null,
           emergency_contact_relationship: form.emergency_contact_relationship || null,
           referral_source: form.referral_source || null,
-        },
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      return data;
       return data;
     },
     onSuccess: async (data) => {
-      if (pendingFiles.length && data?.userId) {
-        await uploadFilesForUser(data.userId);
+      if (pendingFiles.length && data?.user_id) {
+        await uploadFilesForUser(data.user_id);
       }
       toast.success(data?.message || 'Subcontractor created');
       queryClient.invalidateQueries({ queryKey: ['all_subcontractors'] });

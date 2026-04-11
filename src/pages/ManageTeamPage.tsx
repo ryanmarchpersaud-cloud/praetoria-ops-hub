@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,12 +141,12 @@ export default function ManageTeamPage() {
       const [tmRes, rolesRes, statusesRes] = await Promise.all([
         supabase.from('team_members' as any).select('*'),
         supabase.from('user_roles').select('user_id, role'),
-        supabase.functions.invoke('manage-team', { body: { action: 'get_user_statuses' } }),
+        callEdgeFunction('manage-team', { action: 'get_user_statuses' }),
       ]);
 
       const tmData: any[] = (tmRes as any).data || [];
       const roles: any[] = rolesRes.data || [];
-      const statuses: any[] = statusesRes.data?.statuses || [];
+      const statuses: any[] = statusesRes?.statuses || [];
 
       const roleMap: Record<string, string[]> = {};
       roles.forEach((r: any) => {
@@ -224,8 +225,7 @@ export default function ManageTeamPage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const role = ROLE_FOR_TYPE[form.team_type] || 'staff';
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: {
+      const data = await callEdgeFunction('manage-team', {
           action: 'create_user',
           email: form.email,
           password: form.password,
@@ -238,9 +238,7 @@ export default function ManageTeamPage() {
           portal_admin: form.portal_admin,
           portal_worker: form.portal_worker,
           portal_subcontractor: form.portal_subcontractor,
-        },
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
     },
@@ -256,8 +254,7 @@ export default function ManageTeamPage() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!editingUserId) throw new Error('No user selected');
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: {
+      const data = await callEdgeFunction('manage-team', {
           action: 'update_team_member',
           user_id: editingUserId,
           updates: {
@@ -272,9 +269,7 @@ export default function ManageTeamPage() {
             portal_worker: form.portal_worker,
             portal_subcontractor: form.portal_subcontractor,
           },
-        },
       });
-      if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
     },
@@ -289,10 +284,7 @@ export default function ManageTeamPage() {
   /* ── Status mutations ── */
   const statusAction = useMutation({
     mutationFn: async ({ userId, action }: { userId: string; action: string }) => {
-      const { data, error } = await supabase.functions.invoke('manage-team', {
-        body: { action, user_id: userId },
-      });
-      if (error) throw error;
+      const data = await callEdgeFunction('manage-team', { action, user_id: userId });
       if (data?.error) throw new Error(data.error);
       return data;
     },
