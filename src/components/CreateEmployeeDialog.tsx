@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Paperclip, X, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const ROLES = [
   { value: 'staff', label: 'Staff / Worker' },
@@ -33,32 +34,66 @@ const SERVICE_CATEGORIES = [
   'Property Care & Maintenance', 'Cleaning Services', 'Power Washing',
 ];
 
+const DOC_CATEGORIES = [
+  { key: 'drivers_license', label: "Driver's License" },
+  { key: 'drivers_abstract', label: "Driver's Abstract" },
+  { key: 'sin_card', label: 'SIN Card' },
+  { key: 'photo_id', label: 'Photo ID' },
+  { key: 'certificate', label: 'Certificate' },
+  { key: 'other', label: 'Other Document' },
+];
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface PendingFile {
+  file: File;
+  category: string;
 }
 
 const emptyForm = {
   first_name: '', last_name: '', email: '', phone: '', password: '',
   role: 'staff', department: '', employment_type: 'full-time',
   branch_location: '', primary_service_category: '', role_title: '',
-  // Address
   address_line_1: '', address_city: '', address_province: '', address_postal_code: '',
-  // Personal
   date_of_birth: '', gender: '', ethnicity: '', religion: '',
   sin: '', driver_license_number: '', driver_license_class: '', driver_license_expiry: '',
-  // Pay
   pay_type: 'hourly', pay_schedule: 'bi-weekly', hourly_rate: '',
-  // Emergency contact
   emergency_contact_name: '', emergency_contact_phone: '', emergency_contact_relationship: '',
-  // Referral
   referral_source: '',
   notes: '',
 };
 
 export default function CreateEmployeeDialog({ open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [form, setForm] = useState({ ...emptyForm });
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+  const [uploadingDocs, setUploadingDocs] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [activeDocCategory, setActiveDocCategory] = useState('other');
+
+  const uploadFilesForUser = async (userId: string) => {
+    if (!pendingFiles.length || !user?.id) return;
+    setUploadingDocs(true);
+    for (const pf of pendingFiles) {
+      const ext = pf.file.name.split('.').pop() || 'bin';
+      const path = `employee/${userId}/${pf.category}_${Date.now()}_${pf.file.name}`;
+      const { error: uploadError } = await supabase.storage.from('hr-documents').upload(path, pf.file);
+      if (uploadError) { console.error('Upload error:', uploadError); continue; }
+      await supabase.from('files').insert({
+        file_name: `[${pf.category}] ${pf.file.name}`,
+        file_url: path,
+        file_type: ext,
+        record_type: 'employee',
+        record_id: userId,
+        uploaded_by: user.id,
+      });
+    }
+    setUploadingDocs(false);
+  };
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -77,14 +112,12 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: Props) {
           portal_admin: ['admin', 'owner', 'ops_manager', 'accountant', 'hr_admin'].includes(form.role),
           portal_worker: ['staff', 'lead_worker', 'supervisor', 'dispatcher'].includes(form.role),
           portal_subcontractor: false,
-          // Extended fields
           role_title: form.role_title || null,
           department: form.department || null,
           employment_type: form.employment_type,
           branch_location: form.branch_location || null,
           primary_service_category: form.primary_service_category || null,
           hire_date: new Date().toISOString().split('T')[0],
-          // Personal
           address_line_1: form.address_line_1 || null,
           address_city: form.address_city || null,
           address_province: form.address_province || null,
@@ -97,15 +130,12 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: Props) {
           driver_license_number: form.driver_license_number || null,
           driver_license_class: form.driver_license_class || null,
           driver_license_expiry: form.driver_license_expiry || null,
-          // Pay
           pay_type: form.pay_type || null,
           pay_schedule: form.pay_schedule || null,
           hourly_rate: form.hourly_rate ? parseFloat(form.hourly_rate) : null,
-          // Emergency
           emergency_contact_name: form.emergency_contact_name || null,
           emergency_contact_phone: form.emergency_contact_phone || null,
           emergency_contact_relationship: form.emergency_contact_relationship || null,
-          // Referral
           referral_source: form.referral_source || null,
         },
       });
@@ -113,12 +143,16 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: Props) {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      if (pendingFiles.length && data?.userId) {
+        await uploadFilesForUser(data.userId);
+      }
       toast.success(data?.message || 'Employee created successfully');
       queryClient.invalidateQueries({ queryKey: ['employees_admin'] });
       queryClient.invalidateQueries({ queryKey: ['manage_team_v2'] });
       onOpenChange(false);
       setForm({ ...emptyForm });
+      setPendingFiles([]);
     },
     onError: (err: any) => toast.error(err.message || 'Failed to create employee'),
   });
@@ -132,6 +166,14 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: Props) {
 
   const set = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }));
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    const newFiles: PendingFile[] = Array.from(files).map(f => ({ file: f, category: activeDocCategory }));
+    setPendingFiles(prev => [...prev, ...newFiles]);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
   const SectionTitle = ({ children }: { children: React.ReactNode }) => (
     <div className="pt-2">
       <Separator className="mb-3" />
@@ -140,7 +182,7 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: Props) {
   );
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setForm({ ...emptyForm }); }}>
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) { setForm({ ...emptyForm }); setPendingFiles([]); } }}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -261,21 +303,45 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: Props) {
             <div><Label>Who referred them / How did they hear about the job?</Label><Input value={form.referral_source} onChange={e => set('referral_source', e.target.value)} placeholder="e.g. John Smith, Indeed, Walk-in" /></div>
             <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Internal notes..." rows={2} /></div>
 
-            <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1 mt-2">
-              <p className="text-xs font-medium text-muted-foreground">After creation you can also manage:</p>
-              <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-0.5">
-                <li>Certificate & document uploads</li>
-                <li>Driver's abstract uploads</li>
-                <li>Training assignments</li>
-                <li>Equipment issuance</li>
-              </ul>
+            {/* ── Document Attachments ── */}
+            <SectionTitle>Document Attachments</SectionTitle>
+            <p className="text-xs text-muted-foreground mb-2">Upload driver's license, ID, certificates, abstracts, or any other documents. Files are saved after the employee is created.</p>
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Label>Document Type</Label>
+                <Select value={activeDocCategory} onValueChange={setActiveDocCategory}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{DOC_CATEGORIES.map(c => <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} className="gap-1.5">
+                <Paperclip className="h-4 w-4" /> Choose File
+              </Button>
+              <input ref={fileRef} type="file" multiple className="hidden" onChange={handleFileSelect} accept="image/*,.pdf,.doc,.docx,.txt" />
             </div>
+            {pendingFiles.length > 0 && (
+              <div className="space-y-1 mt-2">
+                {pendingFiles.map((pf, i) => (
+                  <div key={i} className="flex items-center justify-between bg-muted/50 rounded px-3 py-1.5 text-xs">
+                    <span className="truncate flex-1">
+                      <span className="font-medium text-muted-foreground">[{DOC_CATEGORIES.find(c => c.key === pf.category)?.label}]</span>{' '}
+                      {pf.file.name}
+                    </span>
+                    <button onClick={() => setPendingFiles(prev => prev.filter((_, j) => j !== i))} className="ml-2 hover:text-destructive">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </ScrollArea>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={mutation.isPending}>
-            {mutation.isPending ? 'Creating...' : 'Create Employee'}
+          <Button onClick={handleSubmit} disabled={mutation.isPending || uploadingDocs}>
+            {mutation.isPending || uploadingDocs ? (
+              <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Creating...</>
+            ) : 'Create Employee'}
           </Button>
         </DialogFooter>
       </DialogContent>
