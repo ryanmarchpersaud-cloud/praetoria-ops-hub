@@ -58,7 +58,6 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
         line_total: Number(i.line_total),
         sort_order: i.sort_order,
         service_date: i.service_date || '',
-        service_time: i.service_time || '',
       })));
     }
   }, [existingItems]);
@@ -73,7 +72,6 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       line_total: price,
       sort_order: prev.length,
       service_date: '',
-      service_time: '',
     }]);
     setPickerOpen(false);
     setDirty(true);
@@ -88,7 +86,6 @@ export default function InvoiceLineItemEditor({ invoiceId, existingItems, onSave
       line_total: 0,
       sort_order: prev.length,
       service_date: '',
-      service_time: '',
     }]);
     setDirty(true);
   };
