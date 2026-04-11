@@ -6,6 +6,7 @@ import {
   useEmployeeEquipment, useIssueEquipment, useUpdateEquipment,
   useEmployeeTrainingRecords, useAssignTraining, useApproveCertificate,
 } from '@/hooks/useEmployees';
+import { useBenefitEnrollments, useUpsertEnrollment, useInsuranceProviders } from '@/hooks/useHRModules';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -533,15 +534,7 @@ export default function EmployeeDetail() {
 
         {/* Benefits */}
         <TabsContent value="benefits">
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Benefits</CardTitle></CardHeader>
-            <CardContent>
-              <InfoRow label="Status" value={<StatusChip status={emp.benefits_status || 'not-enrolled'} />} />
-              <InfoRow label="Provider" value={emp.benefits_provider} />
-              <InfoRow label="Effective Date" value={emp.benefits_effective_date ? format(new Date(emp.benefits_effective_date), 'MMM d, yyyy') : null} />
-              <InfoRow label="Plan Summary" value={emp.benefits_plan_summary} />
-            </CardContent>
-          </Card>
+          <EmployeeBenefitsTab userId={userId!} canManage={canManageWorkers} />
         </TabsContent>
 
         {/* Time Off */}
