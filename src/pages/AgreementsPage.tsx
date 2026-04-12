@@ -292,20 +292,59 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] px-6 pb-2">
           <div className="space-y-4 pb-4">
-            {/* Template */}
+            {/* Mode Toggle */}
             <div>
-              <Label>Agreement Template</Label>
-              <Select value={templateId} onValueChange={handleTemplateChange}>
-                <SelectTrigger><SelectValue placeholder="Choose a template…" /></SelectTrigger>
-                <SelectContent>
-                  {templates.map(t => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name} — <span className="text-muted-foreground text-xs">{categoryLabels[t.category] || t.category}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Agreement Source</Label>
+              <Tabs value={agreementMode} onValueChange={(v) => setAgreementMode(v as 'template' | 'pdf')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="template"><FileText className="h-4 w-4 mr-1" /> Use Template</TabsTrigger>
+                  <TabsTrigger value="pdf"><Upload className="h-4 w-4 mr-1" /> Upload PDF</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
+
+            {/* Template selector (only in template mode) */}
+            {agreementMode === 'template' && (
+              <div>
+                <Label>Agreement Template</Label>
+                <Select value={templateId} onValueChange={handleTemplateChange}>
+                  <SelectTrigger><SelectValue placeholder="Choose a template…" /></SelectTrigger>
+                  <SelectContent>
+                    {templates.map(t => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name} — <span className="text-muted-foreground text-xs">{categoryLabels[t.category] || t.category}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* PDF upload (only in pdf mode) */}
+            {agreementMode === 'pdf' && (
+              <div>
+                <Label>Upload PDF Agreement</Label>
+                <div className="mt-1 border-2 border-dashed rounded-lg p-6 text-center bg-muted/30">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {pdfFile ? pdfFile.name : 'Choose a PDF file to attach'}
+                  </p>
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    className="max-w-xs mx-auto"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 20 * 1024 * 1024) { toast.error('File must be under 20MB'); return; }
+                        setPdfFile(file);
+                        if (!title) setTitle(file.name.replace(/\.pdf$/i, ''));
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
 
@@ -351,8 +390,8 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
               <div><Label>Recipient Email</Label><Input type="email" value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)} /></div>
             </div>
 
-            {/* Merge Fields */}
-            {mergeFields.length > 0 && (
+            {/* Merge Fields (template mode only) */}
+            {agreementMode === 'template' && mergeFields.length > 0 && (
               <>
                 <Separator />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Fill Agreement Details</h4>
@@ -373,8 +412,8 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
               </>
             )}
 
-            {/* Preview */}
-            {selectedTemplate && (
+            {/* Preview (template mode only) */}
+            {agreementMode === 'template' && selectedTemplate && (
               <>
                 <Separator />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Preview</h4>
@@ -384,11 +423,11 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
           </div>
         </ScrollArea>
         <DialogFooter className="px-6 pb-6 pt-2 gap-2">
-          <Button variant="outline" onClick={() => handleCreate(false)} disabled={createAgreement.isPending}>
-            Save as Draft
+          <Button variant="outline" onClick={() => handleCreate(false)} disabled={createAgreement.isPending || uploading}>
+            {uploading ? 'Uploading…' : 'Save as Draft'}
           </Button>
-          <Button onClick={() => handleCreate(true)} disabled={createAgreement.isPending}>
-            <Send className="h-4 w-4 mr-1" /> Create & Send
+          <Button onClick={() => handleCreate(true)} disabled={createAgreement.isPending || uploading}>
+            <Send className="h-4 w-4 mr-1" /> {uploading ? 'Uploading…' : 'Create & Send'}
           </Button>
         </DialogFooter>
       </DialogContent>
