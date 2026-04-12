@@ -39,6 +39,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
   { title: 'Subcontractors', url: '/subcontractors', icon: Users, accessKey: 'subcontractors' },
   { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages', accessKey: 'messaging' },
   { title: 'Finance', url: '/finance', icon: Wallet, accessKey: 'finance' },
+  { title: 'Agreements', url: '/agreements', icon: FileSignature, accessKey: 'finance' as SidebarKey },
 ];
 
 const viewAsItems = [
