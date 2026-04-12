@@ -80,7 +80,7 @@ export function useDashboardEmployees() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('worker_profiles')
-        .select('user_id, full_name, job_title, status, hourly_rate')
+        .select('user_id, full_name, role_title, employment_status, hourly_rate')
         .order('full_name', { ascending: true });
       if (error) throw error;
       return data ?? [];

@@ -36,7 +36,7 @@ export function OperationsMap({ visits, jobs, employees, requests, isLoading }: 
       unassigned: unassignedJobs.length,
       needsInvoicing: needsInvoicing.length,
       openRequests: openRequests.length,
-      crewOnDuty: employees.filter(e => e.status === 'active').length,
+      crewOnDuty: employees.filter(e => e.employment_status === 'Active' || e.employment_status === 'active').length,
     };
   }, [visits, jobs, employees, requests]);
 
