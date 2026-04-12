@@ -24,6 +24,7 @@ export default function PortalBilling() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [savingCard, setSavingCard] = useState(false);
+  const [removingCard, setRemovingCard] = useState(false);
 
   // Auto-sync card on return from Stripe setup
   const searchParams = new URLSearchParams(window.location.search);
