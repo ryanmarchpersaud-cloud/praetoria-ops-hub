@@ -184,7 +184,11 @@ export function useSendAgreement() {
         },
       });
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreements'] }); qc.invalidateQueries({ queryKey: ['agreement'] }); toast.success('Agreement sent'); },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['agreements'] });
+      qc.invalidateQueries({ queryKey: ['agreement'] });
+      toast.success(variables.isReminder ? 'Reminder sent' : 'Agreement sent');
+    },
     onError: (e: any) => toast.error(e.message),
   });
 }
