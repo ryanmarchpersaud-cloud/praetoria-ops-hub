@@ -14,7 +14,7 @@ function json(body: Record<string, unknown>, status = 200) {
 }
 
 function renderTemplate(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || `{{${key}}}`);
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || "");
 }
 
 Deno.serve(async (req) => {
