@@ -324,6 +324,17 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
+        {canRefund && (
+          <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setRefundOpen(true)}>
+            <Undo2 className="h-3.5 w-3.5 mr-1.5" /> Refund
+          </Button>
+        )}
+        {canSendReceipt && (
+          <Button size="sm" variant="outline" onClick={handleSendReceipt} disabled={sendingReceipt}>
+            {sendingReceipt ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1.5" />}
+            Send Receipt
+          </Button>
+        )}
         {canMarkOverdue && (
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleStatusChange('Overdue')}>
             <AlertCircle className="h-3.5 w-3.5 mr-1.5" /> Mark Overdue
