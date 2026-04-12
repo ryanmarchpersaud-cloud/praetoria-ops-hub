@@ -119,19 +119,6 @@ export default function WorkerMore() {
           </CardContent>
         </Card>
       </button>
-
-      {/* Test credentials helper */}
-      <div className="rounded-lg border border-dashed border-amber-500/30 bg-amber-500/5 p-3 space-y-1.5">
-        <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">🧪 Testing Tip</p>
-        <p className="text-[11px] text-muted-foreground">
-          Sign out and use the <strong>Dev · Role Testing</strong> panel on the login page to switch between Admin, Worker, and Customer accounts.
-        </p>
-        <div className="text-[10px] text-muted-foreground/80 space-y-0.5">
-          <p>• <strong>Admin</strong> → admin@praetoriagroup.ca</p>
-          <p>• <strong>Worker</strong> → worker@praetoriagroup.ca</p>
-          <p>• <strong>Customer</strong> → customer@praetoriagroup.ca</p>
-        </div>
-      </div>
     </div>
   );
 }
