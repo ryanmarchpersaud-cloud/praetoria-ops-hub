@@ -60,14 +60,17 @@ export function PortalFAB() {
       // Send admin notification
       await supabase.functions.invoke('send-notification', {
         body: {
-          event: type === 'issue' ? 'new_service_request' : 'new_service_request',
-          subject: type === 'issue' ? `Property Issue Reported by ${customerName}` : `Support Message from ${customerName}`,
-          body: message.trim(),
-          customer_name: customerName,
-          to_email: 'ops@praetoriagroup.ca',
-          reply_to: 'ops@praetoriagroup.ca',
+          event: 'new_service_request',
+          record_type: 'service_request',
           channels: ['in_app', 'email'],
           audience: 'admin',
+          variables: {
+            subject: type === 'issue' ? `Property Issue Reported by ${customerName}` : `Support Message from ${customerName}`,
+            body: message.trim(),
+            customer_name: customerName,
+            to_email: 'ops@praetoriagroup.ca',
+            reply_to: 'ops@praetoriagroup.ca',
+          },
         },
       });
 

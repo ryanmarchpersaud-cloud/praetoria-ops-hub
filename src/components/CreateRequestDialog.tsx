@@ -78,6 +78,8 @@ export function CreateRequestDialog({ open, onOpenChange, defaultCustomerId }: P
             event: 'new_service_request',
             customer_id: form.customer_id,
             record_type: 'service_request',
+            channels: ['in_app', 'email'],
+            audience: 'admin',
             variables: {
               subject: `New Request: ${form.subject}`,
               body: `${custName} — ${form.subject}`,
@@ -85,8 +87,6 @@ export function CreateRequestDialog({ open, onOpenChange, defaultCustomerId }: P
               to_email: 'ops@praetoriagroup.ca',
               reply_to: 'ops@praetoriagroup.ca',
             },
-            channels: ['in_app', 'email'],
-            audience: 'admin',
           },
         });
       } catch (_) { /* non-blocking */ }
