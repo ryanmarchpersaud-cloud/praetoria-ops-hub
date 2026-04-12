@@ -108,17 +108,21 @@ export function NotificationCenter() {
     if (unreadIds.has(n.id)) {
       markRead.mutate(n.id);
     }
-    // Close sheet then navigate
-    setSheetOpen(false);
+
+    // Determine target route
+    let target = '';
     if (n.record_type && n.record_id) {
       const base = RECORD_ROUTES[n.record_type];
-      if (base) {
-        navigate(`${base}/${n.record_id}`);
-        return;
-      }
+      if (base) target = `${base}/${n.record_id}`;
     }
-    if (n.event === 'payment_received') {
-      navigate('/finance/payments');
+    if (!target && n.event === 'payment_received') {
+      target = '/finance/payments';
+    }
+
+    // Close sheet first, then navigate after it unmounts
+    setSheetOpen(false);
+    if (target) {
+      setTimeout(() => navigate(target), 150);
     }
   };
 
