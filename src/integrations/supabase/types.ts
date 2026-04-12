@@ -923,6 +923,63 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_benefit_enrollments: {
+        Row: {
+          created_at: string
+          eligibility_date: string | null
+          employee_contribution_amount: number | null
+          employee_contribution_percent: number | null
+          employer_contribution_amount: number | null
+          employer_contribution_percent: number | null
+          id: string
+          is_taxable_benefit: boolean | null
+          notes: string | null
+          plan_code: string | null
+          plan_name: string
+          plan_type: string
+          provider_name: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          eligibility_date?: string | null
+          employee_contribution_amount?: number | null
+          employee_contribution_percent?: number | null
+          employer_contribution_amount?: number | null
+          employer_contribution_percent?: number | null
+          id?: string
+          is_taxable_benefit?: boolean | null
+          notes?: string | null
+          plan_code?: string | null
+          plan_name: string
+          plan_type?: string
+          provider_name?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          eligibility_date?: string | null
+          employee_contribution_amount?: number | null
+          employee_contribution_percent?: number | null
+          employer_contribution_amount?: number | null
+          employer_contribution_percent?: number | null
+          id?: string
+          is_taxable_benefit?: boolean | null
+          notes?: string | null
+          plan_code?: string | null
+          plan_name?: string
+          plan_type?: string
+          provider_name?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       employee_emergency_contacts: {
         Row: {
           address: string | null
@@ -3685,78 +3742,150 @@ export type Database = {
           bonus_amount: number | null
           cpp_amount: number | null
           created_at: string
+          eap_premium: number | null
           ei_amount: number | null
+          employee_dental_premium: number | null
+          employee_health_premium: number | null
           employee_name: string | null
+          employee_vision_premium: number | null
+          employer_benefit_contribution: number | null
+          employer_cpp: number | null
+          employer_dental_premium: number | null
+          employer_ei: number | null
+          employer_group_life: number | null
+          employer_health_premium: number | null
+          employer_ltd: number | null
+          employer_pension_match: number | null
+          employer_retirement_match: number | null
+          garnishments: number | null
           gross_pay: number | null
+          group_life_premium: number | null
           holiday_hours: number | null
           hourly_rate: number | null
           id: string
           income_tax_amount: number | null
+          ltd_premium: number | null
           memo: string | null
           net_pay: number | null
           other_deductions_amount: number | null
+          overpayment_recovery: number | null
           overtime_hours: number | null
+          pay_method: string | null
           payout_account_id: string | null
           payroll_run_id: string
+          pension_rpp: number | null
           regular_hours: number | null
+          reimbursement_amount: number | null
+          rrsp_prpp: number | null
           salary_override: number | null
           sick_hours: number | null
           status: string | null
           total_deductions: number | null
+          union_dues: number | null
           user_id: string | null
           vacation_hours: number | null
+          vacation_pay_amount: number | null
+          voluntary_deductions: number | null
         }
         Insert: {
           allowance_amount?: number | null
           bonus_amount?: number | null
           cpp_amount?: number | null
           created_at?: string
+          eap_premium?: number | null
           ei_amount?: number | null
+          employee_dental_premium?: number | null
+          employee_health_premium?: number | null
           employee_name?: string | null
+          employee_vision_premium?: number | null
+          employer_benefit_contribution?: number | null
+          employer_cpp?: number | null
+          employer_dental_premium?: number | null
+          employer_ei?: number | null
+          employer_group_life?: number | null
+          employer_health_premium?: number | null
+          employer_ltd?: number | null
+          employer_pension_match?: number | null
+          employer_retirement_match?: number | null
+          garnishments?: number | null
           gross_pay?: number | null
+          group_life_premium?: number | null
           holiday_hours?: number | null
           hourly_rate?: number | null
           id?: string
           income_tax_amount?: number | null
+          ltd_premium?: number | null
           memo?: string | null
           net_pay?: number | null
           other_deductions_amount?: number | null
+          overpayment_recovery?: number | null
           overtime_hours?: number | null
+          pay_method?: string | null
           payout_account_id?: string | null
           payroll_run_id: string
+          pension_rpp?: number | null
           regular_hours?: number | null
+          reimbursement_amount?: number | null
+          rrsp_prpp?: number | null
           salary_override?: number | null
           sick_hours?: number | null
           status?: string | null
           total_deductions?: number | null
+          union_dues?: number | null
           user_id?: string | null
           vacation_hours?: number | null
+          vacation_pay_amount?: number | null
+          voluntary_deductions?: number | null
         }
         Update: {
           allowance_amount?: number | null
           bonus_amount?: number | null
           cpp_amount?: number | null
           created_at?: string
+          eap_premium?: number | null
           ei_amount?: number | null
+          employee_dental_premium?: number | null
+          employee_health_premium?: number | null
           employee_name?: string | null
+          employee_vision_premium?: number | null
+          employer_benefit_contribution?: number | null
+          employer_cpp?: number | null
+          employer_dental_premium?: number | null
+          employer_ei?: number | null
+          employer_group_life?: number | null
+          employer_health_premium?: number | null
+          employer_ltd?: number | null
+          employer_pension_match?: number | null
+          employer_retirement_match?: number | null
+          garnishments?: number | null
           gross_pay?: number | null
+          group_life_premium?: number | null
           holiday_hours?: number | null
           hourly_rate?: number | null
           id?: string
           income_tax_amount?: number | null
+          ltd_premium?: number | null
           memo?: string | null
           net_pay?: number | null
           other_deductions_amount?: number | null
+          overpayment_recovery?: number | null
           overtime_hours?: number | null
+          pay_method?: string | null
           payout_account_id?: string | null
           payroll_run_id?: string
+          pension_rpp?: number | null
           regular_hours?: number | null
+          reimbursement_amount?: number | null
+          rrsp_prpp?: number | null
           salary_override?: number | null
           sick_hours?: number | null
           status?: string | null
           total_deductions?: number | null
+          union_dues?: number | null
           user_id?: string | null
           vacation_hours?: number | null
+          vacation_pay_amount?: number | null
+          voluntary_deductions?: number | null
         }
         Relationships: [
           {

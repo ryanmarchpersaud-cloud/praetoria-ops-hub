@@ -178,25 +178,47 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     if (n(item.bonus_amount) > 0) earnings.push({ label: 'Bonus', amount: n(item.bonus_amount) });
     if (n(item.allowance_amount) > 0) earnings.push({ label: 'Allowance', amount: n(item.allowance_amount) });
     if (n(item.salary_override) > 0) earnings.push({ label: 'Salary', amount: n(item.salary_override) });
+    if (n((item as any).reimbursement_amount) > 0) earnings.push({ label: 'Reimbursement', amount: n((item as any).reimbursement_amount) });
+    if (n((item as any).vacation_pay_amount) > 0) earnings.push({ label: 'Vacation Pay (Accrued)', amount: n((item as any).vacation_pay_amount) });
   }
 
   // ── Deductions (from finalized snapshot) ──
   const deductionLines: { label: string; amount: number }[] = [];
   if (item) {
+    const itm = item as any;
     if (n(item.cpp_amount) > 0) deductionLines.push({ label: 'CPP (Canada Pension Plan)', amount: n(item.cpp_amount) });
     if (n(item.ei_amount) > 0) deductionLines.push({ label: 'EI (Employment Insurance)', amount: n(item.ei_amount) });
     if (n(item.income_tax_amount) > 0) deductionLines.push({ label: 'Federal / Provincial Income Tax', amount: n(item.income_tax_amount) });
+    if (n(itm.union_dues) > 0) deductionLines.push({ label: 'Union Dues', amount: n(itm.union_dues) });
+    if (n(itm.pension_rpp) > 0) deductionLines.push({ label: 'Pension / RPP', amount: n(itm.pension_rpp) });
+    if (n(itm.rrsp_prpp) > 0) deductionLines.push({ label: 'RRSP / PRPP', amount: n(itm.rrsp_prpp) });
+    if (n(itm.employee_health_premium) > 0) deductionLines.push({ label: 'Health Premium (Employee)', amount: n(itm.employee_health_premium) });
+    if (n(itm.employee_dental_premium) > 0) deductionLines.push({ label: 'Dental Premium (Employee)', amount: n(itm.employee_dental_premium) });
+    if (n(itm.employee_vision_premium) > 0) deductionLines.push({ label: 'Vision Premium (Employee)', amount: n(itm.employee_vision_premium) });
+    if (n(itm.group_life_premium) > 0) deductionLines.push({ label: 'Group Life Insurance', amount: n(itm.group_life_premium) });
+    if (n(itm.ltd_premium) > 0) deductionLines.push({ label: 'LTD / Disability', amount: n(itm.ltd_premium) });
+    if (n(itm.eap_premium) > 0) deductionLines.push({ label: 'EAP Premium', amount: n(itm.eap_premium) });
+    if (n(itm.voluntary_deductions) > 0) deductionLines.push({ label: 'Voluntary Deductions', amount: n(itm.voluntary_deductions) });
+    if (n(itm.garnishments) > 0) deductionLines.push({ label: 'Garnishments / Court-Ordered', amount: n(itm.garnishments) });
+    if (n(itm.overpayment_recovery) > 0) deductionLines.push({ label: 'Overpayment Recovery', amount: n(itm.overpayment_recovery) });
     if (n(item.other_deductions_amount) > 0) deductionLines.push({ label: 'Other Deductions', amount: n(item.other_deductions_amount) });
   }
 
-  // ── Benefits / Employer Contributions ──
-  const benefitsLines: { label: string; amount: number | null }[] = [];
-  // Show benefits provider info if enrolled
-  if (empProfile?.benefits_status === 'enrolled' || empProfile?.benefits_status === 'active') {
-    if (empProfile?.benefits_provider) {
-      benefitsLines.push({ label: `Health & Dental (${empProfile.benefits_provider})`, amount: null });
-    }
+  // ── Employer Contributions (from finalized snapshot — shown separately from employee deductions) ──
+  const employerLines: { label: string; amount: number }[] = [];
+  if (item) {
+    const itm = item as any;
+    if (n(itm.employer_cpp) > 0) employerLines.push({ label: 'Employer CPP', amount: n(itm.employer_cpp) });
+    if (n(itm.employer_ei) > 0) employerLines.push({ label: 'Employer EI', amount: n(itm.employer_ei) });
+    if (n(itm.employer_pension_match) > 0) employerLines.push({ label: 'Employer Pension Match', amount: n(itm.employer_pension_match) });
+    if (n(itm.employer_health_premium) > 0) employerLines.push({ label: 'Employer Health Premium', amount: n(itm.employer_health_premium) });
+    if (n(itm.employer_dental_premium) > 0) employerLines.push({ label: 'Employer Dental Premium', amount: n(itm.employer_dental_premium) });
+    if (n(itm.employer_group_life) > 0) employerLines.push({ label: 'Employer Group Life', amount: n(itm.employer_group_life) });
+    if (n(itm.employer_ltd) > 0) employerLines.push({ label: 'Employer LTD', amount: n(itm.employer_ltd) });
+    if (n(itm.employer_benefit_contribution) > 0) employerLines.push({ label: 'Employer Benefit Contribution', amount: n(itm.employer_benefit_contribution) });
+    if (n(itm.employer_retirement_match) > 0) employerLines.push({ label: 'Employer Retirement Match', amount: n(itm.employer_retirement_match) });
   }
+  const totalEmployerContributions = employerLines.reduce((s, e) => s + e.amount, 0);
 
   const totalDeductions = deductionLines.reduce((s, d) => s + d.amount, 0) || n(stub.deductions);
 
@@ -289,10 +311,11 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
         </tr>`).join('')
       : `<tr><td colspan="3" style="padding:8px 12px;font-size:13px;">Total Deductions</td><td style="text-align:right;color:#dc2626;padding:8px 12px;">–$${fmt(stub.deductions)}</td></tr>`;
 
-    const benefitsHtml = benefitsLines.length > 0
-      ? `<div class="section-title">Benefits / Employer Contributions</div>
+    const employerHtml = employerLines.length > 0
+      ? `<div class="section-title">Employer Contributions</div>
          <table><thead><tr><th colspan="3">Description</th><th>Amount</th></tr></thead><tbody>
-         ${benefitsLines.map(b => `<tr><td colspan="3" style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${b.label}</td><td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">${b.amount != null ? '$' + b.amount.toFixed(2) : 'Enrolled'}</td></tr>`).join('')}
+         ${employerLines.map(e => `<tr><td colspan="3" style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${e.label}</td><td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">$${e.amount.toFixed(2)}</td></tr>`).join('')}
+         <tr class="total-row"><td colspan="3">Total Employer Contributions</td><td style="text-align:right;">$${totalEmployerContributions.toFixed(2)}</td></tr>
          </tbody></table>`
       : '';
 
@@ -382,7 +405,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   </tbody>
 </table>
 
-${benefitsHtml}
+${employerHtml}
 
 <div class="net-box">
   <div class="label">NET PAY</div>
@@ -542,29 +565,29 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
               </div>
             </div>
 
-            {/* ── Benefits / Employer Contributions ── */}
-            {benefitsLines.length > 0 && (
+            {/* ── Employer Contributions ── */}
+            {employerLines.length > 0 && (
               <div>
-                <SectionTitle label="Benefits / Employer Contributions" color={primaryColor} />
+                <SectionTitle label="Employer Contributions" color={primaryColor} />
                 <div className="border rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-muted/60">
                         <Th align="left" colSpan={3}>Description</Th>
-                        <Th align="right">Status</Th>
+                        <Th align="right">Amount</Th>
                       </tr>
                     </thead>
                     <tbody>
-                      {benefitsLines.map((b, i) => (
+                      {employerLines.map((e, i) => (
                         <tr key={i} className="border-t border-border/50">
-                          <td className="px-3 py-2 text-foreground" colSpan={3}>{b.label}</td>
-                          <td className="px-3 py-2 text-right text-muted-foreground">
-                            {b.amount != null ? `$${b.amount.toFixed(2)}` : (
-                              <span className="text-emerald-600 font-medium">Enrolled</span>
-                            )}
-                          </td>
+                          <td className="px-3 py-2 text-foreground" colSpan={3}>{e.label}</td>
+                          <td className="px-3 py-2 text-right font-medium">${e.amount.toFixed(2)}</td>
                         </tr>
                       ))}
+                      <tr className="border-t-2 font-bold bg-muted/30" style={{ borderColor: primaryColor }}>
+                        <td className="px-3 py-2.5" colSpan={3}>Total Employer Contributions</td>
+                        <td className="px-3 py-2.5 text-right">${totalEmployerContributions.toFixed(2)}</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
