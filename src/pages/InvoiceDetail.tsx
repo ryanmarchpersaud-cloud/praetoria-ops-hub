@@ -265,33 +265,12 @@ export default function InvoiceDetail() {
   const canCollectFromCard = canRecordPayment && billingProfile?.payment_method_present && (billingProfile as any)?.default_payment_method_id;
   const billingMode = (invoice as any).billing_mode;
 
-  const handleSendReceipt = async () => {
-    setSendingReceipt(true);
-    try {
-      const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
-      await supabase.functions.invoke('send-notification', {
-        body: {
-          event: 'payment_received',
-          customer_id: invoice.customer_id,
-          record_type: 'invoice',
-          record_id: invoice.id,
-          channels: ['in_app', 'email'],
-          audience: 'customer',
-          variables: {
-            customer_name: customerName,
-            invoice_number: invoice.invoice_number || '',
-            amount_paid: amountPaid.toFixed(2),
-            total: total.toFixed(2),
-            to_email: invoice.customers?.email || '',
-          },
-        },
-      });
-      toast.success('Payment receipt sent to customer');
-    } catch {
-      toast.error('Failed to send receipt');
-    } finally {
-      setSendingReceipt(false);
-    }
+  const openReceiptCompose = () => {
+    const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+    setEmailTo(invoice.customers?.email || '');
+    setEmailSubject(`Payment Receipt — ${invoice.invoice_number || 'Invoice'}`);
+    setEmailMessage(`Hi ${customerName || 'there'},\n\nThank you for your payment of $${amountPaid.toFixed(2)} for invoice ${invoice.invoice_number || ''}.\n\nYour remaining balance is $${balanceDue.toFixed(2)}.\n\nIf you have any questions, please don't hesitate to contact us at support@praetoriagroup.ca.\n\nSincerely,\nPraetoria Group`);
+    setConfirmSend(true);
   };
 
   const handleCollectPayment = async () => {
