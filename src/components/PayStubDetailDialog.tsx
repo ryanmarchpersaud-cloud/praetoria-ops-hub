@@ -183,20 +183,40 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   // ── Deductions (from finalized snapshot) ──
   const deductionLines: { label: string; amount: number }[] = [];
   if (item) {
+    const itm = item as any;
     if (n(item.cpp_amount) > 0) deductionLines.push({ label: 'CPP (Canada Pension Plan)', amount: n(item.cpp_amount) });
     if (n(item.ei_amount) > 0) deductionLines.push({ label: 'EI (Employment Insurance)', amount: n(item.ei_amount) });
     if (n(item.income_tax_amount) > 0) deductionLines.push({ label: 'Federal / Provincial Income Tax', amount: n(item.income_tax_amount) });
+    if (n(itm.union_dues) > 0) deductionLines.push({ label: 'Union Dues', amount: n(itm.union_dues) });
+    if (n(itm.pension_rpp) > 0) deductionLines.push({ label: 'Pension / RPP', amount: n(itm.pension_rpp) });
+    if (n(itm.rrsp_prpp) > 0) deductionLines.push({ label: 'RRSP / PRPP', amount: n(itm.rrsp_prpp) });
+    if (n(itm.employee_health_premium) > 0) deductionLines.push({ label: 'Health Premium (Employee)', amount: n(itm.employee_health_premium) });
+    if (n(itm.employee_dental_premium) > 0) deductionLines.push({ label: 'Dental Premium (Employee)', amount: n(itm.employee_dental_premium) });
+    if (n(itm.employee_vision_premium) > 0) deductionLines.push({ label: 'Vision Premium (Employee)', amount: n(itm.employee_vision_premium) });
+    if (n(itm.group_life_premium) > 0) deductionLines.push({ label: 'Group Life Insurance', amount: n(itm.group_life_premium) });
+    if (n(itm.ltd_premium) > 0) deductionLines.push({ label: 'LTD / Disability', amount: n(itm.ltd_premium) });
+    if (n(itm.eap_premium) > 0) deductionLines.push({ label: 'EAP Premium', amount: n(itm.eap_premium) });
+    if (n(itm.voluntary_deductions) > 0) deductionLines.push({ label: 'Voluntary Deductions', amount: n(itm.voluntary_deductions) });
+    if (n(itm.garnishments) > 0) deductionLines.push({ label: 'Garnishments / Court-Ordered', amount: n(itm.garnishments) });
+    if (n(itm.overpayment_recovery) > 0) deductionLines.push({ label: 'Overpayment Recovery', amount: n(itm.overpayment_recovery) });
     if (n(item.other_deductions_amount) > 0) deductionLines.push({ label: 'Other Deductions', amount: n(item.other_deductions_amount) });
   }
 
-  // ── Benefits / Employer Contributions ──
-  const benefitsLines: { label: string; amount: number | null }[] = [];
-  // Show benefits provider info if enrolled
-  if (empProfile?.benefits_status === 'enrolled' || empProfile?.benefits_status === 'active') {
-    if (empProfile?.benefits_provider) {
-      benefitsLines.push({ label: `Health & Dental (${empProfile.benefits_provider})`, amount: null });
-    }
+  // ── Employer Contributions (from finalized snapshot — shown separately from employee deductions) ──
+  const employerLines: { label: string; amount: number }[] = [];
+  if (item) {
+    const itm = item as any;
+    if (n(itm.employer_cpp) > 0) employerLines.push({ label: 'Employer CPP', amount: n(itm.employer_cpp) });
+    if (n(itm.employer_ei) > 0) employerLines.push({ label: 'Employer EI', amount: n(itm.employer_ei) });
+    if (n(itm.employer_pension_match) > 0) employerLines.push({ label: 'Employer Pension Match', amount: n(itm.employer_pension_match) });
+    if (n(itm.employer_health_premium) > 0) employerLines.push({ label: 'Employer Health Premium', amount: n(itm.employer_health_premium) });
+    if (n(itm.employer_dental_premium) > 0) employerLines.push({ label: 'Employer Dental Premium', amount: n(itm.employer_dental_premium) });
+    if (n(itm.employer_group_life) > 0) employerLines.push({ label: 'Employer Group Life', amount: n(itm.employer_group_life) });
+    if (n(itm.employer_ltd) > 0) employerLines.push({ label: 'Employer LTD', amount: n(itm.employer_ltd) });
+    if (n(itm.employer_benefit_contribution) > 0) employerLines.push({ label: 'Employer Benefit Contribution', amount: n(itm.employer_benefit_contribution) });
+    if (n(itm.employer_retirement_match) > 0) employerLines.push({ label: 'Employer Retirement Match', amount: n(itm.employer_retirement_match) });
   }
+  const totalEmployerContributions = employerLines.reduce((s, e) => s + e.amount, 0);
 
   const totalDeductions = deductionLines.reduce((s, d) => s + d.amount, 0) || n(stub.deductions);
 
