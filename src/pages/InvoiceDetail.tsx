@@ -248,6 +248,38 @@ export default function InvoiceDetail() {
   const canRecordPayment = ['Sent', 'Viewed', 'Overdue', 'Partially Paid'].includes(invoice.status) && canRecordPayments;
   const canVoid = !['Voided', 'Paid'].includes(invoice.status) && canVoidInvoices;
   const canMarkOverdue = ['Sent', 'Viewed'].includes(invoice.status) && canManageInvoices;
+  const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
+  const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
+  const billingMode = (invoice as any).billing_mode;
+
+  const handleSendReceipt = async () => {
+    setSendingReceipt(true);
+    try {
+      const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          event: 'payment_received',
+          customer_id: invoice.customer_id,
+          record_type: 'invoice',
+          record_id: invoice.id,
+          channels: ['in_app', 'email'],
+          audience: 'customer',
+          variables: {
+            customer_name: customerName,
+            invoice_number: invoice.invoice_number || '',
+            amount_paid: amountPaid.toFixed(2),
+            total: total.toFixed(2),
+            to_email: invoice.customers?.email || '',
+          },
+        },
+      });
+      toast.success('Payment receipt sent to customer');
+    } catch {
+      toast.error('Failed to send receipt');
+    } finally {
+      setSendingReceipt(false);
+    }
+  };
   const billingMode = (invoice as any).billing_mode;
 
   return (
