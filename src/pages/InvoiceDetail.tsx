@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
 import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 
 export default function InvoiceDetail() {
   const { id } = useParams();
@@ -63,6 +64,7 @@ export default function InvoiceDetail() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [refundOpen, setRefundOpen] = useState(false);
   const [sendingReceipt, setSendingReceipt] = useState(false);
+  const [collectingPayment, setCollectingPayment] = useState(false);
 
   if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="flex items-center justify-center py-16 text-muted-foreground">Invoice not found</div>;
@@ -250,6 +252,7 @@ export default function InvoiceDetail() {
   const canMarkOverdue = ['Sent', 'Viewed'].includes(invoice.status) && canManageInvoices;
   const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
   const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
+  const canCollectFromCard = canRecordPayment && billingProfile?.payment_method_present && (billingProfile as any)?.default_payment_method_id;
   const billingMode = (invoice as any).billing_mode;
 
   const handleSendReceipt = async () => {
@@ -278,6 +281,27 @@ export default function InvoiceDetail() {
       toast.error('Failed to send receipt');
     } finally {
       setSendingReceipt(false);
+    }
+  };
+
+  const handleCollectPayment = async () => {
+    if (!invoice?.id || balanceDue <= 0) return;
+    setCollectingPayment(true);
+    try {
+      const res = await callEdgeFunction('collect-payment', {
+        invoice_id: invoice.id,
+        amount: balanceDue,
+      });
+      if (res?.success) {
+        toast.success(`$${res.amount_charged.toFixed(2)} collected from card on file`);
+        window.location.reload();
+      } else {
+        throw new Error(res?.error || 'Payment failed');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to collect payment');
+    } finally {
+      setCollectingPayment(false);
     }
   };
 
@@ -317,6 +341,17 @@ export default function InvoiceDetail() {
             onClick={() => { setPaymentAmount(balanceDue.toFixed(2)); setPaymentOpen(true); }}
           >
             <DollarSign className="h-3.5 w-3.5 mr-1.5" /> Record Payment
+          </Button>
+        )}
+        {canCollectFromCard && (
+          <Button
+            size="sm" variant="outline"
+            className="text-primary border-primary/30 hover:bg-primary/10"
+            onClick={handleCollectPayment}
+            disabled={collectingPayment}
+          >
+            {collectingPayment ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
+            Collect ${balanceDue.toFixed(2)} from Card
           </Button>
         )}
         <Link to={`/invoices/${invoice.id}/print`}>
@@ -547,7 +582,16 @@ export default function InvoiceDetail() {
               <CardContent className="text-sm space-y-2">
                 <div><span className="text-muted-foreground">Preference</span><p className="font-medium capitalize">{billingProfile.payment_preference?.replace('-', ' ')}</p></div>
                 {billingProfile.payment_method_present && (
-                  <div><span className="text-muted-foreground">Card on File</span><p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p></div>
+                  <div>
+                    <span className="text-muted-foreground">Card on File</span>
+                    <p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p>
+                    {(billingProfile as any).card_exp_month && (billingProfile as any).card_exp_year && (
+                      <p className="text-xs text-muted-foreground">Exp {String((billingProfile as any).card_exp_month).padStart(2, '0')}/{(billingProfile as any).card_exp_year}</p>
+                    )}
+                    {(billingProfile as any).default_payment_method_id && (
+                      <p className="text-xs text-accent">✓ Default</p>
+                    )}
+                  </div>
                 )}
                 <div><span className="text-muted-foreground">Auto-pay</span><p className={`font-medium ${billingProfile.autopay_enabled ? 'text-success' : 'text-muted-foreground'}`}>{billingProfile.autopay_enabled ? 'Enabled' : 'Disabled'}</p></div>
               </CardContent>

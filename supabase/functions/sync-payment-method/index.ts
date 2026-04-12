@@ -63,6 +63,8 @@ serve(async (req) => {
       const pm = paymentMethods.data[0];
       const cardBrand = pm.card?.brand || "card";
       const cardLast4 = pm.card?.last4 || "****";
+      const cardExpMonth = pm.card?.exp_month || null;
+      const cardExpYear = pm.card?.exp_year || null;
 
       if (role_type === "subcontractor") {
         const { data: sub } = await serviceClient
@@ -72,6 +74,8 @@ serve(async (req) => {
             {
               subcontractor_id: sub.id, processor_customer_id: stripeCustomer.id,
               card_brand: cardBrand, card_last4: cardLast4,
+              card_exp_month: cardExpMonth, card_exp_year: cardExpYear,
+              default_payment_method_id: pm.id,
               payment_method_present: true, payment_preference: "credit_card",
               updated_at: new Date().toISOString(),
             },
@@ -86,6 +90,8 @@ serve(async (req) => {
             {
               customer_id: cust.id, processor_customer_id: stripeCustomer.id,
               card_brand: cardBrand, card_last4: cardLast4,
+              card_exp_month: cardExpMonth, card_exp_year: cardExpYear,
+              default_payment_method_id: pm.id,
               payment_method_present: true, payment_preference: "credit_card" as any,
               updated_at: new Date().toISOString(),
             },
@@ -95,7 +101,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ synced: true, card_brand: cardBrand, card_last4: cardLast4 }),
+        JSON.stringify({ synced: true, card_brand: cardBrand, card_last4: cardLast4, card_exp_month: cardExpMonth, card_exp_year: cardExpYear }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }

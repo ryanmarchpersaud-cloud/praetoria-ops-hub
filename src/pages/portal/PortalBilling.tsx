@@ -24,6 +24,7 @@ export default function PortalBilling() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [savingCard, setSavingCard] = useState(false);
+  const [removingCard, setRemovingCard] = useState(false);
 
   // Auto-sync card on return from Stripe setup
   const searchParams = new URLSearchParams(window.location.search);
@@ -128,6 +129,26 @@ export default function PortalBilling() {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
       setSavingCard(false);
+    }
+  };
+
+  // Remove card on file
+  const handleRemoveCard = async () => {
+    if (!customer?.id || !billingProfile) return;
+    setRemovingCard(true);
+    try {
+      await supabase.from('customer_billing_profiles').update({
+        payment_method_present: false,
+        card_brand: null,
+        card_last4: null,
+        updated_at: new Date().toISOString(),
+      } as any).eq('customer_id', customer.id);
+      queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
+      toast({ title: 'Card removed' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setRemovingCard(false);
     }
   };
 
@@ -284,19 +305,31 @@ export default function PortalBilling() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {billingProfile?.payment_method_present ? (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {billingProfile.autopay_enabled ? (
-                    <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Auto-pay enabled</span>
-                  ) : 'Manual payments'}
-                </p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p>
+                  {(billingProfile as any).card_exp_month && (billingProfile as any).card_exp_year && (
+                    <p className="text-xs text-muted-foreground">
+                      Expires {String((billingProfile as any).card_exp_month).padStart(2, '0')}/{(billingProfile as any).card_exp_year}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {billingProfile.autopay_enabled ? (
+                      <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Auto-pay enabled</span>
+                    ) : 'Manual payments'}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Button variant="outline" size="sm" onClick={handleSaveCard} disabled={savingCard}>
+                    {savingCard ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1" />}
+                    Update
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive text-xs" onClick={handleRemoveCard} disabled={removingCard}>
+                    {removingCard ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Remove'}
+                  </Button>
+                </div>
               </div>
-              <Button variant="outline" size="sm" onClick={handleSaveCard} disabled={savingCard}>
-                {savingCard ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1" />}
-                Update Card
-              </Button>
             </div>
           ) : (
             <div className="space-y-2">

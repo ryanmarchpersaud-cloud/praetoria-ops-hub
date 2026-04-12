@@ -444,6 +444,16 @@ function PaymentMethodCard({ customerId }: { customerId: string }) {
         {bp?.payment_method_present ? (
           <div className="space-y-1">
             <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
+            {(bp as any).card_exp_month && (bp as any).card_exp_year && (
+              <p className="text-[10px] text-muted-foreground">
+                Expires {String((bp as any).card_exp_month).padStart(2, '0')}/{(bp as any).card_exp_year}
+              </p>
+            )}
+            {(bp as any).default_payment_method_id && (
+              <p className="text-[10px] text-accent flex items-center gap-1">
+                ✓ Default payment method
+              </p>
+            )}
             <p className="text-[10px] text-muted-foreground">
               {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
             </p>

@@ -225,6 +225,9 @@ serve(async (req) => {
                 await sb.from("customer_billing_profiles").update({
                   card_brand: cardBrand,
                   card_last4: cardLast4,
+                  card_exp_month: pm.card?.exp_month,
+                  card_exp_year: pm.card?.exp_year,
+                  default_payment_method_id: pm.id,
                   payment_method_present: true,
                   payment_preference: "credit_card",
                   updated_at: new Date().toISOString(),
@@ -241,6 +244,9 @@ serve(async (req) => {
                 await sb.from("subcontractor_billing_profiles").update({
                   card_brand: cardBrand,
                   card_last4: cardLast4,
+                  card_exp_month: pm.card?.exp_month,
+                  card_exp_year: pm.card?.exp_year,
+                  default_payment_method_id: pm.id,
                   payment_method_present: true,
                   payment_preference: "credit_card",
                   updated_at: new Date().toISOString(),
@@ -331,14 +337,47 @@ serve(async (req) => {
       case "payment_method.attached": {
         const pm = event.data.object as Stripe.PaymentMethod;
         if (pm.customer && pm.card) {
+          const customerId = typeof pm.customer === "string" ? pm.customer : pm.customer.id;
+          const cardUpdate = {
+            card_brand: pm.card.brand,
+            card_last4: pm.card.last4,
+            card_exp_month: pm.card.exp_month,
+            card_exp_year: pm.card.exp_year,
+            payment_method_present: true,
+            default_payment_method_id: pm.id,
+            payment_preference: "credit_card",
+            updated_at: new Date().toISOString(),
+          };
+
+          // Sync to customer billing profile
+          const { data: custBp } = await sb
+            .from("customer_billing_profiles")
+            .select("id")
+            .eq("processor_customer_id", customerId)
+            .maybeSingle();
+          if (custBp) {
+            await sb.from("customer_billing_profiles").update(cardUpdate).eq("id", custBp.id);
+          }
+
+          // Sync to subcontractor billing profile
+          const { data: subBp } = await sb
+            .from("subcontractor_billing_profiles")
+            .select("id")
+            .eq("processor_customer_id", customerId)
+            .maybeSingle();
+          if (subBp) {
+            await sb.from("subcontractor_billing_profiles").update(cardUpdate).eq("id", subBp.id);
+          }
+
           await log({
             event_name: "stripe.payment_method_attached",
             channel: "payment",
             status: "success",
             metadata: {
-              customer: pm.customer,
+              customer: customerId,
               card_brand: pm.card.brand,
               card_last4: pm.card.last4,
+              exp: `${pm.card.exp_month}/${pm.card.exp_year}`,
             },
           });
         }
