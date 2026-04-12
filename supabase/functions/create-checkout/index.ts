@@ -276,6 +276,85 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Invoice Payment (amount-based, no price_id needed) ──────────
+    if (action === "invoice_payment") {
+      const { invoice_id, amount, description: desc } = params;
+      if (!invoice_id || !amount) return json({ error: "Missing invoice_id or amount" }, 400);
+
+      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+      const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
+
+      const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
+      const authHeader = req.headers.get("Authorization");
+      let userEmail: string | undefined;
+      if (authHeader) {
+        const token = authHeader.replace("Bearer ", "");
+        const { data } = await supabase.auth.getUser(token);
+        userEmail = data.user?.email ?? undefined;
+      }
+
+      let stripeCustomerId: string | undefined;
+      if (userEmail) {
+        const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+        if (customers.data.length > 0) stripeCustomerId = customers.data[0].id;
+      }
+
+      const amountCents = Math.round(Number(amount) * 100);
+
+      try {
+        const session = await stripe.checkout.sessions.create({
+          customer: stripeCustomerId,
+          customer_email: stripeCustomerId ? undefined : userEmail,
+          line_items: [{
+            price_data: {
+              currency: "cad",
+              product_data: { name: desc || "Invoice Payment" },
+              unit_amount: amountCents,
+            },
+            quantity: 1,
+          }],
+          mode: "payment",
+          success_url: `${origin}/portal/billing?payment=success&invoice=${invoice_id}`,
+          cancel_url: `${origin}/portal/billing?payment=cancelled`,
+          metadata: {
+            source: "praetoria_ops",
+            action: "invoice_payment",
+            environment: env,
+            internal_invoice_id: invoice_id,
+          },
+        });
+
+        const logEntry: IntegrationEntry = {
+          provider: "stripe",
+          event_name: "stripe.invoice_payment_created",
+          channel: "payment",
+          status: "success",
+          recipient: userEmail,
+          record_type: "invoice",
+          record_id: invoice_id,
+          provider_response_id: session.id,
+          environment: env,
+          metadata: { amount, invoice_id },
+        };
+        await logIntegration(logEntry);
+        await notifyN8n(logEntry);
+        return json({ ok: true, url: session.url, session_id: session.id });
+      } catch (e: any) {
+        await logIntegration({
+          provider: "stripe",
+          event_name: "stripe.invoice_payment_created",
+          channel: "payment",
+          status: "failed",
+          recipient: userEmail,
+          record_type: "invoice",
+          record_id: invoice_id,
+          environment: env,
+          error_message: e.message,
+        });
+        throw e;
+      }
+    }
+
     return json({ error: `Unknown action: ${action}` }, 400);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
