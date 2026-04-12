@@ -77,10 +77,10 @@ export default function PortalBilling() {
     setRequestingLink(true);
     try {
       const res = await callEdgeFunction('create-checkout', {
+        action: 'invoice_payment',
         invoice_id: inv.id,
         amount: Number(inv.balance_due),
         description: `Invoice ${inv.invoice_number}`,
-        mode: 'payment',
       });
       if (res?.url) {
         window.open(res.url, '_blank');
