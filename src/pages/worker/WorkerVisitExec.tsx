@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { sendNotification } from '@/hooks/useNotifications';
 import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
+import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
 
 // ── Image compression ──
 async function compressImage(file: File, maxWidth = 1920, quality = 0.82): Promise<File> {
@@ -497,6 +498,9 @@ export default function WorkerVisitExec() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Customer Warnings ── */}
+      <CustomerWarningsBanner customerId={(visit as any).customer_id} />
 
       {/* ── Progress stepper ── */}
       <div className="flex items-center gap-1 px-1">
