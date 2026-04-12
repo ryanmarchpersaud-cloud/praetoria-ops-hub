@@ -366,8 +366,8 @@ export default function InvoiceDetail() {
           </Button>
         )}
         {canSendReceipt && (
-          <Button size="sm" variant="outline" onClick={handleSendReceipt} disabled={sendingReceipt}>
-            {sendingReceipt ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1.5" />}
+          <Button size="sm" variant="outline" onClick={openReceiptCompose}>
+            <Mail className="h-3.5 w-3.5 mr-1.5" />
             Send Receipt
           </Button>
         )}
