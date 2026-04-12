@@ -239,13 +239,13 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
 
     // Upload PDF if in pdf mode
     if (agreementMode === 'pdf' && pdfFile) {
-      const fileName = `${crypto.randomUUID()}_${pdfFile.name}`;
+      const safeName = pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `${crypto.randomUUID()}_${safeName}`;
       const { data: upData, error: upError } = await supabase.storage
         .from('agreement-attachments')
         .upload(fileName, pdfFile, { contentType: 'application/pdf' });
       if (upError) { toast.error('PDF upload failed: ' + upError.message); setUploading(false); return; }
-      const { data: urlData } = supabase.storage.from('agreement-attachments').getPublicUrl(fileName);
-      attachmentUrl = urlData?.publicUrl || upData.path;
+      attachmentUrl = fileName;
     }
     setUploading(false);
 
