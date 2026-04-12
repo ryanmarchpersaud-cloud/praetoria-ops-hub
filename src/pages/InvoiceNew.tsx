@@ -69,7 +69,7 @@ export default function InvoiceNew() {
     try {
       const payload: any = {
         customer_id: form.customer_id,
-        invoice_number: 'DRAFT', // trigger will generate
+        invoice_number: '',
         issue_date: form.issue_date,
         due_date: form.due_date,
         tax_rate: parseFloat(form.tax_rate) || 0.13,

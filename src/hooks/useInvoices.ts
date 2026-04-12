@@ -56,7 +56,17 @@ export function useCreateInvoice() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (invoice: any) => {
-      const { data, error } = await supabase.from('invoices').insert(invoice).select().single();
+      const normalizedInvoiceNumber = typeof invoice?.invoice_number === 'string'
+        && ['DRAFT', 'AUTO'].includes(invoice.invoice_number.trim().toUpperCase())
+          ? ''
+          : invoice?.invoice_number;
+
+      const payload = {
+        ...invoice,
+        invoice_number: normalizedInvoiceNumber ?? '',
+      };
+
+      const { data, error } = await supabase.from('invoices').insert(payload).select().single();
       if (error) throw error;
       return data;
     },
