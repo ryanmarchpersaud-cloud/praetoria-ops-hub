@@ -251,6 +251,7 @@ export default function InvoiceDetail() {
   const canMarkOverdue = ['Sent', 'Viewed'].includes(invoice.status) && canManageInvoices;
   const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
   const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
+  const canCollectFromCard = canRecordPayment && billingProfile?.payment_method_present && (billingProfile as any)?.default_payment_method_id;
   const billingMode = (invoice as any).billing_mode;
 
   const handleSendReceipt = async () => {
