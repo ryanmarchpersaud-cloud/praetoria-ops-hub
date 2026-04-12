@@ -431,41 +431,163 @@ export default function CustomerDetail() {
 
 /* ─── Payment Method Status Card (Admin View) ──────── */
 function PaymentMethodCard({ customerId }: { customerId: string }) {
-  const { data: bp } = useBillingProfile(customerId);
+  const { data: bp, refetch } = useBillingProfile(customerId);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [cardBrand, setCardBrand] = useState('visa');
+  const [cardLast4, setCardLast4] = useState('');
+  const [cardExpMonth, setCardExpMonth] = useState('');
+  const [cardExpYear, setCardExpYear] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleSaveCard = async () => {
+    if (!cardLast4 || cardLast4.length !== 4) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('customer_billing_profiles').upsert(
+        {
+          customer_id: customerId,
+          card_brand: cardBrand,
+          card_last4: cardLast4,
+          card_exp_month: cardExpMonth ? parseInt(cardExpMonth) : null,
+          card_exp_year: cardExpYear ? parseInt(cardExpYear) : null,
+          payment_method_present: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'customer_id' }
+      );
+      if (error) throw error;
+      refetch();
+      setManualOpen(false);
+    } catch (err: any) {
+      console.error('Failed to save card:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemoveCard = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase.from('customer_billing_profiles').upsert(
+        {
+          customer_id: customerId,
+          card_brand: null,
+          card_last4: null,
+          card_exp_month: null,
+          card_exp_year: null,
+          payment_method_present: false,
+          default_payment_method_id: null,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'customer_id' }
+      );
+      if (error) throw error;
+      refetch();
+    } catch (err: any) {
+      console.error('Failed to remove card:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-          <CreditCard className="h-3.5 w-3.5" /> Payment Method
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {bp?.payment_method_present ? (
-          <div className="space-y-1">
-            <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
-            {(bp as any).card_exp_month && (bp as any).card_exp_year && (
-              <p className="text-[10px] text-muted-foreground">
-                Expires {String((bp as any).card_exp_month).padStart(2, '0')}/{(bp as any).card_exp_year}
-              </p>
-            )}
-            {(bp as any).default_payment_method_id && (
-              <p className="text-[10px] text-accent flex items-center gap-1">
-                ✓ Default payment method
-              </p>
-            )}
-            <p className="text-[10px] text-muted-foreground">
-              {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
-            </p>
-            <p className="text-[10px] text-muted-foreground">
-              Preference: {bp.payment_preference?.replace('_', ' ')}
-            </p>
+    <>
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <CreditCard className="h-3.5 w-3.5" /> Payment Method
+            </CardTitle>
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={() => {
+              if (bp?.payment_method_present) {
+                setCardBrand(bp.card_brand || 'visa');
+                setCardLast4(bp.card_last4 || '');
+                setCardExpMonth((bp as any).card_exp_month?.toString() || '');
+                setCardExpYear((bp as any).card_exp_year?.toString() || '');
+              } else {
+                setCardBrand('visa');
+                setCardLast4('');
+                setCardExpMonth('');
+                setCardExpYear('');
+              }
+              setManualOpen(true);
+            }}>
+              <Plus className="h-3 w-3" /> {bp?.payment_method_present ? 'Update' : 'Add Card'}
+            </Button>
           </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">No card on file</p>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {bp?.payment_method_present ? (
+            <div className="space-y-1">
+              <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
+              {(bp as any).card_exp_month && (bp as any).card_exp_year && (
+                <p className="text-[10px] text-muted-foreground">
+                  Expires {String((bp as any).card_exp_month).padStart(2, '0')}/{(bp as any).card_exp_year}
+                </p>
+              )}
+              {(bp as any).default_payment_method_id && (
+                <p className="text-[10px] text-accent flex items-center gap-1">
+                  ✓ Default payment method
+                </p>
+              )}
+              <p className="text-[10px] text-muted-foreground">
+                {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                Preference: {bp.payment_preference?.replace('_', ' ')}
+              </p>
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-destructive mt-1" onClick={handleRemoveCard} disabled={saving}>
+                Remove Card
+              </Button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">No card on file</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Manual Card Entry Dialog */}
+      <Dialog open={manualOpen} onOpenChange={setManualOpen}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <CreditCard className="h-4 w-4" /> {bp?.payment_method_present ? 'Update' : 'Add'} Card on File
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Card Brand</Label>
+              <select value={cardBrand} onChange={e => setCardBrand(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-9">
+                <option value="visa">Visa</option>
+                <option value="mastercard">Mastercard</option>
+                <option value="amex">American Express</option>
+                <option value="discover">Discover</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs">Last 4 Digits *</Label>
+              <Input maxLength={4} value={cardLast4} onChange={e => setCardLast4(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="1234" className="h-9 font-mono" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Exp Month</Label>
+                <Input type="number" min="1" max="12" value={cardExpMonth} onChange={e => setCardExpMonth(e.target.value)} placeholder="MM" className="h-9" />
+              </div>
+              <div>
+                <Label className="text-xs">Exp Year</Label>
+                <Input type="number" min="2024" max="2040" value={cardExpYear} onChange={e => setCardExpYear(e.target.value)} placeholder="YYYY" className="h-9" />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Only safe metadata is stored — no full card numbers.</p>
+            <Button className="w-full h-9" onClick={handleSaveCard} disabled={saving || cardLast4.length !== 4}>
+              {saving ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+              Save Card Info
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
