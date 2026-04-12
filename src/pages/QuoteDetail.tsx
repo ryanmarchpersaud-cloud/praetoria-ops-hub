@@ -210,6 +210,8 @@ export default function QuoteDetail() {
   };
 
   const lead = (quote as any).leads;
+  const customer = (quote as any).customers;
+  const clientInfo = lead || customer;
   const isSentOrApproved = ['Sent', 'Approved'].includes(form.approval_status);
   const validItems = items.filter(i => i.item_name);
 

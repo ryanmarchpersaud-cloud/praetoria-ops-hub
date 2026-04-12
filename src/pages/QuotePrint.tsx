@@ -11,6 +11,8 @@ export function formatCurrency(value: number): string {
 
 export function getQuoteDataForExport(quote: any, lineItems: any[]) {
   const lead = quote.leads;
+  const customer = quote.customers;
+  const source = lead || customer;
   return {
     quoteNumber: quote.quote_number,
     status: quote.approval_status,
@@ -24,15 +26,15 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
     taxRate: Number(quote.tax_rate || 0.13),
-    client: lead ? {
-      name: `${lead.first_name} ${lead.last_name}`,
-      company: lead.company_name,
-      address: lead.address_line_1,
-      city: lead.city,
-      province: lead.province,
-      postalCode: lead.postal_code,
-      email: lead.email,
-      phone: lead.phone,
+    client: source ? {
+      name: `${source.first_name} ${source.last_name}`,
+      company: source.company_name,
+      address: source.address_line_1,
+      city: source.city,
+      province: source.province,
+      postalCode: source.postal_code,
+      email: source.email,
+      phone: source.phone,
     } : null,
     lineItems: lineItems.map((item, idx) => ({
       index: idx + 1,
