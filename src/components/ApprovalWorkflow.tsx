@@ -125,6 +125,8 @@ export function ApprovalWorkflowPanel({
   createdAt,
   onStatusChange,
   isUpdating,
+  onConvertToJob,
+  isConverted,
 }: ApprovalWorkflowProps) {
   const [declineReason, setDeclineReason] = useState('');
   const currentStep = getStepIndex(status);
