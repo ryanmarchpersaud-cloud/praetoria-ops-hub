@@ -67,7 +67,7 @@ export function useTodayVisits() {
         .from('visits')
         .select('*, jobs(job_title, job_number), properties(property_name), customers(first_name, last_name, company_name)')
         .eq('service_date', today)
-        .order('start_time', { ascending: true });
+        .order('scheduled_start_time', { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
