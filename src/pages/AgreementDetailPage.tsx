@@ -231,3 +231,33 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null }) {
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!attachmentUrl) return;
+    supabase.storage.from('agreement-attachments')
+      .createSignedUrl(attachmentUrl, 3600)
+      .then(({ data }) => { if (data?.signedUrl) setSignedUrl(data.signedUrl); });
+  }, [attachmentUrl]);
+
+  if (!attachmentUrl || !signedUrl) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <FileText className="h-4 w-4 text-primary" /> Attached PDF Agreement
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <iframe src={signedUrl} className="w-full h-[600px] border rounded" title="Agreement PDF" />
+        <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(signedUrl, '_blank')}>
+          <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+}
