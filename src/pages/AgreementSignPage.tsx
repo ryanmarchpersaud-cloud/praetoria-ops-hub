@@ -66,14 +66,49 @@ export default function AgreementSignPage() {
   if (agreement.status === 'signed' || signed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardContent className="p-8 space-y-4">
-            <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto" />
-            <h2 className="text-2xl font-bold">Agreement Signed</h2>
-            <p className="text-muted-foreground">Thank you, {agreement.recipient_name}. Your signed agreement has been recorded.</p>
-            <p className="text-xs text-muted-foreground">Signed on {agreement.signed_at ? format(new Date(agreement.signed_at), 'MMMM d, yyyy h:mm a') : format(new Date(), 'MMMM d, yyyy h:mm a')}</p>
-          </CardContent>
-        </Card>
+        <div className="max-w-2xl w-full space-y-4">
+          <Card className="text-center">
+            <CardContent className="p-8 space-y-4">
+              <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto" />
+              <h2 className="text-2xl font-bold">Agreement Signed</h2>
+              <p className="text-muted-foreground">Thank you, {agreement.recipient_name}. Your signed agreement has been recorded.</p>
+              <p className="text-xs text-muted-foreground">Signed on {agreement.signed_at ? format(new Date(agreement.signed_at), 'MMMM d, yyyy h:mm a') : format(new Date(), 'MMMM d, yyyy h:mm a')}</p>
+              <div className="flex justify-center gap-3 pt-2">
+                {pdfSignedUrl && (
+                  <Button variant="outline" onClick={() => window.open(pdfSignedUrl, '_blank')}>
+                    <Download className="h-4 w-4 mr-2" /> Download Document
+                  </Button>
+                )}
+                {!pdfSignedUrl && agreement.body_html && (
+                  <Button variant="outline" onClick={() => {
+                    const w = window.open('', '_blank');
+                    if (w) { w.document.write(agreement.body_html); w.document.close(); }
+                  }}>
+                    <FileText className="h-4 w-4 mr-2" /> View Document
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          {pdfSignedUrl && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><FileText className="h-4 w-4" /> Agreement Document</h3>
+                <iframe src={pdfSignedUrl} className="w-full h-[500px] rounded border" title="Agreement PDF" />
+              </CardContent>
+            </Card>
+          )}
+          {!pdfSignedUrl && agreement.body_html && (
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><FileText className="h-4 w-4" /> Agreement Document</h3>
+                <ScrollArea className="h-[400px] border rounded p-4">
+                  <div dangerouslySetInnerHTML={{ __html: agreement.body_html }} />
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     );
   }

@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature } from 'lucide-react';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
@@ -90,6 +90,17 @@ export default function CustomerDetail() {
     queryFn: async () => {
       if (!id) return [];
       const { data, error } = await supabase.from('service_requests').select('id, subject, status, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+  const { data: agreements = [] } = useQuery({
+    queryKey: ['customer_agreements', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase.from('agreements').select('id, title, status, created_at, signing_token').eq('customer_id', id).order('created_at', { ascending: false }).limit(10);
       if (error) throw error;
       return data ?? [];
     },
@@ -353,6 +364,23 @@ export default function CustomerDetail() {
               secondary: `$${Number(i.total || 0).toLocaleString()} · Bal: $${Number(i.balance_due || 0).toLocaleString()}`,
               badge: <StatusBadge status={i.status} showIcon={false} />,
               mono: true,
+            }))}
+          />
+
+          {/* Agreements */}
+          <RelatedRecordCard
+            title="Agreements"
+            icon={FileSignature}
+            count={agreements.length}
+            emptyText="No agreements"
+            createLink="/agreements"
+            createLabel="New"
+            items={agreements.map((a: any) => ({
+              id: a.id,
+              link: `/agreements/${a.id}`,
+              primary: a.title,
+              secondary: a.created_at ? formatDistanceToNow(new Date(a.created_at), { addSuffix: true }) : '',
+              badge: <StatusBadge status={a.status} showIcon={false} />,
             }))}
           />
         </div>
