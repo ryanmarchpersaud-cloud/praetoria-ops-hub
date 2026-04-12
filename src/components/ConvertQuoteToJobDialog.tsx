@@ -44,7 +44,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
   const [visitCount, setVisitCount] = useState(0);
 
   // Form
-  const customerId = lead?.customer_id || null;
+  const customerId = quote?.customer_id || lead?.customer_id || null;
   const [propertyId, setPropertyId] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [serviceCategory, setServiceCategory] = useState('');
