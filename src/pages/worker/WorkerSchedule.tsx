@@ -44,32 +44,44 @@ function formatTime(iso: string | null) {
   } catch { return null; }
 }
 
+const serviceCategoryColors: Record<string, { bg: string; border: string; accent: string }> = {
+  'Snow Removal': { bg: 'bg-sky-500/10', border: 'border-sky-400', accent: 'text-sky-700' },
+  'Landscaping': { bg: 'bg-emerald-500/10', border: 'border-emerald-400', accent: 'text-emerald-700' },
+  'Junk Removal': { bg: 'bg-amber-500/10', border: 'border-amber-400', accent: 'text-amber-700' },
+  'Property Maintenance': { bg: 'bg-violet-500/10', border: 'border-violet-400', accent: 'text-violet-700' },
+  'Property Management': { bg: 'bg-rose-500/10', border: 'border-rose-400', accent: 'text-rose-700' },
+};
+const defaultCategoryColor = { bg: 'bg-primary/10', border: 'border-primary/40', accent: 'text-primary' };
+
 function VisitCard({ visit, showDate = false }: { visit: Visit; showDate?: boolean }) {
   const isActive = visit.visit_status === 'In Progress' || visit.visit_status === 'En Route';
   const isCompleted = visit.visit_status === 'Completed';
   const arrivalStr = formatTime(visit.arrival_time);
   const completionStr = formatTime(visit.completion_time);
+  const catColor = serviceCategoryColors[visit.jobs?.service_category ?? ''] ?? defaultCategoryColor;
 
   return (
     <Link to={`/worker/visit/${visit.id}`} className="block">
       <Card className={cn(
-        'active:shadow-md transition-all',
-        isActive && 'ring-2 ring-primary/30 bg-primary/5',
-        isCompleted && 'opacity-70'
+        'active:shadow-md transition-all border-l-4',
+        catColor.border,
+        isActive && 'ring-2 ring-primary/30 shadow-md',
+        isCompleted && 'opacity-60',
+        !isActive && !isCompleted && catColor.bg,
       )}>
         {isActive && (
-          <div className="bg-primary/10 px-3 py-1 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[11px] font-semibold text-primary">{visit.visit_status}</span>
+          <div className="bg-primary/10 px-3 py-1.5 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-xs font-bold text-primary">{visit.visit_status}</span>
           </div>
         )}
-        <CardContent className="p-3 space-y-2">
+        <CardContent className="p-3.5 space-y-2">
           {/* Top row: visit number + status */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="font-mono text-[11px] font-medium">{visit.visit_number}</span>
+              <span className="font-mono text-xs font-bold text-foreground">{visit.visit_number}</span>
               {visit.jobs?.service_category && (
-                <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full', catColor.bg, catColor.accent)}>
                   {visit.jobs.service_category}
                 </span>
               )}
@@ -79,15 +91,15 @@ function VisitCard({ visit, showDate = false }: { visit: Visit; showDate?: boole
 
           {/* Date (for upcoming tab) */}
           {showDate && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
+            <div className="flex items-center gap-1 text-xs font-medium text-foreground">
+              <Calendar className="h-3.5 w-3.5 text-primary" />
               {format(parseISO(visit.service_date), 'EEE, MMM d')}
             </div>
           )}
 
           {/* Customer */}
           {visit.customers && (
-            <p className="text-sm font-medium text-foreground">
+            <p className="text-sm font-bold text-foreground">
               {visit.customers.first_name} {visit.customers.last_name}
             </p>
           )}
@@ -97,7 +109,7 @@ function VisitCard({ visit, showDate = false }: { visit: Visit; showDate?: boole
             <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground text-xs">{visit.properties.property_name}</p>
+                <p className="font-semibold text-foreground text-xs">{visit.properties.property_name}</p>
                 {visit.properties.address_line_1 && (
                   <p className="text-[11px]">
                     {visit.properties.address_line_1}
@@ -110,8 +122,8 @@ function VisitCard({ visit, showDate = false }: { visit: Visit; showDate?: boole
 
           {/* Time */}
           {arrivalStr && (
-            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-              <Clock className="h-3 w-3" />
+            <div className="flex items-center gap-1 text-xs font-medium text-foreground">
+              <Clock className="h-3.5 w-3.5 text-primary" />
               {arrivalStr}
               {completionStr && <> – {completionStr}</>}
             </div>
@@ -119,7 +131,7 @@ function VisitCard({ visit, showDate = false }: { visit: Visit; showDate?: boole
 
           {/* Job reference */}
           {visit.jobs?.job_title && (
-            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
               <Briefcase className="h-3 w-3" />
               <span className="truncate">{visit.jobs.job_title} ({visit.jobs.job_number})</span>
             </div>
@@ -133,7 +145,7 @@ function VisitCard({ visit, showDate = false }: { visit: Visit; showDate?: boole
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary/10 text-[11px] font-medium text-primary active:scale-95 transition-transform"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold active:scale-95 transition-transform shadow-sm"
               >
                 <Navigation className="h-3 w-3" /> Navigate
               </a>
@@ -142,7 +154,7 @@ function VisitCard({ visit, showDate = false }: { visit: Visit; showDate?: boole
               <a
                 href={`tel:${visit.customers.phone}`}
                 onClick={e => e.stopPropagation()}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted text-[11px] font-medium text-foreground active:scale-95 transition-transform"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted text-[11px] font-bold text-foreground active:scale-95 transition-transform"
               >
                 <Phone className="h-3 w-3" /> Call
               </a>
@@ -398,27 +410,38 @@ export default function WorkerSchedule() {
                 return (
                   <div key={dateKey}>
                     {/* Day header */}
-                    <div className="flex items-center gap-2 py-1.5 mb-1.5 sticky top-0 z-10 bg-background">
+                    <div className={cn(
+                      'flex items-center gap-3 py-2 px-2 mb-2 sticky top-0 z-10 rounded-lg',
+                      dayVisits.length > 0
+                        ? 'bg-primary/10 border border-primary/20'
+                        : 'bg-background',
+                      today && 'bg-primary/15 border border-primary/30'
+                    )}>
                       <div className={cn(
-                        'w-10 h-10 rounded-full flex flex-col items-center justify-center text-center shrink-0',
-                        today ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        'w-11 h-11 rounded-full flex flex-col items-center justify-center text-center shrink-0 shadow-sm',
+                        today ? 'bg-primary text-primary-foreground' :
+                        dayVisits.length > 0 ? 'bg-primary/20 text-primary' : 'bg-muted'
                       )}>
-                        <span className="text-[9px] font-semibold leading-none uppercase">
+                        <span className="text-[9px] font-bold leading-none uppercase">
                           {format(day, 'EEE')}
                         </span>
-                        <span className={cn('text-sm font-bold leading-none', !today && 'text-foreground')}>
+                        <span className={cn('text-sm font-black leading-none', !today && dayVisits.length === 0 && 'text-foreground')}>
                           {format(day, 'd')}
                         </span>
                       </div>
                       <div className="flex-1 flex items-center justify-between">
                         <span className={cn(
-                          'text-xs font-medium',
-                          today ? 'text-primary' : 'text-foreground'
+                          'text-sm font-bold',
+                          today ? 'text-primary' :
+                          dayVisits.length > 0 ? 'text-foreground' : 'text-muted-foreground'
                         )}>
                           {today ? 'Today' : format(day, 'EEEE')}
                         </span>
                         {dayVisits.length > 0 && (
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className={cn(
+                            'text-xs font-bold px-2 py-0.5 rounded-full',
+                            today ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary'
+                          )}>
                             {dayCompleted}/{dayVisits.length}
                           </span>
                         )}
@@ -431,7 +454,7 @@ export default function WorkerSchedule() {
                         No visits
                       </div>
                     ) : (
-                      <div className="ml-5 border-l-2 border-border pl-3 space-y-2">
+                      <div className="ml-5 border-l-[3px] border-primary/30 pl-3 space-y-2.5">
                         {dayVisits.map(visit => (
                           <VisitCard key={visit.id} visit={visit} />
                         ))}
