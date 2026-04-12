@@ -1,0 +1,277 @@
+import { useState, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle, FileSignature, Loader2, Type, PenTool } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAgreementByToken } from '@/hooks/useAgreements';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+
+export default function AgreementSignPage() {
+  const { token } = useParams();
+  const { data: agreement, isLoading, refetch } = useAgreementByToken(token);
+  const [consent, setConsent] = useState(false);
+  const [signerName, setSignerName] = useState('');
+  const [signerEmail, setSignerEmail] = useState('');
+  const [signatureType, setSignatureType] = useState<'typed' | 'drawn'>('typed');
+  const [typedSig, setTypedSig] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [signed, setSigned] = useState(false);
+
+  // Canvas for drawn signature
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [drawing, setDrawing] = useState(false);
+
+  // Mark as viewed on load
+  useEffect(() => {
+    if (agreement && agreement.status === 'sent') {
+      supabase.from('agreements').update({ status: 'viewed', viewed_at: new Date().toISOString() }).eq('id', agreement.id).then(() => {
+        supabase.from('agreement_audit_log').insert({ agreement_id: agreement.id, action: 'viewed', user_agent: navigator.userAgent });
+      });
+    }
+  }, [agreement?.id, agreement?.status]);
+
+  useEffect(() => {
+    if (agreement) {
+      setSignerName(agreement.recipient_name || '');
+      setSignerEmail(agreement.recipient_email || '');
+    }
+  }, [agreement]);
+
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading agreement…</div>;
+  if (!agreement) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Agreement not found or link has expired.</div>;
+  if (agreement.status === 'signed' || signed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full text-center">
+          <CardContent className="p-8 space-y-4">
+            <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto" />
+            <h2 className="text-2xl font-bold">Agreement Signed</h2>
+            <p className="text-muted-foreground">Thank you, {agreement.recipient_name}. Your signed agreement has been recorded.</p>
+            <p className="text-xs text-muted-foreground">Signed on {agreement.signed_at ? format(new Date(agreement.signed_at), 'MMMM d, yyyy h:mm a') : format(new Date(), 'MMMM d, yyyy h:mm a')}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  if (agreement.status === 'cancelled' || agreement.status === 'expired') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full text-center">
+          <CardContent className="p-8 space-y-4">
+            <h2 className="text-xl font-bold">Agreement {agreement.status === 'cancelled' ? 'Cancelled' : 'Expired'}</h2>
+            <p className="text-muted-foreground">This agreement is no longer available for signing.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Canvas drawing handlers
+  const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setDrawing(true);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const getPos = (ev: any) => {
+      if (ev.touches) return { x: ev.touches[0].clientX - rect.left, y: ev.touches[0].clientY - rect.top };
+      return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+    };
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  };
+
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!drawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const getPos = (ev: any) => {
+      if (ev.touches) return { x: ev.touches[0].clientX - rect.left, y: ev.touches[0].clientY - rect.top };
+      return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+    };
+    const pos = getPos(e);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const handleSubmit = async () => {
+    if (!consent) { toast.error('Please check the consent box'); return; }
+    if (!signerName.trim()) { toast.error('Please enter your name'); return; }
+    if (signatureType === 'typed' && !typedSig.trim()) { toast.error('Please type your signature'); return; }
+
+    setSubmitting(true);
+    try {
+      let sigData = '';
+      if (signatureType === 'typed') {
+        sigData = typedSig;
+      } else {
+        const canvas = canvasRef.current;
+        if (canvas) sigData = canvas.toDataURL('image/png');
+      }
+
+      // Insert signature
+      const { error: sigError } = await supabase.from('agreement_signatures').insert({
+        agreement_id: agreement.id,
+        signer_name: signerName,
+        signer_email: signerEmail,
+        signature_data: sigData,
+        signature_type: signatureType,
+        consent_text: 'I have read and agree to the terms of this agreement.',
+        user_agent: navigator.userAgent,
+      });
+      if (sigError) throw sigError;
+
+      // Update agreement status
+      const { error: updError } = await supabase.from('agreements').update({
+        status: 'signed',
+        signed_at: new Date().toISOString(),
+      }).eq('id', agreement.id);
+      if (updError) throw updError;
+
+      // Audit log
+      await supabase.from('agreement_audit_log').insert({
+        agreement_id: agreement.id,
+        action: 'signed',
+        user_agent: navigator.userAgent,
+        metadata: { signer_name: signerName, signer_email: signerEmail },
+      });
+
+      setSigned(true);
+      toast.success('Agreement signed successfully!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to sign');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-muted/30 py-8 px-4">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <FileSignature className="h-10 w-10 text-primary mx-auto" />
+          <h1 className="text-2xl font-bold">Praetoria Group</h1>
+          <p className="text-sm text-muted-foreground">Agreement Review & Signature</p>
+        </div>
+
+        {/* Document */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">{agreement.title}</h2>
+              <Badge variant="outline">Review & Sign</Badge>
+            </div>
+            <Separator className="mb-4" />
+            <ScrollArea className="max-h-[50vh]">
+              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: agreement.body_html }} />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Signature Section */}
+        <Card>
+          <CardContent className="p-6 space-y-5">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <PenTool className="h-5 w-5 text-primary" /> Sign Agreement
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium">Full Name</label>
+                <Input value={signerName} onChange={e => setSignerName(e.target.value)} placeholder="Your full legal name" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <Input value={signerEmail} onChange={e => setSignerEmail(e.target.value)} placeholder="your@email.com" />
+              </div>
+            </div>
+
+            {/* Signature method */}
+            <Tabs value={signatureType} onValueChange={(v) => setSignatureType(v as 'typed' | 'drawn')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="typed"><Type className="h-4 w-4 mr-1" /> Type Signature</TabsTrigger>
+                <TabsTrigger value="drawn"><PenTool className="h-4 w-4 mr-1" /> Draw Signature</TabsTrigger>
+              </TabsList>
+              <TabsContent value="typed" className="mt-3">
+                <Input
+                  value={typedSig}
+                  onChange={e => setTypedSig(e.target.value)}
+                  placeholder="Type your full name as signature"
+                  className="text-2xl h-16"
+                  style={{ fontFamily: 'cursive' }}
+                />
+                {typedSig && (
+                  <div className="mt-2 p-3 border rounded bg-muted/30 text-center">
+                    <p className="text-3xl" style={{ fontFamily: 'cursive' }}>{typedSig}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Signature Preview</p>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="drawn" className="mt-3">
+                <div className="border-2 border-dashed rounded-lg p-1 bg-white">
+                  <canvas
+                    ref={canvasRef}
+                    width={600}
+                    height={150}
+                    className="w-full cursor-crosshair touch-none"
+                    onMouseDown={startDraw}
+                    onMouseMove={draw}
+                    onMouseUp={() => setDrawing(false)}
+                    onMouseLeave={() => setDrawing(false)}
+                    onTouchStart={startDraw}
+                    onTouchMove={draw}
+                    onTouchEnd={() => setDrawing(false)}
+                  />
+                </div>
+                <Button variant="ghost" size="sm" onClick={clearCanvas} className="mt-1">Clear</Button>
+              </TabsContent>
+            </Tabs>
+
+            <Separator />
+
+            {/* Consent */}
+            <div className="flex items-start gap-3 p-4 border rounded-lg bg-muted/30">
+              <Checkbox id="consent" checked={consent} onCheckedChange={(c) => setConsent(!!c)} className="mt-0.5" />
+              <label htmlFor="consent" className="text-sm leading-relaxed cursor-pointer">
+                I, <strong>{signerName || '[Your Name]'}</strong>, have read, understood, and agree to the terms of this agreement. I consent to this electronic signature being legally binding.
+              </label>
+            </div>
+
+            <Button onClick={handleSubmit} disabled={submitting || !consent} className="w-full h-12 text-lg">
+              {submitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle className="h-5 w-5 mr-2" />}
+              Sign Agreement
+            </Button>
+
+            <p className="text-[11px] text-center text-muted-foreground">
+              By clicking "Sign Agreement", you agree to use electronic signatures. A timestamped record will be stored securely.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
