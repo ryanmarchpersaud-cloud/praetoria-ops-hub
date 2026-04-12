@@ -135,6 +135,9 @@ import ExpenseTrackingPage from "./pages/ExpenseTrackingPage";
 import MessagingPage from "./pages/MessagingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 import SystemAnnouncementsPage from "./pages/SystemAnnouncementsPage";
+const AgreementsPage = lazy(() => import("./pages/AgreementsPage"));
+const AgreementDetailPage = lazy(() => import("./pages/AgreementDetailPage"));
+const AgreementSignPage = lazy(() => import("./pages/AgreementSignPage"));
 
 // HR / Training pages
 import HRDashboardPage from "./pages/HRDashboardPage";
@@ -381,6 +384,12 @@ function AppRoutes() {
       <Route path="/settings/requests-config" element={<AdminRoute><ModuleGuard settingsKey="requestsBookings"><RequestsBookingsPage /></ModuleGuard></AdminRoute>} />
       <Route path="/settings/portal" element={<AdminRoute><ModuleGuard settingsKey="portalSettings"><PortalSettingsPage /></ModuleGuard></AdminRoute>} />
       <Route path="/settings/announcements" element={<AdminRoute><ModuleGuard settingsKey="systemAnnouncements"><SystemAnnouncementsPage /></ModuleGuard></AdminRoute>} />
+
+      {/* Agreements */}
+      <Route path="/agreements" element={<AdminRoute><Suspense fallback={<RouteLoading />}><AgreementsPage /></Suspense></AdminRoute>} />
+      <Route path="/agreements/:id" element={<AdminRoute><Suspense fallback={<RouteLoading />}><AgreementDetailPage /></Suspense></AdminRoute>} />
+      {/* Public signing page — no auth required */}
+      <Route path="/sign/:token" element={<Suspense fallback={<RouteLoading />}><AgreementSignPage /></Suspense>} />
 
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
