@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useUnreadNotifications, useMarkNotificationRead, Notification } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -9,6 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 const EVENT_ICONS: Record<string, React.ElementType> = {
   new_service_request: FileText,
   quote_sent: FileText,
+  quote_approved: CheckCircle,
   visit_scheduled: Calendar,
   worker_assigned: Truck,
   worker_en_route: Truck,
@@ -19,11 +21,44 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
   payment_failed: AlertCircle,
 };
 
+function playNotificationSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Play a pleasant two-tone chime
+    const playTone = (freq: number, startTime: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+    const now = ctx.currentTime;
+    playTone(880, now, 0.15);       // A5
+    playTone(1174.66, now + 0.12, 0.2); // D6
+  } catch {
+    // Audio not available
+  }
+}
+
 export function NotificationCenter() {
   const { user } = useAuth();
   const { isStaff, isAdmin } = useUserRole();
   const { data: notifications = [] } = useUnreadNotifications(user?.id, isStaff || isAdmin);
   const markRead = useMarkNotificationRead();
+  const prevCountRef = useRef(0);
+
+  // Play sound when new notifications arrive
+  useEffect(() => {
+    if (notifications.length > prevCountRef.current && prevCountRef.current !== 0) {
+      playNotificationSound();
+    }
+    prevCountRef.current = notifications.length;
+  }, [notifications.length]);
 
   const handleRead = (id: string) => {
     markRead.mutate(id);
