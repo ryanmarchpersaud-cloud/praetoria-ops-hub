@@ -639,7 +639,7 @@ Deno.serve(async (req) => {
 
     // ─── Request Reply (admin → customer) ───
     if (action === "request_reply") {
-      const { to, subject, body: messageBody, attachments, request_id } = payload;
+      const { to, subject, body: messageBody, attachments, request_id } = params;
       if (!to || !messageBody) return json({ error: "to and body are required" }, 400);
 
       let attachmentHtml = "";
