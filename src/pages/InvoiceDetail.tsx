@@ -726,6 +726,20 @@ export default function InvoiceDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Refund Dialog */}
+      <RefundDialog
+        open={refundOpen}
+        onOpenChange={setRefundOpen}
+        invoice={{
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          total,
+          amount_paid: amountPaid,
+          balance_due: balanceDue,
+          customer_id: invoice.customer_id,
+        }}
+      />
     </div>
   );
 }

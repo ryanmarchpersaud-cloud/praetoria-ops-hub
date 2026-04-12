@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquarePlus, FileText, Briefcase, Receipt } from 'lucide-react';
+import { MessageSquarePlus, FileText, Briefcase, Receipt, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WorkflowStat {
