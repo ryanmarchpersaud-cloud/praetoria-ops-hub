@@ -260,4 +260,3 @@ function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null })
     </Card>
   );
 }
-}
