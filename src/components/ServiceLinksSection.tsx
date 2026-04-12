@@ -1,4 +1,4 @@
-import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building } from 'lucide-react';
+import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const serviceLinks = [
@@ -29,6 +29,22 @@ const serviceLinks = [
     label: 'Repairs • Handyman • Property care',
     icon: Wrench,
     color: 'text-orange-500',
+  },
+  {
+    name: 'Power Washing',
+    url: 'https://powerwashing.praetoriagroup.ca',
+    label: 'Driveways • Decks • Building exteriors',
+    icon: Droplets,
+    color: 'text-cyan-500',
+    comingSoon: true,
+  },
+  {
+    name: 'Cleaning Services',
+    url: 'https://cleaning.praetoriagroup.ca',
+    label: 'Move-in/out • Deep cleaning • Turnover',
+    icon: SprayCan,
+    color: 'text-rose-500',
+    comingSoon: true,
   },
   {
     name: 'Property Management',
