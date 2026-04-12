@@ -244,6 +244,21 @@ export function ApprovalWorkflowPanel({
           <CardTitle className="text-sm text-muted-foreground uppercase tracking-wider">Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
+          {/* Convert to Job — primary action when Approved */}
+          {status === 'Approved' && !isConverted && onConvertToJob && (
+            <Button
+              className={`w-full justify-start ${actionButtonStyles.success}`}
+              onClick={onConvertToJob}
+            >
+              <Briefcase className="h-4 w-4 mr-2" />
+              Convert to Job
+            </Button>
+          )}
+          {status === 'Approved' && isConverted && (
+            <div className="flex items-center gap-2 text-sm text-success font-medium py-2">
+              <CheckCircle className="h-4 w-4" /> Converted to Job
+            </div>
+          )}
           {transitions.map((t) => {
             const ActionIcon = t.icon;
 
