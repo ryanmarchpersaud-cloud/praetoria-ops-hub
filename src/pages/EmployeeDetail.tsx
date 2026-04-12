@@ -264,8 +264,9 @@ export default function EmployeeDetail() {
   const [blockOpen, setBlockOpen] = useState(false);
   const [blockSaving, setBlockSaving] = useState(false);
   const [blockReason, setBlockReason] = useState('');
-  const [editOpen, setEditOpen] = useState(false);
-  const [editSaving, setEditSaving] = useState(false);
+   const [editOpen, setEditOpen] = useState(false);
+   const [editSaving, setEditSaving] = useState(false);
+   const [showDocUpload, setShowDocUpload] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [editEquipOpen, setEditEquipOpen] = useState(false);
   const [editEquipItem, setEditEquipItem] = useState<any>(null);
@@ -619,17 +620,31 @@ export default function EmployeeDetail() {
         {/* Documents */}
         <TabsContent value="documents">
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Documents ({docs.length})</CardTitle></CardHeader>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Documents ({docs.length})</CardTitle>
+              {canManageWorkers && (
+                <Button size="sm" onClick={() => setShowDocUpload(true)}>
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Upload Document
+                </Button>
+              )}
+            </CardHeader>
             <CardContent className="p-0">
               {docs.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No documents uploaded.</p> : (
                 <Table>
-                  <TableHeader><TableRow><TableHead>Document</TableHead><TableHead>Type</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Document</TableHead><TableHead>Type</TableHead><TableHead>Date</TableHead><TableHead className="w-10" /></TableRow></TableHeader>
                   <TableBody>
                     {docs.map((d: any) => (
                       <TableRow key={d.id}>
                         <TableCell className="text-sm font-medium">{d.document_name}</TableCell>
                         <TableCell className="text-sm text-muted-foreground capitalize">{d.document_type}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{format(new Date(d.created_at), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>
+                          {d.file_url && (
+                            <a href={d.file_url} target="_blank" rel="noopener noreferrer">
+                              <Button size="icon" variant="ghost" className="h-7 w-7"><FileText className="h-3.5 w-3.5" /></Button>
+                            </a>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -637,6 +652,13 @@ export default function EmployeeDetail() {
               )}
             </CardContent>
           </Card>
+
+          {/* Admin Upload Document Dialog */}
+          <AdminDocUploadDialog
+            open={showDocUpload}
+            onClose={() => setShowDocUpload(false)}
+            userId={userId!}
+          />
         </TabsContent>
 
         {/* Payroll */}
@@ -1222,6 +1244,89 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
           <Button onClick={handleSubmit} disabled={onAssign.isPending}>
             {onAssign.isPending ? 'Assigning…' : 'Assign Training'}
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ── Admin Document Upload Dialog ── */
+function AdminDocUploadDialog({ open, onClose, userId }: { open: boolean; onClose: () => void; userId: string }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [docName, setDocName] = useState('');
+  const [docType, setDocType] = useState('other');
+  const [file, setFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const reset = () => { setDocName(''); setDocType('other'); setFile(null); };
+
+  const handleUpload = async () => {
+    if (!file || !docName.trim()) {
+      toast({ title: 'Please fill all fields', variant: 'destructive' });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${userId}/${Date.now()}.${ext}`;
+      const { error: storageError } = await supabase.storage.from('worker-documents').upload(path, file);
+      if (storageError) throw storageError;
+
+      const { data: { publicUrl } } = supabase.storage.from('worker-documents').getPublicUrl(path);
+
+      const { error: dbError } = await supabase.from('worker_documents').insert([{
+        user_id: userId,
+        document_name: docName.trim(),
+        document_type: docType,
+        file_url: publicUrl,
+        file_name: file.name,
+        uploaded_by: userId,
+      }]);
+      if (dbError) throw dbError;
+
+      toast({ title: 'Document uploaded for employee' });
+      qc.invalidateQueries({ queryKey: ['employee_documents'] });
+      reset();
+      onClose();
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={() => { reset(); onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Upload Document for Employee</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Document Name</Label>
+            <Input placeholder="e.g. Offer Letter" value={docName} onChange={e => setDocName(e.target.value)} />
+          </div>
+          <div>
+            <Label>Type</Label>
+            <Select value={docType} onValueChange={setDocType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="certificate">Certificate</SelectItem>
+                <SelectItem value="policy">Signed Policy</SelectItem>
+                <SelectItem value="id">ID Document</SelectItem>
+                <SelectItem value="training">Training</SelectItem>
+                <SelectItem value="payroll">Payroll</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>File</Label>
+            <Input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => setFile(e.target.files?.[0] ?? null)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
+          <Button onClick={handleUpload} disabled={submitting}>{submitting ? 'Uploading…' : 'Upload'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

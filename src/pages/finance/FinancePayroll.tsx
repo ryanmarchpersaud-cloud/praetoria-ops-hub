@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePayrollRuns, useCreatePayrollRun, useUpdatePayrollRun, usePayrollRunItems, useCreatePayrollRunItem, useUpdatePayrollRunItem, useDeletePayrollRunItem } from '@/hooks/usePayroll';
 import { useFinanceAccounts } from '@/hooks/useFinanceAccounts';
+import { useEmployees } from '@/hooks/useEmployees';
 import { Plus, ChevronRight, Users, DollarSign, Clock, CheckCircle, Lock, ArrowLeft, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -128,14 +130,29 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
   const run = runs?.find(r => r.id === runId);
   const { data: items, isLoading } = usePayrollRunItems(runId);
   const { data: accounts } = useFinanceAccounts();
+  const { data: employees = [] } = useEmployees();
   const updateRun = useUpdatePayrollRun();
   const createItem = useCreatePayrollRunItem();
   const updateItem = useUpdatePayrollRunItem();
   const deleteItem = useDeletePayrollRunItem();
   const [showAdd, setShowAdd] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [itemForm, setItemForm] = useState({ employee_name: '', regular_hours: 0, overtime_hours: 0, holiday_hours: 0, sick_hours: 0, vacation_hours: 0, hourly_rate: 0, bonus_amount: 0, cpp_amount: 0, ei_amount: 0, income_tax_amount: 0, other_deductions_amount: 0 });
 
   const isLocked = run?.status === 'processed' || run?.status === 'cancelled';
+
+  // When employee is selected, auto-fill name and rate
+  const handleEmployeeSelect = (userId: string) => {
+    setSelectedEmployeeId(userId);
+    const emp = employees.find((e: any) => e.user_id === userId);
+    if (emp) {
+      setItemForm(f => ({
+        ...f,
+        employee_name: emp.full_name || '',
+        hourly_rate: Number(emp.hourly_rate) || 0,
+      }));
+    }
+  };
 
   const calcGross = (i: typeof itemForm) => {
     const total_hours = Number(i.regular_hours) + (Number(i.overtime_hours) * 1.5) + Number(i.holiday_hours) + Number(i.sick_hours) + Number(i.vacation_hours);
@@ -144,22 +161,53 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
   const calcDeductions = (i: typeof itemForm) => Number(i.cpp_amount) + Number(i.ei_amount) + Number(i.income_tax_amount) + Number(i.other_deductions_amount);
 
   const handleAddItem = () => {
-    if (!itemForm.employee_name) { toast.error('Enter employee name'); return; }
+    if (!itemForm.employee_name) { toast.error('Select an employee'); return; }
     const gross = calcGross(itemForm);
     const ded = calcDeductions(itemForm);
     createItem.mutate({
       payroll_run_id: runId,
+      user_id: selectedEmployeeId || null,
       ...itemForm,
       gross_pay: gross,
       total_deductions: ded,
       net_pay: Math.round((gross - ded) * 100) / 100,
-    }, { onSuccess: () => { setShowAdd(false); setItemForm({ employee_name: '', regular_hours: 0, overtime_hours: 0, holiday_hours: 0, sick_hours: 0, vacation_hours: 0, hourly_rate: 0, bonus_amount: 0, cpp_amount: 0, ei_amount: 0, income_tax_amount: 0, other_deductions_amount: 0 }); } });
+    }, { onSuccess: () => { setShowAdd(false); setSelectedEmployeeId(''); setItemForm({ employee_name: '', regular_hours: 0, overtime_hours: 0, holiday_hours: 0, sick_hours: 0, vacation_hours: 0, hourly_rate: 0, bonus_amount: 0, cpp_amount: 0, ei_amount: 0, income_tax_amount: 0, other_deductions_amount: 0 }); } });
   };
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = async (newStatus: string) => {
     const updates: any = { status: newStatus };
     if (newStatus === 'approved') { updates.approved_by = user?.id; updates.approved_at = new Date().toISOString(); }
-    if (newStatus === 'processed') { updates.processed_by = user?.id; updates.processed_at = new Date().toISOString(); updates.locked_at = new Date().toISOString(); }
+    if (newStatus === 'processed') {
+      updates.processed_by = user?.id;
+      updates.processed_at = new Date().toISOString();
+      updates.locked_at = new Date().toISOString();
+
+      // Auto-generate pay stubs for each employee in this run
+      if (items && items.length > 0 && run) {
+        const stubs = items
+          .filter((i: any) => i.user_id)
+          .map((i: any) => ({
+            user_id: i.user_id,
+            pay_date: run.pay_date,
+            pay_period_start: run.pay_period_start,
+            pay_period_end: run.pay_period_end,
+            gross_pay: Number(i.gross_pay),
+            deductions: Number(i.total_deductions),
+            net_pay: Number(i.net_pay),
+            ytd_gross: 0,
+            ytd_net: 0,
+            notes: `Auto-generated from payroll run ${run.run_number || runId}`,
+          }));
+        if (stubs.length > 0) {
+          const { error } = await supabase.from('employee_pay_stubs').insert(stubs);
+          if (error) {
+            toast.error('Pay stubs generation failed: ' + error.message);
+          } else {
+            toast.success(`Generated ${stubs.length} pay stub(s)`);
+          }
+        }
+      }
+    }
     updateRun.mutate({ id: runId, ...updates });
   };
 
@@ -175,7 +223,7 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
         </div>
         <Badge className={statusColor[run?.status || 'draft']}>{run?.status}</Badge>
         {run?.status === 'draft' && <Button size="sm" onClick={() => handleStatusChange('approved')}>Approve</Button>}
-        {run?.status === 'approved' && <Button size="sm" onClick={() => handleStatusChange('processed')}>Process</Button>}
+        {run?.status === 'approved' && <Button size="sm" onClick={() => handleStatusChange('processed')}>Process & Generate Pay Stubs</Button>}
         {run?.status === 'draft' && <Button size="sm" variant="destructive" onClick={() => handleStatusChange('cancelled')}>Cancel</Button>}
       </div>
 
@@ -250,7 +298,19 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Add Employee to Run</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Employee Name</Label><Input value={itemForm.employee_name} onChange={e => setItemForm(f => ({ ...f, employee_name: e.target.value }))} /></div>
+            <div>
+              <Label>Select Employee</Label>
+              <Select value={selectedEmployeeId} onValueChange={handleEmployeeSelect}>
+                <SelectTrigger><SelectValue placeholder="Choose an employee…" /></SelectTrigger>
+                <SelectContent>
+                  {employees.map((emp: any) => (
+                    <SelectItem key={emp.user_id} value={emp.user_id}>
+                      {emp.full_name || emp.work_email || 'Unnamed'} {emp.hourly_rate ? `($${emp.hourly_rate}/hr)` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-3 gap-2">
               <div><Label>Reg Hrs</Label><Input type="number" value={itemForm.regular_hours} onChange={e => setItemForm(f => ({ ...f, regular_hours: Number(e.target.value) }))} /></div>
               <div><Label>OT Hrs</Label><Input type="number" value={itemForm.overtime_hours} onChange={e => setItemForm(f => ({ ...f, overtime_hours: Number(e.target.value) }))} /></div>
