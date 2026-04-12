@@ -1,12 +1,18 @@
+import { useState } from 'react';
 import { useWorkerProfile } from '@/hooks/useWorkerProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AvatarUpload } from '@/components/AvatarUpload';
-import { User, Mail, Phone, Briefcase, Users, Shield, MapPin, Award } from 'lucide-react';
+import { WorkerEditProfileDialog } from '@/components/worker/WorkerEditProfileDialog';
+import {
+  User, Mail, Phone, Briefcase, Users, MapPin, Award,
+  Pencil, Calendar, Heart,
+} from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   active: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
@@ -19,6 +25,7 @@ export default function WorkerProfilePage() {
   const { user } = useAuth();
   const { data: profile, isLoading } = useWorkerProfile();
   const queryClient = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
 
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   const initials = displayName
@@ -59,9 +66,14 @@ export default function WorkerProfilePage() {
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold">My Profile</h1>
-        <Badge variant="outline" className={statusColors[profile.employment_status] ?? ''}>
-          {profile.employment_status}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={statusColors[profile.employment_status] ?? ''}>
+            {profile.employment_status}
+          </Badge>
+          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+          </Button>
+        </div>
       </div>
 
       {/* Profile Summary Card */}
@@ -83,7 +95,7 @@ export default function WorkerProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Role & Team Card */}
+      {/* Role & Team Card (read-only) */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Role & Team</CardTitle>
@@ -107,6 +119,36 @@ export default function WorkerProfilePage() {
         <CardContent className="space-y-3">
           <InfoRow icon={Mail} label="Work Email" value={profile.work_email} />
           <InfoRow icon={Phone} label="Phone" value={profile.phone} />
+          {profile.address_line_1 && (
+            <InfoRow icon={MapPin} label="Address" value={[profile.address_line_1, profile.address_city, profile.address_province, profile.address_postal_code].filter(Boolean).join(', ')} />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Personal Info Card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Personal Information</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <InfoRow icon={Calendar} label="Date of Birth" value={profile.date_of_birth} />
+          <InfoRow icon={User} label="Gender" value={profile.gender} />
+          <InfoRow icon={User} label="Ethnicity" value={profile.ethnicity} />
+          <InfoRow icon={User} label="Religion" value={profile.religion} />
+        </CardContent>
+      </Card>
+
+      {/* Emergency Contact Card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Heart className="h-4 w-4" /> Emergency Contact
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <InfoRow icon={User} label="Name" value={profile.emergency_contact_name} />
+          <InfoRow icon={Phone} label="Phone" value={profile.emergency_contact_phone} />
+          <InfoRow icon={Users} label="Relationship" value={profile.emergency_contact_relationship} />
         </CardContent>
       </Card>
 
@@ -131,6 +173,15 @@ export default function WorkerProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit dialog */}
+      {editOpen && (
+        <WorkerEditProfileDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          profile={profile}
+        />
+      )}
     </div>
   );
 }
