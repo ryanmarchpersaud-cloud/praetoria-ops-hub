@@ -343,6 +343,17 @@ export default function InvoiceDetail() {
             <DollarSign className="h-3.5 w-3.5 mr-1.5" /> Record Payment
           </Button>
         )}
+        {canCollectFromCard && (
+          <Button
+            size="sm" variant="outline"
+            className="text-primary border-primary/30 hover:bg-primary/10"
+            onClick={handleCollectPayment}
+            disabled={collectingPayment}
+          >
+            {collectingPayment ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
+            Collect ${balanceDue.toFixed(2)} from Card
+          </Button>
+        )}
         <Link to={`/invoices/${invoice.id}/print`}>
           <Button size="sm" variant="outline">
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
