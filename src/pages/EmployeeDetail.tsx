@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { useQueryClient } from '@tanstack/react-query';
+import PayStubDetailDialog from '@/components/PayStubDetailDialog';
 
 /* ── Predefined PPE / Safety item suggestions ── */
 const PPE_SUGGESTIONS = [
@@ -272,6 +273,7 @@ export default function EmployeeDetail() {
   const [editEquipItem, setEditEquipItem] = useState<any>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteSending, setInviteSending] = useState(false);
+  const [selectedPayStub, setSelectedPayStub] = useState<any>(null);
   // Password is always "praetoria" — handled server-side
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
