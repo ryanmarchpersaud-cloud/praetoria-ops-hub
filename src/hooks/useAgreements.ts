@@ -2,6 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+const AGREEMENT_PORTAL_PATHS: Record<string, string> = {
+  customer: '/portal/agreements',
+  subcontractor: '/subcontractor/agreements',
+  worker: '/worker/agreements',
+  employee: '/worker/agreements',
+};
+
 export function useAgreementTemplates() {
   return useQuery({
     queryKey: ['agreement_templates'],
@@ -123,10 +130,59 @@ export function useUpdateAgreement() {
 export function useSendAgreement() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, sentBy }: { id: string; sentBy: string }) => {
-      const { error } = await supabase.from('agreements').update({ status: 'sent', sent_at: new Date().toISOString(), sent_by: sentBy }).eq('id', id);
+    mutationFn: async ({ id, sentBy, isReminder = false }: { id: string; sentBy: string; isReminder?: boolean }) => {
+      const { data: agreement, error: agreementError } = await supabase
+        .from('agreements')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (agreementError) throw agreementError;
+
+      if (agreement.recipient_email) {
+        const appBaseUrl = window.location.origin;
+        const signingUrl = `${appBaseUrl}/sign/${agreement.signing_token}`;
+        const portalPath = AGREEMENT_PORTAL_PATHS[agreement.recipient_type] || '';
+        const portalUrl = agreement.recipient_user_id && portalPath ? `${appBaseUrl}${portalPath}` : null;
+
+        const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-email', {
+          body: {
+            action: 'agreement_sent',
+            to: agreement.recipient_email,
+            recipient_name: agreement.recipient_name,
+            agreement_title: agreement.title,
+            agreement_id: agreement.id,
+            agreement_category: agreement.category,
+            internal_reference: agreement.internal_reference,
+            signing_url: signingUrl,
+            portal_url: portalUrl,
+            attachment_present: Boolean(agreement.attachment_url),
+            is_reminder: isReminder,
+          },
+        });
+
+        if (emailError) throw emailError;
+        if (emailResult && typeof emailResult === 'object' && 'ok' in emailResult && emailResult.ok === false) {
+          throw new Error((emailResult as { error?: string }).error || 'Failed to send agreement email');
+        }
+      }
+
+      const { error } = await supabase
+        .from('agreements')
+        .update({ status: 'sent', sent_at: new Date().toISOString(), sent_by: sentBy })
+        .eq('id', id);
+
       if (error) throw error;
-      await supabase.from('agreement_audit_log').insert({ agreement_id: id, action: 'sent', performed_by: sentBy });
+
+      await supabase.from('agreement_audit_log').insert({
+        agreement_id: id,
+        action: isReminder ? 'resent' : 'sent',
+        performed_by: sentBy,
+        metadata: {
+          delivery_method: agreement.recipient_email ? 'email_link' : 'portal',
+          attachment_present: Boolean(agreement.attachment_url),
+        },
+      });
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreements'] }); qc.invalidateQueries({ queryKey: ['agreement'] }); toast.success('Agreement sent'); },
     onError: (e: any) => toast.error(e.message),

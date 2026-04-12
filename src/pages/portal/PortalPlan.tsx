@@ -1,11 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useMyAgreements } from '@/hooks/useAgreements';
 import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import {
   FileText, Calendar, MapPin, Snowflake, Repeat, DollarSign,
-  ClipboardList, Download, ExternalLink, ShieldCheck,
+  ClipboardList, ShieldCheck, FileSignature, Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,13 +22,25 @@ const FREQ_LABELS: Record<string, string> = {
   'custom-seasonal': 'Seasonal coverage',
 };
 
+const AGREEMENT_STATUS_STYLES: Record<string, string> = {
+  draft: 'bg-muted text-muted-foreground',
+  sent: 'bg-blue-100 text-blue-700',
+  viewed: 'bg-amber-100 text-amber-700',
+  signed: 'bg-emerald-100 text-emerald-700',
+  declined: 'bg-destructive/10 text-destructive',
+  cancelled: 'bg-muted text-muted-foreground',
+  expired: 'bg-muted text-muted-foreground',
+};
+
 function formatDate(d: string | null) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 export default function PortalPlan() {
+  const { user } = useAuth();
   const { data: customer } = useCustomerProfile();
+  const { data: agreements = [], isLoading: agreementsLoading } = useMyAgreements(user?.id, 'customer');
 
   // Fetch active jobs (plans) for this customer
   const { data: plans = [], isLoading: plansLoading } = useQuery({
@@ -43,24 +59,8 @@ export default function PortalPlan() {
     enabled: !!customer,
   });
 
-  // Fetch agreement files linked to this customer
-  const { data: agreements = [], isLoading: filesLoading } = useQuery({
-    queryKey: ['portal_agreements', customer?.id],
-    queryFn: async () => {
-      if (!customer) return [];
-      const { data, error } = await supabase
-        .from('files')
-        .select('*')
-        .eq('record_type', 'customer_agreement')
-        .eq('record_id', customer.id)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!customer,
-  });
-
-  const isLoading = plansLoading || filesLoading;
+  const latestAgreement = agreements[0];
+  const isLoading = plansLoading || agreementsLoading;
 
   return (
     <div className="space-y-6">
@@ -157,49 +157,62 @@ export default function PortalPlan() {
 
         {isLoading ? (
           <div className="h-20 rounded-lg bg-muted animate-pulse" />
-        ) : agreements.length === 0 ? (
+        ) : !latestAgreement ? (
           <Card>
             <CardContent className="py-10 text-center space-y-1">
               <FileText className="h-8 w-8 mx-auto text-muted-foreground/40" />
               <p className="text-sm text-muted-foreground">No agreement on file.</p>
-              <p className="text-xs text-muted-foreground">Your signed service agreement will appear here once uploaded.</p>
+              <p className="text-xs text-muted-foreground">Your service agreement will appear here once it has been sent to your account.</p>
             </CardContent>
           </Card>
         ) : (
-          agreements.map((file: any) => (
-            <Card key={file.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="pt-4 pb-4 px-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
-                    <FileText className="h-5 w-5 text-red-500" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Uploaded {new Date(file.created_at).toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
-                  </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    <a
-                      href={file.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline px-2 py-1.5 rounded-md hover:bg-primary/5 transition-colors"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" /> View
-                    </a>
-                    <a
-                      href={file.file_url}
-                      download={file.file_name}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline px-2 py-1.5 rounded-md hover:bg-primary/5 transition-colors"
-                    >
-                      <Download className="h-3.5 w-3.5" /> Download
-                    </a>
-                  </div>
+          <Card className="hover:shadow-sm transition-shadow">
+            <CardContent className="pt-4 pb-4 px-4 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{latestAgreement.title}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Created {formatDate(latestAgreement.created_at)}
+                    {latestAgreement.sent_at ? ` • Sent ${formatDate(latestAgreement.sent_at)}` : ''}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          ))
+                <Badge className={cn('capitalize', AGREEMENT_STATUS_STYLES[latestAgreement.status] || 'bg-muted text-muted-foreground')}>
+                  {latestAgreement.status}
+                </Badge>
+              </div>
+
+              <div className="text-xs text-muted-foreground space-y-1">
+                {latestAgreement.attachment_url && <p>The attached PDF agreement is available inside the secure signing flow.</p>}
+                {latestAgreement.status === 'signed' ? (
+                  <p>Your signed agreement is stored on your account.</p>
+                ) : latestAgreement.status === 'draft' ? (
+                  <p>Your agreement is being prepared and will appear here once it has been sent.</p>
+                ) : (
+                  <p>Review the agreement and sign it online using the secure button below.</p>
+                )}
+              </div>
+
+              {latestAgreement.signing_token && latestAgreement.status !== 'draft' && latestAgreement.status !== 'cancelled' && latestAgreement.status !== 'expired' && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={latestAgreement.status === 'signed' ? 'outline' : 'default'}
+                    onClick={() => window.open(`/sign/${latestAgreement.signing_token}`, '_blank')}
+                  >
+                    {latestAgreement.status === 'signed' ? (
+                      <>
+                        <Eye className="h-3.5 w-3.5 mr-1" /> View Agreement
+                      </>
+                    ) : (
+                      <>
+                        <FileSignature className="h-3.5 w-3.5 mr-1" /> Review & Sign
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </section>
     </div>
