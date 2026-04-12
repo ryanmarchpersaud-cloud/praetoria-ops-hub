@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
 import { useBillingProfile } from '@/hooks/useInvoices';
@@ -10,17 +10,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   CreditCard, FileText, CheckCircle, Receipt, ChevronDown, ChevronUp,
-  Phone, Mail, AlertCircle, ExternalLink, DollarSign,
+  Phone, Mail, AlertCircle, ExternalLink, DollarSign, Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 
 export default function PortalBilling() {
   const { user } = useAuth();
   const { data: customer } = useCustomerProfile();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [savingCard, setSavingCard] = useState(false);
 
   // All invoices for this customer
   const { data: allInvoices = [], isLoading } = useQuery({
@@ -43,6 +46,7 @@ export default function PortalBilling() {
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [payDialog, setPayDialog] = useState<{ open: boolean; invoice: any }>({ open: false, invoice: null });
+  const [requestingLink, setRequestingLink] = useState(false);
 
   const openInvoices = allInvoices.filter((i: any) => ['Sent', 'Viewed'].includes(i.status));
   const overdueInvoices = allInvoices.filter((i: any) => i.status === 'Overdue');
@@ -54,39 +58,59 @@ export default function PortalBilling() {
     const next = expandedId === inv.id ? null : inv.id;
     setExpandedId(next);
     if (next) {
-      // Log view to invoice_views table
       if (user?.id) {
         supabase.from('invoice_views').insert({
           invoice_id: inv.id,
           viewer_user_id: user.id,
         } as any).then(() => {});
       }
-      // Mark as Viewed if first time
       if (inv.status === 'Sent' && !inv.viewed_at) {
         await supabase.from('invoices').update({ viewed_at: new Date().toISOString(), status: 'Viewed' as any }).eq('id', inv.id);
       }
     }
   };
 
-  // Log payment request
-  const handlePayRequest = async () => {
+  // Stripe payment link for invoice
+  const handleRequestPaymentLink = async () => {
     const inv = payDialog.invoice;
     if (!inv) return;
+    setRequestingLink(true);
     try {
-      await supabase.from('activities').insert({
-        action_name: 'Customer requested to pay invoice',
-        user_id: user?.id,
-        record_type: 'invoice',
-        record_id: inv.id,
-        workflow_name: 'customer_portal',
-        payload_summary: { invoice_number: inv.invoice_number, amount: inv.balance_due },
-        status: 'completed',
-      } as any);
-      toast({ title: 'Payment request sent', description: 'Our team will follow up with payment instructions.' });
+      const res = await callEdgeFunction('create-checkout', {
+        invoice_id: inv.id,
+        amount: Number(inv.balance_due),
+        description: `Invoice ${inv.invoice_number}`,
+        mode: 'payment',
+      });
+      if (res?.url) {
+        window.open(res.url, '_blank');
+      } else {
+        throw new Error(res?.error || 'Failed to create payment link');
+      }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setRequestingLink(false);
     }
-    setPayDialog({ open: false, invoice: null });
+  };
+
+  // Save card on file via Stripe setup
+  const handleSaveCard = async () => {
+    setSavingCard(true);
+    try {
+      const res = await callEdgeFunction('setup-payment-method', {
+        role_type: 'customer',
+      });
+      if (res?.url) {
+        window.location.href = res.url;
+      } else {
+        throw new Error(res?.error || 'Failed to start card setup');
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingCard(false);
+    }
   };
 
   const InvoiceCard = ({ inv }: { inv: any }) => {
@@ -99,7 +123,6 @@ export default function PortalBilling() {
     return (
       <Card className={cn(isOverdue && 'border-destructive/30')}>
         <CardContent className="p-4 space-y-2">
-          {/* Header row */}
           <button onClick={() => handleExpand(inv)} className="w-full text-left">
             <div className="flex items-start justify-between">
               <div>
@@ -131,10 +154,8 @@ export default function PortalBilling() {
             </p>
           )}
 
-          {/* Expanded details */}
           {isExpanded && (
             <div className="border-t border-border pt-3 space-y-3">
-              {/* Job reference */}
               {inv.jobs?.job_title && (
                 <div className="text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">{inv.jobs.job_title}</span>
@@ -142,7 +163,6 @@ export default function PortalBilling() {
                 </div>
               )}
 
-              {/* Line items */}
               {lineItems.length > 0 && (
                 <div>
                   <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Line Items</p>
@@ -185,7 +205,6 @@ export default function PortalBilling() {
                 </div>
               )}
 
-              {/* Customer memo */}
               {inv.customer_memo && (
                 <div className="bg-muted/50 rounded-md p-3">
                   <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Note</p>
@@ -198,7 +217,6 @@ export default function PortalBilling() {
                 {inv.sent_at && <> · Sent {format(new Date(inv.sent_at), 'MMM d')}</>}
               </p>
 
-              {/* Pay button */}
               {canPay && (
                 <Button
                   className="w-full"
@@ -246,7 +264,7 @@ export default function PortalBilling() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-1.5"><CreditCard className="h-4 w-4" /> Payment Method</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm">
+        <CardContent className="space-y-3 text-sm">
           {billingProfile?.payment_method_present ? (
             <div className="flex items-center justify-between">
               <div>
@@ -257,9 +275,19 @@ export default function PortalBilling() {
                   ) : 'Manual payments'}
                 </p>
               </div>
+              <Button variant="outline" size="sm" onClick={handleSaveCard} disabled={savingCard}>
+                {savingCard ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1" />}
+                Update Card
+              </Button>
             </div>
           ) : (
-            <p className="text-muted-foreground">No payment method on file. Contact us to set up card payments.</p>
+            <div className="space-y-2">
+              <p className="text-muted-foreground">No payment method on file.</p>
+              <Button size="sm" onClick={handleSaveCard} disabled={savingCard} className="w-full">
+                {savingCard ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CreditCard className="h-3.5 w-3.5 mr-1" />}
+                Add Credit Card
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -340,17 +368,23 @@ export default function PortalBilling() {
                 </CardContent>
               </Card>
 
-              {/* Card payment placeholder */}
+              {/* Card payment via Stripe */}
               <Card>
                 <CardContent className="p-4 space-y-2">
                   <p className="text-sm font-medium flex items-center gap-2">
                     <CreditCard className="h-4 w-4" /> Pay by Card
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Secure card payments powered by Stripe — coming soon.
+                    Secure card payments powered by Stripe.
                   </p>
-                  <Button className="w-full" size="sm" onClick={handlePayRequest}>
-                    Request Payment Link
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    onClick={handleRequestPaymentLink}
+                    disabled={requestingLink}
+                  >
+                    {requestingLink ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <ExternalLink className="h-3.5 w-3.5 mr-1" />}
+                    Pay Now with Card
                   </Button>
                 </CardContent>
               </Card>
@@ -358,11 +392,11 @@ export default function PortalBilling() {
               <div className="space-y-2 text-xs text-muted-foreground">
                 <p>Need help? Contact us:</p>
                 <div className="flex flex-col gap-1">
-                  <a href="tel:+18335772386" className="inline-flex items-center gap-2 text-primary hover:underline">
-                    <Phone className="h-3.5 w-3.5" /> 1-833-PRAETORIA
+                  <a href="tel:+13067376269" className="inline-flex items-center gap-2 text-primary hover:underline">
+                    <Phone className="h-3.5 w-3.5" /> (306) 737-6269
                   </a>
-                  <a href="mailto:billing@praetoriagroup.ca" className="inline-flex items-center gap-2 text-primary hover:underline">
-                    <Mail className="h-3.5 w-3.5" /> billing@praetoriagroup.ca
+                  <a href="mailto:support@praetoriagroup.ca" className="inline-flex items-center gap-2 text-primary hover:underline">
+                    <Mail className="h-3.5 w-3.5" /> support@praetoriagroup.ca
                   </a>
                 </div>
               </div>
