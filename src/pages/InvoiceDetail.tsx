@@ -331,12 +331,24 @@ export default function InvoiceDetail() {
       {/* Action buttons */}
       <div className="flex flex-wrap gap-2">
         {canSend && (
-          <Button size="sm" onClick={() => setConfirmSend(true)}>
+          <Button size="sm" onClick={() => {
+            const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+            setEmailTo(invoice.customers?.email || '');
+            setEmailSubject(`Invoice from Praetoria Snow & Ice — ${invoice.jobs?.service_category || 'Snow Removal'}`);
+            setEmailMessage(`Hi ${customerName || 'there'},\n\nThank you for your recent business with us.\n\nThe invoice total is $${total.toFixed(2)}, with $${balanceDue.toFixed(2)} to be paid by ${format(new Date(invoice.due_date), 'MMM d, yyyy')}.\n\nIf you have any questions or concerns regarding this invoice, please don't hesitate to get in touch with us at support@praetoriasnowandice.ca.\n\nSincerely,\nPraetoria Snow & Ice`);
+            setConfirmSend(true);
+          }}>
             <Send className="h-3.5 w-3.5 mr-1.5" /> Send Invoice
           </Button>
         )}
         {canResend && (
-          <Button size="sm" variant="outline" onClick={() => setConfirmSend(true)}>
+          <Button size="sm" variant="outline" onClick={() => {
+            const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+            setEmailTo(invoice.customers?.email || '');
+            setEmailSubject(`Invoice from Praetoria Snow & Ice — ${invoice.jobs?.service_category || 'Snow Removal'}`);
+            setEmailMessage(`Hi ${customerName || 'there'},\n\nThank you for your recent business with us.\n\nThe invoice total is $${total.toFixed(2)}, with $${balanceDue.toFixed(2)} to be paid by ${format(new Date(invoice.due_date), 'MMM d, yyyy')}.\n\nIf you have any questions or concerns regarding this invoice, please don't hesitate to get in touch with us at support@praetoriasnowandice.ca.\n\nSincerely,\nPraetoria Snow & Ice`);
+            setConfirmSend(true);
+          }}>
             <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Resend
           </Button>
         )}
