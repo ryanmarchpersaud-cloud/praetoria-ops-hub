@@ -15,9 +15,11 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   ArrowLeft, Send, RotateCcw, CheckCircle, Ban, AlertCircle, CreditCard, Printer, Save, Loader2,
-  LinkIcon, Briefcase, FileText, Receipt, DollarSign, Eye, EyeOff, CalendarDays, Tag, Undo2, Mail
+  LinkIcon, Briefcase, FileText, Receipt, DollarSign, Eye, EyeOff, CalendarDays, Tag, Undo2, Mail,
+  Paperclip, X, Upload
 } from 'lucide-react';
 import { RefundDialog } from '@/components/RefundDialog';
 import { format } from 'date-fns';
