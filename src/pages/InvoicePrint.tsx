@@ -92,7 +92,7 @@ export default function InvoicePrint() {
   const companyName = company?.invoice_header_name || company?.operating_name || company?.display_name || 'Praetoria Group';
   const companyTagline = 'Residential & Commercial Property Services';
   const companyEmail = company?.support_email || company?.email || company?.billing_email || 'info@praetoriagroup.ca';
-  const companyPhone = company?.phone || '(416) 555-0100';
+  const companyPhone = company?.phone || '(306) 737-6269';
   const companyAddress = company?.physical_address || company?.mailing_address || 'Toronto, Ontario, Canada';
   const accentColor = company?.primary_color || '#3b5bdb';
 

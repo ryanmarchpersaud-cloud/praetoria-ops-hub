@@ -51,8 +51,8 @@ export default function SubcontractorSupport() {
             <a href="mailto:ops@praetoriagroup.ca" className="flex items-center gap-2 text-sm text-primary font-medium hover:underline">
               <Mail className="h-4 w-4" /> ops@praetoriagroup.ca
             </a>
-            <a href="tel:306-555-0100" className="flex items-center gap-2 text-sm text-primary font-medium hover:underline">
-              <Phone className="h-4 w-4" /> 306-555-0100
+            <a href="tel:+13067376269" className="flex items-center gap-2 text-sm text-primary font-medium hover:underline">
+              <Phone className="h-4 w-4" /> (306) 737-6269
             </a>
           </div>
           <div className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">

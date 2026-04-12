@@ -65,7 +65,7 @@ export default function SubcontractorEmergencySafetyPage() {
         siteCity={propertyInfo?.city || undefined}
         musterPointName={propertyInfo?.muster_point_name || undefined}
         musterPointMapNotes={propertyInfo?.muster_point_map_notes || undefined}
-        adminPhone="306-555-0100"
+        adminPhone="(306) 737-6269"
         onReportIncident={() => navigate('/subcontractor/incidents/new')}
         highRisk={propertyInfo?.high_risk_flag}
         reporterName={profile?.company_name || 'Subcontractor'}

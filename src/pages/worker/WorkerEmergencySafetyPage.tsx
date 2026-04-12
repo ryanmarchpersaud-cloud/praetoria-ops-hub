@@ -53,7 +53,7 @@ export default function WorkerEmergencySafetyPage() {
         siteCity={property?.city}
         musterPointName={property?.muster_point_name}
         musterPointMapNotes={property?.muster_point_map_notes}
-        adminPhone="306-555-0100"
+        adminPhone="(306) 737-6269"
         siteContactPhone={(currentVisit?.customers as any)?.phone}
         onReportIncident={() => navigate('/worker/incidents/new')}
         highRisk={property?.high_risk_flag}

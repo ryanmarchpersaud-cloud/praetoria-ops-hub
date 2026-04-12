@@ -28,7 +28,7 @@ export function EmergencySOSPanel({
   musterPointName,
   musterPointMapNotes,
   supervisorPhone,
-  adminPhone = '306-555-0100',
+  adminPhone = '(306) 737-6269',
   siteContactPhone,
   onReportIncident,
   highRisk,
