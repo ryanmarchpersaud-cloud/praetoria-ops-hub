@@ -309,10 +309,11 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
         </tr>`).join('')
       : `<tr><td colspan="3" style="padding:8px 12px;font-size:13px;">Total Deductions</td><td style="text-align:right;color:#dc2626;padding:8px 12px;">–$${fmt(stub.deductions)}</td></tr>`;
 
-    const benefitsHtml = benefitsLines.length > 0
-      ? `<div class="section-title">Benefits / Employer Contributions</div>
+    const employerHtml = employerLines.length > 0
+      ? `<div class="section-title">Employer Contributions</div>
          <table><thead><tr><th colspan="3">Description</th><th>Amount</th></tr></thead><tbody>
-         ${benefitsLines.map(b => `<tr><td colspan="3" style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${b.label}</td><td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">${b.amount != null ? '$' + b.amount.toFixed(2) : 'Enrolled'}</td></tr>`).join('')}
+         ${employerLines.map(e => `<tr><td colspan="3" style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${e.label}</td><td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">$${e.amount.toFixed(2)}</td></tr>`).join('')}
+         <tr class="total-row"><td colspan="3">Total Employer Contributions</td><td style="text-align:right;">$${totalEmployerContributions.toFixed(2)}</td></tr>
          </tbody></table>`
       : '';
 
