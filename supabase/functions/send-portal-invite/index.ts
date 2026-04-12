@@ -9,6 +9,14 @@ const corsHeaders = {
 const APP_URL = "https://praetoria-ops-hub.lovable.app";
 const PLAY_STORE_URL = "https://play.google.com/apps/internaltest/4701596223109416665";
 
+async function getAuthLoginEmail(adminClient: ReturnType<typeof createClient>, userId: string) {
+  const { data, error } = await adminClient.auth.admin.getUserById(userId);
+  if (error) {
+    throw new Error(`Failed to fetch the login email for this account: ${error.message}`);
+  }
+  return data.user?.email ?? null;
+}
+
 function buildEmailHtml(portal: string, firstName: string, email: string, tempPassword: string | null, loginPath: string) {
   const portalLabels: Record<string, { title: string; subtitle: string; description: string; color: string }> = {
     worker: {
@@ -161,7 +169,8 @@ Deno.serve(async (req) => {
       if (!user_id) return new Response(JSON.stringify({ error: "user_id required for subcontractor" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const { data: s } = await adminClient.from("subcontractors").select("contact_name, email").eq("user_id", user_id).single();
       if (!s) return new Response(JSON.stringify({ error: "Subcontractor not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      recipientEmail = s.email;
+      const authLoginEmail = await getAuthLoginEmail(adminClient, user_id);
+      recipientEmail = authLoginEmail || s.email;
       recipientName = s.contact_name?.split(" ")[0] || "Partner";
       loginPath = "/login";
     } else if (portal_type === "customer") {
