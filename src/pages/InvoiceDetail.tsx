@@ -244,6 +244,7 @@ export default function InvoiceDetail() {
   const canResend = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canManageInvoices;
   const canRecordPayment = ['Sent', 'Viewed', 'Overdue', 'Partially Paid'].includes(invoice.status) && canRecordPayments;
   const canVoid = !['Voided', 'Paid'].includes(invoice.status) && canVoidInvoices;
+  const canMarkOverdue = ['Sent', 'Viewed'].includes(invoice.status) && canManageInvoices;
   const billingMode = (invoice as any).billing_mode;
 
   return (
@@ -289,6 +290,11 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
+        {canMarkOverdue && (
+          <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleStatusChange('Overdue')}>
+            <AlertCircle className="h-3.5 w-3.5 mr-1.5" /> Mark Overdue
+          </Button>
+        )}
         {canVoid && (
           <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setConfirmVoid(true)}>
             <Ban className="h-3.5 w-3.5 mr-1.5" /> Void
