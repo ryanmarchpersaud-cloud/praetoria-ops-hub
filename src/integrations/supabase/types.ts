@@ -191,6 +191,7 @@ export type Database = {
       }
       agreements: {
         Row: {
+          attachment_url: string | null
           body_html: string
           category: string
           created_at: string
@@ -224,6 +225,7 @@ export type Database = {
           viewed_at: string | null
         }
         Insert: {
+          attachment_url?: string | null
           body_html?: string
           category?: string
           created_at?: string
@@ -257,6 +259,7 @@ export type Database = {
           viewed_at?: string | null
         }
         Update: {
+          attachment_url?: string | null
           body_html?: string
           category?: string
           created_at?: string
