@@ -91,6 +91,7 @@ export default function LeadDetail() {
         lead_id: id,
         quote_number: '',
         service_category: lead?.service_type as any || 'Other',
+        customer_id: lead?.customer_id || '',
       });
       navigate(`/quotes/${q.id}`);
     } catch (err: any) {
