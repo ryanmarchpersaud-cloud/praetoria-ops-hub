@@ -22,7 +22,7 @@ export function TodayAppointments({ visits, employees, isLoadingVisits, isLoadin
   const overdue = visits.filter(v => v.visit_status === 'Missed');
   const remaining = visits.filter(v => ['Planned', 'Scheduled'].includes(v.visit_status));
 
-  const activeEmployees = employees.filter(e => e.status === 'active');
+  const activeEmployees = employees.filter(e => e.employment_status === 'active' || e.employment_status === 'Active');
 
   return (
     <Card>
@@ -103,9 +103,9 @@ export function TodayAppointments({ visits, employees, isLoadingVisits, isLoadin
                 <Link key={emp.user_id} to={`/employees/${emp.user_id}`} className="flex items-center justify-between py-2 hover:bg-muted/30 rounded px-1 transition-colors">
                   <div className="min-w-0">
                     <p className="text-xs font-medium truncate">{emp.full_name}</p>
-                    <p className="text-[10px] text-muted-foreground">{emp.job_title || 'Team Member'}</p>
+                    <p className="text-[10px] text-muted-foreground">{emp.role_title || 'Team Member'}</p>
                   </div>
-                  <StatusBadge status={emp.status || 'active'} showIcon={false} />
+                  <StatusBadge status={emp.employment_status || 'active'} showIcon={false} />
                 </Link>
               ))}
               {activeEmployees.length === 0 && (
@@ -135,7 +135,7 @@ function VisitGroups({ groups }: { groups: { label: string; items: any[] }[] }) 
                   </p>
                   <p className="text-[10px] text-muted-foreground truncate">
                     {v.jobs?.job_title || v.visit_number}
-                    {v.start_time && <span> · {v.start_time}</span>}
+                    {v.scheduled_start_time && <span> · {v.scheduled_start_time}</span>}
                   </p>
                 </div>
                 <StatusBadge status={v.visit_status} showIcon={false} />

@@ -67,7 +67,7 @@ export function useTodayVisits() {
         .from('visits')
         .select('*, jobs(job_title, job_number), properties(property_name), customers(first_name, last_name, company_name)')
         .eq('service_date', today)
-        .order('start_time', { ascending: true });
+        .order('scheduled_start_time', { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
@@ -80,7 +80,7 @@ export function useDashboardEmployees() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('worker_profiles')
-        .select('user_id, full_name, job_title, status, hourly_rate')
+        .select('user_id, full_name, role_title, employment_status, hourly_rate')
         .order('full_name', { ascending: true });
       if (error) throw error;
       return data ?? [];
