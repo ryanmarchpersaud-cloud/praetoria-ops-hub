@@ -116,6 +116,46 @@ export default function InvoiceDetail() {
       balance_due: Math.max(0, Math.round(newBalance * 100) / 100),
       ...(newStatus === 'Paid' ? { paid_at: new Date().toISOString() } : {}),
     });
+
+    // Send payment_received notification to customer + admin
+    try {
+      const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          event: 'payment_received',
+          customer_id: invoice.customer_id,
+          record_type: 'invoice',
+          record_id: invoice.id,
+          channels: ['in_app', 'email', 'sms'],
+          audience: 'customer',
+          variables: {
+            customer_name: customerName,
+            invoice_number: invoice.invoice_number || '',
+            amount_paid: amount.toFixed(2),
+            total: total.toFixed(2),
+            to_email: invoice.customers?.email || '',
+            to_phone: invoice.customers?.phone || '',
+          },
+        },
+      });
+      // Also notify admin
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          event: 'payment_received',
+          record_type: 'invoice',
+          record_id: invoice.id,
+          channels: ['in_app'],
+          audience: 'admin',
+          variables: {
+            customer_name: customerName,
+            invoice_number: invoice.invoice_number || '',
+            amount_paid: amount.toFixed(2),
+            total: total.toFixed(2),
+          },
+        },
+      });
+    } catch { /* non-critical */ }
+
     setPaymentOpen(false);
     setPaymentAmount('');
   };
@@ -446,13 +486,14 @@ export default function InvoiceDetail() {
             <Button onClick={async () => {
               // Send email via edge function
               const customerEmail = invoice.customers?.email;
+              const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
               if (customerEmail) {
                 try {
                   await supabase.functions.invoke('send-email', {
                     body: {
                       action: 'invoice_sent',
                       customer_email: customerEmail,
-                      customer_name: `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim(),
+                      customer_name: customerName,
                       invoice_number: invoice.invoice_number,
                       service_category: invoice.jobs?.service_category || (invoice as any).service_category,
                       total: total.toFixed(2),
@@ -465,6 +506,27 @@ export default function InvoiceDetail() {
                   console.error('Invoice email send failed:', e);
                 }
               }
+              // Also send in-app + SMS notification via template engine
+              try {
+                await supabase.functions.invoke('send-notification', {
+                  body: {
+                    event: 'invoice_sent',
+                    customer_id: invoice.customer_id,
+                    record_type: 'invoice',
+                    record_id: invoice.id,
+                    channels: ['in_app', 'sms'],
+                    audience: 'customer',
+                    variables: {
+                      customer_name: customerName,
+                      invoice_number: invoice.invoice_number || '',
+                      total: total.toFixed(2),
+                      due_date: format(new Date(invoice.due_date), 'MMM d, yyyy'),
+                      property: '',
+                      to_phone: invoice.customers?.phone || '',
+                    },
+                  },
+                });
+              } catch { /* non-critical */ }
               handleStatusChange('Sent', { sent_at: new Date().toISOString() });
               setConfirmSend(false);
             }}>

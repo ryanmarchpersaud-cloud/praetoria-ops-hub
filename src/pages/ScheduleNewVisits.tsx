@@ -837,7 +837,7 @@ export default function ScheduleNewVisits() {
       },
     });
 
-    // Send notifications to assigned workers
+    // Send notifications to assigned workers (in-app + email)
     if (selectedTeam.length > 0 && successCount > 0) {
       for (const workerId of selectedTeam) {
         try {
@@ -846,10 +846,42 @@ export default function ScheduleNewVisits() {
               event: 'visit_scheduled',
               recipient_id: workerId,
               audience: 'worker',
-              channels: ['in_app'],
+              channels: ['in_app', 'email'],
               variables: {
                 subject: `${successCount} new visit${successCount > 1 ? 's' : ''} assigned`,
                 body: `You have been assigned ${successCount} visit${successCount > 1 ? 's' : ''} for ${format(startDate, 'MMM d, yyyy')}.`,
+                scheduled_date: format(startDate, 'MMM d, yyyy'),
+              },
+            },
+          });
+        } catch { /* notification failures shouldn't block */ }
+      }
+    }
+
+    // Send customer notifications for scheduled visits
+    if (successCount > 0) {
+      const uniqueCustomerIds = [...new Set(selectedJobs.map((j: any) => j.customer_id).filter(Boolean))];
+      for (const custId of uniqueCustomerIds) {
+        try {
+          const custJob = selectedJobs.find((j: any) => j.customer_id === custId);
+          const { data: cust } = await supabase.from('customers').select('first_name, last_name, email, phone').eq('id', custId).maybeSingle();
+          if (!cust) continue;
+          const { data: prop } = custJob?.property_id
+            ? await supabase.from('properties').select('property_name').eq('id', custJob.property_id).maybeSingle()
+            : { data: null };
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'visit_scheduled',
+              customer_id: custId,
+              audience: 'customer',
+              channels: ['in_app', 'email', 'sms'],
+              variables: {
+                customer_name: `${cust.first_name} ${cust.last_name}`,
+                property: prop?.property_name || '',
+                service_type: (custJob as any)?.service_category || '',
+                scheduled_date: format(startDate, 'MMM d, yyyy'),
+                to_email: cust.email || '',
+                to_phone: cust.phone || '',
               },
             },
           });

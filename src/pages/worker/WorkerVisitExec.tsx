@@ -253,8 +253,10 @@ export default function WorkerVisitExec() {
               property: property?.property_name || '',
               service_type: job?.service_category || '',
               worker_name: user?.user_metadata?.full_name || user?.email || '',
+              to_email: customer?.email || '',
+              to_phone: customer?.phone || '',
             },
-            channels: ['in_app'],
+            channels: ['in_app', 'email', 'sms'],
             audience: 'customer',
           });
         } catch { /* non-critical */ }
@@ -303,8 +305,11 @@ export default function WorkerVisitExec() {
               property: property?.property_name || '',
               service_type: job?.service_category || '',
               scheduled_date: visit.service_date,
+              worker_name: user?.user_metadata?.full_name || user?.email || '',
+              to_email: customer?.email || '',
+              to_phone: customer?.phone || '',
             },
-            channels: ['in_app'],
+            channels: ['in_app', 'email', 'sms'],
             audience: 'customer',
           });
         } catch { /* non-critical */ }
