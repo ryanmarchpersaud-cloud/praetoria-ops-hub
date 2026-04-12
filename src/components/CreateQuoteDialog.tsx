@@ -40,6 +40,7 @@ export function CreateQuoteDialog({ open, onOpenChange, defaultCustomerId }: Pro
     try {
       const data = await createQuote.mutateAsync({
         customer_id: form.customer_id,
+        quote_number: '',
         service_category: (form.service_category || 'Other') as any,
         scope_of_work: form.scope_of_work || null,
       });
