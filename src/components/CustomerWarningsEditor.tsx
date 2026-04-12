@@ -10,12 +10,20 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { AlertTriangle, Plus, Trash2, Loader2 } from 'lucide-react';
 
-const WARNING_TYPES = [
+export const WARNING_TYPES = [
   { value: 'payment_issue', label: '💳 Payment Issue', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
   { value: 'complaint', label: '📢 Complaint', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
   { value: 'aggressive', label: '⚠️ Aggressive Behavior', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   { value: 'access_issue', label: '🔒 Access Issue', color: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300' },
   { value: 'scheduling', label: '🕐 Scheduling Restriction', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  { value: 'dogs_pets', label: '🐕 Dogs / Pets on Site', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
+  { value: 'safety_risk', label: '🔫 Safety Risk', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  { value: 'children', label: '👶 Children on Property', color: 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400' },
+  { value: 'elderly_vulnerable', label: '🧓 Elderly / Vulnerable', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
+  { value: 'language_barrier', label: '🌐 Language Barrier', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400' },
+  { value: 'parking_restriction', label: '🚗 Parking Restriction', color: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300' },
+  { value: 'surveillance', label: '📷 Surveillance / Cameras', color: 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300' },
+  { value: 'vip', label: '⭐ VIP / Priority Client', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
   { value: 'general', label: '📝 General Note', color: 'bg-muted text-muted-foreground' },
 ];
 

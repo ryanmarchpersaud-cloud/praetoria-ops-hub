@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, MapPin, Navigation, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DirectionsButton } from '@/components/DirectionsButton';
+import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
 
 export default function SubcontractorVisitExec() {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +56,9 @@ export default function SubcontractorVisitExec() {
           </CardContent>
         </Card>
       )}
+
+      {/* Customer Warnings */}
+      <CustomerWarningsBanner customerId={(visit as any).customer_id} />
 
       {/* Job/Service Info */}
       {job && (
