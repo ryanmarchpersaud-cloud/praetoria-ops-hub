@@ -132,6 +132,26 @@ export default function PortalBilling() {
     }
   };
 
+  // Remove card on file
+  const handleRemoveCard = async () => {
+    if (!customer?.id || !billingProfile) return;
+    setRemovingCard(true);
+    try {
+      await supabase.from('customer_billing_profiles').update({
+        payment_method_present: false,
+        card_brand: null,
+        card_last4: null,
+        updated_at: new Date().toISOString(),
+      } as any).eq('customer_id', customer.id);
+      queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
+      toast({ title: 'Card removed' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setRemovingCard(false);
+    }
+  };
+
   const InvoiceCard = ({ inv }: { inv: any }) => {
     const isExpanded = expandedId === inv.id;
     const lineItems = (inv.invoice_line_items || []).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
