@@ -25,6 +25,25 @@ export default function PortalBilling() {
   const queryClient = useQueryClient();
   const [savingCard, setSavingCard] = useState(false);
 
+  // Auto-sync card on return from Stripe setup
+  const searchParams = new URLSearchParams(window.location.search);
+  const cardSaved = searchParams.get('card_saved');
+
+  useState(() => {
+    if (cardSaved === 'true' && customer?.id) {
+      callEdgeFunction('sync-payment-method', { role_type: 'customer' })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
+          // Clean up URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('card_saved');
+          window.history.replaceState({}, '', url.toString());
+          toast({ title: 'Card saved successfully!' });
+        })
+        .catch(() => {});
+    }
+  });
+
   // All invoices for this customer
   const { data: allInvoices = [], isLoading } = useQuery({
     queryKey: ['portal_invoices', customer?.id],
@@ -360,7 +379,7 @@ export default function PortalBilling() {
                     Send an e-Transfer to:
                   </p>
                   <div className="bg-muted rounded-md px-3 py-2 text-sm font-mono font-medium">
-                    payments@praetoriagroup.ca
+                    payments@praetoriasnowandice.ca
                   </div>
                   <p className="text-[10px] text-muted-foreground">
                     Include invoice #{payDialog.invoice.invoice_number} in the message field.
