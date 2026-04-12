@@ -253,6 +253,22 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     }
   };
 
+  const handleWorkerShare = async () => {
+    setSharing(true);
+    try {
+      const emailTo = prompt('Enter email address to share this pay stub with (e.g. accountant, banker, family):');
+      if (!emailTo || !emailTo.includes('@')) {
+        if (emailTo !== null) toast.error('Please enter a valid email address.');
+        return;
+      }
+      // For now, trigger the print view so the worker can save/share
+      toast.success(`Pay stub prepared for sharing to ${emailTo}. Use Save as PDF to attach to your email.`);
+      handleSavePdf();
+    } finally {
+      setSharing(false);
+    }
+  };
+
   // ── Print HTML builder ──
   const buildPrintHtml = () => {
     const earningsHtml = earnings.length > 0
