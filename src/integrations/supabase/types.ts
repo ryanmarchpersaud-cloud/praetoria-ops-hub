@@ -4292,7 +4292,7 @@ export type Database = {
           converted_job_id: string | null
           created_at: string
           created_by: string | null
-          customer_id: string | null
+          customer_id: string
           email_delivery_status: string | null
           email_ready: boolean
           email_sent_at: string | null
@@ -4300,7 +4300,7 @@ export type Database = {
           follow_up_email_due_at: string | null
           id: string
           internal_notes: string | null
-          lead_id: string
+          lead_id: string | null
           quote_number: string
           request_id: string | null
           scope_of_work: string | null
@@ -4322,7 +4322,7 @@ export type Database = {
           converted_job_id?: string | null
           created_at?: string
           created_by?: string | null
-          customer_id?: string | null
+          customer_id: string
           email_delivery_status?: string | null
           email_ready?: boolean
           email_sent_at?: string | null
@@ -4330,7 +4330,7 @@ export type Database = {
           follow_up_email_due_at?: string | null
           id?: string
           internal_notes?: string | null
-          lead_id: string
+          lead_id?: string | null
           quote_number: string
           request_id?: string | null
           scope_of_work?: string | null
@@ -4352,7 +4352,7 @@ export type Database = {
           converted_job_id?: string | null
           created_at?: string
           created_by?: string | null
-          customer_id?: string | null
+          customer_id?: string
           email_delivery_status?: string | null
           email_ready?: boolean
           email_sent_at?: string | null
@@ -4360,7 +4360,7 @@ export type Database = {
           follow_up_email_due_at?: string | null
           id?: string
           internal_notes?: string | null
-          lead_id?: string
+          lead_id?: string | null
           quote_number?: string
           request_id?: string | null
           scope_of_work?: string | null
