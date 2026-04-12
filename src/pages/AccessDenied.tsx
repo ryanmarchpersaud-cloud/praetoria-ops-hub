@@ -6,15 +6,17 @@ import { Button } from '@/components/ui/button';
 
 export default function AccessDenied() {
   const { user } = useAuth();
-  const { isCustomer, isStaff, canAccessAdminPortal, isActiveUser } = useAuthorization();
+  const { isCustomer, isStaff, isSubcontractor, canAccessAdminPortal, isActiveUser } = useAuthorization();
 
   // Determine best redirect for this user
   let homePath = '/login';
   if (user) {
     if (!isActiveUser) homePath = '/login'; // blocked user
+    else if (canAccessAdminPortal) homePath = '/';
+    else if (isSubcontractor) homePath = '/subcontractor';
     else if (isCustomer) homePath = '/portal/properties';
-    else if (isStaff && !canAccessAdminPortal) homePath = '/worker';
-    else homePath = '/';
+    else if (isStaff) homePath = '/worker';
+    else homePath = '/login'; // no roles — send back to login
   }
 
   const message = user && !isActiveUser
