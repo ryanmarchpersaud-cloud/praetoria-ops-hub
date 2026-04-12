@@ -370,6 +370,14 @@ export default function InvoiceDetail() {
             Send Receipt
           </Button>
         )}
+        {canResend && (
+          <Button size="sm" variant="outline" onClick={() => {
+            window.open(`/invoices/${invoice.id}/print`, '_blank');
+            setConfirmSend(true);
+          }}>
+            <FileText className="h-3.5 w-3.5 mr-1.5" /> Send Invoice
+          </Button>
+        )}
         {canMarkOverdue && (
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleStatusChange('Overdue')}>
             <AlertCircle className="h-3.5 w-3.5 mr-1.5" /> Mark Overdue
@@ -643,13 +651,20 @@ export default function InvoiceDetail() {
       <Dialog open={confirmSend} onOpenChange={setConfirmSend}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{canResend ? 'Resend Invoice?' : 'Send Invoice?'}</DialogTitle>
+            <DialogTitle>{canResend ? 'Send Invoice to Customer?' : 'Send Invoice?'}</DialogTitle>
             <DialogDescription>
               {canResend
-                ? `This will re-mark ${invoice.invoice_number} as Sent and update the sent timestamp.`
-                : `This will finalize ${invoice.invoice_number} and mark it as Sent. The invoice will become read-only.`}
+                ? `This will email ${invoice.invoice_number} to ${invoice.customers?.email || 'the customer'}. You can preview it first using Print / PDF.`
+                : `This will finalize ${invoice.invoice_number} and email it to ${invoice.customers?.email || 'the customer'}. The invoice will become read-only.`}
             </DialogDescription>
           </DialogHeader>
+          <div className="flex gap-2">
+            <Link to={`/invoices/${invoice.id}/print`} target="_blank">
+              <Button variant="outline" size="sm" className="text-xs gap-1">
+                <Eye className="h-3 w-3" /> Preview Invoice
+              </Button>
+            </Link>
+          </div>
           {lineItems.length === 0 && (
             <Alert>
               <AlertCircle className="h-4 w-4" />
