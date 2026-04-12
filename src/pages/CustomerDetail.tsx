@@ -96,6 +96,17 @@ export default function CustomerDetail() {
     enabled: !!id,
   });
 
+  const { data: agreements = [] } = useQuery({
+    queryKey: ['customer_agreements', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase.from('agreements').select('id, title, status, created_at, signing_token').eq('customer_id', id).order('created_at', { ascending: false }).limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
   if (isLoading) return (
     <div className="space-y-4 p-4">
       <Skeleton className="h-8 w-48" />
