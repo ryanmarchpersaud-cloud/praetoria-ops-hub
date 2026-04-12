@@ -1,0 +1,1 @@
+ALTER TYPE notification_event ADD VALUE 'quote_approved';

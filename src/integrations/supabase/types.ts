@@ -7404,6 +7404,7 @@ export type Database = {
         | "new_service_request"
         | "emergency_sos"
         | "incident_report"
+        | "quote_approved"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
@@ -7651,6 +7652,7 @@ export const Constants = {
         "new_service_request",
         "emergency_sos",
         "incident_report",
+        "quote_approved",
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
