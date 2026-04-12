@@ -148,7 +148,7 @@ export function PortalFAB() {
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Phone className="h-3.5 w-3.5" />
-              <span>Or call us: <strong>1-833-PRAETORIA</strong></span>
+              <span>Or call us: <a href="tel:+13067376269" className="font-bold hover:underline">(306) 737-6269</a></span>
             </div>
             <Button
               className="w-full"

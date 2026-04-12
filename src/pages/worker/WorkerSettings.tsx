@@ -72,8 +72,8 @@ export default function WorkerSettings() {
             Need help? Contact your supervisor or the operations team.
           </p>
           <div className="space-y-1.5">
-            <a href="tel:306-555-0100" className="flex items-center gap-2 text-xs text-primary hover:underline">
-              <Phone className="h-3.5 w-3.5" /> 306-555-0100
+            <a href="tel:+13067376269" className="flex items-center gap-2 text-xs text-primary hover:underline">
+              <Phone className="h-3.5 w-3.5" /> (306) 737-6269
             </a>
             <a href="mailto:ops@praetoriagroup.ca" className="flex items-center gap-2 text-xs text-primary hover:underline">
               <Mail className="h-3.5 w-3.5" /> ops@praetoriagroup.ca
