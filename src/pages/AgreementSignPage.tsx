@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, FileSignature, Loader2, Type, PenTool, Download, FileText } from 'lucide-react';
+import { CheckCircle, FileSignature, Loader2, Type, PenTool, Download, FileText, XCircle, Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAgreementByToken } from '@/hooks/useAgreements';
 import { toast } from 'sonner';
