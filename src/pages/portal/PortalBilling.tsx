@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
@@ -24,6 +24,24 @@ export default function PortalBilling() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [savingCard, setSavingCard] = useState(false);
+
+  // Auto-sync card on return from Stripe setup
+  const searchParams = new URLSearchParams(window.location.search);
+  const cardSaved = searchParams.get('card_saved');
+
+  useEffect(() => {
+    if (cardSaved === 'true' && customer?.id) {
+      callEdgeFunction('sync-payment-method', { role_type: 'customer' })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
+          const url = new URL(window.location.href);
+          url.searchParams.delete('card_saved');
+          window.history.replaceState({}, '', url.toString());
+          toast({ title: 'Card saved successfully!' });
+        })
+        .catch(() => {});
+    }
+  }, [cardSaved, customer?.id]);
 
   // All invoices for this customer
   const { data: allInvoices = [], isLoading } = useQuery({
@@ -360,7 +378,7 @@ export default function PortalBilling() {
                     Send an e-Transfer to:
                   </p>
                   <div className="bg-muted rounded-md px-3 py-2 text-sm font-mono font-medium">
-                    payments@praetoriagroup.ca
+                    payments@praetoriasnowandice.ca
                   </div>
                   <p className="text-[10px] text-muted-foreground">
                     Include invoice #{payDialog.invoice.invoice_number} in the message field.

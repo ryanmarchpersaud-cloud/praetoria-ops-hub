@@ -11,11 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard } from 'lucide-react';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
 import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedger';
+import { useBillingProfile } from '@/hooks/useInvoices';
 import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInvoiceDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { PROVINCES } from '@/lib/constants';
@@ -280,6 +281,8 @@ export default function CustomerDetail() {
 
         {/* Sidebar: Related Records */}
         <div className="space-y-3">
+          {/* Payment Method Status */}
+          {id && <PaymentMethodCard customerId={id} />}
           {/* Properties */}
           <RelatedRecordCard
             title="Properties"
@@ -423,6 +426,36 @@ export default function CustomerDetail() {
         />
       )}
     </div>
+  );
+}
+
+/* ─── Payment Method Status Card (Admin View) ──────── */
+function PaymentMethodCard({ customerId }: { customerId: string }) {
+  const { data: bp } = useBillingProfile(customerId);
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <CreditCard className="h-3.5 w-3.5" /> Payment Method
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {bp?.payment_method_present ? (
+          <div className="space-y-1">
+            <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Preference: {bp.payment_preference?.replace('_', ' ')}
+            </p>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">No card on file</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
