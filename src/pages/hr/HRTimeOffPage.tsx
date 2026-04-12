@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAllTimeOffRequests } from '@/hooks/useHRData';
@@ -6,6 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarDays, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,15 +28,19 @@ function useUpdateTimeOffStatus() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ id, status, adminNotes }: { id: string; status: 'approved' | 'denied'; adminNotes?: string }) => {
+    mutationFn: async ({ id, status, adminNotes, payStatus }: { id: string; status: 'approved' | 'denied'; adminNotes?: string; payStatus?: string }) => {
+      const updates: Record<string, any> = {
+        status,
+        approved_by: user?.id || null,
+        reviewed_at: new Date().toISOString(),
+        admin_notes: adminNotes || null,
+      };
+      if (status === 'approved' && payStatus) {
+        updates.pay_status = payStatus;
+      }
       const { error } = await supabase
         .from('employee_time_off_requests')
-        .update({
-          status,
-          approved_by: user?.id || null,
-          reviewed_at: new Date().toISOString(),
-          admin_notes: adminNotes || null,
-        })
+        .update(updates)
         .eq('id', id);
       if (error) throw error;
     },
@@ -53,14 +62,31 @@ export default function HRTimeOffPage() {
 
   const getEmpName = (userId: string) => employees.find(e => e.user_id === userId)?.full_name || 'Unknown';
 
-  const handleAction = (id: string, status: 'approved' | 'denied') => {
-    updateStatus.mutate({ id, status }, {
-      onSuccess: () => toast({ title: `Request ${status}` }),
-      onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
-    });
+  const [approvalDialog, setApprovalDialog] = useState<{ id: string; action: 'approved' | 'denied'; empName: string } | null>(null);
+  const [payStatus, setPayStatus] = useState<string>('paid');
+  const [adminNotes, setAdminNotes] = useState('');
+
+  const handleOpenApproval = (id: string, action: 'approved' | 'denied', empName: string) => {
+    setPayStatus('paid');
+    setAdminNotes('');
+    setApprovalDialog({ id, action, empName });
   };
 
-  const RequestTable = ({ items, showActions }: { items: typeof requests; showActions?: boolean }) => (
+  const handleConfirmAction = () => {
+    if (!approvalDialog) return;
+    updateStatus.mutate(
+      { id: approvalDialog.id, status: approvalDialog.action, adminNotes: adminNotes.trim() || undefined, payStatus: approvalDialog.action === 'approved' ? payStatus : undefined },
+      {
+        onSuccess: () => {
+          toast({ title: `Request ${approvalDialog.action}` });
+          setApprovalDialog(null);
+        },
+        onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+      }
+    );
+  };
+
+  const RequestTable = ({ items, showActions, showPayStatus }: { items: typeof requests; showActions?: boolean; showPayStatus?: boolean }) => (
     <Card>
       <CardContent className="p-0">
         {items.length === 0 ? (
@@ -74,6 +100,7 @@ export default function HRTimeOffPage() {
                 <TableHead>Dates</TableHead>
                 <TableHead>Days</TableHead>
                 <TableHead>Reason</TableHead>
+                {showPayStatus && <TableHead>Pay Status</TableHead>}
                 <TableHead>Status</TableHead>
                 {showActions && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
@@ -81,11 +108,12 @@ export default function HRTimeOffPage() {
             <TableBody>
               {items.map(r => {
                 const badge = statusBadge[r.status] || statusBadge.pending;
+                const empName = getEmpName(r.user_id);
                 return (
                   <TableRow key={r.id}>
                     <TableCell>
                       <Link to={`/employees/${r.user_id}`} className="text-sm font-medium text-primary hover:underline">
-                        {getEmpName(r.user_id)}
+                        {empName}
                       </Link>
                     </TableCell>
                     <TableCell className="text-sm capitalize">{r.request_type?.replace('_', ' ')}</TableCell>
@@ -94,6 +122,13 @@ export default function HRTimeOffPage() {
                     </TableCell>
                     <TableCell className="text-sm font-medium tabular-nums">{r.days_requested}d</TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{r.reason || '—'}</TableCell>
+                    {showPayStatus && (
+                      <TableCell>
+                        <Badge variant="outline" className={`text-[10px] capitalize ${(r as any).pay_status === 'unpaid' ? 'border-amber-300 text-amber-700' : 'border-emerald-300 text-emerald-700'}`}>
+                          {(r as any).pay_status || 'paid'}
+                        </Badge>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Badge variant={badge.variant} className="text-[10px]">{badge.label}</Badge>
                     </TableCell>
@@ -105,7 +140,7 @@ export default function HRTimeOffPage() {
                             variant="default"
                             className="h-7 text-xs gap-1"
                             disabled={updateStatus.isPending}
-                            onClick={() => handleAction(r.id, 'approved')}
+                            onClick={() => handleOpenApproval(r.id, 'approved', empName)}
                           >
                             <CheckCircle2 className="h-3 w-3" /> Approve
                           </Button>
@@ -114,7 +149,7 @@ export default function HRTimeOffPage() {
                             variant="destructive"
                             className="h-7 text-xs gap-1"
                             disabled={updateStatus.isPending}
-                            onClick={() => handleAction(r.id, 'denied')}
+                            onClick={() => handleOpenApproval(r.id, 'denied', empName)}
                           >
                             <XCircle className="h-3 w-3" /> Deny
                           </Button>
@@ -173,10 +208,54 @@ export default function HRTimeOffPage() {
           <TabsTrigger value="all">All ({requests.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="pending" className="mt-4"><RequestTable items={pending} showActions /></TabsContent>
-        <TabsContent value="approved" className="mt-4"><RequestTable items={approved} /></TabsContent>
+        <TabsContent value="approved" className="mt-4"><RequestTable items={approved} showPayStatus /></TabsContent>
         <TabsContent value="denied" className="mt-4"><RequestTable items={denied} /></TabsContent>
-        <TabsContent value="all" className="mt-4"><RequestTable items={requests} /></TabsContent>
+        <TabsContent value="all" className="mt-4"><RequestTable items={requests} showPayStatus /></TabsContent>
       </Tabs>
+
+      {/* Approval / Deny Dialog */}
+      <Dialog open={!!approvalDialog} onOpenChange={() => setApprovalDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {approvalDialog?.action === 'approved' ? 'Approve' : 'Deny'} Time Off
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {approvalDialog?.action === 'approved'
+              ? `Approve time off for ${approvalDialog?.empName}?`
+              : `Deny time off for ${approvalDialog?.empName}?`}
+          </p>
+          <div className="space-y-3">
+            {approvalDialog?.action === 'approved' && (
+              <div>
+                <Label>Pay Status</Label>
+                <Select value={payStatus} onValueChange={setPayStatus}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="paid">With Pay</SelectItem>
+                    <SelectItem value="unpaid">Without Pay</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label>Admin Notes (optional)</Label>
+              <Textarea placeholder="Add a note…" value={adminNotes} onChange={e => setAdminNotes(e.target.value)} rows={2} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApprovalDialog(null)}>Cancel</Button>
+            <Button
+              variant={approvalDialog?.action === 'approved' ? 'default' : 'destructive'}
+              onClick={handleConfirmAction}
+              disabled={updateStatus.isPending}
+            >
+              {updateStatus.isPending ? 'Saving…' : approvalDialog?.action === 'approved' ? 'Approve' : 'Deny'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

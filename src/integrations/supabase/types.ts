@@ -1021,6 +1021,7 @@ export type Database = {
           days_requested: number
           end_date: string
           id: string
+          pay_status: string
           reason: string | null
           request_type: string
           reviewed_at: string | null
@@ -1036,6 +1037,7 @@ export type Database = {
           days_requested?: number
           end_date: string
           id?: string
+          pay_status?: string
           reason?: string | null
           request_type?: string
           reviewed_at?: string | null
@@ -1051,6 +1053,7 @@ export type Database = {
           days_requested?: number
           end_date?: string
           id?: string
+          pay_status?: string
           reason?: string | null
           request_type?: string
           reviewed_at?: string | null
