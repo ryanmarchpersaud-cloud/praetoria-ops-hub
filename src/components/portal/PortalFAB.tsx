@@ -46,14 +46,31 @@ export function PortalFAB() {
   const handleSubmitMessage = async (type: 'issue' | 'support') => {
     if (!message.trim() || !user) return;
     setSubmitting(true);
+    const customerName = customer ? `${customer.first_name} ${customer.last_name}` : (user.email || 'Customer');
     try {
+      // Log to activities
       await supabase.from('activities').insert({
         action_name: type === 'issue' ? 'Customer reported property issue' : 'Customer contacted support',
         user_id: user.id,
         workflow_name: 'customer_portal',
-        payload_summary: { message: message.trim(), customer_name: customer ? `${customer.first_name} ${customer.last_name}` : user.email },
+        payload_summary: { message: message.trim(), customer_name: customerName },
         status: 'completed',
       } as any);
+
+      // Send admin notification
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          event: type === 'issue' ? 'new_service_request' : 'new_service_request',
+          subject: type === 'issue' ? `Property Issue Reported by ${customerName}` : `Support Message from ${customerName}`,
+          body: message.trim(),
+          customer_name: customerName,
+          to_email: 'ops@praetoriagroup.ca',
+          reply_to: 'ops@praetoriagroup.ca',
+          channels: ['in_app', 'email'],
+          audience: 'admin',
+        },
+      });
+
       toast({ title: type === 'issue' ? 'Issue reported' : 'Message sent', description: 'Our team will follow up shortly.' });
       setMessage('');
       setActiveDialog(null);
