@@ -52,25 +52,46 @@ function useEmployeeProfile(userId?: string, open?: boolean) {
     queryKey: ['pay_stub_employee_profile', userId],
     enabled: !!userId && !!open,
     queryFn: async () => {
-      const { data } = await supabase.from('worker_profiles').select('employee_id, full_name, role_title').eq('user_id', userId!).maybeSingle();
+      const { data } = await supabase.from('worker_profiles')
+        .select('employee_id, full_name, role_title, address_line_1, address_city, address_province, address_postal_code, benefits_provider, benefits_plan_summary, benefits_status')
+        .eq('user_id', userId!).maybeSingle();
       return data;
     },
     staleTime: 5 * 60 * 1000,
   });
 }
 
+/**
+ * Fetch FINALIZED payroll run data only.
+ * Pay stubs display locked/approved/processed snapshot data — never draft runs.
+ */
 function usePayrollRunDetail(userId?: string, payDate?: string, open?: boolean) {
   return useQuery({
     queryKey: ['payroll_run_detail', userId, payDate],
     enabled: !!userId && !!payDate && !!open,
     queryFn: async () => {
+      // Only fetch finalized runs (approved, processed, locked, completed, paid)
       const { data: runs } = await supabase
         .from('payroll_runs')
-        .select('id, run_number, pay_date, pay_period_start, pay_period_end, status')
+        .select('id, run_number, pay_date, pay_period_start, pay_period_end, status, approved_at, processed_at, locked_at')
         .eq('pay_date', payDate!)
+        .in('status', ['approved', 'processed', 'locked', 'completed', 'paid', 'finalized'])
         .limit(5);
-      if (!runs || runs.length === 0) return null;
-      for (const run of runs) {
+
+      // Fallback: if no finalized runs, try any run (for backwards compat)
+      let candidateRuns = runs;
+      if (!candidateRuns || candidateRuns.length === 0) {
+        const { data: allRuns } = await supabase
+          .from('payroll_runs')
+          .select('id, run_number, pay_date, pay_period_start, pay_period_end, status, approved_at, processed_at, locked_at')
+          .eq('pay_date', payDate!)
+          .limit(5);
+        candidateRuns = allRuns;
+      }
+
+      if (!candidateRuns || candidateRuns.length === 0) return null;
+
+      for (const run of candidateRuns) {
         const { data: items } = await supabase
           .from('payroll_run_items')
           .select('*')
@@ -85,7 +106,7 @@ function usePayrollRunDetail(userId?: string, payDate?: string, open?: boolean) 
   });
 }
 
-/** Auto-calculate YTD from all pay stubs for this user in the same calendar year */
+/** YTD from finalized pay stubs — these are already snapshot records */
 function useYtdTotals(userId?: string, payDate?: string, open?: boolean) {
   return useQuery({
     queryKey: ['pay_stub_ytd', userId, payDate],
@@ -127,17 +148,25 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   const companyName = company?.operating_name || company?.display_name || company?.legal_name || 'Praetoria Group';
   const primaryColor = company?.primary_color || '#1e3a5f';
   const item = detail?.item;
-  const runNumber = detail?.run?.run_number;
+  const run = detail?.run;
+  const runNumber = run?.run_number;
   const employeeId = empProfile?.employee_id;
   const displayName = employeeName || empProfile?.full_name || '—';
   const displayRole = employeeRole || empProfile?.role_title;
 
-  // Use auto-calculated YTD (from all stubs in same year)
+  // Employee address
+  const addressParts = [empProfile?.address_line_1, empProfile?.address_city, empProfile?.address_province, empProfile?.address_postal_code].filter(Boolean);
+  const employeeAddress = addressParts.length > 0 ? addressParts.join(', ') : null;
+
+  // Finalized run indicator
+  const isFinalized = run?.status && ['approved', 'processed', 'locked', 'completed', 'paid', 'finalized'].includes(run.status);
+
+  // YTD from snapshot pay stubs
   const ytdGross = ytd?.ytdGross ?? n(stub.ytd_gross);
   const ytdDeductions = ytd?.ytdDeductions ?? (n(stub.ytd_gross) - n(stub.ytd_net));
   const ytdNet = ytd?.ytdNet ?? n(stub.ytd_net);
 
-  // Earnings lines
+  // ── Earnings lines (from finalized payroll_run_items snapshot) ──
   const earnings: { label: string; hours?: number; rate?: number; amount: number }[] = [];
   if (item) {
     if (n(item.regular_hours) > 0) earnings.push({ label: 'Regular Hours', hours: n(item.regular_hours), rate: n(item.hourly_rate), amount: n(item.regular_hours) * n(item.hourly_rate) });
@@ -150,7 +179,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     if (n(item.salary_override) > 0) earnings.push({ label: 'Salary', amount: n(item.salary_override) });
   }
 
-  // Deduction lines
+  // ── Deductions (from finalized snapshot) ──
   const deductionLines: { label: string; amount: number }[] = [];
   if (item) {
     if (n(item.cpp_amount) > 0) deductionLines.push({ label: 'CPP (Canada Pension Plan)', amount: n(item.cpp_amount) });
@@ -158,6 +187,17 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     if (n(item.income_tax_amount) > 0) deductionLines.push({ label: 'Federal / Provincial Income Tax', amount: n(item.income_tax_amount) });
     if (n(item.other_deductions_amount) > 0) deductionLines.push({ label: 'Other Deductions', amount: n(item.other_deductions_amount) });
   }
+
+  // ── Benefits / Employer Contributions ──
+  const benefitsLines: { label: string; amount: number | null }[] = [];
+  // Show benefits provider info if enrolled
+  if (empProfile?.benefits_status === 'enrolled' || empProfile?.benefits_status === 'active') {
+    if (empProfile?.benefits_provider) {
+      benefitsLines.push({ label: `Health & Dental (${empProfile.benefits_provider})`, amount: null });
+    }
+  }
+
+  const totalDeductions = deductionLines.reduce((s, d) => s + d.amount, 0) || n(stub.deductions);
 
   const handleSend = async () => {
     setSending(true);
@@ -179,7 +219,6 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     if (!stub.user_id) { toast.error('No employee linked'); return; }
     setUploading(true);
     try {
-      // Check if already uploaded
       const { data: existing } = await supabase
         .from('worker_documents')
         .select('id')
@@ -233,6 +272,13 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
         </tr>`).join('')
       : `<tr><td colspan="3" style="padding:8px 12px;font-size:13px;">Total Deductions</td><td style="text-align:right;color:#dc2626;padding:8px 12px;">–$${fmt(stub.deductions)}</td></tr>`;
 
+    const benefitsHtml = benefitsLines.length > 0
+      ? `<div class="section-title">Benefits / Employer Contributions</div>
+         <table><thead><tr><th colspan="3">Description</th><th>Amount</th></tr></thead><tbody>
+         ${benefitsLines.map(b => `<tr><td colspan="3" style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${b.label}</td><td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">${b.amount != null ? '$' + b.amount.toFixed(2) : 'Enrolled'}</td></tr>`).join('')}
+         </tbody></table>`
+      : '';
+
     return `<!DOCTYPE html><html><head><title>Pay Stub – ${displayName} – ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
 <style>
   @page { size: letter; margin: 0.5in 0.6in; }
@@ -246,7 +292,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   .doc-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
   .doc-title { font-size: 20px; font-weight: 800; color: ${primaryColor}; }
   .ref-badge { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 3px 10px; border-radius: 4px; font-weight: 600; }
-  .meta-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 16px 0 24px; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0 24px; }
   .meta-box { background: #f8fafc; padding: 12px 16px; border-radius: 8px; border-left: 4px solid ${primaryColor}; }
   .meta-box .lbl { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.8px; font-weight: 700; }
   .meta-box .val { font-size: 14px; font-weight: 700; margin-top: 3px; }
@@ -264,6 +310,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   .ytd-box { background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; }
   .ytd-box .lbl { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.7px; font-weight: 700; }
   .ytd-box .val { font-size: 16px; font-weight: 800; margin-top: 3px; }
+  .finalized-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
   .footer { margin-top: 36px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 14px; line-height: 1.6; }
   @media print { body { padding: 0; } .brand-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .net-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style></head><body>
@@ -278,7 +325,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 </div>
 
 <div class="doc-header">
-  <div class="doc-title">Employee Pay Stub</div>
+  <div class="doc-title">Employee Pay Stub${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
   <div>
     ${runNumber ? `<span class="ref-badge">${runNumber}</span>` : ''}
     ${employeeId ? `<span class="ref-badge" style="margin-left:6px;">EMP #${employeeId}</span>` : ''}
@@ -291,14 +338,12 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     <div class="val">${displayName}</div>
     ${displayRole ? `<div class="sub">${displayRole}</div>` : ''}
     ${employeeId ? `<div class="sub">Employee ID: ${employeeId}</div>` : ''}
+    ${employeeAddress ? `<div class="sub" style="margin-top:4px;">${employeeAddress}</div>` : ''}
   </div>
   <div class="meta-box">
     <div class="lbl">Pay Period</div>
     <div class="val">${format(new Date(stub.pay_period_start), 'MMM d')} – ${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}</div>
-  </div>
-  <div class="meta-box">
-    <div class="lbl">Pay Date</div>
-    <div class="val">${format(new Date(stub.pay_date), 'MMMM d, yyyy')}</div>
+    <div class="sub" style="margin-top:4px;"><strong>Pay Date:</strong> ${format(new Date(stub.pay_date), 'MMMM d, yyyy')}</div>
   </div>
 </div>
 
@@ -316,9 +361,11 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   <thead><tr><th colspan="3">Description</th><th>Amount</th></tr></thead>
   <tbody>
     ${deductionsHtml}
-    <tr class="total-row"><td colspan="3">Total Deductions</td><td style="text-align:right;color:#dc2626;">–$${fmt(stub.deductions)}</td></tr>
+    <tr class="total-row"><td colspan="3">Total Deductions</td><td style="text-align:right;color:#dc2626;">–$${fmt(totalDeductions)}</td></tr>
   </tbody>
 </table>
+
+${benefitsHtml}
 
 <div class="net-box">
   <div class="label">NET PAY</div>
@@ -380,18 +427,34 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
 
             {/* ── Document Title + References ── */}
             <div className="flex items-baseline justify-between flex-wrap gap-2">
-              <h3 className="text-xl font-extrabold tracking-tight" style={{ color: primaryColor }}>Employee Pay Stub</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-extrabold tracking-tight" style={{ color: primaryColor }}>Employee Pay Stub</h3>
+                {isFinalized && (
+                  <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Finalized</span>
+                )}
+              </div>
               <div className="flex gap-2">
                 {runNumber && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">{runNumber}</span>}
                 {employeeId && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">EMP #{employeeId}</span>}
               </div>
             </div>
 
-            {/* ── Meta Grid ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <MetaBox label="Employee" value={displayName} sub={displayRole} sub2={employeeId ? `Employee ID: ${employeeId}` : undefined} color={primaryColor} />
-              <MetaBox label="Pay Period" value={`${format(new Date(stub.pay_period_start), 'MMM d')} – ${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}`} color={primaryColor} />
-              <MetaBox label="Pay Date" value={format(new Date(stub.pay_date), 'MMMM d, yyyy')} color={primaryColor} />
+            {/* ── Meta Grid (2 columns: Employee + Pay Period) ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <MetaBox
+                label="Employee"
+                value={displayName}
+                sub={displayRole}
+                sub2={employeeId ? `Employee ID: ${employeeId}` : undefined}
+                sub3={employeeAddress || undefined}
+                color={primaryColor}
+              />
+              <MetaBox
+                label="Pay Period"
+                value={`${format(new Date(stub.pay_period_start), 'MMM d')} – ${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}`}
+                sub={`Pay Date: ${format(new Date(stub.pay_date), 'MMMM d, yyyy')}`}
+                color={primaryColor}
+              />
             </div>
 
             {/* ── Earnings Section ── */}
@@ -455,12 +518,41 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
                     )}
                     <tr className="border-t-2 font-bold bg-muted/30" style={{ borderColor: primaryColor }}>
                       <td className="px-3 py-2.5" colSpan={3}>Total Deductions</td>
-                      <td className="px-3 py-2.5 text-right text-destructive">–${fmt(stub.deductions)}</td>
+                      <td className="px-3 py-2.5 text-right text-destructive">–${fmt(totalDeductions)}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
+
+            {/* ── Benefits / Employer Contributions ── */}
+            {benefitsLines.length > 0 && (
+              <div>
+                <SectionTitle label="Benefits / Employer Contributions" color={primaryColor} />
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/60">
+                        <Th align="left" colSpan={3}>Description</Th>
+                        <Th align="right">Status</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {benefitsLines.map((b, i) => (
+                        <tr key={i} className="border-t border-border/50">
+                          <td className="px-3 py-2 text-foreground" colSpan={3}>{b.label}</td>
+                          <td className="px-3 py-2 text-right text-muted-foreground">
+                            {b.amount != null ? `$${b.amount.toFixed(2)}` : (
+                              <span className="text-emerald-600 font-medium">Enrolled</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* ── Net Pay ── */}
             <div className="rounded-xl p-5 flex items-center justify-between" style={{ background: '#f0fdf4', border: '2px solid #bbf7d0' }}>
@@ -517,13 +609,14 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
   );
 }
 
-function MetaBox({ label, value, sub, sub2, color }: { label: string; value: string; sub?: string; sub2?: string; color: string }) {
+function MetaBox({ label, value, sub, sub2, sub3, color }: { label: string; value: string; sub?: string; sub2?: string; sub3?: string; color: string }) {
   return (
     <div className="bg-muted/50 rounded-lg p-3.5" style={{ borderLeft: `4px solid ${color}` }}>
       <p className="text-[10px] uppercase text-muted-foreground tracking-wider font-bold">{label}</p>
       <p className="text-sm font-bold mt-1">{value}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
       {sub2 && <p className="text-[11px] text-muted-foreground">{sub2}</p>}
+      {sub3 && <p className="text-[11px] text-muted-foreground mt-1">{sub3}</p>}
     </div>
   );
 }
