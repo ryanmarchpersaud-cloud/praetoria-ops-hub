@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, User, MapPin, Clock, AlertTriangle, Phone, FileText, ImageIcon, X, Plus } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Clock, AlertTriangle, Phone, FileText, ImageIcon, X, Plus, Mail, Send, Paperclip, Loader2 } from 'lucide-react';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
@@ -22,6 +23,9 @@ export default function RequestDetail() {
   const [internalNotes, setInternalNotes] = useState('');
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [replyFiles, setReplyFiles] = useState<File[]>([]);
+  const [isSendingReply, setIsSendingReply] = useState(false);
   const { canManageQuotes, canManageRequests } = useActionPermissions();
   const { data: request, isLoading } = useQuery({
     queryKey: ['service_request', id],
@@ -315,11 +319,19 @@ export default function RequestDetail() {
                   <User className="h-3.5 w-3.5" /> Customer
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-sm space-y-1">
+              <CardContent className="text-sm space-y-2">
                 <p className="font-medium">{customer.first_name} {customer.last_name}</p>
                 {customer.company_name && <p className="text-muted-foreground">{customer.company_name}</p>}
-                {customer.email && <p className="text-muted-foreground">{customer.email}</p>}
-                {customer.phone && <p className="text-muted-foreground">{customer.phone}</p>}
+                {customer.email && (
+                  <a href={`mailto:${customer.email}`} className="flex items-center gap-1.5 text-primary hover:underline">
+                    <Mail className="h-3.5 w-3.5" /> {customer.email}
+                  </a>
+                )}
+                {customer.phone && (
+                  <a href={`tel:${customer.phone}`} className="flex items-center gap-1.5 text-primary hover:underline">
+                    <Phone className="h-3.5 w-3.5" /> {customer.phone}
+                  </a>
+                )}
               </CardContent>
             </Card>
           )}
