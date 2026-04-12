@@ -582,7 +582,16 @@ export default function InvoiceDetail() {
               <CardContent className="text-sm space-y-2">
                 <div><span className="text-muted-foreground">Preference</span><p className="font-medium capitalize">{billingProfile.payment_preference?.replace('-', ' ')}</p></div>
                 {billingProfile.payment_method_present && (
-                  <div><span className="text-muted-foreground">Card on File</span><p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p></div>
+                  <div>
+                    <span className="text-muted-foreground">Card on File</span>
+                    <p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p>
+                    {(billingProfile as any).card_exp_month && (billingProfile as any).card_exp_year && (
+                      <p className="text-xs text-muted-foreground">Exp {String((billingProfile as any).card_exp_month).padStart(2, '0')}/{(billingProfile as any).card_exp_year}</p>
+                    )}
+                    {(billingProfile as any).default_payment_method_id && (
+                      <p className="text-xs text-accent">✓ Default</p>
+                    )}
+                  </div>
                 )}
                 <div><span className="text-muted-foreground">Auto-pay</span><p className={`font-medium ${billingProfile.autopay_enabled ? 'text-success' : 'text-muted-foreground'}`}>{billingProfile.autopay_enabled ? 'Enabled' : 'Disabled'}</p></div>
               </CardContent>
