@@ -366,6 +366,23 @@ export default function CustomerDetail() {
               mono: true,
             }))}
           />
+
+          {/* Agreements */}
+          <RelatedRecordCard
+            title="Agreements"
+            icon={FileSignature}
+            count={agreements.length}
+            emptyText="No agreements"
+            createLink="/agreements"
+            createLabel="New"
+            items={agreements.map((a: any) => ({
+              id: a.id,
+              link: `/agreements/${a.id}`,
+              primary: a.title,
+              secondary: a.created_at ? formatDistanceToNow(new Date(a.created_at), { addSuffix: true }) : '',
+              badge: <StatusBadge status={a.status} showIcon={false} />,
+            }))}
+          />
         </div>
       </div>
 
