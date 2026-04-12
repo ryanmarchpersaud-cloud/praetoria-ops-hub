@@ -143,7 +143,7 @@ export function OperationsMap({ visits, jobs, employees, requests, isLoading }: 
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[10px] font-medium text-foreground">
-                      {v.start_time ? format(new Date(`2000-01-01T${v.start_time}`), 'h:mm a') : '—'}
+                      {v.scheduled_start_time ? format(new Date(`2000-01-01T${v.scheduled_start_time}`), 'h:mm a') : '—'}
                     </p>
                     <p className={cn(
                       'text-[9px] font-semibold',
