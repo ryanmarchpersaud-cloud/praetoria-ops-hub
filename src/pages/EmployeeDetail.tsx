@@ -1249,3 +1249,86 @@ function AssignTrainingDialog({ open, onClose, userId, onAssign, toast }: {
     </Dialog>
   );
 }
+
+/* ── Admin Document Upload Dialog ── */
+function AdminDocUploadDialog({ open, onClose, userId }: { open: boolean; onClose: () => void; userId: string }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [docName, setDocName] = useState('');
+  const [docType, setDocType] = useState('other');
+  const [file, setFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const reset = () => { setDocName(''); setDocType('other'); setFile(null); };
+
+  const handleUpload = async () => {
+    if (!file || !docName.trim()) {
+      toast({ title: 'Please fill all fields', variant: 'destructive' });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${userId}/${Date.now()}.${ext}`;
+      const { error: storageError } = await supabase.storage.from('worker-documents').upload(path, file);
+      if (storageError) throw storageError;
+
+      const { data: { publicUrl } } = supabase.storage.from('worker-documents').getPublicUrl(path);
+
+      const { error: dbError } = await supabase.from('worker_documents').insert([{
+        user_id: userId,
+        document_name: docName.trim(),
+        document_type: docType,
+        file_url: publicUrl,
+        file_name: file.name,
+        uploaded_by: userId,
+      }]);
+      if (dbError) throw dbError;
+
+      toast({ title: 'Document uploaded for employee' });
+      qc.invalidateQueries({ queryKey: ['employee_documents'] });
+      reset();
+      onClose();
+    } catch (e: any) {
+      toast({ title: 'Upload failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={() => { reset(); onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Upload Document for Employee</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Document Name</Label>
+            <Input placeholder="e.g. Offer Letter" value={docName} onChange={e => setDocName(e.target.value)} />
+          </div>
+          <div>
+            <Label>Type</Label>
+            <Select value={docType} onValueChange={setDocType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="certificate">Certificate</SelectItem>
+                <SelectItem value="policy">Signed Policy</SelectItem>
+                <SelectItem value="id">ID Document</SelectItem>
+                <SelectItem value="training">Training</SelectItem>
+                <SelectItem value="payroll">Payroll</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>File</Label>
+            <Input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => setFile(e.target.files?.[0] ?? null)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
+          <Button onClick={handleUpload} disabled={submitting}>{submitting ? 'Uploading…' : 'Upload'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
