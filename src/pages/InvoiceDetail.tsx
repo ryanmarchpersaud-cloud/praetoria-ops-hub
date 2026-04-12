@@ -63,6 +63,7 @@ export default function InvoiceDetail() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [refundOpen, setRefundOpen] = useState(false);
   const [sendingReceipt, setSendingReceipt] = useState(false);
+  const [collectingPayment, setCollectingPayment] = useState(false);
 
   if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="flex items-center justify-center py-16 text-muted-foreground">Invoice not found</div>;
