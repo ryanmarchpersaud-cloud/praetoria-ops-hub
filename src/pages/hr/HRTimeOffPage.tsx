@@ -28,15 +28,19 @@ function useUpdateTimeOffStatus() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ id, status, adminNotes }: { id: string; status: 'approved' | 'denied'; adminNotes?: string }) => {
+    mutationFn: async ({ id, status, adminNotes, payStatus }: { id: string; status: 'approved' | 'denied'; adminNotes?: string; payStatus?: string }) => {
+      const updates: Record<string, any> = {
+        status,
+        approved_by: user?.id || null,
+        reviewed_at: new Date().toISOString(),
+        admin_notes: adminNotes || null,
+      };
+      if (status === 'approved' && payStatus) {
+        updates.pay_status = payStatus;
+      }
       const { error } = await supabase
         .from('employee_time_off_requests')
-        .update({
-          status,
-          approved_by: user?.id || null,
-          reviewed_at: new Date().toISOString(),
-          admin_notes: adminNotes || null,
-        })
+        .update(updates)
         .eq('id', id);
       if (error) throw error;
     },
