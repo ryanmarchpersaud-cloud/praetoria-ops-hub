@@ -245,8 +245,7 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
         .from('agreement-attachments')
         .upload(fileName, pdfFile, { contentType: 'application/pdf' });
       if (upError) { toast.error('PDF upload failed: ' + upError.message); setUploading(false); return; }
-      const { data: urlData } = supabase.storage.from('agreement-attachments').getPublicUrl(fileName);
-      attachmentUrl = urlData?.publicUrl || upData.path;
+      attachmentUrl = fileName;
     }
     setUploading(false);
 
