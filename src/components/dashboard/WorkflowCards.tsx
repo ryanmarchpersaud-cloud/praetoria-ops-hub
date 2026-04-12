@@ -83,8 +83,16 @@ export function WorkflowCards({ requests, quotes, jobs, invoices, isLoading }: W
   const awaitingTotal = iAwaiting.reduce((s: number, i: any) => s + Number(i.balance_due || 0), 0);
   const pastDueTotal = iPastDue.reduce((s: number, i: any) => s + Number(i.balance_due || 0), 0);
 
+  // Payment KPIs
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const iPaidThisMonth = invoices.filter((i: any) => i.status === 'Paid' && i.paid_at && new Date(i.paid_at) >= monthStart);
+  const paidThisMonthTotal = iPaidThisMonth.reduce((s: number, i: any) => s + Number(i.amount_paid || 0), 0);
+  const iOutstanding = invoices.filter((i: any) => !['Paid', 'Voided', 'Draft', 'Refunded'].includes(i.status));
+  const outstandingTotal = iOutstanding.reduce((s: number, i: any) => s + Number(i.balance_due || 0), 0);
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
       <WorkflowCard
         title="Requests"
         icon={MessageSquarePlus}
@@ -129,6 +137,18 @@ export function WorkflowCards({ requests, quotes, jobs, invoices, isLoading }: W
           { label: 'Awaiting Payment', count: iAwaiting.length, total: awaitingTotal },
           { label: 'Past Due', count: iPastDue.length, total: pastDueTotal },
           { label: 'Draft', count: iDraft.length },
+        ]}
+      />
+      <WorkflowCard
+        title="Payments"
+        icon={DollarSign}
+        iconClass="bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
+        link="/finance/invoices"
+        isLoading={isLoading}
+        stats={[
+          { label: 'Paid This Month', count: iPaidThisMonth.length, total: paidThisMonthTotal },
+          { label: 'Overdue', count: iPastDue.length, total: pastDueTotal },
+          { label: 'Outstanding A/R', count: iOutstanding.length, total: outstandingTotal },
         ]}
       />
     </div>
