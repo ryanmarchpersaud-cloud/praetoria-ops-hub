@@ -11,11 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard } from 'lucide-react';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
 import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedger';
+import { useBillingProfile } from '@/hooks/useInvoices';
 import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInvoiceDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { PROVINCES } from '@/lib/constants';
