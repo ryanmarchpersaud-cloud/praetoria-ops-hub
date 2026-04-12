@@ -24,6 +24,9 @@ export default function AgreementSignPage() {
   const [typedSig, setTypedSig] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [declined, setDeclined] = useState(false);
+  const [pdfSignedUrl, setPdfSignedUrl] = useState<string | null>(null);
+  const [showSignForm, setShowSignForm] = useState(false);
 
   // Canvas for drawn signature
   const canvasRef = useRef<HTMLCanvasElement>(null);
