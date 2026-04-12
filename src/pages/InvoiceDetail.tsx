@@ -66,6 +66,12 @@ export default function InvoiceDetail() {
   const [sendingReceipt, setSendingReceipt] = useState(false);
   const [collectingPayment, setCollectingPayment] = useState(false);
 
+  // Email compose dialog state
+  const [emailTo, setEmailTo] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+
   if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="flex items-center justify-center py-16 text-muted-foreground">Invoice not found</div>;
 
@@ -325,12 +331,24 @@ export default function InvoiceDetail() {
       {/* Action buttons */}
       <div className="flex flex-wrap gap-2">
         {canSend && (
-          <Button size="sm" onClick={() => setConfirmSend(true)}>
+          <Button size="sm" onClick={() => {
+            const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+            setEmailTo(invoice.customers?.email || '');
+            setEmailSubject(`Invoice from Praetoria Snow & Ice — ${invoice.jobs?.service_category || 'Snow Removal'}`);
+            setEmailMessage(`Hi ${customerName || 'there'},\n\nThank you for your recent business with us.\n\nThe invoice total is $${total.toFixed(2)}, with $${balanceDue.toFixed(2)} to be paid by ${format(new Date(invoice.due_date), 'MMM d, yyyy')}.\n\nIf you have any questions or concerns regarding this invoice, please don't hesitate to get in touch with us at support@praetoriasnowandice.ca.\n\nSincerely,\nPraetoria Snow & Ice`);
+            setConfirmSend(true);
+          }}>
             <Send className="h-3.5 w-3.5 mr-1.5" /> Send Invoice
           </Button>
         )}
         {canResend && (
-          <Button size="sm" variant="outline" onClick={() => setConfirmSend(true)}>
+          <Button size="sm" variant="outline" onClick={() => {
+            const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+            setEmailTo(invoice.customers?.email || '');
+            setEmailSubject(`Invoice from Praetoria Snow & Ice — ${invoice.jobs?.service_category || 'Snow Removal'}`);
+            setEmailMessage(`Hi ${customerName || 'there'},\n\nThank you for your recent business with us.\n\nThe invoice total is $${total.toFixed(2)}, with $${balanceDue.toFixed(2)} to be paid by ${format(new Date(invoice.due_date), 'MMM d, yyyy')}.\n\nIf you have any questions or concerns regarding this invoice, please don't hesitate to get in touch with us at support@praetoriasnowandice.ca.\n\nSincerely,\nPraetoria Snow & Ice`);
+            setConfirmSend(true);
+          }}>
             <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Resend
           </Button>
         )}
@@ -368,14 +386,6 @@ export default function InvoiceDetail() {
           <Button size="sm" variant="outline" onClick={handleSendReceipt} disabled={sendingReceipt}>
             {sendingReceipt ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1.5" />}
             Send Receipt
-          </Button>
-        )}
-        {canResend && (
-          <Button size="sm" variant="outline" onClick={() => {
-            window.open(`/invoices/${invoice.id}/print`, '_blank');
-            setConfirmSend(true);
-          }}>
-            <FileText className="h-3.5 w-3.5 mr-1.5" /> Send Invoice
           </Button>
         )}
         {canMarkOverdue && (
@@ -647,80 +657,103 @@ export default function InvoiceDetail() {
 
       {/* ═══ CONFIRMATION DIALOGS ═══ */}
 
-      {/* Send / Resend Confirmation */}
+      {/* Send / Resend — Email Compose Dialog */}
       <Dialog open={confirmSend} onOpenChange={setConfirmSend}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{canResend ? 'Send Invoice to Customer?' : 'Send Invoice?'}</DialogTitle>
-            <DialogDescription>
-              {canResend
-                ? `This will email ${invoice.invoice_number} to ${invoice.customers?.email || 'the customer'}. You can preview it first using Print / PDF.`
-                : `This will finalize ${invoice.invoice_number} and email it to ${invoice.customers?.email || 'the customer'}. The invoice will become read-only.`}
-            </DialogDescription>
+            <DialogTitle>Email Invoice {invoice.invoice_number} to {invoice.customers?.first_name} {invoice.customers?.last_name}</DialogTitle>
           </DialogHeader>
-          <div className="flex gap-2">
-            <Link to={`/invoices/${invoice.id}/print`} target="_blank">
-              <Button variant="outline" size="sm" className="text-xs gap-1">
-                <Eye className="h-3 w-3" /> Preview Invoice
-              </Button>
-            </Link>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">To</Label>
+              <Input value={emailTo} onChange={e => setEmailTo(e.target.value)} placeholder="customer@email.com" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Subject</Label>
+              <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Message</Label>
+              <Textarea rows={8} value={emailMessage} onChange={e => setEmailMessage(e.target.value)} className="text-sm" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Link to={`/invoices/${invoice.id}/print`} target="_blank">
+                <Button variant="outline" size="sm" className="text-xs gap-1">
+                  <Eye className="h-3 w-3" /> Preview Invoice
+                </Button>
+              </Link>
+              <span className="text-xs text-muted-foreground">Invoice PDF will be included with this email</span>
+            </div>
+            {lineItems.length === 0 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">This invoice has no line items. Are you sure you want to send it?</AlertDescription>
+              </Alert>
+            )}
+            {!isDraft && (
+              <p className="text-xs text-muted-foreground">This will resend the invoice email. The invoice status will not change.</p>
+            )}
+            {isDraft && (
+              <p className="text-xs text-muted-foreground">This will finalize the invoice and make it read-only.</p>
+            )}
           </div>
-          {lineItems.length === 0 && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-xs">This invoice has no line items. Are you sure you want to send it?</AlertDescription>
-            </Alert>
-          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmSend(false)}>Cancel</Button>
             <Button onClick={async () => {
-              // Send email via edge function
-              const customerEmail = invoice.customers?.email;
-              const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
-              if (customerEmail) {
-                try {
-                  await supabase.functions.invoke('send-email', {
-                    body: {
-                      action: 'invoice_sent',
-                      customer_email: customerEmail,
-                      customer_name: customerName,
-                      invoice_number: invoice.invoice_number,
-                      service_category: invoice.jobs?.service_category || (invoice as any).service_category,
-                      total: total.toFixed(2),
-                      balance_due: balanceDue.toFixed(2),
-                      due_date: format(new Date(invoice.due_date), 'MMM d, yyyy'),
-                      invoice_id: invoice.id,
-                    },
-                  });
-                } catch (e) {
-                  console.error('Invoice email send failed:', e);
-                }
-              }
-              // Also send in-app + SMS notification via template engine
+              if (!emailTo) { toast.error('Enter a recipient email'); return; }
+              setSendingEmail(true);
               try {
-                await supabase.functions.invoke('send-notification', {
+                const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+                await supabase.functions.invoke('send-email', {
                   body: {
-                    event: 'invoice_sent',
-                    customer_id: invoice.customer_id,
-                    record_type: 'invoice',
-                    record_id: invoice.id,
-                    channels: ['in_app', 'sms'],
-                    audience: 'customer',
-                    variables: {
-                      customer_name: customerName,
-                      invoice_number: invoice.invoice_number || '',
-                      total: total.toFixed(2),
-                      due_date: format(new Date(invoice.due_date), 'MMM d, yyyy'),
-                      property: '',
-                      to_phone: invoice.customers?.phone || '',
-                    },
+                    action: 'invoice_sent',
+                    customer_email: emailTo,
+                    customer_name: customerName,
+                    invoice_number: invoice.invoice_number,
+                    service_category: invoice.jobs?.service_category || (invoice as any).service_category,
+                    total: total.toFixed(2),
+                    balance_due: balanceDue.toFixed(2),
+                    due_date: format(new Date(invoice.due_date), 'MMM d, yyyy'),
+                    invoice_id: invoice.id,
+                    custom_subject: emailSubject,
+                    custom_message: emailMessage,
                   },
                 });
-              } catch { /* non-critical */ }
-              handleStatusChange('Sent', { sent_at: new Date().toISOString() });
-              setConfirmSend(false);
-            }}>
-              <Send className="h-3.5 w-3.5 mr-1.5" /> {canResend ? 'Resend' : 'Send'}
+                // Also send in-app + SMS notification
+                try {
+                  await supabase.functions.invoke('send-notification', {
+                    body: {
+                      event: 'invoice_sent',
+                      customer_id: invoice.customer_id,
+                      record_type: 'invoice',
+                      record_id: invoice.id,
+                      channels: ['in_app', 'sms'],
+                      audience: 'customer',
+                      variables: {
+                        customer_name: customerName,
+                        invoice_number: invoice.invoice_number || '',
+                        total: total.toFixed(2),
+                        due_date: format(new Date(invoice.due_date), 'MMM d, yyyy'),
+                        property: '',
+                        to_phone: invoice.customers?.phone || '',
+                      },
+                    },
+                  });
+                } catch { /* non-critical */ }
+                if (isDraft) {
+                  handleStatusChange('Sent', { sent_at: new Date().toISOString() });
+                }
+                toast.success('Invoice email sent');
+                setConfirmSend(false);
+              } catch (e) {
+                console.error('Invoice email send failed:', e);
+                toast.error('Failed to send invoice email');
+              } finally {
+                setSendingEmail(false);
+              }
+            }} disabled={sendingEmail} className="gap-1.5">
+              {sendingEmail ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              Send Email
             </Button>
           </DialogFooter>
         </DialogContent>
