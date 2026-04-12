@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { ArrowLeft, Send, Download, RefreshCw, Eye, FileSignature, Clock, CheckC
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgreement, useAgreementSignatures, useAgreementAuditLog, useSendAgreement, useUpdateAgreement } from '@/hooks/useAgreements';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const statusColors: Record<string, string> = {
@@ -132,17 +134,7 @@ export default function AgreementDetailPage() {
         {/* Document Preview */}
         <div className="lg:col-span-2 space-y-4">
           {/* PDF Attachment */}
-          {agreement.attachment_url && (
-            <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Attached PDF Agreement</CardTitle></CardHeader>
-              <CardContent>
-                <iframe src={agreement.attachment_url} className="w-full h-[600px] border rounded" title="Agreement PDF" />
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(agreement.attachment_url!, '_blank')}>
-                  <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          <AgreementPdfViewer attachmentUrl={agreement.attachment_url} />
 
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Agreement Document</CardTitle></CardHeader>
