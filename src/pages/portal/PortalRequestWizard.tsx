@@ -176,6 +176,17 @@ export default function PortalRequestWizard() {
       } as any);
       if (error) throw error;
 
+      // Log customer activity
+      await supabase.from('activities').insert({
+        action_name: `Customer submitted service request: ${subject}`,
+        user_id: user.id,
+        record_type: 'customer',
+        record_id: customer.id,
+        workflow_name: 'customer_portal',
+        payload_summary: { customer_name: `${customer.first_name} ${customer.last_name}`, service: form.service_category },
+        status: 'completed',
+      } as any);
+
       // Notify admin/ops staff about the new request (in-app + email)
       try {
         await supabase.functions.invoke('send-notification', {
