@@ -64,6 +64,7 @@ import PortalPropertyDetail from "./pages/portal/PortalPropertyDetail";
 import PortalServicePreferences from "./pages/portal/PortalServicePreferences";
 import PortalRecurringServices from "./pages/portal/PortalRecurringServices";
 import PortalReferrals from "./pages/portal/PortalReferrals";
+const PortalAgreementsPage = lazy(() => import("./pages/portal/PortalAgreementsPage"));
 
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
@@ -96,6 +97,7 @@ import WorkerIncidentDetailPage from "./pages/worker/WorkerIncidentDetailPage";
 import WorkerExpensesPage from "./pages/worker/WorkerExpensesPage";
 import WorkerEmergencySafetyPage from "./pages/worker/WorkerEmergencySafetyPage";
 import WorkerMessagesPage from "./pages/worker/WorkerMessagesPage";
+import WorkerAgreementsPage from "./pages/worker/WorkerAgreementsPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
@@ -120,6 +122,7 @@ import SubcontractorNewIncidentPage from "./pages/subcontractor/SubcontractorNew
 import SubcontractorIncidentDetailPage from "./pages/subcontractor/SubcontractorIncidentDetailPage";
 import SubcontractorEmergencySafetyPage from "./pages/subcontractor/SubcontractorEmergencySafetyPage";
 import SubcontractorMessagesPage from "./pages/subcontractor/SubcontractorMessagesPage";
+import SubcontractorAgreementsPage from "./pages/subcontractor/SubcontractorAgreementsPage";
 
 // Admin incident pages
 import AdminIncidentsPage from "./pages/AdminIncidentsPage";
