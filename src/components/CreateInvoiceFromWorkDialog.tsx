@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, addDays } from 'date-fns';
+import { z } from 'zod';
 
 type SourceType = 'quote' | 'job' | 'visit';
 
@@ -31,6 +32,23 @@ interface Props {
   billingMode?: string | null;
 }
 
+const createInvoiceDraftSchema = z.object({
+  issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid issue date'),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter a valid due date'),
+  taxRate: z.string()
+    .trim()
+    .min(1, 'Tax rate is required')
+    .refine((value) => !Number.isNaN(Number(value)), 'Enter a valid tax rate')
+    .transform((value) => Number(value))
+    .refine((value) => value >= 0, 'Tax rate must be 0 or greater')
+    .refine((value) => value <= 1, 'Tax rate cannot be greater than 1.00'),
+  customerMemo: z.string().max(2000, 'Customer memo must be 2000 characters or less').transform((value) => value.trim()),
+  internalNotes: z.string().max(2000, 'Internal notes must be 2000 characters or less').transform((value) => value.trim()),
+}).refine((data) => data.dueDate >= data.issueDate, {
+  path: ['dueDate'],
+  message: 'Due date must be on or after the issue date',
+});
+
 export function CreateInvoiceFromWorkDialog({
   open, onOpenChange, sourceType, sourceRecord, lineItems = [],
   customerId, propertyId, jobId, visitId, quoteId, requestId, billingMode,
@@ -44,14 +62,31 @@ export function CreateInvoiceFromWorkDialog({
 
   const [issueDate, setIssueDate] = useState(today);
   const [dueDate, setDueDate] = useState(defaultDue);
-  const [taxRate, setTaxRate] = useState('0.05'); // SK GST default
+  const [taxRate, setTaxRate] = useState('0.05');
   const [customerMemo, setCustomerMemo] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [duplicate, setDuplicate] = useState<any>(null);
   const [checkingDupe, setCheckingDupe] = useState(false);
 
-  // Billing mode validation
+  const normalizedLineItems = useMemo(() => {
+    return lineItems
+      .filter((li: any) => li?.item_name)
+      .map((li: any, idx: number) => {
+        const quantity = Number(li.quantity) || 0;
+        const unitPrice = Number(li.unit_price) || 0;
+        const parsedLineTotal = Number(li.line_total);
+
+        return {
+          ...li,
+          quantity,
+          unit_price: unitPrice,
+          line_total: Number.isFinite(parsedLineTotal) ? parsedLineTotal : quantity * unitPrice,
+          sort_order: Number.isInteger(Number(li.sort_order)) ? Number(li.sort_order) : idx,
+        };
+      });
+  }, [lineItems]);
+
   const effectiveBillingMode = billingMode || (sourceType === 'quote' ? 'quoted_fixed' : sourceType === 'visit' ? 'per_visit' : 'manual');
   const billingModeBlocked = (() => {
     if (effectiveBillingMode === 'quoted_fixed' && sourceType === 'visit') {
@@ -63,7 +98,6 @@ export function CreateInvoiceFromWorkDialog({
     return null;
   })();
 
-  // Check for duplicates
   useEffect(() => {
     if (!open) return;
     setDuplicate(null);
@@ -86,10 +120,10 @@ export function CreateInvoiceFromWorkDialog({
       }
       setCheckingDupe(false);
     };
+
     check();
   }, [open, jobId, visitId, quoteId]);
 
-  // Init notes
   useEffect(() => {
     if (open && sourceRecord) {
       const label = sourceType === 'quote' ? sourceRecord.quote_number
@@ -101,7 +135,36 @@ export function CreateInvoiceFromWorkDialog({
   }, [open, sourceRecord, sourceType]);
 
   const handleCreate = async () => {
-    if (!customerId) { toast({ title: 'Customer required', variant: 'destructive' }); return; }
+    if (!customerId) {
+      toast({ title: 'Customer required', variant: 'destructive' });
+      return;
+    }
+
+    const parsed = createInvoiceDraftSchema.safeParse({
+      issueDate,
+      dueDate,
+      taxRate,
+      customerMemo,
+      internalNotes,
+    });
+
+    if (!parsed.success) {
+      toast({
+        title: 'Check invoice details',
+        description: parsed.error.issues[0]?.message || 'Please review the invoice form.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const {
+      issueDate: validatedIssueDate,
+      dueDate: validatedDueDate,
+      taxRate: validatedTaxRate,
+      customerMemo: validatedCustomerMemo,
+      internalNotes: validatedInternalNotes,
+    } = parsed.data;
+
     setSaving(true);
     try {
       const { data: invoice, error } = await supabase.from('invoices').insert({
@@ -111,35 +174,37 @@ export function CreateInvoiceFromWorkDialog({
         job_id: jobId || null,
         visit_id: visitId || null,
         quote_id: quoteId || null,
-        issue_date: issueDate,
-        due_date: dueDate,
-        tax_rate: parseFloat(taxRate),
+        issue_date: validatedIssueDate,
+        due_date: validatedDueDate,
+        tax_rate: validatedTaxRate,
         status: 'Draft' as any,
-        customer_memo: customerMemo || null,
-        internal_notes: internalNotes || null,
+        customer_memo: validatedCustomerMemo || null,
+        internal_notes: validatedInternalNotes || null,
         billing_mode: effectiveBillingMode,
       } as any).select().single();
       if (error) throw error;
 
-      // Copy line items if available
-      if (lineItems.length > 0) {
-        const items = lineItems.map((li: any, idx: number) => ({
+      if (normalizedLineItems.length > 0) {
+        const items = normalizedLineItems.map((li: any, idx: number) => ({
           invoice_id: invoice.id,
           item_name: li.item_name,
           description: li.description || null,
-          quantity: Number(li.quantity),
-          unit_price: Number(li.unit_price),
-          sort_order: idx,
+          quantity: li.quantity,
+          unit_price: li.unit_price,
+          line_total: li.line_total,
+          sort_order: Number.isInteger(Number(li.sort_order)) ? Number(li.sort_order) : idx,
         }));
-        await supabase.from('invoice_line_items').insert(items as any);
+        const { error: itemsError } = await supabase.from('invoice_line_items').insert(items as any);
+        if (itemsError) throw itemsError;
       }
 
-      // Update billing_status on source
       if (jobId) {
-        await supabase.from('jobs').update({ billing_status: 'invoiced' } as any).eq('id', jobId);
+        const { error: jobUpdateError } = await supabase.from('jobs').update({ billing_status: 'invoiced' } as any).eq('id', jobId);
+        if (jobUpdateError) throw jobUpdateError;
       }
       if (visitId) {
-        await supabase.from('visits').update({ billing_status: 'invoiced' } as any).eq('id', visitId);
+        const { error: visitUpdateError } = await supabase.from('visits').update({ billing_status: 'invoiced' } as any).eq('id', visitId);
+        if (visitUpdateError) throw visitUpdateError;
       }
 
       qc.invalidateQueries({ queryKey: ['invoices'] });
@@ -157,8 +222,9 @@ export function CreateInvoiceFromWorkDialog({
     }
   };
 
-  const subtotal = lineItems.reduce((s, li) => s + Number(li.line_total || 0), 0);
-  const tax = subtotal * parseFloat(taxRate || '0');
+  const subtotal = normalizedLineItems.reduce((sum, li) => sum + Number(li.line_total || 0), 0);
+  const parsedTaxRate = Number(taxRate || '0');
+  const tax = subtotal * (Number.isFinite(parsedTaxRate) ? parsedTaxRate : 0);
   const total = subtotal + tax;
 
   return (
@@ -201,11 +267,11 @@ export function CreateInvoiceFromWorkDialog({
               <span className="text-muted-foreground">Billing Mode</span>
               <Badge variant="secondary" className="text-[10px]">{effectiveBillingMode}</Badge>
             </div>
-            {lineItems.length > 0 && (
+            {normalizedLineItems.length > 0 && (
               <>
-                <div className="flex justify-between"><span className="text-muted-foreground">Line Items</span><span>{lineItems.length}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Line Items</span><span>{normalizedLineItems.length}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="font-mono">${subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Tax ({(parseFloat(taxRate) * 100).toFixed(0)}%)</span><span className="font-mono">${tax.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Tax ({((Number.isFinite(parsedTaxRate) ? parsedTaxRate : 0) * 100).toFixed(0)}%)</span><span className="font-mono">${tax.toFixed(2)}</span></div>
                 <div className="flex justify-between font-medium"><span>Total</span><span className="font-mono">${total.toFixed(2)}</span></div>
               </>
             )}
@@ -217,7 +283,7 @@ export function CreateInvoiceFromWorkDialog({
           </div>
           <div>
             <Label className="text-xs">Tax Rate</Label>
-            <Input value={taxRate} onChange={e => setTaxRate(e.target.value)} />
+            <Input type="number" inputMode="decimal" min="0" max="1" step="0.01" value={taxRate} onChange={e => setTaxRate(e.target.value)} />
           </div>
           <div><Label className="text-xs">Customer Memo</Label><Textarea value={customerMemo} onChange={e => setCustomerMemo(e.target.value)} rows={2} /></div>
           <div><Label className="text-xs">Internal Notes</Label><Textarea value={internalNotes} onChange={e => setInternalNotes(e.target.value)} rows={2} /></div>
