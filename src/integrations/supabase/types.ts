@@ -59,6 +59,281 @@ export type Database = {
         }
         Relationships: []
       }
+      agreement_audit_log: {
+        Row: {
+          action: string
+          agreement_id: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          performed_by: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          agreement_id: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          performed_by?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          agreement_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          performed_by?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_audit_log_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_signatures: {
+        Row: {
+          agreement_id: string
+          consent_text: string | null
+          id: string
+          ip_address: string | null
+          signature_data: string | null
+          signature_type: string
+          signed_at: string
+          signer_email: string | null
+          signer_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          agreement_id: string
+          consent_text?: string | null
+          id?: string
+          ip_address?: string | null
+          signature_data?: string | null
+          signature_type?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          agreement_id?: string
+          consent_text?: string | null
+          id?: string
+          ip_address?: string | null
+          signature_data?: string | null
+          signature_type?: string
+          signed_at?: string
+          signer_email?: string | null
+          signer_name?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_signatures_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_templates: {
+        Row: {
+          body_html: string
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          merge_fields: Json | null
+          name: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          body_html?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          merge_fields?: Json | null
+          name: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          body_html?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          merge_fields?: Json | null
+          name?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      agreements: {
+        Row: {
+          body_html: string
+          category: string
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          declined_at: string | null
+          employee_user_id: string | null
+          expires_at: string | null
+          id: string
+          internal_reference: string | null
+          job_id: string | null
+          merge_data: Json | null
+          notes: string | null
+          property_id: string | null
+          quote_id: string | null
+          recipient_email: string | null
+          recipient_name: string
+          recipient_type: string
+          recipient_user_id: string | null
+          sent_at: string | null
+          sent_by: string | null
+          signed_at: string | null
+          signing_token: string | null
+          status: string
+          subcontractor_user_id: string | null
+          superseded_by: string | null
+          template_id: string | null
+          title: string
+          updated_at: string
+          version: number
+          viewed_at: string | null
+        }
+        Insert: {
+          body_html?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          declined_at?: string | null
+          employee_user_id?: string | null
+          expires_at?: string | null
+          id?: string
+          internal_reference?: string | null
+          job_id?: string | null
+          merge_data?: Json | null
+          notes?: string | null
+          property_id?: string | null
+          quote_id?: string | null
+          recipient_email?: string | null
+          recipient_name: string
+          recipient_type?: string
+          recipient_user_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          signed_at?: string | null
+          signing_token?: string | null
+          status?: string
+          subcontractor_user_id?: string | null
+          superseded_by?: string | null
+          template_id?: string | null
+          title: string
+          updated_at?: string
+          version?: number
+          viewed_at?: string | null
+        }
+        Update: {
+          body_html?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          declined_at?: string | null
+          employee_user_id?: string | null
+          expires_at?: string | null
+          id?: string
+          internal_reference?: string | null
+          job_id?: string | null
+          merge_data?: Json | null
+          notes?: string | null
+          property_id?: string | null
+          quote_id?: string | null
+          recipient_email?: string | null
+          recipient_name?: string
+          recipient_type?: string
+          recipient_user_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          signed_at?: string | null
+          signing_token?: string | null
+          status?: string
+          subcontractor_user_id?: string | null
+          superseded_by?: string | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string
+          version?: number
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreements_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreements_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreements_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreements_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreements_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcement_dismissals: {
         Row: {
           announcement_id: string

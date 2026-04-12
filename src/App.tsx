@@ -64,6 +64,7 @@ import PortalPropertyDetail from "./pages/portal/PortalPropertyDetail";
 import PortalServicePreferences from "./pages/portal/PortalServicePreferences";
 import PortalRecurringServices from "./pages/portal/PortalRecurringServices";
 import PortalReferrals from "./pages/portal/PortalReferrals";
+const PortalAgreementsPage = lazy(() => import("./pages/portal/PortalAgreementsPage"));
 
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
@@ -96,6 +97,7 @@ import WorkerIncidentDetailPage from "./pages/worker/WorkerIncidentDetailPage";
 import WorkerExpensesPage from "./pages/worker/WorkerExpensesPage";
 import WorkerEmergencySafetyPage from "./pages/worker/WorkerEmergencySafetyPage";
 import WorkerMessagesPage from "./pages/worker/WorkerMessagesPage";
+import WorkerAgreementsPage from "./pages/worker/WorkerAgreementsPage";
 import WeatherDetail from "./pages/WeatherDetail";
 
 // Subcontractor pages
@@ -120,6 +122,7 @@ import SubcontractorNewIncidentPage from "./pages/subcontractor/SubcontractorNew
 import SubcontractorIncidentDetailPage from "./pages/subcontractor/SubcontractorIncidentDetailPage";
 import SubcontractorEmergencySafetyPage from "./pages/subcontractor/SubcontractorEmergencySafetyPage";
 import SubcontractorMessagesPage from "./pages/subcontractor/SubcontractorMessagesPage";
+import SubcontractorAgreementsPage from "./pages/subcontractor/SubcontractorAgreementsPage";
 
 // Admin incident pages
 import AdminIncidentsPage from "./pages/AdminIncidentsPage";
@@ -135,6 +138,9 @@ import ExpenseTrackingPage from "./pages/ExpenseTrackingPage";
 import MessagingPage from "./pages/MessagingPage";
 import AutomationsPage from "./pages/AutomationsPage";
 import SystemAnnouncementsPage from "./pages/SystemAnnouncementsPage";
+const AgreementsPage = lazy(() => import("./pages/AgreementsPage"));
+const AgreementDetailPage = lazy(() => import("./pages/AgreementDetailPage"));
+const AgreementSignPage = lazy(() => import("./pages/AgreementSignPage"));
 
 // HR / Training pages
 import HRDashboardPage from "./pages/HRDashboardPage";
@@ -381,6 +387,12 @@ function AppRoutes() {
       <Route path="/settings/requests-config" element={<AdminRoute><ModuleGuard settingsKey="requestsBookings"><RequestsBookingsPage /></ModuleGuard></AdminRoute>} />
       <Route path="/settings/portal" element={<AdminRoute><ModuleGuard settingsKey="portalSettings"><PortalSettingsPage /></ModuleGuard></AdminRoute>} />
       <Route path="/settings/announcements" element={<AdminRoute><ModuleGuard settingsKey="systemAnnouncements"><SystemAnnouncementsPage /></ModuleGuard></AdminRoute>} />
+
+      {/* Agreements */}
+      <Route path="/agreements" element={<AdminRoute><Suspense fallback={<RouteLoading />}><AgreementsPage /></Suspense></AdminRoute>} />
+      <Route path="/agreements/:id" element={<AdminRoute><Suspense fallback={<RouteLoading />}><AgreementDetailPage /></Suspense></AdminRoute>} />
+      {/* Public signing page — no auth required */}
+      <Route path="/sign/:token" element={<Suspense fallback={<RouteLoading />}><AgreementSignPage /></Suspense>} />
 
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
