@@ -177,6 +177,8 @@ const FinanceTaxSlips = lazy(() => import("./pages/finance/FinanceTaxSlips"));
 const FinanceInvoices = lazy(() => import("./pages/finance/FinanceInvoices"));
 const FinanceAR = lazy(() => import("./pages/finance/FinanceAR"));
 const FinanceStatements = lazy(() => import("./pages/finance/FinanceStatements"));
+const FinancePayments = lazy(() => import("./pages/finance/FinancePayments"));
+const PaymentDetail = lazy(() => import("./pages/finance/PaymentDetail"));
 
 import WorkSettingsPage from "./pages/WorkSettingsPage";
 import ScheduleSettingsPage from "./pages/ScheduleSettingsPage";
@@ -352,6 +354,8 @@ function AppRoutes() {
       <Route path="/finance/invoices" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><FinanceInvoices /></Suspense></ModuleGuard></AdminRoute>} />
       <Route path="/finance/accounts-receivable" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><FinanceAR /></Suspense></ModuleGuard></AdminRoute>} />
       <Route path="/finance/statements" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><FinanceStatements /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/payments" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><FinancePayments /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/finance/payments/:id" element={<AdminRoute><ModuleGuard module="finance"><Suspense fallback={<RouteLoading />}><PaymentDetail /></Suspense></ModuleGuard></AdminRoute>} />
       {/* Finance full-access only pages */}
       <Route path="/finance/expenses" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceExpenses /></Suspense></ModuleGuard></AdminRoute>} />
       <Route path="/finance/receipts" element={<AdminRoute><ModuleGuard module="financeFull"><Suspense fallback={<RouteLoading />}><FinanceReceipts /></Suspense></ModuleGuard></AdminRoute>} />
