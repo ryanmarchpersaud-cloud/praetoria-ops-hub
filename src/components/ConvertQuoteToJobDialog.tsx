@@ -227,6 +227,41 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
         }
       }
 
+      // 5. Send email notification to assigned worker
+      if (assignedTo && assignedTo !== 'unassigned') {
+        try {
+          // Look up worker email from profiles
+          const { data: profile } = await supabase
+            .from('profiles' as any)
+            .select('display_name')
+            .eq('user_id', assignedTo)
+            .maybeSingle() as any;
+
+          // Get worker's auth email
+          const workerName = profile?.display_name || 'Team Member';
+
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'worker_assigned',
+              recipient_id: assignedTo,
+              record_type: 'job',
+              record_id: job.id,
+              channels: ['email'],
+              audience: 'worker',
+              variables: {
+                subject: `New Job Assignment: ${job.job_number}`,
+                body: `Hi ${workerName}, you have been assigned to job ${job.job_number} — ${jobTitle}. Please check your app for details.`,
+                worker_name: workerName,
+                job_number: job.job_number,
+                job_title: jobTitle,
+              },
+            },
+          });
+        } catch {
+          // Email is best-effort — don't block conversion
+        }
+      }
+
       qc.invalidateQueries({ queryKey: ['jobs'] });
       qc.invalidateQueries({ queryKey: ['quotes'] });
       qc.invalidateQueries({ queryKey: ['quote', quote.id] });
