@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
@@ -29,12 +29,11 @@ export default function PortalBilling() {
   const searchParams = new URLSearchParams(window.location.search);
   const cardSaved = searchParams.get('card_saved');
 
-  useState(() => {
+  useEffect(() => {
     if (cardSaved === 'true' && customer?.id) {
       callEdgeFunction('sync-payment-method', { role_type: 'customer' })
         .then(() => {
           queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
-          // Clean up URL
           const url = new URL(window.location.href);
           url.searchParams.delete('card_saved');
           window.history.replaceState({}, '', url.toString());
@@ -42,7 +41,7 @@ export default function PortalBilling() {
         })
         .catch(() => {});
     }
-  });
+  }, [cardSaved, customer?.id]);
 
   // All invoices for this customer
   const { data: allInvoices = [], isLoading } = useQuery({
