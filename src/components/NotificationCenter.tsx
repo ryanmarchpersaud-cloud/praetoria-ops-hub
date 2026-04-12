@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useUnreadNotifications, useMarkNotificationRead, Notification } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bell, CheckCircle, FileText, Truck, CreditCard, Calendar, AlertCircle } from 'lucide-react';
@@ -19,6 +20,16 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
   invoice_overdue: AlertCircle,
   payment_received: CheckCircle,
   payment_failed: AlertCircle,
+};
+
+const RECORD_ROUTES: Record<string, string> = {
+  invoice: '/invoices',
+  quote: '/quotes',
+  job: '/jobs',
+  visit: '/visits',
+  request: '/requests',
+  lead: '/leads',
+  payment: '/finance/payments',
 };
 
 let audioCtx: AudioContext | null = null;
@@ -82,6 +93,7 @@ export function NotificationCenter() {
   const { isStaff, isAdmin } = useUserRole();
   const { data: notifications = [] } = useUnreadNotifications(user?.id, isStaff || isAdmin);
   const markRead = useMarkNotificationRead();
+  const navigate = useNavigate();
   const prevCountRef = useRef(0);
 
   // Play sound when new notifications arrive
@@ -92,8 +104,20 @@ export function NotificationCenter() {
     prevCountRef.current = notifications.length;
   }, [notifications.length]);
 
-  const handleRead = (id: string) => {
-    markRead.mutate(id);
+  const handleClick = (n: Notification) => {
+    markRead.mutate(n.id);
+    // Navigate to the related record if possible
+    if (n.record_type && n.record_id) {
+      const base = RECORD_ROUTES[n.record_type];
+      if (base) {
+        navigate(`${base}/${n.record_id}`);
+        return;
+      }
+    }
+    // Fallback: payment_received events link to finance payments
+    if (n.event === 'payment_received') {
+      navigate('/finance/payments');
+    }
   };
 
   const unreadCount = notifications.length;
@@ -123,8 +147,8 @@ export function NotificationCenter() {
               return (
                 <Card
                   key={n.id}
-                  className="cursor-pointer active:shadow-sm transition-shadow"
-                  onClick={() => handleRead(n.id)}
+                  className="cursor-pointer active:shadow-sm transition-shadow hover:bg-muted/50"
+                  onClick={() => handleClick(n)}
                 >
                   <CardContent className="p-3 space-y-1">
                     <div className="flex items-start gap-2">
