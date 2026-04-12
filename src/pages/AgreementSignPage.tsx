@@ -48,6 +48,15 @@ export default function AgreementSignPage() {
     }
   }, [agreement]);
 
+  // Generate signed URL for PDF attachment
+  useEffect(() => {
+    if (agreement?.attachment_url) {
+      supabase.storage.from('agreement-attachments')
+        .createSignedUrl(agreement.attachment_url, 3600)
+        .then(({ data }) => { if (data?.signedUrl) setPdfSignedUrl(data.signedUrl); });
+    }
+  }, [agreement?.attachment_url]);
+
   if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading agreement…</div>;
   if (!agreement) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Agreement not found or link has expired.</div>;
   if (agreement.status === 'signed' || signed) {
