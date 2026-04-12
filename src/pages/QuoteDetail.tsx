@@ -343,6 +343,8 @@ export default function QuoteDetail() {
           createdAt={quote.created_at}
           onStatusChange={handleStatusChange}
           isUpdating={updateQuote.isPending}
+          onConvertToJob={canManageQuotes ? handleConvertToJob : undefined}
+          isConverted={isConverted}
         />
       </div>
 
@@ -559,6 +561,8 @@ export default function QuoteDetail() {
               createdAt={quote.created_at}
               onStatusChange={handleStatusChange}
               isUpdating={updateQuote.isPending}
+              onConvertToJob={canManageQuotes ? handleConvertToJob : undefined}
+              isConverted={isConverted}
             />
           </div>
 
