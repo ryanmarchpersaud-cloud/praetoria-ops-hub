@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
 import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 
 export default function InvoiceDetail() {
   const { id } = useParams();
