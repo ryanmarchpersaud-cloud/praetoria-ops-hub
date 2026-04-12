@@ -1,14 +1,16 @@
+import { useState } from 'react';
 import { useWorkerPayStubs, useWorkerProfile } from '@/hooks/useWorkerProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DollarSign, Calendar, Download, TrendingUp, Phone, Info } from 'lucide-react';
+import { DollarSign, Calendar, TrendingUp, Info, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import PayStubDetailDialog from '@/components/PayStubDetailDialog';
 
 export default function WorkerPayrollPage() {
   const { data: stubs = [], isLoading } = useWorkerPayStubs();
   const { data: profile } = useWorkerProfile();
+  const [selectedStub, setSelectedStub] = useState<any>(null);
 
   if (isLoading) {
     return (
@@ -30,8 +32,8 @@ export default function WorkerPayrollPage() {
       {profile && (
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <DollarSign className="h-5 w-5 text-emerald-600" />
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <DollarSign className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-foreground capitalize">{profile.pay_type || 'Hourly'} Pay</p>
@@ -45,7 +47,7 @@ export default function WorkerPayrollPage() {
 
       {/* Latest Pay */}
       {latest ? (
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedStub(latest)}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Calendar className="h-4 w-4" /> Latest Pay
@@ -70,13 +72,9 @@ export default function WorkerPayrollPage() {
                 <span className="text-emerald-600">${Number(latest.net_pay).toFixed(2)}</span>
               </div>
             </div>
-            {latest.stub_pdf_url && (
-              <a href={latest.stub_pdf_url} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" variant="outline" className="w-full mt-2">
-                  <Download className="h-4 w-4 mr-1" /> Download Pay Stub
-                </Button>
-              </a>
-            )}
+            <Button size="sm" variant="outline" className="w-full mt-2">
+              <Eye className="h-4 w-4 mr-1" /> View Pay Stub
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -119,7 +117,7 @@ export default function WorkerPayrollPage() {
           <CardContent>
             <div className="space-y-2">
               {stubs.slice(1).map(s => (
-                <div key={s.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                <div key={s.id} className="flex items-center justify-between py-2 border-b last:border-0 cursor-pointer hover:bg-muted/50 rounded px-1" onClick={() => setSelectedStub(s)}>
                   <div>
                     <p className="text-sm font-medium">
                       {format(new Date(s.pay_period_start), 'MMM d')} – {format(new Date(s.pay_period_end), 'MMM d')}
@@ -146,6 +144,15 @@ export default function WorkerPayrollPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pay Stub Detail Dialog */}
+      <PayStubDetailDialog
+        stub={selectedStub}
+        open={!!selectedStub}
+        onOpenChange={(o) => { if (!o) setSelectedStub(null); }}
+        employeeName={profile?.full_name}
+        employeeRole={profile?.role_title}
+      />
     </div>
   );
 }
