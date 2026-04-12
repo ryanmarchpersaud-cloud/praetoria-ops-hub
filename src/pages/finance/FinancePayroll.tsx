@@ -10,16 +10,38 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { usePayrollRuns, useCreatePayrollRun, useUpdatePayrollRun, usePayrollRunItems, useCreatePayrollRunItem, useUpdatePayrollRunItem, useDeletePayrollRunItem } from '@/hooks/usePayroll';
 import { useFinanceAccounts } from '@/hooks/useFinanceAccounts';
 import { useEmployees } from '@/hooks/useEmployees';
-import { Plus, ChevronRight, Users, DollarSign, Clock, CheckCircle, Lock, ArrowLeft, Trash2 } from 'lucide-react';
+import { Plus, ChevronRight, Users, DollarSign, Clock, CheckCircle, Lock, ArrowLeft, Trash2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
 const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 const statusColor: Record<string, string> = { draft: 'bg-muted text-muted-foreground', approved: 'bg-primary/10 text-primary', processed: 'bg-accent/10 text-accent', cancelled: 'bg-destructive/10 text-destructive' };
+
+const EMPTY_ITEM_FORM = {
+  employee_name: '', regular_hours: 0, overtime_hours: 0, holiday_hours: 0, sick_hours: 0, vacation_hours: 0,
+  hourly_rate: 0, salary_override: 0, bonus_amount: 0, allowance_amount: 0, reimbursement_amount: 0, vacation_pay_amount: 0,
+  // Statutory deductions
+  cpp_amount: 0, ei_amount: 0, income_tax_amount: 0,
+  // Employee-paid benefit deductions
+  union_dues: 0, pension_rpp: 0, rrsp_prpp: 0,
+  employee_health_premium: 0, employee_dental_premium: 0, employee_vision_premium: 0,
+  group_life_premium: 0, ltd_premium: 0, eap_premium: 0,
+  voluntary_deductions: 0, garnishments: 0, overpayment_recovery: 0, other_deductions_amount: 0,
+  // Employer contributions
+  employer_cpp: 0, employer_ei: 0, employer_pension_match: 0,
+  employer_health_premium: 0, employer_dental_premium: 0, employer_group_life: 0,
+  employer_ltd: 0, employer_benefit_contribution: 0, employer_retirement_match: 0,
+  // Pay method
+  pay_method: 'direct_deposit',
+};
+
+type ItemForm = typeof EMPTY_ITEM_FORM;
 
 export default function FinancePayroll() {
   const [statusFilter, setStatusFilter] = useState('all');
@@ -136,42 +158,112 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
   const updateItem = useUpdatePayrollRunItem();
   const deleteItem = useDeletePayrollRunItem();
   const [showAdd, setShowAdd] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
-  const [itemForm, setItemForm] = useState({ employee_name: '', regular_hours: 0, overtime_hours: 0, holiday_hours: 0, sick_hours: 0, vacation_hours: 0, hourly_rate: 0, bonus_amount: 0, cpp_amount: 0, ei_amount: 0, income_tax_amount: 0, other_deductions_amount: 0 });
+  const [itemForm, setItemForm] = useState<ItemForm>({ ...EMPTY_ITEM_FORM });
 
   const isLocked = run?.status === 'processed' || run?.status === 'cancelled';
 
-  // When employee is selected, auto-fill name and rate
   const handleEmployeeSelect = (userId: string) => {
     setSelectedEmployeeId(userId);
     const emp = employees.find((e: any) => e.user_id === userId);
     if (emp) {
-      setItemForm(f => ({
-        ...f,
-        employee_name: emp.full_name || '',
-        hourly_rate: Number(emp.hourly_rate) || 0,
-      }));
+      setItemForm(f => ({ ...f, employee_name: emp.full_name || '', hourly_rate: Number(emp.hourly_rate) || 0 }));
     }
   };
 
-  const calcGross = (i: typeof itemForm) => {
-    const total_hours = Number(i.regular_hours) + (Number(i.overtime_hours) * 1.5) + Number(i.holiday_hours) + Number(i.sick_hours) + Number(i.vacation_hours);
-    return Math.round(total_hours * Number(i.hourly_rate) * 100) / 100 + Number(i.bonus_amount);
+  const calcGross = (i: ItemForm) => {
+    const hourly = (Number(i.regular_hours) + (Number(i.overtime_hours) * 1.5) + Number(i.holiday_hours) + Number(i.sick_hours) + Number(i.vacation_hours)) * Number(i.hourly_rate);
+    return Math.round((hourly + Number(i.salary_override) + Number(i.bonus_amount) + Number(i.allowance_amount) + Number(i.reimbursement_amount) + Number(i.vacation_pay_amount)) * 100) / 100;
   };
-  const calcDeductions = (i: typeof itemForm) => Number(i.cpp_amount) + Number(i.ei_amount) + Number(i.income_tax_amount) + Number(i.other_deductions_amount);
 
-  const handleAddItem = () => {
+  const calcEmployeeDeductions = (i: ItemForm) =>
+    Number(i.cpp_amount) + Number(i.ei_amount) + Number(i.income_tax_amount) +
+    Number(i.union_dues) + Number(i.pension_rpp) + Number(i.rrsp_prpp) +
+    Number(i.employee_health_premium) + Number(i.employee_dental_premium) + Number(i.employee_vision_premium) +
+    Number(i.group_life_premium) + Number(i.ltd_premium) + Number(i.eap_premium) +
+    Number(i.voluntary_deductions) + Number(i.garnishments) + Number(i.overpayment_recovery) + Number(i.other_deductions_amount);
+
+  const calcEmployerContributions = (i: ItemForm) =>
+    Number(i.employer_cpp) + Number(i.employer_ei) + Number(i.employer_pension_match) +
+    Number(i.employer_health_premium) + Number(i.employer_dental_premium) + Number(i.employer_group_life) +
+    Number(i.employer_ltd) + Number(i.employer_benefit_contribution) + Number(i.employer_retirement_match);
+
+  const openAddDialog = () => {
+    setEditingItemId(null);
+    setSelectedEmployeeId('');
+    setItemForm({ ...EMPTY_ITEM_FORM });
+    setShowAdd(true);
+  };
+
+  const openEditDialog = (item: any) => {
+    setEditingItemId(item.id);
+    setSelectedEmployeeId(item.user_id || '');
+    setItemForm({
+      employee_name: item.employee_name || '',
+      regular_hours: Number(item.regular_hours) || 0,
+      overtime_hours: Number(item.overtime_hours) || 0,
+      holiday_hours: Number(item.holiday_hours) || 0,
+      sick_hours: Number(item.sick_hours) || 0,
+      vacation_hours: Number(item.vacation_hours) || 0,
+      hourly_rate: Number(item.hourly_rate) || 0,
+      salary_override: Number(item.salary_override) || 0,
+      bonus_amount: Number(item.bonus_amount) || 0,
+      allowance_amount: Number(item.allowance_amount) || 0,
+      reimbursement_amount: Number(item.reimbursement_amount) || 0,
+      vacation_pay_amount: Number(item.vacation_pay_amount) || 0,
+      cpp_amount: Number(item.cpp_amount) || 0,
+      ei_amount: Number(item.ei_amount) || 0,
+      income_tax_amount: Number(item.income_tax_amount) || 0,
+      union_dues: Number(item.union_dues) || 0,
+      pension_rpp: Number(item.pension_rpp) || 0,
+      rrsp_prpp: Number(item.rrsp_prpp) || 0,
+      employee_health_premium: Number(item.employee_health_premium) || 0,
+      employee_dental_premium: Number(item.employee_dental_premium) || 0,
+      employee_vision_premium: Number(item.employee_vision_premium) || 0,
+      group_life_premium: Number(item.group_life_premium) || 0,
+      ltd_premium: Number(item.ltd_premium) || 0,
+      eap_premium: Number(item.eap_premium) || 0,
+      voluntary_deductions: Number(item.voluntary_deductions) || 0,
+      garnishments: Number(item.garnishments) || 0,
+      overpayment_recovery: Number(item.overpayment_recovery) || 0,
+      other_deductions_amount: Number(item.other_deductions_amount) || 0,
+      employer_cpp: Number(item.employer_cpp) || 0,
+      employer_ei: Number(item.employer_ei) || 0,
+      employer_pension_match: Number(item.employer_pension_match) || 0,
+      employer_health_premium: Number(item.employer_health_premium) || 0,
+      employer_dental_premium: Number(item.employer_dental_premium) || 0,
+      employer_group_life: Number(item.employer_group_life) || 0,
+      employer_ltd: Number(item.employer_ltd) || 0,
+      employer_benefit_contribution: Number(item.employer_benefit_contribution) || 0,
+      employer_retirement_match: Number(item.employer_retirement_match) || 0,
+      pay_method: item.pay_method || 'direct_deposit',
+    });
+    setShowAdd(true);
+  };
+
+  const handleSaveItem = () => {
     if (!itemForm.employee_name) { toast.error('Select an employee'); return; }
     const gross = calcGross(itemForm);
-    const ded = calcDeductions(itemForm);
-    createItem.mutate({
-      payroll_run_id: runId,
-      user_id: selectedEmployeeId || null,
+    const ded = calcEmployeeDeductions(itemForm);
+    const payload: any = {
       ...itemForm,
       gross_pay: gross,
-      total_deductions: ded,
+      total_deductions: Math.round(ded * 100) / 100,
       net_pay: Math.round((gross - ded) * 100) / 100,
-    }, { onSuccess: () => { setShowAdd(false); setSelectedEmployeeId(''); setItemForm({ employee_name: '', regular_hours: 0, overtime_hours: 0, holiday_hours: 0, sick_hours: 0, vacation_hours: 0, hourly_rate: 0, bonus_amount: 0, cpp_amount: 0, ei_amount: 0, income_tax_amount: 0, other_deductions_amount: 0 }); } });
+    };
+
+    if (editingItemId) {
+      updateItem.mutate({ id: editingItemId, payroll_run_id: runId, ...payload }, {
+        onSuccess: () => { setShowAdd(false); setEditingItemId(null); }
+      });
+    } else {
+      payload.payroll_run_id = runId;
+      payload.user_id = selectedEmployeeId || null;
+      createItem.mutate(payload, {
+        onSuccess: () => { setShowAdd(false); setSelectedEmployeeId(''); setItemForm({ ...EMPTY_ITEM_FORM }); }
+      });
+    }
   };
 
   const handleStatusChange = async (newStatus: string) => {
@@ -182,7 +274,6 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
       updates.processed_at = new Date().toISOString();
       updates.locked_at = new Date().toISOString();
 
-      // Auto-generate pay stubs for each employee in this run
       if (items && items.length > 0 && run) {
         const stubs = items
           .filter((i: any) => i.user_id)
@@ -212,6 +303,9 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
   };
 
   const totals = (items ?? []).reduce((acc, i) => ({ gross: acc.gross + Number(i.gross_pay), ded: acc.ded + Number(i.total_deductions), net: acc.net + Number(i.net_pay) }), { gross: 0, ded: 0, net: 0 });
+  const gross = calcGross(itemForm);
+  const ded = calcEmployeeDeductions(itemForm);
+  const empContrib = calcEmployerContributions(itemForm);
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto">
@@ -238,7 +332,7 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Employees ({items?.length ?? 0})</CardTitle>
-          {!isLocked && <Button size="sm" onClick={() => setShowAdd(true)}><Plus className="h-3.5 w-3.5 mr-1" /> Add Employee</Button>}
+          {!isLocked && <Button size="sm" onClick={openAddDialog}><Plus className="h-3.5 w-3.5 mr-1" /> Add Employee</Button>}
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           {isLoading ? <Skeleton className="h-32 m-4" /> : (
@@ -252,7 +346,7 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
                   <TableHead className="text-right">Gross</TableHead>
                   <TableHead className="text-right">Deductions</TableHead>
                   <TableHead className="text-right">Net</TableHead>
-                  {!isLocked && <TableHead className="w-10" />}
+                  {!isLocked && <TableHead className="w-20" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -266,10 +360,15 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
                     <TableCell className="text-right text-destructive">{fmt(Number(i.total_deductions))}</TableCell>
                     <TableCell className="text-right font-medium">{fmt(Number(i.net_pay))}</TableCell>
                     {!isLocked && (
-                      <TableCell>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteItem.mutate({ id: i.id, payroll_run_id: runId })}>
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </Button>
+                      <TableCell className="text-right">
+                        <div className="flex gap-1 justify-end">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(i)}>
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteItem.mutate({ id: i.id, payroll_run_id: runId })}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     )}
                   </TableRow>
@@ -293,52 +392,164 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
         </Card>
       )}
 
-      {/* Add Employee Dialog */}
-      <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Add Employee to Run</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Select Employee</Label>
-              <Select value={selectedEmployeeId} onValueChange={handleEmployeeSelect}>
-                <SelectTrigger><SelectValue placeholder="Choose an employee…" /></SelectTrigger>
-                <SelectContent>
-                  {employees.map((emp: any) => (
-                    <SelectItem key={emp.user_id} value={emp.user_id}>
-                      {emp.full_name || emp.work_email || 'Unnamed'} {emp.hourly_rate ? `($${emp.hourly_rate}/hr)` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Add / Edit Employee Dialog */}
+      <Dialog open={showAdd} onOpenChange={(o) => { if (!o) { setShowAdd(false); setEditingItemId(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
+            <DialogTitle>{editingItemId ? 'Edit Employee Payroll' : 'Add Employee to Run'}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] px-6 pb-2">
+            <div className="space-y-5 pb-4">
+              {/* Employee Selection */}
+              {!editingItemId && (
+                <div>
+                  <Label>Select Employee</Label>
+                  <Select value={selectedEmployeeId} onValueChange={handleEmployeeSelect}>
+                    <SelectTrigger><SelectValue placeholder="Choose an employee…" /></SelectTrigger>
+                    <SelectContent>
+                      {employees.map((emp: any) => (
+                        <SelectItem key={emp.user_id} value={emp.user_id}>
+                          {emp.full_name || emp.work_email || 'Unnamed'} {emp.hourly_rate ? `($${emp.hourly_rate}/hr)` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {editingItemId && <p className="text-sm font-semibold text-foreground">{itemForm.employee_name}</p>}
+
+              {/* ── Earnings ── */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Earnings</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <NumField label="Reg Hrs" value={itemForm.regular_hours} onChange={v => setItemForm(f => ({ ...f, regular_hours: v }))} />
+                  <NumField label="OT Hrs" value={itemForm.overtime_hours} onChange={v => setItemForm(f => ({ ...f, overtime_hours: v }))} />
+                  <NumField label="Hourly Rate" value={itemForm.hourly_rate} onChange={v => setItemForm(f => ({ ...f, hourly_rate: v }))} step="0.01" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Holiday Hrs" value={itemForm.holiday_hours} onChange={v => setItemForm(f => ({ ...f, holiday_hours: v }))} />
+                  <NumField label="Sick Hrs" value={itemForm.sick_hours} onChange={v => setItemForm(f => ({ ...f, sick_hours: v }))} />
+                  <NumField label="Vacation Hrs" value={itemForm.vacation_hours} onChange={v => setItemForm(f => ({ ...f, vacation_hours: v }))} />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Bonus" value={itemForm.bonus_amount} onChange={v => setItemForm(f => ({ ...f, bonus_amount: v }))} step="0.01" />
+                  <NumField label="Allowance" value={itemForm.allowance_amount} onChange={v => setItemForm(f => ({ ...f, allowance_amount: v }))} step="0.01" />
+                  <NumField label="Reimbursement" value={itemForm.reimbursement_amount} onChange={v => setItemForm(f => ({ ...f, reimbursement_amount: v }))} step="0.01" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Salary Override" value={itemForm.salary_override} onChange={v => setItemForm(f => ({ ...f, salary_override: v }))} step="0.01" />
+                  <NumField label="Vacation Pay $" value={itemForm.vacation_pay_amount} onChange={v => setItemForm(f => ({ ...f, vacation_pay_amount: v }))} step="0.01" />
+                  <div>
+                    <Label className="text-xs">Pay Method</Label>
+                    <Select value={itemForm.pay_method} onValueChange={v => setItemForm(f => ({ ...f, pay_method: v }))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="direct_deposit">Direct Deposit</SelectItem>
+                        <SelectItem value="cheque">Cheque</SelectItem>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="e_transfer">E-Transfer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* ── Statutory Deductions ── */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-destructive mb-2">Statutory Deductions</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <NumField label="CPP" value={itemForm.cpp_amount} onChange={v => setItemForm(f => ({ ...f, cpp_amount: v }))} step="0.01" />
+                  <NumField label="EI" value={itemForm.ei_amount} onChange={v => setItemForm(f => ({ ...f, ei_amount: v }))} step="0.01" />
+                  <NumField label="Income Tax" value={itemForm.income_tax_amount} onChange={v => setItemForm(f => ({ ...f, income_tax_amount: v }))} step="0.01" />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* ── Employee-Paid Benefit Deductions ── */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-orange-600 mb-2">Employee Benefit Deductions</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <NumField label="Union Dues" value={itemForm.union_dues} onChange={v => setItemForm(f => ({ ...f, union_dues: v }))} step="0.01" />
+                  <NumField label="Pension / RPP" value={itemForm.pension_rpp} onChange={v => setItemForm(f => ({ ...f, pension_rpp: v }))} step="0.01" />
+                  <NumField label="RRSP / PRPP" value={itemForm.rrsp_prpp} onChange={v => setItemForm(f => ({ ...f, rrsp_prpp: v }))} step="0.01" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Health Premium" value={itemForm.employee_health_premium} onChange={v => setItemForm(f => ({ ...f, employee_health_premium: v }))} step="0.01" />
+                  <NumField label="Dental Premium" value={itemForm.employee_dental_premium} onChange={v => setItemForm(f => ({ ...f, employee_dental_premium: v }))} step="0.01" />
+                  <NumField label="Vision Premium" value={itemForm.employee_vision_premium} onChange={v => setItemForm(f => ({ ...f, employee_vision_premium: v }))} step="0.01" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Group Life" value={itemForm.group_life_premium} onChange={v => setItemForm(f => ({ ...f, group_life_premium: v }))} step="0.01" />
+                  <NumField label="LTD / Disability" value={itemForm.ltd_premium} onChange={v => setItemForm(f => ({ ...f, ltd_premium: v }))} step="0.01" />
+                  <NumField label="EAP" value={itemForm.eap_premium} onChange={v => setItemForm(f => ({ ...f, eap_premium: v }))} step="0.01" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Voluntary Ded." value={itemForm.voluntary_deductions} onChange={v => setItemForm(f => ({ ...f, voluntary_deductions: v }))} step="0.01" />
+                  <NumField label="Garnishments" value={itemForm.garnishments} onChange={v => setItemForm(f => ({ ...f, garnishments: v }))} step="0.01" />
+                  <NumField label="Overpayment Rec." value={itemForm.overpayment_recovery} onChange={v => setItemForm(f => ({ ...f, overpayment_recovery: v }))} step="0.01" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Other Deductions" value={itemForm.other_deductions_amount} onChange={v => setItemForm(f => ({ ...f, other_deductions_amount: v }))} step="0.01" />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* ── Employer Contributions ── */}
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-2">Employer Contributions</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <NumField label="Employer CPP" value={itemForm.employer_cpp} onChange={v => setItemForm(f => ({ ...f, employer_cpp: v }))} step="0.01" />
+                  <NumField label="Employer EI" value={itemForm.employer_ei} onChange={v => setItemForm(f => ({ ...f, employer_ei: v }))} step="0.01" />
+                  <NumField label="Pension Match" value={itemForm.employer_pension_match} onChange={v => setItemForm(f => ({ ...f, employer_pension_match: v }))} step="0.01" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Health Premium" value={itemForm.employer_health_premium} onChange={v => setItemForm(f => ({ ...f, employer_health_premium: v }))} step="0.01" />
+                  <NumField label="Dental Premium" value={itemForm.employer_dental_premium} onChange={v => setItemForm(f => ({ ...f, employer_dental_premium: v }))} step="0.01" />
+                  <NumField label="Group Life" value={itemForm.employer_group_life} onChange={v => setItemForm(f => ({ ...f, employer_group_life: v }))} step="0.01" />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <NumField label="Employer LTD" value={itemForm.employer_ltd} onChange={v => setItemForm(f => ({ ...f, employer_ltd: v }))} step="0.01" />
+                  <NumField label="Benefit Contrib." value={itemForm.employer_benefit_contribution} onChange={v => setItemForm(f => ({ ...f, employer_benefit_contribution: v }))} step="0.01" />
+                  <NumField label="Retirement Match" value={itemForm.employer_retirement_match} onChange={v => setItemForm(f => ({ ...f, employer_retirement_match: v }))} step="0.01" />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* ── Live Summary ── */}
+              <Card className="bg-muted/50">
+                <CardContent className="p-4 space-y-1.5 text-sm">
+                  <div className="flex justify-between"><span>Gross Earnings</span><span className="font-semibold">{fmt(gross)}</span></div>
+                  <div className="flex justify-between"><span>Employee Deductions</span><span className="text-destructive font-medium">–{fmt(ded)}</span></div>
+                  <Separator className="my-1" />
+                  <div className="flex justify-between font-bold text-base"><span>Net Pay</span><span>{fmt(gross - ded)}</span></div>
+                  <Separator className="my-1" />
+                  <div className="flex justify-between text-muted-foreground"><span>Employer Contributions (info only)</span><span className="text-emerald-600 font-medium">{fmt(empContrib)}</span></div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div><Label>Reg Hrs</Label><Input type="number" value={itemForm.regular_hours} onChange={e => setItemForm(f => ({ ...f, regular_hours: Number(e.target.value) }))} /></div>
-              <div><Label>OT Hrs</Label><Input type="number" value={itemForm.overtime_hours} onChange={e => setItemForm(f => ({ ...f, overtime_hours: Number(e.target.value) }))} /></div>
-              <div><Label>Rate</Label><Input type="number" step="0.01" value={itemForm.hourly_rate} onChange={e => setItemForm(f => ({ ...f, hourly_rate: Number(e.target.value) }))} /></div>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div><Label>Holiday Hrs</Label><Input type="number" value={itemForm.holiday_hours} onChange={e => setItemForm(f => ({ ...f, holiday_hours: Number(e.target.value) }))} /></div>
-              <div><Label>Sick Hrs</Label><Input type="number" value={itemForm.sick_hours} onChange={e => setItemForm(f => ({ ...f, sick_hours: Number(e.target.value) }))} /></div>
-              <div><Label>Vacation Hrs</Label><Input type="number" value={itemForm.vacation_hours} onChange={e => setItemForm(f => ({ ...f, vacation_hours: Number(e.target.value) }))} /></div>
-            </div>
-            <div><Label>Bonus</Label><Input type="number" step="0.01" value={itemForm.bonus_amount} onChange={e => setItemForm(f => ({ ...f, bonus_amount: Number(e.target.value) }))} /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label>CPP</Label><Input type="number" step="0.01" value={itemForm.cpp_amount} onChange={e => setItemForm(f => ({ ...f, cpp_amount: Number(e.target.value) }))} /></div>
-              <div><Label>EI</Label><Input type="number" step="0.01" value={itemForm.ei_amount} onChange={e => setItemForm(f => ({ ...f, ei_amount: Number(e.target.value) }))} /></div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><Label>Income Tax</Label><Input type="number" step="0.01" value={itemForm.income_tax_amount} onChange={e => setItemForm(f => ({ ...f, income_tax_amount: Number(e.target.value) }))} /></div>
-              <div><Label>Other Deductions</Label><Input type="number" step="0.01" value={itemForm.other_deductions_amount} onChange={e => setItemForm(f => ({ ...f, other_deductions_amount: Number(e.target.value) }))} /></div>
-            </div>
-            <Card className="bg-muted/50"><CardContent className="p-3 text-sm">
-              <div className="flex justify-between"><span>Gross:</span><span className="font-medium">{fmt(calcGross(itemForm))}</span></div>
-              <div className="flex justify-between"><span>Deductions:</span><span className="text-destructive">{fmt(calcDeductions(itemForm))}</span></div>
-              <div className="flex justify-between font-bold"><span>Net:</span><span>{fmt(calcGross(itemForm) - calcDeductions(itemForm))}</span></div>
-            </CardContent></Card>
-          </div>
-          <DialogFooter><Button onClick={handleAddItem} disabled={createItem.isPending}>Add Employee</Button></DialogFooter>
+          </ScrollArea>
+          <DialogFooter className="px-6 pb-6 pt-2">
+            <Button onClick={handleSaveItem} disabled={createItem.isPending || updateItem.isPending}>
+              {editingItemId ? 'Save Changes' : 'Add Employee'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* ── Reusable number field ── */
+function NumField({ label, value, onChange, step = '1' }: { label: string; value: number; onChange: (v: number) => void; step?: string }) {
+  return (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <Input type="number" step={step} className="h-9" value={value || ''} onChange={e => onChange(Number(e.target.value) || 0)} />
     </div>
   );
 }
