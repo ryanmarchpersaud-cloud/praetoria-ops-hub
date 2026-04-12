@@ -7429,6 +7429,9 @@ export type Database = {
         | "Other"
         | "Property Management"
         | "Cleaning Services"
+        | "Property Inspection"
+        | "Gutter Cleaning"
+        | "Bylaw / Compliance"
       service_frequency:
         | "one-time"
         | "weekly"
@@ -7676,6 +7679,9 @@ export const Constants = {
         "Other",
         "Property Management",
         "Cleaning Services",
+        "Property Inspection",
+        "Gutter Cleaning",
+        "Bylaw / Compliance",
       ],
       service_frequency: [
         "one-time",
