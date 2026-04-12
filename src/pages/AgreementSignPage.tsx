@@ -73,6 +73,19 @@ export default function AgreementSignPage() {
       </div>
     );
   }
+  if (agreement.status === 'declined' || declined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full text-center">
+          <CardContent className="p-8 space-y-4">
+            <XCircle className="h-16 w-16 text-destructive mx-auto" />
+            <h2 className="text-2xl font-bold">Agreement Declined</h2>
+            <p className="text-muted-foreground">You have declined this agreement. If this was a mistake, please contact us.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   if (agreement.status === 'cancelled' || agreement.status === 'expired') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
