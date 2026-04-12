@@ -215,7 +215,7 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
     if (!selectedTemplate) return '';
     let html = selectedTemplate.body_html;
     // Auto-fill company name
-    const data = { ...mergeData, company_name: mergeData.company_name || 'Praetoria Group' };
+    const data: Record<string, string> = { ...mergeData, company_name: mergeData.company_name || 'Praetoria Group' };
     if (recipientType === 'customer') data.customer_name = recipientName;
     if (recipientType === 'subcontractor') data.subcontractor_name = recipientName;
     if (recipientType === 'worker') { data.employee_name = recipientName; data.recipient_name = recipientName; }
