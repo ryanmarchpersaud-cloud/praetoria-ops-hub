@@ -36,6 +36,7 @@ const serviceLinks = [
     label: 'Full-service property management',
     icon: Building,
     color: 'text-violet-500',
+    comingSoon: true,
   },
 ];
 
