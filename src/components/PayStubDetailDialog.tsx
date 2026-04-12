@@ -142,6 +142,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   const { user } = useAuth();
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   if (!stub) return null;
 
@@ -249,6 +250,22 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
       toast.error(e.message || 'Failed to upload');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleWorkerShare = async () => {
+    setSharing(true);
+    try {
+      const emailTo = prompt('Enter email address to share this pay stub with (e.g. accountant, banker, family):');
+      if (!emailTo || !emailTo.includes('@')) {
+        if (emailTo !== null) toast.error('Please enter a valid email address.');
+        return;
+      }
+      // For now, trigger the print view so the worker can save/share
+      toast.success(`Pay stub prepared for sharing to ${emailTo}. Use Save as PDF to attach to your email.`);
+      handleSavePdf();
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -576,13 +593,19 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
 
             {/* ── Actions ── */}
             <Separator />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className={`grid gap-2 ${workerView ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
               <Button variant="outline" size="sm" onClick={handlePrint} className="w-full">
                 <Printer className="h-4 w-4 mr-1.5" /> Print
               </Button>
               <Button variant="outline" size="sm" onClick={handleSavePdf} className="w-full">
                 <Download className="h-4 w-4 mr-1.5" /> Save as PDF
               </Button>
+              {workerView && (
+                <Button variant="default" size="sm" onClick={handleWorkerShare} disabled={sharing} className="w-full">
+                  {sharing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Send className="h-4 w-4 mr-1.5" />}
+                  {sharing ? 'Sharing…' : 'Share / Send'}
+                </Button>
+              )}
               {!workerView && stub.user_id && (
                 <>
                   <Button variant="outline" size="sm" onClick={handleUploadToPortal} disabled={uploading} className="w-full">
