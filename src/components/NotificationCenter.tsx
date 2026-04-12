@@ -21,10 +21,42 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
   payment_failed: AlertCircle,
 };
 
+let audioCtx: AudioContext | null = null;
+
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  return audioCtx;
+}
+
+// Resume audio context on first user interaction (required by browser autoplay policy)
+function ensureAudioResumed() {
+  try {
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+  } catch { /* ignore */ }
+}
+
+// Listen for any user interaction to unlock audio
+if (typeof window !== 'undefined') {
+  const unlock = () => {
+    ensureAudioResumed();
+    window.removeEventListener('click', unlock);
+    window.removeEventListener('keydown', unlock);
+    window.removeEventListener('touchstart', unlock);
+  };
+  window.addEventListener('click', unlock);
+  window.addEventListener('keydown', unlock);
+  window.addEventListener('touchstart', unlock);
+}
+
 function playNotificationSound() {
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    // Play a pleasant two-tone chime
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') ctx.resume();
     const playTone = (freq: number, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -38,8 +70,8 @@ function playNotificationSound() {
       osc.stop(startTime + duration);
     };
     const now = ctx.currentTime;
-    playTone(880, now, 0.15);       // A5
-    playTone(1174.66, now + 0.12, 0.2); // D6
+    playTone(880, now, 0.15);
+    playTone(1174.66, now + 0.12, 0.2);
   } catch {
     // Audio not available
   }

@@ -254,6 +254,97 @@ export default function RequestDetail() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Reply to Customer */}
+          {customer?.email && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <Send className="h-3.5 w-3.5" /> Reply to Customer
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Textarea
+                  value={replyMessage}
+                  onChange={e => setReplyMessage(e.target.value)}
+                  placeholder={`Write a message to ${customer.first_name}…`}
+                  rows={3}
+                  className="text-sm"
+                />
+                {replyFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {replyFiles.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 text-[11px] bg-muted px-2 py-0.5 rounded-full">
+                        <Paperclip className="h-3 w-3" /> {f.name}
+                        <button onClick={() => setReplyFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-destructive">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    disabled={!replyMessage.trim() || isSendingReply}
+                    onClick={async () => {
+                      setIsSendingReply(true);
+                      try {
+                        // Upload attachments if any
+                        const attachmentUrls: string[] = [];
+                        for (const file of replyFiles) {
+                          const path = `replies/${id}/${Date.now()}_${file.name}`;
+                          const { error: upErr } = await supabase.storage
+                            .from('request-attachments')
+                            .upload(path, file);
+                          if (!upErr) {
+                            const { data: urlData } = supabase.storage
+                              .from('request-attachments')
+                              .getPublicUrl(path);
+                            if (urlData?.publicUrl) attachmentUrls.push(urlData.publicUrl);
+                          }
+                        }
+
+                        await callEdgeFunction('send-email', {
+                          action: 'request_reply',
+                          to: customer.email,
+                          subject: `Re: ${request.subject}`,
+                          body: replyMessage,
+                          attachments: attachmentUrls,
+                          request_id: id,
+                        });
+
+                        toast.success('Reply sent to customer');
+                        setReplyMessage('');
+                        setReplyFiles([]);
+                      } catch (err: any) {
+                        toast.error(err.message || 'Failed to send reply');
+                      } finally {
+                        setIsSendingReply(false);
+                      }
+                    }}
+                  >
+                    {isSendingReply ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1" />}
+                    Send Reply
+                  </Button>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={e => {
+                        if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                        e.target.value = '';
+                      }}
+                    />
+                    <Button size="sm" variant="outline" type="button" asChild>
+                      <span><Paperclip className="h-3.5 w-3.5 mr-1" /> Attach Files</span>
+                    </Button>
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
