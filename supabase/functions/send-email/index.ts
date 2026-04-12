@@ -637,6 +637,46 @@ Deno.serve(async (req) => {
       return json({ ...result, action: "agreement_sent" });
     }
 
+    // ─── Request Reply (admin → customer) ───
+    if (action === "request_reply") {
+      const { to, subject, body: messageBody, attachments, request_id } = payload;
+      if (!to || !messageBody) return json({ error: "to and body are required" }, 400);
+
+      let attachmentHtml = "";
+      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+        const links = attachments.map((url: string) => {
+          const name = url.split("/").pop() || "Attachment";
+          return `<a href="${url}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
+        }).join("<br/>");
+        attachmentHtml = `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;"/>
+          <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+      }
+
+      const html = wrapHtml(`Re: ${subject || "Your Request"}`, `
+        <h2 style="margin:0 0 16px;font-size:18px;">Message from Praetoria Group</h2>
+        <div style="white-space:pre-wrap;line-height:1.6;">${messageBody}</div>
+        ${attachmentHtml}
+        <p style="margin-top:24px;font-size:13px;color:#6b7280;">If you have questions, simply reply to this email.</p>
+      `);
+
+      const replyTo = resolveReplyTo(undefined, "operational");
+      const result = await sendViaResend({ to, subject: subject || "Update on your request", html, reply_to: replyTo });
+
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.request_reply",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: to,
+        record_type: "service_request",
+        record_id: request_id,
+        provider_response_id: result.id,
+        error_message: result.error,
+      };
+      await logIntegration(logEntry);
+      return json({ ...result, action: "request_reply" });
+    }
+
     // ─── Health check ───
     if (action === "health") {
       const hasKey = !!Deno.env.get("RESEND_API_KEY");

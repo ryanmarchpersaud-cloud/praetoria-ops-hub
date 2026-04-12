@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, User, MapPin, Clock, AlertTriangle, Phone, FileText, ImageIcon, X, Plus } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Clock, AlertTriangle, Phone, FileText, ImageIcon, X, Plus, Mail, Send, Paperclip, Loader2 } from 'lucide-react';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
@@ -22,6 +23,9 @@ export default function RequestDetail() {
   const [internalNotes, setInternalNotes] = useState('');
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [resolvedUrls, setResolvedUrls] = useState<string[]>([]);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [replyFiles, setReplyFiles] = useState<File[]>([]);
+  const [isSendingReply, setIsSendingReply] = useState(false);
   const { canManageQuotes, canManageRequests } = useActionPermissions();
   const { data: request, isLoading } = useQuery({
     queryKey: ['service_request', id],
@@ -250,6 +254,97 @@ export default function RequestDetail() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Reply to Customer */}
+          {customer?.email && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <Send className="h-3.5 w-3.5" /> Reply to Customer
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Textarea
+                  value={replyMessage}
+                  onChange={e => setReplyMessage(e.target.value)}
+                  placeholder={`Write a message to ${customer.first_name}…`}
+                  rows={3}
+                  className="text-sm"
+                />
+                {replyFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {replyFiles.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 text-[11px] bg-muted px-2 py-0.5 rounded-full">
+                        <Paperclip className="h-3 w-3" /> {f.name}
+                        <button onClick={() => setReplyFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-destructive">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    disabled={!replyMessage.trim() || isSendingReply}
+                    onClick={async () => {
+                      setIsSendingReply(true);
+                      try {
+                        // Upload attachments if any
+                        const attachmentUrls: string[] = [];
+                        for (const file of replyFiles) {
+                          const path = `replies/${id}/${Date.now()}_${file.name}`;
+                          const { error: upErr } = await supabase.storage
+                            .from('request-attachments')
+                            .upload(path, file);
+                          if (!upErr) {
+                            const { data: urlData } = supabase.storage
+                              .from('request-attachments')
+                              .getPublicUrl(path);
+                            if (urlData?.publicUrl) attachmentUrls.push(urlData.publicUrl);
+                          }
+                        }
+
+                        await callEdgeFunction('send-email', {
+                          action: 'request_reply',
+                          to: customer.email,
+                          subject: `Re: ${request.subject}`,
+                          body: replyMessage,
+                          attachments: attachmentUrls,
+                          request_id: id,
+                        });
+
+                        toast.success('Reply sent to customer');
+                        setReplyMessage('');
+                        setReplyFiles([]);
+                      } catch (err: any) {
+                        toast.error(err.message || 'Failed to send reply');
+                      } finally {
+                        setIsSendingReply(false);
+                      }
+                    }}
+                  >
+                    {isSendingReply ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1" />}
+                    Send Reply
+                  </Button>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={e => {
+                        if (e.target.files) setReplyFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                        e.target.value = '';
+                      }}
+                    />
+                    <Button size="sm" variant="outline" type="button" asChild>
+                      <span><Paperclip className="h-3.5 w-3.5 mr-1" /> Attach Files</span>
+                    </Button>
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -315,11 +410,19 @@ export default function RequestDetail() {
                   <User className="h-3.5 w-3.5" /> Customer
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-sm space-y-1">
+              <CardContent className="text-sm space-y-2">
                 <p className="font-medium">{customer.first_name} {customer.last_name}</p>
                 {customer.company_name && <p className="text-muted-foreground">{customer.company_name}</p>}
-                {customer.email && <p className="text-muted-foreground">{customer.email}</p>}
-                {customer.phone && <p className="text-muted-foreground">{customer.phone}</p>}
+                {customer.email && (
+                  <a href={`mailto:${customer.email}`} className="flex items-center gap-1.5 text-primary hover:underline">
+                    <Mail className="h-3.5 w-3.5" /> {customer.email}
+                  </a>
+                )}
+                {customer.phone && (
+                  <a href={`tel:${customer.phone}`} className="flex items-center gap-1.5 text-primary hover:underline">
+                    <Phone className="h-3.5 w-3.5" /> {customer.phone}
+                  </a>
+                )}
               </CardContent>
             </Card>
           )}
