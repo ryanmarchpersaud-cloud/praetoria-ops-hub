@@ -40,6 +40,15 @@ const serviceLinks = [
   },
 ];
 
+const ComingSoonBadge = ({ size = 'sm' }: { size?: 'sm' | 'xs' }) => (
+  <span className={cn(
+    'inline-flex items-center rounded-full bg-amber-100 text-amber-700 font-semibold uppercase tracking-wider dark:bg-amber-950/40 dark:text-amber-400',
+    size === 'xs' ? 'px-1.5 py-0.5 text-[7px]' : 'px-2 py-0.5 text-[8px]'
+  )}>
+    Coming Soon
+  </span>
+);
+
 interface ServiceLinksSectionProps {
   variant?: 'login' | 'sidebar' | 'portal' | 'compact';
 }
@@ -53,14 +62,20 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
           {serviceLinks.map((s) => (
             <a
               key={s.name}
-              href={s.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-card hover:bg-muted transition-colors group"
+              href={s.comingSoon ? undefined : s.url}
+              target={s.comingSoon ? undefined : '_blank'}
+              rel={s.comingSoon ? undefined : 'noopener noreferrer'}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-card transition-colors group',
+                s.comingSoon ? 'opacity-75 cursor-default' : 'hover:bg-muted'
+              )}
+              onClick={s.comingSoon ? (e) => e.preventDefault() : undefined}
             >
               <s.icon className={cn('h-3 w-3 shrink-0', s.color)} />
               <span className="text-[10px] font-medium text-foreground">{s.name}</span>
-              <ExternalLink className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              {s.comingSoon ? <ComingSoonBadge size="xs" /> : (
+                <ExternalLink className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
             </a>
           ))}
         </div>
@@ -73,14 +88,20 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
         {serviceLinks.map((s) => (
           <a
             key={s.name}
-            href={s.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors group"
+            href={s.comingSoon ? undefined : s.url}
+            target={s.comingSoon ? undefined : '_blank'}
+            rel={s.comingSoon ? undefined : 'noopener noreferrer'}
+            className={cn(
+              'flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-sidebar-foreground/70 transition-colors group',
+              s.comingSoon ? 'opacity-75 cursor-default' : 'hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
+            )}
+            onClick={s.comingSoon ? (e) => e.preventDefault() : undefined}
           >
             <s.icon className={cn('h-3.5 w-3.5 shrink-0', s.color)} />
             <span className="truncate">{s.name}</span>
-            <ExternalLink className="h-2.5 w-2.5 ml-auto opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+            {s.comingSoon ? <ComingSoonBadge size="xs" /> : (
+              <ExternalLink className="h-2.5 w-2.5 ml-auto opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
+            )}
           </a>
         ))}
       </div>
@@ -95,14 +116,20 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
           {serviceLinks.map((s) => (
             <a
               key={s.name}
-              href={s.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center gap-1 p-2.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors text-center group"
+              href={s.comingSoon ? undefined : s.url}
+              target={s.comingSoon ? undefined : '_blank'}
+              rel={s.comingSoon ? undefined : 'noopener noreferrer'}
+              className={cn(
+                'flex flex-col items-center gap-1 p-2.5 rounded-lg border border-border bg-card transition-colors text-center group relative',
+                s.comingSoon ? 'opacity-80 cursor-default' : 'hover:bg-muted'
+              )}
+              onClick={s.comingSoon ? (e) => e.preventDefault() : undefined}
             >
               <s.icon className={cn('h-4 w-4', s.color)} />
               <span className="text-[10px] font-medium text-foreground leading-tight">{s.name}</span>
-              <ExternalLink className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              {s.comingSoon ? <ComingSoonBadge size="xs" /> : (
+                <ExternalLink className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
             </a>
           ))}
         </div>
@@ -120,17 +147,23 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
         {serviceLinks.map((s) => (
           <a
             key={s.name}
-            href={s.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors group"
+            href={s.comingSoon ? undefined : s.url}
+            target={s.comingSoon ? undefined : '_blank'}
+            rel={s.comingSoon ? undefined : 'noopener noreferrer'}
+            className={cn(
+              'flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-card transition-colors group',
+              s.comingSoon ? 'opacity-80 cursor-default' : 'hover:bg-muted'
+            )}
+            onClick={s.comingSoon ? (e) => e.preventDefault() : undefined}
           >
             <s.icon className={cn('h-4 w-4 shrink-0', s.color)} />
             <div className="min-w-0">
               <p className="text-xs font-medium text-foreground leading-tight truncate">{s.name}</p>
               <p className="text-[9px] text-muted-foreground leading-tight truncate">{s.label}</p>
             </div>
-            <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            {s.comingSoon ? <ComingSoonBadge /> : (
+              <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            )}
           </a>
         ))}
       </div>
