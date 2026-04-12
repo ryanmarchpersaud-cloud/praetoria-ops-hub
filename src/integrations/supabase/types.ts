@@ -2244,6 +2244,105 @@ export type Database = {
         }
         Relationships: []
       }
+      form_submissions: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          followup_required: boolean
+          id: string
+          invoice_reference: string | null
+          job_id: string | null
+          materials_used: string | null
+          notes: string | null
+          photos: string[]
+          property_id: string | null
+          quote_reference: string | null
+          status: string
+          submission_data: Json
+          submitted_at: string
+          submitted_by: string
+          template_id: string
+          updated_at: string
+          visit_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          followup_required?: boolean
+          id?: string
+          invoice_reference?: string | null
+          job_id?: string | null
+          materials_used?: string | null
+          notes?: string | null
+          photos?: string[]
+          property_id?: string | null
+          quote_reference?: string | null
+          status?: string
+          submission_data?: Json
+          submitted_at?: string
+          submitted_by: string
+          template_id: string
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          followup_required?: boolean
+          id?: string
+          invoice_reference?: string | null
+          job_id?: string | null
+          materials_used?: string | null
+          notes?: string | null
+          photos?: string[]
+          property_id?: string | null
+          quote_reference?: string | null
+          status?: string
+          submission_data?: Json
+          submitted_at?: string
+          submitted_by?: string
+          template_id?: string
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_submissions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_submissions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_submissions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "form_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_submissions_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_template_fields: {
         Row: {
           created_at: string
