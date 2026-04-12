@@ -66,6 +66,12 @@ export default function InvoiceDetail() {
   const [sendingReceipt, setSendingReceipt] = useState(false);
   const [collectingPayment, setCollectingPayment] = useState(false);
 
+  // Email compose dialog state
+  const [emailTo, setEmailTo] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+
   if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="flex items-center justify-center py-16 text-muted-foreground">Invoice not found</div>;
 
