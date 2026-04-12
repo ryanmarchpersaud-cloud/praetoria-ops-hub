@@ -152,6 +152,7 @@ export default function WorkerPayrollPage() {
         onOpenChange={(o) => { if (!o) setSelectedStub(null); }}
         employeeName={profile?.full_name}
         employeeRole={profile?.role_title}
+        workerView
       />
     </div>
   );
