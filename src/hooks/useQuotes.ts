@@ -12,7 +12,7 @@ export function useQuotes(filters?: { approval_status?: string; search?: string 
   return useQuery({
     queryKey: ['quotes', filters],
     queryFn: async () => {
-      let query = supabase.from('quotes').select('*, leads(first_name, last_name, company_name)').order('created_at', { ascending: false });
+      let query = supabase.from('quotes').select('*, leads(first_name, last_name, company_name), customers(first_name, last_name, company_name, email, phone)').order('created_at', { ascending: false });
       if (filters?.approval_status) query = query.eq('approval_status', filters.approval_status as any);
       const { data, error } = await query;
       if (error) throw error;
@@ -26,7 +26,7 @@ export function useQuote(id: string | undefined) {
     queryKey: ['quote', id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase.from('quotes').select('*, leads(*)').eq('id', id).single();
+      const { data, error } = await supabase.from('quotes').select('*, leads(*), customers(*)').eq('id', id).single();
       if (error) throw error;
       return data;
     },

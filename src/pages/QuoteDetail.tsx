@@ -210,6 +210,8 @@ export default function QuoteDetail() {
   };
 
   const lead = (quote as any).leads;
+  const customer = (quote as any).customers;
+  const clientInfo = lead || customer;
   const isSentOrApproved = ['Sent', 'Approved'].includes(form.approval_status);
   const validItems = items.filter(i => i.item_name);
 
@@ -255,9 +257,9 @@ export default function QuoteDetail() {
             <h1 className="text-lg md:text-xl font-bold mono">{quote.quote_number}</h1>
             <StatusBadge status={form.approval_status || 'Draft'} />
           </div>
-          {lead && (
+          {clientInfo && (
             <p className="text-xs text-muted-foreground truncate">
-              {lead.first_name} {lead.last_name}{lead.company_name ? ` — ${lead.company_name}` : ''}
+              {clientInfo.first_name} {clientInfo.last_name}{clientInfo.company_name ? ` — ${clientInfo.company_name}` : ''}
             </p>
           )}
         </div>
@@ -331,18 +333,18 @@ export default function QuoteDetail() {
       </div>
 
       {/* ── Client Quick Info (mobile) ── */}
-      {lead && (
+      {clientInfo && (
         <Card className="lg:hidden">
           <CardContent className="py-3">
             <div className="flex flex-wrap gap-3 text-sm">
-              {lead.phone && (
-                <a href={`tel:${lead.phone}`} className="flex items-center gap-1.5 text-primary active:opacity-70 min-h-[44px]">
-                  <Phone className="h-3.5 w-3.5" /> {lead.phone}
+              {clientInfo.phone && (
+                <a href={`tel:${clientInfo.phone}`} className="flex items-center gap-1.5 text-primary active:opacity-70 min-h-[44px]">
+                  <Phone className="h-3.5 w-3.5" /> {clientInfo.phone}
                 </a>
               )}
-              {lead.email && (
-                <a href={`mailto:${lead.email}`} className="flex items-center gap-1.5 text-primary active:opacity-70 min-h-[44px]">
-                  <Mail className="h-3.5 w-3.5" /> <span className="truncate max-w-[160px]">{lead.email}</span>
+              {clientInfo.email && (
+                <a href={`mailto:${clientInfo.email}`} className="flex items-center gap-1.5 text-primary active:opacity-70 min-h-[44px]">
+                  <Mail className="h-3.5 w-3.5" /> <span className="truncate max-w-[160px]">{clientInfo.email}</span>
                 </a>
               )}
             </div>
@@ -547,22 +549,23 @@ export default function QuoteDetail() {
           </div>
 
           {/* Client info — desktop */}
-          {lead && (
+          {clientInfo && (
             <Card className="hidden lg:block">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider">Client</CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-1.5">
-                <p className="font-medium">{lead.first_name} {lead.last_name}</p>
-                {lead.company_name && <p className="text-muted-foreground">{lead.company_name}</p>}
-                {lead.email && (
-                  <a href={`mailto:${lead.email}`} className="text-primary text-xs hover:underline block">{lead.email}</a>
+                <p className="font-medium">{clientInfo.first_name} {clientInfo.last_name}</p>
+                {clientInfo.company_name && <p className="text-muted-foreground">{clientInfo.company_name}</p>}
+                {clientInfo.email && (
+                  <a href={`mailto:${clientInfo.email}`} className="text-primary text-xs hover:underline block">{clientInfo.email}</a>
                 )}
-                {lead.phone && (
-                  <a href={`tel:${lead.phone}`} className="text-primary text-xs hover:underline block">{lead.phone}</a>
+                {clientInfo.phone && (
+                  <a href={`tel:${clientInfo.phone}`} className="text-primary text-xs hover:underline block">{clientInfo.phone}</a>
                 )}
-                {lead.address_line_1 && <p className="text-xs text-muted-foreground">{lead.address_line_1}, {lead.city} {lead.province}</p>}
-                <Link to={`/leads/${lead.id}`} className="text-primary text-xs hover:underline inline-block mt-1">View Lead →</Link>
+                {clientInfo.address_line_1 && <p className="text-xs text-muted-foreground">{clientInfo.address_line_1}, {clientInfo.city} {clientInfo.province}</p>}
+                {lead && <Link to={`/leads/${lead.id}`} className="text-primary text-xs hover:underline inline-block mt-1">View Lead →</Link>}
+                {!lead && customer && <Link to={`/customers/${quote.customer_id}`} className="text-primary text-xs hover:underline inline-block mt-1">View Customer →</Link>}
               </CardContent>
             </Card>
           )}
@@ -639,7 +642,7 @@ export default function QuoteDetail() {
         sourceType="quote"
         sourceRecord={quote}
         lineItems={lineItems}
-        customerId={lead?.customer_id || ''}
+        customerId={quote.customer_id || lead?.customer_id || ''}
         quoteId={id}
         requestId={(quote as any).request_id}
       />
