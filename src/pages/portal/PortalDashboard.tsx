@@ -309,7 +309,7 @@ export default function PortalDashboard() {
           </p>
           <div className="flex flex-wrap gap-2">
             <a
-              href="tel:+18005551234"
+              href="tel:+13067376269"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
             >
               <Phone className="h-3.5 w-3.5" /> Call Us
