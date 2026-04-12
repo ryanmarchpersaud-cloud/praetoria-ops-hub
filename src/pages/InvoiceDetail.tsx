@@ -71,6 +71,8 @@ export default function InvoiceDetail() {
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [sendMeCopy, setSendMeCopy] = useState(false);
+  const [emailAttachments, setEmailAttachments] = useState<File[]>([]);
 
   if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="flex items-center justify-center py-16 text-muted-foreground">Invoice not found</div>;
