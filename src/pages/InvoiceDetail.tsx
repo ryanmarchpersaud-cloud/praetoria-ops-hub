@@ -283,6 +283,27 @@ export default function InvoiceDetail() {
     }
   };
 
+  const handleCollectPayment = async () => {
+    if (!invoice?.id || balanceDue <= 0) return;
+    setCollectingPayment(true);
+    try {
+      const res = await callEdgeFunction('collect-payment', {
+        invoice_id: invoice.id,
+        amount: balanceDue,
+      });
+      if (res?.success) {
+        toast.success(`$${res.amount_charged.toFixed(2)} collected from card on file`);
+        window.location.reload();
+      } else {
+        throw new Error(res?.error || 'Payment failed');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to collect payment');
+    } finally {
+      setCollectingPayment(false);
+    }
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
       <div className="flex items-center gap-2">
