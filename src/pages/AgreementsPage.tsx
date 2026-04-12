@@ -239,7 +239,8 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
 
     // Upload PDF if in pdf mode
     if (agreementMode === 'pdf' && pdfFile) {
-      const fileName = `${crypto.randomUUID()}_${pdfFile.name}`;
+      const safeName = pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileName = `${crypto.randomUUID()}_${safeName}`;
       const { data: upData, error: upError } = await supabase.storage
         .from('agreement-attachments')
         .upload(fileName, pdfFile, { contentType: 'application/pdf' });
