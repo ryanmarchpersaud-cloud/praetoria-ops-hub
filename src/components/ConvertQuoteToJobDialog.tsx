@@ -193,6 +193,7 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
             crew_notes: serviceInstructions || scopeOfWork || null,
             quote_id: quote.id,
             request_id: quote.request_id || null,
+            assigned_worker_id: job.assigned_to || null,
           } as any);
           generatedCount = 1;
         } else if (plannedDates.length > 0) {
