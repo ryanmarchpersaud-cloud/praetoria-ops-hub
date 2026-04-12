@@ -1,4 +1,4 @@
-import { CheckCircle, Send, XCircle, Eye, FileEdit, Clock, AlertTriangle, ArrowRight } from 'lucide-react';
+import { CheckCircle, Send, XCircle, Eye, FileEdit, Clock, AlertTriangle, ArrowRight, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,6 +24,8 @@ interface ApprovalWorkflowProps {
   createdAt: string;
   onStatusChange: (status: ApprovalStatus) => Promise<void>;
   isUpdating: boolean;
+  onConvertToJob?: () => void;
+  isConverted?: boolean;
 }
 
 const PIPELINE_STEPS: { status: ApprovalStatus; label: string; icon: typeof CheckCircle }[] = [
@@ -52,7 +54,7 @@ function getValidTransitions(status: ApprovalStatus): { status: ApprovalStatus; 
       ];
     case 'Approved':
       return [
-        { status: 'Sent', label: 'Mark as Sent', variant: 'primary', icon: Send },
+        { status: 'Sent', label: 'Mark as Sent', variant: 'warning', icon: Send },
         { status: 'Draft', label: 'Revert to Draft', variant: 'warning', icon: FileEdit },
       ];
     case 'Sent':
@@ -84,7 +86,7 @@ function getStatusBannerInfo(status: ApprovalStatus, followUpDueAt: string | nul
     banners.push({ type: 'error', message: 'This quote was declined. Reopen as draft to revise and resubmit.', icon: XCircle });
   }
   if (status === 'Approved') {
-    banners.push({ type: 'success', message: 'Approved and ready to send to client.', icon: CheckCircle });
+    banners.push({ type: 'success', message: 'Approved by client — ready to convert to a job.', icon: CheckCircle });
   }
   if (status === 'Sent' && followUpDueAt) {
     const due = new Date(followUpDueAt);
