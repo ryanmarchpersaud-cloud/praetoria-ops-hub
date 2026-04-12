@@ -661,47 +661,102 @@ export default function InvoiceDetail() {
 
       {/* ═══ CONFIRMATION DIALOGS ═══ */}
 
-      {/* Send / Resend — Email Compose Dialog */}
-      <Dialog open={confirmSend} onOpenChange={setConfirmSend}>
-        <DialogContent className="max-w-lg">
+      {/* Send / Resend — Polished Email Compose Dialog */}
+      <Dialog open={confirmSend} onOpenChange={(open) => { setConfirmSend(open); if (!open) setEmailAttachments([]); }}>
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Email Invoice {invoice.invoice_number} to {invoice.customers?.first_name} {invoice.customers?.last_name}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-primary" />
+              Email Invoice {invoice.invoice_number}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* To */}
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">To</Label>
-              <Input value={emailTo} onChange={e => setEmailTo(e.target.value)} placeholder="customer@email.com" />
+              <Label className="text-xs font-medium text-muted-foreground">To</Label>
+              <Input value={emailTo} onChange={e => setEmailTo(e.target.value)} placeholder="customer@email.com" className="h-9" />
             </div>
+            {/* Subject */}
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Subject</Label>
-              <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+              <Label className="text-xs font-medium text-muted-foreground">Subject</Label>
+              <Input value={emailSubject} onChange={e => setEmailSubject(e.target.value)} className="h-9" />
             </div>
+            {/* Message */}
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Message</Label>
-              <Textarea rows={8} value={emailMessage} onChange={e => setEmailMessage(e.target.value)} className="text-sm" />
+              <Label className="text-xs font-medium text-muted-foreground">Message</Label>
+              <Textarea rows={7} value={emailMessage} onChange={e => setEmailMessage(e.target.value)} className="text-sm leading-relaxed" />
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* Attachments */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Paperclip className="h-3 w-3" /> Attachments
+              </Label>
+              <div className="rounded-lg border border-dashed border-border/60 p-3 space-y-2">
+                {/* Invoice PDF auto-attached */}
+                <div className="flex items-center gap-2 text-xs bg-muted/50 rounded-md px-3 py-2">
+                  <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="flex-1 font-medium">{invoice.invoice_number}.pdf</span>
+                  <Badge variant="secondary" className="text-[9px]">Invoice</Badge>
+                </div>
+
+                {/* User-uploaded attachments */}
+                {emailAttachments.map((file, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs bg-muted/50 rounded-md px-3 py-2">
+                    <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="flex-1 truncate">{file.name}</span>
+                    <span className="text-muted-foreground">{(file.size / 1024).toFixed(0)}KB</span>
+                    <button onClick={() => setEmailAttachments(prev => prev.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Upload button */}
+                <label className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 cursor-pointer w-fit">
+                  <Upload className="h-3 w-3" />
+                  <span>Add attachment</span>
+                  <input
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={e => {
+                      if (e.target.files) setEmailAttachments(prev => [...prev, ...Array.from(e.target.files!)]);
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox id="sendCopy" checked={sendMeCopy} onCheckedChange={(c) => setSendMeCopy(!!c)} />
+                <label htmlFor="sendCopy" className="text-xs text-muted-foreground cursor-pointer">Send me a copy</label>
+              </div>
               <Link to={`/invoices/${invoice.id}/print`} target="_blank">
-                <Button variant="outline" size="sm" className="text-xs gap-1">
+                <Button variant="ghost" size="sm" className="text-xs gap-1 h-7">
                   <Eye className="h-3 w-3" /> Preview Invoice
                 </Button>
               </Link>
-              <span className="text-xs text-muted-foreground">Invoice PDF will be included with this email</span>
             </div>
+
             {lineItems.length === 0 && (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-xs">This invoice has no line items. Are you sure you want to send it?</AlertDescription>
               </Alert>
             )}
+            {isDraft && (
+              <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2">
+                Sending will finalize this invoice and make it read-only.
+              </p>
+            )}
             {!isDraft && (
               <p className="text-xs text-muted-foreground">This will resend the invoice email. The invoice status will not change.</p>
             )}
-            {isDraft && (
-              <p className="text-xs text-muted-foreground">This will finalize the invoice and make it read-only.</p>
-            )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setConfirmSend(false)}>Cancel</Button>
             <Button onClick={async () => {
               if (!emailTo) { toast.error('Enter a recipient email'); return; }
@@ -721,6 +776,7 @@ export default function InvoiceDetail() {
                     invoice_id: invoice.id,
                     custom_subject: emailSubject,
                     custom_message: emailMessage,
+                    send_copy: sendMeCopy,
                   },
                 });
                 // Also send in-app + SMS notification
@@ -749,6 +805,7 @@ export default function InvoiceDetail() {
                 }
                 toast.success('Invoice email sent');
                 setConfirmSend(false);
+                setEmailAttachments([]);
               } catch (e) {
                 console.error('Invoice email send failed:', e);
                 toast.error('Failed to send invoice email');
