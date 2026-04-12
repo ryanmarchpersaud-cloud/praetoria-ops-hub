@@ -2181,6 +2181,72 @@ export type Database = {
           },
         ]
       }
+      finance_refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string | null
+          id: string
+          internal_notes: string | null
+          invoice_id: string | null
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          refund_type: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_refund_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          internal_notes?: string | null
+          invoice_id?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          refund_type?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          internal_notes?: string | null
+          invoice_id?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          refund_type?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_refunds_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_refunds_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finance_vendors: {
         Row: {
           address_line_1: string | null

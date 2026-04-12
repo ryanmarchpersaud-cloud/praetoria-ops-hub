@@ -17,8 +17,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   ArrowLeft, Send, RotateCcw, CheckCircle, Ban, AlertCircle, CreditCard, Printer, Save, Loader2,
-  LinkIcon, Briefcase, FileText, Receipt, DollarSign, Eye, EyeOff, CalendarDays, Tag
+  LinkIcon, Briefcase, FileText, Receipt, DollarSign, Eye, EyeOff, CalendarDays, Tag, Undo2, Mail
 } from 'lucide-react';
+import { RefundDialog } from '@/components/RefundDialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
@@ -60,6 +61,8 @@ export default function InvoiceDetail() {
   const [confirmVoid, setConfirmVoid] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [sendingReceipt, setSendingReceipt] = useState(false);
 
   if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="flex items-center justify-center py-16 text-muted-foreground">Invoice not found</div>;
@@ -245,7 +248,38 @@ export default function InvoiceDetail() {
   const canRecordPayment = ['Sent', 'Viewed', 'Overdue', 'Partially Paid'].includes(invoice.status) && canRecordPayments;
   const canVoid = !['Voided', 'Paid'].includes(invoice.status) && canVoidInvoices;
   const canMarkOverdue = ['Sent', 'Viewed'].includes(invoice.status) && canManageInvoices;
+  const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
+  const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
   const billingMode = (invoice as any).billing_mode;
+
+  const handleSendReceipt = async () => {
+    setSendingReceipt(true);
+    try {
+      const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          event: 'payment_received',
+          customer_id: invoice.customer_id,
+          record_type: 'invoice',
+          record_id: invoice.id,
+          channels: ['in_app', 'email'],
+          audience: 'customer',
+          variables: {
+            customer_name: customerName,
+            invoice_number: invoice.invoice_number || '',
+            amount_paid: amountPaid.toFixed(2),
+            total: total.toFixed(2),
+            to_email: invoice.customers?.email || '',
+          },
+        },
+      });
+      toast.success('Payment receipt sent to customer');
+    } catch {
+      toast.error('Failed to send receipt');
+    } finally {
+      setSendingReceipt(false);
+    }
+  };
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
@@ -290,6 +324,17 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
+        {canRefund && (
+          <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setRefundOpen(true)}>
+            <Undo2 className="h-3.5 w-3.5 mr-1.5" /> Refund
+          </Button>
+        )}
+        {canSendReceipt && (
+          <Button size="sm" variant="outline" onClick={handleSendReceipt} disabled={sendingReceipt}>
+            {sendingReceipt ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Mail className="h-3.5 w-3.5 mr-1.5" />}
+            Send Receipt
+          </Button>
+        )}
         {canMarkOverdue && (
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleStatusChange('Overdue')}>
             <AlertCircle className="h-3.5 w-3.5 mr-1.5" /> Mark Overdue
@@ -681,6 +726,20 @@ export default function InvoiceDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Refund Dialog */}
+      <RefundDialog
+        open={refundOpen}
+        onOpenChange={setRefundOpen}
+        invoice={{
+          id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          total,
+          amount_paid: amountPaid,
+          balance_due: balanceDue,
+          customer_id: invoice.customer_id,
+        }}
+      />
     </div>
   );
 }
