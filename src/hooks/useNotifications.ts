@@ -74,6 +74,7 @@ export function useUnreadNotifications(recipientId?: string, isOpsStaff?: boolea
       return (data || []) as unknown as Notification[];
     },
     enabled: !!recipientId,
+    refetchInterval: 15000,
   });
 }
 
