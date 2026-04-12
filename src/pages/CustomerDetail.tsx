@@ -429,6 +429,36 @@ export default function CustomerDetail() {
   );
 }
 
+/* ─── Payment Method Status Card (Admin View) ──────── */
+function PaymentMethodCard({ customerId }: { customerId: string }) {
+  const { data: bp } = useBillingProfile(customerId);
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+          <CreditCard className="h-3.5 w-3.5" /> Payment Method
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {bp?.payment_method_present ? (
+          <div className="space-y-1">
+            <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Preference: {bp.payment_preference?.replace('_', ' ')}
+            </p>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">No card on file</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ─── Reusable sidebar card ──────────────────────────── */
 interface RelatedItem {
   id: string;
