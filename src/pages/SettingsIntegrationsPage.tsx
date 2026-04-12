@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, Database, FileText,
-  MapPin, Calendar, CheckCircle2, AlertCircle, Clock, Loader2, Settings, Copy, Check,
+  MapPin, Calendar, BarChart3, CheckCircle2, AlertCircle, Clock, Loader2, Settings, Copy, Check,
   RefreshCw, ExternalLink,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -87,11 +87,12 @@ const INTEGRATIONS: IntegrationDef[] = [
   { id: 'twilio', name: 'Twilio (SMS)', category: 'Communication', icon: MessageSquare, description: 'Transactional SMS — request confirmations, ops alerts, admin tests.', status: 'configured', enabled: true, environment: 'production', configNotes: 'Connected via Twilio connector. Edge function: send-sms.', lastActivity: null, canTest: true, testFn: testTwilio },
   { id: 'stripe', name: 'Stripe Payments', category: 'Payments', icon: CreditCard, description: 'Online payments — checkout sessions, invoice links.', status: 'test_mode', enabled: true, environment: 'test', configNotes: 'Account: Praetoria Snow & Ice. Edge function: create-checkout. Test mode active.', lastActivity: null, canTest: true, testFn: testStripe },
   { id: 'n8n', name: 'n8n / Automation', category: 'Automation', icon: Webhook, description: 'Workflow automation — triggers on lead, quote, job, and visit lifecycle events.', status: 'configured', enabled: true, environment: 'production', configNotes: 'Edge function endpoint active. Webhook URL configured.', lastActivity: null, canTest: true, testFn: testN8n },
-  { id: 'ionos', name: 'IONOS Email Hosting', category: 'Communication', icon: Globe, description: 'Business email hosting — @praetoriagroup.ca and @praetoriasnowandice.ca.', status: 'not_configured', enabled: false, environment: 'n/a', configNotes: 'Requires IONOS API key for mailbox provisioning.', lastActivity: null, canTest: false },
-  { id: 'weather', name: 'Weather Intelligence', category: 'Operations', icon: CloudSun, description: 'Operational weather data — forecasts, snow triggers, dispatch support.', status: 'pending', enabled: false, environment: 'n/a', configNotes: 'Provider: ECCC GeoMet API. Future: OpenWeatherMap or Tomorrow.io.', lastActivity: null, canTest: false },
-  { id: 'maps', name: 'Maps / Routing', category: 'Operations', icon: MapPin, description: 'Route optimization, GPS, territory mapping, and navigation.', status: 'not_configured', enabled: false, environment: 'n/a', configNotes: 'Future: Google Maps Platform or Mapbox for route optimization.', lastActivity: null, canTest: false },
-  { id: 'calendar', name: 'Calendar Sync', category: 'Operations', icon: Calendar, description: 'Sync schedules with Google Calendar, Outlook, or iCal.', status: 'not_configured', enabled: false, environment: 'n/a', configNotes: 'Future: Google Calendar API or CalDAV integration.', lastActivity: null, canTest: false },
-  { id: 'accounting', name: 'Accounting / Export', category: 'Financial', icon: FileText, description: 'Export invoices/expenses to QuickBooks, Xero, or CSV.', status: 'not_configured', enabled: false, environment: 'n/a', configNotes: 'Future: QuickBooks Online API or Xero integration.', lastActivity: null, canTest: false },
+  { id: 'ionos', name: 'IONOS Email Hosting', category: 'Communication', icon: Globe, description: 'Business mailbox hosting — @praetoriagroup.ca and @praetoriasnowandice.ca.', status: 'configured', enabled: true, environment: 'production', configNotes: '10 mailboxes configured. Reply-to routing active for all service divisions.', lastActivity: null, canTest: false },
+  { id: 'weather', name: 'Weather Intelligence', category: 'Operations', icon: CloudSun, description: 'ECCC weather data — real-time conditions, forecasts, snow/ice warnings.', status: 'connected', enabled: true, environment: 'production', configNotes: 'Provider: ECCC GeoMet API. 17 cities. Edge function: weather.', lastActivity: null, canTest: false },
+  { id: 'maps', name: 'Maps / Routing', category: 'Operations', icon: MapPin, description: 'Interactive maps, geocoding, route optimization via Leaflet + OpenStreetMap.', status: 'connected', enabled: true, environment: 'production', configNotes: 'Leaflet/OSM. No API key required. Greedy TSP route engine.', lastActivity: null, canTest: false },
+  { id: 'calendar', name: 'Calendar Sync', category: 'Operations', icon: Calendar, description: 'iCal feed export for Google Calendar, Outlook, Apple Calendar.', status: 'connected', enabled: true, environment: 'production', configNotes: 'iCal endpoint active. Visits & jobs. Worker-specific feeds.', lastActivity: null, canTest: false },
+  { id: 'accounting', name: 'Accounting / Export', category: 'Financial', icon: FileText, description: 'CSV export — invoices, payments, expenses, customers, vendors.', status: 'connected', enabled: true, environment: 'production', configNotes: 'CSV export ready. QuickBooks/Xero import compatible.', lastActivity: null, canTest: false },
+  { id: 'analytics', name: 'Analytics & Reporting', category: 'Internal', icon: BarChart3, description: 'Database-driven KPIs — 13 report types with date filtering and CSV export.', status: 'connected', enabled: true, environment: 'production', configNotes: 'Internal analytics engine. Finance Reports module.', lastActivity: null, canTest: false },
 ];
 
 const CATEGORIES = [...new Set(INTEGRATIONS.map(i => i.category))];
@@ -158,7 +159,7 @@ export default function SettingsIntegrationsPage() {
         {/* Summary cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card><CardContent className="pt-4"><p className="text-3xl font-bold">{INTEGRATIONS.length}</p><p className="text-xs text-muted-foreground">Total Integrations</p></CardContent></Card>
-          <Card><CardContent className="pt-4"><p className="text-3xl font-bold text-green-600">{connectedCount}</p><p className="text-xs text-muted-foreground">Active / Configured</p></CardContent></Card>
+          <Card><CardContent className="pt-4"><p className="text-3xl font-bold text-accent">{connectedCount}</p><p className="text-xs text-muted-foreground">Active / Configured</p></CardContent></Card>
           <Card><CardContent className="pt-4"><p className="text-3xl font-bold text-orange-500">{INTEGRATIONS.filter(i => i.status === 'pending').length}</p><p className="text-xs text-muted-foreground">Pending</p></CardContent></Card>
           <Card><CardContent className="pt-4"><p className="text-3xl font-bold text-destructive">{INTEGRATIONS.filter(i => ['not_configured', 'error'].includes(i.status)).length}</p><p className="text-xs text-muted-foreground">Not Configured</p></CardContent></Card>
         </div>
