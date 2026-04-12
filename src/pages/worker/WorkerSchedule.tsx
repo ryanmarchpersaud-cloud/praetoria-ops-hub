@@ -410,27 +410,38 @@ export default function WorkerSchedule() {
                 return (
                   <div key={dateKey}>
                     {/* Day header */}
-                    <div className="flex items-center gap-2 py-1.5 mb-1.5 sticky top-0 z-10 bg-background">
+                    <div className={cn(
+                      'flex items-center gap-3 py-2 px-2 mb-2 sticky top-0 z-10 rounded-lg',
+                      dayVisits.length > 0
+                        ? 'bg-primary/10 border border-primary/20'
+                        : 'bg-background',
+                      today && 'bg-primary/15 border border-primary/30'
+                    )}>
                       <div className={cn(
-                        'w-10 h-10 rounded-full flex flex-col items-center justify-center text-center shrink-0',
-                        today ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        'w-11 h-11 rounded-full flex flex-col items-center justify-center text-center shrink-0 shadow-sm',
+                        today ? 'bg-primary text-primary-foreground' :
+                        dayVisits.length > 0 ? 'bg-primary/20 text-primary' : 'bg-muted'
                       )}>
-                        <span className="text-[9px] font-semibold leading-none uppercase">
+                        <span className="text-[9px] font-bold leading-none uppercase">
                           {format(day, 'EEE')}
                         </span>
-                        <span className={cn('text-sm font-bold leading-none', !today && 'text-foreground')}>
+                        <span className={cn('text-sm font-black leading-none', !today && dayVisits.length === 0 && 'text-foreground')}>
                           {format(day, 'd')}
                         </span>
                       </div>
                       <div className="flex-1 flex items-center justify-between">
                         <span className={cn(
-                          'text-xs font-medium',
-                          today ? 'text-primary' : 'text-foreground'
+                          'text-sm font-bold',
+                          today ? 'text-primary' :
+                          dayVisits.length > 0 ? 'text-foreground' : 'text-muted-foreground'
                         )}>
                           {today ? 'Today' : format(day, 'EEEE')}
                         </span>
                         {dayVisits.length > 0 && (
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className={cn(
+                            'text-xs font-bold px-2 py-0.5 rounded-full',
+                            today ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary'
+                          )}>
                             {dayCompleted}/{dayVisits.length}
                           </span>
                         )}
@@ -443,7 +454,7 @@ export default function WorkerSchedule() {
                         No visits
                       </div>
                     ) : (
-                      <div className="ml-5 border-l-2 border-border pl-3 space-y-2">
+                      <div className="ml-5 border-l-[3px] border-primary/30 pl-3 space-y-2.5">
                         {dayVisits.map(visit => (
                           <VisitCard key={visit.id} visit={visit} />
                         ))}
