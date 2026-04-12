@@ -178,6 +178,8 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     if (n(item.bonus_amount) > 0) earnings.push({ label: 'Bonus', amount: n(item.bonus_amount) });
     if (n(item.allowance_amount) > 0) earnings.push({ label: 'Allowance', amount: n(item.allowance_amount) });
     if (n(item.salary_override) > 0) earnings.push({ label: 'Salary', amount: n(item.salary_override) });
+    if (n((item as any).reimbursement_amount) > 0) earnings.push({ label: 'Reimbursement', amount: n((item as any).reimbursement_amount) });
+    if (n((item as any).vacation_pay_amount) > 0) earnings.push({ label: 'Vacation Pay (Accrued)', amount: n((item as any).vacation_pay_amount) });
   }
 
   // ── Deductions (from finalized snapshot) ──
