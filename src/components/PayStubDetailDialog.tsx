@@ -142,6 +142,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   const { user } = useAuth();
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   if (!stub) return null;
 
