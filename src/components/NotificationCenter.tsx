@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useUnreadNotifications, useMarkNotificationRead, Notification } from '@/hooks/useNotifications';
+import { useEffect, useRef, useState } from 'react';
+import { useUnreadNotifications, useAllRecentNotifications, useMarkNotificationRead, Notification } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useNavigate } from 'react-router-dom';
@@ -41,17 +41,13 @@ function getAudioContext() {
   return audioCtx;
 }
 
-// Resume audio context on first user interaction (required by browser autoplay policy)
 function ensureAudioResumed() {
   try {
     const ctx = getAudioContext();
-    if (ctx.state === 'suspended') {
-      ctx.resume();
-    }
+    if (ctx.state === 'suspended') ctx.resume();
   } catch { /* ignore */ }
 }
 
-// Listen for any user interaction to unlock audio
 if (typeof window !== 'undefined') {
   const unlock = () => {
     ensureAudioResumed();
@@ -83,30 +79,37 @@ function playNotificationSound() {
     const now = ctx.currentTime;
     playTone(880, now, 0.15);
     playTone(1174.66, now + 0.12, 0.2);
-  } catch {
-    // Audio not available
-  }
+  } catch { /* Audio not available */ }
 }
 
 export function NotificationCenter() {
   const { user } = useAuth();
   const { isStaff, isAdmin } = useUserRole();
-  const { data: notifications = [] } = useUnreadNotifications(user?.id, isStaff || isAdmin);
+  const isOps = isStaff || isAdmin;
+  const { data: unreadNotifications = [] } = useUnreadNotifications(user?.id, isOps);
+  const { data: allNotifications = [] } = useAllRecentNotifications(user?.id, isOps);
   const markRead = useMarkNotificationRead();
   const navigate = useNavigate();
   const prevCountRef = useRef(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Play sound when new notifications arrive
   useEffect(() => {
-    if (notifications.length > prevCountRef.current && prevCountRef.current !== 0) {
+    if (unreadNotifications.length > prevCountRef.current && prevCountRef.current !== 0) {
       playNotificationSound();
     }
-    prevCountRef.current = notifications.length;
-  }, [notifications.length]);
+    prevCountRef.current = unreadNotifications.length;
+  }, [unreadNotifications.length]);
+
+  const unreadIds = new Set(unreadNotifications.map(n => n.id));
 
   const handleClick = (n: Notification) => {
-    markRead.mutate(n.id);
-    // Navigate to the related record if possible
+    // Mark as read if unread
+    if (unreadIds.has(n.id)) {
+      markRead.mutate(n.id);
+    }
+    // Close sheet then navigate
+    setSheetOpen(false);
     if (n.record_type && n.record_id) {
       const base = RECORD_ROUTES[n.record_type];
       if (base) {
@@ -114,16 +117,15 @@ export function NotificationCenter() {
         return;
       }
     }
-    // Fallback: payment_received events link to finance payments
     if (n.event === 'payment_received') {
       navigate('/finance/payments');
     }
   };
 
-  const unreadCount = notifications.length;
+  const unreadCount = unreadNotifications.length;
 
   return (
-    <Sheet>
+    <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
       <SheetTrigger asChild>
         <button className="relative w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center hover:bg-muted transition-colors">
           <Bell className="h-4 w-4 text-foreground" />
@@ -134,27 +136,29 @@ export function NotificationCenter() {
           )}
         </button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-80">
+      <SheetContent side="right" className="w-80" aria-describedby={undefined}>
         <SheetHeader>
           <SheetTitle>Notifications</SheetTitle>
         </SheetHeader>
         <div className="mt-4 space-y-2">
-          {notifications.length === 0 ? (
+          {allNotifications.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">All caught up!</p>
           ) : (
-            notifications.map((n: Notification) => {
+            allNotifications.map((n: Notification) => {
               const Icon = EVENT_ICONS[n.event] || Bell;
+              const isUnread = unreadIds.has(n.id);
               return (
                 <Card
                   key={n.id}
-                  className="cursor-pointer active:shadow-sm transition-shadow hover:bg-muted/50"
+                  className={`cursor-pointer active:shadow-sm transition-shadow hover:bg-muted/50 ${isUnread ? 'border-primary/40 bg-primary/5' : 'opacity-70'}`}
                   onClick={() => handleClick(n)}
                 >
                   <CardContent className="p-3 space-y-1">
                     <div className="flex items-start gap-2">
-                      <Icon className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                      {isUnread && <span className="mt-1.5 h-2 w-2 rounded-full bg-primary shrink-0" />}
+                      <Icon className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${isUnread ? 'text-primary' : 'text-muted-foreground'}`} />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium leading-tight">{n.subject}</p>
+                        <p className={`text-xs leading-tight ${isUnread ? 'font-semibold' : 'font-medium text-muted-foreground'}`}>{n.subject}</p>
                         {n.body && (
                           <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
                         )}
