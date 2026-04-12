@@ -642,7 +642,7 @@ export default function QuoteDetail() {
         sourceType="quote"
         sourceRecord={quote}
         lineItems={lineItems}
-        customerId={lead?.customer_id || ''}
+        customerId={quote.customer_id || lead?.customer_id || ''}
         quoteId={id}
         requestId={(quote as any).request_id}
       />
