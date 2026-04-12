@@ -403,7 +403,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   </tbody>
 </table>
 
-${benefitsHtml}
+${employerHtml}
 
 <div class="net-box">
   <div class="label">NET PAY</div>
@@ -563,29 +563,29 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
               </div>
             </div>
 
-            {/* ── Benefits / Employer Contributions ── */}
-            {benefitsLines.length > 0 && (
+            {/* ── Employer Contributions ── */}
+            {employerLines.length > 0 && (
               <div>
-                <SectionTitle label="Benefits / Employer Contributions" color={primaryColor} />
+                <SectionTitle label="Employer Contributions" color={primaryColor} />
                 <div className="border rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-muted/60">
                         <Th align="left" colSpan={3}>Description</Th>
-                        <Th align="right">Status</Th>
+                        <Th align="right">Amount</Th>
                       </tr>
                     </thead>
                     <tbody>
-                      {benefitsLines.map((b, i) => (
+                      {employerLines.map((e, i) => (
                         <tr key={i} className="border-t border-border/50">
-                          <td className="px-3 py-2 text-foreground" colSpan={3}>{b.label}</td>
-                          <td className="px-3 py-2 text-right text-muted-foreground">
-                            {b.amount != null ? `$${b.amount.toFixed(2)}` : (
-                              <span className="text-emerald-600 font-medium">Enrolled</span>
-                            )}
-                          </td>
+                          <td className="px-3 py-2 text-foreground" colSpan={3}>{e.label}</td>
+                          <td className="px-3 py-2 text-right font-medium">${e.amount.toFixed(2)}</td>
                         </tr>
                       ))}
+                      <tr className="border-t-2 font-bold bg-muted/30" style={{ borderColor: primaryColor }}>
+                        <td className="px-3 py-2.5" colSpan={3}>Total Employer Contributions</td>
+                        <td className="px-3 py-2.5 text-right">${totalEmployerContributions.toFixed(2)}</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
