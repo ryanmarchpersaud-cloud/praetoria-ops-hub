@@ -193,6 +193,28 @@ export default function AgreementSignPage() {
     }
   };
 
+  const handleDecline = async () => {
+    setSubmitting(true);
+    try {
+      await supabase.from('agreements').update({ status: 'declined', declined_at: new Date().toISOString() }).eq('id', agreement.id);
+      await supabase.from('agreement_audit_log').insert({ agreement_id: agreement.id, action: 'declined', user_agent: navigator.userAgent });
+      setDeclined(true);
+      toast.success('Agreement declined');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePrint = () => {
+    if (pdfSignedUrl) {
+      window.open(pdfSignedUrl, '_blank');
+    } else {
+      window.print();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-muted/30 py-8 px-4">
       <div className="max-w-3xl mx-auto space-y-6">
@@ -204,14 +226,14 @@ export default function AgreementSignPage() {
         </div>
 
         {/* Attached PDF */}
-        {agreement.attachment_url && (
+        {pdfSignedUrl && (
           <Card>
             <CardContent className="p-6">
               <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
                 <FileText className="h-4 w-4 text-primary" /> Agreement Document (PDF)
               </h3>
-              <iframe src={agreement.attachment_url} className="w-full h-[500px] border rounded" title="Agreement PDF" />
-              <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(agreement.attachment_url!, '_blank')}>
+              <iframe src={pdfSignedUrl} className="w-full h-[500px] border rounded" title="Agreement PDF" />
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(pdfSignedUrl, '_blank')}>
                 <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
               </Button>
             </CardContent>
@@ -232,85 +254,112 @@ export default function AgreementSignPage() {
           </CardContent>
         </Card>
 
-        {/* Signature Section */}
-        <Card>
-          <CardContent className="p-6 space-y-5">
-            <h3 className="text-lg font-bold flex items-center gap-2">
-              <PenTool className="h-5 w-5 text-primary" /> Sign Agreement
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium">Full Name</label>
-                <Input value={signerName} onChange={e => setSignerName(e.target.value)} placeholder="Your full legal name" />
+        {/* Quick Action Buttons */}
+        {!showSignForm && (
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <h3 className="text-lg font-bold text-center">What would you like to do?</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Button size="lg" className="h-16 text-base" onClick={() => setShowSignForm(true)}>
+                  <CheckCircle className="h-5 w-5 mr-2" /> Yes, I Approve
+                </Button>
+                <Button size="lg" variant="destructive" className="h-16 text-base" onClick={handleDecline} disabled={submitting}>
+                  <XCircle className="h-5 w-5 mr-2" /> No, I Do Not Approve
+                </Button>
+                <Button size="lg" variant="outline" className="h-16 text-base" onClick={handlePrint}>
+                  <Printer className="h-5 w-5 mr-2" /> Print & Read
+                </Button>
               </div>
-              <div>
-                <label className="text-sm font-medium">Email</label>
-                <Input value={signerEmail} onChange={e => setSignerEmail(e.target.value)} placeholder="your@email.com" />
-              </div>
-            </div>
+            </CardContent>
+          </Card>
+        )}
 
-            {/* Signature method */}
-            <Tabs value={signatureType} onValueChange={(v) => setSignatureType(v as 'typed' | 'drawn')}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="typed"><Type className="h-4 w-4 mr-1" /> Type Signature</TabsTrigger>
-                <TabsTrigger value="drawn"><PenTool className="h-4 w-4 mr-1" /> Draw Signature</TabsTrigger>
-              </TabsList>
-              <TabsContent value="typed" className="mt-3">
-                <Input
-                  value={typedSig}
-                  onChange={e => setTypedSig(e.target.value)}
-                  placeholder="Type your full name as signature"
-                  className="text-2xl h-16"
-                  style={{ fontFamily: 'cursive' }}
-                />
-                {typedSig && (
-                  <div className="mt-2 p-3 border rounded bg-muted/30 text-center">
-                    <p className="text-3xl" style={{ fontFamily: 'cursive' }}>{typedSig}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Signature Preview</p>
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="drawn" className="mt-3">
-                <div className="border-2 border-dashed rounded-lg p-1 bg-white">
-                  <canvas
-                    ref={canvasRef}
-                    width={600}
-                    height={150}
-                    className="w-full cursor-crosshair touch-none"
-                    onMouseDown={startDraw}
-                    onMouseMove={draw}
-                    onMouseUp={() => setDrawing(false)}
-                    onMouseLeave={() => setDrawing(false)}
-                    onTouchStart={startDraw}
-                    onTouchMove={draw}
-                    onTouchEnd={() => setDrawing(false)}
-                  />
+        {/* Signature Section (shown after clicking Approve) */}
+        {showSignForm && (
+          <Card>
+            <CardContent className="p-6 space-y-5">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <PenTool className="h-5 w-5 text-primary" /> Sign Agreement
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium">Full Name</label>
+                  <Input value={signerName} onChange={e => setSignerName(e.target.value)} placeholder="Your full legal name" />
                 </div>
-                <Button variant="ghost" size="sm" onClick={clearCanvas} className="mt-1">Clear</Button>
-              </TabsContent>
-            </Tabs>
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <Input value={signerEmail} onChange={e => setSignerEmail(e.target.value)} placeholder="your@email.com" />
+                </div>
+              </div>
 
-            <Separator />
+              {/* Signature method */}
+              <Tabs value={signatureType} onValueChange={(v) => setSignatureType(v as 'typed' | 'drawn')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="typed"><Type className="h-4 w-4 mr-1" /> Type Signature</TabsTrigger>
+                  <TabsTrigger value="drawn"><PenTool className="h-4 w-4 mr-1" /> Draw Signature</TabsTrigger>
+                </TabsList>
+                <TabsContent value="typed" className="mt-3">
+                  <Input
+                    value={typedSig}
+                    onChange={e => setTypedSig(e.target.value)}
+                    placeholder="Type your full name as signature"
+                    className="text-2xl h-16"
+                    style={{ fontFamily: 'cursive' }}
+                  />
+                  {typedSig && (
+                    <div className="mt-2 p-3 border rounded bg-muted/30 text-center">
+                      <p className="text-3xl" style={{ fontFamily: 'cursive' }}>{typedSig}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Signature Preview</p>
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="drawn" className="mt-3">
+                  <div className="border-2 border-dashed rounded-lg p-1 bg-white">
+                    <canvas
+                      ref={canvasRef}
+                      width={600}
+                      height={150}
+                      className="w-full cursor-crosshair touch-none"
+                      onMouseDown={startDraw}
+                      onMouseMove={draw}
+                      onMouseUp={() => setDrawing(false)}
+                      onMouseLeave={() => setDrawing(false)}
+                      onTouchStart={startDraw}
+                      onTouchMove={draw}
+                      onTouchEnd={() => setDrawing(false)}
+                    />
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={clearCanvas} className="mt-1">Clear</Button>
+                </TabsContent>
+              </Tabs>
 
-            {/* Consent */}
-            <div className="flex items-start gap-3 p-4 border rounded-lg bg-muted/30">
-              <Checkbox id="consent" checked={consent} onCheckedChange={(c) => setConsent(!!c)} className="mt-0.5" />
-              <label htmlFor="consent" className="text-sm leading-relaxed cursor-pointer">
-                I, <strong>{signerName || '[Your Name]'}</strong>, have read, understood, and agree to the terms of this agreement. I consent to this electronic signature being legally binding.
-              </label>
-            </div>
+              <Separator />
 
-            <Button onClick={handleSubmit} disabled={submitting || !consent} className="w-full h-12 text-lg">
-              {submitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle className="h-5 w-5 mr-2" />}
-              Sign Agreement
-            </Button>
+              {/* Consent */}
+              <div className="flex items-start gap-3 p-4 border rounded-lg bg-muted/30">
+                <Checkbox id="consent" checked={consent} onCheckedChange={(c) => setConsent(!!c)} className="mt-0.5" />
+                <label htmlFor="consent" className="text-sm leading-relaxed cursor-pointer">
+                  I, <strong>{signerName || '[Your Name]'}</strong>, have read, understood, and agree to the terms of this agreement. I consent to this electronic signature being legally binding.
+                </label>
+              </div>
 
-            <p className="text-[11px] text-center text-muted-foreground">
-              By clicking "Sign Agreement", you agree to use electronic signatures. A timestamped record will be stored securely.
-            </p>
-          </CardContent>
-        </Card>
+              <div className="flex gap-3">
+                <Button onClick={handleSubmit} disabled={submitting || !consent} className="flex-1 h-12 text-lg">
+                  {submitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle className="h-5 w-5 mr-2" />}
+                  Sign Agreement
+                </Button>
+                <Button variant="outline" onClick={() => setShowSignForm(false)} className="h-12">
+                  Back
+                </Button>
+              </div>
+
+              <p className="text-[11px] text-center text-muted-foreground">
+                By clicking "Sign Agreement", you agree to use electronic signatures. A timestamped record will be stored securely.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
