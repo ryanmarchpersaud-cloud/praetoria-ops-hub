@@ -388,14 +388,6 @@ export default function InvoiceDetail() {
             Send Receipt
           </Button>
         )}
-        {canResend && (
-          <Button size="sm" variant="outline" onClick={() => {
-            window.open(`/invoices/${invoice.id}/print`, '_blank');
-            setConfirmSend(true);
-          }}>
-            <FileText className="h-3.5 w-3.5 mr-1.5" /> Send Invoice
-          </Button>
-        )}
         {canMarkOverdue && (
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleStatusChange('Overdue')}>
             <AlertCircle className="h-3.5 w-3.5 mr-1.5" /> Mark Overdue
