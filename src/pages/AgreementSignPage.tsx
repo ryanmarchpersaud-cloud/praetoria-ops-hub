@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, FileSignature, Loader2, Type, PenTool } from 'lucide-react';
+import { CheckCircle, FileSignature, Loader2, Type, PenTool, Download, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAgreementByToken } from '@/hooks/useAgreements';
 import { toast } from 'sonner';
@@ -178,7 +178,22 @@ export default function AgreementSignPage() {
           <p className="text-sm text-muted-foreground">Agreement Review & Signature</p>
         </div>
 
-        {/* Document */}
+        {/* Attached PDF */}
+        {agreement.attachment_url && (
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
+                <FileText className="h-4 w-4 text-primary" /> Agreement Document (PDF)
+              </h3>
+              <iframe src={agreement.attachment_url} className="w-full h-[500px] border rounded" title="Agreement PDF" />
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(agreement.attachment_url!, '_blank')}>
+                <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Document (HTML body) */}
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">

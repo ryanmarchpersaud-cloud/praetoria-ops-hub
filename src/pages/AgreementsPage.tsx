@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, FileSignature, Send, Eye, Search, Filter } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, FileSignature, Send, Eye, Search, Filter, Upload, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -184,6 +185,9 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
   const [recipientUserId, setRecipientUserId] = useState('');
   const [title, setTitle] = useState('');
   const [mergeData, setMergeData] = useState<Record<string, string>>({});
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [agreementMode, setAgreementMode] = useState<'template' | 'pdf'>('template');
 
   const selectedTemplate = templates.find(t => t.id === templateId);
   const mergeFields: string[] = selectedTemplate?.merge_fields ? (selectedTemplate.merge_fields as string[]) : [];
@@ -226,11 +230,29 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
   };
 
   const handleCreate = async (andSend = false) => {
-    if (!templateId || !recipientName || !title) { toast.error('Fill required fields'); return; }
-    const body = renderBody();
+    if (!recipientName || !title) { toast.error('Fill required fields'); return; }
+    if (agreementMode === 'template' && !templateId) { toast.error('Select a template'); return; }
+    if (agreementMode === 'pdf' && !pdfFile) { toast.error('Attach a PDF file'); return; }
+
+    setUploading(true);
+    let attachmentUrl = '';
+
+    // Upload PDF if in pdf mode
+    if (agreementMode === 'pdf' && pdfFile) {
+      const fileName = `${crypto.randomUUID()}_${pdfFile.name}`;
+      const { data: upData, error: upError } = await supabase.storage
+        .from('agreement-attachments')
+        .upload(fileName, pdfFile, { contentType: 'application/pdf' });
+      if (upError) { toast.error('PDF upload failed: ' + upError.message); setUploading(false); return; }
+      const { data: urlData } = supabase.storage.from('agreement-attachments').getPublicUrl(fileName);
+      attachmentUrl = urlData?.publicUrl || upData.path;
+    }
+    setUploading(false);
+
+    const body = agreementMode === 'template' ? renderBody() : `<p>Please review the attached PDF agreement document.</p>`;
     const payload: any = {
-      template_id: templateId,
-      category: selectedTemplate?.category || 'general',
+      template_id: agreementMode === 'template' ? templateId : null,
+      category: agreementMode === 'template' ? (selectedTemplate?.category || 'general') : 'general',
       title,
       recipient_type: recipientType,
       recipient_name: recipientName,
@@ -239,6 +261,7 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
       merge_data: mergeData,
       created_by: userId,
       status: 'draft',
+      ...(attachmentUrl && { attachment_url: attachmentUrl }),
     };
     if (recipientType === 'customer' && recipientUserId) payload.customer_id = recipientUserId;
     if (recipientType === 'subcontractor' && recipientUserId) payload.subcontractor_user_id = recipientUserId;
@@ -269,20 +292,59 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] px-6 pb-2">
           <div className="space-y-4 pb-4">
-            {/* Template */}
+            {/* Mode Toggle */}
             <div>
-              <Label>Agreement Template</Label>
-              <Select value={templateId} onValueChange={handleTemplateChange}>
-                <SelectTrigger><SelectValue placeholder="Choose a template…" /></SelectTrigger>
-                <SelectContent>
-                  {templates.map(t => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name} — <span className="text-muted-foreground text-xs">{categoryLabels[t.category] || t.category}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Agreement Source</Label>
+              <Tabs value={agreementMode} onValueChange={(v) => setAgreementMode(v as 'template' | 'pdf')}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="template"><FileText className="h-4 w-4 mr-1" /> Use Template</TabsTrigger>
+                  <TabsTrigger value="pdf"><Upload className="h-4 w-4 mr-1" /> Upload PDF</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
+
+            {/* Template selector (only in template mode) */}
+            {agreementMode === 'template' && (
+              <div>
+                <Label>Agreement Template</Label>
+                <Select value={templateId} onValueChange={handleTemplateChange}>
+                  <SelectTrigger><SelectValue placeholder="Choose a template…" /></SelectTrigger>
+                  <SelectContent>
+                    {templates.map(t => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name} — <span className="text-muted-foreground text-xs">{categoryLabels[t.category] || t.category}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* PDF upload (only in pdf mode) */}
+            {agreementMode === 'pdf' && (
+              <div>
+                <Label>Upload PDF Agreement</Label>
+                <div className="mt-1 border-2 border-dashed rounded-lg p-6 text-center bg-muted/30">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {pdfFile ? pdfFile.name : 'Choose a PDF file to attach'}
+                  </p>
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    className="max-w-xs mx-auto"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 20 * 1024 * 1024) { toast.error('File must be under 20MB'); return; }
+                        setPdfFile(file);
+                        if (!title) setTitle(file.name.replace(/\.pdf$/i, ''));
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
 
@@ -328,8 +390,8 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
               <div><Label>Recipient Email</Label><Input type="email" value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)} /></div>
             </div>
 
-            {/* Merge Fields */}
-            {mergeFields.length > 0 && (
+            {/* Merge Fields (template mode only) */}
+            {agreementMode === 'template' && mergeFields.length > 0 && (
               <>
                 <Separator />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Fill Agreement Details</h4>
@@ -350,8 +412,8 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
               </>
             )}
 
-            {/* Preview */}
-            {selectedTemplate && (
+            {/* Preview (template mode only) */}
+            {agreementMode === 'template' && selectedTemplate && (
               <>
                 <Separator />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Preview</h4>
@@ -361,11 +423,11 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
           </div>
         </ScrollArea>
         <DialogFooter className="px-6 pb-6 pt-2 gap-2">
-          <Button variant="outline" onClick={() => handleCreate(false)} disabled={createAgreement.isPending}>
-            Save as Draft
+          <Button variant="outline" onClick={() => handleCreate(false)} disabled={createAgreement.isPending || uploading}>
+            {uploading ? 'Uploading…' : 'Save as Draft'}
           </Button>
-          <Button onClick={() => handleCreate(true)} disabled={createAgreement.isPending}>
-            <Send className="h-4 w-4 mr-1" /> Create & Send
+          <Button onClick={() => handleCreate(true)} disabled={createAgreement.isPending || uploading}>
+            <Send className="h-4 w-4 mr-1" /> {uploading ? 'Uploading…' : 'Create & Send'}
           </Button>
         </DialogFooter>
       </DialogContent>
