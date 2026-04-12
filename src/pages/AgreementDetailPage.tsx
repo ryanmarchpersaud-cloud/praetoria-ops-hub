@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Download, RefreshCw, Eye, FileSignature, Clock, CheckCircle, XCircle, Copy } from 'lucide-react';
+import { ArrowLeft, Send, Download, RefreshCw, Eye, FileSignature, Clock, CheckCircle, XCircle, Copy, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgreement, useAgreementSignatures, useAgreementAuditLog, useSendAgreement, useUpdateAgreement } from '@/hooks/useAgreements';
@@ -130,7 +130,20 @@ export default function AgreementDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Document Preview */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-4">
+          {/* PDF Attachment */}
+          {agreement.attachment_url && (
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Attached PDF Agreement</CardTitle></CardHeader>
+              <CardContent>
+                <iframe src={agreement.attachment_url} className="w-full h-[600px] border rounded" title="Agreement PDF" />
+                <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(agreement.attachment_url!, '_blank')}>
+                  <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Agreement Document</CardTitle></CardHeader>
             <CardContent>
