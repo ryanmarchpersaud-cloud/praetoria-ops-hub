@@ -33,6 +33,11 @@ export default function ActivityPage() {
           <SelectItem value="lead">Lead</SelectItem>
           <SelectItem value="quote">Quote</SelectItem>
           <SelectItem value="customer">Customer</SelectItem>
+          <SelectItem value="service_request">Service Request</SelectItem>
+          <SelectItem value="job">Job</SelectItem>
+          <SelectItem value="visit">Visit</SelectItem>
+          <SelectItem value="invoice">Invoice</SelectItem>
+          <SelectItem value="incident_report">Incident Report</SelectItem>
         </SelectContent>
       </Select>
 

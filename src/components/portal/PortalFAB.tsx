@@ -52,6 +52,8 @@ export function PortalFAB() {
       await supabase.from('activities').insert({
         action_name: type === 'issue' ? 'Customer reported property issue' : 'Customer contacted support',
         user_id: user.id,
+        record_type: 'customer',
+        record_id: customer?.id ?? null,
         workflow_name: 'customer_portal',
         payload_summary: { message: message.trim(), customer_name: customerName },
         status: 'completed',
