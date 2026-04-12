@@ -304,6 +304,32 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ success: true, statuses }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // ── UPDATE AUTH USER (email/password) ──
+    if (action === "update_auth_user") {
+      const { user_id: targetUserId, email: newEmail, password: newPassword } = body;
+      if (!targetUserId) {
+        return new Response(JSON.stringify({ error: "user_id is required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const updatePayload: Record<string, unknown> = {};
+      if (newEmail) updatePayload.email = newEmail;
+      if (newPassword) updatePayload.password = newPassword;
+      if (newEmail) updatePayload.email_confirm = true;
+
+      const { data: updatedUser, error: updateErr } = await adminClient.auth.admin.updateUserById(
+        targetUserId, updatePayload
+      );
+      if (updateErr) {
+        return new Response(JSON.stringify({ error: updateErr.message }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true, user: { id: updatedUser.user.id, email: updatedUser.user.email } }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: `Unknown action: ${action}` }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
