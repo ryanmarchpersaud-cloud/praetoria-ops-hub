@@ -184,6 +184,9 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
   const [recipientUserId, setRecipientUserId] = useState('');
   const [title, setTitle] = useState('');
   const [mergeData, setMergeData] = useState<Record<string, string>>({});
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [agreementMode, setAgreementMode] = useState<'template' | 'pdf'>('template');
 
   const selectedTemplate = templates.find(t => t.id === templateId);
   const mergeFields: string[] = selectedTemplate?.merge_fields ? (selectedTemplate.merge_fields as string[]) : [];
@@ -226,11 +229,29 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
   };
 
   const handleCreate = async (andSend = false) => {
-    if (!templateId || !recipientName || !title) { toast.error('Fill required fields'); return; }
-    const body = renderBody();
+    if (!recipientName || !title) { toast.error('Fill required fields'); return; }
+    if (agreementMode === 'template' && !templateId) { toast.error('Select a template'); return; }
+    if (agreementMode === 'pdf' && !pdfFile) { toast.error('Attach a PDF file'); return; }
+
+    setUploading(true);
+    let attachmentUrl = '';
+
+    // Upload PDF if in pdf mode
+    if (agreementMode === 'pdf' && pdfFile) {
+      const fileName = `${crypto.randomUUID()}_${pdfFile.name}`;
+      const { data: upData, error: upError } = await supabase.storage
+        .from('agreement-attachments')
+        .upload(fileName, pdfFile, { contentType: 'application/pdf' });
+      if (upError) { toast.error('PDF upload failed: ' + upError.message); setUploading(false); return; }
+      const { data: urlData } = supabase.storage.from('agreement-attachments').getPublicUrl(fileName);
+      attachmentUrl = urlData?.publicUrl || upData.path;
+    }
+    setUploading(false);
+
+    const body = agreementMode === 'template' ? renderBody() : `<p>Please review the attached PDF agreement document.</p>`;
     const payload: any = {
-      template_id: templateId,
-      category: selectedTemplate?.category || 'general',
+      template_id: agreementMode === 'template' ? templateId : null,
+      category: agreementMode === 'template' ? (selectedTemplate?.category || 'general') : 'general',
       title,
       recipient_type: recipientType,
       recipient_name: recipientName,
@@ -239,6 +260,7 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
       merge_data: mergeData,
       created_by: userId,
       status: 'draft',
+      ...(attachmentUrl && { attachment_url: attachmentUrl }),
     };
     if (recipientType === 'customer' && recipientUserId) payload.customer_id = recipientUserId;
     if (recipientType === 'subcontractor' && recipientUserId) payload.subcontractor_user_id = recipientUserId;
