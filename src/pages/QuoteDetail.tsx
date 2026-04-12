@@ -200,7 +200,21 @@ export default function QuoteDetail() {
   const handleStatusChange = async (newStatus: string) => {
     if (!id) return;
     try {
-      const updates: any = { id, approval_status: newStatus as any };
+      // Save line items first so totals are calculated by DB triggers
+      await upsertItems.mutateAsync({
+        quoteId: id,
+        items: items.filter(i => i.item_name).map((i, idx) => ({
+          quote_id: id, item_name: i.item_name, description: i.description || null,
+          quantity: i.quantity, unit_price: i.unit_price, sort_order: idx,
+        })),
+      });
+      // Also save quote fields (scope, tax_rate, etc.)
+      const updates: any = {
+        id, approval_status: newStatus as any,
+        service_category: form.service_category, scope_of_work: form.scope_of_work,
+        agent_summary: form.agent_summary, internal_notes: form.internal_notes,
+        tax_rate: Number(form.tax_rate || 0.13),
+      };
       if (newStatus === 'Sent') { updates.sent_status = 'Sent'; updates.sent_at = new Date().toISOString(); }
       await updateQuote.mutateAsync(updates);
       toast({ title: `Quote ${newStatus.toLowerCase()}` });
