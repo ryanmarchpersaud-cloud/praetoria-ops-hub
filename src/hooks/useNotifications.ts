@@ -61,14 +61,14 @@ export function useUnreadNotifications(recipientId?: string, isOpsStaff?: boolea
         if (error) throw error;
         return (data || []) as unknown as Notification[];
       }
-      // For non-ops, only personal notifications
+      // For non-ops (workers, subcontractors), personal notifications by recipient_id OR worker audience
       let query = (supabase.from('notifications' as any) as any)
         .select('*')
         .eq('status', 'sent')
         .is('read_at', null)
+        .or(`recipient_id.eq.${recipientId},and(audience.eq.worker,recipient_id.eq.${recipientId})`)
         .order('created_at', { ascending: false })
         .limit(20);
-      if (recipientId) query = query.eq('recipient_id', recipientId);
       const { data, error } = await query;
       if (error) throw error;
       return (data || []) as unknown as Notification[];
