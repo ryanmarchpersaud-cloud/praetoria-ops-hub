@@ -668,14 +668,15 @@ export default function EmployeeDetail() {
             <CardContent className="p-0">
               {payStubs.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No pay stubs recorded.</p> : (
                 <Table>
-                  <TableHeader><TableRow><TableHead>Pay Date</TableHead><TableHead>Period</TableHead><TableHead className="text-right">Gross</TableHead><TableHead className="text-right">Net</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>Pay Date</TableHead><TableHead>Period</TableHead><TableHead className="text-right">Gross</TableHead><TableHead className="text-right">Net</TableHead><TableHead /></TableRow></TableHeader>
                   <TableBody>
                     {payStubs.map((p: any) => (
-                      <TableRow key={p.id}>
+                      <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedPayStub(p)}>
                         <TableCell className="text-sm font-medium">{format(new Date(p.pay_date), 'MMM d, yyyy')}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{format(new Date(p.pay_period_start), 'MMM d')} – {format(new Date(p.pay_period_end), 'MMM d')}</TableCell>
                         <TableCell className="text-sm text-right">${Number(p.gross_pay).toFixed(2)}</TableCell>
                         <TableCell className="text-sm text-right font-medium">${Number(p.net_pay).toFixed(2)}</TableCell>
+                        <TableCell className="text-right"><Button variant="ghost" size="sm" className="text-xs">View</Button></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -683,6 +684,13 @@ export default function EmployeeDetail() {
               )}
             </CardContent>
           </Card>
+          <PayStubDetailDialog
+            stub={selectedPayStub}
+            open={!!selectedPayStub}
+            onOpenChange={(o) => { if (!o) setSelectedPayStub(null); }}
+            employeeName={emp.full_name}
+            employeeRole={emp.role_title}
+          />
         </TabsContent>
 
         {/* Benefits */}
