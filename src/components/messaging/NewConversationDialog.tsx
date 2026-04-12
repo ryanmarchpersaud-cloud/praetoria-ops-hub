@@ -4,10 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateConversation, type ConversationType } from '@/hooks/useMessaging';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useCreateConversation, useMessagingPeople, type ConversationType } from '@/hooks/useMessaging';
 import { Plus, Loader2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -23,38 +20,7 @@ export function NewConversationDialog({ onCreated, trigger }: Props) {
   const [title, setTitle] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const createConversation = useCreateConversation();
-  const { user } = useAuth();
-
-  // Fetch available team members + subcontractors
-  const { data: people = [] } = useQuery({
-    queryKey: ['messaging_people'],
-    queryFn: async () => {
-      const results: { id: string; name: string; role: string }[] = [];
-      
-      const { data: team } = await supabase
-        .from('team_members')
-        .select('user_id, full_name, display_name, job_title')
-        .eq('is_active', true);
-      (team || []).forEach((t: any) => {
-        if (t.user_id && t.user_id !== user?.id) {
-          results.push({ id: t.user_id, name: t.full_name || t.display_name || 'Unknown', role: t.job_title || 'Staff' });
-        }
-      });
-
-      const { data: subs } = await supabase
-        .from('subcontractors')
-        .select('user_id, contact_name, company_name')
-        .eq('active_flag', true);
-      (subs || []).forEach((s: any) => {
-        if (s.user_id && s.user_id !== user?.id) {
-          results.push({ id: s.user_id, name: s.contact_name, role: s.company_name || 'Subcontractor' });
-        }
-      });
-
-      return results;
-    },
-    enabled: open,
-  });
+  const { data: people = [], isLoading: peopleLoading, isError: peopleError } = useMessagingPeople(open);
 
   const toggleUser = (id: string) => {
     setSelectedUsers(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
@@ -120,6 +86,12 @@ export function NewConversationDialog({ onCreated, trigger }: Props) {
           <div className="space-y-1.5">
             <Label>Members</Label>
             <div className="max-h-[240px] overflow-y-auto space-y-0.5 border rounded-lg p-1">
+              {peopleLoading && (
+                <p className="text-xs text-muted-foreground text-center py-4">Loading members…</p>
+              )}
+              {peopleError && !peopleLoading && (
+                <p className="text-xs text-destructive text-center py-4">Couldn’t load members. Please try again.</p>
+              )}
               {people.map(p => (
                 <button
                   key={p.id}
@@ -141,8 +113,8 @@ export function NewConversationDialog({ onCreated, trigger }: Props) {
                   </div>
                 </button>
               ))}
-              {people.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-4">No team members found</p>
+              {!peopleLoading && !peopleError && people.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-4">No available members found</p>
               )}
             </div>
           </div>

@@ -59,6 +59,81 @@ export interface MessageAttachment {
   created_at: string;
 }
 
+export interface MessagingPerson {
+  id: string;
+  name: string;
+  role: string;
+}
+
+function formatMessagingRole(value: string | null | undefined) {
+  if (!value) return null;
+
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/** Fetch available people for starting conversations */
+export function useMessagingPeople(enabled = true) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['messaging_people', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const people = new Map<string, MessagingPerson>();
+
+      const [teamRes, subRes] = await Promise.all([
+        supabase
+          .from('team_members')
+          .select('user_id, full_name, display_name, team_type, portal_admin, portal_worker, portal_subcontractor')
+          .eq('is_active', true),
+        supabase
+          .from('subcontractors')
+          .select('user_id, contact_name, company_name, active_flag')
+          .eq('active_flag', true),
+      ]);
+
+      if (teamRes.error) throw teamRes.error;
+      if (subRes.error) throw subRes.error;
+
+      (teamRes.data || []).forEach((member: any) => {
+        if (!member.user_id || member.user_id === user.id) return;
+
+        const role = member.portal_admin
+          ? 'Admin'
+          : member.portal_worker
+            ? 'Worker'
+            : member.portal_subcontractor
+              ? 'Subcontractor'
+              : formatMessagingRole(member.team_type) || 'Staff';
+
+        people.set(member.user_id, {
+          id: member.user_id,
+          name: member.full_name || member.display_name || 'Unknown',
+          role,
+        });
+      });
+
+      (subRes.data || []).forEach((sub: any) => {
+        if (!sub.user_id || sub.user_id === user.id) return;
+
+        people.set(sub.user_id, {
+          id: sub.user_id,
+          name: sub.contact_name || sub.company_name || 'Subcontractor',
+          role: sub.company_name || 'Subcontractor',
+        });
+      });
+
+      return Array.from(people.values()).sort((a, b) => a.name.localeCompare(b.name));
+    },
+    enabled: enabled && !!user,
+  });
+}
+
 /** Fetch all conversations the current user is a member of */
 export function useConversations(filter?: { type?: string; unreadOnly?: boolean; includeArchived?: boolean }) {
   const { user } = useAuth();
