@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { sendNotification } from '@/hooks/useNotifications';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { useJob, useJobVisits, useUpdateJob, useDeleteJob } from '@/hooks/useJobs';
 import { useCreateVisit } from '@/hooks/useVisits';
@@ -73,6 +74,7 @@ export default function JobDetail() {
   const handleSave = async () => {
     if (!id) return;
     try {
+      const previousAssignedTo = job.assigned_to;
       await updateJob.mutateAsync({
         id, job_title: form.job_title, service_category: form.service_category,
         scope_of_work: form.scope_of_work, priority: form.priority,
@@ -87,6 +89,31 @@ export default function JobDetail() {
         additional_visit_rate: form.additional_visit_rate || null,
         service_instructions: form.service_instructions || null,
       });
+
+      // Send worker_assigned notification if worker changed
+      if (form.assigned_to && form.assigned_to !== previousAssignedTo) {
+        try {
+          const worker = employees.find((e: any) => e.user_id === form.assigned_to);
+          await sendNotification({
+            event: 'worker_assigned',
+            recipient_id: form.assigned_to,
+            record_type: 'job',
+            record_id: id,
+            channels: ['email', 'sms'],
+            audience: 'worker',
+            variables: {
+              worker_name: worker?.full_name || '',
+              job_number: form.job_number || '',
+              job_title: form.job_title || '',
+              service_type: form.service_category || '',
+              property: property?.property_name || '',
+              customer_name: customer ? `${customer.first_name} ${customer.last_name}` : '',
+              scheduled_date: form.scheduled_date || '',
+            },
+          });
+        } catch { /* non-critical */ }
+      }
+
       toast({ title: 'Job saved' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });

@@ -97,6 +97,86 @@ export default function InvoiceDetail() {
     try {
       await updateInvoice.mutateAsync({ id: invoice.id, status: newStatus, ...extra });
       toast.success(`Invoice marked as ${newStatus}`);
+
+      // Fire invoice_overdue notification
+      if (newStatus === 'Overdue') {
+        const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'invoice_overdue',
+              customer_id: invoice.customer_id,
+              record_type: 'invoice',
+              record_id: invoice.id,
+              channels: ['in_app', 'email', 'sms'],
+              audience: 'customer',
+              variables: {
+                customer_name: customerName,
+                invoice_number: invoice.invoice_number || '',
+                total: total.toFixed(2),
+                balance_due: balanceDue.toFixed(2),
+                due_date: format(new Date(invoice.due_date), 'MMM d, yyyy'),
+                to_email: invoice.customers?.email || '',
+                to_phone: invoice.customers?.phone || '',
+              },
+            },
+          });
+          // Also notify admin
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'invoice_overdue',
+              record_type: 'invoice',
+              record_id: invoice.id,
+              channels: ['in_app'],
+              audience: 'admin',
+              variables: {
+                customer_name: customerName,
+                invoice_number: invoice.invoice_number || '',
+                total: total.toFixed(2),
+                balance_due: balanceDue.toFixed(2),
+              },
+            },
+          });
+        } catch { /* non-critical */ }
+      }
+
+      // Fire payment_failed notification
+      if (newStatus === 'Failed') {
+        const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'payment_failed',
+              customer_id: invoice.customer_id,
+              record_type: 'invoice',
+              record_id: invoice.id,
+              channels: ['in_app', 'email'],
+              audience: 'customer',
+              variables: {
+                customer_name: customerName,
+                invoice_number: invoice.invoice_number || '',
+                total: total.toFixed(2),
+                balance_due: balanceDue.toFixed(2),
+                to_email: invoice.customers?.email || '',
+              },
+            },
+          });
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'payment_failed',
+              record_type: 'invoice',
+              record_id: invoice.id,
+              channels: ['in_app'],
+              audience: 'admin',
+              variables: {
+                customer_name: customerName,
+                invoice_number: invoice.invoice_number || '',
+                total: total.toFixed(2),
+              },
+            },
+          });
+        } catch { /* non-critical */ }
+      }
     } catch {
       toast.error('Failed to update invoice');
     }
@@ -164,6 +244,7 @@ export default function InvoiceDetail() {
   const canResend = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canManageInvoices;
   const canRecordPayment = ['Sent', 'Viewed', 'Overdue', 'Partially Paid'].includes(invoice.status) && canRecordPayments;
   const canVoid = !['Voided', 'Paid'].includes(invoice.status) && canVoidInvoices;
+  const canMarkOverdue = ['Sent', 'Viewed'].includes(invoice.status) && canManageInvoices;
   const billingMode = (invoice as any).billing_mode;
 
   return (
@@ -209,6 +290,11 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
+        {canMarkOverdue && (
+          <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => handleStatusChange('Overdue')}>
+            <AlertCircle className="h-3.5 w-3.5 mr-1.5" /> Mark Overdue
+          </Button>
+        )}
         {canVoid && (
           <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setConfirmVoid(true)}>
             <Ban className="h-3.5 w-3.5 mr-1.5" /> Void

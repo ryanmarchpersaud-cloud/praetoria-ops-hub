@@ -7316,6 +7316,10 @@ export type Database = {
         | "invoice_overdue"
         | "payment_received"
         | "payment_failed"
+        | "agreement_sent"
+        | "new_service_request"
+        | "emergency_sos"
+        | "incident_report"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
@@ -7556,6 +7560,10 @@ export const Constants = {
         "invoice_overdue",
         "payment_received",
         "payment_failed",
+        "agreement_sent",
+        "new_service_request",
+        "emergency_sos",
+        "incident_report",
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
