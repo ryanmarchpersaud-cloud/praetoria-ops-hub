@@ -826,9 +826,12 @@ export type Database = {
           billing_email: string | null
           billing_frequency: Database["public"]["Enums"]["billing_frequency"]
           card_brand: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
           card_last4: string | null
           created_at: string
           customer_id: string
+          default_payment_method_id: string | null
           id: string
           notes: string | null
           payment_method_present: boolean
@@ -842,9 +845,12 @@ export type Database = {
           billing_email?: string | null
           billing_frequency?: Database["public"]["Enums"]["billing_frequency"]
           card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
           card_last4?: string | null
           created_at?: string
           customer_id: string
+          default_payment_method_id?: string | null
           id?: string
           notes?: string | null
           payment_method_present?: boolean
@@ -858,9 +864,12 @@ export type Database = {
           billing_email?: string | null
           billing_frequency?: Database["public"]["Enums"]["billing_frequency"]
           card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
           card_last4?: string | null
           created_at?: string
           customer_id?: string
+          default_payment_method_id?: string | null
           id?: string
           notes?: string | null
           payment_method_present?: boolean
@@ -5410,8 +5419,11 @@ export type Database = {
           autopay_enabled: boolean
           billing_email: string | null
           card_brand: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
           card_last4: string | null
           created_at: string
+          default_payment_method_id: string | null
           id: string
           notes: string | null
           payment_method_present: boolean
@@ -5425,8 +5437,11 @@ export type Database = {
           autopay_enabled?: boolean
           billing_email?: string | null
           card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
           card_last4?: string | null
           created_at?: string
+          default_payment_method_id?: string | null
           id?: string
           notes?: string | null
           payment_method_present?: boolean
@@ -5440,8 +5455,11 @@ export type Database = {
           autopay_enabled?: boolean
           billing_email?: string | null
           card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
           card_last4?: string | null
           created_at?: string
+          default_payment_method_id?: string | null
           id?: string
           notes?: string | null
           payment_method_present?: boolean
