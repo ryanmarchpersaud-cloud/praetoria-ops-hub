@@ -25,6 +25,7 @@ type Visit = {
   completion_time: string | null;
   service_summary: string | null;
   crew_notes: string | null;
+  assigned_worker_id: string | null;
   properties: { property_name: string; address_line_1: string | null; city: string | null; province: string | null; postal_code: string | null } | null;
   customers: { first_name: string; last_name: string; phone: string | null } | null;
   jobs: { assigned_to: string | null; service_category: string | null; job_title: string | null; job_number: string | null; service_instructions: string | null } | null;
