@@ -29,6 +29,8 @@ const statusIcons: Record<string, typeof FileEdit> = {
   'closed': Archive,
   'cancelled': Ban,
   'completed': CheckCircle,
+  'disputed': AlertTriangle,
+  'refunded': DollarSign,
 };
 
 export const StatusBadge = forwardRef<HTMLSpanElement, { status: string; showIcon?: boolean }>(
