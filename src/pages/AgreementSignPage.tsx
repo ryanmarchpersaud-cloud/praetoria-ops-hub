@@ -53,7 +53,11 @@ export default function AgreementSignPage() {
     if (agreement?.attachment_url) {
       supabase.storage.from('agreement-attachments')
         .createSignedUrl(agreement.attachment_url, 3600)
-        .then(({ data }) => { if (data?.signedUrl) setPdfSignedUrl(data.signedUrl); });
+        .then(({ data }) => {
+          if (data?.signedUrl) {
+            setPdfSignedUrl(resolveSignedStorageUrl(data.signedUrl));
+          }
+        });
     }
   }, [agreement?.attachment_url]);
 
@@ -363,4 +367,12 @@ export default function AgreementSignPage() {
       </div>
     </div>
   );
+}
+
+function resolveSignedStorageUrl(url: string) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1${url}`;
 }

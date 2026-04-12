@@ -575,6 +575,68 @@ Deno.serve(async (req) => {
       return json({ ...result, action: "incident_share" });
     }
 
+    // ─── Agreement Sent / Reminder (recipient-facing) ───
+    if (action === "agreement_sent") {
+      const {
+        to,
+        recipient_name,
+        agreement_title,
+        agreement_id,
+        agreement_category,
+        internal_reference,
+        signing_url,
+        portal_url,
+        attachment_present,
+        is_reminder,
+      } = params;
+
+      if (!to) return json({ error: "Missing 'to' email address" }, 400);
+      if (!signing_url) return json({ error: "Missing signing_url" }, 400);
+
+      const result = await sendViaResend({
+        to,
+        subject: `${is_reminder ? "Reminder: " : ""}${agreement_title || "Agreement"} — Signature Requested`,
+        html: wrapHtml(is_reminder ? "Agreement Reminder" : "Agreement Ready for Signature", `
+          <p>Dear ${recipient_name || "Valued Recipient"},</p>
+          <p>Please review and sign <strong>${agreement_title || "your agreement"}</strong>.</p>
+          ${internal_reference ? `<p><strong>Reference:</strong> ${internal_reference}</p>` : ""}
+          ${agreement_category ? `<p><strong>Category:</strong> <span class="badge">${agreement_category}</span></p>` : ""}
+          ${attachment_present ? `<p>A PDF version of the agreement is available inside the secure signing page below.</p>` : ""}
+          <p style="margin:24px 0;">
+            <a href="${signing_url}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600;">Review &amp; Sign Agreement</a>
+          </p>
+          <p>If the button does not open, copy and paste this secure link into your browser:</p>
+          <p style="word-break:break-all;"><a href="${signing_url}">${signing_url}</a></p>
+          ${portal_url ? `<p>If you already have portal access, you can also find this agreement in your portal:<br/><a href="${portal_url}">${portal_url}</a></p>` : ""}
+          <p>If you have any questions, simply reply to this email and our team will help.</p>
+          <p>Best regards,<br/>Praetoria Group</p>
+        `),
+        reply_to: EMAIL_CONFIG.opsInbox,
+      });
+
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.agreement_sent",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: Array.isArray(to) ? to.join(", ") : to,
+        record_type: "agreement",
+        record_id: agreement_id,
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: {
+          agreement_title,
+          agreement_category,
+          internal_reference,
+          attachment_present: !!attachment_present,
+          is_reminder: !!is_reminder,
+        },
+      };
+      await logIntegration(logEntry);
+      await notifyN8n(logEntry);
+      return json({ ...result, action: "agreement_sent" });
+    }
+
     // ─── Health check ───
     if (action === "health") {
       const hasKey = !!Deno.env.get("RESEND_API_KEY");

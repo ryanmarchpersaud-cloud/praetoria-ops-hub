@@ -53,8 +53,7 @@ export default function AgreementDetailPage() {
   };
 
   const handleResend = () => {
-    sendAgreement.mutate({ id: agreement.id, sentBy: user?.id! });
-    toast.success('Reminder sent');
+    sendAgreement.mutate({ id: agreement.id, sentBy: user?.id!, isReminder: true });
   };
 
   const handleCopyLink = () => {
@@ -239,7 +238,11 @@ function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null })
     if (!attachmentUrl) return;
     supabase.storage.from('agreement-attachments')
       .createSignedUrl(attachmentUrl, 3600)
-      .then(({ data }) => { if (data?.signedUrl) setSignedUrl(data.signedUrl); });
+      .then(({ data }) => {
+        if (data?.signedUrl) {
+          setSignedUrl(resolveSignedStorageUrl(data.signedUrl));
+        }
+      });
   }, [attachmentUrl]);
 
   if (!attachmentUrl || !signedUrl) return null;
@@ -259,4 +262,12 @@ function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null })
       </CardContent>
     </Card>
   );
+}
+
+function resolveSignedStorageUrl(url: string) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1${url}`;
 }
