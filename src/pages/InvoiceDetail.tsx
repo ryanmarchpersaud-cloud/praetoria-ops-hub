@@ -97,6 +97,86 @@ export default function InvoiceDetail() {
     try {
       await updateInvoice.mutateAsync({ id: invoice.id, status: newStatus, ...extra });
       toast.success(`Invoice marked as ${newStatus}`);
+
+      // Fire invoice_overdue notification
+      if (newStatus === 'Overdue') {
+        const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'invoice_overdue',
+              customer_id: invoice.customer_id,
+              record_type: 'invoice',
+              record_id: invoice.id,
+              channels: ['in_app', 'email', 'sms'],
+              audience: 'customer',
+              variables: {
+                customer_name: customerName,
+                invoice_number: invoice.invoice_number || '',
+                total: total.toFixed(2),
+                balance_due: balanceDue.toFixed(2),
+                due_date: format(new Date(invoice.due_date), 'MMM d, yyyy'),
+                to_email: invoice.customers?.email || '',
+                to_phone: invoice.customers?.phone || '',
+              },
+            },
+          });
+          // Also notify admin
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'invoice_overdue',
+              record_type: 'invoice',
+              record_id: invoice.id,
+              channels: ['in_app'],
+              audience: 'admin',
+              variables: {
+                customer_name: customerName,
+                invoice_number: invoice.invoice_number || '',
+                total: total.toFixed(2),
+                balance_due: balanceDue.toFixed(2),
+              },
+            },
+          });
+        } catch { /* non-critical */ }
+      }
+
+      // Fire payment_failed notification
+      if (newStatus === 'Failed') {
+        const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'payment_failed',
+              customer_id: invoice.customer_id,
+              record_type: 'invoice',
+              record_id: invoice.id,
+              channels: ['in_app', 'email'],
+              audience: 'customer',
+              variables: {
+                customer_name: customerName,
+                invoice_number: invoice.invoice_number || '',
+                total: total.toFixed(2),
+                balance_due: balanceDue.toFixed(2),
+                to_email: invoice.customers?.email || '',
+              },
+            },
+          });
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'payment_failed',
+              record_type: 'invoice',
+              record_id: invoice.id,
+              channels: ['in_app'],
+              audience: 'admin',
+              variables: {
+                customer_name: customerName,
+                invoice_number: invoice.invoice_number || '',
+                total: total.toFixed(2),
+              },
+            },
+          });
+        } catch { /* non-critical */ }
+      }
     } catch {
       toast.error('Failed to update invoice');
     }
