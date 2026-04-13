@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
@@ -95,6 +96,59 @@ export default function VisitDetail() {
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
+        )}
+        {canManageVisits && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-11 gap-1.5">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">More</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {form.visit_status !== 'Completed' && form.visit_status !== 'Cancelled' && (
+                <DropdownMenuItem onClick={async () => {
+                  try {
+                    await updateVisit.mutateAsync({ id, visit_status: 'Completed' });
+                    set('visit_status', 'Completed');
+                    toast({ title: 'Visit marked complete' });
+                  } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+                }} className="gap-2">
+                  <CheckSquare className="h-4 w-4" /> Mark Complete
+                </DropdownMenuItem>
+              )}
+              {form.visit_status !== 'Cancelled' && (
+                <DropdownMenuItem onClick={async () => {
+                  try {
+                    await updateVisit.mutateAsync({ id, visit_status: 'Cancelled' });
+                    set('visit_status', 'Cancelled');
+                    toast({ title: 'Visit cancelled' });
+                  } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+                }} className="gap-2">
+                  <XCircle className="h-4 w-4" /> Cancel Visit
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={async () => {
+                try {
+                  await updateVisit.mutateAsync({ id, visit_status: 'Archived' });
+                  set('visit_status', 'Archived');
+                  toast({ title: 'Visit archived' });
+                } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+              }} className="gap-2">
+                <Archive className="h-4 w-4" /> Archive
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={async () => {
+                try {
+                  await updateVisit.mutateAsync({ id, visit_status: 'Deleted' });
+                  toast({ title: 'Visit deleted' });
+                  navigate('/visits');
+                } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+              }} className="gap-2 text-destructive focus:text-destructive">
+                <Trash2 className="h-4 w-4" /> Delete Visit
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 
