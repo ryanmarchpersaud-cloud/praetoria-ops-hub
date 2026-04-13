@@ -123,7 +123,18 @@ export function NotificationCenter() {
     let target = '';
     if (n.record_type && n.record_id) {
       const base = RECORD_ROUTES[n.record_type];
-      if (base) target = `${base}/${n.record_id}`;
+      if (base) {
+        // For activity-only routes (no detail page), just go to the list
+        if (base === '/activity') {
+          target = base;
+        } else {
+          target = `${base}/${n.record_id}`;
+        }
+      }
+    }
+    if (!target && n.record_type) {
+      const base = RECORD_ROUTES[n.record_type];
+      if (base) target = base;
     }
     if (!target && n.event === 'payment_received') {
       target = '/finance/payments';

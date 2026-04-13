@@ -132,7 +132,7 @@ export function WorkerFAB() {
     { icon: CheckCircle, label: 'Complete Visit', color: 'bg-blue-500', action: isOnVisitPage ? handleCompleteVisit : noVisitToast, category: 'field' as const, requiresVisitContext: true },
     { icon: Camera, label: 'Add Photos', color: 'bg-violet-500', action: isOnVisitPage ? handleAddPhotos : noVisitToast, category: 'field' as const, requiresVisitContext: true },
     { icon: StickyNote, label: 'Add Note', color: 'bg-amber-500', action: isOnVisitPage ? handleAddNote : noVisitToast, category: 'field' as const, requiresVisitContext: true },
-    { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: isOnVisitPage ? `/worker/visit/${currentVisitId}` : '/worker/incidents', category: 'field' as const },
+    { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: '/worker/incidents/new', category: 'field' as const },
     { icon: Receipt, label: 'Expense', color: 'bg-cyan-500', action: () => setQuickAction('expense'), category: 'field' as const },
     { icon: active ? LogOut : LogIn, label: active ? 'Clock Out' : 'Clock In', color: active ? 'bg-orange-500' : 'bg-emerald-600', action: handleClock, category: 'field' as const },
     { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: isOnVisitPage ? handleOpenDirections : noVisitToast, category: 'field' as const, requiresVisitContext: true },
