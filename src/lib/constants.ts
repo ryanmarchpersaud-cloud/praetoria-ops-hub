@@ -53,6 +53,11 @@ export const RECURRENCE_FREQUENCIES = ['Daily', 'Weekly', 'Biweekly', 'Monthly',
 export const SERVICE_FREQUENCIES = ['one-time', 'weekly', 'biweekly', 'monthly', 'on-snowfall', 'custom-seasonal'] as const;
 export const INVOICE_STATUSES = ['Draft', 'Sent', 'Viewed', 'Paid', 'Partially Paid', 'Overdue', 'Failed', 'Voided', 'Refunded', 'Disputed'] as const;
 
+export const CUSTOMER_TYPES = ['Residential', 'Commercial', 'Contractor', 'Property Manager', 'Other'] as const;
+export const ACCOUNT_TYPES = ['Individual', 'Company'] as const;
+export const BILLING_METHODS = ['Email', 'Mail', 'Portal', 'Other'] as const;
+export const COMMUNICATION_METHODS = ['Email', 'Phone', 'Text / SMS', 'Portal'] as const;
+
 export function getStatusClass(status: string): string {
   const s = status.toLowerCase();
   if (s === 'new' || s === 'scheduled' || s === 'open') return 'status-new';

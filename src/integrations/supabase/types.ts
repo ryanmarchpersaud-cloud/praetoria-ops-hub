@@ -1161,59 +1161,131 @@ export type Database = {
       }
       customers: {
         Row: {
+          account_type: string
+          accounts_payable_email: string | null
           address_line_1: string | null
+          billing_address_line_1: string | null
+          billing_address_same_as_service: boolean
+          billing_city: string | null
+          billing_contact_email: string | null
+          billing_contact_name: string | null
+          billing_contact_phone: string | null
+          billing_postal_code: string | null
+          billing_province: string | null
           city: string | null
+          company_legal_name: string | null
           company_name: string | null
           created_at: string
           created_by: string | null
           customer_status: string
+          customer_tags: string[] | null
+          customer_type: string
           email: string | null
           first_name: string
           id: string
           last_name: string
           notes: string | null
+          operating_name: string | null
           phone: string | null
+          portal_access_enabled: boolean
           postal_code: string | null
+          preferred_billing_method: string | null
+          preferred_communication_method: string | null
+          primary_contact_title: string | null
+          project_notes: string | null
           province: string | null
+          referral_source: string | null
+          requires_po_number: boolean
           secondary_email: string | null
+          site_contact_email: string | null
+          site_contact_name: string | null
+          site_contact_phone: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          account_type?: string
+          accounts_payable_email?: string | null
           address_line_1?: string | null
+          billing_address_line_1?: string | null
+          billing_address_same_as_service?: boolean
+          billing_city?: string | null
+          billing_contact_email?: string | null
+          billing_contact_name?: string | null
+          billing_contact_phone?: string | null
+          billing_postal_code?: string | null
+          billing_province?: string | null
           city?: string | null
+          company_legal_name?: string | null
           company_name?: string | null
           created_at?: string
           created_by?: string | null
           customer_status?: string
+          customer_tags?: string[] | null
+          customer_type?: string
           email?: string | null
           first_name: string
           id?: string
           last_name: string
           notes?: string | null
+          operating_name?: string | null
           phone?: string | null
+          portal_access_enabled?: boolean
           postal_code?: string | null
+          preferred_billing_method?: string | null
+          preferred_communication_method?: string | null
+          primary_contact_title?: string | null
+          project_notes?: string | null
           province?: string | null
+          referral_source?: string | null
+          requires_po_number?: boolean
           secondary_email?: string | null
+          site_contact_email?: string | null
+          site_contact_name?: string | null
+          site_contact_phone?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          account_type?: string
+          accounts_payable_email?: string | null
           address_line_1?: string | null
+          billing_address_line_1?: string | null
+          billing_address_same_as_service?: boolean
+          billing_city?: string | null
+          billing_contact_email?: string | null
+          billing_contact_name?: string | null
+          billing_contact_phone?: string | null
+          billing_postal_code?: string | null
+          billing_province?: string | null
           city?: string | null
+          company_legal_name?: string | null
           company_name?: string | null
           created_at?: string
           created_by?: string | null
           customer_status?: string
+          customer_tags?: string[] | null
+          customer_type?: string
           email?: string | null
           first_name?: string
           id?: string
           last_name?: string
           notes?: string | null
+          operating_name?: string | null
           phone?: string | null
+          portal_access_enabled?: boolean
           postal_code?: string | null
+          preferred_billing_method?: string | null
+          preferred_communication_method?: string | null
+          primary_contact_title?: string | null
+          project_notes?: string | null
           province?: string | null
+          referral_source?: string | null
+          requires_po_number?: boolean
           secondary_email?: string | null
+          site_contact_email?: string | null
+          site_contact_name?: string | null
+          site_contact_phone?: string | null
           updated_at?: string
           user_id?: string | null
         }
