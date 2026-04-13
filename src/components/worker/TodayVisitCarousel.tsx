@@ -278,7 +278,11 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
   const { toast } = useToast();
   const createLead = useCreateLead();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '', notes: '' });
+  const { user } = useAuth();
+  const [form, setForm] = useState({
+    first_name: '', last_name: '', email: '', phone: '', company_name: '',
+    service_type: 'Snow & Ice', notes: '', address_line_1: '', city: '',
+  });
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
@@ -286,7 +290,12 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
     if (!form.first_name || !form.last_name) { toast({ title: 'First & last name required', variant: 'destructive' }); return; }
     setSaving(true);
     try {
-      const data = await createLead.mutateAsync({ ...form, status: 'New' as any, source: 'Field' as any } as any);
+      const data = await createLead.mutateAsync({
+        ...form,
+        status: 'New' as any,
+        lead_source: 'Field' as any,
+        created_by: user?.id ?? null,
+      } as any);
       toast({ title: 'Lead created' });
       onOpenChange(false);
       navigate(`/leads/${data.id}`);
@@ -296,7 +305,7 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-3">
+      <DialogContent className="max-w-md mx-3 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-base">New Lead</DialogTitle>
           <DialogDescription>Capture a new lead from the field.</DialogDescription>
@@ -309,7 +318,19 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
           <div><Label className="text-xs">Email</Label><Input type="email" value={form.email} onChange={e => set('email', e.target.value)} /></div>
           <div><Label className="text-xs">Phone</Label><Input value={form.phone} onChange={e => set('phone', e.target.value)} /></div>
           <div><Label className="text-xs">Company</Label><Input value={form.company_name} onChange={e => set('company_name', e.target.value)} /></div>
+          <div>
+            <Label className="text-xs">Service Interest</Label>
+            <Select value={form.service_type} onValueChange={v => set('service_type', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SERVICE_CATEGORIES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div><Label className="text-xs">Address</Label><Input value={form.address_line_1} onChange={e => set('address_line_1', e.target.value)} placeholder="Street address" /></div>
+          <div><Label className="text-xs">City</Label><Input value={form.city} onChange={e => set('city', e.target.value)} /></div>
           <div><Label className="text-xs">Notes</Label><Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} placeholder="Met at job site…" /></div>
+          {user && <p className="text-[10px] text-muted-foreground">Created by: {user.email}</p>}
           <Button className="w-full h-11" disabled={saving || !form.first_name || !form.last_name} onClick={handleSubmit}>
             {saving ? 'Creating…' : 'Create Lead'}
           </Button>
