@@ -201,8 +201,8 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
                             </p>
                           </div>
                         </div>
-                        {isInProgress && visit.arrival_time && (
-                          <span className="whitespace-nowrap text-xs font-bold font-mono tabular-nums text-primary">
+                      {isInProgress && visit.arrival_time && (
+                          <span className="whitespace-nowrap text-[10px] font-bold font-mono tabular-nums text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
                             {formatTimer(elapsedSeconds)}
                           </span>
                         )}
