@@ -1,17 +1,35 @@
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubcontractorProfile, useSubcontractorAssignments, useSubcontractorInvoices } from '@/hooks/useSubcontractor';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { AvatarUpload } from '@/components/AvatarUpload';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DailyRouteMap, type RouteStop } from '@/components/DailyRouteMap';
 import {
   CalendarDays, Receipt, FileText, ChevronRight, MapPin, CheckCircle,
   AlertTriangle, Briefcase, ShieldCheck, Clock, Truck, DollarSign,
-  Navigation, Phone,
+  Navigation, Phone, Plus, UserPlus, ClipboardList, Home, Send,
+  CalendarPlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CreateRequestDialog } from '@/components/CreateRequestDialog';
+import CreateVisitDialog from '@/components/CreateVisitDialog';
+
+type QuickBookAction = 'visit' | 'job' | 'customer' | 'property' | 'lead' | 'quote' | 'invoice' | 'request' | 'incident';
+
+const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; color: string }[] = [
+  { label: 'New Visit', icon: ClipboardList, action: 'visit', color: 'text-blue-600' },
+  { label: 'New Job', icon: Briefcase, action: 'job', color: 'text-indigo-600' },
+  { label: 'New Customer', icon: UserPlus, action: 'customer', color: 'text-emerald-600' },
+  { label: 'New Property', icon: Home, action: 'property', color: 'text-amber-600' },
+  { label: 'New Lead', icon: Send, action: 'lead', color: 'text-violet-600' },
+  { label: 'New Quote', icon: FileText, action: 'quote', color: 'text-cyan-600' },
+  { label: 'New Invoice', icon: Receipt, action: 'invoice', color: 'text-rose-600' },
+  { label: 'New Request', icon: CalendarPlus, action: 'request', color: 'text-orange-600' },
+  { label: 'New Incident', icon: AlertTriangle, action: 'incident', color: 'text-red-600' },
+];
 import { TodayWorkOverviewDialog } from '@/components/TodayWorkOverviewDialog';
 
 function getGreeting() {
