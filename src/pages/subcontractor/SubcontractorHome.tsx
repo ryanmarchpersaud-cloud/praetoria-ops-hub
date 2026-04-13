@@ -282,6 +282,7 @@ export default function SubcontractorHome() {
 
       <CreateVisitDialog open={visitOpen} onOpenChange={setVisitOpen} />
       <CreateRequestDialog open={requestOpen} onOpenChange={setRequestOpen} />
+      <SubcontractorQuickBookDialogs activeDialog={quickBookDialog} onClose={() => setQuickBookDialog(null)} />
 
       {todayAssignments.length > 0 && (
         <DailyRouteMap
