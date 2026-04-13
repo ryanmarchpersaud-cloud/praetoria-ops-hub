@@ -75,7 +75,7 @@ export default function AdminSubcontractorInvoiceDetail() {
       if (invErr) throw invErr;
 
       // 2. Create payment record
-      await supabase.from('subcontractor_payments').insert({
+      const { error: payErr } = await supabase.from('subcontractor_payments').insert({
         subcontractor_id: invoice.subcontractor_id,
         invoice_id: id,
         amount: invoice.amount,
@@ -84,6 +84,7 @@ export default function AdminSubcontractorInvoiceDetail() {
         reference_number: referenceNumber || null,
         notes: `Payment for ${invoice.invoice_number}`,
       });
+      if (payErr) throw payErr;
 
       // 3. Log activity
       await supabase.from('activities').insert({
