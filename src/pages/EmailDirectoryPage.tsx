@@ -13,12 +13,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Download, Mail, Users, UserPlus, Filter, CheckSquare, Plus } from 'lucide-react';
+import { Search, Download, Mail, Users, UserPlus, Filter, CheckSquare, Plus, Phone } from 'lucide-react';
 
 interface EmailContact {
   id: string;
   name: string;
   email: string;
+  secondary_email: string | null;
   source: string;
   company: string | null;
   phone: string | null;
@@ -86,6 +87,7 @@ export default function EmailDirectoryPage() {
           id: `cust-${c.id}`,
           name: `${c.first_name} ${c.last_name}`,
           email: c.email,
+          secondary_email: c.secondary_email || null,
           source: 'Customer',
           company: c.company_name,
           phone: c.phone,
@@ -102,6 +104,7 @@ export default function EmailDirectoryPage() {
           id: `lead-${l.id}`,
           name: `${l.first_name} ${l.last_name}`,
           email: l.email,
+          secondary_email: l.secondary_email || null,
           source: 'Lead',
           company: l.company_name,
           phone: l.phone,
@@ -118,6 +121,7 @@ export default function EmailDirectoryPage() {
           id: `manual-${m.id}`,
           name: m.name,
           email: m.email,
+          secondary_email: null,
           source: 'Manual',
           company: m.company,
           phone: m.phone,
@@ -185,11 +189,11 @@ export default function EmailDirectoryPage() {
       toast({ title: 'No contacts to export', variant: 'destructive' });
       return;
     }
-    const header = ['Name', 'Email', 'Source', 'Company', 'Phone', 'City', 'Status'];
+    const header = ['Name', 'Email', 'Secondary Email', 'Phone', 'Source', 'Company', 'City', 'Status'];
     const csv = [
       header.join(','),
       ...rows.map((r) =>
-        [r.name, r.email, r.source, r.company || '', r.phone || '', r.city || '', r.status]
+        [r.name, r.email, r.secondary_email || '', r.phone || '', r.source, r.company || '', r.city || '', r.status]
           .map((v) => `"${v.replace(/"/g, '""')}"`)
           .join(',')
       ),
@@ -414,22 +418,24 @@ export default function EmailDirectoryPage() {
               </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead className="hidden lg:table-cell">Alt Email</TableHead>
+              <TableHead className="hidden md:table-cell">Phone</TableHead>
               <TableHead className="hidden md:table-cell">Source</TableHead>
-              <TableHead className="hidden md:table-cell">Company</TableHead>
-              <TableHead className="hidden lg:table-cell">City</TableHead>
+              <TableHead className="hidden lg:table-cell">Company</TableHead>
+              <TableHead className="hidden xl:table-cell">City</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   No contacts with email addresses found
                 </TableCell>
               </TableRow>
@@ -444,15 +450,21 @@ export default function EmailDirectoryPage() {
                   </TableCell>
                   <TableCell className="font-medium">{contact.name}</TableCell>
                   <TableCell className="text-sm">{contact.email}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                    {contact.secondary_email || '—'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    {contact.phone || '—'}
+                  </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={contact.source === 'Customer' ? 'default' : contact.source === 'Lead' ? 'secondary' : 'outline'} className="text-[10px]">
                       {contact.source}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                     {contact.company || '—'}
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                     {contact.city || '—'}
                   </TableCell>
                   <TableCell>
@@ -474,12 +486,13 @@ export default function EmailDirectoryPage() {
       {/* Twilio / Marketing note */}
       <Card className="border-dashed">
         <CardContent className="p-4 flex items-start gap-3">
-          <Mail className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+          <Phone className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium">Email Marketing Integration</p>
+            <p className="text-sm font-medium">Email & SMS Marketing Ready</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Export your contacts as CSV and import into Twilio SendGrid, Mailchimp, or any email marketing
-              platform. Use the <strong>Add Contact</strong> button to manually add phone or walk-in inquiries.
+              Export contacts as CSV with emails, secondary emails, and phone numbers — ready for both
+              email campaigns (Twilio SendGrid, Mailchimp) <strong>and</strong> SMS marketing (Twilio). Use
+              <strong> Add Contact</strong> to manually record phone or walk-in inquiries.
             </p>
           </div>
         </CardContent>
