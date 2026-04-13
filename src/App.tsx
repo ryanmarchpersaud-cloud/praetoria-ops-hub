@@ -45,6 +45,7 @@ import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import Subcontractors from "./pages/Subcontractors";
 import SubcontractorDetail from "./pages/SubcontractorDetail";
+import AdminSubcontractorInvoiceDetail from "./pages/AdminSubcontractorInvoiceDetail";
 import EmailDirectoryPage from "./pages/EmailDirectoryPage";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
