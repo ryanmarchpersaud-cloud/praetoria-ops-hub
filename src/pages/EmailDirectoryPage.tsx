@@ -189,11 +189,11 @@ export default function EmailDirectoryPage() {
       toast({ title: 'No contacts to export', variant: 'destructive' });
       return;
     }
-    const header = ['Name', 'Email', 'Source', 'Company', 'Phone', 'City', 'Status'];
+    const header = ['Name', 'Email', 'Secondary Email', 'Phone', 'Source', 'Company', 'City', 'Status'];
     const csv = [
       header.join(','),
       ...rows.map((r) =>
-        [r.name, r.email, r.source, r.company || '', r.phone || '', r.city || '', r.status]
+        [r.name, r.email, r.secondary_email || '', r.phone || '', r.source, r.company || '', r.city || '', r.status]
           .map((v) => `"${v.replace(/"/g, '""')}"`)
           .join(',')
       ),
