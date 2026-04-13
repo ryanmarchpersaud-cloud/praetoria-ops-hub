@@ -7,14 +7,32 @@ export function useVisits(filters?: { visit_status?: string; visit_type?: string
     queryFn: async () => {
       let query = supabase
         .from('visits')
-        .select('*, jobs(id, job_title, job_number), properties(id, property_name), customers(first_name, last_name, company_name), visit_photos(id), worker_profiles!visits_assigned_worker_id_fkey(full_name)')
+        .select('*, jobs(id, job_title, job_number), properties(id, property_name), customers(first_name, last_name, company_name), visit_photos(id)')
         .order('service_date', { ascending: false });
       if (filters?.visit_status) query = query.eq('visit_status', filters.visit_status as any);
       if (filters?.visit_type) query = query.eq('visit_type', filters.visit_type as any);
       if (filters?.search) query = query.or(`visit_number.ilike.%${filters.search}%,service_summary.ilike.%${filters.search}%`);
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+
+      // Enrich with worker names for assigned visits
+      const workerIds = [...new Set((data || []).map((v: any) => v.assigned_worker_id).filter(Boolean))];
+      let workerMap: Record<string, string> = {};
+      if (workerIds.length > 0) {
+        const { data: workers } = await supabase
+          .from('worker_profiles')
+          .select('user_id, full_name')
+          .in('user_id', workerIds);
+        if (workers) {
+          workerMap = Object.fromEntries(workers.map((w: any) => [w.user_id, w.full_name]));
+        }
+      }
+      return (data || []).map((v: any) => ({
+        ...v,
+        worker_profiles: v.assigned_worker_id && workerMap[v.assigned_worker_id]
+          ? { full_name: workerMap[v.assigned_worker_id] }
+          : null,
+      }));
     },
   });
 }
