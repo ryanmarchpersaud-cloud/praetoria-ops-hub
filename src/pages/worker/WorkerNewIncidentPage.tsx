@@ -75,20 +75,9 @@ export default function WorkerNewIncidentPage() {
 
       await supabase.from('notifications').insert([
         {
-          event: 'incident_reported',
+          event: 'incident_report' as any,
           channel: 'in_app',
           audience: 'admin',
-          record_type: 'incident_report',
-          record_id: data.id,
-          subject: notifSubject,
-          body: notifBody,
-          status: 'sent',
-          sent_at: new Date().toISOString(),
-        },
-        {
-          event: 'incident_reported',
-          channel: 'in_app',
-          audience: 'hr',
           record_type: 'incident_report',
           record_id: data.id,
           subject: notifSubject,
