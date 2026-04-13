@@ -1175,6 +1175,7 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           province: string | null
+          secondary_email: string | null
           updated_at: string
           user_id: string | null
         }
@@ -1193,6 +1194,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           province?: string | null
+          secondary_email?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -1211,6 +1213,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           province?: string | null
+          secondary_email?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -3630,6 +3633,7 @@ export type Database = {
           postal_code: string | null
           preferred_contact_method: string | null
           province: string | null
+          secondary_email: string | null
           service_type: Database["public"]["Enums"]["service_category"]
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
@@ -3655,6 +3659,7 @@ export type Database = {
           postal_code?: string | null
           preferred_contact_method?: string | null
           province?: string | null
+          secondary_email?: string | null
           service_type?: Database["public"]["Enums"]["service_category"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -3680,6 +3685,7 @@ export type Database = {
           postal_code?: string | null
           preferred_contact_method?: string | null
           province?: string | null
+          secondary_email?: string | null
           service_type?: Database["public"]["Enums"]["service_category"]
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
