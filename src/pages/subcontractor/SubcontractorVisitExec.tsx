@@ -252,6 +252,20 @@ export default function SubcontractorVisitExec() {
           },
         });
 
+        // Mark subcontractor assignment as completed
+        const subProfile = await supabase
+          .from('subcontractors')
+          .select('id')
+          .eq('user_id', user?.id)
+          .maybeSingle();
+        if (subProfile.data) {
+          await supabase
+            .from('subcontractor_assignments')
+            .update({ assignment_status: 'completed' })
+            .eq('visit_id', id!)
+            .eq('subcontractor_id', subProfile.data.id);
+        }
+
         if (isOneTime && job) {
           await supabase.from('jobs').update({ status: 'Completed' }).eq('id', job.id);
         }
