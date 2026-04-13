@@ -60,6 +60,7 @@ export default function SubcontractorHome() {
 
   const [visitOpen, setVisitOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
   const [quickBookDialog, setQuickBookDialog] = useState<QuickBookDialogType>(null);
 
   const handleQuickBookAction = (action: QuickBookAction) => {
@@ -73,6 +74,7 @@ export default function SubcontractorHome() {
       case 'invoice': setQuickBookDialog('invoice'); break;
       case 'request': setRequestOpen(true); break;
       case 'incident': navigate('/subcontractor/incidents/new'); break;
+      case 'task': setTaskOpen(true); break;
     }
   };
 
@@ -285,8 +287,8 @@ export default function SubcontractorHome() {
       <CreateVisitDialog open={visitOpen} onOpenChange={setVisitOpen} />
       <CreateRequestDialog open={requestOpen} onOpenChange={setRequestOpen} />
       <SubcontractorQuickBookDialogs activeDialog={quickBookDialog} onClose={() => setQuickBookDialog(null)} />
+      <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} defaultAssigneeType="subcontractor" />
 
-      {todayAssignments.length > 0 && (
         <DailyRouteMap
           stops={todayAssignments.map((a: any): RouteStop => ({
             id: a.id,
