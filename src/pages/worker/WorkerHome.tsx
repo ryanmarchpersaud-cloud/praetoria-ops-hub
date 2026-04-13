@@ -9,7 +9,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { WorkerFAB } from '@/components/worker/WorkerFAB';
 import { WorkerLocationCard } from '@/components/worker/WorkerLocationCard';
 import { AvatarUpload } from '@/components/AvatarUpload';
-import { WeatherCard } from '@/components/WeatherCard';
+
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { DailyRouteMap, type RouteStop } from '@/components/DailyRouteMap';
 import { TodayVisitCarousel } from '@/components/worker/TodayVisitCarousel';
@@ -324,7 +324,7 @@ export default function WorkerHome() {
         />
       )}
 
-      <WeatherCard />
+      
     </div>
   );
 }

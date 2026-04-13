@@ -191,7 +191,6 @@ export default function WorkerSchedule() {
         .from('visits')
         .select(VISIT_SELECT)
         .eq('service_date', todayStr)
-        .or(`assigned_worker_id.eq.${user!.id},jobs.assigned_to.eq.${user!.id}`)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
       return (data || []).filter((v: any) => v.assigned_worker_id === user!.id || v.jobs?.assigned_to === user!.id) as unknown as Visit[];

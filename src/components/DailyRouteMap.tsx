@@ -84,20 +84,31 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
     }
 
     let cancelled = false;
+    const timeout = setTimeout(() => {
+      if (!cancelled) {
+        cancelled = true;
+        setLoading(false);
+      }
+    }, 10000);
+
     async function resolve() {
       const results: (RouteStop & { lat: number; lng: number })[] = [];
       for (const stop of stops) {
+        if (cancelled) return;
         if (stop.lat && stop.lng) {
           results.push({ ...stop, lat: stop.lat, lng: stop.lng });
         } else {
-          const coords = await geocodeAddress(stop.address, stop.city);
-          if (coords && !cancelled) {
-            results.push({ ...stop, ...coords });
+          try {
+            const coords = await geocodeAddress(stop.address, stop.city);
+            if (coords && !cancelled) {
+              results.push({ ...stop, ...coords });
+            }
+          } catch {
+            // skip failed geocode
           }
           // Rate limit for Nominatim (1 req/sec)
           await new Promise(r => setTimeout(r, 1100));
         }
-        if (cancelled) return;
       }
       if (!cancelled) {
         setGeocoded(results);
@@ -105,7 +116,7 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
       }
     }
     resolve();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [stops]);
 
   // Render map after geocoding completes
