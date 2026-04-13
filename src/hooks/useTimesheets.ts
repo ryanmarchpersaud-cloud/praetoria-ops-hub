@@ -14,7 +14,8 @@ export function useTimesheets(dateRange?: { from: string; to: string }) {
         .eq('user_id', user.id)
         .order('clock_in', { ascending: false });
       if (dateRange) {
-        query = query.gte('clock_in', dateRange.from).lte('clock_in', dateRange.to);
+        // Include shifts that started OR ended within the range (covers overnight shifts)
+        query = query.or(`and(clock_in.gte.${dateRange.from},clock_in.lte.${dateRange.to}),and(clock_out.gte.${dateRange.from},clock_out.lte.${dateRange.to})`);
       }
       const { data, error } = await query;
       if (error) throw error;
