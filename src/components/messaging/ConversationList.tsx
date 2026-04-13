@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday } from 'date-fns';
 import {
   MessageSquare, Users, Briefcase, ClipboardCheck, AlertTriangle,
-  Wrench, Megaphone, Loader2, BellOff, Archive, MoreVertical,
+  Wrench, Megaphone, Loader2, BellOff, Archive, MoreVertical, Trash2,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
