@@ -1,11 +1,11 @@
-import { useConversations, useToggleMute, useToggleArchive, type Conversation } from '@/hooks/useMessaging';
+import { useConversations, useToggleMute, useToggleArchive, useDeleteConversation, type Conversation } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday } from 'date-fns';
 import {
   MessageSquare, Users, Briefcase, ClipboardCheck, AlertTriangle,
-  Wrench, Megaphone, Loader2, BellOff, Archive, MoreVertical,
+  Wrench, Megaphone, Loader2, BellOff, Archive, MoreVertical, Trash2,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -51,6 +51,7 @@ export function ConversationList({ selectedId, onSelect, filter }: Props) {
   const { user } = useAuth();
   const toggleMute = useToggleMute();
   const toggleArchive = useToggleArchive();
+  const deleteConversation = useDeleteConversation();
 
   if (isLoading) {
     return (
@@ -168,6 +169,20 @@ export function ConversationList({ selectedId, onSelect, filter }: Props) {
                   >
                     <Archive className="h-3.5 w-3.5 mr-2" />
                     Archive
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm('Delete this conversation? This cannot be undone.')) {
+                        deleteConversation.mutate(convo.id, {
+                          onSuccess: () => toast.success('Conversation deleted'),
+                        });
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
