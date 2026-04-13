@@ -137,8 +137,9 @@ export function useMessagingPeople(enabled = true) {
 /** Fetch all conversations the current user is a member of */
 export function useConversations(filter?: { type?: string; unreadOnly?: boolean; includeArchived?: boolean }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['conversations', user?.id, filter],
     queryFn: async () => {
       if (!user) return [];
@@ -160,7 +161,6 @@ export function useConversations(filter?: { type?: string; unreadOnly?: boolean;
       const { data, error } = await query;
       if (error) throw error;
 
-      // Get per-conversation unread counts
       const { data: unreadData } = await (supabase.rpc as any)('get_conversation_unread_counts', {
         _user_id: user.id,
       });
@@ -185,6 +185,45 @@ export function useConversations(filter?: { type?: string; unreadOnly?: boolean;
     enabled: !!user,
     refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`conversations-live-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversation_members',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversations',
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+      }, (payload: any) => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        if (payload.new?.sender_user_id !== user.id) {
+          queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
+
+  return query;
 }
 
 /** Fetch messages for a conversation */
@@ -363,6 +402,8 @@ export function useSendMessage() {
       queryClient.invalidateQueries({ queryKey: ['messages', vars.conversationId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications_unread'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications_all_recent'] });
     },
   });
 }
@@ -398,7 +439,47 @@ export function useCreateConversation() {
         .single();
       if (error) throw error;
 
-      const allMembers = [...new Set([user.id, ...memberUserIds])];
+      let expandedMemberUserIds = memberUserIds;
+
+      if (type === 'direct_message' && memberUserIds.length > 0) {
+        const { data: roleRows } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+
+        const senderRoles = (roleRows || []).map((row: any) => row.role);
+        const senderIsFieldOrExternal = senderRoles.some((role: string) =>
+          ['subcontractor', 'staff', 'lead_worker', 'supervisor', 'dispatcher'].includes(role)
+        ) && !senderRoles.some((role: string) =>
+          ['owner', 'admin', 'manager', 'ops_manager', 'accountant', 'hr_admin'].includes(role)
+        );
+
+        if (senderIsFieldOrExternal) {
+          const { data: selectedTeamMembers } = await supabase
+            .from('team_members')
+            .select('user_id, portal_admin')
+            .in('user_id', memberUserIds);
+
+          const targetsAdmin = (selectedTeamMembers || []).some((member: any) => member.portal_admin);
+
+          if (targetsAdmin) {
+            const { data: adminMembers } = await supabase
+              .from('team_members')
+              .select('user_id')
+              .eq('is_active', true)
+              .eq('portal_admin', true);
+
+            expandedMemberUserIds = [
+              ...new Set([
+                ...memberUserIds,
+                ...(adminMembers || []).map((member: any) => member.user_id).filter(Boolean),
+              ]),
+            ];
+          }
+        }
+      }
+
+      const allMembers = [...new Set([user.id, ...expandedMemberUserIds])];
       const { error: memErr } = await supabase
         .from('conversation_members')
         .insert(allMembers.map(uid => ({
