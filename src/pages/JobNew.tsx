@@ -695,7 +695,7 @@ export default function JobNew() {
         <CardContent className="space-y-4">
           {/* Multi-worker assignment */}
           <div>
-            <Label className="text-xs font-medium flex items-center gap-1">Assign Workers / Crew</Label>
+            <Label className="text-xs font-medium flex items-center gap-1">Assign Workers / Subcontractors</Label>
             {assignedWorkers.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-1 mb-2">
                 {assignedWorkers.map(uid => (

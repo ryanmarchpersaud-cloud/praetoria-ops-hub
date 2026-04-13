@@ -328,7 +328,7 @@ export default function JobDetail() {
               {/* Worker Assignment */}
               <div>
                 <Label className="text-xs flex items-center gap-1">
-                  <UserCheck className="h-3 w-3" /> Assign Worker
+                  <UserCheck className="h-3 w-3" /> Assign Worker / Subcontractor
                 </Label>
                 <select
                   value={form.assigned_to || ''}
