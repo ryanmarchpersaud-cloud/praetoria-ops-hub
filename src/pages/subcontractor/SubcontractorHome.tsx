@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import { CreateRequestDialog } from '@/components/CreateRequestDialog';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
+import { SubcontractorQuickBookDialogs, type QuickBookDialogType } from '@/components/subcontractor/SubcontractorQuickBookDialogs';
 
 type QuickBookAction = 'visit' | 'job' | 'customer' | 'property' | 'lead' | 'quote' | 'invoice' | 'request' | 'incident';
 
