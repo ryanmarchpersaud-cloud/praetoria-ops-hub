@@ -13,6 +13,7 @@ import { useJobs } from '@/hooks/useJobs';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useProperties } from '@/hooks/useProperties';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { SERVICE_CATEGORIES, VISIT_TYPES, VISIT_STATUSES, VISIT_PRIORITIES, RECURRENCE_FREQUENCIES } from '@/lib/constants';
 import { Briefcase, User, MapPin, Calendar, Clock, Users, FileText, Settings2, Repeat, AlertTriangle, Save, Plus } from 'lucide-react';
@@ -29,6 +30,8 @@ export default function CreateVisitDialog({ open, onOpenChange, defaultJobId }: 
   const { data: customers = [] } = useCustomers();
   const { data: properties = [] } = useProperties();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
+  const activeSubs = (subcontractors as any[]).filter((s: any) => s.user_id && s.active_flag !== false);
   const createVisit = useCreateVisit();
 
   // Form state
@@ -267,6 +270,11 @@ export default function CreateVisitDialog({ open, onOpenChange, defaultJobId }: 
                     {(employees as any[]).map((e: any) => (
                       <SelectItem key={e.user_id} value={e.user_id}>
                         {e.full_name}{e.job_title ? ` · ${e.job_title}` : ''}
+                      </SelectItem>
+                    ))}
+                    {activeSubs.length > 0 && activeSubs.map((s: any) => (
+                      <SelectItem key={s.user_id} value={s.user_id}>
+                        {s.contact_name || s.company_name} · Subcontractor
                       </SelectItem>
                     ))}
                   </SelectContent>

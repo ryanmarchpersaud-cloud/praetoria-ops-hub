@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCustomers, useCreateCustomer } from '@/hooks/useCustomers';
 import { useProperties } from '@/hooks/useProperties';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { supabase } from '@/integrations/supabase/client';
 import { SERVICE_CATEGORIES, JOB_STATUSES, JOB_PRIORITIES } from '@/lib/constants';
@@ -66,6 +67,7 @@ export default function JobNew() {
   const { data: customers = [] } = useCustomers();
   const { data: allProperties = [] } = useProperties();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
   const createCustomer = useCreateCustomer();
   const createVisit = useCreateVisit();
 
@@ -162,13 +164,20 @@ export default function JobNew() {
     return catalogItems.filter(i => `${i.name} ${i.description || ''} ${i.service_category || ''}`.toLowerCase().includes(s));
   }, [catalogItems, catalogSearch]);
 
+  const activeSubs = useMemo(() =>
+    (subcontractors as any[]).filter((s: any) => s.user_id && s.active_flag !== false), [subcontractors]);
+
+  const allAssignableWorkers = useMemo(() => {
+    const emps = (employees as any[]).map((e: any) => ({ uid: e.user_id, name: e.full_name || e.user_id, label: e.job_title || '', type: 'worker' as const }));
+    const subs = activeSubs.map((s: any) => ({ uid: s.user_id, name: s.contact_name || s.company_name, label: s.company_name ? `Subcontractor · ${s.company_name}` : 'Subcontractor', type: 'sub' as const }));
+    return [...emps, ...subs];
+  }, [employees, activeSubs]);
+
   const filteredWorkers = useMemo(() => {
-    if (!workerSearch) return employees as any[];
+    if (!workerSearch) return allAssignableWorkers;
     const s = workerSearch.toLowerCase();
-    return (employees as any[]).filter((e: any) =>
-      `${e.full_name || ''} ${e.job_title || ''}`.toLowerCase().includes(s)
-    );
-  }, [employees, workerSearch]);
+    return allAssignableWorkers.filter(w => `${w.name} ${w.label}`.toLowerCase().includes(s));
+  }, [allAssignableWorkers, workerSearch]);
 
   const subtotal = useMemo(() => lineItems.reduce((s, li) => s + li.line_total, 0), [lineItems]);
 
@@ -343,10 +352,27 @@ export default function JobNew() {
         await supabase.from('job_line_items').insert(items as any);
       }
 
+      // Create subcontractor_assignments for any subcontractors in the crew
+      if (job) {
+        const subUserIds = assignedWorkers.filter(uid => activeSubs.some((s: any) => s.user_id === uid));
+        for (const uid of subUserIds) {
+          const sub = activeSubs.find((s: any) => s.user_id === uid);
+          if (sub) {
+            await supabase.from('subcontractor_assignments').insert({
+              subcontractor_id: sub.id,
+              job_id: job.id,
+              property_id: propertyId || null,
+              assignment_status: 'assigned',
+            } as any);
+          }
+        }
+      }
+
       // Invalidate caches
       qc.invalidateQueries({ queryKey: ['jobs'] });
       qc.invalidateQueries({ queryKey: ['property_jobs'] });
       qc.invalidateQueries({ queryKey: ['sidebar_counts'] });
+      qc.invalidateQueries({ queryKey: ['subcontractor_assignments'] });
 
       toast({ title: 'Job created', description: `${(job as any).job_number} — ${jobTitle}` });
 
@@ -390,7 +416,13 @@ export default function JobNew() {
   //  RENDER
   // ═══════════════════════════════════════════
 
-  const workerName = (uid: string) => (employees as any[]).find((e: any) => e.user_id === uid)?.full_name || uid;
+  const workerName = (uid: string) => {
+    const emp = (employees as any[]).find((e: any) => e.user_id === uid);
+    if (emp) return emp.full_name || uid;
+    const sub = activeSubs.find((s: any) => s.user_id === uid);
+    if (sub) return `${sub.contact_name || sub.company_name} (Sub)`;
+    return uid;
+  };
   const salesRepName = salesRepId ? workerName(salesRepId) : null;
 
   return (
@@ -663,7 +695,7 @@ export default function JobNew() {
         <CardContent className="space-y-4">
           {/* Multi-worker assignment */}
           <div>
-            <Label className="text-xs font-medium flex items-center gap-1">Assign Workers / Crew</Label>
+            <Label className="text-xs font-medium flex items-center gap-1">Assign Workers / Subcontractors</Label>
             {assignedWorkers.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-1 mb-2">
                 {assignedWorkers.map(uid => (
@@ -678,18 +710,18 @@ export default function JobNew() {
             )}
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input value={workerSearch} onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); }} onFocus={() => setShowWorkerDropdown(true)} placeholder="Search team members..." className="h-9 pl-8 text-sm" />
+              <Input value={workerSearch} onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); }} onFocus={() => setShowWorkerDropdown(true)} placeholder="Search workers & subcontractors..." className="h-9 pl-8 text-sm" />
             </div>
             {showWorkerDropdown && (
               <div className="border rounded-lg mt-1 max-h-48 overflow-y-auto divide-y bg-card shadow-md">
-                {filteredWorkers.filter((e: any) => !assignedWorkers.includes(e.user_id)).length === 0 ? (
+                {filteredWorkers.filter(w => !assignedWorkers.includes(w.uid)).length === 0 ? (
                   <p className="text-xs text-muted-foreground p-3">No available team members</p>
                 ) : (
-                  filteredWorkers.filter((e: any) => !assignedWorkers.includes(e.user_id)).slice(0, 15).map((e: any) => (
-                    <button key={e.user_id} type="button" className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors flex items-center justify-between text-sm"
-                      onClick={() => { toggleWorker(e.user_id); setWorkerSearch(''); setShowWorkerDropdown(false); }}>
-                      <span className="font-medium">{e.full_name}</span>
-                      {e.job_title && <span className="text-xs text-muted-foreground">{e.job_title}</span>}
+                  filteredWorkers.filter(w => !assignedWorkers.includes(w.uid)).slice(0, 15).map(w => (
+                    <button key={w.uid} type="button" className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors flex items-center justify-between text-sm"
+                      onClick={() => { toggleWorker(w.uid); setWorkerSearch(''); setShowWorkerDropdown(false); }}>
+                      <span className="font-medium">{w.name}</span>
+                      <span className="text-xs text-muted-foreground">{w.label}</span>
                     </button>
                   ))
                 )}

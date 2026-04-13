@@ -13,6 +13,7 @@ import { Briefcase, CheckCircle, Calendar, FileText, Loader2, ArrowRight, Sparkl
 import { supabase } from '@/integrations/supabase/client';
 import { useProperties } from '@/hooks/useProperties';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { SERVICE_CATEGORIES, SERVICE_FREQUENCIES } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +37,8 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
   const qc = useQueryClient();
   const { data: allProperties = [] } = useProperties();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
+  const activeSubs = (subcontractors as any[]).filter((s: any) => s.user_id && s.active_flag !== false);
   const createVisit = useCreateVisit();
 
   const [step, setStep] = useState<Step>('details');
@@ -344,6 +347,11 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
                   <SelectItem value="unassigned">— Unassigned —</SelectItem>
                   {(employees as any[]).map((e: any) => (
                     <SelectItem key={e.user_id} value={e.user_id}>{e.full_name || e.user_id}</SelectItem>
+                  ))}
+                  {activeSubs.length > 0 && activeSubs.map((s: any) => (
+                    <SelectItem key={s.user_id} value={s.user_id}>
+                      {s.contact_name || s.company_name} · Subcontractor
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
