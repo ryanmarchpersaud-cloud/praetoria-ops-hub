@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Monitor, Settings, LogOut, User, ChevronRight, HardHat, Eye,
   Briefcase, FileText, Heart, DollarSign, Award, CalendarDays, UserCheck,
-  ShieldAlert, Receipt, BookOpen, CreditCard,
+  ShieldAlert, Receipt, BookOpen, CreditCard, ClipboardCheck,
 } from 'lucide-react';
 
 export default function WorkerMore() {
@@ -19,6 +19,7 @@ export default function WorkerMore() {
   };
 
   const profileItems = [
+    { icon: ClipboardCheck, label: 'My Tasks', to: '/worker/tasks', description: 'Assigned errands, pickups & checks' },
     { icon: User, label: 'My Profile', to: '/worker/profile', description: 'Personal info & service lines' },
     { icon: Briefcase, label: 'My Employment', to: '/worker/employment', description: 'Job details & compensation' },
     { icon: ShieldAlert, label: 'Emergency & Safety', to: '/worker/emergency-safety', description: 'SOS, contacts & medical alerts' },
