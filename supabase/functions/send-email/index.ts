@@ -692,7 +692,52 @@ Deno.serve(async (req) => {
       return json({ ...result, action: "request_reply" });
     }
 
-    // ─── Health check ───
+    // ─── Subcontractor Payment Receipt ───
+    if (action === "subcontractor_payment_receipt") {
+      const { to, contact_name, company_name, invoice_number, amount, payment_date, payment_method, reference_number } = params;
+      if (!to) return json({ error: "Missing 'to' email" }, 400);
+
+      const fmtAmount = new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(Number(amount || 0));
+      const fmtDate = payment_date || new Date().toISOString().split("T")[0];
+
+      const html = wrapHtml("Payment Receipt", `
+        <p>Hi ${contact_name || "there"},</p>
+        <p>This confirms that payment has been processed for your invoice.</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+          <tr style="border-bottom:1px solid #e4e4e7;">
+            <td style="padding:8px 0;color:#71717a;font-size:13px;">Invoice</td>
+            <td style="padding:8px 0;text-align:right;font-weight:600;">${invoice_number || "—"}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e4e4e7;">
+            <td style="padding:8px 0;color:#71717a;font-size:13px;">Amount Paid</td>
+            <td style="padding:8px 0;text-align:right;font-weight:600;color:#059669;">${fmtAmount}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #e4e4e7;">
+            <td style="padding:8px 0;color:#71717a;font-size:13px;">Payment Date</td>
+            <td style="padding:8px 0;text-align:right;">${fmtDate}</td>
+          </tr>
+          ${payment_method ? `<tr style="border-bottom:1px solid #e4e4e7;"><td style="padding:8px 0;color:#71717a;font-size:13px;">Method</td><td style="padding:8px 0;text-align:right;">${payment_method}</td></tr>` : ""}
+          ${reference_number ? `<tr><td style="padding:8px 0;color:#71717a;font-size:13px;">Reference</td><td style="padding:8px 0;text-align:right;font-family:monospace;font-size:13px;">${reference_number}</td></tr>` : ""}
+        </table>
+        <p style="font-size:13px;color:#71717a;">If you have questions about this payment, please contact us at <a href="mailto:support@praetoriagroup.ca" style="color:#0369a1;">support@praetoriagroup.ca</a>.</p>
+        <p>Thank you for your work,<br><strong>Praetoria Group</strong></p>
+      `);
+
+      const result = await sendViaResend({ to, subject: `Payment Receipt — ${invoice_number || "Invoice"}`, html, reply_to: EMAIL_CONFIG.supportInbox });
+      const logEntry: IntegrationEntry = {
+        provider: "resend",
+        event_name: "email.subcontractor_payment_receipt",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: typeof to === "string" ? to : to[0],
+        record_type: "subcontractor_invoice",
+        provider_response_id: result.id,
+        error_message: result.error,
+      };
+      await logIntegration(logEntry);
+      return json({ ...result, action: "subcontractor_payment_receipt" });
+    }
+
     if (action === "health") {
       const hasKey = !!Deno.env.get("RESEND_API_KEY");
       return json({ ok: true, resend_configured: hasKey });

@@ -1,10 +1,16 @@
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Receipt, Calendar, DollarSign, FileText, Building2, CheckCircle, XCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { ArrowLeft, Receipt, DollarSign, FileText, Building2, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -23,6 +29,11 @@ export default function AdminSubcontractorInvoiceDetail() {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
+  const [payDialogOpen, setPayDialogOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('e-transfer');
+  const [referenceNumber, setReferenceNumber] = useState('');
+  const [processing, setProcessing] = useState(false);
+
   const { data: invoice, isLoading } = useQuery({
     queryKey: ['admin_sub_invoice', id],
     queryFn: async () => {
@@ -40,10 +51,82 @@ export default function AdminSubcontractorInvoiceDetail() {
 
   const updateStatus = async (status: string) => {
     if (!id) return;
-    const { error } = await supabase.from('subcontractor_invoices').update({ status }).eq('id', id);
+    const updates: any = { status };
+    if (status === 'approved') updates.approved_at = new Date().toISOString();
+    const { error } = await supabase.from('subcontractor_invoices').update(updates).eq('id', id);
     if (error) { toast.error(error.message); return; }
     toast.success(`Invoice ${status}`);
     qc.invalidateQueries({ queryKey: ['admin_sub_invoice', id] });
+  };
+
+  const handleMarkPaid = async () => {
+    if (!id || !invoice) return;
+    setProcessing(true);
+    const sub = invoice.subcontractors as any;
+    const now = new Date().toISOString();
+    const todayDate = now.split('T')[0];
+
+    try {
+      // 1. Update invoice status
+      const { error: invErr } = await supabase.from('subcontractor_invoices').update({
+        status: 'paid',
+        paid_at: now,
+      }).eq('id', id);
+      if (invErr) throw invErr;
+
+      // 2. Create payment record
+      await supabase.from('subcontractor_payments').insert({
+        subcontractor_id: invoice.subcontractor_id,
+        invoice_id: id,
+        amount: invoice.amount,
+        payment_date: todayDate,
+        payment_method: paymentMethod,
+        reference_number: referenceNumber || null,
+        notes: `Payment for ${invoice.invoice_number}`,
+      });
+
+      // 3. Log activity
+      await supabase.from('activities').insert({
+        action_name: `Subcontractor invoice ${invoice.invoice_number} paid`,
+        record_type: 'subcontractor_invoice',
+        record_id: id,
+        status: 'completed',
+        payload_summary: {
+          invoice_number: invoice.invoice_number,
+          amount: Number(invoice.amount),
+          company: sub?.company_name,
+          payment_method: paymentMethod,
+        },
+      });
+
+      // 4. Send receipt email
+      if (sub?.email) {
+        try {
+          await callEdgeFunction('send-email', {
+            action: 'subcontractor_payment_receipt',
+            to: sub.email,
+            contact_name: sub.contact_name,
+            company_name: sub.company_name,
+            invoice_number: invoice.invoice_number,
+            amount: invoice.amount,
+            payment_date: todayDate,
+            payment_method: paymentMethod,
+            reference_number: referenceNumber || null,
+          });
+        } catch (emailErr) {
+          console.error('Receipt email failed:', emailErr);
+          // Don't block payment on email failure
+        }
+      }
+
+      toast.success('Payment recorded & receipt sent!');
+      setPayDialogOpen(false);
+      qc.invalidateQueries({ queryKey: ['admin_sub_invoice', id] });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to process payment');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>;
@@ -99,6 +182,12 @@ export default function AdminSubcontractorInvoiceDetail() {
                 </p>
               </div>
             )}
+            {invoice.paid_at && (
+              <div>
+                <p className="text-xs text-muted-foreground">Paid On</p>
+                <p className="text-sm font-medium text-emerald-600">{format(new Date(invoice.paid_at), 'MMM d, yyyy')}</p>
+              </div>
+            )}
           </div>
           {invoice.notes && (
             <div>
@@ -128,10 +217,54 @@ export default function AdminSubcontractorInvoiceDetail() {
         </div>
       )}
       {invoice.status === 'approved' && (
-        <Button className="w-full gap-2" onClick={() => updateStatus('paid')}>
+        <Button className="w-full gap-2" onClick={() => setPayDialogOpen(true)}>
           <DollarSign className="h-4 w-4" /> Mark as Paid
         </Button>
       )}
+
+      {/* Payment Dialog */}
+      <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Payment — {invoice.invoice_number}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <p className="text-sm text-muted-foreground">Amount</p>
+              <p className="text-2xl font-bold">{fmt(Number(invoice.amount))}</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Payment Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="e-transfer">E-Transfer</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="direct_deposit">Direct Deposit</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Reference Number (optional)</Label>
+              <Input placeholder="e.g. E-TRF-12345" value={referenceNumber} onChange={e => setReferenceNumber(e.target.value)} />
+            </div>
+            {sub?.email && (
+              <p className="text-xs text-muted-foreground">
+                A payment receipt will be emailed to <strong>{sub.email}</strong>
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleMarkPaid} disabled={processing} className="gap-2">
+              {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+              {processing ? 'Processing...' : 'Confirm Payment'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
