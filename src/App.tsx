@@ -292,6 +292,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/access-denied" element={<AccessDenied />} />
 
       {/* Admin-only routes */}
