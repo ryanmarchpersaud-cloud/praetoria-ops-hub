@@ -110,7 +110,7 @@ function ExpenseDialog({ open, onClose }: { open: boolean; onClose: () => void }
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5 text-cyan-500" /> Log Expense
+            <Receipt className="h-5 w-5 text-primary" /> Log Expense
           </DialogTitle>
           <DialogDescription>Submit a field expense for reimbursement.</DialogDescription>
         </DialogHeader>
@@ -213,7 +213,7 @@ function MessageAdminDialog({ open, onClose }: { open: boolean; onClose: () => v
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-slate-500" /> Message Admin
+            <MessageSquare className="h-5 w-5 text-muted-foreground" /> Message Admin
           </DialogTitle>
           <DialogDescription>Send a quick message to the office.</DialogDescription>
         </DialogHeader>
@@ -301,7 +301,7 @@ function EquipmentIssueDialog({ open, onClose }: { open: boolean; onClose: () =>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wrench className="h-5 w-5 text-red-500" /> Equipment Issue
+            <Wrench className="h-5 w-5 text-destructive" /> Equipment Issue
           </DialogTitle>
           <DialogDescription>Report a broken or malfunctioning piece of equipment.</DialogDescription>
         </DialogHeader>
@@ -385,7 +385,7 @@ function MaterialsUsedDialog({ open, onClose }: { open: boolean; onClose: () => 
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-teal-500" /> Materials Used
+            <Package className="h-5 w-5 text-accent-foreground" /> Materials Used
           </DialogTitle>
           <DialogDescription>Log materials consumed on this job.</DialogDescription>
         </DialogHeader>
