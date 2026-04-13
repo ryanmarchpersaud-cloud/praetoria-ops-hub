@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   CheckCircle2, ChevronRight, CalendarPlus, MapPin, Clock,
@@ -9,8 +9,21 @@ import {
 import { cn } from '@/lib/utils';
 import { differenceInSeconds } from 'date-fns';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { useCreateCustomer, useCustomers } from '@/hooks/useCustomers';
+import { useCreateLead } from '@/hooks/useLeads';
+import { useCreateQuote } from '@/hooks/useQuotes';
+import { useCreateProperty } from '@/hooks/useProperties';
+import { CreateRequestDialog } from '@/components/CreateRequestDialog';
+import CreateVisitDialog from '@/components/CreateVisitDialog';
+import { SERVICE_CATEGORIES } from '@/lib/constants';
 
 interface VisitCard {
   id: string;
@@ -40,16 +53,18 @@ function formatTimer(seconds: number) {
 }
 
 /* ─── Quick Book Menu Items ─── */
-const QUICK_BOOK_ITEMS = [
-  { label: 'New Visit', icon: ClipboardList, to: '/worker/schedule', color: 'text-blue-600' },
-  { label: 'New Job', icon: Briefcase, to: '/worker/schedule', color: 'text-indigo-600' },
-  { label: 'New Customer', icon: UserPlus, to: '/worker/search', color: 'text-emerald-600' },
-  { label: 'New Property', icon: Home, to: '/worker/search', color: 'text-amber-600' },
-  { label: 'New Lead', icon: Send, to: '/worker/search', color: 'text-violet-600' },
-  { label: 'New Quote', icon: FileText, to: '/worker/search', color: 'text-cyan-600' },
-  { label: 'New Invoice', icon: Receipt, to: '/worker/search', color: 'text-rose-600' },
-  { label: 'New Request', icon: CalendarPlus, to: '/worker/schedule', color: 'text-orange-600' },
-  { label: 'New Incident', icon: AlertTriangle, to: '/worker/incidents/new', color: 'text-red-600' },
+type QuickBookAction = 'visit' | 'job' | 'customer' | 'property' | 'lead' | 'quote' | 'invoice' | 'request' | 'incident';
+
+const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; color: string }[] = [
+  { label: 'New Visit', icon: ClipboardList, action: 'visit', color: 'text-blue-600' },
+  { label: 'New Job', icon: Briefcase, action: 'job', color: 'text-indigo-600' },
+  { label: 'New Customer', icon: UserPlus, action: 'customer', color: 'text-emerald-600' },
+  { label: 'New Property', icon: Home, action: 'property', color: 'text-amber-600' },
+  { label: 'New Lead', icon: Send, action: 'lead', color: 'text-violet-600' },
+  { label: 'New Quote', icon: FileText, action: 'quote', color: 'text-cyan-600' },
+  { label: 'New Invoice', icon: Receipt, action: 'invoice', color: 'text-rose-600' },
+  { label: 'New Request', icon: CalendarPlus, action: 'request', color: 'text-orange-600' },
+  { label: 'New Incident', icon: AlertTriangle, action: 'incident', color: 'text-red-600' },
 ];
 
 /* ─── Visit Card Component ─── */
@@ -189,13 +204,175 @@ function VisitCardItem({ visit, workerInitials, now, isDragging, dragMoved }: {
   );
 }
 
+/* ─── Inline Create Customer Form ─── */
+function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { toast } = useToast();
+  const createCustomer = useCreateCustomer();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', address_line_1: '', city: '' });
+  const [saving, setSaving] = useState(false);
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async () => {
+    if (!form.first_name || !form.last_name) { toast({ title: 'First & last name required', variant: 'destructive' }); return; }
+    setSaving(true);
+    try {
+      const data = await createCustomer.mutateAsync(form as any);
+      toast({ title: 'Customer created' });
+      onOpenChange(false);
+      navigate(`/customers/${data.id}`);
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md mx-3">
+        <DialogHeader>
+          <DialogTitle className="text-base">New Customer</DialogTitle>
+          <DialogDescription>Add a new customer from the field.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-xs">First Name *</Label><Input value={form.first_name} onChange={e => set('first_name', e.target.value)} placeholder="First" /></div>
+            <div><Label className="text-xs">Last Name *</Label><Input value={form.last_name} onChange={e => set('last_name', e.target.value)} placeholder="Last" /></div>
+          </div>
+          <div><Label className="text-xs">Email</Label><Input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="email@example.com" /></div>
+          <div><Label className="text-xs">Phone</Label><Input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="(555) 123-4567" /></div>
+          <div><Label className="text-xs">Address</Label><Input value={form.address_line_1} onChange={e => set('address_line_1', e.target.value)} placeholder="123 Main St" /></div>
+          <div><Label className="text-xs">City</Label><Input value={form.city} onChange={e => set('city', e.target.value)} placeholder="City" /></div>
+          <Button className="w-full h-11" disabled={saving || !form.first_name || !form.last_name} onClick={handleSubmit}>
+            {saving ? 'Creating…' : 'Create Customer'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ─── Inline Create Lead Form ─── */
+function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { toast } = useToast();
+  const createLead = useCreateLead();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '', notes: '' });
+  const [saving, setSaving] = useState(false);
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async () => {
+    if (!form.first_name || !form.last_name) { toast({ title: 'First & last name required', variant: 'destructive' }); return; }
+    setSaving(true);
+    try {
+      const data = await createLead.mutateAsync({ ...form, status: 'New' as any, source: 'Field' as any } as any);
+      toast({ title: 'Lead created' });
+      onOpenChange(false);
+      navigate(`/leads/${data.id}`);
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md mx-3">
+        <DialogHeader>
+          <DialogTitle className="text-base">New Lead</DialogTitle>
+          <DialogDescription>Capture a new lead from the field.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-xs">First Name *</Label><Input value={form.first_name} onChange={e => set('first_name', e.target.value)} placeholder="First" /></div>
+            <div><Label className="text-xs">Last Name *</Label><Input value={form.last_name} onChange={e => set('last_name', e.target.value)} placeholder="Last" /></div>
+          </div>
+          <div><Label className="text-xs">Email</Label><Input type="email" value={form.email} onChange={e => set('email', e.target.value)} /></div>
+          <div><Label className="text-xs">Phone</Label><Input value={form.phone} onChange={e => set('phone', e.target.value)} /></div>
+          <div><Label className="text-xs">Company</Label><Input value={form.company_name} onChange={e => set('company_name', e.target.value)} /></div>
+          <div><Label className="text-xs">Notes</Label><Textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={2} placeholder="Met at job site…" /></div>
+          <Button className="w-full h-11" disabled={saving || !form.first_name || !form.last_name} onClick={handleSubmit}>
+            {saving ? 'Creating…' : 'Create Lead'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ─── Inline Create Property Form ─── */
+function CreatePropertyInline({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { toast } = useToast();
+  const createProperty = useCreateProperty();
+  const { data: customers = [] } = useCustomers();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ property_name: '', address_line_1: '', city: '', customer_id: '' });
+  const [saving, setSaving] = useState(false);
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async () => {
+    if (!form.property_name || !form.address_line_1) { toast({ title: 'Name & address required', variant: 'destructive' }); return; }
+    setSaving(true);
+    try {
+      const data = await createProperty.mutateAsync({ ...form, customer_id: form.customer_id || null } as any);
+      toast({ title: 'Property created' });
+      onOpenChange(false);
+      navigate(`/properties/${data.id}`);
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md mx-3">
+        <DialogHeader>
+          <DialogTitle className="text-base">New Property</DialogTitle>
+          <DialogDescription>Add a property from the field.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div><Label className="text-xs">Property Name *</Label><Input value={form.property_name} onChange={e => set('property_name', e.target.value)} placeholder="e.g. 123 Oak Ave" /></div>
+          <div><Label className="text-xs">Address *</Label><Input value={form.address_line_1} onChange={e => set('address_line_1', e.target.value)} placeholder="Street address" /></div>
+          <div><Label className="text-xs">City</Label><Input value={form.city} onChange={e => set('city', e.target.value)} /></div>
+          <div>
+            <Label className="text-xs">Customer (optional)</Label>
+            <Select value={form.customer_id} onValueChange={v => set('customer_id', v)}>
+              <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+              <SelectContent>
+                {customers.map((c: any) => (
+                  <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button className="w-full h-11" disabled={saving || !form.property_name || !form.address_line_1} onClick={handleSubmit}>
+            {saving ? 'Creating…' : 'Create Property'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /* ─── Main Carousel ─── */
 export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouselProps) {
+  const navigate = useNavigate();
   const [now, setNow] = useState(new Date());
   const [isDragging, setIsDragging] = useState(false);
   const [quickBookOpen, setQuickBookOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const dragState = useRef({ isPointerDown: false, startX: 0, startScrollLeft: 0, moved: false });
+
+  // Inline dialog states
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [leadOpen, setLeadOpen] = useState(false);
+  const [propertyOpen, setPropertyOpen] = useState(false);
+  const [visitOpen, setVisitOpen] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [quoteOpen, setQuoteOpen] = useState(false);
+
+  // Lazy import for quote dialog
+  const [QuoteDialog, setQuoteDialog] = useState<any>(null);
+  useEffect(() => {
+    if (quoteOpen && !QuoteDialog) {
+      import('@/components/CreateQuoteDialog').then(m => setQuoteDialog(() => m.CreateQuoteDialog));
+    }
+  }, [quoteOpen, QuoteDialog]);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
@@ -230,6 +407,21 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
     if (e && e.pointerType !== 'mouse') return;
     dragState.current.isPointerDown = false;
     setIsDragging(false);
+  };
+
+  const handleQuickBookAction = (action: QuickBookAction) => {
+    setQuickBookOpen(false);
+    switch (action) {
+      case 'customer': setCustomerOpen(true); break;
+      case 'lead': setLeadOpen(true); break;
+      case 'property': setPropertyOpen(true); break;
+      case 'visit': setVisitOpen(true); break;
+      case 'request': setRequestOpen(true); break;
+      case 'quote': setQuoteOpen(true); break;
+      case 'job': navigate('/jobs/new'); break;
+      case 'invoice': navigate('/invoices/new'); break;
+      case 'incident': navigate('/worker/incidents/new'); break;
+    }
   };
 
   if (visits.length === 0) return null;
@@ -298,7 +490,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
         </div>
       </div>
 
-      {/* Quick Book Dialog */}
+      {/* Quick Book Menu Dialog */}
       <Dialog open={quickBookOpen} onOpenChange={setQuickBookOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -309,19 +501,26 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
           </DialogHeader>
           <div className="grid grid-cols-3 gap-3 py-2">
             {QUICK_BOOK_ITEMS.map((item) => (
-              <Link
+              <button
                 key={item.label}
-                to={item.to}
-                onClick={() => setQuickBookOpen(false)}
+                onClick={() => handleQuickBookAction(item.action)}
                 className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-muted active:scale-95 transition-all"
               >
                 <item.icon className={cn('h-5 w-5', item.color)} />
                 <span className="text-[10px] font-medium text-foreground text-center leading-tight">{item.label}</span>
-              </Link>
+              </button>
             ))}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Creation Dialogs */}
+      <CreateCustomerInline open={customerOpen} onOpenChange={setCustomerOpen} />
+      <CreateLeadInline open={leadOpen} onOpenChange={setLeadOpen} />
+      <CreatePropertyInline open={propertyOpen} onOpenChange={setPropertyOpen} />
+      <CreateVisitDialog open={visitOpen} onOpenChange={setVisitOpen} />
+      <CreateRequestDialog open={requestOpen} onOpenChange={setRequestOpen} />
+      {QuoteDialog && <QuoteDialog open={quoteOpen} onOpenChange={setQuoteOpen} />}
     </div>
   );
 }
