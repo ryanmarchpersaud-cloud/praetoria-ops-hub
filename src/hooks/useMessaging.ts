@@ -363,6 +363,8 @@ export function useSendMessage() {
       queryClient.invalidateQueries({ queryKey: ['messages', vars.conversationId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications_unread'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications_all_recent'] });
     },
   });
 }
@@ -398,7 +400,47 @@ export function useCreateConversation() {
         .single();
       if (error) throw error;
 
-      const allMembers = [...new Set([user.id, ...memberUserIds])];
+      let expandedMemberUserIds = memberUserIds;
+
+      if (type === 'direct_message' && memberUserIds.length > 0) {
+        const { data: roleRows } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id);
+
+        const senderRoles = (roleRows || []).map((row: any) => row.role);
+        const senderIsFieldOrExternal = senderRoles.some((role: string) =>
+          ['subcontractor', 'staff', 'lead_worker', 'supervisor', 'dispatcher'].includes(role)
+        ) && !senderRoles.some((role: string) =>
+          ['owner', 'admin', 'manager', 'ops_manager', 'accountant', 'hr_admin'].includes(role)
+        );
+
+        if (senderIsFieldOrExternal) {
+          const { data: selectedTeamMembers } = await supabase
+            .from('team_members')
+            .select('user_id, portal_admin')
+            .in('user_id', memberUserIds);
+
+          const targetsAdmin = (selectedTeamMembers || []).some((member: any) => member.portal_admin);
+
+          if (targetsAdmin) {
+            const { data: adminMembers } = await supabase
+              .from('team_members')
+              .select('user_id')
+              .eq('is_active', true)
+              .eq('portal_admin', true);
+
+            expandedMemberUserIds = [
+              ...new Set([
+                ...memberUserIds,
+                ...(adminMembers || []).map((member: any) => member.user_id).filter(Boolean),
+              ]),
+            ];
+          }
+        }
+      }
+
+      const allMembers = [...new Set([user.id, ...expandedMemberUserIds])];
       const { error: memErr } = await supabase
         .from('conversation_members')
         .insert(allMembers.map(uid => ({
