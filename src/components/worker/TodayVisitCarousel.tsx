@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   CheckCircle2, ChevronRight, CalendarPlus, MapPin, Clock,
   Plus, UserPlus, FileText, Briefcase, ClipboardList, Home,
-  Receipt, AlertTriangle, Send,
+  Receipt, AlertTriangle, Send, ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { differenceInSeconds } from 'date-fns';
@@ -24,6 +24,7 @@ import { useCreateQuote } from '@/hooks/useQuotes';
 import { useCreateProperty } from '@/hooks/useProperties';
 import { CreateRequestDialog } from '@/components/CreateRequestDialog';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
+import { CreateTaskDialog } from '@/components/CreateTaskDialog';
 import { SERVICE_CATEGORIES, PROVINCES } from '@/lib/constants';
 
 interface VisitCard {
@@ -54,7 +55,7 @@ function formatTimer(seconds: number) {
 }
 
 /* ─── Quick Book Menu Items ─── */
-type QuickBookAction = 'visit' | 'job' | 'customer' | 'property' | 'lead' | 'quote' | 'invoice' | 'request' | 'incident';
+type QuickBookAction = 'visit' | 'job' | 'customer' | 'property' | 'lead' | 'quote' | 'invoice' | 'request' | 'incident' | 'task';
 
 const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; color: string }[] = [
   { label: 'New Visit', icon: ClipboardList, action: 'visit', color: 'text-blue-600' },
@@ -66,6 +67,7 @@ const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; col
   { label: 'New Invoice', icon: Receipt, action: 'invoice', color: 'text-rose-600' },
   { label: 'New Request', icon: CalendarPlus, action: 'request', color: 'text-orange-600' },
   { label: 'New Incident', icon: AlertTriangle, action: 'incident', color: 'text-red-600' },
+  { label: 'New Task', icon: ClipboardCheck, action: 'task', color: 'text-teal-600' },
 ];
 
 /* ─── Visit Card Component ─── */
@@ -409,6 +411,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
   const [visitOpen, setVisitOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
 
   // Lazy import for quote dialog
   const [QuoteDialog, setQuoteDialog] = useState<any>(null);
@@ -465,6 +468,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
       case 'job': navigate('/jobs/new'); break;
       case 'invoice': navigate('/invoices/new'); break;
       case 'incident': navigate('/worker/incidents/new'); break;
+      case 'task': setTaskOpen(true); break;
     }
   };
 
@@ -565,6 +569,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
       <CreateVisitDialog open={visitOpen} onOpenChange={setVisitOpen} />
       <CreateRequestDialog open={requestOpen} onOpenChange={setRequestOpen} />
       {QuoteDialog && <QuoteDialog open={quoteOpen} onOpenChange={setQuoteOpen} />}
+      <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} defaultAssigneeType="worker" />
     </div>
   );
 }

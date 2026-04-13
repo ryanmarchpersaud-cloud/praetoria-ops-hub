@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   User, Building2, ShieldCheck, DollarSign, HelpCircle, Settings, LogOut, ChevronRight, Truck,
-  ShieldAlert, Receipt, Shield, BookOpen,
+  ShieldAlert, Receipt, Shield, BookOpen, ClipboardCheck,
 } from 'lucide-react';
 
 export default function SubcontractorMore() {
@@ -15,6 +15,7 @@ export default function SubcontractorMore() {
   const handleLogout = async () => { await signOut(); navigate('/login'); };
 
   const items = [
+    { icon: ClipboardCheck, label: 'My Tasks', to: '/subcontractor/tasks', description: 'Assigned errands, pickups & checks' },
     { icon: User, label: 'My Profile', to: '/subcontractor/profile', description: 'Contact info & details' },
     { icon: Building2, label: 'Company Details', to: '/subcontractor/company', description: 'Business information' },
     { icon: Shield, label: 'Emergency & Safety', to: '/subcontractor/emergency-safety', description: 'SOS, contacts & medical alerts' },

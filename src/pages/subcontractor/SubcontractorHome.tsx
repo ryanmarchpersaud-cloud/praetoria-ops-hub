@@ -11,14 +11,15 @@ import {
   CalendarDays, Receipt, FileText, ChevronRight, MapPin, CheckCircle,
   AlertTriangle, Briefcase, ShieldCheck, Clock, Truck, DollarSign,
   Navigation, Phone, Plus, UserPlus, ClipboardList, Home, Send,
-  CalendarPlus,
+  CalendarPlus, ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CreateRequestDialog } from '@/components/CreateRequestDialog';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
 import { SubcontractorQuickBookDialogs, type QuickBookDialogType } from '@/components/subcontractor/SubcontractorQuickBookDialogs';
+import { CreateTaskDialog } from '@/components/CreateTaskDialog';
 
-type QuickBookAction = 'visit' | 'job' | 'customer' | 'property' | 'lead' | 'quote' | 'invoice' | 'request' | 'incident';
+type QuickBookAction = 'visit' | 'job' | 'customer' | 'property' | 'lead' | 'quote' | 'invoice' | 'request' | 'incident' | 'task';
 
 const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; color: string }[] = [
   { label: 'New Visit', icon: ClipboardList, action: 'visit', color: 'text-blue-600' },
@@ -30,6 +31,7 @@ const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; col
   { label: 'New Invoice', icon: Receipt, action: 'invoice', color: 'text-rose-600' },
   { label: 'New Request', icon: CalendarPlus, action: 'request', color: 'text-orange-600' },
   { label: 'New Incident', icon: AlertTriangle, action: 'incident', color: 'text-red-600' },
+  { label: 'New Task', icon: ClipboardCheck, action: 'task', color: 'text-teal-600' },
 ];
 import { TodayWorkOverviewDialog } from '@/components/TodayWorkOverviewDialog';
 
@@ -58,6 +60,7 @@ export default function SubcontractorHome() {
 
   const [visitOpen, setVisitOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
   const [quickBookDialog, setQuickBookDialog] = useState<QuickBookDialogType>(null);
 
   const handleQuickBookAction = (action: QuickBookAction) => {
@@ -71,6 +74,7 @@ export default function SubcontractorHome() {
       case 'invoice': setQuickBookDialog('invoice'); break;
       case 'request': setRequestOpen(true); break;
       case 'incident': navigate('/subcontractor/incidents/new'); break;
+      case 'task': setTaskOpen(true); break;
     }
   };
 
@@ -283,6 +287,7 @@ export default function SubcontractorHome() {
       <CreateVisitDialog open={visitOpen} onOpenChange={setVisitOpen} />
       <CreateRequestDialog open={requestOpen} onOpenChange={setRequestOpen} />
       <SubcontractorQuickBookDialogs activeDialog={quickBookDialog} onClose={() => setQuickBookDialog(null)} />
+      <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} defaultAssigneeType="subcontractor" />
 
       {todayAssignments.length > 0 && (
         <DailyRouteMap

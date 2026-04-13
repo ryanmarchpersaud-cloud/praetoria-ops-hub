@@ -102,6 +102,8 @@ import WorkerEmergencySafetyPage from "./pages/worker/WorkerEmergencySafetyPage"
 import WorkerMessagesPage from "./pages/worker/WorkerMessagesPage";
 import WorkerAgreementsPage from "./pages/worker/WorkerAgreementsPage";
 import WeatherDetail from "./pages/WeatherDetail";
+const TasksPage = lazy(() => import("./pages/TasksPage"));
+const WorkerTasksPage = lazy(() => import("./pages/worker/WorkerTasksPage"));
 
 // Subcontractor pages
 import SubcontractorHome from "./pages/subcontractor/SubcontractorHome";
@@ -323,6 +325,7 @@ function AppRoutes() {
 
       {/* Activity — owner/admin only */}
       <Route path="/activity" element={<AdminRoute><ModuleGuard module="ownerOnly"><ActivityPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/tasks" element={<AdminRoute><ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><TasksPage /></Suspense></ModuleGuard></AdminRoute>} />
 
       {/* HR / People module */}
       <Route path="/employees" element={<AdminRoute><ModuleGuard module="hr"><Employees /></ModuleGuard></AdminRoute>} />
@@ -455,6 +458,7 @@ function AppRoutes() {
       <Route path="/worker/emergency-safety" element={<WorkerRoute><WorkerLayout><WorkerEmergencySafetyPage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/settings" element={<WorkerRoute><WorkerLayout><WorkerSettings /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/messages" element={<WorkerRoute><WorkerLayout><WorkerMessagesPage /></WorkerLayout></WorkerRoute>} />
+      <Route path="/worker/tasks" element={<WorkerRoute><WorkerLayout><Suspense fallback={<RouteLoading />}><WorkerTasksPage /></Suspense></WorkerLayout></WorkerRoute>} />
 
       {/* Subcontractor routes */}
       <Route path="/subcontractor" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorHome /></SubcontractorLayout></SubcontractorRoute>} />
@@ -480,6 +484,7 @@ function AppRoutes() {
       <Route path="/subcontractor/messages" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorMessagesPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/training" element={<SubcontractorRoute><SubcontractorLayout><SubcontractorTrainingPage /></SubcontractorLayout></SubcontractorRoute>} />
       <Route path="/subcontractor/training/:id" element={<SubcontractorRoute><SubcontractorLayout><WorkerCourseDetailPage backTo="/subcontractor/training" /></SubcontractorLayout></SubcontractorRoute>} />
+      <Route path="/subcontractor/tasks" element={<SubcontractorRoute><SubcontractorLayout><Suspense fallback={<RouteLoading />}><WorkerTasksPage /></Suspense></SubcontractorLayout></SubcontractorRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
