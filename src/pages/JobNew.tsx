@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCustomers, useCreateCustomer } from '@/hooks/useCustomers';
 import { useProperties } from '@/hooks/useProperties';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { supabase } from '@/integrations/supabase/client';
 import { SERVICE_CATEGORIES, JOB_STATUSES, JOB_PRIORITIES } from '@/lib/constants';
@@ -66,6 +67,7 @@ export default function JobNew() {
   const { data: customers = [] } = useCustomers();
   const { data: allProperties = [] } = useProperties();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
   const createCustomer = useCreateCustomer();
   const createVisit = useCreateVisit();
 
@@ -162,13 +164,20 @@ export default function JobNew() {
     return catalogItems.filter(i => `${i.name} ${i.description || ''} ${i.service_category || ''}`.toLowerCase().includes(s));
   }, [catalogItems, catalogSearch]);
 
+  const activeSubs = useMemo(() =>
+    (subcontractors as any[]).filter((s: any) => s.user_id && s.active_flag !== false), [subcontractors]);
+
+  const allAssignableWorkers = useMemo(() => {
+    const emps = (employees as any[]).map((e: any) => ({ uid: e.user_id, name: e.full_name || e.user_id, label: e.job_title || '', type: 'worker' as const }));
+    const subs = activeSubs.map((s: any) => ({ uid: s.user_id, name: s.contact_name || s.company_name, label: s.company_name ? `Subcontractor · ${s.company_name}` : 'Subcontractor', type: 'sub' as const }));
+    return [...emps, ...subs];
+  }, [employees, activeSubs]);
+
   const filteredWorkers = useMemo(() => {
-    if (!workerSearch) return employees as any[];
+    if (!workerSearch) return allAssignableWorkers;
     const s = workerSearch.toLowerCase();
-    return (employees as any[]).filter((e: any) =>
-      `${e.full_name || ''} ${e.job_title || ''}`.toLowerCase().includes(s)
-    );
-  }, [employees, workerSearch]);
+    return allAssignableWorkers.filter(w => `${w.name} ${w.label}`.toLowerCase().includes(s));
+  }, [allAssignableWorkers, workerSearch]);
 
   const subtotal = useMemo(() => lineItems.reduce((s, li) => s + li.line_total, 0), [lineItems]);
 

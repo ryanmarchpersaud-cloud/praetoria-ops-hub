@@ -4,6 +4,7 @@ import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { useJob, useJobVisits, useUpdateJob, useDeleteJob } from '@/hooks/useJobs';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +30,7 @@ export default function JobDetail() {
   const { data: job, isLoading } = useJob(id);
   const { data: visits = [] } = useJobVisits(id);
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
   const updateJob = useUpdateJob();
   const deleteJob = useDeleteJob();
   const createVisit = useCreateVisit();
@@ -70,6 +72,8 @@ export default function JobDetail() {
   const customer = (job as any).customers;
   const property = (job as any).properties;
   const assignedWorker = employees.find((e: any) => e.user_id === form.assigned_to);
+  const assignedSub = (subcontractors as any[]).find((s: any) => s.user_id === form.assigned_to);
+  const assignedName = assignedWorker ? (assignedWorker as any).full_name : assignedSub ? (assignedSub as any).contact_name || (assignedSub as any).company_name : null;
 
   const handleSave = async () => {
     if (!id) return;
@@ -319,15 +323,27 @@ export default function JobDetail() {
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10"
                 >
                   <option value="">— Unassigned —</option>
-                  {(employees as any[]).map((emp: any) => (
-                    <option key={emp.user_id} value={emp.user_id}>
-                      {emp.full_name || emp.user_id}
-                    </option>
-                  ))}
+                  <optgroup label="Workers">
+                    {(employees as any[]).map((emp: any) => (
+                      <option key={emp.user_id} value={emp.user_id}>
+                        {emp.full_name || emp.user_id}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {(subcontractors as any[]).length > 0 && (
+                    <optgroup label="Subcontractors">
+                      {(subcontractors as any[]).filter((s: any) => s.user_id && s.active_flag !== false).map((s: any) => (
+                        <option key={s.user_id} value={s.user_id}>
+                          {s.contact_name || s.company_name} {s.company_name ? `(${s.company_name})` : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
-                {assignedWorker && (
+                {assignedName && (
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    Assigned to: <span className="font-medium text-foreground">{(assignedWorker as any).full_name}</span>
+                    Assigned to: <span className="font-medium text-foreground">{assignedName}</span>
+                    {assignedSub && <Badge variant="outline" className="ml-1 text-[9px] py-0 px-1">Subcontractor</Badge>}
                   </p>
                 )}
               </div>
