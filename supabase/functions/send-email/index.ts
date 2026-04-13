@@ -357,10 +357,24 @@ Deno.serve(async (req) => {
 
     // ─── Invoice Sent (customer-facing) ───
     if (action === "invoice_sent") {
-      const { customer_email, customer_name, invoice_number, service_category, total, balance_due, due_date, invoice_id } = params;
+      const { customer_email, customer_name, invoice_number, service_category, total, balance_due, due_date, invoice_id, invoice_pdf_url, attachments } = params;
       if (!customer_email) return json({ error: "Missing customer_email" }, 400);
 
       const replyTo = resolveReplyTo(service_category, "operational");
+
+      // Build attachment links HTML
+      let attachmentHtml = "";
+      if (invoice_pdf_url) {
+        attachmentHtml += `<p style="margin:16px 0 8px;"><a href="${invoice_pdf_url}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:600;font-size:14px;">📄 View / Download Invoice PDF</a></p>`;
+      }
+      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+        const links = attachments.map((url: string) => {
+          const name = decodeURIComponent(url.split("/").pop() || "Attachment");
+          return `<a href="${url}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
+        }).join("<br/>");
+        attachmentHtml += `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"/>
+          <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+      }
 
       const result = await sendViaResend({
         to: customer_email,
@@ -373,6 +387,7 @@ Deno.serve(async (req) => {
             <tr><td style="padding:6px 0;color:#71717a;">Balance Due</td><td style="padding:6px 0;text-align:right;font-weight:600;color:#dc2626;">$${balance_due || total || "0.00"} CAD</td></tr>
             <tr><td style="padding:6px 0;color:#71717a;">Due Date</td><td style="padding:6px 0;text-align:right;font-weight:600;">${due_date || "Upon receipt"}</td></tr>
           </table>
+          ${attachmentHtml}
           <p>You can view and pay this invoice in your <a href="https://praetoria-ops-hub.lovable.app/portal/billing">customer portal</a>.</p>
           <p>Thank you for your business,<br/>Praetoria Group</p>
         `),

@@ -741,6 +741,19 @@ export default function InvoiceDetail() {
               if (!emailTo) { toast.error('Enter a recipient email'); return; }
               setSendingEmail(true);
               try {
+                // Upload any user-added attachments to storage and collect URLs
+                const attachmentUrls: string[] = [];
+                for (const file of emailAttachments) {
+                  const filePath = `invoice-attachments/${invoice.id}/${Date.now()}-${file.name}`;
+                  const { error: upErr } = await supabase.storage.from('invoice-attachments').upload(filePath, file);
+                  if (!upErr) {
+                    const { data: urlData } = supabase.storage.from('invoice-attachments').getPublicUrl(filePath);
+                    if (urlData?.publicUrl) attachmentUrls.push(urlData.publicUrl);
+                  }
+                }
+                // Include the printable invoice PDF link
+                const invoicePdfUrl = `${window.location.origin}/invoices/${invoice.id}/print`;
+
                 const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
                 await supabase.functions.invoke('send-email', {
                   body: {
@@ -756,6 +769,8 @@ export default function InvoiceDetail() {
                     custom_subject: emailSubject,
                     custom_message: emailMessage,
                     send_copy: sendMeCopy,
+                    invoice_pdf_url: invoicePdfUrl,
+                    attachments: attachmentUrls,
                   },
                 });
                 // Also send in-app + SMS notification
