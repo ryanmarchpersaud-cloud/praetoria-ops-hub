@@ -272,6 +272,11 @@ export default function CreateVisitDialog({ open, onOpenChange, defaultJobId }: 
                         {e.full_name}{e.job_title ? ` · ${e.job_title}` : ''}
                       </SelectItem>
                     ))}
+                    {activeSubs.length > 0 && activeSubs.map((s: any) => (
+                      <SelectItem key={s.user_id} value={s.user_id}>
+                        {s.contact_name || s.company_name} · Subcontractor
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

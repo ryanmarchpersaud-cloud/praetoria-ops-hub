@@ -348,6 +348,11 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
                   {(employees as any[]).map((e: any) => (
                     <SelectItem key={e.user_id} value={e.user_id}>{e.full_name || e.user_id}</SelectItem>
                   ))}
+                  {activeSubs.length > 0 && activeSubs.map((s: any) => (
+                    <SelectItem key={s.user_id} value={s.user_id}>
+                      {s.contact_name || s.company_name} · Subcontractor
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
