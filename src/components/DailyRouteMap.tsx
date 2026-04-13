@@ -92,12 +92,12 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
         cancelled = true;
         setLoading(false);
       }
-    }, 10000);
+    }, 15000);
 
     async function resolve() {
       const results: (RouteStop & { lat: number; lng: number })[] = [];
       for (const stop of stops) {
-        if (cancelled) return;
+        if (cancelled) break;
         if (stop.lat && stop.lng) {
           results.push({ ...stop, lat: stop.lat, lng: stop.lng });
         } else {
@@ -109,8 +109,8 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
           } catch {
             // skip failed geocode
           }
-          // Rate limit for Nominatim (1 req/sec)
-          await new Promise(r => setTimeout(r, 1100));
+          // Rate limit for Nominatim (1 req/sec) — but use a shorter delay
+          if (!cancelled) await new Promise(r => setTimeout(r, 1050));
         }
       }
       if (!cancelled) {
