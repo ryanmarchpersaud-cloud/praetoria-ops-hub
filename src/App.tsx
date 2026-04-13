@@ -399,6 +399,9 @@ function AppRoutes() {
       {/* Public signing page — no auth required */}
       <Route path="/sign/:token" element={<Suspense fallback={<RouteLoading />}><AgreementSignPage /></Suspense>} />
 
+      {/* Email Directory */}
+      <Route path="/email-directory" element={<AdminRoute><ModuleGuard module="opsOrFinance"><EmailDirectoryPage /></ModuleGuard></AdminRoute>} />
+
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
       {/* Customer portal routes */}
