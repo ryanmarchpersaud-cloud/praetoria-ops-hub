@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomerProfile } from '@/hooks/useUserRole';
-import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Menu, X, ShieldCheck, Receipt, ChevronRight, Home, Settings2, RefreshCw, Gift } from 'lucide-react';
+import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Menu, X, ShieldCheck, Receipt, ChevronRight, Home, Settings2, RefreshCw, Gift, HelpCircle } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -24,6 +24,7 @@ const portalNav = [
   { title: 'Preferences', to: '/portal/preferences', icon: Settings2, tileColor: 'action-tile-slate', iconColor: 'text-slate-600' },
   { title: 'Referrals', to: '/portal/referrals', icon: Gift, tileColor: 'action-tile-amber', iconColor: 'text-amber-600' },
   { title: 'My Account', to: '/portal/account', icon: User, tileColor: 'action-tile-slate', iconColor: 'text-slate-600' },
+  { title: 'Help & FAQ', to: '/portal/help', icon: HelpCircle, tileColor: 'action-tile-cyan', iconColor: 'text-cyan-600' },
 ];
 
 export function PortalLayout({ children }: { children: ReactNode }) {

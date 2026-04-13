@@ -1,31 +1,60 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { HelpCircle, Mail, Phone, FileText, ShieldCheck, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { HelpCircle, Mail, Phone, FileText, ShieldCheck, DollarSign, Clock, AlertTriangle, CalendarCheck, Camera, ClipboardCheck, Truck, BookOpen } from 'lucide-react';
+
+const QUICK_START_STEPS = [
+  { label: 'Check your schedule', desc: 'View assigned visits from the Schedule tab.' },
+  { label: 'Complete assigned work', desc: 'Open a visit, update status step-by-step (En Route → On Site → Done).' },
+  { label: 'Upload photos & notes', desc: 'Capture before/after photos and add completion notes during visits.' },
+  { label: 'Submit invoices', desc: 'Go to Invoices and submit for completed work.' },
+  { label: 'Stay compliant', desc: 'Keep insurance, WCB, and licenses up to date under Compliance.' },
+];
 
 const FAQ_ITEMS = [
   {
+    icon: CalendarCheck,
+    q: 'How do I view my assigned work?',
+    a: 'Open the Schedule tab from the bottom navigation. You\'ll see all upcoming visits assigned to you, organized by date. Tap any visit to see full details including property info, scope of work, and access instructions.',
+  },
+  {
+    icon: Truck,
+    q: 'How do I update my status and complete work?',
+    a: 'Open an assigned visit and use the status stepper to progress through each stage: Scheduled → En Route → On Site → Done. Each status update is timestamped and visible to the operations team in real time.',
+  },
+  {
+    icon: Camera,
+    q: 'How do I upload photos and notes?',
+    a: 'During a visit, use the photo capture section to take before/after photos. You can also add completion notes and flag any issues. Photos are uploaded directly to the job record for documentation.',
+  },
+  {
+    icon: FileText,
     q: 'How do I submit an invoice?',
-    a: 'Go to Invoices from the bottom nav or More menu, tap "Submit Invoice", fill in the details, attach your PDF or photo, and submit. The admin team will review and process it.',
+    a: 'Go to Invoices from the bottom nav or More menu, tap "Submit Invoice," fill in the details, attach your PDF or photo, and submit. Invoices are auto-numbered (SUB-INV-XXXXX) and the admin team will review and process them.',
   },
   {
-    q: 'How do I update my insurance or compliance docs?',
-    a: 'Navigate to More → Compliance. You can upload updated insurance certificates, WCB letters, business licenses, and safety documents directly from there.',
+    icon: ShieldCheck,
+    q: 'How do I upload compliance documents?',
+    a: 'Navigate to More → Compliance. You can upload updated insurance certificates, WCB letters, business licenses, and safety documents directly. Keep these current to maintain your active status.',
   },
   {
-    q: 'When will I get paid?',
-    a: 'Payments are processed on a Net 30 basis from the invoice approval date. You can check your payment history under More → Payments.',
+    icon: DollarSign,
+    q: 'How does the payout / payment process work?',
+    a: 'Payments are processed on a Net 30 basis from the invoice approval date. You can check your payment history and pending amounts under More → Payments. Ensure your payment details are up to date under Settings.',
   },
   {
+    icon: AlertTriangle,
     q: 'How do I report a site incident?',
-    a: 'Go to More → Incidents & Damage to file a new report. Include photos, descriptions, and any witness information for fastest resolution.',
+    a: 'Go to More → Incidents & Damage to file a new report. Include photos, descriptions, location, and any witness information. Reports are sent to the operations team immediately for review.',
   },
   {
+    icon: ClipboardCheck,
     q: 'How do I update my company details?',
-    a: 'Contact the operations team to update your company name, business number, or address. Some fields can be viewed under More → Company Details.',
+    a: 'You can view your company profile under More → Company Details. For changes to your company name, business number, or address, contact the operations team directly.',
   },
   {
+    icon: BookOpen,
     q: 'My schedule changed — what do I do?',
-    a: 'Check the Schedule tab for updated assignments. If you need to swap or decline a visit, contact the operations team immediately.',
+    a: 'Check the Schedule tab for updated assignments. If you need to swap or decline a visit, contact the operations team immediately using the contact info below.',
   },
 ];
 
@@ -33,8 +62,27 @@ export default function SubcontractorSupport() {
   return (
     <div className="px-4 pt-6 pb-4 space-y-4 max-w-lg animate-fade-in">
       <h1 className="text-xl font-bold flex items-center gap-2">
-        <HelpCircle className="h-5 w-5 text-primary" /> Support
+        <HelpCircle className="h-5 w-5 text-primary" /> Support & Quick Start
       </h1>
+
+      {/* Quick start steps */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <BookOpen className="h-4 w-4" /> Quick Start Guide
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ol className="space-y-2 text-sm text-muted-foreground list-decimal list-inside">
+            {QUICK_START_STEPS.map((step, i) => (
+              <li key={i}>
+                <span className="text-foreground font-medium">{step.label}</span>
+                <span className="text-xs"> — {step.desc}</span>
+              </li>
+            ))}
+          </ol>
+        </CardContent>
+      </Card>
 
       {/* Contact card */}
       <Card>
@@ -97,11 +145,25 @@ export default function SubcontractorSupport() {
           <Accordion type="single" collapsible className="w-full">
             {FAQ_ITEMS.map((item, i) => (
               <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-sm text-left">{item.q}</AccordionTrigger>
-                <AccordionContent className="text-xs text-muted-foreground">{item.a}</AccordionContent>
+                <AccordionTrigger className="text-sm text-left gap-2">
+                  <span className="flex items-center gap-2">
+                    <item.icon className="h-4 w-4 text-primary shrink-0" />
+                    {item.q}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="text-xs text-muted-foreground ml-6">{item.a}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
+        </CardContent>
+      </Card>
+
+      {/* Credibility note */}
+      <Card className="bg-muted/30">
+        <CardContent className="pt-4">
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+            Professional standards · Reliable partner workflow · Safety and compliance focused.
+          </p>
         </CardContent>
       </Card>
     </div>
