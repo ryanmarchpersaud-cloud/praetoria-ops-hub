@@ -4093,6 +4093,137 @@ export type Database = {
           },
         ]
       }
+      operational_tasks: {
+        Row: {
+          address: string | null
+          assigned_to: string | null
+          assignee_type: string
+          budget_limit: number | null
+          city: string | null
+          completed_at: string | null
+          completion_notes: string | null
+          completion_photos: string[] | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          due_date: string | null
+          due_time: string | null
+          follow_up_required: boolean
+          id: string
+          job_id: string | null
+          materials_parts_list: string | null
+          notes: string | null
+          photos_required: boolean
+          postal_code: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          property_id: string | null
+          province: string | null
+          receipt_required: boolean
+          receipt_urls: string[] | null
+          status: Database["public"]["Enums"]["task_status"]
+          task_category: Database["public"]["Enums"]["task_category"]
+          task_description: string | null
+          task_title: string
+          updated_at: string
+          visit_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          assigned_to?: string | null
+          assignee_type?: string
+          budget_limit?: number | null
+          city?: string | null
+          completed_at?: string | null
+          completion_notes?: string | null
+          completion_photos?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          due_date?: string | null
+          due_time?: string | null
+          follow_up_required?: boolean
+          id?: string
+          job_id?: string | null
+          materials_parts_list?: string | null
+          notes?: string | null
+          photos_required?: boolean
+          postal_code?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          property_id?: string | null
+          province?: string | null
+          receipt_required?: boolean
+          receipt_urls?: string[] | null
+          status?: Database["public"]["Enums"]["task_status"]
+          task_category?: Database["public"]["Enums"]["task_category"]
+          task_description?: string | null
+          task_title: string
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          assigned_to?: string | null
+          assignee_type?: string
+          budget_limit?: number | null
+          city?: string | null
+          completed_at?: string | null
+          completion_notes?: string | null
+          completion_photos?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          due_date?: string | null
+          due_time?: string | null
+          follow_up_required?: boolean
+          id?: string
+          job_id?: string | null
+          materials_parts_list?: string | null
+          notes?: string | null
+          photos_required?: boolean
+          postal_code?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          property_id?: string | null
+          province?: string | null
+          receipt_required?: boolean
+          receipt_urls?: string[] | null
+          status?: Database["public"]["Enums"]["task_status"]
+          task_category?: Database["public"]["Enums"]["task_category"]
+          task_description?: string | null
+          task_title?: string
+          updated_at?: string
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_tasks_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_tasks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_tasks_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_settings: {
         Row: {
           auto_mark_sent: boolean | null
@@ -7576,6 +7707,24 @@ export type Database = {
         | "monthly"
         | "on-snowfall"
         | "custom-seasonal"
+      task_category:
+        | "Shopping / Materials Pickup"
+        | "Parts Purchase"
+        | "Property Check"
+        | "Site Inspection"
+        | "Delivery / Drop-off"
+        | "Estimate Support"
+        | "Photo Verification"
+        | "Maintenance Check"
+        | "Other"
+      task_priority: "low" | "medium" | "high" | "urgent"
+      task_status:
+        | "New"
+        | "Assigned"
+        | "In Progress"
+        | "Waiting"
+        | "Completed"
+        | "Cancelled"
       visit_status:
         | "Planned"
         | "Scheduled"
@@ -7832,6 +7981,26 @@ export const Constants = {
         "monthly",
         "on-snowfall",
         "custom-seasonal",
+      ],
+      task_category: [
+        "Shopping / Materials Pickup",
+        "Parts Purchase",
+        "Property Check",
+        "Site Inspection",
+        "Delivery / Drop-off",
+        "Estimate Support",
+        "Photo Verification",
+        "Maintenance Check",
+        "Other",
+      ],
+      task_priority: ["low", "medium", "high", "urgent"],
+      task_status: [
+        "New",
+        "Assigned",
+        "In Progress",
+        "Waiting",
+        "Completed",
+        "Cancelled",
       ],
       visit_status: [
         "Planned",
