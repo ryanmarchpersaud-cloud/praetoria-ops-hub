@@ -165,7 +165,6 @@ function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void
     try {
       await createLead.mutateAsync({
         ...form,
-        source: 'subcontractor_referral',
         service_type: (form.service_type || null) as any,
       });
       toast({ title: 'Lead created' });
@@ -376,6 +375,7 @@ function QuickQuoteDialog({ open, onClose }: { open: boolean; onClose: () => voi
     try {
       const data = await createQuote.mutateAsync({
         customer_id: form.customer_id,
+        quote_number: '',
         service_category: (form.service_category || 'Snow & Ice') as any,
         scope_of_work: form.scope_of_work || null,
       });
