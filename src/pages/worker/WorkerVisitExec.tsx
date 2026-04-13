@@ -334,7 +334,26 @@ export default function WorkerVisitExec() {
           await supabase.from('jobs').update({ status: 'Completed' }).eq('id', job.id);
         }
 
-        toast({ title: 'Visit completed!', description: isOneTime ? 'Job marked as complete.' : 'Visit recorded.' });
+        // Check if all today's visits are now complete
+        let allDoneMessage = '';
+        try {
+          const todayStr = new Date().toISOString().split('T')[0];
+          const { data: remaining } = await supabase
+            .from('visits')
+            .select('id')
+            .eq('assigned_worker_id', user?.id)
+            .eq('service_date', todayStr)
+            .not('status', 'in', '("Completed","Cancelled","Skipped")');
+          if (!remaining || remaining.length === 0) {
+            allDoneMessage = ' 🎉 All visits for today are done — great job! Stand by for more assignments.';
+          }
+        } catch { /* non-critical */ }
+
+        toast({
+          title: allDoneMessage ? '🎉 All Done for Today!' : 'Visit completed!',
+          description: (isOneTime ? 'Job marked as complete. ' : 'Visit recorded. ') + allDoneMessage,
+          duration: allDoneMessage ? 8000 : 4000,
+        });
         navigate('/worker/schedule');
         return;
       }

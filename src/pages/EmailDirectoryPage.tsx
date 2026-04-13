@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useLeads } from '@/hooks/useLeads';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,14 +10,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Download, Mail, Users, UserPlus, Filter, CheckSquare } from 'lucide-react';
+import { Search, Download, Mail, Users, UserPlus, Filter, CheckSquare, Plus } from 'lucide-react';
 
 interface EmailContact {
   id: string;
   name: string;
   email: string;
-  source: 'Customer' | 'Lead';
+  source: string;
   company: string | null;
   phone: string | null;
   city: string | null;
@@ -34,15 +38,44 @@ const STATUS_COLORS: Record<string, string> = {
   Lost: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
 
+const FIXED_STATUSES = ['active', 'lost', 'paused', 'New', 'Contacted', 'Qualified', 'Converted', 'Lost'];
+
+function useManualContacts() {
+  return useQuery({
+    queryKey: ['email_contacts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('email_contacts').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+function useAddManualContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (contact: { name: string; email: string; company?: string; phone?: string; city?: string; status?: string }) => {
+      const { data, error } = await supabase.from('email_contacts').insert(contact).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['email_contacts'] }),
+  });
+}
+
 export default function EmailDirectoryPage() {
   const { data: customers = [], isLoading: loadingCustomers } = useCustomers();
   const { data: leads = [], isLoading: loadingLeads } = useLeads();
+  const { data: manualContacts = [], isLoading: loadingManual } = useManualContacts();
+  const addManual = useAddManualContact();
   const { toast } = useToast();
 
   const [search, setSearch] = useState('');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', company: '', phone: '', city: '', status: 'active' });
 
   const contacts: EmailContact[] = useMemo(() => {
     const list: EmailContact[] = [];
@@ -79,11 +112,28 @@ export default function EmailDirectoryPage() {
       }
     });
 
-    // De-duplicate by email, prefer customer over lead
+    manualContacts.forEach((m: any) => {
+      if (m.email) {
+        list.push({
+          id: `manual-${m.id}`,
+          name: m.name,
+          email: m.email,
+          source: 'Manual',
+          company: m.company,
+          phone: m.phone,
+          city: m.city,
+          status: m.status || 'active',
+          created_at: m.created_at,
+        });
+      }
+    });
+
+    // De-duplicate by email, prefer customer > lead > manual
     const seen = new Map<string, EmailContact>();
     list.forEach((c) => {
       const key = c.email.toLowerCase();
-      if (!seen.has(key) || c.source === 'Customer') {
+      const existing = seen.get(key);
+      if (!existing || (c.source === 'Customer' && existing.source !== 'Customer')) {
         seen.set(key, c);
       }
     });
@@ -91,7 +141,7 @@ export default function EmailDirectoryPage() {
     return Array.from(seen.values()).sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [customers, leads]);
+  }, [customers, leads, manualContacts]);
 
   const filtered = useMemo(() => {
     return contacts.filter((c) => {
@@ -110,7 +160,7 @@ export default function EmailDirectoryPage() {
   }, [contacts, search, sourceFilter, statusFilter]);
 
   const allStatuses = useMemo(() => {
-    const s = new Set<string>();
+    const s = new Set<string>(FIXED_STATUSES);
     contacts.forEach((c) => s.add(c.status));
     return Array.from(s).sort();
   }, [contacts]);
@@ -118,11 +168,8 @@ export default function EmailDirectoryPage() {
   const isAllSelected = filtered.length > 0 && filtered.every((c) => selected.has(c.id));
 
   const toggleAll = () => {
-    if (isAllSelected) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(filtered.map((c) => c.id)));
-    }
+    if (isAllSelected) setSelected(new Set());
+    else setSelected(new Set(filtered.map((c) => c.id)));
   };
 
   const toggleOne = (id: string) => {
@@ -133,7 +180,7 @@ export default function EmailDirectoryPage() {
   };
 
   const exportCSV = () => {
-    const rows = (selected.size > 0 ? filtered.filter((c) => selected.has(c.id)) : filtered);
+    const rows = selected.size > 0 ? filtered.filter((c) => selected.has(c.id)) : filtered;
     if (rows.length === 0) {
       toast({ title: 'No contacts to export', variant: 'destructive' });
       return;
@@ -158,9 +205,32 @@ export default function EmailDirectoryPage() {
     toast({ title: `Exported ${rows.length} contacts` });
   };
 
-  const isLoading = loadingCustomers || loadingLeads;
+  const handleAddContact = async () => {
+    if (!form.name.trim() || !form.email.trim()) {
+      toast({ title: 'Name and email are required', variant: 'destructive' });
+      return;
+    }
+    try {
+      await addManual.mutateAsync({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        company: form.company.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        city: form.city.trim() || undefined,
+        status: form.status,
+      });
+      toast({ title: 'Contact added to directory' });
+      setForm({ name: '', email: '', company: '', phone: '', city: '', status: 'active' });
+      setAddOpen(false);
+    } catch {
+      toast({ title: 'Failed to add contact', variant: 'destructive' });
+    }
+  };
+
+  const isLoading = loadingCustomers || loadingLeads || loadingManual;
   const customerCount = contacts.filter((c) => c.source === 'Customer').length;
   const leadCount = contacts.filter((c) => c.source === 'Lead').length;
+  const manualCount = contacts.filter((c) => c.source === 'Manual').length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -178,6 +248,59 @@ export default function EmailDirectoryPage() {
               {selected.size} selected
             </Badge>
           )}
+          <Dialog open={addOpen} onOpenChange={setAddOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Contact
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Manual Contact</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div>
+                  <Label>Name *</Label>
+                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Full name" />
+                </div>
+                <div>
+                  <Label>Email *</Label>
+                  <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Company</Label>
+                    <Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Phone</Label>
+                    <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>City</Label>
+                    <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="paused">Paused</SelectItem>
+                        <SelectItem value="lost">Lost</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button className="w-full" onClick={handleAddContact} disabled={addManual.isPending}>
+                  {addManual.isPending ? 'Adding...' : 'Add to Directory'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button variant="outline" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-2" />
             Export CSV
@@ -186,7 +309,7 @@ export default function EmailDirectoryPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -194,7 +317,7 @@ export default function EmailDirectoryPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{contacts.length}</p>
-              <p className="text-xs text-muted-foreground">Total Emails</p>
+              <p className="text-xs text-muted-foreground">Total</p>
             </div>
           </CardContent>
         </Card>
@@ -217,6 +340,17 @@ export default function EmailDirectoryPage() {
             <div>
               <p className="text-2xl font-bold">{leadCount}</p>
               <p className="text-xs text-muted-foreground">Leads</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="h-10 w-10 rounded-lg bg-sky-500/10 flex items-center justify-center">
+              <Plus className="h-5 w-5 text-sky-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{manualCount}</p>
+              <p className="text-xs text-muted-foreground">Manual</p>
             </div>
           </CardContent>
         </Card>
@@ -252,6 +386,7 @@ export default function EmailDirectoryPage() {
             <SelectItem value="all">All Sources</SelectItem>
             <SelectItem value="Customer">Customers</SelectItem>
             <SelectItem value="Lead">Leads</SelectItem>
+            <SelectItem value="Manual">Manual</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -310,7 +445,7 @@ export default function EmailDirectoryPage() {
                   <TableCell className="font-medium">{contact.name}</TableCell>
                   <TableCell className="text-sm">{contact.email}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <Badge variant={contact.source === 'Customer' ? 'default' : 'secondary'} className="text-[10px]">
+                    <Badge variant={contact.source === 'Customer' ? 'default' : contact.source === 'Lead' ? 'secondary' : 'outline'} className="text-[10px]">
                       {contact.source}
                     </Badge>
                   </TableCell>
@@ -344,7 +479,7 @@ export default function EmailDirectoryPage() {
             <p className="text-sm font-medium">Email Marketing Integration</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               Export your contacts as CSV and import into Twilio SendGrid, Mailchimp, or any email marketing
-              platform. Twilio SendGrid supports bulk email campaigns with templates, scheduling, and tracking.
+              platform. Use the <strong>Add Contact</strong> button to manually add phone or walk-in inquiries.
             </p>
           </div>
         </CardContent>

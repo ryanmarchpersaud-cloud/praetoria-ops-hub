@@ -1216,6 +1216,51 @@ export type Database = {
         }
         Relationships: []
       }
+      email_contacts: {
+        Row: {
+          city: string | null
+          company: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          source_label: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          source_label?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          source_label?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employee_benefit_enrollments: {
         Row: {
           created_at: string
