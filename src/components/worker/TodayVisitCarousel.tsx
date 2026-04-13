@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   CheckCircle2, ChevronRight, CalendarPlus, MapPin, Clock,
@@ -23,7 +24,7 @@ import { useCreateQuote } from '@/hooks/useQuotes';
 import { useCreateProperty } from '@/hooks/useProperties';
 import { CreateRequestDialog } from '@/components/CreateRequestDialog';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
-import { SERVICE_CATEGORIES } from '@/lib/constants';
+import { SERVICE_CATEGORIES, PROVINCES } from '@/lib/constants';
 
 interface VisitCard {
   id: string;
