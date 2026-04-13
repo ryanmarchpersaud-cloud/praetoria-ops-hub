@@ -258,7 +258,29 @@ export default function SubcontractorHome() {
         )}
       </div>
 
-      {/* Daily Route Map */}
+      {/* Quick Book */}
+      <div>
+        <h2 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+          <CalendarPlus className="h-4 w-4 text-primary" />
+          Quick Book
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          {QUICK_BOOK_ITEMS.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => handleQuickBookAction(item.action)}
+              className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/50 hover:bg-muted active:scale-95 transition-all"
+            >
+              <item.icon className={cn('h-5 w-5', item.color)} />
+              <span className="text-[10px] font-medium text-foreground text-center leading-tight">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <CreateVisitDialog open={visitOpen} onOpenChange={setVisitOpen} />
+      <CreateRequestDialog open={requestOpen} onOpenChange={setRequestOpen} />
+
       {todayAssignments.length > 0 && (
         <DailyRouteMap
           stops={todayAssignments.map((a: any): RouteStop => ({
