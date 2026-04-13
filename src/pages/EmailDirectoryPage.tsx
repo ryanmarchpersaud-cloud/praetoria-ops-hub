@@ -19,6 +19,7 @@ interface EmailContact {
   id: string;
   name: string;
   email: string;
+  secondary_email: string | null;
   source: string;
   company: string | null;
   phone: string | null;
