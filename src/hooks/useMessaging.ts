@@ -137,8 +137,9 @@ export function useMessagingPeople(enabled = true) {
 /** Fetch all conversations the current user is a member of */
 export function useConversations(filter?: { type?: string; unreadOnly?: boolean; includeArchived?: boolean }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['conversations', user?.id, filter],
     queryFn: async () => {
       if (!user) return [];
@@ -160,7 +161,6 @@ export function useConversations(filter?: { type?: string; unreadOnly?: boolean;
       const { data, error } = await query;
       if (error) throw error;
 
-      // Get per-conversation unread counts
       const { data: unreadData } = await (supabase.rpc as any)('get_conversation_unread_counts', {
         _user_id: user.id,
       });
@@ -185,6 +185,45 @@ export function useConversations(filter?: { type?: string; unreadOnly?: boolean;
     enabled: !!user,
     refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`conversations-live-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversation_members',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'conversations',
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+      }, (payload: any) => {
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        if (payload.new?.sender_user_id !== user.id) {
+          queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
+
+  return query;
 }
 
 /** Fetch messages for a conversation */
