@@ -102,6 +102,8 @@ import WorkerEmergencySafetyPage from "./pages/worker/WorkerEmergencySafetyPage"
 import WorkerMessagesPage from "./pages/worker/WorkerMessagesPage";
 import WorkerAgreementsPage from "./pages/worker/WorkerAgreementsPage";
 import WeatherDetail from "./pages/WeatherDetail";
+const TasksPage = lazy(() => import("./pages/TasksPage"));
+const WorkerTasksPage = lazy(() => import("./pages/worker/WorkerTasksPage"));
 
 // Subcontractor pages
 import SubcontractorHome from "./pages/subcontractor/SubcontractorHome";
