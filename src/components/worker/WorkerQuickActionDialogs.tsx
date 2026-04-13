@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 
 export type QuickActionType = 'expense' | 'message_admin' | 'equipment_issue' | 'materials_used' | null;
 
@@ -31,56 +32,76 @@ export function WorkerQuickActionDialogs({ activeAction, onClose }: Props) {
   );
 }
 
-function useSubmitActivity() {
+/* ─── Expense ─── */
+function ExpenseDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { user } = useAuth();
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('Fuel / Gas / Diesel');
+  const [description, setDescription] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const submit = async (actionName: string, payload: Record<string, unknown>) => {
-    const { error } = await supabase.from('activities').insert([{
-      action_name: actionName,
-      user_id: user?.id ?? null,
-      workflow_name: 'field_worker',
-      payload_summary: payload as any,
-      status: 'completed',
-    }]);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      return false;
-    }
-    qc.invalidateQueries({ queryKey: ['activities'] });
-    return true;
-  };
-  return submit;
-}
+  const CATEGORIES = [
+    'Fuel / Gas / Diesel', 'Materials & Supplies', 'Equipment Repair',
+    'Vehicle Maintenance', 'Tools', 'Safety Gear', 'Food / Meals (on-site)',
+    'Parking / Tolls', 'Other',
+  ];
 
-/* ─── Expense ─── */
-function ExpenseDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('fuel');
-  const [description, setDescription] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const submit = useSubmitActivity();
-  const { toast } = useToast();
-
-  const reset = () => { setAmount(''); setCategory('fuel'); setDescription(''); };
+  const reset = () => { setAmount(''); setCategory('Fuel / Gas / Diesel'); setDescription(''); };
 
   const handleSubmit = async () => {
-    if (!amount || isNaN(Number(amount))) {
+    if (!amount || isNaN(Number(amount)) || !user) {
       toast({ title: 'Enter a valid amount', variant: 'destructive' });
       return;
     }
     setSubmitting(true);
-    const ok = await submit('Expense submitted', {
-      amount: Number(amount),
-      category,
-      description: description || undefined,
-    });
-    setSubmitting(false);
-    if (ok) {
-      toast({ title: 'Expense logged', description: `$${Number(amount).toFixed(2)} — ${category}` });
+    try {
+      // Insert into the actual worker_expense_claims table
+      const { data, error } = await supabase.from('worker_expense_claims').insert([{
+        user_id: user.id,
+        amount: Number(amount),
+        category,
+        description: description.trim() || null,
+        expense_date: format(new Date(), 'yyyy-MM-dd'),
+        status: 'submitted',
+      }]).select('id').single();
+      if (error) throw error;
+
+      // Log to activity feed
+      await supabase.from('activities').insert([{
+        action_name: `Expense claim submitted: $${Number(amount).toFixed(2)} — ${category}`,
+        user_id: user.id,
+        workflow_name: 'field_worker',
+        record_type: 'expense_claim',
+        record_id: data.id,
+        payload_summary: { amount: Number(amount), category, description: description.trim() || undefined } as any,
+        status: 'completed',
+      }]);
+
+      // Notify admin in-app
+      await supabase.from('notifications').insert([{
+        event: 'expense_submitted',
+        channel: 'in_app',
+        audience: 'admin',
+        record_type: 'expense_claim',
+        record_id: data.id,
+        subject: `New Expense Claim: $${Number(amount).toFixed(2)}`,
+        body: `A worker submitted a $${Number(amount).toFixed(2)} expense (${category}). Review in Expense Tracking.`,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      }]);
+
+      qc.invalidateQueries({ queryKey: ['worker_expense_claims'] });
+      qc.invalidateQueries({ queryKey: ['admin_worker_expense_claims'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
+      toast({ title: 'Expense submitted', description: `$${Number(amount).toFixed(2)} — ${category}` });
       reset();
       onClose();
+    } catch (e: any) {
+      toast({ title: 'Failed to submit expense', description: e.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -89,7 +110,7 @@ function ExpenseDialog({ open, onClose }: { open: boolean; onClose: () => void }
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Receipt className="h-5 w-5 text-cyan-500" /> Log Expense
+            <Receipt className="h-5 w-5 text-primary" /> Log Expense
           </DialogTitle>
           <DialogDescription>Submit a field expense for reimbursement.</DialogDescription>
         </DialogHeader>
@@ -103,11 +124,7 @@ function ExpenseDialog({ open, onClose }: { open: boolean; onClose: () => void }
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="fuel">Fuel</SelectItem>
-                <SelectItem value="supplies">Supplies</SelectItem>
-                <SelectItem value="equipment">Equipment</SelectItem>
-                <SelectItem value="food">Food / Meals</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -127,29 +144,67 @@ function ExpenseDialog({ open, onClose }: { open: boolean; onClose: () => void }
 
 /* ─── Message Admin ─── */
 function MessageAdminDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user } = useAuth();
   const [message, setMessage] = useState('');
   const [urgency, setUrgency] = useState('normal');
   const [submitting, setSubmitting] = useState(false);
-  const submit = useSubmitActivity();
   const { toast } = useToast();
+  const qc = useQueryClient();
 
   const reset = () => { setMessage(''); setUrgency('normal'); };
 
   const handleSubmit = async () => {
-    if (!message.trim()) {
+    if (!message.trim() || !user) {
       toast({ title: 'Enter a message', variant: 'destructive' });
       return;
     }
     setSubmitting(true);
-    const ok = await submit('Message to admin', {
-      message: message.trim(),
-      urgency,
-    });
-    setSubmitting(false);
-    if (ok) {
-      toast({ title: 'Message sent', description: 'Admin will be notified.' });
+    try {
+      // Log to activity feed
+      await supabase.from('activities').insert([{
+        action_name: `Message to admin`,
+        user_id: user.id,
+        workflow_name: 'field_worker',
+        record_type: 'worker_message',
+        payload_summary: { message: message.trim(), urgency } as any,
+        status: 'completed',
+      }]);
+
+      // Create in-app notification for admin
+      await supabase.from('notifications').insert([{
+        event: 'worker_message',
+        channel: 'in_app',
+        audience: 'admin',
+        record_type: 'worker_message',
+        subject: `Worker Message (${urgency === 'high' ? '🔴 HIGH' : urgency === 'normal' ? 'Normal' : 'Low'})`,
+        body: message.trim(),
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      }]);
+
+      // Send email notification for high urgency
+      if (urgency === 'high') {
+        try {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              action: 'worker_message',
+              message: message.trim(),
+              urgency,
+              reporter_name: user.email,
+            },
+          });
+        } catch { /* non-critical */ }
+      }
+
+      qc.invalidateQueries({ queryKey: ['activities'] });
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      toast({ title: 'Message sent', description: 'Admin has been notified.' });
       reset();
       onClose();
+    } catch (e: any) {
+      toast({ title: 'Failed to send message', description: e.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -158,7 +213,7 @@ function MessageAdminDialog({ open, onClose }: { open: boolean; onClose: () => v
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-slate-500" /> Message Admin
+            <MessageSquare className="h-5 w-5 text-muted-foreground" /> Message Admin
           </DialogTitle>
           <DialogDescription>Send a quick message to the office.</DialogDescription>
         </DialogHeader>
@@ -190,31 +245,54 @@ function MessageAdminDialog({ open, onClose }: { open: boolean; onClose: () => v
 
 /* ─── Equipment Issue ─── */
 function EquipmentIssueDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user } = useAuth();
   const [equipment, setEquipment] = useState('');
   const [severity, setSeverity] = useState('minor');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const submit = useSubmitActivity();
   const { toast } = useToast();
+  const qc = useQueryClient();
 
   const reset = () => { setEquipment(''); setSeverity('minor'); setDescription(''); };
 
   const handleSubmit = async () => {
-    if (!equipment.trim()) {
+    if (!equipment.trim() || !user) {
       toast({ title: 'Enter equipment name', variant: 'destructive' });
       return;
     }
     setSubmitting(true);
-    const ok = await submit('Equipment issue reported', {
-      equipment: equipment.trim(),
-      severity,
-      description: description.trim() || undefined,
-    });
-    setSubmitting(false);
-    if (ok) {
+    try {
+      // Log to activity feed
+      await supabase.from('activities').insert([{
+        action_name: `Equipment issue reported: ${equipment.trim()}`,
+        user_id: user.id,
+        workflow_name: 'field_worker',
+        record_type: 'equipment_issue',
+        payload_summary: { equipment: equipment.trim(), severity, description: description.trim() || undefined } as any,
+        status: 'completed',
+      }]);
+
+      // Create in-app notification for admin
+      await supabase.from('notifications').insert([{
+        event: 'equipment_issue',
+        channel: 'in_app',
+        audience: 'admin',
+        record_type: 'equipment_issue',
+        subject: `Equipment Issue: ${equipment.trim()} (${severity})`,
+        body: `A worker reported a ${severity} issue with ${equipment.trim()}.${description.trim() ? ' ' + description.trim() : ''}`,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      }]);
+
+      qc.invalidateQueries({ queryKey: ['activities'] });
+      qc.invalidateQueries({ queryKey: ['notifications'] });
       toast({ title: 'Issue reported', description: `${equipment} — ${severity}` });
       reset();
       onClose();
+    } catch (e: any) {
+      toast({ title: 'Failed to report issue', description: e.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -223,7 +301,7 @@ function EquipmentIssueDialog({ open, onClose }: { open: boolean; onClose: () =>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wrench className="h-5 w-5 text-red-500" /> Equipment Issue
+            <Wrench className="h-5 w-5 text-destructive" /> Equipment Issue
           </DialogTitle>
           <DialogDescription>Report a broken or malfunctioning piece of equipment.</DialogDescription>
         </DialogHeader>
@@ -259,33 +337,46 @@ function EquipmentIssueDialog({ open, onClose }: { open: boolean; onClose: () =>
 
 /* ─── Materials Used ─── */
 function MaterialsUsedDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { user } = useAuth();
   const [itemName, setItemName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('bags');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const submit = useSubmitActivity();
   const { toast } = useToast();
+  const qc = useQueryClient();
 
   const reset = () => { setItemName(''); setQuantity(''); setUnit('bags'); setNotes(''); };
 
   const handleSubmit = async () => {
-    if (!itemName.trim()) {
+    if (!itemName.trim() || !user) {
       toast({ title: 'Enter material name', variant: 'destructive' });
       return;
     }
     setSubmitting(true);
-    const ok = await submit('Materials used', {
-      item_name: itemName.trim(),
-      quantity: quantity ? Number(quantity) : undefined,
-      unit,
-      notes: notes.trim() || undefined,
-    });
-    setSubmitting(false);
-    if (ok) {
+    try {
+      await supabase.from('activities').insert([{
+        action_name: `Materials used: ${quantity ? quantity + ' ' + unit + ' of ' : ''}${itemName.trim()}`,
+        user_id: user.id,
+        workflow_name: 'field_worker',
+        record_type: 'materials_used',
+        payload_summary: {
+          item_name: itemName.trim(),
+          quantity: quantity ? Number(quantity) : undefined,
+          unit,
+          notes: notes.trim() || undefined,
+        } as any,
+        status: 'completed',
+      }]);
+
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast({ title: 'Materials logged', description: `${quantity ? quantity + ' ' + unit + ' of ' : ''}${itemName}` });
       reset();
       onClose();
+    } catch (e: any) {
+      toast({ title: 'Failed to log materials', description: e.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -294,7 +385,7 @@ function MaterialsUsedDialog({ open, onClose }: { open: boolean; onClose: () => 
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-teal-500" /> Materials Used
+            <Package className="h-5 w-5 text-accent-foreground" /> Materials Used
           </DialogTitle>
           <DialogDescription>Log materials consumed on this job.</DialogDescription>
         </DialogHeader>
