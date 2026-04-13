@@ -103,7 +103,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
             <>
               <s.icon className={cn('h-3 w-3 shrink-0', s.color)} />
               <span className="text-[10px] font-medium text-foreground">{s.name}</span>
-              <Handshake className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Handshake className="h-5 w-5 text-emerald-500 shrink-0" />
             </>
           ))}
         </div>
@@ -149,7 +149,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
             >
               <s.icon className={cn('h-3.5 w-3.5 shrink-0', s.color)} />
               <span className="truncate">{s.name}</span>
-              <Handshake className="h-4 w-4 ml-auto opacity-60 shrink-0" />
+              <Handshake className="h-5 w-5 ml-auto text-emerald-500 shrink-0" />
             </button>
           ))}
         </div>
@@ -251,7 +251,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
               <p className="text-xs font-medium text-foreground leading-tight truncate">{s.name}</p>
               <p className="text-[9px] text-muted-foreground leading-tight truncate">{s.label}</p>
             </div>
-            <Handshake className="h-5 w-5 ml-auto text-muted-foreground shrink-0" />
+            <Handshake className="h-6 w-6 ml-auto text-emerald-500 shrink-0" />
           </button>
         ))}
       </div>
