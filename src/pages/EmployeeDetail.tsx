@@ -820,6 +820,11 @@ export default function EmployeeDetail() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Visits */}
+        <TabsContent value="visits">
+          <EmployeeVisitsTab userId={userId!} />
+        </TabsContent>
       </Tabs>
 
       {/* Issue Equipment Dialog */}
