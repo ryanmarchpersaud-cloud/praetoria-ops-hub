@@ -94,7 +94,7 @@ export default function SubcontractorInvoices() {
         .eq('subcontractor_id', profile.id);
       const invoiceNumber = `SUB-INV-${String((count || 0) + 1).padStart(5, '0')}`;
 
-      const { error: dbError } = await supabase
+      const { data: insertedInvoice, error: dbError } = await supabase
         .from('subcontractor_invoices')
         .insert({
           subcontractor_id: profile.id,
@@ -106,7 +106,9 @@ export default function SubcontractorInvoices() {
           notes: notes || null,
           attachment_url: attachmentUrl,
           status: 'submitted',
-        });
+        })
+        .select('id')
+        .single();
 
       if (dbError) throw dbError;
 
@@ -115,6 +117,7 @@ export default function SubcontractorInvoices() {
         user_id: user?.id,
         action_name: 'subcontractor_invoice_submitted',
         record_type: 'subcontractor_invoice',
+        record_id: insertedInvoice.id,
         status: 'completed',
         payload_summary: {
           invoice_number: invoiceNumber,

@@ -45,6 +45,7 @@ import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import Subcontractors from "./pages/Subcontractors";
 import SubcontractorDetail from "./pages/SubcontractorDetail";
+import AdminSubcontractorInvoiceDetail from "./pages/AdminSubcontractorInvoiceDetail";
 import EmailDirectoryPage from "./pages/EmailDirectoryPage";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
@@ -327,6 +328,7 @@ function AppRoutes() {
       <Route path="/employees" element={<AdminRoute><ModuleGuard module="hr"><Employees /></ModuleGuard></AdminRoute>} />
       <Route path="/employees/:id" element={<AdminRoute><ModuleGuard module="hr"><EmployeeDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/subcontractors" element={<AdminRoute><ModuleGuard module="ops"><Subcontractors /></ModuleGuard></AdminRoute>} />
+      <Route path="/subcontractors/invoices/:id" element={<AdminRoute><ModuleGuard module="ops"><AdminSubcontractorInvoiceDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/subcontractors/:id" element={<AdminRoute><ModuleGuard module="ops"><SubcontractorDetail /></ModuleGuard></AdminRoute>} />
 
       {/* HR Workspace */}

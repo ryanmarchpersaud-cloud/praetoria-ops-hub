@@ -14,7 +14,7 @@ export default function ActivityPage() {
 
   const getRecordLink = (type: string | null, id: string | null) => {
     if (!type || !id) return null;
-    const map: Record<string, string> = { lead: '/leads/', quote: '/quotes/', customer: '/customers/', property: '/properties/', job: '/jobs/', visit: '/visits/', invoice: '/invoices/', request: '/requests/', service_request: '/requests/', incident_report: '/admin/incidents/' };
+    const map: Record<string, string> = { lead: '/leads/', quote: '/quotes/', customer: '/customers/', property: '/properties/', job: '/jobs/', visit: '/visits/', invoice: '/invoices/', request: '/requests/', service_request: '/requests/', incident_report: '/admin/incidents/', subcontractor_invoice: '/subcontractors/invoices/' };
     const prefix = map[type.toLowerCase()];
     return prefix ? `${prefix}${id}` : null;
   };
@@ -38,6 +38,7 @@ export default function ActivityPage() {
           <SelectItem value="visit">Visit</SelectItem>
           <SelectItem value="invoice">Invoice</SelectItem>
           <SelectItem value="incident_report">Incident Report</SelectItem>
+          <SelectItem value="subcontractor_invoice">Subcontractor Invoice</SelectItem>
         </SelectContent>
       </Select>
 
