@@ -20,7 +20,7 @@ import { useModuleAccess, useSettingsAccess } from '@/hooks/useModuleAccess';
 type ModuleType =
   | 'finance' | 'financeFull'
   | 'hr' | 'hrFull'
-  | 'ops' | 'opsOrFinance'
+  | 'ops' | 'opsOrFinance' | 'opsOrHr'
   | 'ownerOnly'
   | 'messaging'
   | 'dashboard';
@@ -71,6 +71,9 @@ export function ModuleGuard({ children, module, settingsKey }: ModuleGuardProps)
         break;
       case 'opsOrFinance':
         allowed = access.opsFullAccess || access.financeFullAccess || access.financeViewLimited;
+        break;
+      case 'opsOrHr':
+        allowed = access.opsFullAccess || access.hrFullAccess;
         break;
       case 'ownerOnly':
         allowed = access.isOwnerOrAdmin;

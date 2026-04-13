@@ -69,6 +69,24 @@ export default function WorkerNewIncidentPage() {
         status: 'completed',
       });
 
+      // Create in-app notifications for admin AND HR (matching equipment_issue pattern)
+      const notifSubject = `🚨 Incident Report: ${(data as any).report_number} — ${type}`;
+      const notifBody = `${type} reported${location.trim() ? ` at ${location.trim()}` : ''}. Severity: ${medicalAttention ? 'HIGH' : 'Medium'}. ${description.trim().slice(0, 120)}${user.email ? ` — Reported by ${user.email}` : ''}`;
+
+      await supabase.from('notifications').insert([
+        {
+          event: 'incident_report' as any,
+          channel: 'in_app',
+          audience: 'admin',
+          record_type: 'incident_report',
+          record_id: data.id,
+          subject: notifSubject,
+          body: notifBody,
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+        },
+      ]);
+
       // Send internal ops + admin email notification
       try {
         await supabase.functions.invoke('send-email', {
@@ -85,6 +103,9 @@ export default function WorkerNewIncidentPage() {
       } catch { /* non-critical */ }
 
       qc.invalidateQueries({ queryKey: ['incident_reports'] });
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
       setSubmitted({ id: data.id, report_number: (data as any).report_number });
     } catch (e: any) {
       toast({ title: 'Failed to submit', description: e.message, variant: 'destructive' });
