@@ -342,9 +342,9 @@ function AppRoutes() {
       <Route path="/hr/compensation" element={<AdminRoute><ModuleGuard module="hr"><HRCompensationPage /></ModuleGuard></AdminRoute>} />
       <Route path="/hr/sk-compliance" element={<AdminRoute><ModuleGuard module="hr"><HRComplianceWorkflowsPage /></ModuleGuard></AdminRoute>} />
 
-      {/* Incidents — ops access */}
-      <Route path="/incidents" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentsPage /></ModuleGuard></AdminRoute>} />
-      <Route path="/incidents/:id" element={<AdminRoute><ModuleGuard module="ops"><AdminIncidentDetailPage /></ModuleGuard></AdminRoute>} />
+      {/* Incidents — ops + HR access */}
+      <Route path="/incidents" element={<AdminRoute><ModuleGuard module="opsOrHr"><AdminIncidentsPage /></ModuleGuard></AdminRoute>} />
+      <Route path="/incidents/:id" element={<AdminRoute><ModuleGuard module="opsOrHr"><AdminIncidentDetailPage /></ModuleGuard></AdminRoute>} />
 
       {/* Messaging */}
       <Route path="/messaging" element={<AdminRoute><ModuleGuard module="messaging"><MessagingPage /></ModuleGuard></AdminRoute>} />
