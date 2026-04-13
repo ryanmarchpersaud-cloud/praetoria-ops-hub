@@ -1165,6 +1165,8 @@ export type Database = {
           city: string | null
           company_name: string | null
           created_at: string
+          created_by: string | null
+          customer_status: string
           email: string | null
           first_name: string
           id: string
@@ -1181,6 +1183,8 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           created_at?: string
+          created_by?: string | null
+          customer_status?: string
           email?: string | null
           first_name: string
           id?: string
@@ -1197,6 +1201,8 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           created_at?: string
+          created_by?: string | null
+          customer_status?: string
           email?: string | null
           first_name?: string
           id?: string
@@ -3565,6 +3571,7 @@ export type Database = {
           city: string | null
           company_name: string | null
           created_at: string
+          created_by: string | null
           customer_id: string | null
           description: string | null
           email: string | null
@@ -3589,6 +3596,7 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           created_at?: string
+          created_by?: string | null
           customer_id?: string | null
           description?: string | null
           email?: string | null
@@ -3613,6 +3621,7 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           created_at?: string
+          created_by?: string | null
           customer_id?: string | null
           description?: string | null
           email?: string | null
