@@ -14,6 +14,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PortalLayout } from "@/components/PortalLayout";
 import { SubcontractorLayout } from "@/components/subcontractor/SubcontractorLayout";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
 import LeadDetail from "./pages/LeadDetail";
