@@ -123,6 +123,8 @@ function SubIncidentDialog({ open, onClose, subId }: { open: boolean; onClose: (
         date_time: dateTime || new Date().toISOString(),
         location: location.trim() || null,
         description: description.trim(),
+        follow_up_status: 'open',
+        severity: 'medium',
       }]);
       if (error) throw error;
       toast({ title: 'Incident report submitted' });

@@ -21,6 +21,10 @@ interface Props {
   onClose: () => void;
 }
 
+function assertMutation(error: { message: string } | null | undefined) {
+  if (error) throw error;
+}
+
 export function WorkerQuickActionDialogs({ activeAction, onClose }: Props) {
   return (
     <>
@@ -66,10 +70,10 @@ function ExpenseDialog({ open, onClose }: { open: boolean; onClose: () => void }
         expense_date: format(new Date(), 'yyyy-MM-dd'),
         status: 'submitted',
       }]).select('id').single();
-      if (error) throw error;
+      assertMutation(error);
 
       // Log to activity feed
-      await supabase.from('activities').insert([{
+      const { error: activityError } = await supabase.from('activities').insert([{
         action_name: `Expense claim submitted: $${Number(amount).toFixed(2)} — ${category}`,
         user_id: user.id,
         workflow_name: 'field_worker',
@@ -78,23 +82,28 @@ function ExpenseDialog({ open, onClose }: { open: boolean; onClose: () => void }
         payload_summary: { amount: Number(amount), category, description: description.trim() || undefined } as any,
         status: 'completed',
       }]);
+      assertMutation(activityError);
 
       // Notify admin in-app
-      await supabase.from('notifications').insert([{
+      const { error: notificationError } = await supabase.from('notifications').insert([{
         event: 'expense_submitted',
         channel: 'in_app',
         audience: 'admin',
         record_type: 'expense_claim',
         record_id: data.id,
         subject: `New Expense Claim: $${Number(amount).toFixed(2)}`,
-        body: `A worker submitted a $${Number(amount).toFixed(2)} expense (${category}). Review in Expense Tracking.`,
+        body: `A worker submitted a $${Number(amount).toFixed(2)} expense (${category})${user.email ? ` from ${user.email}` : ''}. Review in Expense Tracking.`,
         status: 'sent',
         sent_at: new Date().toISOString(),
       }]);
+      assertMutation(notificationError);
 
       qc.invalidateQueries({ queryKey: ['worker_expense_claims'] });
       qc.invalidateQueries({ queryKey: ['admin_worker_expense_claims'] });
       qc.invalidateQueries({ queryKey: ['activities'] });
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
       toast({ title: 'Expense submitted', description: `$${Number(amount).toFixed(2)} — ${category}` });
       reset();
       onClose();
@@ -161,7 +170,7 @@ function MessageAdminDialog({ open, onClose }: { open: boolean; onClose: () => v
     setSubmitting(true);
     try {
       // Log to activity feed
-      await supabase.from('activities').insert([{
+      const { error: activityError } = await supabase.from('activities').insert([{
         action_name: `Message to admin`,
         user_id: user.id,
         workflow_name: 'field_worker',
@@ -169,18 +178,20 @@ function MessageAdminDialog({ open, onClose }: { open: boolean; onClose: () => v
         payload_summary: { message: message.trim(), urgency } as any,
         status: 'completed',
       }]);
+      assertMutation(activityError);
 
       // Create in-app notification for admin
-      await supabase.from('notifications').insert([{
+      const { error: notificationError } = await supabase.from('notifications').insert([{
         event: 'worker_message',
         channel: 'in_app',
         audience: 'admin',
         record_type: 'worker_message',
         subject: `Worker Message (${urgency === 'high' ? '🔴 HIGH' : urgency === 'normal' ? 'Normal' : 'Low'})`,
-        body: message.trim(),
+        body: `${message.trim()}${user.email ? `\n\nFrom: ${user.email}` : ''}`,
         status: 'sent',
         sent_at: new Date().toISOString(),
       }]);
+      assertMutation(notificationError);
 
       // Send email notification for high urgency
       if (urgency === 'high') {
@@ -198,6 +209,8 @@ function MessageAdminDialog({ open, onClose }: { open: boolean; onClose: () => v
 
       qc.invalidateQueries({ queryKey: ['activities'] });
       qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
       toast({ title: 'Message sent', description: 'Admin has been notified.' });
       reset();
       onClose();
@@ -263,7 +276,7 @@ function EquipmentIssueDialog({ open, onClose }: { open: boolean; onClose: () =>
     setSubmitting(true);
     try {
       // Log to activity feed
-      await supabase.from('activities').insert([{
+      const { error: activityError } = await supabase.from('activities').insert([{
         action_name: `Equipment issue reported: ${equipment.trim()}`,
         user_id: user.id,
         workflow_name: 'field_worker',
@@ -271,21 +284,25 @@ function EquipmentIssueDialog({ open, onClose }: { open: boolean; onClose: () =>
         payload_summary: { equipment: equipment.trim(), severity, description: description.trim() || undefined } as any,
         status: 'completed',
       }]);
+      assertMutation(activityError);
 
       // Create in-app notification for admin
-      await supabase.from('notifications').insert([{
+      const { error: notificationError } = await supabase.from('notifications').insert([{
         event: 'equipment_issue',
         channel: 'in_app',
         audience: 'admin',
         record_type: 'equipment_issue',
         subject: `Equipment Issue: ${equipment.trim()} (${severity})`,
-        body: `A worker reported a ${severity} issue with ${equipment.trim()}.${description.trim() ? ' ' + description.trim() : ''}`,
+        body: `A worker reported a ${severity} issue with ${equipment.trim()}.${description.trim() ? ' ' + description.trim() : ''}${user.email ? ` Reported by ${user.email}.` : ''}`,
         status: 'sent',
         sent_at: new Date().toISOString(),
       }]);
+      assertMutation(notificationError);
 
       qc.invalidateQueries({ queryKey: ['activities'] });
       qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
       toast({ title: 'Issue reported', description: `${equipment} — ${severity}` });
       reset();
       onClose();

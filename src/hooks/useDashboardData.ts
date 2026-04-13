@@ -95,11 +95,12 @@ export function useDashboardIncidents() {
       const { data, error } = await supabase
         .from('incident_reports')
         .select('id, severity, follow_up_status, incident_type, date_time')
-        .in('follow_up_status', ['open', 'investigating', 'pending'])
         .order('date_time', { ascending: false })
-        .limit(10);
+        .limit(25);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? [])
+        .filter((incident: any) => !incident.follow_up_status || !['resolved', 'closed'].includes(incident.follow_up_status))
+        .slice(0, 10);
     },
   });
 }

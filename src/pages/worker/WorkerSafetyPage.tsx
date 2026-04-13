@@ -137,6 +137,8 @@ function IncidentDialog({ open, onClose }: { open: boolean; onClose: () => void 
         witnesses: witnesses.trim() || null,
         medical_attention: medicalAttention,
         reported_to: reportedTo.trim() || null,
+        follow_up_status: 'open',
+        severity: medicalAttention ? 'high' : 'medium',
       }]);
       if (error) throw error;
       toast({ title: 'Incident report submitted' });

@@ -42,6 +42,8 @@ export default function FinanceDashboard() {
   // Compute extra warnings
   const pendingApprovalExpenses = (recentExpenses ?? []).filter((e: any) => e.status === 'submitted').length;
   const pendingReimbursements = (recentExpenses ?? []).filter((e: any) => e.status === 'approved').length;
+  const workerClaimsAwaitingReview = stats?.workerClaimsAwaitingReview ?? 0;
+  const workerClaimsAwaitingReimbursement = stats?.workerClaimsAwaitingReimbursement ?? 0;
   const billsDueSoon = (recentBills ?? []).filter((b: any) => {
     if (!b.due_date || b.status === 'paid' || b.status === 'void') return false;
     const days = differenceInDays(new Date(b.due_date), new Date());
@@ -226,9 +228,19 @@ export default function FinanceDashboard() {
                 {pendingApprovalExpenses} expenses awaiting approval
               </Badge>
             )}
+            {workerClaimsAwaitingReview > 0 && (
+              <Badge variant="outline" className="cursor-pointer border-primary text-primary" onClick={() => nav('/settings/expenses')}>
+                {workerClaimsAwaitingReview} worker claims awaiting review
+              </Badge>
+            )}
             {pendingReimbursements > 0 && (
               <Badge variant="outline" className="cursor-pointer border-accent text-accent" onClick={() => nav('/finance/expenses')}>
                 {pendingReimbursements} pending reimbursements
+              </Badge>
+            )}
+            {workerClaimsAwaitingReimbursement > 0 && (
+              <Badge variant="outline" className="cursor-pointer border-accent text-accent" onClick={() => nav('/settings/expenses')}>
+                {workerClaimsAwaitingReimbursement} worker claims awaiting reimbursement
               </Badge>
             )}
             {(stats?.outstandingInvoices ?? 0) > 0 && (
@@ -236,7 +248,7 @@ export default function FinanceDashboard() {
                 {fmt(stats?.outstandingInvoices ?? 0)} outstanding AR
               </Badge>
             )}
-            {(stats?.receiptsAwaitingReview ?? 0) === 0 && (stats?.overdueBillCount ?? 0) === 0 && (stats?.outstandingInvoices ?? 0) === 0 && billsDueSoon === 0 && pendingApprovalExpenses === 0 && (
+            {(stats?.receiptsAwaitingReview ?? 0) === 0 && (stats?.overdueBillCount ?? 0) === 0 && (stats?.outstandingInvoices ?? 0) === 0 && billsDueSoon === 0 && pendingApprovalExpenses === 0 && workerClaimsAwaitingReview === 0 && workerClaimsAwaitingReimbursement === 0 && (
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <CheckCircle className="h-4 w-4 text-accent" /> No alerts — everything looks good
               </div>

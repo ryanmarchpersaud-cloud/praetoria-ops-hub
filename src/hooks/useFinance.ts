@@ -266,24 +266,33 @@ export function useFinanceDashboard(dateRange?: { from?: string; to?: string }) 
       let billQ = supabase.from('finance_bills').select('total, balance_due, status, due_date');
       const recQ = supabase.from('finance_receipts').select('review_status');
       let invQ = supabase.from('invoices').select('total, balance_due, status, issue_date');
+      let workerClaimQ = supabase.from('worker_expense_claims').select('status, created_at');
 
       if (dateRange?.from) {
         expQ = expQ.gte('expense_date', dateRange.from);
         billQ = billQ.gte('bill_date', dateRange.from);
         invQ = invQ.gte('issue_date', dateRange.from);
+        workerClaimQ = workerClaimQ.gte('created_at', `${dateRange.from}T00:00:00`);
       }
       if (dateRange?.to) {
         expQ = expQ.lte('expense_date', dateRange.to);
         billQ = billQ.lte('bill_date', dateRange.to);
         invQ = invQ.lte('issue_date', dateRange.to);
+        workerClaimQ = workerClaimQ.lte('created_at', `${dateRange.to}T23:59:59.999`);
       }
 
-      const [expRes, billRes, recRes, invRes] = await Promise.all([expQ, billQ, recQ, invQ]);
+      const [expRes, billRes, recRes, invRes, workerClaimsRes] = await Promise.all([expQ, billQ, recQ, invQ, workerClaimQ]);
+
+      if (expRes.error) throw expRes.error;
+      if (billRes.error) throw billRes.error;
+      if (recRes.error) throw recRes.error;
+      if (invRes.error) throw invRes.error;
 
       const expenses = expRes.data || [];
       const bills = billRes.data || [];
       const receipts = recRes.data || [];
       const invoices = invRes.data || [];
+      const workerClaims = workerClaimsRes.error ? [] : (workerClaimsRes.data || []);
 
       const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount_total || 0), 0);
       const totalRevenue = invoices.reduce((s, i) => s + Number(i.total || 0), 0);
@@ -291,6 +300,8 @@ export function useFinanceDashboard(dateRange?: { from?: string; to?: string }) 
       const openBills = bills.filter(b => ['open', 'partial', 'overdue'].includes(b.status)).reduce((s, b) => s + Number(b.balance_due || 0), 0);
       const receiptsAwaitingReview = receipts.filter(r => r.review_status === 'unreviewed').length;
       const overdueBills = bills.filter(b => b.status === 'overdue' || (b.due_date && new Date(b.due_date) < new Date() && ['open', 'partial'].includes(b.status)));
+      const workerClaimsAwaitingReview = workerClaims.filter((claim: any) => claim.status === 'submitted').length;
+      const workerClaimsAwaitingReimbursement = workerClaims.filter((claim: any) => claim.status === 'approved').length;
 
       const categoryBreakdown: Record<string, number> = {};
       expenses.forEach(e => {
@@ -309,6 +320,8 @@ export function useFinanceDashboard(dateRange?: { from?: string; to?: string }) 
         expenseCount: expenses.length,
         billCount: bills.length,
         overdueBillCount: overdueBills.length,
+        workerClaimsAwaitingReview,
+        workerClaimsAwaitingReimbursement,
       };
     },
   });
