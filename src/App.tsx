@@ -45,6 +45,7 @@ import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import Subcontractors from "./pages/Subcontractors";
 import SubcontractorDetail from "./pages/SubcontractorDetail";
+import EmailDirectoryPage from "./pages/EmailDirectoryPage";
 import NotFound from "./pages/NotFound";
 import AccessDenied from "./pages/AccessDenied";
 
@@ -397,6 +398,9 @@ function AppRoutes() {
       <Route path="/agreements/:id" element={<AdminRoute><Suspense fallback={<RouteLoading />}><AgreementDetailPage /></Suspense></AdminRoute>} />
       {/* Public signing page — no auth required */}
       <Route path="/sign/:token" element={<Suspense fallback={<RouteLoading />}><AgreementSignPage /></Suspense>} />
+
+      {/* Email Directory */}
+      <Route path="/email-directory" element={<AdminRoute><ModuleGuard module="opsOrFinance"><EmailDirectoryPage /></ModuleGuard></AdminRoute>} />
 
       <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
 
