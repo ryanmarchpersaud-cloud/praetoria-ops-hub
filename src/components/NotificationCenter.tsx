@@ -35,6 +35,8 @@ const RECORD_ROUTES: Record<string, string> = {
   lead: '/leads',
   payment: '/finance/payments',
   incident_report: '/incidents',
+  equipment_issue: '/activity',
+  worker_message: '/activity',
   expense_claim: '/finance/expenses',
   agreement: '/agreements',
   incident: '/incidents',
@@ -112,37 +114,29 @@ export function NotificationCenter() {
   const unreadIds = new Set(unreadNotifications.map(n => n.id));
 
   const handleClick = (n: Notification) => {
-    // Mark as read if unread
     if (unreadIds.has(n.id)) {
       markRead.mutate(n.id);
     }
 
-    // Determine target route
     let target = '';
-    if (n.record_type && n.record_id) {
-      const base = RECORD_ROUTES[n.record_type];
-      if (base) {
-        // For activity-only routes (no detail page), just go to the list
-        if (base === '/activity') {
-          target = base;
-        } else {
-          target = `${base}/${n.record_id}`;
-        }
-      }
-    }
-    if (!target && n.record_type) {
-      const base = RECORD_ROUTES[n.record_type];
-      if (base) target = base;
-    }
-    if (!target && n.event === 'payment_received') {
-      target = '/finance/payments';
+    const base = n.record_type ? RECORD_ROUTES[n.record_type] : undefined;
+
+    if (base) {
+      const listOnlyRoutes = new Set(['/activity']);
+      target = n.record_id && !listOnlyRoutes.has(base)
+        ? `${base}/${n.record_id}`
+        : base;
     }
 
-    // Close sheet first, then navigate after it unmounts
-    setSheetOpen(false);
-    if (target) {
-      setTimeout(() => navigate(target), 150);
+    if (!target && n.event === 'payment_received') {
+      target = n.record_id ? `/finance/payments/${n.record_id}` : '/finance/payments';
     }
+
+    if (target) {
+      navigate(target);
+    }
+
+    setSheetOpen(false);
   };
 
   const unreadCount = unreadNotifications.length;
