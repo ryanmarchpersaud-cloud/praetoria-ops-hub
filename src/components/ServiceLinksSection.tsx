@@ -1,5 +1,7 @@
-import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan } from 'lucide-react';
+import { useState } from 'react';
+import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CleaningPartnerDialog } from '@/components/CleaningPartnerDialog';
 
 const activeServices = [
   {
@@ -32,6 +34,16 @@ const activeServices = [
   },
 ];
 
+const partnerServices = [
+  {
+    name: 'Cleaning Services',
+    label: 'Available Through Trusted Partner',
+    icon: SprayCan,
+    color: 'text-rose-500',
+    partnerId: 'cleaning' as const,
+  },
+];
+
 const comingSoonServices = [
   {
     name: 'Power Washing',
@@ -39,13 +51,6 @@ const comingSoonServices = [
     label: 'Driveways • Decks • Building exteriors',
     icon: Droplets,
     color: 'text-cyan-500',
-  },
-  {
-    name: 'Cleaning Services',
-    url: 'https://cleaning.praetoriagroup.ca',
-    label: 'Move-in/out • Deep cleaning • Turnover',
-    icon: SprayCan,
-    color: 'text-rose-500',
   },
   {
     name: 'Property Management',
