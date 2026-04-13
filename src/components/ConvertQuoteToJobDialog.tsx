@@ -37,6 +37,8 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
   const qc = useQueryClient();
   const { data: allProperties = [] } = useProperties();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
+  const activeSubs = (subcontractors as any[]).filter((s: any) => s.user_id && s.active_flag !== false);
   const createVisit = useCreateVisit();
 
   const [step, setStep] = useState<Step>('details');

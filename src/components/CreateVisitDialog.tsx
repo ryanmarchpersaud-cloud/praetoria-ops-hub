@@ -30,6 +30,8 @@ export default function CreateVisitDialog({ open, onOpenChange, defaultJobId }: 
   const { data: customers = [] } = useCustomers();
   const { data: properties = [] } = useProperties();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useAllSubcontractors();
+  const activeSubs = (subcontractors as any[]).filter((s: any) => s.user_id && s.active_flag !== false);
   const createVisit = useCreateVisit();
 
   // Form state
