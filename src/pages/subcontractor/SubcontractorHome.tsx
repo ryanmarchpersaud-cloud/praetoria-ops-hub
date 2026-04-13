@@ -49,10 +49,28 @@ function formatToday() {
 
 export default function SubcontractorHome() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: profile } = useSubcontractorProfile();
   const { data: assignments = [] } = useSubcontractorAssignments(profile?.id);
   const { data: invoices = [] } = useSubcontractorInvoices(profile?.id);
+
+  const [visitOpen, setVisitOpen] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
+
+  const handleQuickBookAction = (action: QuickBookAction) => {
+    switch (action) {
+      case 'visit': setVisitOpen(true); break;
+      case 'job': navigate('/subcontractor/schedule'); break;
+      case 'customer': navigate('/subcontractor/company'); break;
+      case 'property': navigate('/subcontractor/company'); break;
+      case 'lead': navigate('/subcontractor/company'); break;
+      case 'quote': navigate('/subcontractor/invoices'); break;
+      case 'invoice': navigate('/subcontractor/invoices/new'); break;
+      case 'request': setRequestOpen(true); break;
+      case 'incident': navigate('/subcontractor/incidents/new'); break;
+    }
+  };
 
   const firstName = profile?.contact_name?.split(' ')[0] || user?.email?.split('@')[0] || 'there';
   const todayStr = new Date().toISOString().split('T')[0];
