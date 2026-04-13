@@ -37,9 +37,21 @@ export default function WorkerTimesheet() {
   const clockIn = useClockIn();
   const clockOut = useClockOut();
 
+  // Use proper ISO strings with timezone so Supabase timestamptz comparisons work correctly
+  const rangeFrom = useMemo(() => {
+    const d = new Date(weekStart);
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }, [weekStart]);
+  const rangeTo = useMemo(() => {
+    const d = new Date(weekEnd);
+    d.setHours(23, 59, 59, 999);
+    return d.toISOString();
+  }, [weekEnd]);
+
   const { data: entries = [], isLoading } = useTimesheets({
-    from: format(weekStart, "yyyy-MM-dd'T'00:00:00"),
-    to: format(weekEnd, "yyyy-MM-dd'T'23:59:59"),
+    from: rangeFrom,
+    to: rangeTo,
   });
 
   // Group by day
