@@ -411,6 +411,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
   const [visitOpen, setVisitOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
 
   // Lazy import for quote dialog
   const [QuoteDialog, setQuoteDialog] = useState<any>(null);
@@ -467,6 +468,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
       case 'job': navigate('/jobs/new'); break;
       case 'invoice': navigate('/invoices/new'); break;
       case 'incident': navigate('/worker/incidents/new'); break;
+      case 'task': setTaskOpen(true); break;
     }
   };
 
@@ -567,6 +569,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
       <CreateVisitDialog open={visitOpen} onOpenChange={setVisitOpen} />
       <CreateRequestDialog open={requestOpen} onOpenChange={setRequestOpen} />
       {QuoteDialog && <QuoteDialog open={quoteOpen} onOpenChange={setQuoteOpen} />}
+      <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} defaultAssigneeType="worker" />
     </div>
   );
 }
