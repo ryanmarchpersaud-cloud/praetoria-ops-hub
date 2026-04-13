@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, ChevronRight, Plus } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Plus, CalendarPlus, Briefcase, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { differenceInSeconds } from 'date-fns';
 
@@ -141,10 +141,9 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
           const customerName = visit.customers
             ? `${visit.customers.first_name} ${visit.customers.last_name}`
             : 'Unknown';
-          const address = visit.properties?.address_line_1 || '';
           const propertyName = visit.properties?.property_name || '';
+          const address = visit.properties?.address_line_1 || '';
           const serviceCategory = (visit.jobs as any)?.service_category || visit.visit_type || '';
-          const displayAddress = [propertyName, address].filter(Boolean).join(' • ');
 
           let elapsedSeconds = 0;
           if (isInProgress && visit.arrival_time) {
@@ -186,29 +185,28 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
                         isCompleted ? 'bg-emerald-500' : isInProgress ? 'bg-primary animate-pulse' : 'bg-primary'
                       )}
                     />
-                    <div className="flex-1 space-y-1.5 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            {isCompleted && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />}
-                            <p
-                              className={cn(
-                                'truncate text-sm font-semibold',
-                                isCompleted ? 'text-muted-foreground' : 'text-foreground'
-                              )}
-                            >
-                              {customerName}
-                            </p>
-                          </div>
+                    <div className="flex-1 min-w-0 p-3 flex flex-col gap-1">
+                      {/* Row 1: Customer name + timer */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          {isCompleted && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />}
+                          <p
+                            className={cn(
+                              'truncate text-sm font-semibold',
+                              isCompleted ? 'text-muted-foreground' : 'text-foreground'
+                            )}
+                          >
+                            {customerName}
+                          </p>
                         </div>
-                      {isInProgress && visit.arrival_time && (
-                          <span className="whitespace-nowrap text-[10px] font-bold font-mono tabular-nums text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                        {isInProgress && visit.arrival_time && (
+                          <span className="shrink-0 whitespace-nowrap text-[10px] font-bold font-mono tabular-nums text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
                             {formatTimer(elapsedSeconds)}
                           </span>
                         )}
                         {isCompleted && completionDuration && (
-                          <div className="flex items-center gap-1">
-                            <span className="whitespace-nowrap text-[11px] font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
+                          <div className="shrink-0 flex items-center gap-1">
+                            <span className="whitespace-nowrap text-[10px] font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
                               {completionDuration}
                             </span>
                             <CheckCircle2 className="h-3 w-3 text-emerald-500" />
@@ -216,6 +214,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
                         )}
                       </div>
 
+                      {/* Row 2: Time */}
                       <p className="text-[11px] text-muted-foreground">
                         {visit.arrival_time
                           ? new Date(visit.arrival_time).toLocaleTimeString('en-CA', {
@@ -225,14 +224,20 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
                           : 'Anytime'}
                       </p>
 
-                      {displayAddress && <p className="truncate text-[11px] text-muted-foreground">{displayAddress}</p>}
+                      {/* Row 3: Property + address (truncated) */}
+                      {(propertyName || address) && (
+                        <p className="truncate text-[11px] text-muted-foreground">
+                          {propertyName}{propertyName && address ? ' • ' : ''}{address}
+                        </p>
+                      )}
 
+                      {/* Row 4: Service category + initials */}
                       <div className="flex items-center justify-between pt-0.5">
                         {serviceCategory && (
                           <span className="truncate text-[11px] font-medium text-primary">{serviceCategory}</span>
                         )}
-                        <div className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted">
-                          <span className="text-[10px] font-bold text-muted-foreground">{workerInitials}</span>
+                        <div className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
+                          <span className="text-[9px] font-bold text-muted-foreground">{workerInitials}</span>
                         </div>
                       </div>
                     </div>
@@ -243,24 +248,42 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
           );
         })}
 
-        <Link
-          to="/worker/schedule"
+        {/* Quick Book Card */}
+        <div
           onClick={(event) => {
             if (dragState.current.moved || isDragging) {
               event.preventDefault();
+              event.stopPropagation();
             }
           }}
           className="w-[280px] shrink-0 snap-start"
         >
           <Card className="h-full border-2 border-dashed transition-colors hover:border-primary/40">
-            <CardContent className="flex min-h-[120px] h-full items-center justify-center p-0">
-              <div className="flex items-center gap-2 text-primary">
-                <Plus className="h-5 w-5" />
-                <span className="text-sm font-semibold">View Schedule</span>
+            <CardContent className="flex flex-col min-h-[120px] h-full items-center justify-center gap-3 p-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <CalendarPlus className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm font-semibold text-foreground">Quick Book</p>
+              <p className="text-[10px] text-muted-foreground text-center">Create from the field</p>
+              <div className="flex gap-2 w-full">
+                <Link
+                  to="/worker/schedule"
+                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-primary/10 text-primary text-[10px] font-semibold active:scale-95 transition-transform"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <ClipboardList className="h-3 w-3" /> Visit
+                </Link>
+                <Link
+                  to="/worker/schedule"
+                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-accent text-accent-foreground text-[10px] font-semibold active:scale-95 transition-transform"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <Briefcase className="h-3 w-3" /> Job
+                </Link>
               </div>
             </CardContent>
           </Card>
-        </Link>
+        </div>
       </div>
     </div>
   );
