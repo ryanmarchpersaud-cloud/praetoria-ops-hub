@@ -152,6 +152,7 @@ function EmployeeVisitsTab({ userId }: { userId: string }) {
 }
 
 
+function EmployeeBenefitsTab({ userId, canManage }: { userId: string; canManage: boolean }) {
   const { data: allEnrollments = [] } = useBenefitEnrollments();
   const { data: providers = [] } = useInsuranceProviders();
   const upsertEnrollment = useUpsertEnrollment();
