@@ -86,7 +86,71 @@ const PLAN_TYPES = ['Health', 'Dental', 'Vision', 'Life / Disability', 'Group Be
 const CHANGE_TYPES = ['new_enrollment', 'life_event', 'plan_change', 'termination'];
 const ENROLLMENT_STATUSES = ['active', 'pending', 'terminated', 'on_hold'];
 
-function EmployeeBenefitsTab({ userId, canManage }: { userId: string; canManage: boolean }) {
+function EmployeeVisitsTab({ userId }: { userId: string }) {
+  const { data: visits = [], isLoading } = useQuery({
+    queryKey: ['employee_visits', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('visits')
+        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, service_summary, jobs(job_title, job_number), properties(property_name), customers(first_name, last_name)')
+        .eq('assigned_worker_id', userId)
+        .order('service_date', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId,
+  });
+
+  if (isLoading) return <p className="p-4 text-sm text-muted-foreground">Loading visits...</p>;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2"><ClipboardCheck className="h-4 w-4" /> Assigned Visits ({visits.length})</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {visits.length === 0 ? (
+          <p className="p-4 text-sm text-muted-foreground">No visits assigned to this worker.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Visit</TableHead>
+                <TableHead className="hidden sm:table-cell">Job</TableHead>
+                <TableHead className="hidden md:table-cell">Customer</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visits.map((v: any) => (
+                <TableRow key={v.id} className="cursor-pointer" onClick={() => window.location.href = `/visits/${v.id}`}>
+                  <TableCell>
+                    <p className="text-sm font-medium">{v.visit_number}</p>
+                    <p className="text-xs text-muted-foreground">{v.visit_type}</p>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                    {v.jobs ? `${v.jobs.job_number} — ${v.jobs.job_title}` : '—'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    {v.customers ? `${v.customers.first_name} ${v.customers.last_name}` : '—'}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {v.service_date ? format(new Date(v.service_date), 'MMM d, yyyy') : '—'}
+                  </TableCell>
+                  <TableCell><StatusChip status={v.visit_status} /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+
   const { data: allEnrollments = [] } = useBenefitEnrollments();
   const { data: providers = [] } = useInsuranceProviders();
   const upsertEnrollment = useUpsertEnrollment();
