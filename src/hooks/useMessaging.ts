@@ -340,9 +340,9 @@ export function useSendMessage() {
         if (members && members.length > 0) {
           const senderName = user.user_metadata?.full_name || user.email || 'Someone';
           const notifications = members.map((m: any) => ({
-            event: 'message_received' as any,
-            channel: 'in_app',
-            audience: 'staff',
+            event: 'worker_message' as const,
+            channel: 'in_app' as const,
+            audience: 'admin' as const,
             recipient_id: m.user_id,
             record_type: 'conversation',
             record_id: conversationId,
@@ -351,7 +351,7 @@ export function useSendMessage() {
             status: 'sent',
             sent_at: new Date().toISOString(),
           }));
-          await supabase.from('notifications').insert(notifications);
+          await supabase.from('notifications').insert(notifications as any);
         }
       } catch (e) {
         console.error('Failed to create message notification:', e);
