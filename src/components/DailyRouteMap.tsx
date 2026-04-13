@@ -23,17 +23,20 @@ interface DailyRouteMapProps {
 // Geocode using OpenStreetMap Nominatim (free, no key)
 async function geocodeAddress(address: string, city?: string): Promise<{ lat: number; lng: number } | null> {
   const q = [address, city].filter(Boolean).join(', ');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
-      { headers: { 'User-Agent': 'PraetoriaOpsHub/1.0' } }
+      { headers: { 'User-Agent': 'PraetoriaOpsHub/1.0' }, signal: controller.signal }
     );
+    clearTimeout(timer);
     const data = await res.json();
     if (data.length > 0) {
       return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
     }
   } catch {
-    // silent fail
+    clearTimeout(timer);
   }
   return null;
 }
@@ -89,12 +92,12 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
         cancelled = true;
         setLoading(false);
       }
-    }, 10000);
+    }, 15000);
 
     async function resolve() {
       const results: (RouteStop & { lat: number; lng: number })[] = [];
       for (const stop of stops) {
-        if (cancelled) return;
+        if (cancelled) break;
         if (stop.lat && stop.lng) {
           results.push({ ...stop, lat: stop.lat, lng: stop.lng });
         } else {
@@ -106,8 +109,8 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
           } catch {
             // skip failed geocode
           }
-          // Rate limit for Nominatim (1 req/sec)
-          await new Promise(r => setTimeout(r, 1100));
+          // Rate limit for Nominatim (1 req/sec) — but use a shorter delay
+          if (!cancelled) await new Promise(r => setTimeout(r, 1050));
         }
       }
       if (!cancelled) {
@@ -183,6 +186,8 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
 
   if (stops.length === 0) return null;
 
+  const showMapFailed = !loading && geocoded.length === 0;
+
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-2">
@@ -203,11 +208,21 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
               </div>
             </div>
           )}
-          <div
-            ref={mapRef}
-            className="w-full rounded-t-lg"
-            style={{ height: '200px', zIndex: 0, position: 'relative' }}
-          />
+          {showMapFailed && (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <MapPin className="h-6 w-6 text-muted-foreground/40" />
+                <p className="text-xs text-muted-foreground">Map unavailable — addresses could not be located</p>
+              </div>
+            </div>
+          )}
+          {!showMapFailed && (
+            <div
+              ref={mapRef}
+              className="w-full rounded-t-lg"
+              style={{ height: '200px', zIndex: 0, position: 'relative' }}
+            />
+          )}
         </div>
       </Card>
 
