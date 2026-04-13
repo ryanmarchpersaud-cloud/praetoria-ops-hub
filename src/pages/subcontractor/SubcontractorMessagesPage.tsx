@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ConversationList } from '@/components/messaging/ConversationList';
 import { ChatThread } from '@/components/messaging/ChatThread';
+import { NewConversationDialog } from '@/components/messaging/NewConversationDialog';
 import { useConversations } from '@/hooks/useMessaging';
 import { MessageSquare } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export default function SubcontractorMessagesPage() {
           <MessageSquare className="h-5 w-5 text-primary" />
           Messages
         </h1>
+        <NewConversationDialog onCreated={(id) => setSelectedId(id)} />
       </div>
       <p className="text-xs text-muted-foreground">Messages with admin and your assigned jobs/visits</p>
 
