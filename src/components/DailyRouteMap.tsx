@@ -186,6 +186,8 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
 
   if (stops.length === 0) return null;
 
+  const showMapFailed = !loading && geocoded.length === 0;
+
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-2">
@@ -206,11 +208,21 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
               </div>
             </div>
           )}
-          <div
-            ref={mapRef}
-            className="w-full rounded-t-lg"
-            style={{ height: '200px', zIndex: 0, position: 'relative' }}
-          />
+          {showMapFailed && (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <MapPin className="h-6 w-6 text-muted-foreground/40" />
+                <p className="text-xs text-muted-foreground">Map unavailable — addresses could not be located</p>
+              </div>
+            </div>
+          )}
+          {!showMapFailed && (
+            <div
+              ref={mapRef}
+              className="w-full rounded-t-lg"
+              style={{ height: '200px', zIndex: 0, position: 'relative' }}
+            />
+          )}
         </div>
       </Card>
 
