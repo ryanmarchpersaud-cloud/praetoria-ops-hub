@@ -23,17 +23,20 @@ interface DailyRouteMapProps {
 // Geocode using OpenStreetMap Nominatim (free, no key)
 async function geocodeAddress(address: string, city?: string): Promise<{ lat: number; lng: number } | null> {
   const q = [address, city].filter(Boolean).join(', ');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
-      { headers: { 'User-Agent': 'PraetoriaOpsHub/1.0' } }
+      { headers: { 'User-Agent': 'PraetoriaOpsHub/1.0' }, signal: controller.signal }
     );
+    clearTimeout(timer);
     const data = await res.json();
     if (data.length > 0) {
       return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
     }
   } catch {
-    // silent fail
+    clearTimeout(timer);
   }
   return null;
 }
