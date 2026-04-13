@@ -20,6 +20,10 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
   invoice_overdue: AlertCircle,
   payment_received: CheckCircle,
   payment_failed: AlertCircle,
+  incident_reported: AlertCircle,
+  equipment_issue: AlertCircle,
+  worker_message: FileText,
+  expense_submitted: CreditCard,
 };
 
 const RECORD_ROUTES: Record<string, string> = {
@@ -30,6 +34,12 @@ const RECORD_ROUTES: Record<string, string> = {
   request: '/requests',
   lead: '/leads',
   payment: '/finance/payments',
+  incident_report: '/incidents',
+  equipment_issue: '/activity',
+  worker_message: '/activity',
+  expense_claim: '/finance/expenses',
+  agreement: '/agreements',
+  incident: '/incidents',
 };
 
 let audioCtx: AudioContext | null = null;
