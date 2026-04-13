@@ -329,6 +329,34 @@ export function useSendMessage() {
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id);
 
+      // Create in-app notification for other members
+      try {
+        const { data: members } = await supabase
+          .from('conversation_members')
+          .select('user_id')
+          .eq('conversation_id', conversationId)
+          .neq('user_id', user.id);
+
+        if (members && members.length > 0) {
+          const senderName = user.user_metadata?.full_name || user.email || 'Someone';
+          const notifications = members.map((m: any) => ({
+            event: 'worker_message' as const,
+            channel: 'in_app' as const,
+            audience: 'admin' as const,
+            recipient_id: m.user_id,
+            record_type: 'conversation',
+            record_id: conversationId,
+            subject: `New message from ${senderName}`,
+            body: body?.substring(0, 120) || '📎 Attachment',
+            status: 'sent',
+            sent_at: new Date().toISOString(),
+          }));
+          await supabase.from('notifications').insert(notifications as any);
+        }
+      } catch (e) {
+        console.error('Failed to create message notification:', e);
+      }
+
       return msg;
     },
     onSuccess: (_, vars) => {
