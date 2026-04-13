@@ -450,15 +450,21 @@ export default function EmailDirectoryPage() {
                   </TableCell>
                   <TableCell className="font-medium">{contact.name}</TableCell>
                   <TableCell className="text-sm">{contact.email}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                    {contact.secondary_email || '—'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    {contact.phone || '—'}
+                  </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant={contact.source === 'Customer' ? 'default' : contact.source === 'Lead' ? 'secondary' : 'outline'} className="text-[10px]">
                       {contact.source}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                     {contact.company || '—'}
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
                     {contact.city || '—'}
                   </TableCell>
                   <TableCell>
