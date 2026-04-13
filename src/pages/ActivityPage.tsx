@@ -38,6 +38,7 @@ export default function ActivityPage() {
           <SelectItem value="visit">Visit</SelectItem>
           <SelectItem value="invoice">Invoice</SelectItem>
           <SelectItem value="incident_report">Incident Report</SelectItem>
+          <SelectItem value="subcontractor_invoice">Subcontractor Invoice</SelectItem>
         </SelectContent>
       </Select>
 
