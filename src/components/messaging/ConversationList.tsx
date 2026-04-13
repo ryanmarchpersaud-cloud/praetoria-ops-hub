@@ -34,7 +34,7 @@ const typeLabels: Record<string, string> = {
 
 interface Props {
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string | null) => void;
   filter?: string;
 }
 
