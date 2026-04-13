@@ -58,16 +58,17 @@ export default function SubcontractorHome() {
 
   const [visitOpen, setVisitOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [quickBookDialog, setQuickBookDialog] = useState<QuickBookDialogType>(null);
 
   const handleQuickBookAction = (action: QuickBookAction) => {
     switch (action) {
       case 'visit': setVisitOpen(true); break;
-      case 'job': navigate('/subcontractor/schedule'); break;
-      case 'customer': navigate('/subcontractor/company'); break;
-      case 'property': navigate('/subcontractor/company'); break;
-      case 'lead': navigate('/subcontractor/company'); break;
-      case 'quote': navigate('/subcontractor/invoices'); break;
-      case 'invoice': navigate('/subcontractor/invoices/new'); break;
+      case 'job': setQuickBookDialog('job'); break;
+      case 'customer': setQuickBookDialog('customer'); break;
+      case 'property': setQuickBookDialog('property'); break;
+      case 'lead': setQuickBookDialog('lead'); break;
+      case 'quote': setQuickBookDialog('quote'); break;
+      case 'invoice': setQuickBookDialog('invoice'); break;
       case 'request': setRequestOpen(true); break;
       case 'incident': navigate('/subcontractor/incidents/new'); break;
     }
