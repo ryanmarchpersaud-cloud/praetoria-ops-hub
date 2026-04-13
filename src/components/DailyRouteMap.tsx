@@ -79,7 +79,7 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
   const [geocoded, setGeocoded] = useState<(RouteStop & { lat: number; lng: number })[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Geocode all stops
+  // Geocode all stops — parallel with short timeout
   useEffect(() => {
     if (stops.length === 0) {
       setLoading(false);
@@ -87,38 +87,40 @@ export function DailyRouteMap({ stops, className }: DailyRouteMapProps) {
     }
 
     let cancelled = false;
-    const timeout = setTimeout(() => {
-      if (!cancelled) {
-        cancelled = true;
-        setLoading(false);
-      }
-    }, 15000);
 
-    async function resolve() {
-      const results: (RouteStop & { lat: number; lng: number })[] = [];
-      for (const stop of stops) {
-        if (cancelled) break;
-        if (stop.lat && stop.lng) {
-          results.push({ ...stop, lat: stop.lat, lng: stop.lng });
-        } else {
-          try {
-            const coords = await geocodeAddress(stop.address, stop.city);
-            if (coords && !cancelled) {
-              results.push({ ...stop, ...coords });
-            }
-          } catch {
-            // skip failed geocode
-          }
-          // Rate limit for Nominatim (1 req/sec) — but use a shorter delay
-          if (!cancelled) await new Promise(r => setTimeout(r, 1050));
-        }
-      }
-      if (!cancelled) {
-        setGeocoded(results);
-        setLoading(false);
-      }
+    // Pre-populate with any stops that already have coords
+    const withCoords = stops.filter(s => s.lat && s.lng) as (RouteStop & { lat: number; lng: number })[];
+    if (withCoords.length > 0) {
+      setGeocoded(withCoords);
+      setLoading(false);
     }
-    resolve();
+
+    // Try geocoding remaining stops in parallel (best-effort)
+    const needsGeocode = stops.filter(s => !s.lat || !s.lng);
+    if (needsGeocode.length === 0) {
+      setLoading(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      if (!cancelled) { cancelled = true; setLoading(false); }
+    }, 8000);
+
+    Promise.allSettled(
+      needsGeocode.map(stop => geocodeAddress(stop.address, stop.city).then(coords => coords ? { ...stop, ...coords } : null))
+    ).then(results => {
+      if (cancelled) return;
+      const resolved = results
+        .filter((r): r is PromiseFulfilledResult<(RouteStop & { lat: number; lng: number }) | null> => r.status === 'fulfilled')
+        .map(r => r.value)
+        .filter(Boolean) as (RouteStop & { lat: number; lng: number })[];
+      setGeocoded(prev => {
+        const ids = new Set(prev.map(p => p.id));
+        return [...prev, ...resolved.filter(r => !ids.has(r.id))];
+      });
+      setLoading(false);
+    });
+
     return () => { cancelled = true; clearTimeout(timeout); };
   }, [stops]);
 
