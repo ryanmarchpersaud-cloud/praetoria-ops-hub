@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Download, Mail, Users, UserPlus, Filter, CheckSquare, Plus } from 'lucide-react';
+import { Search, Download, Mail, Users, UserPlus, Filter, CheckSquare, Plus, Phone } from 'lucide-react';
 
 interface EmailContact {
   id: string;
