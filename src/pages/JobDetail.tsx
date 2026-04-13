@@ -94,6 +94,19 @@ export default function JobDetail() {
         service_instructions: form.service_instructions || null,
       });
 
+      // If assigned to a subcontractor, create/update subcontractor_assignment
+      const assignedSubRecord = (subcontractors as any[]).find((s: any) => s.user_id === form.assigned_to);
+      if (assignedSubRecord) {
+        // Upsert: delete old assignment for this job, insert new
+        await supabase.from('subcontractor_assignments').delete().eq('job_id', id as string);
+        await supabase.from('subcontractor_assignments').insert({
+          subcontractor_id: assignedSubRecord.id,
+          job_id: id,
+          property_id: form.property_id || null,
+          assignment_status: 'assigned',
+        } as any);
+      }
+
       // Send worker_assigned notification if worker changed
       if (form.assigned_to && form.assigned_to !== previousAssignedTo) {
         try {

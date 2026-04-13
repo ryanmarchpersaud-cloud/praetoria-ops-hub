@@ -352,10 +352,27 @@ export default function JobNew() {
         await supabase.from('job_line_items').insert(items as any);
       }
 
+      // Create subcontractor_assignments for any subcontractors in the crew
+      if (job) {
+        const subUserIds = assignedWorkers.filter(uid => activeSubs.some((s: any) => s.user_id === uid));
+        for (const uid of subUserIds) {
+          const sub = activeSubs.find((s: any) => s.user_id === uid);
+          if (sub) {
+            await supabase.from('subcontractor_assignments').insert({
+              subcontractor_id: sub.id,
+              job_id: job.id,
+              property_id: propertyId || null,
+              assignment_status: 'assigned',
+            } as any);
+          }
+        }
+      }
+
       // Invalidate caches
       qc.invalidateQueries({ queryKey: ['jobs'] });
       qc.invalidateQueries({ queryKey: ['property_jobs'] });
       qc.invalidateQueries({ queryKey: ['sidebar_counts'] });
+      qc.invalidateQueries({ queryKey: ['subcontractor_assignments'] });
 
       toast({ title: 'Job created', description: `${(job as any).job_number} — ${jobTitle}` });
 

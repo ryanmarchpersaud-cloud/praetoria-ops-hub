@@ -13,6 +13,7 @@ import { Briefcase, CheckCircle, Calendar, FileText, Loader2, ArrowRight, Sparkl
 import { supabase } from '@/integrations/supabase/client';
 import { useProperties } from '@/hooks/useProperties';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { SERVICE_CATEGORIES, SERVICE_FREQUENCIES } from '@/lib/constants';
 import { useToast } from '@/hooks/use-toast';

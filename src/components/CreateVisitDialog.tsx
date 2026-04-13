@@ -13,6 +13,7 @@ import { useJobs } from '@/hooks/useJobs';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useProperties } from '@/hooks/useProperties';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { SERVICE_CATEGORIES, VISIT_TYPES, VISIT_STATUSES, VISIT_PRIORITIES, RECURRENCE_FREQUENCIES } from '@/lib/constants';
 import { Briefcase, User, MapPin, Calendar, Clock, Users, FileText, Settings2, Repeat, AlertTriangle, Save, Plus } from 'lucide-react';
