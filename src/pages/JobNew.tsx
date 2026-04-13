@@ -399,7 +399,13 @@ export default function JobNew() {
   //  RENDER
   // ═══════════════════════════════════════════
 
-  const workerName = (uid: string) => (employees as any[]).find((e: any) => e.user_id === uid)?.full_name || uid;
+  const workerName = (uid: string) => {
+    const emp = (employees as any[]).find((e: any) => e.user_id === uid);
+    if (emp) return emp.full_name || uid;
+    const sub = activeSubs.find((s: any) => s.user_id === uid);
+    if (sub) return `${sub.contact_name || sub.company_name} (Sub)`;
+    return uid;
+  };
   const salesRepName = salesRepId ? workerName(salesRepId) : null;
 
   return (
@@ -687,18 +693,18 @@ export default function JobNew() {
             )}
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input value={workerSearch} onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); }} onFocus={() => setShowWorkerDropdown(true)} placeholder="Search team members..." className="h-9 pl-8 text-sm" />
+              <Input value={workerSearch} onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); }} onFocus={() => setShowWorkerDropdown(true)} placeholder="Search workers & subcontractors..." className="h-9 pl-8 text-sm" />
             </div>
             {showWorkerDropdown && (
               <div className="border rounded-lg mt-1 max-h-48 overflow-y-auto divide-y bg-card shadow-md">
-                {filteredWorkers.filter((e: any) => !assignedWorkers.includes(e.user_id)).length === 0 ? (
+                {filteredWorkers.filter(w => !assignedWorkers.includes(w.uid)).length === 0 ? (
                   <p className="text-xs text-muted-foreground p-3">No available team members</p>
                 ) : (
-                  filteredWorkers.filter((e: any) => !assignedWorkers.includes(e.user_id)).slice(0, 15).map((e: any) => (
-                    <button key={e.user_id} type="button" className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors flex items-center justify-between text-sm"
-                      onClick={() => { toggleWorker(e.user_id); setWorkerSearch(''); setShowWorkerDropdown(false); }}>
-                      <span className="font-medium">{e.full_name}</span>
-                      {e.job_title && <span className="text-xs text-muted-foreground">{e.job_title}</span>}
+                  filteredWorkers.filter(w => !assignedWorkers.includes(w.uid)).slice(0, 15).map(w => (
+                    <button key={w.uid} type="button" className="w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors flex items-center justify-between text-sm"
+                      onClick={() => { toggleWorker(w.uid); setWorkerSearch(''); setShowWorkerDropdown(false); }}>
+                      <span className="font-medium">{w.name}</span>
+                      <span className="text-xs text-muted-foreground">{w.label}</span>
                     </button>
                   ))
                 )}
