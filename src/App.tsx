@@ -65,6 +65,7 @@ import PortalPropertyDetail from "./pages/portal/PortalPropertyDetail";
 import PortalServicePreferences from "./pages/portal/PortalServicePreferences";
 import PortalRecurringServices from "./pages/portal/PortalRecurringServices";
 import PortalReferrals from "./pages/portal/PortalReferrals";
+import PortalHelpPage from "./pages/portal/PortalHelpPage";
 const PortalAgreementsPage = lazy(() => import("./pages/portal/PortalAgreementsPage"));
 
 // Worker pages
@@ -420,6 +421,7 @@ function AppRoutes() {
       <Route path="/portal/preferences" element={<PortalRoute><PortalServicePreferences /></PortalRoute>} />
       <Route path="/portal/recurring" element={<PortalRoute><PortalRecurringServices /></PortalRoute>} />
       <Route path="/portal/referrals" element={<PortalRoute><PortalReferrals /></PortalRoute>} />
+      <Route path="/portal/help" element={<PortalRoute><PortalHelpPage /></PortalRoute>} />
       {/* Worker routes */}
       <Route path="/worker" element={<WorkerRoute><WorkerLayout><WorkerHome /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerSchedule /></WorkerLayout></WorkerRoute>} />
