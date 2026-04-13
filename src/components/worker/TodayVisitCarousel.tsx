@@ -24,6 +24,7 @@ import { useCreateQuote } from '@/hooks/useQuotes';
 import { useCreateProperty } from '@/hooks/useProperties';
 import { CreateRequestDialog } from '@/components/CreateRequestDialog';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
+import { CreateTaskDialog } from '@/components/CreateTaskDialog';
 import { SERVICE_CATEGORIES, PROVINCES } from '@/lib/constants';
 
 interface VisitCard {
