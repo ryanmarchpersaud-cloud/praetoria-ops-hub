@@ -90,7 +90,7 @@ export default function Customers() {
         preferred_communication_method: g('preferred_communication_method'),
         referral_source: g('referral_source'),
         notes: g('notes'),
-      } as any);
+      });
       toast({ title: 'Customer created' });
       setDialogOpen(false);
       setAccountType('Individual');
@@ -280,8 +280,8 @@ export default function Customers() {
                   <TableCell className="font-medium">
                     <Link to={`/customers/${c.id}`} className="hover:text-primary">{c.first_name} {c.last_name}</Link>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm">{(c as any).company_name || '—'}</TableCell>
-                  <TableCell className="hidden md:table-cell text-sm">{(c as any).customer_type || '—'}</TableCell>
+                  <TableCell className="hidden md:table-cell text-sm">{c.company_name || '—'}</TableCell>
+                  <TableCell className="hidden md:table-cell text-sm">{c.customer_type || '—'}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.email || '—'}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm">{c.phone || '—'}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm">{c.city || '—'}</TableCell>

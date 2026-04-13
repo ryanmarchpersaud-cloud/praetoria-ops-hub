@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark } from 'lucide-react';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
@@ -19,7 +19,7 @@ import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedg
 import { useBillingProfile } from '@/hooks/useInvoices';
 import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInvoiceDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { PROVINCES } from '@/lib/constants';
+import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function CustomerDetail() {
@@ -122,11 +122,38 @@ export default function CustomerDetail() {
     if (!id || !form) return;
     try {
       await updateCustomer.mutateAsync({
-        id, first_name: form.first_name, last_name: form.last_name,
-        company_name: form.company_name || null, email: form.email || null,
-        phone: form.phone || null, address_line_1: form.address_line_1 || null,
+        id,
+        first_name: form.first_name, last_name: form.last_name,
+        customer_type: form.customer_type || 'Residential',
+        account_type: form.account_type || 'Individual',
+        company_name: form.company_name || null,
+        company_legal_name: form.company_legal_name || null,
+        operating_name: form.operating_name || null,
+        primary_contact_title: form.primary_contact_title || null,
+        email: form.email || null, phone: form.phone || null,
+        secondary_email: form.secondary_email || null,
+        billing_contact_name: form.billing_contact_name || null,
+        billing_contact_email: form.billing_contact_email || null,
+        billing_contact_phone: form.billing_contact_phone || null,
+        accounts_payable_email: form.accounts_payable_email || null,
+        preferred_billing_method: form.preferred_billing_method || null,
+        requires_po_number: form.requires_po_number || false,
+        site_contact_name: form.site_contact_name || null,
+        site_contact_phone: form.site_contact_phone || null,
+        site_contact_email: form.site_contact_email || null,
+        project_notes: form.project_notes || null,
+        address_line_1: form.address_line_1 || null,
         city: form.city || null, province: form.province || null,
-        postal_code: form.postal_code || null, notes: form.notes || null,
+        postal_code: form.postal_code || null,
+        billing_address_same_as_service: form.billing_address_same_as_service ?? true,
+        billing_address_line_1: form.billing_address_line_1 || null,
+        billing_city: form.billing_city || null,
+        billing_province: form.billing_province || null,
+        billing_postal_code: form.billing_postal_code || null,
+        portal_access_enabled: form.portal_access_enabled || false,
+        preferred_communication_method: form.preferred_communication_method || null,
+        referral_source: form.referral_source || null,
+        notes: form.notes || null,
       });
       toast({ title: 'Customer saved' });
     } catch (err: any) {
@@ -189,7 +216,11 @@ export default function CustomerDetail() {
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="text-lg md:text-xl font-bold">{customer.first_name} {customer.last_name}</h1>
-          {customer.company_name && <p className="text-xs text-muted-foreground">{customer.company_name}</p>}
+          <div className="flex items-center gap-2 flex-wrap">
+            {customer.company_name && <span className="text-xs text-muted-foreground">{customer.company_name}</span>}
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{customer.customer_type}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{customer.account_type}</span>
+          </div>
         </div>
       </div>
 
@@ -219,14 +250,61 @@ export default function CustomerDetail() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
+          {/* Account & Customer Type */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Account Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Customer Type</Label>
+                  <select value={form?.customer_type || 'Residential'} onChange={e => set('customer_type', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
+                    {CUSTOMER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs">Account Type</Label>
+                  <select value={form?.account_type || 'Individual'} onChange={e => set('account_type', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
+                    {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Company Info (Company accounts) */}
+          {form?.account_type === 'Company' && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-1.5"><Building2 className="h-4 w-4" /> Company Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div><Label className="text-xs">Company Name</Label><Input value={form?.company_name || ''} onChange={e => set('company_name', e.target.value)} /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label className="text-xs">Legal Name</Label><Input value={form?.company_legal_name || ''} onChange={e => set('company_legal_name', e.target.value)} /></div>
+                  <div><Label className="text-xs">Operating / DBA Name</Label><Input value={form?.operating_name || ''} onChange={e => set('operating_name', e.target.value)} /></div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Contact info */}
           <Card>
-            <CardContent className="pt-4 space-y-3">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-1.5"><Contact className="h-4 w-4" /> {form?.account_type === 'Company' ? 'Primary Contact' : 'Contact Information'}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div><Label className="text-xs">First Name *</Label><Input value={form?.first_name || ''} onChange={e => set('first_name', e.target.value)} /></div>
                 <div><Label className="text-xs">Last Name *</Label><Input value={form?.last_name || ''} onChange={e => set('last_name', e.target.value)} /></div>
               </div>
-              <div><Label className="text-xs">Company</Label><Input value={form?.company_name || ''} onChange={e => set('company_name', e.target.value)} /></div>
+              {form?.account_type === 'Company' && (
+                <div><Label className="text-xs">Title / Role</Label><Input value={form?.primary_contact_title || ''} onChange={e => set('primary_contact_title', e.target.value)} /></div>
+              )}
+              {form?.account_type !== 'Company' && (
+                <div><Label className="text-xs">Company</Label><Input value={form?.company_name || ''} onChange={e => set('company_name', e.target.value)} /></div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs flex items-center gap-1"><Mail className="h-3 w-3" /> Email</Label>
@@ -237,8 +315,58 @@ export default function CustomerDetail() {
                   <Input value={form?.phone || ''} onChange={e => set('phone', e.target.value)} />
                 </div>
               </div>
+              <div><Label className="text-xs">Secondary Email</Label><Input type="email" value={form?.secondary_email || ''} onChange={e => set('secondary_email', e.target.value)} /></div>
             </CardContent>
           </Card>
+
+          {/* Billing Contact (Company accounts) */}
+          {form?.account_type === 'Company' && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-1.5"><Landmark className="h-4 w-4" /> Billing Contact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label className="text-xs">Billing Contact Name</Label><Input value={form?.billing_contact_name || ''} onChange={e => set('billing_contact_name', e.target.value)} /></div>
+                  <div><Label className="text-xs">Billing Contact Phone</Label><Input value={form?.billing_contact_phone || ''} onChange={e => set('billing_contact_phone', e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label className="text-xs">Billing Contact Email</Label><Input type="email" value={form?.billing_contact_email || ''} onChange={e => set('billing_contact_email', e.target.value)} /></div>
+                  <div><Label className="text-xs">Accounts Payable Email</Label><Input type="email" value={form?.accounts_payable_email || ''} onChange={e => set('accounts_payable_email', e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Preferred Billing Method</Label>
+                    <select value={form?.preferred_billing_method || ''} onChange={e => set('preferred_billing_method', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
+                      <option value="">—</option>
+                      {BILLING_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-end gap-2 pb-1">
+                    <input type="checkbox" checked={form?.requires_po_number || false} onChange={e => set('requires_po_number', e.target.checked)} id="edit_requires_po" className="rounded" />
+                    <Label htmlFor="edit_requires_po" className="text-xs cursor-pointer">Requires PO / Job Number</Label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Site / Project Contact (Company accounts) */}
+          {form?.account_type === 'Company' && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-1.5"><ClipboardCheck className="h-4 w-4" /> Site / Project Contact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-3 gap-3">
+                  <div><Label className="text-xs">Site Contact Name</Label><Input value={form?.site_contact_name || ''} onChange={e => set('site_contact_name', e.target.value)} /></div>
+                  <div><Label className="text-xs">Site Contact Phone</Label><Input value={form?.site_contact_phone || ''} onChange={e => set('site_contact_phone', e.target.value)} /></div>
+                  <div><Label className="text-xs">Site Contact Email</Label><Input type="email" value={form?.site_contact_email || ''} onChange={e => set('site_contact_email', e.target.value)} /></div>
+                </div>
+                <div><Label className="text-xs">Project / Contractor Notes</Label><Textarea value={form?.project_notes || ''} onChange={e => set('project_notes', e.target.value)} rows={2} /></div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Address */}
           <Card>
