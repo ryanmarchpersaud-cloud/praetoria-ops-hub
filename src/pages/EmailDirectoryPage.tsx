@@ -418,9 +418,11 @@ export default function EmailDirectoryPage() {
               </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead className="hidden lg:table-cell">Alt Email</TableHead>
+              <TableHead className="hidden md:table-cell">Phone</TableHead>
               <TableHead className="hidden md:table-cell">Source</TableHead>
-              <TableHead className="hidden md:table-cell">Company</TableHead>
-              <TableHead className="hidden lg:table-cell">City</TableHead>
+              <TableHead className="hidden lg:table-cell">Company</TableHead>
+              <TableHead className="hidden xl:table-cell">City</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
