@@ -486,12 +486,13 @@ export default function EmailDirectoryPage() {
       {/* Twilio / Marketing note */}
       <Card className="border-dashed">
         <CardContent className="p-4 flex items-start gap-3">
-          <Mail className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+          <Phone className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium">Email Marketing Integration</p>
+            <p className="text-sm font-medium">Email & SMS Marketing Ready</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Export your contacts as CSV and import into Twilio SendGrid, Mailchimp, or any email marketing
-              platform. Use the <strong>Add Contact</strong> button to manually add phone or walk-in inquiries.
+              Export contacts as CSV with emails, secondary emails, and phone numbers — ready for both
+              email campaigns (Twilio SendGrid, Mailchimp) <strong>and</strong> SMS marketing (Twilio). Use
+              <strong> Add Contact</strong> to manually record phone or walk-in inquiries.
             </p>
           </div>
         </CardContent>
