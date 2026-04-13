@@ -176,7 +176,10 @@ export function ConversationList({ selectedId, onSelect, filter }: Props) {
                       e.stopPropagation();
                       if (window.confirm('Delete this conversation? This cannot be undone.')) {
                         deleteConversation.mutate(convo.id, {
-                          onSuccess: () => toast.success('Conversation deleted'),
+                          onSuccess: () => {
+                            toast.success('Conversation deleted');
+                            if (selectedId === convo.id) onSelect(null);
+                          },
                         });
                       }
                     }}
