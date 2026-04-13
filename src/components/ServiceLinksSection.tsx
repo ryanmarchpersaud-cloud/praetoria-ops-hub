@@ -66,9 +66,22 @@ interface ServiceLinksSectionProps {
 }
 
 export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionProps) {
+  const [cleaningOpen, setCleaningOpen] = useState(false);
+
+  const partnerChip = (s: typeof partnerServices[0], className: string, inner: React.ReactNode) => (
+    <button
+      key={s.name}
+      onClick={() => setCleaningOpen(true)}
+      className={className}
+    >
+      {inner}
+    </button>
+  );
+
   if (variant === 'compact') {
     return (
       <div className="border-t border-border pt-3 mt-4 px-4 pb-2">
+        <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
         <p className="text-[10px] font-medium text-muted-foreground mb-2 uppercase tracking-wider">Explore Our Services</p>
         <div className="flex flex-wrap gap-1.5">
           {activeServices.map((s) => (
@@ -83,6 +96,15 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
               <span className="text-[10px] font-medium text-foreground">{s.name}</span>
               <ExternalLink className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
+          ))}
+          {partnerServices.map((s) => partnerChip(
+            s,
+            'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-card transition-colors group hover:bg-muted cursor-pointer',
+            <>
+              <s.icon className={cn('h-3 w-3 shrink-0', s.color)} />
+              <span className="text-[10px] font-medium text-foreground">{s.name}</span>
+              <Handshake className="h-2.5 w-2.5 text-muted-foreground" />
+            </>
           ))}
         </div>
         <p className="text-[10px] font-medium text-muted-foreground mt-3 mb-1.5 uppercase tracking-wider">Site Coming Soon</p>
@@ -104,6 +126,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
   if (variant === 'sidebar') {
     return (
       <div className="space-y-1">
+        <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
         <div className="space-y-0.5">
           {activeServices.map((s) => (
             <a
@@ -117,6 +140,17 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
               <span className="truncate">{s.name}</span>
               <ExternalLink className="h-2.5 w-2.5 ml-auto opacity-0 group-hover:opacity-60 transition-opacity shrink-0" />
             </a>
+          ))}
+          {partnerServices.map((s) => (
+            <button
+              key={s.name}
+              onClick={() => setCleaningOpen(true)}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-sidebar-foreground/70 transition-colors group hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
+            >
+              <s.icon className={cn('h-3.5 w-3.5 shrink-0', s.color)} />
+              <span className="truncate">{s.name}</span>
+              <Handshake className="h-2.5 w-2.5 ml-auto opacity-60 shrink-0" />
+            </button>
           ))}
         </div>
         <p className="text-[10px] font-medium text-sidebar-foreground/40 px-2 pt-2 uppercase tracking-wider">Site Coming Soon</p>
@@ -138,6 +172,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
   if (variant === 'portal') {
     return (
       <div className="border-t border-border pt-4 mt-4">
+        <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
         <p className="text-xs font-medium text-muted-foreground mb-2 px-1">Our Services</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
           {activeServices.map((s) => (
@@ -152,6 +187,17 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
               <span className="text-[10px] font-medium text-foreground leading-tight">{s.name}</span>
               <ExternalLink className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
+          ))}
+          {partnerServices.map((s) => (
+            <button
+              key={s.name}
+              onClick={() => setCleaningOpen(true)}
+              className="flex flex-col items-center gap-1 p-2.5 rounded-lg border border-border bg-card transition-colors text-center group relative hover:bg-muted"
+            >
+              <s.icon className={cn('h-4 w-4', s.color)} />
+              <span className="text-[10px] font-medium text-foreground leading-tight">{s.name}</span>
+              <span className="text-[8px] text-muted-foreground">Trusted Partner</span>
+            </button>
           ))}
         </div>
         <p className="text-[10px] font-medium text-muted-foreground mt-3 mb-1.5 px-1 uppercase tracking-wider">Site Coming Soon</p>
@@ -173,6 +219,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
   // Login variant
   return (
     <div className="mt-6">
+      <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
       <p className="text-xs font-medium text-muted-foreground mb-3 text-center tracking-wide uppercase">
         Explore Our Services
       </p>
@@ -193,11 +240,25 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
             <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
           </a>
         ))}
+        {partnerServices.map((s) => (
+          <button
+            key={s.name}
+            onClick={() => setCleaningOpen(true)}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-card transition-colors group hover:bg-muted text-left"
+          >
+            <s.icon className={cn('h-4 w-4 shrink-0', s.color)} />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-foreground leading-tight truncate">{s.name}</p>
+              <p className="text-[9px] text-muted-foreground leading-tight truncate">{s.label}</p>
+            </div>
+            <Handshake className="h-3 w-3 ml-auto text-muted-foreground shrink-0" />
+          </button>
+        ))}
       </div>
       <p className="text-[10px] font-medium text-muted-foreground mt-4 mb-2 text-center tracking-wide uppercase">
         Site Coming Soon
       </p>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {comingSoonServices.map((s) => (
           <span
             key={s.name}
