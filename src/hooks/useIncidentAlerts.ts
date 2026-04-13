@@ -11,15 +11,15 @@ import { useNavigate } from 'react-router-dom';
  * and refreshes sidebar counts + dashboard data.
  */
 export function useIncidentAlerts() {
-  const { isOwnerOrAdmin, opsFullAccess, isLoading } = useModuleAccess();
+  const { isOwnerOrAdmin, opsFullAccess, hrFullAccess, isLoading } = useModuleAccess();
   const qc = useQueryClient();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const isAdmin = isOwnerOrAdmin || opsFullAccess;
+  const isAlertRecipient = isOwnerOrAdmin || opsFullAccess || hrFullAccess;
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
-    if (isLoading || !isAdmin) return;
+    if (isLoading || !isAlertRecipient) return;
 
     const channel = supabase
       .channel('incident-alerts')
@@ -32,7 +32,9 @@ export function useIncidentAlerts() {
           // Refresh sidebar counts and any open incident queries
           qc.invalidateQueries({ queryKey: ['sidebar_counts'] });
           qc.invalidateQueries({ queryKey: ['admin_incident_reports'] });
-          qc.invalidateQueries({ queryKey: ['dashboard'] });
+          qc.invalidateQueries({ queryKey: ['all_incident_reports_hr'] });
+          qc.invalidateQueries({ queryKey: ['dashboard_incidents_all'] });
+          qc.invalidateQueries({ queryKey: ['dashboard_activities'] });
 
           // Show prominent toast
           const severity = report.severity || 'medium';
@@ -61,5 +63,5 @@ export function useIncidentAlerts() {
         channelRef.current = null;
       }
     };
-  }, [isAdmin, isLoading]);
+  }, [isAlertRecipient, isLoading, navigate, qc, toast]);
 }

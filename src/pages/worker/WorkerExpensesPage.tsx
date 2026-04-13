@@ -26,6 +26,10 @@ const CATEGORIES = [
   'Other',
 ];
 
+function assertMutation(error: { message: string } | null | undefined) {
+  if (error) throw error;
+}
+
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
     submitted: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
@@ -110,7 +114,7 @@ export default function WorkerExpensesPage() {
         receiptFileName = selectedFile.name;
       }
 
-      const { error: dbError } = await supabase
+      const { data: claim, error: dbError } = await supabase
         .from('worker_expense_claims')
         .insert({
           user_id: user.id,
@@ -121,15 +125,18 @@ export default function WorkerExpensesPage() {
           receipt_url: receiptUrl,
           receipt_file_name: receiptFileName,
           status: 'submitted',
-        });
+        })
+        .select('id')
+        .single();
 
-      if (dbError) throw dbError;
+      assertMutation(dbError);
 
       // Log activity
-      await supabase.from('activities').insert({
+      const { error: activityError } = await supabase.from('activities').insert({
         user_id: user.id,
         action_name: 'expense_claim_submitted',
-        record_type: 'worker_expense_claim',
+        record_type: 'expense_claim',
+        record_id: (claim as any).id,
         status: 'completed',
         payload_summary: {
           amount: parsedAmount,
@@ -137,9 +144,27 @@ export default function WorkerExpensesPage() {
           has_receipt: !!receiptUrl,
         },
       });
+      assertMutation(activityError);
+
+      const { error: notificationError } = await supabase.from('notifications').insert({
+        event: 'expense_submitted',
+        channel: 'in_app',
+        audience: 'admin',
+        record_type: 'expense_claim',
+        record_id: (claim as any).id,
+        subject: `New Expense Claim: $${parsedAmount.toFixed(2)}`,
+        body: `A worker submitted a ${category} reimbursement claim${user.email ? ` from ${user.email}` : ''}. Review in Expense Tracking.`,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      });
+      assertMutation(notificationError);
 
       toast.success('Expense claim submitted! Admin will review it.');
       queryClient.invalidateQueries({ queryKey: ['worker_expense_claims'] });
+      queryClient.invalidateQueries({ queryKey: ['admin_worker_expense_claims'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications_unread'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications_all_recent'] });
       resetForm();
       setOpen(false);
     } catch (err: any) {

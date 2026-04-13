@@ -123,6 +123,7 @@ export default function HRDashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">HR Workspace</h1>
           <p className="text-sm text-muted-foreground">People management, training, compliance & safety coordination</p>
+          <p className="text-xs text-muted-foreground mt-1">Safety and compliance alerts appear in the Alerts &amp; Action Items section below.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild>
@@ -209,7 +210,7 @@ export default function HRDashboardPage() {
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600" /> Action Items
+              <AlertTriangle className="h-4 w-4 text-amber-600" /> Alerts &amp; Action Items
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">

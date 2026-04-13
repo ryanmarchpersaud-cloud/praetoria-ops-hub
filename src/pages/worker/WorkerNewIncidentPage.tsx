@@ -55,6 +55,8 @@ export default function WorkerNewIncidentPage() {
         medical_attention: medicalAttention,
         reported_to: reportedTo.trim() || null,
         photos: photos.length > 0 ? photos : null,
+        follow_up_status: 'open',
+        severity: medicalAttention ? 'high' : 'medium',
       }]).select('id, report_number').single();
       if (error) throw error;
 

@@ -49,6 +49,8 @@ export default function SubcontractorNewIncidentPage() {
         location: location.trim() || null,
         description: description.trim(),
         photos: photos.length > 0 ? photos : null,
+        follow_up_status: 'open',
+        severity: 'medium',
       }]).select('id, report_number').single();
       if (error) throw error;
 
