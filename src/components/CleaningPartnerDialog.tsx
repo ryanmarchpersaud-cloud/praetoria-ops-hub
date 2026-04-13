@@ -37,7 +37,7 @@ export function CleaningPartnerDialog({ open, onOpenChange }: CleaningPartnerDia
         </DialogHeader>
 
         <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-3 mt-1">
-          <Handshake className="w-5 h-5 text-muted-foreground shrink-0" />
+          <Handshake className="w-6 h-6 text-emerald-500 shrink-0" />
           <p className="text-xs text-muted-foreground">
             <span className="font-medium text-foreground">Trusted Partner:</span>{' '}
             {PARTNER_NAME}
