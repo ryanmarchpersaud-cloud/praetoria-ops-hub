@@ -81,6 +81,7 @@ export function DraggableItem({ id, type, data, isDragDisabled, onVisitClick }: 
             {data.visit_type}
             {data.arrival_time && ` · ${format(parseISO(data.arrival_time), 'h:mm a')}`}
             {data.properties?.property_name && ` · ${data.properties.property_name}`}
+            {data.worker_profiles?.full_name && ` · 👷 ${data.worker_profiles.full_name}`}
           </p>
         </div>
         <StatusBadge status={data.visit_status} showIcon={false} />

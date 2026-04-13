@@ -7,7 +7,7 @@ export function useVisits(filters?: { visit_status?: string; visit_type?: string
     queryFn: async () => {
       let query = supabase
         .from('visits')
-        .select('*, jobs(id, job_title, job_number), properties(id, property_name), customers(first_name, last_name, company_name), visit_photos(id)')
+        .select('*, jobs(id, job_title, job_number), properties(id, property_name), customers(first_name, last_name, company_name), visit_photos(id), worker_profiles!visits_assigned_worker_id_fkey(full_name)')
         .order('service_date', { ascending: false });
       if (filters?.visit_status) query = query.eq('visit_status', filters.visit_status as any);
       if (filters?.visit_type) query = query.eq('visit_type', filters.visit_type as any);

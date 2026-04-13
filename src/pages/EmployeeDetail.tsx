@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import {
   useEmployee, useEmployeeCertifications, useEmployeeDocuments,
@@ -20,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw, Ban, ShieldOff, Landmark, Loader2, Pencil, Send } from 'lucide-react';
+import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw, Ban, ShieldOff, Landmark, Loader2, Pencil, Send, ClipboardCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -85,6 +86,71 @@ const PPE_SUGGESTIONS = [
 const PLAN_TYPES = ['Health', 'Dental', 'Vision', 'Life / Disability', 'Group Benefits', 'Other'];
 const CHANGE_TYPES = ['new_enrollment', 'life_event', 'plan_change', 'termination'];
 const ENROLLMENT_STATUSES = ['active', 'pending', 'terminated', 'on_hold'];
+
+function EmployeeVisitsTab({ userId }: { userId: string }) {
+  const { data: visits = [], isLoading } = useQuery({
+    queryKey: ['employee_visits', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('visits')
+        .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, service_summary, jobs(job_title, job_number), properties(property_name), customers(first_name, last_name)')
+        .eq('assigned_worker_id', userId)
+        .order('service_date', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId,
+  });
+
+  if (isLoading) return <p className="p-4 text-sm text-muted-foreground">Loading visits...</p>;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2"><ClipboardCheck className="h-4 w-4" /> Assigned Visits ({visits.length})</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {visits.length === 0 ? (
+          <p className="p-4 text-sm text-muted-foreground">No visits assigned to this worker.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Visit</TableHead>
+                <TableHead className="hidden sm:table-cell">Job</TableHead>
+                <TableHead className="hidden md:table-cell">Customer</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visits.map((v: any) => (
+                <TableRow key={v.id} className="cursor-pointer" onClick={() => window.location.href = `/visits/${v.id}`}>
+                  <TableCell>
+                    <p className="text-sm font-medium">{v.visit_number}</p>
+                    <p className="text-xs text-muted-foreground">{v.visit_type}</p>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                    {v.jobs ? `${v.jobs.job_number} — ${v.jobs.job_title}` : '—'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    {v.customers ? `${v.customers.first_name} ${v.customers.last_name}` : '—'}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {v.service_date ? format(new Date(v.service_date), 'MMM d, yyyy') : '—'}
+                  </TableCell>
+                  <TableCell><StatusChip status={v.visit_status} /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function EmployeeBenefitsTab({ userId, canManage }: { userId: string; canManage: boolean }) {
   const { data: allEnrollments = [] } = useBenefitEnrollments();
@@ -458,6 +524,7 @@ export default function EmployeeDetail() {
           <TabsTrigger value="timeoff" className="gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Time Off</TabsTrigger>
           <TabsTrigger value="emergency" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Emergency</TabsTrigger>
           <TabsTrigger value="equipment" className="gap-1.5"><HardHat className="h-3.5 w-3.5" /> Equipment</TabsTrigger>
+          <TabsTrigger value="visits" className="gap-1.5"><ClipboardCheck className="h-3.5 w-3.5" /> Visits</TabsTrigger>
         </TabsList>
 
         {/* Profile */}
@@ -818,6 +885,11 @@ export default function EmployeeDetail() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Visits */}
+        <TabsContent value="visits">
+          <EmployeeVisitsTab userId={userId!} />
         </TabsContent>
       </Tabs>
 
