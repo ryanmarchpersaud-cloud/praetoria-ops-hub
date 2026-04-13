@@ -558,6 +558,26 @@ export function useToggleArchive() {
   });
 }
 
+/** Delete a conversation and its messages/members */
+export function useDeleteConversation() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (conversationId: string) => {
+      if (!user) return;
+      // Delete messages first, then members, then the conversation
+      await supabase.from('messages').delete().eq('conversation_id', conversationId);
+      await supabase.from('conversation_members').delete().eq('conversation_id', conversationId);
+      await supabase.from('conversations').delete().eq('id', conversationId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['unread_count'] });
+    },
+  });
+}
+
 /** Get total unread count across all conversations */
 export function useUnreadCount() {
   const { user } = useAuth();

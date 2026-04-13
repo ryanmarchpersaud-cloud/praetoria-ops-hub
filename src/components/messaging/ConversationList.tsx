@@ -1,4 +1,4 @@
-import { useConversations, useToggleMute, useToggleArchive, type Conversation } from '@/hooks/useMessaging';
+import { useConversations, useToggleMute, useToggleArchive, useDeleteConversation, type Conversation } from '@/hooks/useMessaging';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
