@@ -38,6 +38,7 @@ const RECORD_ROUTES: Record<string, string> = {
   equipment_issue: '/activity',
   worker_message: '/activity',
   expense_claim: '/finance/expenses',
+  materials_used: '/activity',
   agreement: '/agreements',
   incident: '/incidents',
 };

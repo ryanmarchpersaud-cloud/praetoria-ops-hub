@@ -372,8 +372,11 @@ function MaterialsUsedDialog({ open, onClose }: { open: boolean; onClose: () => 
     }
     setSubmitting(true);
     try {
-      await supabase.from('activities').insert([{
-        action_name: `Materials used: ${quantity ? quantity + ' ' + unit + ' of ' : ''}${itemName.trim()}`,
+      const materialDesc = `${quantity ? quantity + ' ' + unit + ' of ' : ''}${itemName.trim()}`;
+
+      // Log to activity feed
+      const { error: activityError } = await supabase.from('activities').insert([{
+        action_name: `Materials used: ${materialDesc}`,
         user_id: user.id,
         workflow_name: 'field_worker',
         record_type: 'materials_used',
@@ -385,8 +388,25 @@ function MaterialsUsedDialog({ open, onClose }: { open: boolean; onClose: () => 
         } as any,
         status: 'completed',
       }]);
+      assertMutation(activityError);
+
+      // Notify admin in-app
+      const { error: notificationError } = await supabase.from('notifications').insert([{
+        event: 'materials_used',
+        channel: 'in_app',
+        audience: 'admin',
+        record_type: 'materials_used',
+        subject: `Materials Used: ${materialDesc}`,
+        body: `A worker logged material usage: ${materialDesc}.${notes.trim() ? ' Notes: ' + notes.trim() : ''}${user.email ? ' Reported by ' + user.email + '.' : ''}`,
+        status: 'sent',
+        sent_at: new Date().toISOString(),
+      }]);
+      assertMutation(notificationError);
 
       qc.invalidateQueries({ queryKey: ['activities'] });
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
       toast({ title: 'Materials logged', description: `${quantity ? quantity + ' ' + unit + ' of ' : ''}${itemName}` });
       reset();
       onClose();
