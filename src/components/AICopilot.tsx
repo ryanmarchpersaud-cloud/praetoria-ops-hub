@@ -117,13 +117,13 @@ export function AICopilot() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const lastSpokenRef = useRef<number>(-1);
+  const sendRef = useRef<(text: string) => void>(() => {});
   const { speak, stop, speakingIdx } = useSpeech();
 
   // Voice input: when recognized, either auto-send or fill input
   const handleVoiceResult = useCallback((transcript: string) => {
     if (autoSpeak) {
-      // In hands-free mode, auto-send the voice input
-      send(transcript);
+      sendRef.current(transcript);
     } else {
       setInput(prev => (prev ? prev + ' ' : '') + transcript);
       inputRef.current?.focus();
