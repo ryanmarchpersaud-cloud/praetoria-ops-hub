@@ -376,13 +376,32 @@ export function AICopilot() {
 
           {/* Input */}
           <div className="border-t px-3 py-2.5 shrink-0">
+            {listening && (
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                </span>
+                <span className="text-[11px] text-muted-foreground">Listening… speak now</span>
+              </div>
+            )}
             <div className="flex items-end gap-2">
+              <Button
+                variant={listening ? 'default' : 'ghost'}
+                size="icon"
+                className={cn('h-9 w-9 rounded-xl shrink-0', listening && 'bg-red-500 hover:bg-red-600 text-white')}
+                onClick={toggleMic}
+                disabled={isLoading}
+                title={listening ? 'Stop listening' : 'Voice input'}
+              >
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about your operations..."
+                placeholder={listening ? 'Listening...' : 'Ask about your operations...'}
                 rows={1}
                 className="flex-1 resize-none bg-muted/50 border-0 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30 max-h-24"
               />
