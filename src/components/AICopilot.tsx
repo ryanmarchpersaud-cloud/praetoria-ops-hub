@@ -260,6 +260,9 @@ export function AICopilot() {
     setIsLoading(false);
   }, [messages, isLoading]);
 
+  // Keep sendRef in sync
+  useEffect(() => { sendRef.current = send; }, [send]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
