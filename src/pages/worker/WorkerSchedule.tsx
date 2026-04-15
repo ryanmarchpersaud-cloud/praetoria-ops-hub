@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import {
   ChevronLeft, ChevronRight, MapPin, Calendar, Clock,
   Navigation, Phone, Briefcase, ChevronRight as ChevronR,
+  ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
