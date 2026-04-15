@@ -268,6 +268,7 @@ function TaskCard({ task, showDate = false }: { task: TaskItem; showDate?: boole
   );
 }
 
+export default function WorkerSchedule() {
   const [tab, setTab] = useState<ScheduleTab>('today');
   const [weekOffset, setWeekOffset] = useState(0);
   const { user } = useAuth();
