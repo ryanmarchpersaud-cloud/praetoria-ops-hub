@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, X, Send, Loader2, Sparkles, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
+import { Bot, X, Send, Loader2, Sparkles, Volume2, VolumeX, Mic, MicOff, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -30,7 +30,23 @@ function stripMarkdown(md: string): string {
     .trim();
 }
 
-function useSpeech() {
+function useVoices() {
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  useEffect(() => {
+    const load = () => {
+      const v = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+      if (v.length) setVoices(v);
+    };
+    load();
+    window.speechSynthesis.addEventListener('voiceschanged', load);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', load);
+  }, []);
+
+  return voices;
+}
+
+function useSpeech(selectedVoice: SpeechSynthesisVoice | null) {
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -47,20 +63,22 @@ function useSpeech() {
     const utt = new SpeechSynthesisUtterance(plain);
     utt.rate = 1.05;
     utt.pitch = 1;
-    // Prefer a natural-sounding voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.name.includes('Samantha'))
-      || voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'))
-      || voices.find(v => v.lang.startsWith('en') && v.localService);
-    if (preferred) utt.voice = preferred;
+    if (selectedVoice) {
+      utt.voice = selectedVoice;
+    } else {
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.name.includes('Samantha'))
+        || voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'))
+        || voices.find(v => v.lang.startsWith('en') && v.localService);
+      if (preferred) utt.voice = preferred;
+    }
     utt.onend = () => setSpeakingIdx(null);
     utt.onerror = () => setSpeakingIdx(null);
     setSpeakingIdx(idx);
     utteranceRef.current = utt;
     window.speechSynthesis.speak(utt);
-  }, [stop]);
+  }, [stop, selectedVoice]);
 
-  // Cleanup on unmount
   useEffect(() => () => { window.speechSynthesis.cancel(); }, []);
 
   return { speak, stop, speakingIdx };
@@ -114,11 +132,16 @@ export function AICopilot() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(false);
+  const [showVoicePicker, setShowVoicePicker] = useState(false);
+  const [selectedVoiceName, setSelectedVoiceName] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const lastSpokenRef = useRef<number>(-1);
   const sendRef = useRef<(text: string) => void>(() => {});
-  const { speak, stop, speakingIdx } = useSpeech();
+
+  const voices = useVoices();
+  const selectedVoice = voices.find(v => v.name === selectedVoiceName) || null;
+  const { speak, stop, speakingIdx } = useSpeech(selectedVoice);
 
   // Voice input: when recognized, either auto-send or fill input
   const handleVoiceResult = useCallback((transcript: string) => {
@@ -270,6 +293,10 @@ export function AICopilot() {
     }
   };
 
+  const displayVoiceName = selectedVoice
+    ? selectedVoice.name.replace(/^(Microsoft |Google )/, '').split(' (')[0]
+    : 'Auto';
+
   return (
     <>
       {/* FAB */}
@@ -305,6 +332,44 @@ export function AICopilot() {
             <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => { stop(); setOpen(false); }}>
               <X className="h-4 w-4" />
             </Button>
+          </div>
+
+          {/* Voice picker */}
+          <div className="px-4 py-1.5 border-b bg-muted/30 shrink-0">
+            <button
+              onClick={() => setShowVoicePicker(!showVoicePicker)}
+              className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors w-full"
+            >
+              <Volume2 className="h-3 w-3" />
+              <span>Voice: <span className="font-medium text-foreground">{displayVoiceName}</span></span>
+              <ChevronDown className={cn('h-3 w-3 ml-auto transition-transform', showVoicePicker && 'rotate-180')} />
+            </button>
+            {showVoicePicker && (
+              <div className="mt-1.5 max-h-36 overflow-y-auto rounded-lg border bg-card shadow-sm">
+                <button
+                  onClick={() => { setSelectedVoiceName(null); setShowVoicePicker(false); }}
+                  className={cn(
+                    'w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted/50 transition-colors',
+                    !selectedVoiceName && 'bg-primary/10 text-primary font-medium'
+                  )}
+                >
+                  Auto (best available)
+                </button>
+                {voices.map(v => (
+                  <button
+                    key={v.name}
+                    onClick={() => { setSelectedVoiceName(v.name); setShowVoicePicker(false); }}
+                    className={cn(
+                      'w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted/50 transition-colors flex items-center justify-between',
+                      selectedVoiceName === v.name && 'bg-primary/10 text-primary font-medium'
+                    )}
+                  >
+                    <span>{v.name.replace(/^(Microsoft |Google )/, '')}</span>
+                    <span className="text-muted-foreground text-[9px] ml-2">{v.lang}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Messages */}
