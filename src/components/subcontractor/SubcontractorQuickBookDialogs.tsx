@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MapPin } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
