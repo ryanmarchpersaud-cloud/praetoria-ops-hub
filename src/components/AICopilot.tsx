@@ -66,6 +66,48 @@ function useSpeech() {
   return { speak, stop, speakingIdx };
 }
 
+/** Hook: browser speech recognition for voice input */
+function useSpeechRecognition(onResult: (text: string) => void) {
+  const [listening, setListening] = useState(false);
+  const recRef = useRef<any>(null);
+
+  const toggle = useCallback(() => {
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+
+    if (listening && recRef.current) {
+      recRef.current.stop();
+      setListening(false);
+      return;
+    }
+
+    const rec = new SpeechRec();
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+
+    rec.onresult = (event: any) => {
+      const transcript = event.results[0]?.[0]?.transcript;
+      if (transcript) onResult(transcript);
+      setListening(false);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+
+    recRef.current = rec;
+    rec.start();
+    setListening(true);
+  }, [listening, onResult]);
+
+  useEffect(() => () => { recRef.current?.stop(); }, []);
+
+  return { listening, toggle };
+}
+
 export function AICopilot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
