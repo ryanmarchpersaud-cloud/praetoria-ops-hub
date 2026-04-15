@@ -485,7 +485,7 @@ export default function WorkerSchedule() {
             <div className="space-y-3">
               {[1, 2, 3].map(i => <div key={i} className="h-28 rounded-xl bg-muted animate-pulse" />)}
             </div>
-          ) : upcomingVisits.length === 0 ? (
+          ) : totalUpcomingItems === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <Calendar className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
@@ -497,6 +497,9 @@ export default function WorkerSchedule() {
             <div className="space-y-2.5">
               {upcomingVisits.map(visit => (
                 <VisitCard key={visit.id} visit={visit} showDate />
+              ))}
+              {upcomingTasks.map(task => (
+                <TaskCard key={task.id} task={task} showDate />
               ))}
             </div>
           )}
