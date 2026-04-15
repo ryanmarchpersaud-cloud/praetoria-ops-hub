@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { NotificationCenter } from './NotificationCenter';
 import { AnnouncementBanner } from './AnnouncementBanner';
+import { AICopilot } from './AICopilot';
 import { useIncidentAlerts } from '@/hooks/useIncidentAlerts';
 
 export function AppLayout({ children }: { children: ReactNode }) {
