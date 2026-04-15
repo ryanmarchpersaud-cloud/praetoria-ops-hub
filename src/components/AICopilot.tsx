@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, X, Send, Loader2, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { Bot, X, Send, Loader2, Sparkles, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -66,6 +66,48 @@ function useSpeech() {
   return { speak, stop, speakingIdx };
 }
 
+/** Hook: browser speech recognition for voice input */
+function useSpeechRecognition(onResult: (text: string) => void) {
+  const [listening, setListening] = useState(false);
+  const recRef = useRef<any>(null);
+
+  const toggle = useCallback(() => {
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+
+    if (listening && recRef.current) {
+      recRef.current.stop();
+      setListening(false);
+      return;
+    }
+
+    const rec = new SpeechRec();
+    rec.lang = 'en-US';
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+
+    rec.onresult = (event: any) => {
+      const transcript = event.results[0]?.[0]?.transcript;
+      if (transcript) onResult(transcript);
+      setListening(false);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+
+    recRef.current = rec;
+    rec.start();
+    setListening(true);
+  }, [listening, onResult]);
+
+  useEffect(() => () => { recRef.current?.stop(); }, []);
+
+  return { listening, toggle };
+}
+
 export function AICopilot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -75,7 +117,19 @@ export function AICopilot() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const lastSpokenRef = useRef<number>(-1);
+  const sendRef = useRef<(text: string) => void>(() => {});
   const { speak, stop, speakingIdx } = useSpeech();
+
+  // Voice input: when recognized, either auto-send or fill input
+  const handleVoiceResult = useCallback((transcript: string) => {
+    if (autoSpeak) {
+      sendRef.current(transcript);
+    } else {
+      setInput(prev => (prev ? prev + ' ' : '') + transcript);
+      inputRef.current?.focus();
+    }
+  }, [autoSpeak]);
+  const { listening, toggle: toggleMic } = useSpeechRecognition(handleVoiceResult);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -206,6 +260,9 @@ export function AICopilot() {
     setIsLoading(false);
   }, [messages, isLoading]);
 
+  // Keep sendRef in sync
+  useEffect(() => { sendRef.current = send; }, [send]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -322,13 +379,32 @@ export function AICopilot() {
 
           {/* Input */}
           <div className="border-t px-3 py-2.5 shrink-0">
+            {listening && (
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                </span>
+                <span className="text-[11px] text-muted-foreground">Listening… speak now</span>
+              </div>
+            )}
             <div className="flex items-end gap-2">
+              <Button
+                variant={listening ? 'default' : 'ghost'}
+                size="icon"
+                className={cn('h-9 w-9 rounded-xl shrink-0', listening && 'bg-red-500 hover:bg-red-600 text-white')}
+                onClick={toggleMic}
+                disabled={isLoading}
+                title={listening ? 'Stop listening' : 'Voice input'}
+              >
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about your operations..."
+                placeholder={listening ? 'Listening...' : 'Ask about your operations...'}
                 rows={1}
                 className="flex-1 resize-none bg-muted/50 border-0 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30 max-h-24"
               />
