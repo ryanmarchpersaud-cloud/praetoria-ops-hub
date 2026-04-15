@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MapPin } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -8,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { useCreateCustomer, useCustomers } from '@/hooks/useCustomers';
 import { useCreateProperty } from '@/hooks/useProperties';
 import { useCreateLead } from '@/hooks/useLeads';
@@ -217,6 +219,7 @@ function QuickJobDialog({ open, onClose }: { open: boolean; onClose: () => void 
   const createJob = useCreateJob();
   const { data: customers = [] } = useCustomers();
   const { data: properties = [] } = useProperties();
+  const { user } = useAuth();
   const [form, setForm] = useState({ job_title: '', customer_id: '', property_id: '', service_category: '', notes: '' });
 
   const reset = () => setForm({ job_title: '', customer_id: '', property_id: '', service_category: '', notes: '' });
@@ -224,6 +227,12 @@ function QuickJobDialog({ open, onClose }: { open: boolean; onClose: () => void 
   const filteredProperties = form.customer_id
     ? properties?.filter((p: any) => p.customer_id === form.customer_id) || []
     : properties || [];
+
+  // Get selected property address for display
+  const selectedProperty = form.property_id ? (properties || []).find((p: any) => p.id === form.property_id) : null;
+  const propertyAddress = selectedProperty
+    ? [selectedProperty.address_line_1, selectedProperty.city, selectedProperty.province].filter(Boolean).join(', ')
+    : null;
 
   const handleSubmit = async () => {
     if (!form.job_title.trim()) {
@@ -237,8 +246,9 @@ function QuickJobDialog({ open, onClose }: { open: boolean; onClose: () => void 
         property_id: form.property_id || null,
         service_category: (form.service_category || 'Snow & Ice') as any,
         notes: form.notes || null,
+        assigned_to: user?.id || null,
       });
-      toast({ title: 'Job created' });
+      toast({ title: 'Job created & assigned to you', description: 'Check your schedule.' });
       reset();
       onClose();
     } catch (e: any) {
@@ -251,7 +261,7 @@ function QuickJobDialog({ open, onClose }: { open: boolean; onClose: () => void 
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>New Job</DialogTitle>
-          <DialogDescription>Create a new job.</DialogDescription>
+          <DialogDescription>Create a new job assigned to you.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div><Label>Job Title *</Label><Input value={form.job_title} onChange={e => setForm(f => ({ ...f, job_title: e.target.value }))} /></div>
@@ -276,16 +286,30 @@ function QuickJobDialog({ open, onClose }: { open: boolean; onClose: () => void 
             </Select>
           </div>
           <div>
-            <Label>Property</Label>
+            <Label>Property (for directions)</Label>
             <Select value={form.property_id} onValueChange={v => setForm(f => ({ ...f, property_id: v }))}>
               <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
               <SelectContent>
                 {filteredProperties.map((p: any) => (
-                  <SelectItem key={p.id} value={p.id}>{p.property_name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>{p.property_name}{p.address_line_1 ? ` — ${p.address_line_1}` : ''}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          {propertyAddress && (
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/10 text-xs">
+              <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="text-foreground font-medium truncate">{propertyAddress}</span>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(propertyAddress)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-auto text-primary font-bold text-[10px] shrink-0"
+              >
+                Navigate ↗
+              </a>
+            </div>
+          )}
           <div><Label>Notes</Label><Textarea rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
         </div>
         <DialogFooter>
