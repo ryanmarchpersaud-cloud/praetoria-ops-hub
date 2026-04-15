@@ -29,6 +29,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
+      <AICopilot />
     </SidebarProvider>
   );
 }
