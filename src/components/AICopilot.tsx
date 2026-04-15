@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, X, Send, Loader2, Sparkles } from 'lucide-react';
+import { Bot, X, Send, Loader2, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -15,13 +15,67 @@ const SUGGESTIONS = [
   'How many active jobs?',
 ];
 
+/** Strip markdown to plain text for speech */
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/#{1,6}\s?/g, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`{1,3}[^`]*`{1,3}/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/[>\-|]/g, ' ')
+    .replace(/\n{2,}/g, '. ')
+    .replace(/\n/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function useSpeech() {
+  const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const stop = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setSpeakingIdx(null);
+    utteranceRef.current = null;
+  }, []);
+
+  const speak = useCallback((text: string, idx: number) => {
+    stop();
+    const plain = stripMarkdown(text);
+    if (!plain) return;
+    const utt = new SpeechSynthesisUtterance(plain);
+    utt.rate = 1.05;
+    utt.pitch = 1;
+    // Prefer a natural-sounding voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes('Samantha'))
+      || voices.find(v => v.name.includes('Google') && v.lang.startsWith('en'))
+      || voices.find(v => v.lang.startsWith('en') && v.localService);
+    if (preferred) utt.voice = preferred;
+    utt.onend = () => setSpeakingIdx(null);
+    utt.onerror = () => setSpeakingIdx(null);
+    setSpeakingIdx(idx);
+    utteranceRef.current = utt;
+    window.speechSynthesis.speak(utt);
+  }, [stop]);
+
+  // Cleanup on unmount
+  useEffect(() => () => { window.speechSynthesis.cancel(); }, []);
+
+  return { speak, stop, speakingIdx };
+}
+
 export function AICopilot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const lastSpokenRef = useRef<number>(-1);
+  const { speak, stop, speakingIdx } = useSpeech();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -34,6 +88,17 @@ export function AICopilot() {
       inputRef.current.focus();
     }
   }, [open]);
+
+  // Auto-speak newest assistant message when streaming finishes
+  useEffect(() => {
+    if (!autoSpeak || isLoading) return;
+    const lastIdx = messages.length - 1;
+    const last = messages[lastIdx];
+    if (last?.role === 'assistant' && lastIdx > lastSpokenRef.current) {
+      lastSpokenRef.current = lastIdx;
+      speak(last.content, lastIdx);
+    }
+  }, [messages, isLoading, autoSpeak, speak]);
 
   const send = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -171,7 +236,16 @@ export function AICopilot() {
               <p className="text-sm font-semibold">Praetoria AI Co-pilot</p>
               <p className="text-[10px] text-muted-foreground">Ask about invoices, jobs, schedule & more</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setOpen(false)}>
+            <Button
+              variant={autoSpeak ? 'default' : 'ghost'}
+              size="icon"
+              className="h-7 w-7 shrink-0"
+              onClick={() => { setAutoSpeak(!autoSpeak); if (autoSpeak) stop(); }}
+              title={autoSpeak ? 'Auto-speak ON — click to mute' : 'Auto-speak OFF — click to enable'}
+            >
+              {autoSpeak ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => { stop(); setOpen(false); }}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -200,18 +274,39 @@ export function AICopilot() {
             )}
             {messages.map((msg, i) => (
               <div key={i} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                <div className={cn(
-                  'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm',
-                  msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-br-md'
-                    : 'bg-muted rounded-bl-md'
-                )}>
-                  {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>ul]:mb-1.5 [&>ol]:mb-1.5 [&>p:last-child]:mb-0">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                <div className="flex flex-col gap-1 max-w-[85%]">
+                  <div className={cn(
+                    'rounded-2xl px-3.5 py-2.5 text-sm',
+                    msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground rounded-br-md'
+                      : 'bg-muted rounded-bl-md'
+                  )}>
+                    {msg.role === 'assistant' ? (
+                      <div className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1.5 [&>ul]:mb-1.5 [&>ol]:mb-1.5 [&>p:last-child]:mb-0">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    )}
+                  </div>
+                  {/* Speak button for assistant messages */}
+                  {msg.role === 'assistant' && !isLoading && (
+                    <button
+                      onClick={() => speakingIdx === i ? stop() : speak(msg.content, i)}
+                      className={cn(
+                        'flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full w-fit transition-colors',
+                        speakingIdx === i
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                      )}
+                      title={speakingIdx === i ? 'Stop speaking' : 'Read aloud'}
+                    >
+                      {speakingIdx === i ? (
+                        <><VolumeX className="h-3 w-3" /> Stop</>
+                      ) : (
+                        <><Volume2 className="h-3 w-3" /> Listen</>
+                      )}
+                    </button>
                   )}
                 </div>
               </div>
