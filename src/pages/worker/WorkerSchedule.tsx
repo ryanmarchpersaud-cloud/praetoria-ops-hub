@@ -167,7 +167,107 @@ function VisitCard({ visit, showDate = false }: { visit: Visit; showDate?: boole
   );
 }
 
-export default function WorkerSchedule() {
+type TaskItem = {
+  id: string;
+  task_title: string;
+  task_category: string;
+  status: string;
+  priority: string;
+  due_date: string | null;
+  due_time: string | null;
+  address: string | null;
+  city: string | null;
+  province: string | null;
+  properties: { property_name: string; address_line_1: string | null; city: string | null } | null;
+  customers: { first_name: string; last_name: string } | null;
+};
+
+const TASK_SELECT = 'id, task_title, task_category, status, priority, due_date, due_time, address, city, province, properties(property_name, address_line_1, city), customers(first_name, last_name)';
+
+const priorityColors: Record<string, string> = {
+  urgent: 'bg-red-500/10 text-red-700 border-red-400',
+  high: 'bg-orange-500/10 text-orange-700 border-orange-400',
+  medium: 'bg-blue-500/10 text-blue-700 border-blue-400',
+  low: 'bg-slate-500/10 text-slate-600 border-slate-300',
+};
+
+function TaskCard({ task, showDate = false }: { task: TaskItem; showDate?: boolean }) {
+  const isCompleted = task.status === 'Completed' || task.status === 'Cancelled';
+  const pColor = priorityColors[task.priority] || priorityColors.medium;
+  const taskAddress = task.properties?.address_line_1
+    ? [task.properties.address_line_1, task.properties.city].filter(Boolean).join(', ')
+    : task.address
+    ? [task.address, task.city, task.province].filter(Boolean).join(', ')
+    : null;
+
+  return (
+    <Link to={`/worker/tasks`} className="block">
+      <Card className={cn(
+        'active:shadow-md transition-all border-l-4',
+        'border-amber-400 bg-amber-500/5',
+        isCompleted && 'opacity-60',
+      )}>
+        <CardContent className="p-3.5 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <ClipboardList className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700">Task</span>
+              <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize', pColor)}>
+                {task.priority}
+              </span>
+            </div>
+            <StatusBadge status={task.status} showIcon={false} />
+          </div>
+
+          {showDate && task.due_date && (
+            <div className="flex items-center gap-1 text-xs font-medium text-foreground">
+              <Calendar className="h-3.5 w-3.5 text-primary" />
+              {format(parseISO(task.due_date), 'EEE, MMM d')}
+            </div>
+          )}
+
+          <p className="text-sm font-bold text-foreground">{task.task_title}</p>
+
+          {task.customers && (
+            <p className="text-xs text-muted-foreground">
+              {task.customers.first_name} {task.customers.last_name}
+            </p>
+          )}
+
+          {task.properties && (
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+              <span className="font-semibold text-foreground text-xs">{task.properties.property_name}</span>
+            </div>
+          )}
+
+          {task.due_time && (
+            <div className="flex items-center gap-1 text-xs font-medium text-foreground">
+              <Clock className="h-3.5 w-3.5 text-primary" />
+              {task.due_time}
+            </div>
+          )}
+
+          {/* Quick actions */}
+          <div className="flex gap-2 pt-1">
+            {taskAddress && (
+              <a
+                href={`https://maps.google.com/maps?daddr=${encodeURIComponent(taskAddress)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold active:scale-95 transition-transform shadow-sm"
+              >
+                <Navigation className="h-3 w-3" /> Navigate
+              </a>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
   const [tab, setTab] = useState<ScheduleTab>('today');
   const [weekOffset, setWeekOffset] = useState(0);
   const { user } = useAuth();
