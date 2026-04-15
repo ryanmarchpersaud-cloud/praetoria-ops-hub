@@ -548,15 +548,17 @@ export default function WorkerSchedule() {
               {days.map(day => {
                 const dateKey = format(day, 'yyyy-MM-dd');
                 const dayVisits = visitsByDay.get(dateKey) || [];
+                const dayTasks = tasksByDay.get(dateKey) || [];
                 const today = isToday(day);
                 const dayCompleted = dayVisits.filter(v => v.visit_status === 'Completed').length;
+                const totalDayItems = dayVisits.length + dayTasks.length;
 
                 return (
                   <div key={dateKey}>
                     {/* Day header */}
                     <div className={cn(
                       'flex items-center gap-3 py-2 px-2 mb-2 sticky top-0 z-10 rounded-lg',
-                      dayVisits.length > 0
+                      totalDayItems > 0
                         ? 'bg-primary/10 border border-primary/20'
                         : 'bg-background',
                       today && 'bg-primary/15 border border-primary/30'
@@ -564,12 +566,12 @@ export default function WorkerSchedule() {
                       <div className={cn(
                         'w-11 h-11 rounded-full flex flex-col items-center justify-center text-center shrink-0 shadow-sm',
                         today ? 'bg-primary text-primary-foreground' :
-                        dayVisits.length > 0 ? 'bg-primary/20 text-primary' : 'bg-muted'
+                        totalDayItems > 0 ? 'bg-primary/20 text-primary' : 'bg-muted'
                       )}>
                         <span className="text-[9px] font-bold leading-none uppercase">
                           {format(day, 'EEE')}
                         </span>
-                        <span className={cn('text-sm font-black leading-none', !today && dayVisits.length === 0 && 'text-foreground')}>
+                        <span className={cn('text-sm font-black leading-none', !today && totalDayItems === 0 && 'text-foreground')}>
                           {format(day, 'd')}
                         </span>
                       </div>
@@ -577,30 +579,34 @@ export default function WorkerSchedule() {
                         <span className={cn(
                           'text-sm font-bold',
                           today ? 'text-primary' :
-                          dayVisits.length > 0 ? 'text-foreground' : 'text-muted-foreground'
+                          totalDayItems > 0 ? 'text-foreground' : 'text-muted-foreground'
                         )}>
                           {today ? 'Today' : format(day, 'EEEE')}
                         </span>
-                        {dayVisits.length > 0 && (
+                        {totalDayItems > 0 && (
                           <span className={cn(
                             'text-xs font-bold px-2 py-0.5 rounded-full',
                             today ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary'
                           )}>
                             {dayCompleted}/{dayVisits.length}
+                            {dayTasks.length > 0 && ` + ${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}`}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Visits */}
-                    {dayVisits.length === 0 ? (
+                    {/* Visits + Tasks */}
+                    {totalDayItems === 0 ? (
                       <div className="ml-12 py-3 text-xs text-muted-foreground/50 border-l-2 border-dashed border-border pl-4">
-                        No visits
+                        No visits or tasks
                       </div>
                     ) : (
                       <div className="ml-5 border-l-[3px] border-primary/30 pl-3 space-y-2.5">
                         {dayVisits.map(visit => (
                           <VisitCard key={visit.id} visit={visit} />
+                        ))}
+                        {dayTasks.map(task => (
+                          <TaskCard key={task.id} task={task} />
                         ))}
                       </div>
                     )}
