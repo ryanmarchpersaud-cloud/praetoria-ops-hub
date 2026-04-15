@@ -336,6 +336,29 @@ export default function WorkerSchedule() {
     enabled: !!user,
   });
 
+  // ── Operational Tasks ──
+  const { data: myTasks = [] } = useQuery({
+    queryKey: ['worker_schedule_tasks', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('operational_tasks')
+        .select(TASK_SELECT)
+        .eq('assigned_to', user!.id)
+        .not('status', 'in', '("Completed","Cancelled")')
+        .order('due_date', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return (data || []) as unknown as TaskItem[];
+    },
+    enabled: !!user,
+  });
+
+  // Tasks for today
+  const todayTasks = useMemo(() => myTasks.filter(t => t.due_date === todayStr), [myTasks, todayStr]);
+  // Tasks upcoming (next 14 days, not today)
+  const upcomingTasks = useMemo(() => myTasks.filter(t => t.due_date && t.due_date > todayStr && t.due_date <= upcomingEnd), [myTasks, todayStr, upcomingEnd]);
+  // Tasks with no due date (show in today)
+  const undatedTasks = useMemo(() => myTasks.filter(t => !t.due_date), [myTasks]);
+
   const visitsByDay = useMemo(() => {
     const map = new Map<string, Visit[]>();
     days.forEach(d => map.set(format(d, 'yyyy-MM-dd'), []));
@@ -346,6 +369,18 @@ export default function WorkerSchedule() {
     return map;
   }, [weekVisits, days]);
 
+  const tasksByDay = useMemo(() => {
+    const map = new Map<string, TaskItem[]>();
+    days.forEach(d => map.set(format(d, 'yyyy-MM-dd'), []));
+    myTasks.forEach(t => {
+      if (t.due_date) {
+        const arr = map.get(t.due_date);
+        if (arr) arr.push(t);
+      }
+    });
+    return map;
+  }, [myTasks, days]);
+
   // Sort today: In Progress first, then En Route, then Scheduled, then rest
   const sortedToday = useMemo(() => {
     const order: Record<string, number> = { 'In Progress': 0, 'En Route': 1, 'Scheduled': 2, 'Planned': 3 };
@@ -354,10 +389,12 @@ export default function WorkerSchedule() {
 
   const todayCompleted = todayVisits.filter(v => v.visit_status === 'Completed').length;
   const weekCompleted = weekVisits.filter(v => v.visit_status === 'Completed').length;
+  const totalTodayItems = todayVisits.length + todayTasks.length + undatedTasks.length;
+  const totalUpcomingItems = upcomingVisits.length + upcomingTasks.length;
 
   const tabs: { key: ScheduleTab; label: string; count: number }[] = [
-    { key: 'today', label: 'Today', count: todayVisits.length },
-    { key: 'upcoming', label: 'Upcoming', count: upcomingVisits.length },
+    { key: 'today', label: 'Today', count: totalTodayItems },
+    { key: 'upcoming', label: 'Upcoming', count: totalUpcomingItems },
     { key: 'week', label: 'Week', count: weekVisits.length },
   ];
 
