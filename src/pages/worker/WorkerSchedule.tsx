@@ -456,11 +456,11 @@ export default function WorkerSchedule() {
             <div className="space-y-3">
               {[1, 2, 3].map(i => <div key={i} className="h-28 rounded-xl bg-muted animate-pulse" />)}
             </div>
-          ) : sortedToday.length === 0 ? (
+          ) : totalTodayItems === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <Calendar className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-sm font-medium text-muted-foreground">No visits scheduled for today</p>
+                <p className="text-sm font-medium text-muted-foreground">No visits or tasks for today</p>
                 <p className="text-xs text-muted-foreground/60 mt-1">Check upcoming or weekly schedule</p>
               </CardContent>
             </Card>
@@ -468,6 +468,9 @@ export default function WorkerSchedule() {
             <div className="space-y-2.5">
               {sortedToday.map(visit => (
                 <VisitCard key={visit.id} visit={visit} />
+              ))}
+              {[...todayTasks, ...undatedTasks].map(task => (
+                <TaskCard key={task.id} task={task} />
               ))}
             </div>
           )}
