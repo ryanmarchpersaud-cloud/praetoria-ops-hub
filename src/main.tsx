@@ -1,6 +1,10 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { configureStatusBar } from "./lib/statusBar";
+
+// Configure native status bar (no-op on web)
+configureStatusBar();
 
 // Service worker registration — only in production, never in iframes/preview
 const isInIframe = (() => {
