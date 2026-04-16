@@ -8,6 +8,7 @@ export async function configureStatusBar() {
     // Prevent the webview from rendering under the status bar
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setStyle({ style: Style.Dark });
+    await StatusBar.setBackgroundColor({ color: '#ffffffff' });
   } catch {
     // StatusBar plugin not available — ignore
   }
