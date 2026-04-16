@@ -39,7 +39,7 @@ export function PortalLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-card shadow-sm">
+      <header className="sticky top-0 z-30 border-b border-border bg-card shadow-sm safe-area-top safe-area-x">
         <div className="max-w-5xl mx-auto flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center p-1">
