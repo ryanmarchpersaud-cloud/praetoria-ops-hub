@@ -14,14 +14,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-12 md:h-14 flex items-center justify-between border-b border-border px-3 md:px-4 bg-card shrink-0 sticky top-0 z-10 safe-area-top safe-area-x">
-            <div className="flex items-center">
-              <SidebarTrigger className="mr-3" />
-              <span className="text-xs md:text-sm font-medium text-muted-foreground truncate">
-                <span className="hidden sm:inline">Praetoria Group — </span>Admin Portal
-              </span>
+          <header className="border-b border-border bg-card shrink-0 sticky top-0 z-30">
+            <div className="flex min-h-12 items-center justify-between pt-[env(safe-area-inset-top,0px)] pl-[calc(env(safe-area-inset-left,0px)+0.75rem)] pr-[calc(env(safe-area-inset-right,0px)+0.75rem)] md:min-h-14 md:pl-[calc(env(safe-area-inset-left,0px)+1rem)] md:pr-[calc(env(safe-area-inset-right,0px)+1rem)]">
+              <div className="flex min-w-0 items-center">
+                <SidebarTrigger className="mr-2 md:mr-3" />
+                <span className="text-xs md:text-sm font-medium text-muted-foreground truncate">
+                  <span className="hidden sm:inline">Praetoria Group — </span>Admin Portal
+                </span>
+              </div>
+              <NotificationCenter />
             </div>
-            <NotificationCenter />
           </header>
           <AnnouncementBanner />
           <main className="flex-1 p-3 md:p-6 overflow-auto">
