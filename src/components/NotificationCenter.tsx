@@ -124,7 +124,8 @@ export function NotificationCenter() {
     const base = n.record_type ? RECORD_ROUTES[n.record_type] : undefined;
 
     if (base) {
-      const listOnlyRoutes = new Set(['/activity']);
+      // Routes that have no /:id detail page — navigate to list only
+      const listOnlyRoutes = new Set(['/activity', '/messaging', '/finance/expenses']);
       target = n.record_id && !listOnlyRoutes.has(base)
         ? `${base}/${n.record_id}`
         : base;
