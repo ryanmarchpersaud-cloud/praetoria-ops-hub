@@ -514,6 +514,20 @@ export default function InvoiceDetail() {
                     <Input type="date" value={draftDueDate} onChange={e => setDraftDueDate(e.target.value)} className="h-8" />
                   </div>
                   <div className="space-y-1">
+                    <Label className="text-xs">Property (where work was done)</Label>
+                    <Select value={draftPropertyId || 'none'} onValueChange={v => setDraftPropertyId(v === 'none' ? '' : v)}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select property..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— No property —</SelectItem>
+                        {customerProperties.map((p: any) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.property_name}{p.address_line_1 ? ` · ${p.address_line_1}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
                     <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3" /> Customer Memo</Label>
                     <Textarea rows={2} value={draftMemo} onChange={e => setDraftMemo(e.target.value)} className="text-xs" placeholder="Shown on invoice to customer" />
                   </div>
