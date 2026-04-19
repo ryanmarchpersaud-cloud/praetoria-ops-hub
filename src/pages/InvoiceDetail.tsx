@@ -22,6 +22,7 @@ import {
   Paperclip, X, Upload
 } from 'lucide-react';
 import { RefundDialog } from '@/components/RefundDialog';
+import { RecordPaymentDialog } from '@/components/finance/RecordPaymentDialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
@@ -336,6 +337,14 @@ export default function InvoiceDetail() {
           </Button>
         )}
         {canRecordPayment && (
+          <Button
+            size="sm" variant="outline"
+            onClick={() => setPaymentOpen(true)}
+          >
+            <DollarSign className="h-3.5 w-3.5 mr-1.5" /> Record Payment
+          </Button>
+        )}
+        {false && canRecordPayment && (
           <Button
             size="sm" variant="outline"
             className="text-success border-success/30 hover:bg-success/10"
