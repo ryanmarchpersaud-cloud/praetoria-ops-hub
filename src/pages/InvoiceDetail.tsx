@@ -344,15 +344,6 @@ export default function InvoiceDetail() {
             <DollarSign className="h-3.5 w-3.5 mr-1.5" /> Record Payment
           </Button>
         )}
-        {false && canRecordPayment && (
-          <Button
-            size="sm" variant="outline"
-            className="text-success border-success/30 hover:bg-success/10"
-            onClick={() => { setPaymentAmount(balanceDue.toFixed(2)); setPaymentOpen(true); }}
-          >
-            <DollarSign className="h-3.5 w-3.5 mr-1.5" /> Record Payment
-          </Button>
-        )}
         {canCollectFromCard && (
           <Button
             size="sm" variant="outline"
@@ -842,46 +833,12 @@ export default function InvoiceDetail() {
       </Dialog>
 
       {/* Record Payment Dialog */}
-      <Dialog open={paymentOpen} onOpenChange={setPaymentOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Record Payment</DialogTitle>
-            <DialogDescription>
-              Record a payment against {invoice.invoice_number}. Balance due: ${balanceDue.toFixed(2)}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Payment Amount</Label>
-              <Input
-                type="number" step="0.01" min="0.01" max={balanceDue}
-                value={paymentAmount}
-                onChange={e => setPaymentAmount(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="text-xs" onClick={() => setPaymentAmount(balanceDue.toFixed(2))}>
-                Full Balance (${balanceDue.toFixed(2)})
-              </Button>
-            </div>
-            {parseFloat(paymentAmount) > 0 && parseFloat(paymentAmount) < balanceDue - 0.005 && (
-              <p className="text-xs text-muted-foreground">
-                Remaining balance after payment: <span className="font-medium text-foreground">${(balanceDue - parseFloat(paymentAmount)).toFixed(2)}</span> — invoice will be marked as <span className="font-medium">Partially Paid</span>.
-              </p>
-            )}
-            {parseFloat(paymentAmount) >= balanceDue - 0.005 && parseFloat(paymentAmount) > 0 && (
-              <p className="text-xs text-success">Invoice will be marked as <span className="font-medium">Paid</span>.</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentOpen(false)}>Cancel</Button>
-            <Button onClick={handleRecordPayment} className="gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5" /> Record Payment
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RecordPaymentDialog
+        open={paymentOpen}
+        onOpenChange={setPaymentOpen}
+        customerId={invoice.customer_id}
+        initialInvoiceId={invoice.id}
+      />
 
       {/* Refund Dialog */}
       <RefundDialog
