@@ -12,10 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { RecordPaymentDialog } from '@/components/finance/RecordPaymentDialog';
 import {
   Search, DollarSign, CreditCard, ArrowUpDown, ChevronUp, ChevronDown,
   CalendarIcon, TrendingUp, AlertTriangle, CheckCircle, Clock, X, Banknote,
-  ArrowRight,
+  ArrowRight, Plus, User,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO, subDays, subMonths, subWeeks, startOfMonth, startOfYear, isAfter, isBefore } from 'date-fns';
@@ -99,7 +102,22 @@ export default function FinancePayments() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
   const [customCalOpen, setCustomCalOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [paymentCustomerId, setPaymentCustomerId] = useState<string>('');
   const perPage = 25;
+
+  // Customer search for "Record Payment" entry
+  const { data: customers = [] } = useQuery({
+    queryKey: ['fp_customers_picker'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('customers')
+        .select('id, first_name, last_name, company_name, email')
+        .order('company_name', { ascending: true, nullsFirst: false })
+        .limit(500);
+      return data || [];
+    },
+  });
 
   // Fetch all payments with invoice + customer data
   const { data: allPayments = [], isLoading } = useQuery({
