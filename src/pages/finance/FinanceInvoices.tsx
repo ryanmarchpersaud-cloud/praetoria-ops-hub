@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { RecordPaymentDialog } from '@/components/finance/RecordPaymentDialog';
 import {
   Search, Plus, FileText, DollarSign, Clock, AlertTriangle, CheckCircle,
   TrendingUp, ArrowRight, Download, Printer, Send, MoreHorizontal,
@@ -330,64 +331,12 @@ export default function FinanceInvoices() {
       )}
 
       {/* Payment Dialog */}
-      <Dialog open={!!payInvoice} onOpenChange={o => !o && setPayInvoice(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Record Payment — {payInvoice?.invoice_number}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total</span><span className="font-bold">{fmt(Number(payInvoice?.total || 0))}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Balance Due</span><span className="font-bold text-destructive">{fmt(Number(payInvoice?.balance_due || payInvoice?.total || 0))}</span>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Payment Amount *</Label>
-              <Input type="number" step="0.01" value={payForm.amount} onChange={e => setPayForm(p => ({ ...p, amount: e.target.value }))} className="h-8" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Method</Label>
-              <Select value={payForm.method} onValueChange={v => setPayForm(p => ({ ...p, method: v }))}>
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="e_transfer">E-Transfer</SelectItem>
-                  <SelectItem value="credit_card">Credit Card</SelectItem>
-                  <SelectItem value="cheque">Cheque</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="wire">Wire Transfer</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Deposit Account</Label>
-              <Select value={payForm.account_id} onValueChange={v => setPayForm(p => ({ ...p, account_id: v }))}>
-                <SelectTrigger className="h-8"><SelectValue placeholder="Select account..." /></SelectTrigger>
-                <SelectContent>
-                  {accounts.filter((a: any) => a.is_active).map((a: any) => (
-                    <SelectItem key={a.id} value={a.id}>{a.account_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Reference #</Label>
-              <Input value={payForm.reference} onChange={e => setPayForm(p => ({ ...p, reference: e.target.value }))} className="h-8" placeholder="Cheque #, confirmation code..." />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Internal Note</Label>
-              <Textarea rows={2} value={payForm.note} onChange={e => setPayForm(p => ({ ...p, note: e.target.value }))} className="text-xs" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPayInvoice(null)}>Cancel</Button>
-            <Button onClick={submitPayment} disabled={recordPayment.isPending}>
-              {recordPayment.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Record Payment
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RecordPaymentDialog
+        open={!!payInvoice}
+        onOpenChange={(o) => { if (!o) setPayInvoice(null); }}
+        customerId={payInvoice?.customer_id || ''}
+        initialInvoiceId={payInvoice?.id}
+      />
     </div>
   );
 }
