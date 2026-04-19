@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -59,6 +60,23 @@ export default function InvoiceDetail() {
   const [draftNotes, setDraftNotes] = useState('');
   const [draftIssueDate, setDraftIssueDate] = useState('');
   const [draftDueDate, setDraftDueDate] = useState('');
+  const [draftPropertyId, setDraftPropertyId] = useState<string>('');
+
+  // Properties for this customer (for Property selector when editing)
+  const { data: customerProperties = [] } = useQuery({
+    queryKey: ['customer_properties_for_invoice', invoice?.customer_id],
+    queryFn: async () => {
+      if (!invoice?.customer_id) return [];
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, property_name, address_line_1, city')
+        .eq('customer_id', invoice.customer_id)
+        .order('property_name');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!invoice?.customer_id && editingMeta,
+  });
 
   // Confirmation dialogs
   const [confirmSend, setConfirmSend] = useState(false);
@@ -90,6 +108,7 @@ export default function InvoiceDetail() {
     setDraftNotes(invoice.internal_notes || '');
     setDraftIssueDate(invoice.issue_date);
     setDraftDueDate(invoice.due_date);
+    setDraftPropertyId(invoice.property_id || '');
     setEditingMeta(true);
   };
 
@@ -101,6 +120,7 @@ export default function InvoiceDetail() {
         internal_notes: draftNotes || null,
         issue_date: draftIssueDate,
         due_date: draftDueDate,
+        property_id: draftPropertyId || null,
       });
       toast.success('Invoice details updated');
       setEditingMeta(false);
@@ -492,6 +512,20 @@ export default function InvoiceDetail() {
                   <div className="space-y-1">
                     <Label className="text-xs">Due Date</Label>
                     <Input type="date" value={draftDueDate} onChange={e => setDraftDueDate(e.target.value)} className="h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Property (where work was done)</Label>
+                    <Select value={draftPropertyId || 'none'} onValueChange={v => setDraftPropertyId(v === 'none' ? '' : v)}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select property..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— No property —</SelectItem>
+                        {customerProperties.map((p: any) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.property_name}{p.address_line_1 ? ` · ${p.address_line_1}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs flex items-center gap-1"><Eye className="h-3 w-3" /> Customer Memo</Label>
