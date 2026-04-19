@@ -223,6 +223,9 @@ export default function FinancePayments() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Payments</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Track all payments, payouts, and transaction statuses</p>
         </div>
+        <Button onClick={() => setPickerOpen(true)} className="gap-1.5">
+          <Plus className="h-4 w-4" /> Record Payment
+        </Button>
       </div>
 
       {/* KPI Cards */}
@@ -408,6 +411,48 @@ export default function FinancePayments() {
             <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="h-7 text-xs">Next</Button>
           </div>
         </div>
+      )}
+      {/* Customer picker for new payment */}
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-md p-0">
+          <DialogHeader className="px-4 pt-4">
+            <DialogTitle>Record Payment</DialogTitle>
+            <DialogDescription>Choose a customer to record a payment for.</DialogDescription>
+          </DialogHeader>
+          <Command>
+            <CommandInput placeholder="Search customer..." />
+            <CommandList>
+              <CommandEmpty>No customers found.</CommandEmpty>
+              <CommandGroup>
+                {customers.map((c: any) => {
+                  const label = c.company_name || `${c.first_name || ''} ${c.last_name || ''}`.trim();
+                  return (
+                    <CommandItem
+                      key={c.id}
+                      value={`${label} ${c.email || ''}`}
+                      onSelect={() => { setPickerOpen(false); setPaymentCustomerId(c.id); }}
+                      className="cursor-pointer"
+                    >
+                      <User className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{label}</span>
+                        {c.email && <span className="text-xs text-muted-foreground">{c.email}</span>}
+                      </div>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </DialogContent>
+      </Dialog>
+
+      {paymentCustomerId && (
+        <RecordPaymentDialog
+          open={!!paymentCustomerId}
+          onOpenChange={(o) => { if (!o) setPaymentCustomerId(''); }}
+          customerId={paymentCustomerId}
+        />
       )}
     </div>
   );
