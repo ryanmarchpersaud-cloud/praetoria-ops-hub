@@ -53,6 +53,7 @@ const ATTACHMENT_CATEGORIES = [
 
 const GALLERY_ACCEPT = 'image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*';
 const DOC_ACCEPT = 'application/pdf,image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif';
+const NATIVE_PICKER_INPUT_CLASS = 'pointer-events-none fixed -left-[9999px] top-auto h-px w-px opacity-0';
 
 export default function IncidentPhotoUpload({
   photos,
@@ -85,13 +86,17 @@ export default function IncidentPhotoUpload({
     const input = ref.current;
     if (!input) return;
 
-    setStatus(null);
-    // Call .click() synchronously inside the user gesture. Do NOT use
-    // showPicker() for file inputs (unsupported on iOS Safari and several
-    // mobile WebViews) and do NOT await anything before this call, otherwise
-    // the browser will silently drop the request to open the photo library.
-    input.click();
-    setShowAddMoreOptions(false);
+    try {
+      input.value = '';
+      input.click();
+      setShowAddMoreOptions(false);
+      setStatus(null);
+    } catch (err) {
+      console.error('Failed to open incident attachment picker', err);
+      const text = 'Could not open the file picker on this device. Please try again.';
+      showStatus({ type: 'error', text });
+      toast({ title: 'Attachment picker failed', description: text, variant: 'destructive' });
+    }
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
