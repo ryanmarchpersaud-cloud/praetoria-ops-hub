@@ -199,6 +199,19 @@
     padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   }
 
+  /* Regression guard for signed-in worker/subcontractor shells.
+     The Apr 22 portal-shell changes moved these authenticated views onto a
+     safe-area path that can report 0px on some iPhone webviews after auth or
+     returning from the photo picker. Keep a minimum notch-safe clearance only
+     on those signed-in mobile shells, without affecting Android. */
+  @supports (-webkit-touch-callout: none) {
+    @media (max-width: 767px) {
+      [data-portal-scroll-shell] {
+        padding-top: max(59px, calc(env(safe-area-inset-top, 0px) + 12px));
+      }
+    }
+  }
+
   /* Shared page-header row used at the top of mobile portal subpages.
      Guarantees the title and any trailing action button (e.g. "Report",
      "Add", "Edit") never clip on narrow iPhones: the row wraps cleanly,
