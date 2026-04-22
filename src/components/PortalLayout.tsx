@@ -37,7 +37,16 @@ export function PortalLayout({ children }: { children: ReactNode }) {
     : user?.email;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="bg-background"
+      style={{
+        paddingTop: 'env(safe-area-inset-top, 44px)',
+        minHeight: '100dvh',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b border-border bg-card shadow-sm safe-area-top safe-area-x">
         <div className="max-w-5xl mx-auto flex items-center justify-between h-14 px-4">
