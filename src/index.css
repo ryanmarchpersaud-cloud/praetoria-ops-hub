@@ -202,6 +202,21 @@
     padding-top: 12px;
   }
 
+  /* Worker subpages under More still need a stronger iPhone fallback because
+     Safari/PWA sometimes reports a zero top inset even with viewport-fit=cover.
+     This keeps the total top clearance at roughly 59px without affecting Android. */
+  .worker-portal-shell {
+    padding-top: 12px;
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    @media (max-width: 767px) {
+      .worker-portal-shell {
+        padding-top: max(12px, calc(59px - env(safe-area-inset-top, 0px)));
+      }
+    }
+  }
+
   /* Shared page-header row used at the top of mobile portal subpages.
      Guarantees the title and any trailing action button (e.g. "Report",
      "Add", "Edit") never clip on narrow iPhones: the row wraps cleanly,
