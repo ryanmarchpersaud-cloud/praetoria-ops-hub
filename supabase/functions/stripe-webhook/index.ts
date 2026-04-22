@@ -426,6 +426,12 @@ serve(async (req) => {
         console.log(`[stripe-webhook] Unhandled event type: ${event.type}`);
     }
 
+    // Mark event as fully processed for the dedupe table
+    await sb
+      .from("stripe_webhook_events")
+      .update({ processed_at: new Date().toISOString() })
+      .eq("event_id", event.id);
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
