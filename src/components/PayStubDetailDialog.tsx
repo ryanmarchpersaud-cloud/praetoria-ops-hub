@@ -144,6 +144,20 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (open && stub) {
+      iosLog('paystub:open', { id: stub.id, payDate: stub.pay_date });
+    }
+  }, [open, stub]);
 
   if (!stub) return null;
 
