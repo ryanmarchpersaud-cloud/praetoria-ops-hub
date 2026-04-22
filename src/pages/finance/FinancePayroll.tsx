@@ -15,7 +15,8 @@ import { Separator } from '@/components/ui/separator';
 import { usePayrollRuns, useCreatePayrollRun, useUpdatePayrollRun, usePayrollRunItems, useCreatePayrollRunItem, useUpdatePayrollRunItem, useDeletePayrollRunItem } from '@/hooks/usePayroll';
 import { useFinanceAccounts } from '@/hooks/useFinanceAccounts';
 import { useEmployees } from '@/hooks/useEmployees';
-import { Plus, ChevronRight, Users, DollarSign, Clock, CheckCircle, Lock, ArrowLeft, Trash2, Pencil } from 'lucide-react';
+import { useAggregatedApprovedHours } from '@/hooks/useTimesheets';
+import { Plus, ChevronRight, Users, DollarSign, Clock, CheckCircle, Lock, ArrowLeft, Trash2, Pencil, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -332,7 +333,14 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Employees ({items?.length ?? 0})</CardTitle>
-          {!isLocked && <Button size="sm" onClick={openAddDialog}><Plus className="h-3.5 w-3.5 mr-1" /> Add Employee</Button>}
+          {!isLocked && (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={handlePullFromTimesheets} disabled={pullLoading || createItem.isPending}>
+                <Download className="h-3.5 w-3.5 mr-1" /> Pull Approved Hours
+              </Button>
+              <Button size="sm" onClick={openAddDialog}><Plus className="h-3.5 w-3.5 mr-1" /> Add Employee</Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           {isLoading ? <Skeleton className="h-32 m-4" /> : (
