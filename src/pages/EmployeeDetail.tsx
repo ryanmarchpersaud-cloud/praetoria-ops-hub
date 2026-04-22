@@ -21,7 +21,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw, Ban, ShieldOff, Landmark, Loader2, Pencil, Send, ClipboardCheck } from 'lucide-react';
+import { ArrowLeft, User, Briefcase, Award, FileText, DollarSign, Heart, CalendarDays, UserCheck, MapPin, HardHat, Plus, BookOpen, CheckCircle2, XCircle, RotateCcw, Ban, ShieldOff, Landmark, Loader2, Pencil, Send, ClipboardCheck, Clock } from 'lucide-react';
+import { EmployeeTimesheetsTab } from '@/components/hr/EmployeeTimesheetsTab';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -524,6 +525,7 @@ export default function EmployeeDetail() {
           <TabsTrigger value="timeoff" className="gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Time Off</TabsTrigger>
           <TabsTrigger value="emergency" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Emergency</TabsTrigger>
           <TabsTrigger value="equipment" className="gap-1.5"><HardHat className="h-3.5 w-3.5" /> Equipment</TabsTrigger>
+          <TabsTrigger value="timesheets" className="gap-1.5"><Clock className="h-3.5 w-3.5" /> Timesheets</TabsTrigger>
           <TabsTrigger value="visits" className="gap-1.5"><ClipboardCheck className="h-3.5 w-3.5" /> Visits</TabsTrigger>
         </TabsList>
 
@@ -897,6 +899,11 @@ export default function EmployeeDetail() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Timesheets */}
+        <TabsContent value="timesheets">
+          {userId && <EmployeeTimesheetsTab userId={userId} />}
         </TabsContent>
 
         {/* Visits */}

@@ -1,0 +1,98 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Clock, Users, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAdminLiveWorkforce } from '@/hooks/useTimesheets';
+import { formatDistanceToNow } from 'date-fns';
+
+export function LiveWorkforcePanel() {
+  const { data, isLoading } = useAdminLiveWorkforce();
+
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <div>
+          <CardTitle className="text-base font-semibold">Live Workforce</CardTitle>
+          <p className="text-xs text-muted-foreground mt-0.5">Who's clocked in right now</p>
+        </div>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/employees">
+            View all <ChevronRight className="h-4 w-4 ml-1" />
+          </Link>
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* KPI strip */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-lg border bg-emerald-50 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/40 p-3">
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 mb-1">
+              <Users className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wide">On Clock</span>
+            </div>
+            <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+              {isLoading ? '—' : data?.active_count ?? 0}
+            </div>
+          </div>
+          <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/40 p-3">
+            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-1">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wide">Done Today</span>
+            </div>
+            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+              {isLoading ? '—' : data?.completed_today ?? 0}
+            </div>
+          </div>
+          <div className="rounded-lg border bg-violet-50 dark:bg-violet-950/30 border-violet-100 dark:border-violet-900/40 p-3">
+            <div className="flex items-center gap-2 text-violet-700 dark:text-violet-400 mb-1">
+              <Clock className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wide">Hours Today</span>
+            </div>
+            <div className="text-2xl font-bold text-violet-900 dark:text-violet-100">
+              {isLoading ? '—' : (data?.total_today_hours ?? 0).toFixed(1)}
+            </div>
+          </div>
+        </div>
+
+        {/* Active sessions list */}
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Active Sessions
+          </div>
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground py-4 text-center">Loading…</div>
+          ) : !data?.active_sessions.length ? (
+            <div className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded-lg">
+              No workers currently clocked in
+            </div>
+          ) : (
+            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+              {data.active_sessions.map((s: any) => (
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between rounded-md border bg-card p-2.5 hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">{s.full_name}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Clocked in {formatDistanceToNow(new Date(s.clock_in), { addSuffix: true })}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="shrink-0 font-mono text-[11px]">
+                    {s.elapsed_hours.toFixed(1)}h
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

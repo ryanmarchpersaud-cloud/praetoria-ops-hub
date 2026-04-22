@@ -15,7 +15,8 @@ import { Separator } from '@/components/ui/separator';
 import { usePayrollRuns, useCreatePayrollRun, useUpdatePayrollRun, usePayrollRunItems, useCreatePayrollRunItem, useUpdatePayrollRunItem, useDeletePayrollRunItem } from '@/hooks/usePayroll';
 import { useFinanceAccounts } from '@/hooks/useFinanceAccounts';
 import { useEmployees } from '@/hooks/useEmployees';
-import { Plus, ChevronRight, Users, DollarSign, Clock, CheckCircle, Lock, ArrowLeft, Trash2, Pencil } from 'lucide-react';
+import { useAggregatedApprovedHours } from '@/hooks/useTimesheets';
+import { Plus, ChevronRight, Users, DollarSign, Clock, CheckCircle, Lock, ArrowLeft, Trash2, Pencil, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -196,6 +197,57 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
     setShowAdd(true);
   };
 
+  // Pull approved hours from timesheets for the run's pay period
+  const { data: approvedHours = [], refetch: refetchApproved, isFetching: pullLoading } = useAggregatedApprovedHours(
+    run?.pay_period_start ?? null,
+    run?.pay_period_end ?? null,
+  );
+
+  const handlePullFromTimesheets = async () => {
+    if (!run) return;
+    const { data: fresh } = await refetchApproved();
+    const rows = fresh ?? [];
+    if (!rows.length) {
+      toast.info('No approved timesheets found in this pay period');
+      return;
+    }
+    const existingUserIds = new Set((items ?? []).map((it: any) => it.user_id));
+    const toAdd = rows.filter((r) => !existingUserIds.has(r.user_id));
+    if (!toAdd.length) {
+      toast.info('All workers with approved hours are already in this run');
+      return;
+    }
+    let created = 0;
+    for (const r of toAdd) {
+      const regular_hours = Math.min(40, Number(r.total_hours));
+      const overtime_hours = Math.max(0, Number(r.total_hours) - 40);
+      const hourly_rate = Number(r.hourly_rate);
+      const gross_pay = Math.round((regular_hours * hourly_rate + overtime_hours * hourly_rate * 1.5) * 100) / 100;
+      try {
+        await new Promise<void>((resolve, reject) => {
+          createItem.mutate(
+            {
+              payroll_run_id: runId,
+              user_id: r.user_id,
+              employee_name: r.full_name,
+              regular_hours,
+              overtime_hours,
+              hourly_rate,
+              gross_pay,
+              net_pay: gross_pay,
+              total_deductions: 0,
+              memo: `Auto-pulled from ${r.entry_count} approved timesheet(s)`,
+            } as any,
+            { onSuccess: () => { created++; resolve(); }, onError: (e: any) => reject(e) },
+          );
+        });
+      } catch (e: any) {
+        toast.error(`Failed to add ${r.full_name}: ${e.message}`);
+      }
+    }
+    toast.success(`Added ${created} employees with approved hours`);
+  };
+
   const openEditDialog = (item: any) => {
     setEditingItemId(item.id);
     setSelectedEmployeeId(item.user_id || '');
@@ -332,7 +384,14 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Employees ({items?.length ?? 0})</CardTitle>
-          {!isLocked && <Button size="sm" onClick={openAddDialog}><Plus className="h-3.5 w-3.5 mr-1" /> Add Employee</Button>}
+          {!isLocked && (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={handlePullFromTimesheets} disabled={pullLoading || createItem.isPending}>
+                <Download className="h-3.5 w-3.5 mr-1" /> Pull Approved Hours
+              </Button>
+              <Button size="sm" onClick={openAddDialog}><Plus className="h-3.5 w-3.5 mr-1" /> Add Employee</Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           {isLoading ? <Skeleton className="h-32 m-4" /> : (
