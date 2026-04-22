@@ -1,44 +1,35 @@
 project_id = "czltgypfgegjmcsczpms"
 
-[functions.n8n-webhook]
-verify_jwt = false
-
-[functions.invite-customer]
-verify_jwt = false
-
-[functions.send-notification]
-verify_jwt = false
-
-[functions.weather]
-verify_jwt = false
-
-[functions.send-email]
-verify_jwt = false
-
-[functions.manage-team]
-verify_jwt = false
-
-
-[functions.send-sms]
-verify_jwt = false
-
-[functions.create-checkout]
-verify_jwt = false
-
-[functions.setup-payment-method]
-verify_jwt = false
-
-[functions.sync-payment-method]
-verify_jwt = false
-
-[functions.video-room]
-verify_jwt = false
-
-[functions.summarize-meeting]
-verify_jwt = false
-
-[functions.stripe-webhook]
-verify_jwt = false
-
-[functions.calendar-feed]
-verify_jwt = false
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.calendar-feed]
+    verify_jwt = false
+  [functions.create-checkout]
+    verify_jwt = false
+  [functions.invite-customer]
+    verify_jwt = false
+  [functions.manage-team]
+    verify_jwt = false
+  [functions.n8n-webhook]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.send-email]
+    verify_jwt = false
+  [functions.send-notification]
+    verify_jwt = false
+  [functions.send-sms]
+    verify_jwt = false
+  [functions.setup-payment-method]
+    verify_jwt = false
+  [functions.stripe-webhook]
+    verify_jwt = false
+  [functions.summarize-meeting]
+    verify_jwt = false
+  [functions.sync-payment-method]
+    verify_jwt = false
+  [functions.video-room]
+    verify_jwt = false
+  [functions.weather]
+    verify_jwt = false
