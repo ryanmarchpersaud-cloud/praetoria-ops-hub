@@ -104,9 +104,10 @@ export default function IncidentPhotoUpload({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const remaining = maxPhotos - photos.length;
+    const totalCount = photos.length + attachments.length;
+    const remaining = totalMaxAttachments - totalCount;
     if (remaining <= 0) {
-      const text = `Maximum ${maxPhotos} photos allowed`;
+      const text = `Maximum ${totalMaxAttachments} total attachments allowed`;
       showStatus({ type: 'error', text });
       toast({ title: text, variant: 'destructive' });
       e.target.value = '';
@@ -180,9 +181,10 @@ export default function IncidentPhotoUpload({
     if (!files || files.length === 0) return;
     if (!onAttachmentsChange) return;
 
-    const remaining = maxAttachments - attachments.length;
+    const totalCount = photos.length + attachments.length;
+    const remaining = totalMaxAttachments - totalCount;
     if (remaining <= 0) {
-      const text = `Maximum ${maxAttachments} documents allowed`;
+      const text = `Maximum ${totalMaxAttachments} total attachments allowed`;
       showStatus({ type: 'error', text });
       toast({ title: text, variant: 'destructive' });
       e.target.value = '';
@@ -284,8 +286,10 @@ export default function IncidentPhotoUpload({
     onAttachmentsChange(attachments.map((a, i) => (i === index ? { ...a, category } : a)));
   };
 
-  const uploadDisabled = photos.length >= maxPhotos;
-  const docDisabled = attachments.length >= maxAttachments;
+  const totalMaxAttachments = Math.min(maxPhotos, maxAttachments);
+  const totalCount = photos.length + attachments.length;
+  const uploadDisabled = totalCount >= totalMaxAttachments;
+  const docDisabled = totalCount >= totalMaxAttachments;
   const anyUploadBusy = uploading || docUploading;
 
   return (
@@ -352,7 +356,7 @@ export default function IncidentPhotoUpload({
           >
             <span className="flex items-center gap-2">
               {anyUploadBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
-              {photos.length > 0 || attachments.length > 0 ? 'Add More' : 'Add Attachment'}
+              {totalCount > 0 ? `Add More (${totalCount}/${totalMaxAttachments})` : 'Add Attachment'}
             </span>
             <ChevronDown className={`h-4 w-4 transition-transform ${showAddMoreOptions ? 'rotate-180' : ''}`} />
           </Button>
@@ -396,7 +400,7 @@ export default function IncidentPhotoUpload({
         {photos.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Photos ({photos.length}/{maxPhotos})
+              Photos ({photos.length})
             </p>
             <div className="grid grid-cols-3 gap-2">
               {photos.map((url, i) => (
@@ -418,45 +422,54 @@ export default function IncidentPhotoUpload({
         {onAttachmentsChange && attachments.length > 0 && (
           <div className="space-y-2 border-t border-border pt-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Files & Documents ({attachments.length}/{maxAttachments})
+              Files & Documents ({attachments.length})
             </p>
             <ul className="space-y-2">
-              {attachments.map((att, i) => (
-                <li
-                  key={`${att.path}-${i}`}
-                  className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2"
-                >
-                  {att.mime?.startsWith('image/') ? (
-                    <FileIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
-                  ) : (
-                    <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium">{att.name}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {(att.size / 1024).toFixed(0)} KB · {att.mime || 'file'}
-                    </p>
-                  </div>
-                  <Select value={att.category} onValueChange={(v) => updateAttachmentCategory(i, v)}>
-                    <SelectTrigger className="h-7 w-[140px] text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ATTACHMENT_CATEGORIES.map((c) => (
-                        <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <button
-                    type="button"
-                    onClick={() => removeAttachment(i)}
-                    aria-label={`Remove ${att.name}`}
-                    className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              {attachments.map((att, i) => {
+                const isImage = att.mime?.startsWith('image/');
+                return (
+                  <li
+                    key={`${att.path}-${i}`}
+                    className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2"
                   >
-                    <X className="h-4 w-4" />
-                  </button>
-                </li>
-              ))}
+                    {isImage && att.url ? (
+                      <img
+                        src={att.url}
+                        alt={att.name}
+                        className="h-12 w-12 shrink-0 rounded-md border border-border object-cover"
+                      />
+                    ) : isImage ? (
+                      <FileIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-medium">{att.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {(att.size / 1024).toFixed(0)} KB · {att.mime || 'file'}
+                      </p>
+                    </div>
+                    <Select value={att.category} onValueChange={(v) => updateAttachmentCategory(i, v)}>
+                      <SelectTrigger className="h-7 w-[140px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ATTACHMENT_CATEGORIES.map((c) => (
+                          <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(i)}
+                      aria-label={`Remove ${att.name}`}
+                      className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -481,7 +494,7 @@ export default function IncidentPhotoUpload({
         )}
 
         <p className="text-center text-[10px] text-muted-foreground">
-          Photos: JPG, PNG, HEIC · Files: PDF, JPG, PNG, HEIC · Multiple attachments supported · Stored securely
+          Total attachments: up to {totalMaxAttachments} · Photos: JPG, PNG, HEIC · Files: PDF, JPG, PNG, HEIC · Stored securely
         </p>
       </CardContent>
     </Card>
