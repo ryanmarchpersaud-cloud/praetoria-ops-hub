@@ -52,8 +52,8 @@ const ATTACHMENT_CATEGORIES = [
   'Other',
 ];
 
-const GALLERY_ACCEPT = 'image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*';
-const DOC_ACCEPT = 'application/pdf,image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif';
+const GALLERY_ACCEPT = 'image/*';
+const DOC_ACCEPT = 'application/pdf,.pdf,image/*';
 const NATIVE_PICKER_INPUT_CLASS = 'pointer-events-none fixed -left-[9999px] top-auto h-px w-px opacity-0';
 
 export default function IncidentPhotoUpload({
@@ -368,30 +368,6 @@ export default function IncidentPhotoUpload({
           onChange={handleFileSelect}
         />
 
-        <input
-          ref={galleryRef}
-          name="incident-gallery-upload"
-          type="file"
-          accept={GALLERY_ACCEPT}
-          multiple
-          disabled={uploadDisabled}
-          aria-label="Choose photos from gallery"
-          className={NATIVE_PICKER_INPUT_CLASS}
-          onChange={handleFileSelect}
-        />
-
-        <input
-          ref={docRef}
-          name="incident-document-upload"
-          type="file"
-          accept={DOC_ACCEPT}
-          multiple
-          disabled={docDisabled}
-          aria-label="Upload file or document"
-          className={NATIVE_PICKER_INPUT_CLASS}
-          onChange={handleDocSelect}
-        />
-
         <div className="space-y-2">
           <Select value={pendingCategory} onValueChange={setPendingCategory}>
             <SelectTrigger className="h-9 text-xs">
@@ -430,26 +406,48 @@ export default function IncidentPhotoUpload({
                 <Camera className="h-4 w-4 mr-2" />
                 Take Photo
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start"
-                disabled={uploadDisabled || anyUploadBusy}
-                onClick={() => triggerNativePicker(galleryRef)}
-              >
-                <ImagePlus className="h-4 w-4 mr-2" />
-                Choose from Gallery / Photo Library
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start"
-                disabled={docDisabled || anyUploadBusy}
-                onClick={() => triggerNativePicker(docRef)}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Upload File / Document
-              </Button>
+              <label className={`inline-flex w-full cursor-pointer items-center justify-start rounded-md border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${uploadDisabled || anyUploadBusy ? 'pointer-events-none opacity-50' : ''}`}>
+                <ImagePlus className="h-4 w-4 mr-2 shrink-0" />
+                <span className="min-w-0 flex-1">Choose from Gallery / Photo Library</span>
+                <input
+                  ref={galleryRef}
+                  name="incident-gallery-upload"
+                  type="file"
+                  accept={GALLERY_ACCEPT}
+                  multiple
+                  disabled={uploadDisabled || anyUploadBusy}
+                  aria-label="Choose photos from gallery"
+                  className={NATIVE_PICKER_INPUT_CLASS}
+                  onClick={(e) => {
+                    (e.currentTarget as HTMLInputElement).value = '';
+                    setShowAddMoreOptions(false);
+                    setStatus(null);
+                    iosLog('incident:gallery:tap');
+                  }}
+                  onChange={handleFileSelect}
+                />
+              </label>
+              <label className={`inline-flex w-full cursor-pointer items-center justify-start rounded-md border border-input bg-background px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${docDisabled || anyUploadBusy ? 'pointer-events-none opacity-50' : ''}`}>
+                <FileText className="h-4 w-4 mr-2 shrink-0" />
+                <span className="min-w-0 flex-1">Upload File / Document</span>
+                <input
+                  ref={docRef}
+                  name="incident-document-upload"
+                  type="file"
+                  accept={DOC_ACCEPT}
+                  multiple
+                  disabled={docDisabled || anyUploadBusy}
+                  aria-label="Upload file or document"
+                  className={NATIVE_PICKER_INPUT_CLASS}
+                  onClick={(e) => {
+                    (e.currentTarget as HTMLInputElement).value = '';
+                    setShowAddMoreOptions(false);
+                    setStatus(null);
+                    iosLog('incident:file:tap');
+                  }}
+                  onChange={handleDocSelect}
+                />
+              </label>
             </div>
           )}
         </div>

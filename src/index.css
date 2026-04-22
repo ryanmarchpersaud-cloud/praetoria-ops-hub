@@ -176,13 +176,20 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* iPhone-safe top padding for mobile portal shells (Worker / Subcontractor / Customer).
-     Applies the iOS safe-area inset PLUS a 12px breathing buffer so headers
-     never sit under the notch / status bar / browser chrome. Per-page wrappers
-     can keep their own pt-3 / pt-4 — those add additional spacing INSIDE the
-     safe area without being clipped. */
+  /* iPhone-safe top padding for mobile portal shells.
+     Default: use the real safe-area inset plus a modest 12px breathing buffer.
+     On iPhone Safari / iPhone PWA, WebKit can sometimes report a tiny or zero
+     top inset even though the visual top chrome/notch still needs space.
+     The iOS-only fallback below guarantees a practical minimum top offset so
+     worker/subcontractor portal headers never jam into the clock/notch area. */
   .safe-area-top-buffer {
     padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    .safe-area-top-buffer {
+      padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 32px);
+    }
   }
 
   /* Shared page-header row used at the top of mobile portal subpages.
