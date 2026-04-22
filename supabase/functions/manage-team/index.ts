@@ -85,6 +85,14 @@ Deno.serve(async (req) => {
       const newUserId = authData.user.id;
       await adminClient.from("user_roles").insert({ user_id: newUserId, role });
 
+      // Force password change on first login (account created with admin-set temp password)
+      await adminClient
+        .from("profiles")
+        .upsert(
+          { user_id: newUserId, display_name: full_name || email, must_change_password: true },
+          { onConflict: "user_id" }
+        );
+
       await adminClient.from("team_members").insert({
         user_id: newUserId,
         full_name: full_name || email,
@@ -178,6 +186,14 @@ Deno.serve(async (req) => {
 
       const newUserId = authData.user.id;
       await adminClient.from("user_roles").insert({ user_id: newUserId, role: "subcontractor" });
+
+      // Force password change on first login
+      await adminClient
+        .from("profiles")
+        .upsert(
+          { user_id: newUserId, display_name: contact_name, must_change_password: true },
+          { onConflict: "user_id" }
+        );
 
       await adminClient.from("team_members").insert({
         user_id: newUserId, full_name: contact_name, email,
@@ -324,6 +340,15 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: updateErr.message }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+      // If admin set a new password, force the user to change it on next login
+      if (newPassword) {
+        await adminClient
+          .from("profiles")
+          .upsert(
+            { user_id: targetUserId, must_change_password: true },
+            { onConflict: "user_id" }
+          );
       }
       return new Response(JSON.stringify({ success: true, user: { id: updatedUser.user.id, email: updatedUser.user.email } }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
