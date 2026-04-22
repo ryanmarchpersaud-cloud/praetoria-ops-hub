@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'ca.praetoriagroup.opshub',
-  appName: 'Praetoria Ops Hub',
+  appId: 'ca.praetoriagroup.app',
+  appName: 'Praetoria Group',
   webDir: 'dist',
   // No server.url — production builds serve from the local dist bundle.
   // For development hot-reload, temporarily uncomment and set:
@@ -14,7 +14,7 @@ const config: CapacitorConfig = {
     StatusBar: {
       overlaysWebView: false,
       style: 'DARK',
-      backgroundColor: '#ffffffff',
+      backgroundColor: '#FFFFFF',
     },
   },
 };
