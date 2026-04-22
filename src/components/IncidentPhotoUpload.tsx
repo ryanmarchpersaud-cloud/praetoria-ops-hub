@@ -116,6 +116,8 @@ export default function IncidentPhotoUpload({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    iosLog('incident:photo:select', { count: files.length });
+
     const totalCount = photos.length + attachments.length;
     const remaining = totalMaxAttachments - totalCount;
     if (remaining <= 0) {
@@ -135,7 +137,21 @@ export default function IncidentPhotoUpload({
 
     try {
       const newUrls: string[] = [];
-      for (const file of toUpload) {
+      for (const rawFile of toUpload) {
+        // iPhone photos (HEIC/large JPEG) are 4–8 MB and freeze Safari on
+        // serial uploads. Downscale on the main thread before uploading.
+        let file = rawFile;
+        try {
+          file = await downscaleImageIfLarge(rawFile);
+          iosLog('incident:photo:resized', {
+            from: rawFile.size,
+            to: file.size,
+            name: file.name,
+          });
+        } catch {
+          file = rawFile;
+        }
+
         if (file.size > 10 * 1024 * 1024) {
           failures.push(`${file.name}: exceeds 10 MB`);
           toast({ title: `${file.name} exceeds 10 MB limit`, variant: 'destructive' });
@@ -160,6 +176,8 @@ export default function IncidentPhotoUpload({
         successCount += 1;
       }
 
+      if (!isMountedRef.current) return;
+
       if (newUrls.length > 0) {
         onPhotosChange([...photos, ...newUrls]);
       }
@@ -177,12 +195,16 @@ export default function IncidentPhotoUpload({
       } else if (failures.length > 0) {
         showStatus({ type: 'error', text: `Upload failed: ${failures.join('; ')}` });
       }
+      iosLog('incident:photo:done', { successCount, failures: failures.length });
     } catch (err: any) {
       const text = err?.message || 'Upload error';
-      showStatus({ type: 'error', text });
-      toast({ title: 'Upload error', description: text, variant: 'destructive' });
+      iosLog('incident:photo:error', { message: text });
+      if (isMountedRef.current) {
+        showStatus({ type: 'error', text });
+        toast({ title: 'Upload error', description: text, variant: 'destructive' });
+      }
     } finally {
-      setUploading(false);
+      if (isMountedRef.current) setUploading(false);
       if (cameraRef.current) cameraRef.current.value = '';
       if (galleryRef.current) galleryRef.current.value = '';
     }
