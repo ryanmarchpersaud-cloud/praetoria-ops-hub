@@ -70,11 +70,21 @@ export default function WorkerDocumentsPage() {
                     <span className="text-[10px] text-muted-foreground">{format(new Date(doc.created_at), 'MMM d, yyyy')}</span>
                   </div>
                 </div>
-                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                  <Button size="icon" variant="ghost" className="h-8 w-8">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </a>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  onClick={async () => {
+                    try {
+                      const { openWorkerDocument } = await import('@/lib/workerDocuments');
+                      await openWorkerDocument(doc.file_url);
+                    } catch (e: any) {
+                      toast({ title: 'Could not open document', description: e?.message, variant: 'destructive' });
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           ))}
@@ -112,15 +122,11 @@ function UploadDialog({ open, onClose }: { open: boolean; onClose: () => void })
         .upload(path, file);
       if (storageError) throw storageError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('worker-documents')
-        .getPublicUrl(path);
-
       const { error: dbError } = await supabase.from('worker_documents').insert([{
         user_id: user.id,
         document_name: docName.trim(),
         document_type: docType,
-        file_url: publicUrl,
+        file_url: path,
         file_name: file.name,
         uploaded_by: user.id,
       }]);
