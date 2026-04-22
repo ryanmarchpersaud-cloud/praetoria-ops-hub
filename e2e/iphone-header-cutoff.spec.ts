@@ -260,22 +260,57 @@ for (const mode of MODES) {
             ).toBeGreaterThanOrEqual(0);
             expect(
               btnBox.x + btnBox.width,
-              `${pageDef.label}: action clipped on right edge. Snapshot: ${snapshotPath}`,
+              `${pageDef.label}: action clipped on right edge. Snapshot: ${headerRowPath}`,
             ).toBeLessThanOrEqual(viewport.width + 1);
 
-            // Minimum tap target.
             expect(btnBox.width, `${pageDef.label}: action too narrow`).toBeGreaterThanOrEqual(40);
             expect(btnBox.height, `${pageDef.label}: action too short`).toBeGreaterThanOrEqual(32);
 
-            // Title and action must not overlap horizontally on the same row.
-            const sameRow = Math.abs(titleBox.y - btnBox.y) < Math.max(titleBox.height, btnBox.height);
+            const sameRow =
+              Math.abs(titleBox.y - btnBox.y) < Math.max(titleBox.height, btnBox.height);
             if (sameRow) {
               const titleRight = titleBox.x + titleBox.width;
               expect(
                 titleRight,
-                `${pageDef.label}: title overlaps action button on the same row. Snapshot: ${snapshotPath}`,
+                `${pageDef.label}: title overlaps action button on the same row. Snapshot: ${headerRowPath}`,
               ).toBeLessThanOrEqual(btnBox.x + 1);
             }
+
+            // ---------- Bounding-box comparison vs header row ----------
+            if (headerRowBox) {
+              expect(
+                titleBox.y,
+                `${pageDef.label}: title sits above header row top`,
+              ).toBeGreaterThanOrEqual(headerRowBox.y - 1);
+              expect(
+                btnBox.y,
+                `${pageDef.label}: action sits above header row top`,
+              ).toBeGreaterThanOrEqual(headerRowBox.y - 1);
+              expect(
+                titleBox.y + titleBox.height,
+                `${pageDef.label}: title overflows header row bottom`,
+              ).toBeLessThanOrEqual(headerRowBox.y + headerRowBox.height + 1);
+              expect(
+                btnBox.y + btnBox.height,
+                `${pageDef.label}: action overflows header row bottom`,
+              ).toBeLessThanOrEqual(headerRowBox.y + headerRowBox.height + 1);
+            }
+
+            // Action must trail the title horizontally.
+            expect(
+              btnBox.x,
+              `${pageDef.label}: action.x ${btnBox.x} should be right of title.x ${titleBox.x}`,
+            ).toBeGreaterThan(titleBox.x);
+
+            // Log key boxes for cross-run diffing.
+            console.log(
+              `[iphone-header-cutoff] ${id} boxes: ${JSON.stringify({
+                safeAreaTop: SAFE_AREA_TOP_PX,
+                headerRow: headerRowBox,
+                title: titleBox,
+                action: btnBox,
+              })}`,
+            );
           }
         });
       });
