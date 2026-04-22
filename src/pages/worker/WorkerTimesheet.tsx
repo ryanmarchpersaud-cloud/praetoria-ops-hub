@@ -87,9 +87,9 @@ export default function WorkerTimesheet() {
   return (
     <div className="px-4 pt-3 pb-4 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" /> Timesheet
+      <div className="page-header-row">
+        <h1 className="text-lg font-bold flex items-center gap-2 page-header-title min-w-0">
+          <Clock className="h-5 w-5 text-primary shrink-0" /> Timesheet
         </h1>
         <div className="flex items-center gap-1">
           <button onClick={() => setWeekOffset(o => o - 1)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted active:bg-muted">

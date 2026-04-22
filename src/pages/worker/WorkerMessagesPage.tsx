@@ -26,9 +26,9 @@ export default function WorkerMessagesPage() {
 
   return (
     <div className="px-4 pt-4 pb-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary" />
+      <div className="page-header-row">
+        <h1 className="text-lg font-bold flex items-center gap-2 page-header-title min-w-0">
+          <MessageSquare className="h-5 w-5 text-primary shrink-0" />
           Messages
         </h1>
         <NewConversationDialog

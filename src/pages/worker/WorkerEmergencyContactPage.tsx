@@ -29,10 +29,10 @@ export default function WorkerEmergencyContactPage() {
 
   return (
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">Emergency Contacts</h1>
+      <div className="page-header-row">
+        <h1 className="text-lg font-bold page-header-title">Emergency Contacts</h1>
         {contacts.length < 3 && (
-          <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}>
+          <Button size="sm" variant="outline" className="page-header-action" onClick={() => setShowAdd(true)}>
             <Plus className="h-4 w-4 mr-1" /> Add
           </Button>
         )}
