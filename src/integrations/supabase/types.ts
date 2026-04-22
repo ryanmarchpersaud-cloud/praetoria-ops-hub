@@ -3161,6 +3161,7 @@ export type Database = {
       incident_reports: {
         Row: {
           admin_notes: string | null
+          attachments: Json
           corrective_action_notes: string | null
           created_at: string
           date_time: string
@@ -3189,6 +3190,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          attachments?: Json
           corrective_action_notes?: string | null
           created_at?: string
           date_time?: string
@@ -3217,6 +3219,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          attachments?: Json
           corrective_action_notes?: string | null
           created_at?: string
           date_time?: string
