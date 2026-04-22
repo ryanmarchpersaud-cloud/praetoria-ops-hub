@@ -303,12 +303,19 @@ export default function IncidentPhotoUpload({
           </p>
         </div>
 
+        {/*
+          Hidden file inputs. Notes for iOS Safari compatibility:
+          - Do NOT set `disabled` here — disabled inputs ignore .click() on iOS.
+          - Do NOT use display:none / visibility:hidden — use `sr-only` so the
+            element remains focusable and clickable from JS.
+          - The camera input uses `capture="environment"`. The gallery input
+            must NOT have `capture` — that is what forces camera-only on iOS.
+        */}
         <input
           ref={cameraRef}
           type="file"
           accept={GALLERY_ACCEPT}
           capture="environment"
-          disabled={uploadDisabled}
           aria-label="Take photo"
           className="sr-only"
           onChange={handleFileSelect}
@@ -319,7 +326,6 @@ export default function IncidentPhotoUpload({
           type="file"
           accept={GALLERY_ACCEPT}
           multiple
-          disabled={uploadDisabled}
           aria-label="Choose photos from gallery"
           className="sr-only"
           onChange={handleFileSelect}
@@ -330,7 +336,6 @@ export default function IncidentPhotoUpload({
           type="file"
           accept={DOC_ACCEPT}
           multiple
-          disabled={docDisabled}
           aria-label="Upload file or document"
           className="sr-only"
           onChange={handleDocSelect}
