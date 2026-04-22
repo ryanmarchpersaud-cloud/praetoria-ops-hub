@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logAuditEvent } from './auditLog';
 
 const BUCKET = 'worker-documents';
 
@@ -27,7 +28,21 @@ export async function openWorkerDocument(fileUrl: string): Promise<void> {
     .from(BUCKET)
     .createSignedUrl(path, 60 * 10); // 10 minutes
   if (error || !data?.signedUrl) {
+    logAuditEvent({
+      action: 'document.signed_url_generated',
+      targetType: 'worker_document',
+      targetId: path,
+      success: false,
+      metadata: { bucket: BUCKET, error: error?.message ?? 'no signed url' },
+    });
     throw error ?? new Error('Could not generate download link');
   }
+  logAuditEvent({
+    action: 'document.signed_url_generated',
+    targetType: 'worker_document',
+    targetId: path,
+    success: true,
+    metadata: { bucket: BUCKET, expires_in_seconds: 600 },
+  });
   window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
 }

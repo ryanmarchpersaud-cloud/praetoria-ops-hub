@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { iosLog } from '@/lib/iosDebug';
+import { logAuditEvent } from '@/lib/auditLog';
 
 const WHITE_LOGO_URL = 'https://czltgypfgegjmcsczpms.supabase.co/storage/v1/object/public/attachments/praetoria-logo-white.png';
 
@@ -156,8 +157,18 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   useEffect(() => {
     if (open && stub) {
       iosLog('paystub:open', { id: stub.id, payDate: stub.pay_date });
+      logAuditEvent({
+        action: 'pay_stub.view',
+        targetType: 'pay_stub',
+        targetId: stub.id,
+        metadata: {
+          pay_date: stub.pay_date,
+          subject_user_id: stub.user_id,
+          context: workerView ? 'worker_self' : 'admin',
+        },
+      });
     }
-  }, [open, stub]);
+  }, [open, stub, workerView]);
 
   if (!stub) return null;
 

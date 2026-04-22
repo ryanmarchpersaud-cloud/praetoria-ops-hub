@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Search, KeyRound, Mail, RefreshCw, Copy, Check, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logAuditEvent } from '@/lib/auditLog';
 
 interface UserRow {
   user_id: string;
@@ -79,8 +80,22 @@ export default function AdminUsersPage() {
     });
     setActingId(null);
     if (error || data?.error) {
+      logAuditEvent({
+        action: 'admin.user.password_reset',
+        targetType: 'user',
+        targetId: user.user_id,
+        success: false,
+        metadata: { email: user.email, error: error?.message || data?.error },
+      });
       toast.error(error?.message || data?.error || 'Failed to send reset');
     } else {
+      logAuditEvent({
+        action: 'admin.user.password_reset',
+        targetType: 'user',
+        targetId: user.user_id,
+        success: true,
+        metadata: { email: user.email, method: 'email_link' },
+      });
       toast.success(`Reset email sent to ${user.email}`);
     }
   }
@@ -108,9 +123,23 @@ export default function AdminUsersPage() {
     });
     setActingId(null);
     if (error || data?.error) {
+      logAuditEvent({
+        action: 'admin.user.temp_password_set',
+        targetType: 'user',
+        targetId: pwDialog.user.user_id,
+        success: false,
+        metadata: { email: pwDialog.user.email, error: error?.message || data?.error },
+      });
       toast.error(error?.message || data?.error || 'Failed to set password');
       return;
     }
+    logAuditEvent({
+      action: 'admin.user.temp_password_set',
+      targetType: 'user',
+      targetId: pwDialog.user.user_id,
+      success: true,
+      metadata: { email: pwDialog.user.email },
+    });
     setGeneratedResult(tempPassword);
     toast.success('Temporary password set');
   }

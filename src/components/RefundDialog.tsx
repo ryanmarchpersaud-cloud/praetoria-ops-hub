@@ -9,6 +9,7 @@ import { Loader2, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { useQueryClient } from '@tanstack/react-query';
+import { logAuditEvent } from '@/lib/auditLog';
 
 interface RefundDialogProps {
   open: boolean;
@@ -77,12 +78,39 @@ export function RefundDialog({ open, onOpenChange, invoice }: RefundDialogProps)
 
       if (error) throw new Error(typeof error === 'string' ? error : (error as any)?.message || 'Refund failed');
 
+      logAuditEvent({
+        action: 'payment.refund',
+        targetType: 'invoice',
+        targetId: invoice.id,
+        customerId: invoice.customer_id,
+        success: true,
+        metadata: {
+          invoice_number: invoice.invoice_number,
+          refund_type: refundType,
+          amount: refundAmount,
+          reason,
+        },
+      });
+
       toast.success(`$${refundAmount.toFixed(2)} refund processed successfully`);
       qc.invalidateQueries({ queryKey: ['invoice', invoice.id] });
       qc.invalidateQueries({ queryKey: ['invoices'] });
       qc.invalidateQueries({ queryKey: ['finance_refunds'] });
       handleOpen(false);
     } catch (err: any) {
+      logAuditEvent({
+        action: 'payment.refund',
+        targetType: 'invoice',
+        targetId: invoice.id,
+        customerId: invoice.customer_id,
+        success: false,
+        metadata: {
+          invoice_number: invoice.invoice_number,
+          refund_type: refundType,
+          amount: refundAmount,
+          error: err?.message ?? String(err),
+        },
+      });
       toast.error(err.message || 'Failed to process refund');
     } finally {
       setProcessing(false);
