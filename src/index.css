@@ -133,31 +133,9 @@
     font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    padding-top: var(--sat);
     padding-right: var(--sar);
     padding-bottom: var(--sab);
     padding-left: var(--sal);
-  }
-
-  html {
-    margin-top: env(safe-area-inset-top) !important;
-  }
-
-  body {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    position: fixed;
-    width: 100%;
-  }
-
-  #root {
-    position: fixed;
-    top: env(safe-area-inset-top);
-    left: env(safe-area-inset-left);
-    right: env(safe-area-inset-right);
-    bottom: env(safe-area-inset-bottom);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
   h1, h2, h3, h4, h5, h6 {
