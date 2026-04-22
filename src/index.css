@@ -203,25 +203,15 @@
   }
 
   /* Shared portal shell top breathing room.
-     The actual iPhone safe-area inset is now applied globally on body/#root,
-     so portal shells only add a consistent extra buffer here. */
+     Worker pages must include the device safe-area inset directly so content
+     always starts below the iPhone notch / status bar, while Android keeps the
+     same light top spacing. */
   .safe-area-top-buffer {
     padding-top: 12px;
   }
 
-  /* Worker subpages under More still need a stronger iPhone fallback because
-     Safari/PWA sometimes reports a zero top inset even with viewport-fit=cover.
-     This keeps the total top clearance at roughly 59px without affecting Android. */
   .worker-portal-shell {
-    padding-top: 12px;
-  }
-
-  @supports (-webkit-touch-callout: none) {
-    @media (max-width: 767px) {
-      .worker-portal-shell {
-        padding-top: max(12px, calc(59px - env(safe-area-inset-top, 0px)));
-      }
-    }
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   }
 
   /* Shared page-header row used at the top of mobile portal subpages.
