@@ -390,7 +390,11 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
          </tbody></table>`
       : '';
 
-    return `<!DOCTYPE html><html><head><title>Pay Stub – ${displayName} – ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
+    return `<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pay Stub – ${displayName} – ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
 <style>
   @page { size: letter; margin: 0.5in 0.6in; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -521,7 +525,7 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
 
   const openPrintableDoc = (autoPrint: boolean, downloadFilename?: string) => {
     const html = buildPrintHtmlWithAutoPrint(autoPrint);
-    const blob = new Blob([html], { type: 'text/html' });
+    const blob = new Blob(['\ufeff', html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
     // Try opening in a new tab/window first
