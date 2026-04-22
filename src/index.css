@@ -191,15 +191,12 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Shared portal shell top breathing room.
-     Keep worker/subcontractor pages below the iPhone status bar/notch with a
-     single shared inset rule plus a small visual buffer. Include the legacy
-     WebKit constant() fallback because some iPhone webviews / embedded modes
-     do not resolve env() consistently. */
+  /* Shared portal shell breathing room.
+     The actual iPhone top inset is now applied at the route wrapper level so
+     portal shells only add the small visual gap below it. */
   .safe-area-top-buffer,
   .worker-portal-shell {
-    padding-top: calc(constant(safe-area-inset-top) + 12px);
-    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+    padding-top: 12px;
   }
 
   /* Shared page-header row used at the top of mobile portal subpages.
