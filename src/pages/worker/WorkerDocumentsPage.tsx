@@ -26,7 +26,7 @@ const typeLabels: Record<string, string> = {
 
 export default function WorkerDocumentsPage() {
   const { data: docs = [], isLoading } = useWorkerDocuments();
-  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
   const [showUpload, setShowUpload] = useState(false);
 
   if (isLoading) {
