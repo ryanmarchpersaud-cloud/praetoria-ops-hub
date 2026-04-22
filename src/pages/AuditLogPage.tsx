@@ -257,7 +257,7 @@ export default function AuditLogPage() {
             <div className="grid gap-4 md:grid-cols-4">
               <Card><CardContent className="pt-4 flex items-center gap-3"><Activity className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{totalCount}</p><p className="text-xs text-muted-foreground">Events Shown</p></div></CardContent></Card>
               <Card><CardContent className="pt-4 flex items-center gap-3"><AlertTriangle className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">{failedCount}</p><p className="text-xs text-muted-foreground">Failed</p></div></CardContent></Card>
-              <Card><CardContent className="pt-4 flex items-center gap-3"><Shield className="h-8 w-8 text-orange-500" /><div><p className="text-2xl font-bold">{approvalPending}</p><p className="text-xs text-muted-foreground">Pending Approval</p></div></CardContent></Card>
+              <Card><CardContent className="pt-4 flex items-center gap-3"><Shield className="h-8 w-8 text-warning" /><div><p className="text-2xl font-bold">{approvalPending}</p><p className="text-xs text-muted-foreground">Pending Approval</p></div></CardContent></Card>
               <Card><CardContent className="pt-4 flex items-center gap-3"><FileText className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{recordTypes.length}</p><p className="text-xs text-muted-foreground">Record Types</p></div></CardContent></Card>
             </div>
 
