@@ -901,6 +901,11 @@ export default function EmployeeDetail() {
           </Card>
         </TabsContent>
 
+        {/* Timesheets */}
+        <TabsContent value="timesheets">
+          {userId && <EmployeeTimesheetsTab userId={userId} />}
+        </TabsContent>
+
         {/* Visits */}
         <TabsContent value="visits">
           <EmployeeVisitsTab userId={userId!} />
