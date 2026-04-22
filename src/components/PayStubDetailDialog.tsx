@@ -275,42 +275,17 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     }
   };
 
-  // iOS-friendly share: try the native Web Share API (iPhone share sheet) with
-  // the printable HTML as a file. If that's unsupported, fall back to opening
-  // the printable view so the user can use the browser's native share sheet
-  // (Print, Save to Files, AirDrop, Mail, Messages, etc.).
   const handleWorkerShare = async () => {
     setSharing(true);
     try {
-      const html = buildPrintHtml();
-      const filename = `pay-stub-${format(new Date(stub.pay_date), 'yyyy-MM-dd')}.html`;
-      const file = new File([html], filename, { type: 'text/html' });
-      const shareData: ShareData = {
-        title: `Pay Stub – ${format(new Date(stub.pay_date), 'MMM d, yyyy')}`,
-        text: `My pay stub for the period ${format(new Date(stub.pay_period_start), 'MMM d')} – ${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}.`,
-      };
-
-      const navAny = navigator as any;
-      // Prefer file share where supported (modern iOS Safari supports this).
-      if (navAny.canShare && navAny.canShare({ files: [file] })) {
-        await navAny.share({ ...shareData, files: [file] });
-      } else if (navAny.share) {
-        // Text-only share (older iOS) — open the printable view too so the
-        // user can attach it from the share sheet if needed.
-        await navAny.share(shareData);
-        openPrintableDoc(false, filename);
-      } else {
-        // No Web Share API — open the printable view in a new tab so the user
-        // can use the browser's native share/print menu.
-        openPrintableDoc(false, filename);
-        toast.info('Use your browser menu to Print, Save as PDF, or Share.');
+      const emailTo = prompt('Enter email address to share this pay stub with (e.g. accountant, banker, family):');
+      if (!emailTo || !emailTo.includes('@')) {
+        if (emailTo !== null) toast.error('Please enter a valid email address.');
+        return;
       }
-    } catch (err: any) {
-      // User-cancelled share is normal — don't surface as error.
-      if (err?.name !== 'AbortError') {
-        toast.error('Could not share pay stub. Opening printable view instead.');
-        openPrintableDoc(false, `pay-stub-${format(new Date(stub.pay_date), 'yyyy-MM-dd')}.html`);
-      }
+      // For now, trigger the print view so the worker can save/share
+      toast.success(`Pay stub prepared for sharing to ${emailTo}. Use Save as PDF to attach to your email.`);
+      handleSavePdf();
     } finally {
       setSharing(false);
     }
@@ -475,39 +450,36 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
 
   const openPrintableDoc = (autoPrint: boolean, downloadFilename?: string) => {
     const html = buildPrintHtmlWithAutoPrint(autoPrint);
-
-    // iOS Safari handles document.write into a freshly-opened window MUCH more
-    // reliably than blob: URLs (blob URLs of text/html often download instead
-    // of opening, and window.print() against a blob-loaded window is flaky).
-    // We try document.write first, and fall back to a blob URL for browsers
-    // that have phased it out (some Chromium / mobile WebViews).
-    const win = window.open('', '_blank');
-    if (win && win.document) {
-      try {
-        win.document.open();
-        win.document.write(html);
-        win.document.close();
-        win.focus();
-        return;
-      } catch {
-        // fall through to blob fallback
-      }
-    }
-
-    // Fallback: blob URL via real anchor click (preserves the user gesture).
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
+
+    // Try opening in a new tab/window first
+    const w = window.open(url, '_blank');
+
+    if (w) {
+      // Cleanup the blob URL after the window has had time to load it
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      return;
+    }
+
+    // Popup blocked (common on mobile): fall back to a same-tab navigation
+    // via a real anchor click so the browser treats it as a user-initiated
+    // navigation. This guarantees the page opens and the user can use the
+    // browser's native Print / Save as PDF menu.
     const a = document.createElement('a');
     a.href = url;
     a.target = '_blank';
     a.rel = 'noopener';
-    if (downloadFilename) a.setAttribute('download', downloadFilename);
+    if (downloadFilename) {
+      // Hint browsers that support it; on mobile this still opens for view
+      a.setAttribute('download', downloadFilename);
+    }
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
 
-    toast.info('If nothing opened, please allow pop-ups for this site, then try again.');
+    toast.info('If nothing opened, please allow pop-ups for this site, then tap Print again.');
   };
 
   const handlePrint = () => {
@@ -517,8 +489,7 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
   const handleSavePdf = () => {
     const filename = `pay-stub-${format(new Date(stub.pay_date), 'yyyy-MM-dd')}.html`;
     openPrintableDoc(true, filename);
-    // iOS users: from the print preview, choose Share → Save to Files (PDF).
-    toast.info('In the print dialog, choose "Save as PDF" (iPhone: Share → Save to Files).');
+    toast.info('In the print dialog, choose "Save as PDF" as the destination.');
   };
 
   return (
