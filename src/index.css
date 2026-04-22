@@ -68,6 +68,12 @@
     --sar: env(safe-area-inset-right, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
+
+    /* iPhone header baseline — single knob to shift all portal headers down.
+       Default 0 (Android / desktop unaffected). Overridden inside the
+       iPhone-specific @supports block below. Tune --ios-header-baseline
+       in one place to move every signed-in header together. */
+    --ios-header-baseline: 0px;
   }
 
   .dark {
@@ -206,8 +212,14 @@
      on those signed-in mobile shells, without affecting Android. */
   @supports (-webkit-touch-callout: none) {
     @media (max-width: 767px) {
+      :root {
+        /* 🎚️ Single knob: increase to push ALL iPhone headers further down,
+           decrease to bring them up. Affects portal shell + page header rows. */
+        --ios-header-baseline: 28px;
+      }
+
       [data-portal-scroll-shell] {
-        padding-top: max(76px, calc(env(safe-area-inset-top, 0px) + 28px));
+        padding-top: max(76px, calc(env(safe-area-inset-top, 0px) + var(--ios-header-baseline)));
       }
     }
   }
@@ -224,19 +236,12 @@
     flex-wrap: wrap;
   }
 
-  /* iPhone safety net for subpage headers.
-     The Safety & Incidents page (and other subpages with a title + trailing
-     action button) was rendering the title under the notch on iPhone because
-     the per-page wrapper only adds pt-3 inside a shell whose safe-area inset
-     can resolve to 0 in some iOS webview modes. Add a minimum top inset to
-     the header row itself so the title and action always sit below the
-     unsafe area, without changing Android (where the inset is 0 and 8px
-     is harmless). Also keep the title and action on one line on narrow
-     iPhones so the title cannot wrap up into the notch. */
+  /* iPhone safety net for subpage headers — uses the same baseline knob
+     so subpage titles + action buttons shift together with the shell. */
   @supports (-webkit-touch-callout: none) {
     @media (max-width: 767px) {
       .page-header-row {
-        margin-top: max(12px, calc(env(safe-area-inset-top, 0px) + 4px));
+        margin-top: max(12px, calc(env(safe-area-inset-top, 0px) + var(--ios-header-baseline) - 24px));
         flex-wrap: nowrap;
       }
     }
