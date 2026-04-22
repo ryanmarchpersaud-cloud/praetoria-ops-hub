@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShieldAlert, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import IncidentPhotoUpload from '@/components/IncidentPhotoUpload';
+import IncidentPhotoUpload, { type IncidentAttachment } from '@/components/IncidentPhotoUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -30,6 +30,7 @@ export default function SubcontractorNewIncidentPage() {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<IncidentAttachment[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string; report_number: string } | null>(null);
 
@@ -49,6 +50,7 @@ export default function SubcontractorNewIncidentPage() {
         location: location.trim() || null,
         description: description.trim(),
         photos: photos.length > 0 ? photos : null,
+        attachments: attachments,
         follow_up_status: 'open',
         severity: 'medium',
       }]).select('id, report_number').single();
@@ -159,7 +161,12 @@ export default function SubcontractorNewIncidentPage() {
         </CardContent>
       </Card>
 
-      <IncidentPhotoUpload photos={photos} onPhotosChange={setPhotos} />
+      <IncidentPhotoUpload
+        photos={photos}
+        onPhotosChange={setPhotos}
+        attachments={attachments}
+        onAttachmentsChange={setAttachments}
+      />
 
       <Button className="w-full" variant="destructive" onClick={handleSubmit} disabled={submitting || !description.trim()}>
         {submitting ? 'Submitting…' : 'Submit Incident Report'}
