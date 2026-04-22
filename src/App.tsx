@@ -265,7 +265,7 @@ function WorkerRoute({ children }: { children: React.ReactNode }) {
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
   if (!canAccessWorkerPortal) return <Navigate to="/access-denied" replace />;
-  return <div className="safe-area-top">{children}</div>;
+  return <>{children}</>;
 }
 
 function PortalRoute({ children }: { children: React.ReactNode }) {
@@ -295,7 +295,7 @@ function SubcontractorRoute({ children }: { children: React.ReactNode }) {
   if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (!canAccessSubcontractorPortal && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
-  return <div className="safe-area-top">{children}</div>;
+  return <>{children}</>;
 }
 
 function LoginRoute() {

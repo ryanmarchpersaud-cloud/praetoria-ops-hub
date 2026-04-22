@@ -192,11 +192,11 @@
   }
 
   /* Shared portal shell breathing room.
-     The actual iPhone top inset is now applied at the route wrapper level so
-     portal shells only add the small visual gap below it. */
+     Apply the real device top inset on the scroll shell itself so iPhone
+     signed-in portal pages stay below the unsafe area after auth. */
   .safe-area-top-buffer,
   .worker-portal-shell {
-    padding-top: 12px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   }
 
   /* Shared page-header row used at the top of mobile portal subpages.

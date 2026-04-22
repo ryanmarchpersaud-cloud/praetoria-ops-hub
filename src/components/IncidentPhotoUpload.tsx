@@ -53,8 +53,8 @@ const ATTACHMENT_CATEGORIES = [
 ];
 
 const GALLERY_ACCEPT = 'image/*';
-const DOC_ACCEPT = 'application/pdf,.pdf,image/*';
-const NATIVE_PICKER_INPUT_CLASS = 'pointer-events-none fixed -left-[9999px] top-auto h-px w-px opacity-0';
+const DOC_ACCEPT = 'application/pdf,.pdf,image/*,.heic,.heif';
+const NATIVE_PICKER_INPUT_CLASS = 'absolute h-px w-px overflow-hidden opacity-0';
 
 export default function IncidentPhotoUpload({
   photos,
@@ -179,7 +179,7 @@ export default function IncidentPhotoUpload({
       if (!isMountedRef.current) return;
 
       if (newUrls.length > 0) {
-        onPhotosChange([...photos, ...newUrls]);
+        onPhotosChange([...photos, ...newUrls].filter(Boolean));
       }
 
       if (successCount > 0 && failures.length === 0) {
@@ -274,12 +274,17 @@ export default function IncidentPhotoUpload({
           continue;
         }
 
-        const { data: signed } = await supabase.storage
+        const { data: signed, error: signedError } = await supabase.storage
           .from('incident-attachments')
           .createSignedUrl(path, 60 * 60 * 24 * 7);
 
+        if (signedError || !signed?.signedUrl) {
+          failures.push(`${file.name}: could not generate access link`);
+          continue;
+        }
+
         newAttachments.push({
-          url: signed?.signedUrl || '',
+          url: signed.signedUrl,
           path,
           name: file.name,
           mime: file.type || 'application/octet-stream',
