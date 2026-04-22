@@ -475,36 +475,39 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
 
   const openPrintableDoc = (autoPrint: boolean, downloadFilename?: string) => {
     const html = buildPrintHtmlWithAutoPrint(autoPrint);
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
 
-    // Try opening in a new tab/window first
-    const w = window.open(url, '_blank');
-
-    if (w) {
-      // Cleanup the blob URL after the window has had time to load it
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      return;
+    // iOS Safari handles document.write into a freshly-opened window MUCH more
+    // reliably than blob: URLs (blob URLs of text/html often download instead
+    // of opening, and window.print() against a blob-loaded window is flaky).
+    // We try document.write first, and fall back to a blob URL for browsers
+    // that have phased it out (some Chromium / mobile WebViews).
+    const win = window.open('', '_blank');
+    if (win && win.document) {
+      try {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        return;
+      } catch {
+        // fall through to blob fallback
+      }
     }
 
-    // Popup blocked (common on mobile): fall back to a same-tab navigation
-    // via a real anchor click so the browser treats it as a user-initiated
-    // navigation. This guarantees the page opens and the user can use the
-    // browser's native Print / Save as PDF menu.
+    // Fallback: blob URL via real anchor click (preserves the user gesture).
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.target = '_blank';
     a.rel = 'noopener';
-    if (downloadFilename) {
-      // Hint browsers that support it; on mobile this still opens for view
-      a.setAttribute('download', downloadFilename);
-    }
+    if (downloadFilename) a.setAttribute('download', downloadFilename);
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
 
-    toast.info('If nothing opened, please allow pop-ups for this site, then tap Print again.');
+    toast.info('If nothing opened, please allow pop-ups for this site, then try again.');
   };
 
   const handlePrint = () => {
@@ -514,7 +517,8 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
   const handleSavePdf = () => {
     const filename = `pay-stub-${format(new Date(stub.pay_date), 'yyyy-MM-dd')}.html`;
     openPrintableDoc(true, filename);
-    toast.info('In the print dialog, choose "Save as PDF" as the destination.');
+    // iOS users: from the print preview, choose Share → Save to Files (PDF).
+    toast.info('In the print dialog, choose "Save as PDF" (iPhone: Share → Save to Files).');
   };
 
   return (
