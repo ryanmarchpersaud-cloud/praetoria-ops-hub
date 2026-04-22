@@ -86,18 +86,12 @@ export default function IncidentPhotoUpload({
     if (!input) return;
 
     setStatus(null);
-
-    try {
-      if (typeof input.showPicker === 'function') {
-        input.showPicker();
-      } else {
-        input.click();
-      }
-      setShowAddMoreOptions(false);
-    } catch {
-      input.click();
-      setShowAddMoreOptions(false);
-    }
+    // Call .click() synchronously inside the user gesture. Do NOT use
+    // showPicker() for file inputs (unsupported on iOS Safari and several
+    // mobile WebViews) and do NOT await anything before this call, otherwise
+    // the browser will silently drop the request to open the photo library.
+    input.click();
+    setShowAddMoreOptions(false);
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
