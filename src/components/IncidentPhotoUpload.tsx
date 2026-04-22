@@ -368,30 +368,6 @@ export default function IncidentPhotoUpload({
           onChange={handleFileSelect}
         />
 
-        <input
-          ref={galleryRef}
-          name="incident-gallery-upload"
-          type="file"
-          accept={GALLERY_ACCEPT}
-          multiple
-          disabled={uploadDisabled}
-          aria-label="Choose photos from gallery"
-          className={NATIVE_PICKER_INPUT_CLASS}
-          onChange={handleFileSelect}
-        />
-
-        <input
-          ref={docRef}
-          name="incident-document-upload"
-          type="file"
-          accept={DOC_ACCEPT}
-          multiple
-          disabled={docDisabled}
-          aria-label="Upload file or document"
-          className={NATIVE_PICKER_INPUT_CLASS}
-          onChange={handleDocSelect}
-        />
-
         <div className="space-y-2">
           <Select value={pendingCategory} onValueChange={setPendingCategory}>
             <SelectTrigger className="h-9 text-xs">
