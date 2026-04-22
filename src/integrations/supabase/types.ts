@@ -402,6 +402,63 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_role: string | null
+          actor_user_id: string | null
+          after_data: Json | null
+          before_data: Json | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          request_id: string | null
+          success: boolean
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          request_id?: string | null
+          success?: boolean
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_role?: string | null
+          actor_user_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          request_id?: string | null
+          success?: boolean
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       automation_logs: {
         Row: {
           created_at: string
@@ -7742,6 +7799,21 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      write_audit_log: {
+        Args: {
+          _action: string
+          _after?: Json
+          _before?: Json
+          _customer_id?: string
+          _ip_address?: string
+          _metadata?: Json
+          _success?: boolean
+          _target_id?: string
+          _target_type?: string
+          _user_agent?: string
+        }
+        Returns: string
       }
     }
     Enums: {
