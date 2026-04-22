@@ -161,16 +161,38 @@ async function notifyN8n(entry: IntegrationEntry) {
 }
 
 // ── Resend sender ────────────────────────────────────────────────
+interface EmailAttachment {
+  filename: string;
+  content: string; // base64
+  content_type?: string;
+}
+
 interface EmailPayload {
   to: string | string[];
   subject: string;
   html: string;
   reply_to?: string;
+  attachments?: EmailAttachment[];
 }
 
 async function sendViaResend(payload: EmailPayload): Promise<{ ok: boolean; id?: string; error?: string }> {
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   if (!RESEND_API_KEY) return { ok: false, error: "RESEND_API_KEY not configured" };
+
+  const body: Record<string, unknown> = {
+    from: SENDER,
+    to: Array.isArray(payload.to) ? payload.to : [payload.to],
+    subject: payload.subject,
+    html: payload.html,
+    reply_to: payload.reply_to,
+  };
+  if (payload.attachments && payload.attachments.length > 0) {
+    body.attachments = payload.attachments.map((a) => ({
+      filename: a.filename,
+      content: a.content,
+      content_type: a.content_type,
+    }));
+  }
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -178,13 +200,7 @@ async function sendViaResend(payload: EmailPayload): Promise<{ ok: boolean; id?:
       Authorization: `Bearer ${RESEND_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: SENDER,
-      to: Array.isArray(payload.to) ? payload.to : [payload.to],
-      subject: payload.subject,
-      html: payload.html,
-      reply_to: payload.reply_to,
-    }),
+    body: JSON.stringify(body),
   });
 
   const data = await res.json();
@@ -736,6 +752,82 @@ Deno.serve(async (req) => {
       };
       await logIntegration(logEntry);
       return json({ ...result, action: "subcontractor_payment_receipt" });
+    }
+
+    // ─── Pay Stub Email (employee) ───
+    if (action === "pay_stub_email") {
+      const {
+        to,
+        employee_name,
+        pay_date,
+        pay_period_start,
+        pay_period_end,
+        net_pay,
+        stub_pdf_url,
+        stub_pdf_base64,
+        stub_pdf_filename,
+      } = params;
+      if (!to) return json({ error: "Missing 'to' email address" }, 400);
+
+      let attachment: EmailAttachment | null = null;
+      const filename = stub_pdf_filename || `pay-stub-${pay_date || "latest"}.pdf`;
+
+      if (stub_pdf_base64 && typeof stub_pdf_base64 === "string") {
+        attachment = { filename, content: stub_pdf_base64, content_type: "application/pdf" };
+      } else if (stub_pdf_url && typeof stub_pdf_url === "string") {
+        try {
+          const pdfRes = await fetch(stub_pdf_url);
+          if (pdfRes.ok) {
+            const buf = new Uint8Array(await pdfRes.arrayBuffer());
+            // base64-encode in chunks to avoid stack overflow on large PDFs
+            let binary = "";
+            const chunk = 0x8000;
+            for (let i = 0; i < buf.length; i += chunk) {
+              binary += String.fromCharCode(...buf.subarray(i, i + chunk));
+            }
+            attachment = { filename, content: btoa(binary), content_type: "application/pdf" };
+          }
+        } catch {
+          // fall through — we'll send without attachment but warn caller
+        }
+      }
+
+      if (!attachment) {
+        return json({
+          ok: false,
+          error: "No PDF attachment available. Use 'Upload to Portal' first to generate a PDF, or provide stub_pdf_base64.",
+        }, 400);
+      }
+
+      const periodLabel = pay_period_start && pay_period_end
+        ? `${pay_period_start} \u2013 ${pay_period_end}`
+        : pay_date || "";
+
+      const result = await sendViaResend({
+        to,
+        subject: `Pay Stub \u2013 ${pay_date || ""} \u2013 Praetoria Group`,
+        html: wrapHtml("Your Pay Stub", `
+          <p>Hi ${employee_name || "there"},</p>
+          <p>Your pay stub for the period <strong>${periodLabel}</strong> is attached as a PDF.</p>
+          ${net_pay ? `<p><strong>Net Pay:</strong> $${Number(net_pay).toFixed(2)} CAD</p>` : ""}
+          <p>If you have any questions about your pay, please contact <a href="mailto:support@praetoriagroup.ca" style="color:#0369a1;">support@praetoriagroup.ca</a>.</p>
+          <p>Thank you,<br/><strong>Praetoria Group Payroll</strong></p>
+        `),
+        reply_to: EMAIL_CONFIG.supportInbox,
+        attachments: [attachment],
+      });
+
+      await logIntegration({
+        provider: "resend",
+        event_name: "email.pay_stub",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: typeof to === "string" ? to : to[0],
+        record_type: "pay_stub",
+        provider_response_id: result.id,
+        error_message: result.error,
+      });
+      return json({ ...result, action: "pay_stub_email" });
     }
 
     if (action === "health") {
