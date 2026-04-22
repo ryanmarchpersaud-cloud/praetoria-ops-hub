@@ -19,6 +19,7 @@ import { ShareHistoryDetailDialog } from '@/components/ShareHistoryDetailDialog'
 import { IncidentResponseMetrics } from '@/components/incident/IncidentResponseMetrics';
 import { IncidentTimeline } from '@/components/incident/IncidentTimeline';
 import { IncidentPrintButton } from '@/components/incident/IncidentPrintButton';
+import { IncidentAttachmentsList } from '@/components/incident/IncidentAttachmentsList';
 
 const statusColors: Record<string, string> = {
   open: 'bg-amber-500/10 text-amber-700 border-amber-200',
@@ -341,7 +342,14 @@ export default function AdminIncidentDetailPage() {
             </Card>
           )}
 
-          {/* Investigation Timeline */}
+          {/* Documents (PDFs, IDs, insurance, etc.) */}
+          {Array.isArray(r.attachments) && r.attachments.length > 0 && (
+            <Card>
+              <CardContent className="p-5">
+                <IncidentAttachmentsList attachments={r.attachments as any} />
+              </CardContent>
+            </Card>
+          )}
           <IncidentTimeline report={r} shares={shares} />
         </div>
 

@@ -5,8 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, MapPin, Clock } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { IncidentAttachmentsList } from '@/components/incident/IncidentAttachmentsList';
 
 const statusColors: Record<string, string> = {
   open: 'bg-amber-500/10 text-amber-700 border-amber-200',
@@ -90,6 +91,33 @@ export default function SubcontractorIncidentDetailPage() {
           <p className="text-sm whitespace-pre-wrap">{report.description || 'No description provided.'}</p>
         </CardContent>
       </Card>
+
+      {/* Photos */}
+      {Array.isArray(report.photos) && report.photos.length > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" /> Photos ({report.photos.length})
+            </h2>
+            <div className="grid grid-cols-3 gap-2">
+              {report.photos.map((url: string, i: number) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-md overflow-hidden border">
+                  <img src={url} alt={`Incident photo ${i + 1}`} className="w-full h-24 object-cover" />
+                </a>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Documents */}
+      {Array.isArray(report.attachments) && report.attachments.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <IncidentAttachmentsList attachments={report.attachments as any} />
+          </CardContent>
+        </Card>
+      )}
 
       <p className="text-[10px] text-muted-foreground text-center">
         Filed {format(new Date(report.created_at), 'MMM d, yyyy · h:mm a')}
