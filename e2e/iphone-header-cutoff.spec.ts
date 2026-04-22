@@ -160,14 +160,10 @@ for (const mode of MODES) {
             return;
           }
 
-          // Always snapshot the top strip so reviewers can eyeball regressions
-          // even when the assertions pass.
-          const snapshotPath = path.join(
-            SNAPSHOT_DIR,
-            `${id}.png`,
-          );
+          // ---------- Snapshot 1: top strip (notch context) ----------
+          const stripPath = path.join(SNAPSHOT_DIR, `${id}__strip.png`);
           await page.screenshot({
-            path: snapshotPath,
+            path: stripPath,
             clip: {
               x: 0,
               y: 0,
@@ -186,9 +182,53 @@ for (const mode of MODES) {
           expect(titleBox, "title bounding box").not.toBeNull();
           if (!titleBox) return;
 
+          // ---------- Snapshot 2: full header row element ----------
+          // Walk up from the title to the nearest .page-header-row, header,
+          // or sticky/top container so we capture the WHOLE row (title +
+          // trailing action), not just the strip.
+          const headerRow = title
+            .locator(
+              "xpath=ancestor-or-self::*[contains(concat(' ', normalize-space(@class), ' '), ' page-header-row ') or self::header][1]",
+            )
+            .first();
+
+          const headerRowExists = (await headerRow.count()) > 0;
+          const headerRowPath = path.join(SNAPSHOT_DIR, `${id}__header-row.png`);
+          let headerRowBox: Awaited<ReturnType<typeof title.boundingBox>> = null;
+
+          if (headerRowExists) {
+            try {
+              await headerRow.screenshot({ path: headerRowPath });
+              headerRowBox = await headerRow.boundingBox();
+            } catch {
+              // element-level screenshot can fail if the row is partially off-screen;
+              // fall back to a viewport-clipped capture using the bounding box.
+              headerRowBox = await headerRow.boundingBox();
+              if (headerRowBox) {
+                await page.screenshot({
+                  path: headerRowPath,
+                  clip: {
+                    x: Math.max(0, headerRowBox.x),
+                    y: Math.max(0, headerRowBox.y),
+                    width: Math.min(headerRowBox.width, viewport.width),
+                    height: Math.min(headerRowBox.height, viewport.height),
+                  },
+                });
+              }
+            }
+          }
+
+          // Header row itself must clear the safe-area inset.
+          if (headerRowBox) {
+            expect(
+              headerRowBox.y,
+              `${pageDef.label}: headerRow.top ${headerRowBox.y}px must clear safe-area inset (${SAFE_AREA_TOP_PX}px). Snapshot: ${headerRowPath}`,
+            ).toBeGreaterThanOrEqual(SAFE_AREA_TOP_PX);
+          }
+
           expect(
             titleBox.y,
-            `${pageDef.label}: title.top ${titleBox.y}px must clear safe-area inset (${SAFE_AREA_TOP_PX}px). Snapshot: ${snapshotPath}`,
+            `${pageDef.label}: title.top ${titleBox.y}px must clear safe-area inset (${SAFE_AREA_TOP_PX}px). Snapshot: ${stripPath}`,
           ).toBeGreaterThanOrEqual(SAFE_AREA_TOP_PX);
 
           expect(
@@ -211,7 +251,7 @@ for (const mode of MODES) {
 
             expect(
               btnBox.y,
-              `${pageDef.label}: action.top ${btnBox.y}px must clear safe-area inset (${SAFE_AREA_TOP_PX}px). Snapshot: ${snapshotPath}`,
+              `${pageDef.label}: action.top ${btnBox.y}px must clear safe-area inset (${SAFE_AREA_TOP_PX}px). Snapshot: ${headerRowPath}`,
             ).toBeGreaterThanOrEqual(SAFE_AREA_TOP_PX);
 
             expect(
