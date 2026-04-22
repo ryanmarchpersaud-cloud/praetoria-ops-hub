@@ -68,11 +68,19 @@ export default function IncidentPhotoUpload({
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const docRef = useRef<HTMLInputElement>(null);
+  const isMountedRef = useRef(true);
   const [uploading, setUploading] = useState(false);
   const [docUploading, setDocUploading] = useState(false);
   const [status, setStatus] = useState<StatusMessage>(null);
   const [pendingCategory, setPendingCategory] = useState<string>('Insurance');
   const [showAddMoreOptions, setShowAddMoreOptions] = useState(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const showStatus = (msg: StatusMessage) => {
     setStatus(msg);
