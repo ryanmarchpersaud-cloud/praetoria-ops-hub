@@ -709,9 +709,21 @@ export default function EmployeeDetail() {
                         <TableCell className="text-sm text-muted-foreground">{format(new Date(d.created_at), 'MMM d, yyyy')}</TableCell>
                         <TableCell>
                           {d.file_url && (
-                            <a href={d.file_url} target="_blank" rel="noopener noreferrer">
-                              <Button size="icon" variant="ghost" className="h-7 w-7"><FileText className="h-3.5 w-3.5" /></Button>
-                            </a>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7"
+                              onClick={async () => {
+                                try {
+                                  const { openWorkerDocument } = await import('@/lib/workerDocuments');
+                                  await openWorkerDocument(d.file_url);
+                                } catch (e: any) {
+                                  toast({ title: 'Could not open document', description: e?.message, variant: 'destructive' });
+                                }
+                              }}
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                            </Button>
                           )}
                         </TableCell>
                       </TableRow>
@@ -1355,13 +1367,11 @@ function AdminDocUploadDialog({ open, onClose, userId }: { open: boolean; onClos
       const { error: storageError } = await supabase.storage.from('worker-documents').upload(path, file);
       if (storageError) throw storageError;
 
-      const { data: { publicUrl } } = supabase.storage.from('worker-documents').getPublicUrl(path);
-
       const { error: dbError } = await supabase.from('worker_documents').insert([{
         user_id: userId,
         document_name: docName.trim(),
         document_type: docType,
-        file_url: publicUrl,
+        file_url: path,
         file_name: file.name,
         uploaded_by: userId,
       }]);
