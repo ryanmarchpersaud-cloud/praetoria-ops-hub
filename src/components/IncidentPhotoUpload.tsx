@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, X, Loader2, ImagePlus } from 'lucide-react';
+import { Camera, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface IncidentPhotoUploadProps {
@@ -11,10 +11,25 @@ interface IncidentPhotoUploadProps {
   maxPhotos?: number;
 }
 
+type StatusMessage =
+  | { type: 'success'; text: string }
+  | { type: 'error'; text: string }
+  | null;
+
 export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos = 5 }: IncidentPhotoUploadProps) {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [status, setStatus] = useState<StatusMessage>(null);
+
+  const showStatus = (msg: StatusMessage) => {
+    setStatus(msg);
+    if (msg) {
+      window.setTimeout(() => {
+        setStatus((current) => (current === msg ? null : current));
+      }, 5000);
+    }
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -22,17 +37,24 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
 
     const remaining = maxPhotos - photos.length;
     if (remaining <= 0) {
-      toast({ title: `Maximum ${maxPhotos} photos allowed`, variant: 'destructive' });
+      const text = `Maximum ${maxPhotos} photos allowed`;
+      showStatus({ type: 'error', text });
+      toast({ title: text, variant: 'destructive' });
       return;
     }
 
     const toUpload = Array.from(files).slice(0, remaining);
     setUploading(true);
+    setStatus(null);
+
+    let successCount = 0;
+    const failures: string[] = [];
 
     try {
       const newUrls: string[] = [];
       for (const file of toUpload) {
         if (file.size > 10 * 1024 * 1024) {
+          failures.push(`${file.name}: exceeds 10 MB`);
           toast({ title: `${file.name} exceeds 10 MB limit`, variant: 'destructive' });
           continue;
         }
@@ -45,19 +67,37 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
           .upload(path, file, { upsert: false });
 
         if (uploadError) {
+          failures.push(`${file.name}: ${uploadError.message}`);
           toast({ title: 'Upload failed', description: uploadError.message, variant: 'destructive' });
           continue;
         }
 
         const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
         newUrls.push(urlData.publicUrl);
+        successCount += 1;
       }
 
       if (newUrls.length > 0) {
         onPhotosChange([...photos, ...newUrls]);
       }
+
+      if (successCount > 0 && failures.length === 0) {
+        showStatus({
+          type: 'success',
+          text: `${successCount} photo${successCount === 1 ? '' : 's'} uploaded successfully`,
+        });
+      } else if (successCount > 0 && failures.length > 0) {
+        showStatus({
+          type: 'error',
+          text: `${successCount} uploaded, ${failures.length} failed: ${failures.join('; ')}`,
+        });
+      } else if (failures.length > 0) {
+        showStatus({ type: 'error', text: `Upload failed: ${failures.join('; ')}` });
+      }
     } catch (err: any) {
-      toast({ title: 'Upload error', description: err.message, variant: 'destructive' });
+      const text = err?.message || 'Upload error';
+      showStatus({ type: 'error', text });
+      toast({ title: 'Upload error', description: text, variant: 'destructive' });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -112,6 +152,25 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
             <><Camera className="h-4 w-4 mr-2" />{photos.length === 0 ? 'Add Photos' : `Add More (${photos.length}/${maxPhotos})`}</>
           )}
         </Button>
+
+        {status && (
+          <div
+            role="status"
+            aria-live="polite"
+            className={`flex items-start gap-2 rounded-md border p-2 text-xs ${
+              status.type === 'success'
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                : 'border-destructive/30 bg-destructive/10 text-destructive'
+            }`}
+          >
+            {status.type === 'success' ? (
+              <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+            ) : (
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            )}
+            <span className="leading-snug">{status.text}</span>
+          </div>
+        )}
 
         <p className="text-[10px] text-muted-foreground text-center">
           Up to {maxPhotos} photos · Max 10 MB each · Camera or gallery
