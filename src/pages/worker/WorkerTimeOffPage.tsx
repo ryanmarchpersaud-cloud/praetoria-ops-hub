@@ -155,11 +155,11 @@ function RequestDialog({ open, onClose }: { open: boolean; onClose: () => void }
 
   return (
     <Dialog open={open} onOpenChange={() => { reset(); onClose(); }}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
+      <DialogContent className="max-w-sm max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-4 pt-4 pb-2 shrink-0">
           <DialogTitle>Request Time Off</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-3 px-4 overflow-y-auto flex-1">
           <div>
             <Label>Type</Label>
             <Select value={type} onValueChange={setType}>
@@ -190,7 +190,7 @@ function RequestDialog({ open, onClose }: { open: boolean; onClose: () => void }
             <Textarea placeholder="Brief reason…" value={reason} onChange={e => setReason(e.target.value)} rows={2} />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="px-4 py-3 border-t shrink-0 gap-2">
           <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={submitting}>{submitting ? 'Submitting…' : 'Submit'}</Button>
         </DialogFooter>
