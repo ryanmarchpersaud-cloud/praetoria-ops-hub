@@ -52,8 +52,8 @@ const ATTACHMENT_CATEGORIES = [
   'Other',
 ];
 
-const GALLERY_ACCEPT = 'image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*';
-const DOC_ACCEPT = 'application/pdf,image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif';
+const GALLERY_ACCEPT = 'image/*';
+const DOC_ACCEPT = 'application/pdf,.pdf,image/*';
 const NATIVE_PICKER_INPUT_CLASS = 'pointer-events-none fixed -left-[9999px] top-auto h-px w-px opacity-0';
 
 export default function IncidentPhotoUpload({
