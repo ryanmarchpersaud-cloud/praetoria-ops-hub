@@ -248,7 +248,7 @@ function PayrollRunDetail({ runId, onBack }: { runId: string; onBack: () => void
     toast.success(`Added ${created} employees with approved hours`);
   };
 
-
+  const openEditDialog = (item: any) => {
     setEditingItemId(item.id);
     setSelectedEmployeeId(item.user_id || '');
     setItemForm({
