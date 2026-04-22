@@ -513,10 +513,12 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
   };
 
   const handlePrint = () => {
+    iosLog('paystub:print');
     openPrintableDoc(true);
   };
 
   const handleSavePdf = () => {
+    iosLog('paystub:pdf');
     const filename = `pay-stub-${format(new Date(stub.pay_date), 'yyyy-MM-dd')}.html`;
     openPrintableDoc(true, filename);
     toast.info('In the print dialog, choose "Save as PDF" as the destination.');
