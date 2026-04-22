@@ -68,6 +68,12 @@
     --sar: env(safe-area-inset-right, 0px);
     --sab: env(safe-area-inset-bottom, 0px);
     --sal: env(safe-area-inset-left, 0px);
+
+    /* iPhone header baseline — single knob to shift all portal headers down.
+       Default 0 (Android / desktop unaffected). Overridden inside the
+       iPhone-specific @supports block below. Tune --ios-header-baseline
+       in one place to move every signed-in header together. */
+    --ios-header-baseline: 0px;
   }
 
   .dark {
