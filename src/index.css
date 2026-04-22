@@ -224,6 +224,24 @@
     flex-wrap: wrap;
   }
 
+  /* iPhone safety net for subpage headers.
+     The Safety & Incidents page (and other subpages with a title + trailing
+     action button) was rendering the title under the notch on iPhone because
+     the per-page wrapper only adds pt-3 inside a shell whose safe-area inset
+     can resolve to 0 in some iOS webview modes. Add a minimum top inset to
+     the header row itself so the title and action always sit below the
+     unsafe area, without changing Android (where the inset is 0 and 8px
+     is harmless). Also keep the title and action on one line on narrow
+     iPhones so the title cannot wrap up into the notch. */
+  @supports (-webkit-touch-callout: none) {
+    @media (max-width: 767px) {
+      .page-header-row {
+        margin-top: max(0px, calc(env(safe-area-inset-top, 0px) - 12px));
+        flex-wrap: nowrap;
+      }
+    }
+  }
+
   /* Title slot inside .page-header-row — must shrink instead of pushing
      the action button off-screen. Pair with text-truncation if needed. */
   .page-header-title {
