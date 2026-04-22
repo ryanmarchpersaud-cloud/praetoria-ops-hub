@@ -5761,6 +5761,27 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          processed_at: string | null
+          received_at: string
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          processed_at?: string | null
+          received_at?: string
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          processed_at?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       subcontractor_assignments: {
         Row: {
           assigned_at: string
