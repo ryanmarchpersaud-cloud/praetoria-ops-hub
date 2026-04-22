@@ -143,6 +143,13 @@
     padding-top: var(--sat);
   }
 
+  .page-container,
+  .main-layout,
+  .screen-wrapper,
+  #root > div {
+    padding-top: env(safe-area-inset-top);
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight text-foreground;
   }
