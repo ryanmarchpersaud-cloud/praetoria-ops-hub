@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ShieldAlert, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import IncidentPhotoUpload from '@/components/IncidentPhotoUpload';
+import IncidentPhotoUpload, { type IncidentAttachment } from '@/components/IncidentPhotoUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -33,6 +33,7 @@ export default function WorkerNewIncidentPage() {
   const [medicalAttention, setMedicalAttention] = useState(false);
   const [reportedTo, setReportedTo] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<IncidentAttachment[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string; report_number: string } | null>(null);
 
@@ -55,6 +56,7 @@ export default function WorkerNewIncidentPage() {
         medical_attention: medicalAttention,
         reported_to: reportedTo.trim() || null,
         photos: photos.length > 0 ? photos : null,
+        attachments: attachments,
         follow_up_status: 'open',
         severity: medicalAttention ? 'high' : 'medium',
       }]).select('id, report_number').single();
@@ -211,7 +213,12 @@ export default function WorkerNewIncidentPage() {
         </CardContent>
       </Card>
 
-      <IncidentPhotoUpload photos={photos} onPhotosChange={setPhotos} />
+      <IncidentPhotoUpload
+        photos={photos}
+        onPhotosChange={setPhotos}
+        attachments={attachments}
+        onAttachmentsChange={setAttachments}
+      />
 
       <Button className="w-full" variant="destructive" onClick={handleSubmit} disabled={submitting || !description.trim()}>
         {submitting ? 'Submitting…' : 'Submit Incident Report'}
