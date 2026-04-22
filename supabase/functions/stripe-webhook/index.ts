@@ -62,48 +62,75 @@ serve(async (req) => {
     });
   }
 
+  // ── Hardened: fail closed if webhook secret missing in production ────
+  // Webhooks without signature verification are forgeable; reject rather
+  // than silently accept JSON.
+  if (!webhookSecret) {
+    console.error("[stripe-webhook] STRIPE_WEBHOOK_SECRET not configured — refusing request");
+    await log({
+      event_name: "stripe.webhook_secret_missing",
+      status: "failed",
+      error_message: "STRIPE_WEBHOOK_SECRET not configured",
+    });
+    return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
   const sb = getServiceClient();
 
   let event: Stripe.Event;
 
-  // If webhook secret is configured, verify signature; otherwise parse raw JSON
-  if (webhookSecret) {
-    const body = await req.text();
-    const sig = req.headers.get("stripe-signature");
-    if (!sig) {
-      return new Response(JSON.stringify({ error: "Missing stripe-signature" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    try {
-      event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
-    } catch (err: any) {
-      console.error("Webhook signature verification failed:", err.message);
-      await log({
-        event_name: "stripe.webhook_signature_failed",
-        status: "failed",
-        error_message: err.message,
-      });
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-  } else {
-    // No webhook secret — parse JSON directly (development mode)
-    try {
-      event = await req.json();
-    } catch {
-      return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+  // Always verify signature
+  const body = await req.text();
+  const sig = req.headers.get("stripe-signature");
+  if (!sig) {
+    return new Response(JSON.stringify({ error: "Missing stripe-signature" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  try {
+    event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
+  } catch (err: any) {
+    console.error("Webhook signature verification failed:", err.message);
+    await log({
+      event_name: "stripe.webhook_signature_failed",
+      status: "failed",
+      error_message: err.message,
+    });
+    return new Response(JSON.stringify({ error: "Invalid signature" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   console.log(`[stripe-webhook] Received event: ${event.type} (${event.id})`);
+
+  // ── Hardened: idempotency dedupe on event.id ─────────────────────────
+  // Stripe retries webhooks; without dedupe we could double-record
+  // payments / double-update invoices on transient failures.
+  try {
+    const { error: dedupeErr } = await sb
+      .from("stripe_webhook_events")
+      .insert({ event_id: event.id, event_type: event.type });
+    if (dedupeErr) {
+      // Unique violation = already processed → 200 OK so Stripe stops retrying
+      if ((dedupeErr as any).code === "23505") {
+        console.log(`[stripe-webhook] Duplicate event ${event.id} ignored`);
+        return new Response(JSON.stringify({ received: true, duplicate: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      console.error("[stripe-webhook] Dedupe insert failed:", dedupeErr);
+      // Continue processing — don't lose events because of dedupe table issue
+    }
+  } catch (e) {
+    console.error("[stripe-webhook] Dedupe check error:", e);
+  }
 
   try {
     switch (event.type) {
@@ -398,6 +425,12 @@ serve(async (req) => {
       default:
         console.log(`[stripe-webhook] Unhandled event type: ${event.type}`);
     }
+
+    // Mark event as fully processed for the dedupe table
+    await sb
+      .from("stripe_webhook_events")
+      .update({ processed_at: new Date().toISOString() })
+      .eq("event_id", event.id);
 
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

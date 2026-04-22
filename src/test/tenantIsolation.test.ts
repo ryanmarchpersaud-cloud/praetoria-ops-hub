@@ -104,6 +104,26 @@ describe('Tenant isolation — storage path traversal', () => {
       expect(data?.size ?? 0).toBe(0);
     }
   });
+
+  it('anonymous cannot download messaging files from attachments bucket', async () => {
+    // Phase 3: messaging/* is no longer publicly readable
+    const { data, error } = await anon.storage
+      .from('attachments')
+      .download(`messaging/${RANDOM_OTHER_USER}/guessed.pdf`);
+    if (!error) {
+      expect(data?.size ?? 0).toBe(0);
+    }
+  });
+
+  it('anonymous cannot download incident photos from attachments bucket', async () => {
+    // Phase 3: incidents/* is no longer publicly readable
+    const { data, error } = await anon.storage
+      .from('attachments')
+      .download(`incidents/guessed-photo.jpg`);
+    if (!error) {
+      expect(data?.size ?? 0).toBe(0);
+    }
+  });
 });
 
 describe('Tenant isolation — write protection', () => {
