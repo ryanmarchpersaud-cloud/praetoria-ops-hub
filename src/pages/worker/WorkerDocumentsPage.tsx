@@ -40,9 +40,9 @@ export default function WorkerDocumentsPage() {
 
   return (
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">My Documents</h1>
-        <Button size="sm" variant="outline" onClick={() => setShowUpload(true)}>
+      <div className="page-header-row">
+        <h1 className="text-lg font-bold page-header-title">My Documents</h1>
+        <Button size="sm" variant="outline" className="page-header-action" onClick={() => setShowUpload(true)}>
           <Plus className="h-4 w-4 mr-1" /> Upload
         </Button>
       </div>

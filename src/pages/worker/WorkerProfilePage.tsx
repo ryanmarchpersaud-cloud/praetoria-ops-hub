@@ -64,9 +64,9 @@ export default function WorkerProfilePage() {
 
   return (
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">My Profile</h1>
-        <div className="flex items-center gap-2">
+      <div className="page-header-row">
+        <h1 className="text-lg font-bold page-header-title">My Profile</h1>
+        <div className="flex items-center gap-2 page-header-action">
           <Badge variant="outline" className={statusColors[profile.employment_status] ?? ''}>
             {profile.employment_status}
           </Badge>

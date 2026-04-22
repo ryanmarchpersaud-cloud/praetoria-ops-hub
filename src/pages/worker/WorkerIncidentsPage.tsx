@@ -38,9 +38,9 @@ export default function WorkerIncidentsPage() {
 
   return (
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <h1 className="text-lg font-bold min-w-0 flex-1">Safety & Incidents</h1>
-        <Link to="/worker/incidents/new" className="shrink-0">
+      <div className="page-header-row">
+        <h1 className="text-lg font-bold page-header-title">Safety & Incidents</h1>
+        <Link to="/worker/incidents/new" className="page-header-action">
           <Button size="sm" variant="outline">
             <Plus className="h-4 w-4 mr-1" /> Report
           </Button>

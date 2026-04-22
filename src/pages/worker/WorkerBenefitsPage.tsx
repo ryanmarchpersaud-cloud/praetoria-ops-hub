@@ -63,9 +63,9 @@ export default function WorkerBenefitsPage() {
 
   return (
     <div className="px-4 pt-3 pb-4 space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">Benefits</h1>
-        <Badge variant="outline" className={activeEnrollments.length > 0 ? statusColors.active : statusColors.waived}>
+      <div className="page-header-row">
+        <h1 className="text-lg font-bold page-header-title">Benefits</h1>
+        <Badge variant="outline" className={`page-header-action ${activeEnrollments.length > 0 ? statusColors.active : statusColors.waived}`}>
           {activeEnrollments.length > 0 ? `${activeEnrollments.length} Active` : 'No Enrollments'}
         </Badge>
       </div>
