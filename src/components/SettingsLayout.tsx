@@ -4,6 +4,7 @@ import {
   Settings, Webhook, Plug, Users, ShieldCheck, ScrollText, Gauge,
   Building2, Package, CreditCard, Receipt, Zap, Briefcase, CalendarCog,
   MapPinned, ClipboardList, MessageSquare, Mail, BookOpen, Globe, Megaphone,
+  KeyRound, HeartPulse, Activity,
 } from 'lucide-react';
 
 type SettingsAccessKey =
@@ -17,7 +18,8 @@ interface SettingsItem {
   title: string;
   url: string;
   icon: any;
-  accessKey: SettingsAccessKey;
+  accessKey?: SettingsAccessKey;
+  alwaysShow?: boolean;
 }
 
 const settingsNav: { group: string; items: SettingsItem[] }[] = [
@@ -66,6 +68,14 @@ const settingsNav: { group: string; items: SettingsItem[] }[] = [
       { title: 'Seat Usage', url: '/settings/usage', icon: Gauge, accessKey: 'seatUsage' },
     ],
   },
+  {
+    group: 'User & Auth Diagnostics',
+    items: [
+      { title: 'Users', url: '/settings/users', icon: KeyRound, alwaysShow: true },
+      { title: 'Auth Email Health', url: '/settings/auth-email-health', icon: HeartPulse, alwaysShow: true },
+      { title: 'Auth Activity', url: '/settings/auth-activity', icon: Activity, alwaysShow: true },
+    ],
+  },
 ];
 
 export function SettingsLayout({ children }: { children: React.ReactNode }) {
@@ -75,7 +85,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
   const visibleNav = settingsNav
     .map(group => ({
       ...group,
-      items: group.items.filter(item => access[item.accessKey]),
+      items: group.items.filter(item => item.alwaysShow || (item.accessKey && access[item.accessKey])),
     }))
     .filter(group => group.items.length > 0);
 
