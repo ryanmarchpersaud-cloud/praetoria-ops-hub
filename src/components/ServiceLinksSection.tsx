@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan, Handshake } from 'lucide-react';
+import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan, HardHat, Handshake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CleaningPartnerDialog } from '@/components/CleaningPartnerDialog';
+import { ConstructionPartnerDialog } from '@/components/ConstructionPartnerDialog';
 
 const activeServices = [
   {
@@ -42,6 +43,13 @@ const partnerServices = [
     color: 'text-rose-500',
     partnerId: 'cleaning' as const,
   },
+  {
+    name: 'Construction & Renovations',
+    label: 'Available Through Trusted Partner',
+    icon: HardHat,
+    color: 'text-amber-500',
+    partnerId: 'construction' as const,
+  },
 ];
 
 const comingSoonServices = [
@@ -67,11 +75,17 @@ interface ServiceLinksSectionProps {
 
 export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionProps) {
   const [cleaningOpen, setCleaningOpen] = useState(false);
+  const [constructionOpen, setConstructionOpen] = useState(false);
+
+  const openPartner = (partnerId: typeof partnerServices[0]['partnerId']) => {
+    if (partnerId === 'cleaning') setCleaningOpen(true);
+    else if (partnerId === 'construction') setConstructionOpen(true);
+  };
 
   const partnerChip = (s: typeof partnerServices[0], className: string, inner: React.ReactNode) => (
     <button
       key={s.name}
-      onClick={() => setCleaningOpen(true)}
+      onClick={() => openPartner(s.partnerId)}
       className={className}
     >
       {inner}
