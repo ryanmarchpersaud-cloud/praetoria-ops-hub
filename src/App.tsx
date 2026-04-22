@@ -15,6 +15,7 @@ import { PortalLayout } from "@/components/PortalLayout";
 import { SubcontractorLayout } from "@/components/subcontractor/SubcontractorLayout";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
+import ChangePassword from "./pages/ChangePassword";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
 import LeadDetail from "./pages/LeadDetail";
@@ -204,12 +205,23 @@ function RouteLoading() {
   return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
 }
 
+/** Returns a redirect to /change-password if the user has a temp password to change */
+function useForcePasswordChangeRedirect() {
+  const { user, mustChangePassword, mustChangePasswordChecked } = useAuth();
+  if (user && mustChangePasswordChecked && mustChangePassword) {
+    return <Navigate to="/change-password" replace />;
+  }
+  return null;
+}
+
 /** Block inactive/archived users from all protected areas */
 function ActiveGuard({ children }: { children: React.ReactNode }) {
   const { isActiveUser, isLoading } = useAuthorization();
   const { user, loading } = useAuth();
+  const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   return <>{children}</>;
 }
@@ -217,8 +229,10 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
   if (isCustomer && !canAccessAdminPortal) return <Navigate to="/portal" replace />;
@@ -230,8 +244,10 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 function StaffRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, isStaff, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (!isStaff && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
@@ -241,8 +257,10 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
 function WorkerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, canAccessWorkerPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
   if (!canAccessWorkerPortal) return <Navigate to="/access-denied" replace />;
@@ -252,8 +270,10 @@ function WorkerRoute({ children }: { children: React.ReactNode }) {
 function PortalRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, canAccessCustomerPortal, isStaff, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (!canAccessCustomerPortal) return <Navigate to="/access-denied" replace />;
   const isPreview = isStaff && !isCustomer;
@@ -268,21 +288,26 @@ function PortalRoute({ children }: { children: React.ReactNode }) {
 function SubcontractorRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { canAccessSubcontractorPortal, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (!canAccessSubcontractorPortal && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
   return <>{children}</>;
 }
 
 function LoginRoute() {
-  const { user, loading } = useAuth();
+  const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
   const { isCustomer, isStaff, isAdmin, isSubcontractor, canAccessAdminPortal, isLoading } = useAuthorization();
   if (loading || isLoading) {
     if (!user) return <Login />;
     return <RouteLoading />;
   }
   if (user) {
+    if (mustChangePasswordChecked && mustChangePassword) {
+      return <Navigate to="/change-password" replace />;
+    }
     if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
     if (isCustomer) return <Navigate to="/portal" replace />;
     if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
@@ -296,6 +321,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/access-denied" element={<AccessDenied />} />
 
       {/* Admin-only routes */}
