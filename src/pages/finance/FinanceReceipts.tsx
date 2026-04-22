@@ -56,7 +56,8 @@ export default function FinanceReceipts() {
         const proceed = confirm(`"${file.name}" may be a duplicate. Upload anyway?`);
         if (!proceed) continue;
       }
-      const path = `receipts/${Date.now()}-${file.name}`;
+      // Staff-only bucket; prefix with org/staff path for future multi-tenant readiness
+      const path = `org/${Date.now()}-${file.name}`;
       const { error: upErr } = await supabase.storage.from('finance-receipts').upload(path, file);
       if (upErr) { toast.error(`Upload failed: ${upErr.message}`); continue; }
       const { data: urlData } = supabase.storage.from('finance-receipts').getPublicUrl(path);

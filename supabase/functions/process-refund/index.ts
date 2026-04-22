@@ -1,35 +1,20 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders, requireAuth, requireRole } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-  );
-  const sb = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
-
   try {
-    // Auth
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Not authenticated");
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userErr } = await supabaseClient.auth.getUser(token);
-    if (userErr || !userData.user) throw new Error("Authentication failed");
-    const userId = userData.user.id;
+    // Standardized auth + role gate (refunds = admin/owner/accountant only)
+    const auth = await requireAuth(req);
+    if (!auth.ok) return auth.response;
+    const gate = await requireRole(auth, ["owner", "admin", "accountant"]);
+    if (!gate.ok) return gate.response;
+    const sb = auth.adminClient;
+    const userId = auth.userId;
 
     const body = await req.json();
     const { invoice_id, refund_type, amount, reason, internal_notes } = body;
