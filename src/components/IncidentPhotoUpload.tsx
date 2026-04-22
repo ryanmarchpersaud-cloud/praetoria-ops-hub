@@ -303,34 +303,37 @@ export default function IncidentPhotoUpload({
 
         <input
           ref={cameraRef}
+          name="incident-camera-upload"
           type="file"
           accept={GALLERY_ACCEPT}
           capture="environment"
           disabled={uploadDisabled}
           aria-label="Take photo"
-          className="sr-only"
+          className={NATIVE_PICKER_INPUT_CLASS}
           onChange={handleFileSelect}
         />
 
         <input
           ref={galleryRef}
+          name="incident-gallery-upload"
           type="file"
           accept={GALLERY_ACCEPT}
           multiple
           disabled={uploadDisabled}
           aria-label="Choose photos from gallery"
-          className="sr-only"
+          className={NATIVE_PICKER_INPUT_CLASS}
           onChange={handleFileSelect}
         />
 
         <input
           ref={docRef}
+          name="incident-document-upload"
           type="file"
           accept={DOC_ACCEPT}
           multiple
           disabled={docDisabled}
           aria-label="Upload file or document"
-          className="sr-only"
+          className={NATIVE_PICKER_INPUT_CLASS}
           onChange={handleDocSelect}
         />
 
