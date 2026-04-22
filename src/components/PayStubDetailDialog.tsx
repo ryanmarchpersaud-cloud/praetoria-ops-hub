@@ -7,8 +7,9 @@ import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { iosLog } from '@/lib/iosDebug';
 
 const WHITE_LOGO_URL = 'https://czltgypfgegjmcsczpms.supabase.co/storage/v1/object/public/attachments/praetoria-logo-white.png';
 
