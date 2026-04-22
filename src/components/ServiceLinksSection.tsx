@@ -142,6 +142,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
       <div className="space-y-1">
         <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
         <ConstructionPartnerDialog open={constructionOpen} onOpenChange={setConstructionOpen} />
+        <div className="space-y-0.5">
           {activeServices.map((s) => (
             <a
               key={s.name}
@@ -235,6 +236,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
     <div className="mt-6">
       <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
       <ConstructionPartnerDialog open={constructionOpen} onOpenChange={setConstructionOpen} />
+      <p className="text-xs font-medium text-muted-foreground mb-3 text-center tracking-wide uppercase">
         Explore Our Services
       </p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
