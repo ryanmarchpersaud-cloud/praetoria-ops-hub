@@ -135,6 +135,8 @@ function useYtdTotals(userId?: string, payDate?: string, open?: boolean) {
 
 const n = (v: any) => Number(v || 0);
 const fmt = (v: any) => n(v).toFixed(2);
+const safeMinus = '-';
+const safeDash = ' - ';
 
 export default function PayStubDetailDialog({ stub, open, onOpenChange, employeeName, employeeRole, workerView }: Props) {
   const { data: company } = useCompanySettings();
@@ -311,7 +313,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
         return;
       }
 
-      const docName = `Pay Stub – ${format(new Date(stub.pay_period_start), 'MMM d')} to ${format(new Date(stub.pay_period_end), 'MMM d, yyyy')} (${format(new Date(stub.pay_date), 'yyyy-MM-dd')})`;
+      const docName = `Pay Stub - ${format(new Date(stub.pay_period_start), 'MMM d')} to ${format(new Date(stub.pay_period_end), 'MMM d, yyyy')} (${format(new Date(stub.pay_date), 'yyyy-MM-dd')})`;
 
       const { error } = await supabase.from('worker_documents').insert({
         user_id: stub.user_id,
@@ -341,7 +343,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
       // when available, otherwise just open the printable view so the
       // worker can email/AirDrop/save the PDF themselves.
       const shareData: ShareData = {
-        title: `Pay Stub – ${displayName}`,
+        title: `Pay Stub - ${displayName}`,
         text: `My pay stub from ${companyName} for pay date ${format(new Date(stub.pay_date), 'MMM d, yyyy')}.`,
       };
       if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
@@ -372,15 +374,15 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:center;">${e.rate != null ? '$' + e.rate.toFixed(2) : '—'}</td>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-weight:600;">$${e.amount.toFixed(2)}</td>
         </tr>`).join('')
-      : `<tr><td colspan="4" style="padding:8px 12px;font-size:13px;">Gross Earnings — $${fmt(stub.gross_pay)}</td></tr>`;
+      : `<tr><td colspan="4" style="padding:8px 12px;font-size:13px;">Gross Earnings ${safeDash}$${fmt(stub.gross_pay)}</td></tr>`;
 
     const deductionsHtml = deductionLines.length > 0
       ? deductionLines.map(d => `
         <tr>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;" colspan="3">${d.label}</td>
-          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;color:#dc2626;">–$${d.amount.toFixed(2)}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;color:#dc2626;">${safeMinus}$${d.amount.toFixed(2)}</td>
         </tr>`).join('')
-      : `<tr><td colspan="3" style="padding:8px 12px;font-size:13px;">Total Deductions</td><td style="text-align:right;color:#dc2626;padding:8px 12px;">–$${fmt(stub.deductions)}</td></tr>`;
+      : `<tr><td colspan="3" style="padding:8px 12px;font-size:13px;">Total Deductions</td><td style="text-align:right;color:#dc2626;padding:8px 12px;">${safeMinus}$${fmt(stub.deductions)}</td></tr>`;
 
     const employerHtml = employerLines.length > 0
       ? `<div class="section-title">Employer Contributions</div>
@@ -394,7 +396,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Pay Stub – ${displayName} – ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
+<title>Pay Stub - ${displayName} - ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
 <style>
   @page { size: letter; margin: 0.5in 0.6in; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -457,7 +459,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   </div>
   <div class="meta-box">
     <div class="lbl">Pay Period</div>
-    <div class="val">${format(new Date(stub.pay_period_start), 'MMM d')} – ${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}</div>
+    <div class="val">${format(new Date(stub.pay_period_start), 'MMM d')}${safeDash}${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}</div>
     <div class="sub" style="margin-top:4px;"><strong>Pay Date:</strong> ${format(new Date(stub.pay_date), 'MMMM d, yyyy')}</div>
   </div>
 </div>
@@ -476,7 +478,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   <thead><tr><th colspan="3">Description</th><th>Amount</th></tr></thead>
   <tbody>
     ${deductionsHtml}
-    <tr class="total-row"><td colspan="3">Total Deductions</td><td style="text-align:right;color:#dc2626;">–$${fmt(totalDeductions)}</td></tr>
+    <tr class="total-row"><td colspan="3">Total Deductions</td><td style="text-align:right;color:#dc2626;">${safeMinus}$${fmt(totalDeductions)}</td></tr>
   </tbody>
 </table>
 
@@ -613,7 +615,7 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
               />
               <MetaBox
                 label="Pay Period"
-                value={`${format(new Date(stub.pay_period_start), 'MMM d')} – ${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}`}
+                value={`${format(new Date(stub.pay_period_start), 'MMM d')}${safeDash}${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}`}
                 sub={`Pay Date: ${format(new Date(stub.pay_date), 'MMMM d, yyyy')}`}
                 color={primaryColor}
               />
@@ -670,17 +672,17 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
                     {deductionLines.length > 0 ? deductionLines.map((d, i) => (
                       <tr key={i} className="border-t border-border/50">
                         <td className="px-3 py-2 text-foreground" colSpan={3}>{d.label}</td>
-                        <td className="px-3 py-2 text-right text-destructive">–${d.amount.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right text-destructive">-{d.amount.toFixed(2)}</td>
                       </tr>
                     )) : (
                       <tr className="border-t border-border/50">
                         <td className="px-3 py-2" colSpan={3}>Total Deductions</td>
-                        <td className="px-3 py-2 text-right text-destructive">–${fmt(stub.deductions)}</td>
+                        <td className="px-3 py-2 text-right text-destructive">-{fmt(stub.deductions)}</td>
                       </tr>
                     )}
                     <tr className="border-t-2 font-bold bg-muted/30" style={{ borderColor: primaryColor }}>
                       <td className="px-3 py-2.5" colSpan={3}>Total Deductions</td>
-                      <td className="px-3 py-2.5 text-right text-destructive">–${fmt(totalDeductions)}</td>
+                      <td className="px-3 py-2.5 text-right text-destructive">-{fmt(totalDeductions)}</td>
                     </tr>
                   </tbody>
                 </table>

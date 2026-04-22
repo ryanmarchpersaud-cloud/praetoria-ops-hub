@@ -190,7 +190,7 @@ async function sendViaResend(payload: EmailPayload): Promise<{ ok: boolean; id?:
     body.attachments = payload.attachments.map((a) => ({
       filename: a.filename,
       content: a.content,
-      content_type: a.content_type,
+      contentType: a.content_type,
     }));
   }
 
