@@ -778,7 +778,9 @@ export default function InvoiceDetail() {
                 // Upload any user-added attachments to storage and collect URLs
                 const attachmentUrls: string[] = [];
                 for (const file of emailAttachments) {
-                  const filePath = `invoice-attachments/${invoice.id}/${Date.now()}-${file.name}`;
+                  // Tenant-scoped path: customer_id/invoice_id ensures RLS isolation
+                  const tenantPrefix = invoice.customer_id ?? 'shared';
+                  const filePath = `${tenantPrefix}/${invoice.id}/${Date.now()}-${file.name}`;
                   const { error: upErr } = await supabase.storage.from('invoice-attachments').upload(filePath, file);
                   if (!upErr) {
                     const { data: urlData } = supabase.storage.from('invoice-attachments').getPublicUrl(filePath);
