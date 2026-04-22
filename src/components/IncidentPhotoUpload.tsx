@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
+import { useId, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Camera, X, Loader2, CheckCircle2, AlertCircle, ImagePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface IncidentPhotoUploadProps {
   photos: string[];
@@ -20,6 +21,8 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
   const { toast } = useToast();
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+  const cameraInputId = useId();
+  const galleryInputId = useId();
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState<StatusMessage>(null);
 
@@ -110,6 +113,8 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
     onPhotosChange(photos.filter((_, i) => i !== index));
   };
 
+  const uploadDisabled = photos.length >= maxPhotos;
+
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
@@ -138,47 +143,49 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
           </Button>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <div className="relative">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={photos.length >= maxPhotos}
-                className="w-full pointer-events-none"
-              >
-                <Camera className="h-4 w-4 mr-2" />Take Photo
-              </Button>
-              <input
-                ref={cameraRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                disabled={photos.length >= maxPhotos}
-                aria-label="Take photo"
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                onChange={handleFileSelect}
-              />
-            </div>
+            <input
+              id={cameraInputId}
+              ref={cameraRef}
+              type="file"
+              accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif"
+              capture="environment"
+              disabled={uploadDisabled}
+              aria-label="Take photo"
+              className="sr-only"
+              onChange={handleFileSelect}
+            />
+            <label
+              htmlFor={cameraInputId}
+              className={cn(
+                buttonVariants({ variant: 'outline' }),
+                'w-full cursor-pointer',
+                uploadDisabled && 'pointer-events-none opacity-50'
+              )}
+            >
+              <Camera className="h-4 w-4 mr-2" />Take Photo
+            </label>
 
-            <div className="relative">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={photos.length >= maxPhotos}
-                className="w-full pointer-events-none"
-              >
-                <ImagePlus className="h-4 w-4 mr-2" />Gallery
-              </Button>
-              <input
-                ref={galleryRef}
-                type="file"
-                accept="image/*"
-                multiple
-                disabled={photos.length >= maxPhotos}
-                aria-label="Choose photos from gallery"
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                onChange={handleFileSelect}
-              />
-            </div>
+            <input
+              id={galleryInputId}
+              ref={galleryRef}
+              type="file"
+              accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif"
+              multiple
+              disabled={uploadDisabled}
+              aria-label="Choose photos from gallery"
+              className="sr-only"
+              onChange={handleFileSelect}
+            />
+            <label
+              htmlFor={galleryInputId}
+              className={cn(
+                buttonVariants({ variant: 'outline' }),
+                'w-full cursor-pointer',
+                uploadDisabled && 'pointer-events-none opacity-50'
+              )}
+            >
+              <ImagePlus className="h-4 w-4 mr-2" />Gallery
+            </label>
           </div>
         )}
         {photos.length > 0 && (
