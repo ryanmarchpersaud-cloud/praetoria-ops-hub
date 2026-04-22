@@ -95,6 +95,10 @@ export default function IncidentPhotoUpload({
     const input = ref.current;
     if (!input) return;
 
+    const which =
+      ref === cameraRef ? 'camera' : ref === galleryRef ? 'gallery' : 'document';
+    iosLog(`incident:${which}:tap`);
+
     try {
       input.value = '';
       input.click();
