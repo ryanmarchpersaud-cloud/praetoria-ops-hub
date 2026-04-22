@@ -85,12 +85,19 @@ export default function IncidentPhotoUpload({
     const input = ref.current;
     if (!input) return;
 
-    setStatus(null);
-    // Call .click() synchronously inside the user gesture. Do NOT use
-    // showPicker() for file inputs (unsupported on iOS Safari and several
-    // mobile WebViews) and do NOT await anything before this call, otherwise
-    // the browser will silently drop the request to open the photo library.
+    // CRITICAL for iOS Safari: call .click() FIRST, synchronously, inside the
+    // user gesture. Do NOT call setState (which triggers re-render) before
+    // .click(), and do NOT use showPicker() (unsupported on iOS file inputs).
+    // Also ensure the input is not `disabled` at the moment of the click — iOS
+    // silently drops clicks on disabled inputs.
+    if (input.disabled) input.disabled = false;
+    // Reset value so selecting the same file twice still triggers onChange.
+    try { input.value = ''; } catch { /* some browsers throw on reset */ }
     input.click();
+
+    // State changes happen AFTER the synchronous click so the gesture is
+    // preserved on iOS Safari / WebKit.
+    setStatus(null);
     setShowAddMoreOptions(false);
   };
 
