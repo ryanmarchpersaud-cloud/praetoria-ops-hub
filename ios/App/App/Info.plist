@@ -44,7 +44,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+	<false/>
 	<!-- Privacy permission descriptions required by app features -->
 	<key>NSCameraUsageDescription</key>
 	<string>Praetoria Ops Hub uses your camera to capture visit photos, incident evidence, and profile pictures.</string>
