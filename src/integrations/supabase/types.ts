@@ -6609,27 +6609,42 @@ export type Database = {
       }
       timesheets: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           clock_in: string
           clock_out: string | null
           created_at: string
           id: string
           notes: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          status: string
           user_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           clock_in?: string
           clock_out?: string | null
           created_at?: string
           id?: string
           notes?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          status?: string
           user_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           clock_in?: string
           clock_out?: string | null
           created_at?: string
           id?: string
           notes?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -7752,6 +7767,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aggregate_approved_hours: {
+        Args: { _end_date: string; _start_date: string }
+        Returns: {
+          entry_count: number
+          full_name: string
+          hourly_rate: number
+          total_hours: number
+          user_id: string
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
