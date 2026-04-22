@@ -132,45 +132,53 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
           </div>
         )}
 
-        <input
-          ref={cameraRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handleFileSelect}
-        />
-        <input
-          ref={galleryRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={handleFileSelect}
-        />
-
         {uploading ? (
           <Button type="button" variant="outline" className="w-full" disabled>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading…
           </Button>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={photos.length >= maxPhotos}
-              onClick={() => cameraRef.current?.click()}
-            >
-              <Camera className="h-4 w-4 mr-2" />Take Photo
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={photos.length >= maxPhotos}
-              onClick={() => galleryRef.current?.click()}
-            >
-              <ImagePlus className="h-4 w-4 mr-2" />Gallery
-            </Button>
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={photos.length >= maxPhotos}
+                className="w-full pointer-events-none"
+              >
+                <Camera className="h-4 w-4 mr-2" />Take Photo
+              </Button>
+              <input
+                ref={cameraRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                disabled={photos.length >= maxPhotos}
+                aria-label="Take photo"
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                onChange={handleFileSelect}
+              />
+            </div>
+
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={photos.length >= maxPhotos}
+                className="w-full pointer-events-none"
+              >
+                <ImagePlus className="h-4 w-4 mr-2" />Gallery
+              </Button>
+              <input
+                ref={galleryRef}
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={photos.length >= maxPhotos}
+                aria-label="Choose photos from gallery"
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                onChange={handleFileSelect}
+              />
+            </div>
           </div>
         )}
         {photos.length > 0 && (
