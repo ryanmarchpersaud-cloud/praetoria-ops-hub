@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Download, Printer, Send, Upload, Loader2 } from 'lucide-react';
+import { Download, Printer, Send, Upload, Loader2, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -662,16 +662,18 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
             {/* ── Actions ── */}
             <Separator />
             <div className={`grid gap-2 ${workerView ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
-              <Button variant="outline" size="sm" onClick={handlePrint} className="w-full">
-                <Printer className="h-4 w-4 mr-1.5" /> Print
+              <Button variant="outline" size="sm" onClick={handlePrint} className="w-full px-2 whitespace-nowrap">
+                <Printer className="h-4 w-4 mr-1 sm:mr-1.5 shrink-0" />
+                <span className="text-xs sm:text-sm">Print</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={handleSavePdf} className="w-full">
-                <Download className="h-4 w-4 mr-1.5" /> Save as PDF
+              <Button variant="outline" size="sm" onClick={handleSavePdf} className="w-full px-2 whitespace-nowrap">
+                <Download className="h-4 w-4 mr-1 sm:mr-1.5 shrink-0" />
+                <span className="text-xs sm:text-sm"><span className="sm:hidden">PDF</span><span className="hidden sm:inline">Save as PDF</span></span>
               </Button>
               {workerView && (
-                <Button variant="default" size="sm" onClick={handleWorkerShare} disabled={sharing} className="w-full">
-                  {sharing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Send className="h-4 w-4 mr-1.5" />}
-                  {sharing ? 'Sharing…' : 'Share / Send'}
+                <Button variant="default" size="sm" onClick={handleWorkerShare} disabled={sharing} className="w-full px-2 whitespace-nowrap">
+                  {sharing ? <Loader2 className="h-4 w-4 mr-1 sm:mr-1.5 animate-spin shrink-0" /> : <Share2 className="h-4 w-4 mr-1 sm:mr-1.5 shrink-0" />}
+                  <span className="text-xs sm:text-sm">{sharing ? 'Sharing…' : 'Share'}</span>
                 </Button>
               )}
               {!workerView && stub.user_id && (
