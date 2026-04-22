@@ -330,6 +330,31 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── SEND PASSWORD RESET (admin-triggered) ──
+    if (action === "send_password_reset") {
+      const { email: targetEmail, redirect_to } = body;
+      if (!targetEmail) {
+        return new Response(JSON.stringify({ error: "email is required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data, error } = await adminClient.auth.admin.generateLink({
+        type: "recovery",
+        email: targetEmail,
+        options: redirect_to ? { redirectTo: redirect_to } : undefined,
+      });
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Password reset email sent to ${targetEmail}`,
+        action_link: data?.properties?.action_link ?? null,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: `Unknown action: ${action}` }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
