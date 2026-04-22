@@ -29,9 +29,9 @@ const INITIAL_CHECKS: CheckResult[] = [
 
 function StatusIcon({ status }: { status: CheckStatus }) {
   if (status === 'running') return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
-  if (status === 'pass') return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+  if (status === 'pass') return <CheckCircle2 className="h-4 w-4 text-primary" />;
   if (status === 'fail') return <XCircle className="h-4 w-4 text-destructive" />;
-  if (status === 'warn') return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+  if (status === 'warn') return <AlertTriangle className="h-4 w-4 text-muted-foreground" />;
   return <div className="h-4 w-4 rounded-full border border-muted-foreground/30" />;
 }
 
@@ -276,9 +276,9 @@ export default function AuthEmailHealthPage() {
                 variant={summary.status === 'fail' ? 'destructive' : 'default'}
                 className={
                   summary.status === 'pass'
-                    ? 'border-green-600/30 bg-green-500/5'
+                    ? 'border-primary/30 bg-primary/5'
                     : summary.status === 'warn'
-                    ? 'border-yellow-600/30 bg-yellow-500/5'
+                    ? 'border-muted-foreground/30 bg-muted/40'
                     : undefined
                 }
               >
