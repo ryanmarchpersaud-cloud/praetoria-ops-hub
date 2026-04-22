@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Camera, X, Loader2, CheckCircle2, AlertCircle, ImagePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface IncidentPhotoUploadProps {
@@ -18,7 +18,8 @@ type StatusMessage =
 
 export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos = 5 }: IncidentPhotoUploadProps) {
   const { toast } = useToast();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState<StatusMessage>(null);
 
@@ -100,7 +101,8 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
       toast({ title: 'Upload error', description: text, variant: 'destructive' });
     } finally {
       setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
+      if (cameraRef.current) cameraRef.current.value = '';
+      if (galleryRef.current) galleryRef.current.value = '';
     }
   };
 
@@ -131,7 +133,15 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
         )}
 
         <input
-          ref={fileRef}
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileSelect}
+        />
+        <input
+          ref={galleryRef}
           type="file"
           accept="image/*"
           multiple
@@ -139,19 +149,33 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
           onChange={handleFileSelect}
         />
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          disabled={uploading || photos.length >= maxPhotos}
-          onClick={() => fileRef.current?.click()}
-        >
-          {uploading ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading…</>
-          ) : (
-            <><Camera className="h-4 w-4 mr-2" />{photos.length === 0 ? 'Add Photos' : `Add More (${photos.length}/${maxPhotos})`}</>
-          )}
-        </Button>
+        {uploading ? (
+          <Button type="button" variant="outline" className="w-full" disabled>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading…
+          </Button>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={photos.length >= maxPhotos}
+              onClick={() => cameraRef.current?.click()}
+            >
+              <Camera className="h-4 w-4 mr-2" />Take Photo
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={photos.length >= maxPhotos}
+              onClick={() => galleryRef.current?.click()}
+            >
+              <ImagePlus className="h-4 w-4 mr-2" />Gallery
+            </Button>
+          </div>
+        )}
+        {photos.length > 0 && (
+          <p className="text-[10px] text-muted-foreground text-center">{photos.length}/{maxPhotos} photos added</p>
+        )}
 
         {status && (
           <div
