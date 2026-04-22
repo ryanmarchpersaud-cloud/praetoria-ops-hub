@@ -96,7 +96,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
     return (
       <div className="border-t border-border pt-3 mt-4 px-4 pb-2">
         <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
-        <p className="text-[10px] font-medium text-muted-foreground mb-2 uppercase tracking-wider">Explore Our Services</p>
+        <ConstructionPartnerDialog open={constructionOpen} onOpenChange={setConstructionOpen} />
         <div className="flex flex-wrap gap-1.5">
           {activeServices.map((s) => (
             <a
@@ -141,7 +141,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
     return (
       <div className="space-y-1">
         <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
-        <div className="space-y-0.5">
+        <ConstructionPartnerDialog open={constructionOpen} onOpenChange={setConstructionOpen} />
           {activeServices.map((s) => (
             <a
               key={s.name}
@@ -158,7 +158,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
           {partnerServices.map((s) => (
             <button
               key={s.name}
-              onClick={() => setCleaningOpen(true)}
+              onClick={() => openPartner(s.partnerId)}
               className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-sidebar-foreground/70 transition-colors group hover:text-sidebar-foreground hover:bg-sidebar-accent/50 w-full text-left"
             >
               <s.icon className={cn('h-3.5 w-3.5 shrink-0', s.color)} />
@@ -187,7 +187,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
     return (
       <div className="border-t border-border pt-4 mt-4">
         <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
-        <p className="text-xs font-medium text-muted-foreground mb-2 px-1">Our Services</p>
+        <ConstructionPartnerDialog open={constructionOpen} onOpenChange={setConstructionOpen} />
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
           {activeServices.map((s) => (
             <a
@@ -205,7 +205,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
           {partnerServices.map((s) => (
             <button
               key={s.name}
-              onClick={() => setCleaningOpen(true)}
+              onClick={() => openPartner(s.partnerId)}
               className="flex flex-col items-center gap-1 p-2.5 rounded-lg border border-border bg-card transition-colors text-center group relative hover:bg-muted"
             >
               <s.icon className={cn('h-4 w-4', s.color)} />
@@ -234,7 +234,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
   return (
     <div className="mt-6">
       <CleaningPartnerDialog open={cleaningOpen} onOpenChange={setCleaningOpen} />
-      <p className="text-xs font-medium text-muted-foreground mb-3 text-center tracking-wide uppercase">
+      <ConstructionPartnerDialog open={constructionOpen} onOpenChange={setConstructionOpen} />
         Explore Our Services
       </p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -257,7 +257,7 @@ export function ServiceLinksSection({ variant = 'login' }: ServiceLinksSectionPr
         {partnerServices.map((s) => (
           <button
             key={s.name}
-            onClick={() => setCleaningOpen(true)}
+            onClick={() => openPartner(s.partnerId)}
             className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-card transition-colors group hover:bg-muted text-left"
           >
             <s.icon className={cn('h-4 w-4 shrink-0', s.color)} />
