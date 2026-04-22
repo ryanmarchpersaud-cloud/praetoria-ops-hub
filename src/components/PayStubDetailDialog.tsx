@@ -428,23 +428,68 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
 </body></html>`;
   };
 
+  // Build HTML with auto-print script injected so it works reliably across
+  // mobile browsers (iOS Safari, Android Chrome, TWA) and desktop where
+  // window.open + document.write can be blocked or unreliable.
+  const buildPrintHtmlWithAutoPrint = (autoPrint: boolean) => {
+    const html = buildPrintHtml();
+    if (!autoPrint) return html;
+    const printScript = `
+<script>
+  (function(){
+    function doPrint(){ try { window.focus(); window.print(); } catch(e){} }
+    if (document.readyState === 'complete') {
+      setTimeout(doPrint, 400);
+    } else {
+      window.addEventListener('load', function(){ setTimeout(doPrint, 400); });
+    }
+  })();
+<\/script>`;
+    return html.replace('</body>', `${printScript}</body>`);
+  };
+
+  const openPrintableDoc = (autoPrint: boolean, downloadFilename?: string) => {
+    const html = buildPrintHtmlWithAutoPrint(autoPrint);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+
+    // Try opening in a new tab/window first
+    const w = window.open(url, '_blank');
+
+    if (w) {
+      // Cleanup the blob URL after the window has had time to load it
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      return;
+    }
+
+    // Popup blocked (common on mobile): fall back to a same-tab navigation
+    // via a real anchor click so the browser treats it as a user-initiated
+    // navigation. This guarantees the page opens and the user can use the
+    // browser's native Print / Save as PDF menu.
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    if (downloadFilename) {
+      // Hint browsers that support it; on mobile this still opens for view
+      a.setAttribute('download', downloadFilename);
+    }
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+
+    toast.info('If nothing opened, please allow pop-ups for this site, then tap Print again.');
+  };
+
   const handlePrint = () => {
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write(buildPrintHtml());
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 500);
+    openPrintableDoc(true);
   };
 
   const handleSavePdf = () => {
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write(buildPrintHtml());
-    w.document.close();
-    w.focus();
-    toast.info('Use "Save as PDF" in the print dialog to download.');
-    setTimeout(() => w.print(), 500);
+    const filename = `pay-stub-${format(new Date(stub.pay_date), 'yyyy-MM-dd')}.html`;
+    openPrintableDoc(true, filename);
+    toast.info('In the print dialog, choose "Save as PDF" as the destination.');
   };
 
   return (
