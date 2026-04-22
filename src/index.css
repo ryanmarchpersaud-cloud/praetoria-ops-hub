@@ -139,15 +139,25 @@
     padding-left: var(--sal);
   }
 
-  #root {
-    padding-top: var(--sat);
+  html {
+    margin-top: env(safe-area-inset-top) !important;
   }
 
-  .page-container,
-  .main-layout,
-  .screen-wrapper,
-  #root > div {
-    padding-top: env(safe-area-inset-top);
+  body {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    position: fixed;
+    width: 100%;
+  }
+
+  #root {
+    position: fixed;
+    top: env(safe-area-inset-top);
+    left: env(safe-area-inset-left);
+    right: env(safe-area-inset-right);
+    bottom: env(safe-area-inset-bottom);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   h1, h2, h3, h4, h5, h6 {
