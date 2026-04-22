@@ -6,7 +6,10 @@ import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 
 export function WorkerLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="worker-portal-shell min-h-screen bg-background pb-20 safe-area-x">
+    <div
+      data-portal-scroll-shell
+      className="worker-portal-shell scrollable h-[100svh] bg-background pb-20 overscroll-y-contain safe-area-x"
+    >
       <AnnouncementBanner />
       <div className="max-w-lg mx-auto">
         {children}
