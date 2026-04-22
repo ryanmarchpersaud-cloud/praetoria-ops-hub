@@ -215,6 +215,8 @@ export default function IncidentPhotoUpload({
     if (!files || files.length === 0) return;
     if (!onAttachmentsChange) return;
 
+    iosLog('incident:file:attach', { count: files.length });
+
     const totalCount = photos.length + attachments.length;
     const remaining = totalMaxAttachments - totalCount;
     if (remaining <= 0) {
@@ -242,7 +244,19 @@ export default function IncidentPhotoUpload({
     const newAttachments: IncidentAttachment[] = [];
 
     try {
-      for (const file of toUpload) {
+      for (const rawFile of toUpload) {
+        // Compress image documents (insurance card photos, licence shots,
+        // damage photos) before upload so iPhone HEIC/JPEG don't stall.
+        // Leave PDFs and other docs untouched.
+        let file = rawFile;
+        if (rawFile.type.startsWith('image/')) {
+          try {
+            file = await downscaleImageIfLarge(rawFile);
+          } catch {
+            file = rawFile;
+          }
+        }
+
         if (file.size > 25 * 1024 * 1024) {
           failures.push(`${file.name}: exceeds 25 MB`);
           continue;
@@ -275,6 +289,8 @@ export default function IncidentPhotoUpload({
         successCount += 1;
       }
 
+      if (!isMountedRef.current) return;
+
       if (newAttachments.length > 0) {
         onAttachmentsChange([...attachments, ...newAttachments]);
       }
@@ -289,11 +305,15 @@ export default function IncidentPhotoUpload({
       } else if (failures.length > 0) {
         showStatus({ type: 'error', text: `Upload failed: ${failures.join('; ')}` });
       }
+      iosLog('incident:file:done', { successCount, failures: failures.length });
     } catch (err: any) {
-      showStatus({ type: 'error', text: err?.message || 'Upload error' });
-      toast({ title: 'Upload error', description: err?.message || 'Upload error', variant: 'destructive' });
+      iosLog('incident:file:error', { message: err?.message });
+      if (isMountedRef.current) {
+        showStatus({ type: 'error', text: err?.message || 'Upload error' });
+        toast({ title: 'Upload error', description: err?.message || 'Upload error', variant: 'destructive' });
+      }
     } finally {
-      setDocUploading(false);
+      if (isMountedRef.current) setDocUploading(false);
       if (docRef.current) docRef.current.value = '';
     }
   };
