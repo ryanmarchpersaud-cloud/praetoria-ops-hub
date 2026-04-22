@@ -207,7 +207,7 @@
   @supports (-webkit-touch-callout: none) {
     @media (max-width: 767px) {
       [data-portal-scroll-shell] {
-        padding-top: max(59px, calc(env(safe-area-inset-top, 0px) + 12px));
+        padding-top: max(76px, calc(env(safe-area-inset-top, 0px) + 28px));
       }
     }
   }
@@ -236,7 +236,7 @@
   @supports (-webkit-touch-callout: none) {
     @media (max-width: 767px) {
       .page-header-row {
-        margin-top: max(0px, calc(env(safe-area-inset-top, 0px) - 12px));
+        margin-top: max(12px, calc(env(safe-area-inset-top, 0px) + 4px));
         flex-wrap: nowrap;
       }
     }
