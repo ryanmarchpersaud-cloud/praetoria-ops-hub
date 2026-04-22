@@ -251,14 +251,44 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   const handleSend = async () => {
     setSending(true);
     try {
-      const { data: profile } = await supabase.from('worker_profiles').select('work_email, full_name').eq('user_id', stub.user_id!).maybeSingle();
+      const { data: profile } = await supabase
+        .from('worker_profiles')
+        .select('work_email, full_name')
+        .eq('user_id', stub.user_id!)
+        .maybeSingle();
       if (!profile?.work_email) {
         toast.error('No email found for this employee.');
         return;
       }
-      toast.success(`Pay stub notification sent to ${profile.full_name || displayName}`);
-    } catch {
-      toast.error('Failed to send pay stub');
+      if (!stub.stub_pdf_url) {
+        toast.error('No pay stub PDF available. Click "Upload to Portal" first to generate the PDF, then send.');
+        return;
+      }
+
+      const recipientName = profile.full_name || displayName;
+      const filename = `pay-stub-${format(new Date(stub.pay_date), 'yyyy-MM-dd')}.pdf`;
+
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
+          action: 'pay_stub_email',
+          to: profile.work_email,
+          employee_name: recipientName,
+          pay_date: format(new Date(stub.pay_date), 'MMM d, yyyy'),
+          pay_period_start: format(new Date(stub.pay_period_start), 'MMM d, yyyy'),
+          pay_period_end: format(new Date(stub.pay_period_end), 'MMM d, yyyy'),
+          net_pay: stub.net_pay,
+          stub_pdf_url: stub.stub_pdf_url,
+          stub_pdf_filename: filename,
+        },
+      });
+
+      if (error) throw error;
+      if (data && (data as any).ok === false) {
+        throw new Error((data as any).error || 'Email send failed');
+      }
+      toast.success(`Pay stub PDF emailed to ${recipientName}`);
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to send pay stub');
     } finally {
       setSending(false);
     }
@@ -360,7 +390,11 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
          </tbody></table>`
       : '';
 
-    return `<!DOCTYPE html><html><head><title>Pay Stub – ${displayName} – ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
+    return `<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pay Stub – ${displayName} – ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
 <style>
   @page { size: letter; margin: 0.5in 0.6in; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -491,7 +525,7 @@ ${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong
 
   const openPrintableDoc = (autoPrint: boolean, downloadFilename?: string) => {
     const html = buildPrintHtmlWithAutoPrint(autoPrint);
-    const blob = new Blob([html], { type: 'text/html' });
+    const blob = new Blob(['\ufeff', html], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
 
     // Try opening in a new tab/window first
