@@ -185,6 +185,29 @@
     padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   }
 
+  /* Shared page-header row used at the top of mobile portal subpages.
+     Guarantees the title and any trailing action button (e.g. "Report",
+     "Add", "Edit") never clip on narrow iPhones: the row wraps cleanly,
+     the title shrinks via min-w-0, and the action stays a fixed-size pill. */
+  .page-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem; /* gap-3 */
+    flex-wrap: wrap;
+  }
+
+  /* Title slot inside .page-header-row — must shrink instead of pushing
+     the action button off-screen. Pair with text-truncation if needed. */
+  .page-header-title {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  /* Action slot inside .page-header-row — never shrinks, never clips. */
+  .page-header-action {
+    flex: 0 0 auto;
+
   .safe-area-left {
     padding-left: env(safe-area-inset-left, 0px);
   }
