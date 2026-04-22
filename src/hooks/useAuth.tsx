@@ -1,6 +1,7 @@
-import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logAuditEvent } from '@/lib/auditLog';
 
 interface AuthContextType {
   user: User | null;
@@ -46,14 +47,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMustChangePasswordChecked(true);
   }, []);
 
+  const lastLoggedAuthRef = useRef<string | null>(null);
+
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       // Defer to avoid potential deadlocks inside the auth callback
       setMustChangePasswordChecked(false);
       setTimeout(() => { checkMustChangePassword(session?.user?.id); }, 0);
+
+      // Audit auth events (deferred so we don't block the auth callback)
+      const uid = session?.user?.id ?? null;
+      const dedupeKey = `${event}:${uid ?? 'anon'}`;
+      if (lastLoggedAuthRef.current !== dedupeKey) {
+        lastLoggedAuthRef.current = dedupeKey;
+        setTimeout(() => {
+          if (event === 'SIGNED_IN' && uid) {
+            logAuditEvent({ action: 'auth.login', targetType: 'user', targetId: uid });
+          } else if (event === 'SIGNED_OUT') {
+            logAuditEvent({ action: 'auth.logout', targetType: 'user', targetId: uid });
+          } else if (event === 'PASSWORD_RECOVERY' && uid) {
+            logAuditEvent({ action: 'auth.password_reset_requested', targetType: 'user', targetId: uid });
+          } else if (event === 'USER_UPDATED' && uid) {
+            logAuditEvent({ action: 'auth.password_changed', targetType: 'user', targetId: uid });
+          }
+        }, 0);
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
