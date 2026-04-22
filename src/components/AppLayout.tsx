@@ -11,7 +11,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
   useIncidentAlerts();
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div
+        className="flex w-full"
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 44px)',
+          minHeight: '100dvh',
+          boxSizing: 'border-box',
+        }}
+      >
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="border-b border-border bg-card shrink-0 sticky top-0 z-30">
