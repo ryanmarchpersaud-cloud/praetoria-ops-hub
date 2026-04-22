@@ -6,7 +6,7 @@ import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 
 export function WorkerLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background pb-20 safe-area-top-buffer safe-area-x">
+    <div className="worker-portal-shell min-h-screen bg-background pb-20 safe-area-x">
       <AnnouncementBanner />
       <div className="max-w-lg mx-auto">
         {children}
