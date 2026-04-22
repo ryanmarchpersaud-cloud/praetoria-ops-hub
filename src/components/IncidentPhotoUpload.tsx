@@ -95,7 +95,6 @@ export default function IncidentPhotoUpload({ photos, onPhotosChange, maxPhotos 
           type="file"
           accept="image/*"
           multiple
-          capture="environment"
           className="hidden"
           onChange={handleFileSelect}
         />
