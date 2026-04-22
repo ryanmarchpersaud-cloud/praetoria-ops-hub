@@ -277,17 +277,32 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 
   const handleWorkerShare = async () => {
     setSharing(true);
+    iosLog('paystub:share:start');
     try {
-      const emailTo = prompt('Enter email address to share this pay stub with (e.g. accountant, banker, family):');
-      if (!emailTo || !emailTo.includes('@')) {
-        if (emailTo !== null) toast.error('Please enter a valid email address.');
-        return;
+      // iOS Safari (especially in PWA / standalone mode) treats blocking
+      // prompt() / alert() / confirm() as a freeze hazard — the engine
+      // can throttle or kill the page. Use the native Web Share Sheet
+      // when available, otherwise just open the printable view so the
+      // worker can email/AirDrop/save the PDF themselves.
+      const shareData: ShareData = {
+        title: `Pay Stub – ${displayName}`,
+        text: `My pay stub from ${companyName} for pay date ${format(new Date(stub.pay_date), 'MMM d, yyyy')}.`,
+      };
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        try {
+          await navigator.share(shareData);
+          iosLog('paystub:share:native-ok');
+          toast.success('Share sheet opened. Use Save as PDF if you need to attach to email.');
+          return;
+        } catch (err) {
+          // User canceled or share unavailable — fall through to PDF view.
+          iosLog('paystub:share:native-cancel', { message: (err as Error)?.message });
+        }
       }
-      // For now, trigger the print view so the worker can save/share
-      toast.success(`Pay stub prepared for sharing to ${emailTo}. Use Save as PDF to attach to your email.`);
+      toast.success('Opening printable view. Use Save as PDF or your browser share menu to send it.');
       handleSavePdf();
     } finally {
-      setSharing(false);
+      if (isMountedRef.current) setSharing(false);
     }
   };
 
