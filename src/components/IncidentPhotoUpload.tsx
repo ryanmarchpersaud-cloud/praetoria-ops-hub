@@ -159,13 +159,26 @@ export default function IncidentPhotoUpload({
 
     // iOS WKWebView can OOM-crash when decoding many full-resolution photos
     // back-to-back. Cap the batch on iOS and ask the user to add more after.
-    const iosBatchCap = isIOSWebView() ? 3 : remaining;
-    const toUpload = Array.from(files).slice(0, Math.min(remaining, iosBatchCap));
-    if (isIOSWebView() && files.length > iosBatchCap) {
-      toast({
-        title: `Uploading first ${iosBatchCap} photos`,
-        description: `iPhone limits how many large photos can be processed at once. Add the rest after these finish.`,
+    const iosBatchCap = isIOS ? 3 : remaining;
+    const batchSize = Math.min(remaining, iosBatchCap);
+    const toUpload = Array.from(files).slice(0, batchSize);
+    const deferredCount = isIOS ? Math.max(0, files.length - batchSize) : 0;
+
+    if (isIOS) {
+      // Seed the per-file iOS progress card so the user sees exactly what's
+      // queued and what's still waiting after the first batch finishes.
+      setIosBatch({
+        kind: 'photo',
+        items: toUpload.map((f) => ({ name: f.name, status: 'pending' })),
+        pendingCount: deferredCount,
+        totalPicked: files.length,
       });
+      if (deferredCount > 0) {
+        toast({
+          title: `Uploading first ${batchSize} of ${files.length} photos`,
+          description: `iPhone limits how many large photos can be processed at once. The remaining ${deferredCount} will stay queued — submit is locked until they're added.`,
+        });
+      }
     }
     setUploading(true);
     setStatus(null);
@@ -175,7 +188,15 @@ export default function IncidentPhotoUpload({
 
     try {
       const newUrls: string[] = [];
-      for (const rawFile of toUpload) {
+      for (let idx = 0; idx < toUpload.length; idx++) {
+        const rawFile = toUpload[idx];
+        if (isIOS) {
+          setIosBatch((prev) => prev && {
+            ...prev,
+            items: prev.items.map((it, i) => i === idx ? { ...it, status: 'uploading' } : it),
+          });
+        }
+
         // iPhone photos (HEIC/large JPEG) are 4–8 MB and freeze Safari on
         // serial uploads. Downscale on the main thread before uploading.
         let file = rawFile;
@@ -193,6 +214,12 @@ export default function IncidentPhotoUpload({
         if (file.size > 10 * 1024 * 1024) {
           failures.push(`${file.name}: exceeds 10 MB`);
           toast({ title: `${file.name} exceeds 10 MB limit`, variant: 'destructive' });
+          if (isIOS) {
+            setIosBatch((prev) => prev && {
+              ...prev,
+              items: prev.items.map((it, i) => i === idx ? { ...it, status: 'failed', error: 'over 10 MB' } : it),
+            });
+          }
           continue;
         }
 
@@ -206,12 +233,24 @@ export default function IncidentPhotoUpload({
         if (uploadError) {
           failures.push(`${file.name}: ${uploadError.message}`);
           toast({ title: 'Upload failed', description: uploadError.message, variant: 'destructive' });
+          if (isIOS) {
+            setIosBatch((prev) => prev && {
+              ...prev,
+              items: prev.items.map((it, i) => i === idx ? { ...it, status: 'failed', error: uploadError.message } : it),
+            });
+          }
           continue;
         }
 
         const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
         newUrls.push(urlData.publicUrl);
         successCount += 1;
+        if (isIOS) {
+          setIosBatch((prev) => prev && {
+            ...prev,
+            items: prev.items.map((it, i) => i === idx ? { ...it, status: 'done' } : it),
+          });
+        }
 
         // Yield to the event loop between photos so iOS WKWebView can
         // reclaim graphics memory before the next decode.
@@ -249,6 +288,13 @@ export default function IncidentPhotoUpload({
       if (isMountedRef.current) setUploading(false);
       if (cameraRef.current) cameraRef.current.value = '';
       if (galleryRef.current) galleryRef.current.value = '';
+      // If there are no deferred files left, clear the iOS batch card after a
+      // short delay so the user can see the final per-file results.
+      if (isIOS && deferredCount === 0 && isMountedRef.current) {
+        window.setTimeout(() => {
+          if (isMountedRef.current) setIosBatch(null);
+        }, 4000);
+      }
     }
   };
 
