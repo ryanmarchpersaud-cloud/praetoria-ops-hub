@@ -81,6 +81,7 @@ export default function IncidentPhotoUpload({
   onAttachmentsChange,
   maxPhotos = 5,
   maxAttachments = 10,
+  onBusyChange,
 }: IncidentPhotoUploadProps) {
   const { toast } = useToast();
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -92,6 +93,8 @@ export default function IncidentPhotoUpload({
   const [status, setStatus] = useState<StatusMessage>(null);
   const [pendingCategory, setPendingCategory] = useState<string>('Insurance');
   const [showAddMoreOptions, setShowAddMoreOptions] = useState(false);
+  const [iosBatch, setIosBatch] = useState<IosBatchState>(null);
+  const isIOS = isIOSWebView();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -99,6 +102,14 @@ export default function IncidentPhotoUpload({
       isMountedRef.current = false;
     };
   }, []);
+
+  // Keep parent informed so the submit button can lock while uploads/pending
+  // batches are still in flight on iOS.
+  const hasPendingIosBatch = !!iosBatch && iosBatch.pendingCount > 0;
+  const busy = uploading || docUploading || hasPendingIosBatch;
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
 
   const showStatus = (msg: StatusMessage) => {
     setStatus(msg);
