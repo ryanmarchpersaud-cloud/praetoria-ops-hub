@@ -263,8 +263,17 @@ export default function SubcontractorInvoices() {
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Submit Invoice</DialogTitle>
+              <DialogTitle>{isEditMode ? `Edit & Resubmit ${editingInvoice?.invoice_number}` : 'Submit Invoice'}</DialogTitle>
             </DialogHeader>
+            {isEditMode && editingInvoice?.admin_review_notes && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Admin rejected this invoice</AlertTitle>
+                <AlertDescription className="whitespace-pre-wrap">
+                  <span className="font-medium">Reason: </span>{editingInvoice.admin_review_notes}
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-4 pt-2">
               <div className="space-y-1.5">
                 <Label htmlFor="inv-amount">Invoice Amount (CAD) <span className="text-destructive">*</span></Label>
