@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle, Receipt, LinkIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { logQuoteFollowUpChange } from '@/lib/quoteFollowUpLog';
 import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -178,10 +179,14 @@ export default function QuoteDetail() {
   const handleSave = async () => {
     if (!id) return;
     try {
+      // Capture previous follow-up date for activity logging.
+      const previousFollowUp = (quote as any)?.follow_up_due_at ?? null;
+      const nextFollowUp = form.follow_up_due_at || null;
+
       await updateQuote.mutateAsync({
         id, service_category: form.service_category, scope_of_work: form.scope_of_work,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
-        approval_status: form.approval_status, follow_up_due_at: form.follow_up_due_at,
+        approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
         tax_rate: Number(form.tax_rate || 0.13),
       });
       await upsertItems.mutateAsync({
@@ -191,6 +196,18 @@ export default function QuoteDetail() {
           quantity: i.quantity, unit_price: i.unit_price, sort_order: idx,
         })),
       });
+
+      // Fire-and-forget log only when the follow-up actually changed.
+      if ((previousFollowUp || null) !== (nextFollowUp || null)) {
+        void logQuoteFollowUpChange({
+          quoteId: id,
+          quoteNumber: (quote as any)?.quote_number ?? null,
+          previousDueAt: previousFollowUp,
+          nextDueAt: nextFollowUp,
+          source: 'quote_detail',
+        });
+      }
+
       toast({ title: 'Quote saved' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });

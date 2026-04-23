@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { logQuoteFollowUpChange } from '@/lib/quoteFollowUpLog';
 
 type Bucket = 'overdue' | 'today' | 'thisWeek' | 'later';
 
@@ -49,7 +50,17 @@ const bucketMeta: Record<Bucket, { label: string; tone: string; icon: any }> = {
   later: { label: 'Later', tone: 'text-muted-foreground', icon: CheckCircle2 },
 };
 
-function DueDateEditor({ quoteId, current, onUpdated }: { quoteId: string; current: string; onUpdated?: () => void }) {
+function DueDateEditor({
+  quoteId,
+  quoteNumber,
+  current,
+  onUpdated,
+}: {
+  quoteId: string;
+  quoteNumber?: string | null;
+  current: string;
+  onUpdated?: () => void;
+}) {
   const updateQuote = useUpdateQuote();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -60,7 +71,15 @@ function DueDateEditor({ quoteId, current, onUpdated }: { quoteId: string; curre
       // Preserve time portion of original due date when changing the date.
       const original = new Date(current);
       date.setHours(original.getHours() || 9, original.getMinutes() || 0, 0, 0);
-      await updateQuote.mutateAsync({ id: quoteId, follow_up_due_at: date.toISOString() } as any);
+      const nextIso = date.toISOString();
+      await updateQuote.mutateAsync({ id: quoteId, follow_up_due_at: nextIso } as any);
+      void logQuoteFollowUpChange({
+        quoteId,
+        quoteNumber,
+        previousDueAt: current,
+        nextDueAt: nextIso,
+        source: 'follow_ups_view',
+      });
       toast({ title: 'Follow-up updated', description: format(date, 'PPP p') });
       setOpen(false);
       onUpdated?.();
@@ -72,6 +91,13 @@ function DueDateEditor({ quoteId, current, onUpdated }: { quoteId: string; curre
   const handleClear = async () => {
     try {
       await updateQuote.mutateAsync({ id: quoteId, follow_up_due_at: null } as any);
+      void logQuoteFollowUpChange({
+        quoteId,
+        quoteNumber,
+        previousDueAt: current,
+        nextDueAt: null,
+        source: 'follow_ups_view',
+      });
       toast({ title: 'Follow-up cleared' });
       setOpen(false);
       onUpdated?.();
@@ -218,7 +244,7 @@ export default function QuoteFollowUps() {
                         <p className={cn('text-[11px]', meta.tone)}>
                           {format(new Date(q.follow_up_due_at), 'MMM d, p')}
                         </p>
-                        <DueDateEditor quoteId={q.id} current={q.follow_up_due_at} onUpdated={refetch} />
+                        <DueDateEditor quoteId={q.id} quoteNumber={q.quote_number} current={q.follow_up_due_at} onUpdated={refetch} />
                       </div>
                     </div>
                   ))}
@@ -254,7 +280,7 @@ export default function QuoteFollowUps() {
                             {format(new Date(q.follow_up_due_at), 'MMM d, yyyy p')}
                           </TableCell>
                           <TableCell className="text-right">
-                            <DueDateEditor quoteId={q.id} current={q.follow_up_due_at} onUpdated={refetch} />
+                            <DueDateEditor quoteId={q.id} quoteNumber={q.quote_number} current={q.follow_up_due_at} onUpdated={refetch} />
                           </TableCell>
                         </TableRow>
                       ))}
