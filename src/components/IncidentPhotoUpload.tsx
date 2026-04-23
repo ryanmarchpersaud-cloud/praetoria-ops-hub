@@ -128,7 +128,16 @@ export default function IncidentPhotoUpload({
       return;
     }
 
-    const toUpload = Array.from(files).slice(0, remaining);
+    // iOS WKWebView can OOM-crash when decoding many full-resolution photos
+    // back-to-back. Cap the batch on iOS and ask the user to add more after.
+    const iosBatchCap = isIOSWebView() ? 3 : remaining;
+    const toUpload = Array.from(files).slice(0, Math.min(remaining, iosBatchCap));
+    if (isIOSWebView() && files.length > iosBatchCap) {
+      toast({
+        title: `Uploading first ${iosBatchCap} photos`,
+        description: `iPhone limits how many large photos can be processed at once. Add the rest after these finish.`,
+      });
+    }
     setUploading(true);
     setStatus(null);
 
@@ -174,6 +183,10 @@ export default function IncidentPhotoUpload({
         const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
         newUrls.push(urlData.publicUrl);
         successCount += 1;
+
+        // Yield to the event loop between photos so iOS WKWebView can
+        // reclaim graphics memory before the next decode.
+        await yieldToBrowser(50);
       }
 
       if (!isMountedRef.current) return;
