@@ -341,6 +341,9 @@ export default function EmployeeDetail() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteSending, setInviteSending] = useState(false);
   const [selectedPayStub, setSelectedPayStub] = useState<any>(null);
+  const [tempPwOpen, setTempPwOpen] = useState(false);
+  const [tempPwLoading, setTempPwLoading] = useState(false);
+  const [tempPwResult, setTempPwResult] = useState<{ password: string; email: string | null } | null>(null);
   // Password is always "praetoria" — handled server-side
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
