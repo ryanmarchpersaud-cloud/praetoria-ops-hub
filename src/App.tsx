@@ -23,6 +23,7 @@ import LeadDetail from "./pages/LeadDetail";
 import Quotes from "./pages/Quotes";
 import QuoteDetail from "./pages/QuoteDetail";
 import QuotePrint from "./pages/QuotePrint";
+import QuoteFollowUps from "./pages/QuoteFollowUps";
 import Customers from "./pages/Customers";
 import CustomerDetail from "./pages/CustomerDetail";
 import Properties from "./pages/Properties";
