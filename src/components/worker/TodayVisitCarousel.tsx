@@ -237,8 +237,11 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
         created_by: user?.id ?? null,
       } as any);
       toast({ title: 'Lead created', description: 'Sent to admin for review and next steps.' });
+      setForm({
+        first_name: '', last_name: '', email: '', phone: '',
+        address_line_1: '', city: '', province: '', company_name: '', notes: '',
+      });
       onOpenChange(false);
-      navigate(`/leads/${data.id}`);
     } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
     finally { setSaving(false); }
   };
@@ -351,7 +354,6 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
       });
       reset();
       onOpenChange(false);
-      navigate(`/leads/${data.id}`);
     } catch (e: any) {
       toast.error('Could not submit lead', { description: e.message });
     } finally { setSaving(false); }
@@ -537,7 +539,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
   const handleQuickBookAction = (action: QuickBookAction) => {
     setQuickBookOpen(false);
     switch (action) {
-      case 'customer': setCustomerOpen(true); break;
+      case 'customer': setLeadOpen(true); break;
       case 'lead': setLeadOpen(true); break;
       case 'property': setPropertyOpen(true); break;
       case 'visit': setVisitOpen(true); break;
