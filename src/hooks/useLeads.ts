@@ -101,7 +101,26 @@ export function useCreateLead() {
           .insert(payload)
           .select()
           .single();
-        if (error) throw error;
+        if (error) {
+          const raw = String(error.message ?? '');
+          // Translate confusing Postgres / PostgREST errors into something
+          // a field user can actually act on.
+          if (
+            raw.toLowerCase().includes('row-level security') ||
+            raw.toLowerCase().includes('row level security') ||
+            (error as any).code === '42501'
+          ) {
+            throw new Error(
+              "Your account isn't set up to submit field leads yet. Please ask an admin to enable portal access for you."
+            );
+          }
+          if (raw.toLowerCase().includes('schema cache')) {
+            throw new Error(
+              'We couldn\'t save this lead because the form sent an unexpected field. Please refresh the app and try again.'
+            );
+          }
+          throw error;
+        }
         return data as Lead;
       };
 
