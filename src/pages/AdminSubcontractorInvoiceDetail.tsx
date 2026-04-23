@@ -31,11 +31,17 @@ export default function AdminSubcontractorInvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
 
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('e-transfer');
   const [referenceNumber, setReferenceNumber] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState(false);
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ['admin_sub_invoice', id],
@@ -52,14 +58,84 @@ export default function AdminSubcontractorInvoiceDetail() {
     enabled: !!id,
   });
 
-  const updateStatus = async (status: string) => {
+  const handleApprove = async () => {
     if (!id) return;
-    const updates: any = { status };
-    if (status === 'approved') updates.approved_at = new Date().toISOString();
-    const { error } = await supabase.from('subcontractor_invoices').update(updates).eq('id', id);
+    const { error } = await supabase
+      .from('subcontractor_invoices')
+      .update({ status: 'approved', approved_at: new Date().toISOString() })
+      .eq('id', id);
     if (error) { toast.error(error.message); return; }
-    toast.success(`Invoice ${status}`);
+    toast.success('Invoice approved');
     qc.invalidateQueries({ queryKey: ['admin_sub_invoice', id] });
+  };
+
+  const handleReject = async () => {
+    if (!id || !invoice) return;
+    const reason = rejectReason.trim();
+    if (reason.length < 5) {
+      setRejectError('Please provide a reason of at least 5 characters so the subcontractor knows what to fix.');
+      return;
+    }
+    if (reason.length > 1000) {
+      setRejectError('Reason must be 1000 characters or fewer.');
+      return;
+    }
+    setRejectError(null);
+    setRejecting(true);
+    const sub = invoice.subcontractors as any;
+    try {
+      const { error } = await supabase
+        .from('subcontractor_invoices')
+        .update({
+          status: 'rejected',
+          admin_review_notes: reason,
+          rejected_at: new Date().toISOString(),
+          rejected_by: user?.id ?? null,
+          approved_at: null,
+        })
+        .eq('id', id);
+      if (error) throw error;
+
+      // Activity log for visibility
+      await supabase.from('activities').insert({
+        action_name: `Subcontractor invoice ${invoice.invoice_number} rejected`,
+        record_type: 'subcontractor_invoice',
+        record_id: id,
+        status: 'completed',
+        payload_summary: {
+          invoice_number: invoice.invoice_number,
+          amount: Number(invoice.amount),
+          company: sub?.company_name,
+          reason,
+        },
+      });
+
+      // Best-effort notification email (won't block on failure)
+      if (sub?.email) {
+        try {
+          await callEdgeFunction('send-email', {
+            action: 'subcontractor_invoice_rejected',
+            to: sub.email,
+            contact_name: sub.contact_name,
+            company_name: sub.company_name,
+            invoice_number: invoice.invoice_number,
+            amount: invoice.amount,
+            reason,
+          });
+        } catch (emailErr) {
+          console.error('Rejection email failed:', emailErr);
+        }
+      }
+
+      toast.success('Invoice rejected — subcontractor can now edit and resubmit.');
+      setRejectDialogOpen(false);
+      setRejectReason('');
+      qc.invalidateQueries({ queryKey: ['admin_sub_invoice', id] });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to reject invoice');
+    } finally {
+      setRejecting(false);
+    }
   };
 
   const handleMarkPaid = async () => {
