@@ -14,7 +14,9 @@ import {
   Paperclip,
   FileIcon,
   ChevronDown,
+  Clock,
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { downscaleImageIfLarge, iosLog, isIOSWebView, yieldToBrowser } from '@/lib/iosDebug';
 
