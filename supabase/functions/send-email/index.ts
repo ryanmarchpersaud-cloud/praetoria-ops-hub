@@ -830,6 +830,45 @@ Deno.serve(async (req) => {
       return json({ ...result, action: "pay_stub_email" });
     }
 
+    // ─── Subcontractor Invoice Submitted (notify ops/finance) ───
+    if (action === "subcontractor_invoice_submitted") {
+      const { company_name, contact_name, invoice_number, amount, invoice_date, attachment_url, is_resubmission } = params;
+      const recipients = [EMAIL_CONFIG.opsInbox, EMAIL_CONFIG.adminInbox];
+      const amountStr = amount != null ? Number(amount).toFixed(2) : "0.00";
+      const verb = is_resubmission ? "resubmitted" : "submitted";
+      const subjectPrefix = is_resubmission ? "Resubmitted" : "New";
+
+      const result = await sendViaResend({
+        to: recipients,
+        subject: `${subjectPrefix} Subcontractor Invoice ${invoice_number || ""} — ${company_name || "Subcontractor"} ($${amountStr})`,
+        html: wrapHtml(`Subcontractor Invoice ${verb}`, `
+          <p>A subcontractor invoice has been ${verb} for review.</p>
+          <table style="border-collapse:collapse;margin:12px 0;">
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice #</td><td style="padding:4px 0;"><strong>${invoice_number || "—"}</strong></td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Subcontractor</td><td style="padding:4px 0;">${company_name || "—"}${contact_name ? ` (${contact_name})` : ""}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Amount</td><td style="padding:4px 0;"><strong>$${amountStr} CAD</strong></td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice Date</td><td style="padding:4px 0;">${invoice_date || "—"}</td></tr>
+          </table>
+          ${attachment_url ? `<p><a href="${attachment_url}" style="color:#2563eb;">View attached invoice PDF</a></p>` : ""}
+          <p><a href="https://praetoria-ops-hub.lovable.app/subcontractors/invoices" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;">Review in Admin Portal</a></p>
+        `),
+        reply_to: EMAIL_CONFIG.opsInbox,
+      });
+
+      await logIntegration({
+        provider: "resend",
+        event_name: "email.subcontractor_invoice_submitted",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: recipients.join(", "),
+        record_type: "subcontractor_invoice",
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: { invoice_number, amount, company_name, is_resubmission: !!is_resubmission },
+      });
+      return json({ ...result, action: "subcontractor_invoice_submitted" });
+    }
+
     // ─── Subcontractor Invoice Rejected ───
     if (action === "subcontractor_invoice_rejected") {
       const { to, contact_name, company_name, invoice_number, amount, reason } = params;
