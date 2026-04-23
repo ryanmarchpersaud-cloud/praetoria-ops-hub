@@ -5975,6 +5975,8 @@ export type Database = {
           invoice_number: string
           notes: string | null
           paid_at: string | null
+          rejected_at: string | null
+          rejected_by: string | null
           service_period_end: string | null
           service_period_start: string | null
           status: string
@@ -5994,6 +5996,8 @@ export type Database = {
           invoice_number: string
           notes?: string | null
           paid_at?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
           service_period_end?: string | null
           service_period_start?: string | null
           status?: string
@@ -6013,6 +6017,8 @@ export type Database = {
           invoice_number?: string
           notes?: string | null
           paid_at?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
           service_period_end?: string | null
           service_period_start?: string | null
           status?: string
