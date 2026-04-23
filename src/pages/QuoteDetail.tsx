@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle, Receipt, LinkIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { logQuoteFollowUpChange } from '@/lib/quoteFollowUpLog';
 import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
