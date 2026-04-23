@@ -125,7 +125,8 @@ export default function SubcontractorInvoices() {
       return;
     }
 
-    const result = invoiceSchema.safeParse({
+    const schema = isEditMode ? editInvoiceSchema : invoiceSchema;
+    const result = schema.safeParse({
       amount,
       invoiceDate,
       file: selectedFile,
@@ -147,8 +148,8 @@ export default function SubcontractorInvoices() {
 
     setSubmitting(true);
     try {
-      // Upload required attachment
-      let attachmentUrl: string | null = null;
+      // Upload replacement attachment if a new file was chosen.
+      let attachmentUrl: string | null = isEditMode ? (editingInvoice?.attachment_url ?? null) : null;
       if (selectedFile) {
         const ext = selectedFile.name.split('.').pop();
         const filePath = `${profile.id}/invoices/${Date.now()}-invoice.${ext}`;
@@ -163,46 +164,82 @@ export default function SubcontractorInvoices() {
         attachmentUrl = publicUrl;
       }
 
-      // Generate invoice number: SUB-INV-XXXXX
-      const { count } = await supabase
-        .from('subcontractor_invoices')
-        .select('*', { count: 'exact', head: true })
-        .eq('subcontractor_id', profile.id);
-      const invoiceNumber = `SUB-INV-${String((count || 0) + 1).padStart(5, '0')}`;
+      if (isEditMode && editingInvoice) {
+        // Resubmit a previously rejected invoice — keep number, clear rejection state.
+        const { error: updErr } = await supabase
+          .from('subcontractor_invoices')
+          .update({
+            amount: parsedAmount,
+            invoice_date: invoiceDate,
+            service_period_start: periodStart || null,
+            service_period_end: periodEnd || null,
+            notes: notes || null,
+            attachment_url: attachmentUrl,
+            status: 'submitted',
+            admin_review_notes: null,
+            rejected_at: null,
+            rejected_by: null,
+            submitted_at: new Date().toISOString(),
+          })
+          .eq('id', editingInvoice.id);
+        if (updErr) throw updErr;
 
-      const { data: insertedInvoice, error: dbError } = await supabase
-        .from('subcontractor_invoices')
-        .insert({
-          subcontractor_id: profile.id,
-          invoice_number: invoiceNumber,
-          amount: parsedAmount,
-          invoice_date: invoiceDate,
-          service_period_start: periodStart || null,
-          service_period_end: periodEnd || null,
-          notes: notes || null,
-          attachment_url: attachmentUrl,
-          status: 'submitted',
-        })
-        .select('id')
-        .single();
+        await supabase.from('activities').insert({
+          user_id: user?.id,
+          action_name: 'subcontractor_invoice_resubmitted',
+          record_type: 'subcontractor_invoice',
+          record_id: editingInvoice.id,
+          status: 'completed',
+          payload_summary: {
+            invoice_number: editingInvoice.invoice_number,
+            amount: parsedAmount,
+            company: profile.company_name,
+          },
+        });
 
-      if (dbError) throw dbError;
+        toast.success(`Invoice ${editingInvoice.invoice_number} resubmitted for review.`);
+      } else {
+        // Brand-new invoice
+        const { count } = await supabase
+          .from('subcontractor_invoices')
+          .select('*', { count: 'exact', head: true })
+          .eq('subcontractor_id', profile.id);
+        const invoiceNumber = `SUB-INV-${String((count || 0) + 1).padStart(5, '0')}`;
 
-      // Log activity for admin visibility
-      await supabase.from('activities').insert({
-        user_id: user?.id,
-        action_name: 'subcontractor_invoice_submitted',
-        record_type: 'subcontractor_invoice',
-        record_id: insertedInvoice.id,
-        status: 'completed',
-        payload_summary: {
-          invoice_number: invoiceNumber,
-          amount: parsedAmount,
-          company: profile.company_name,
-        },
-      });
+        const { data: insertedInvoice, error: dbError } = await supabase
+          .from('subcontractor_invoices')
+          .insert({
+            subcontractor_id: profile.id,
+            invoice_number: invoiceNumber,
+            amount: parsedAmount,
+            invoice_date: invoiceDate,
+            service_period_start: periodStart || null,
+            service_period_end: periodEnd || null,
+            notes: notes || null,
+            attachment_url: attachmentUrl,
+            status: 'submitted',
+          })
+          .select('id')
+          .single();
 
-      toast.success(`Invoice ${invoiceNumber} submitted successfully!`);
+        if (dbError) throw dbError;
+
+        await supabase.from('activities').insert({
+          user_id: user?.id,
+          action_name: 'subcontractor_invoice_submitted',
+          record_type: 'subcontractor_invoice',
+          record_id: insertedInvoice.id,
+          status: 'completed',
+          payload_summary: {
+            invoice_number: invoiceNumber,
+            amount: parsedAmount,
+            company: profile.company_name,
+          },
+        });
+
+        toast.success(`Invoice ${invoiceNumber} submitted successfully!`);
+      }
+
       queryClient.invalidateQueries({ queryKey: ['subcontractor_invoices'] });
       resetForm();
       setOpen(false);
