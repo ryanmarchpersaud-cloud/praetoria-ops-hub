@@ -37,27 +37,89 @@ export function iosLog(tag: string, data?: Record<string, unknown>) {
   }
 }
 
+// Detect iOS / iPadOS WKWebView (Capacitor) so we can apply tighter
+// memory budgets — WKWebView on iPhones routinely terminates the renderer
+// when the JS heap or graphics memory spikes (OOM "crash" in App Store
+// Connect). Safari on desktop is fine; the issue is mobile WebKit.
+export function isIOSWebView(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+    (ua.includes('Mac') && typeof document !== 'undefined' && 'ontouchend' in document);
+  return isIOS;
+}
+
 /**
  * Best-effort client-side image downscaler. iPhone HEIC/JPEGs are often
- * 4–8 MB each which causes long uploads and main-thread stalls on Safari.
- * Resizes to a max edge of `maxWidth` and re-encodes to JPEG.
+ * 4–8 MB each which causes long uploads, main-thread stalls, and WKWebView
+ * OOM crashes on iOS. Resizes to a max edge of `maxWidth` and re-encodes
+ * to JPEG.
  *
- * Falls back to the original file on any failure (HEIC sometimes can't be
- * decoded by canvas in older Safari) so we never block the upload flow.
+ * Strategy:
+ *  1. Prefer `createImageBitmap` — decodes off the main thread and releases
+ *     memory deterministically via `.close()`. This is the single biggest
+ *     win for avoiding iOS WebView OOM crashes when handling multiple
+ *     full-resolution camera photos.
+ *  2. Fall back to <img> + canvas for older browsers.
+ *  3. On any failure (including HEIC that can't be decoded), return the
+ *     original file rather than crash the flow.
  */
 export async function downscaleImageIfLarge(
   file: File,
-  maxWidth = 1920,
+  maxWidth?: number,
   qualityBytes = 1_500_000,
 ): Promise<File> {
-  if (!file.type.startsWith('image/')) return file;
-  if (file.size < 200_000) return file;
-
-  // HEIC/HEIF often can't be drawn to canvas in iOS Safari; skip and let
-  // the network upload handle it as-is rather than crashing the tab.
-  if (/heic|heif/i.test(file.type) || /\.heic$|\.heif$/i.test(file.name)) {
+  if (!file.type.startsWith('image/') && !/\.(heic|heif|jpe?g|png|webp)$/i.test(file.name)) {
     return file;
   }
+  if (file.size < 200_000) return file;
+
+  // Tighter budget on iOS WKWebView to avoid renderer OOM termination.
+  const effectiveMaxWidth = maxWidth ?? (isIOSWebView() ? 1280 : 1920);
+
+  // HEIC/HEIF: try createImageBitmap first (iOS 17+ WKWebView decodes HEIC
+  // natively). If it fails, return original — the network upload will
+  // handle it as-is rather than crashing the tab.
+  const isHeic = /heic|heif/i.test(file.type) || /\.heic$|\.heif$/i.test(file.name);
+
+  // ---- Path 1: createImageBitmap (preferred, lower memory) ----
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file);
+      try {
+        if (bitmap.width <= effectiveMaxWidth && file.size < qualityBytes && !isHeic) {
+          return file;
+        }
+        const scale = Math.min(1, effectiveMaxWidth / bitmap.width);
+        const targetW = Math.max(1, Math.round(bitmap.width * scale));
+        const targetH = Math.max(1, Math.round(bitmap.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return file;
+        ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+        const blob: Blob | null = await new Promise((resolve) =>
+          canvas.toBlob(resolve, 'image/jpeg', 0.82),
+        );
+        // Release canvas pixels eagerly to help iOS reclaim graphics memory.
+        canvas.width = 0;
+        canvas.height = 0;
+        if (!blob) return file;
+        const newName = file.name.replace(/\.(heic|heif|png|webp)$/i, '.jpg');
+        return new File([blob], newName, { type: 'image/jpeg' });
+      } finally {
+        try { bitmap.close(); } catch { /* ignore */ }
+      }
+    } catch {
+      // HEIC decode unsupported on this iOS version, or other decode error.
+      if (isHeic) return file;
+      // Fall through to <img> path for non-HEIC images.
+    }
+  }
+
+  // ---- Path 2: <img> + canvas fallback ----
+  if (isHeic) return file;
 
   return new Promise<File>((resolve) => {
     const url = URL.createObjectURL(file);
@@ -65,14 +127,9 @@ export async function downscaleImageIfLarge(
     let done = false;
 
     const cleanup = () => {
-      try {
-        URL.revokeObjectURL(url);
-      } catch {
-        // ignore
-      }
+      try { URL.revokeObjectURL(url); } catch { /* ignore */ }
     };
 
-    // Safety timeout — never let a stuck decode freeze the upload flow.
     const timeoutId = window.setTimeout(() => {
       if (done) return;
       done = true;
@@ -84,38 +141,33 @@ export async function downscaleImageIfLarge(
       if (done) return;
       done = true;
       window.clearTimeout(timeoutId);
-
       try {
-        if (img.width <= maxWidth && file.size < qualityBytes) {
+        if (img.width <= effectiveMaxWidth && file.size < qualityBytes) {
           cleanup();
           resolve(file);
           return;
         }
-        const scale = Math.min(1, maxWidth / img.width);
+        const scale = Math.min(1, effectiveMaxWidth / img.width);
         const targetW = Math.max(1, Math.round(img.width * scale));
         const targetH = Math.max(1, Math.round(img.height * scale));
         const canvas = document.createElement('canvas');
         canvas.width = targetW;
         canvas.height = targetH;
         const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          cleanup();
-          resolve(file);
-          return;
-        }
+        if (!ctx) { cleanup(); resolve(file); return; }
         ctx.drawImage(img, 0, 0, targetW, targetH);
         canvas.toBlob(
           (blob) => {
+            // Release pixels.
+            canvas.width = 0;
+            canvas.height = 0;
             cleanup();
-            if (!blob) {
-              resolve(file);
-              return;
-            }
+            if (!blob) { resolve(file); return; }
             const newName = file.name.replace(/\.(heic|heif|png|webp)$/i, '.jpg');
             resolve(new File([blob], newName, { type: 'image/jpeg' }));
           },
           'image/jpeg',
-          0.85,
+          0.82,
         );
       } catch {
         cleanup();
@@ -133,4 +185,9 @@ export async function downscaleImageIfLarge(
 
     img.src = url;
   });
+}
+
+/** Yield to the event loop so iOS WKWebView can GC between heavy operations. */
+export function yieldToBrowser(ms = 0): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
