@@ -213,7 +213,6 @@ function VisitCardItem({ visit, workerInitials, now, isDragging, dragMoved }: {
 function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { toast } = useToast();
   const createLead = useCreateLead();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', phone: '',
@@ -303,7 +302,6 @@ const fieldLeadSchema = z.object({
 
 function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const createLead = useCreateLead();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', phone: '', company_name: '',

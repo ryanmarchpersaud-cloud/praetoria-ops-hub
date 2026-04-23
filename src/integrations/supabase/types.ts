@@ -7783,6 +7783,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      can_submit_field_lead: { Args: { _user_id: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
