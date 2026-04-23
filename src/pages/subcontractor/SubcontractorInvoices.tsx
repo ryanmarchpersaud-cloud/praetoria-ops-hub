@@ -77,6 +77,7 @@ export default function SubcontractorInvoices() {
     }
   }, [searchParams, setSearchParams]);
   const [submitting, setSubmitting] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any | null>(null);
   const [amount, setAmount] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [periodStart, setPeriodStart] = useState('');
@@ -84,6 +85,8 @@ export default function SubcontractorInvoices() {
   const [notes, setNotes] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<InvoiceErrors>({});
+
+  const isEditMode = !!editingInvoice;
 
   const totals = {
     pending: invoices.filter((i: any) => i.status === 'submitted' || i.status === 'pending').reduce((s: number, i: any) => s + Number(i.amount), 0),
@@ -99,7 +102,21 @@ export default function SubcontractorInvoices() {
     setNotes('');
     setSelectedFile(null);
     setErrors({});
+    setEditingInvoice(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const openEditDialog = (inv: any) => {
+    setEditingInvoice(inv);
+    setAmount(String(inv.amount ?? ''));
+    setInvoiceDate(inv.invoice_date || format(new Date(), 'yyyy-MM-dd'));
+    setPeriodStart(inv.service_period_start || '');
+    setPeriodEnd(inv.service_period_end || '');
+    setNotes(inv.notes || '');
+    setSelectedFile(null);
+    setErrors({});
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setOpen(true);
   };
 
   const handleSubmit = async () => {
