@@ -830,6 +830,42 @@ Deno.serve(async (req) => {
       return json({ ...result, action: "pay_stub_email" });
     }
 
+    // ─── Subcontractor Invoice Rejected ───
+    if (action === "subcontractor_invoice_rejected") {
+      const { to, contact_name, company_name, invoice_number, amount, reason } = params;
+      if (!to) return json({ error: "Missing 'to' email address" }, 400);
+
+      const amountStr = amount != null ? Number(amount).toFixed(2) : "0.00";
+      const result = await sendViaResend({
+        to,
+        subject: `Action Required: Invoice ${invoice_number || ""} needs revision`,
+        html: wrapHtml("Invoice Requires Revision", `
+          <p>Hi ${contact_name || company_name || "there"},</p>
+          <p>Your submitted invoice <strong>${invoice_number || ""}</strong> ($${amountStr} CAD) has been reviewed and requires changes before we can process payment.</p>
+          <p style="background:#fef2f2;border-left:3px solid #dc2626;padding:12px;border-radius:4px;">
+            <strong>Reason:</strong><br/>${(reason || "").replace(/\n/g, "<br/>")}
+          </p>
+          <p>Please log in to your <a href="https://praetoria-ops-hub.lovable.app/subcontractor/invoices">subcontractor portal</a> to edit and resubmit this invoice.</p>
+          <p>If you have questions, reply to this email or contact <a href="mailto:${EMAIL_CONFIG.adminInbox}">${EMAIL_CONFIG.adminInbox}</a>.</p>
+          <p>Thank you,<br/>Praetoria Group</p>
+        `),
+        reply_to: EMAIL_CONFIG.adminInbox,
+      });
+
+      await logIntegration({
+        provider: "resend",
+        event_name: "email.subcontractor_invoice_rejected",
+        channel: "email",
+        status: result.ok ? "success" : "failed",
+        recipient: to,
+        record_type: "subcontractor_invoice",
+        provider_response_id: result.id,
+        error_message: result.error,
+        metadata: { invoice_number, amount, company_name },
+      });
+      return json({ ...result, action: "subcontractor_invoice_rejected" });
+    }
+
     if (action === "health") {
       const hasKey = !!Deno.env.get("RESEND_API_KEY");
       return json({ ok: true, resend_configured: hasKey });
