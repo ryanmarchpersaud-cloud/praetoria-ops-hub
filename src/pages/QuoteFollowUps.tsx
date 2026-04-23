@@ -12,6 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { logQuoteFollowUpChange } from '@/lib/quoteFollowUpLog';
 
 type Bucket = 'overdue' | 'today' | 'thisWeek' | 'later';
 
