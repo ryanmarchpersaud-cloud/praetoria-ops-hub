@@ -54,12 +54,16 @@ function isTransientError(err: any): boolean {
   return false;
 }
 
-async function findRecentDuplicateLead(payload: LeadInsert): Promise<Lead | null> {
+async function findRecentDuplicateLead(
+  payload: LeadInsert,
+  createdBy: string,
+): Promise<Lead | null> {
   const sinceIso = new Date(Date.now() - 60_000).toISOString();
   let query = supabase
     .from('leads')
     .select('*')
     .gte('created_at', sinceIso)
+    .eq('created_by', createdBy)
     .ilike('first_name', payload.first_name ?? '')
     .ilike('last_name', payload.last_name ?? '')
     .limit(1);
@@ -81,18 +85,27 @@ export function useCreateLead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (lead: LeadInsert) => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('You must be signed in to submit a lead.');
+      // IMPORTANT (iOS): Use getSession() which reads the cached session
+      // synchronously from local storage. supabase.auth.getUser() makes a
+      // network round-trip to /auth/v1/user that iOS Safari frequently
+      // cancels when the dialog closes / the on-screen keyboard collapses
+      // right after the user taps "Submit", causing the entire mutation to
+      // silently abort before the lead is ever inserted.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+      if (!userId) {
+        throw new Error('You must be signed in to submit a lead.');
+      }
 
       const payload: LeadInsert = {
         ...lead,
-        created_by: authData.user.id,
+        created_by: userId,
       };
 
-      // Pre-check: if this user just submitted the same lead in the last 60s,
-      // return that one instead of creating a duplicate.
-      const preExisting = await findRecentDuplicateLead(payload);
+      // Pre-check: if THIS user just submitted the same lead in the last 60s,
+      // return that one instead of creating a duplicate. Scoped by created_by
+      // so we never collapse two different users' leads into one.
+      const preExisting = await findRecentDuplicateLead(payload, userId);
       if (preExisting) return preExisting;
 
       const insertOnce = async () => {
@@ -130,13 +143,13 @@ export function useCreateLead() {
         if (!isTransientError(err)) throw err;
 
         // The insert may have actually landed before the network failed.
-        const landed = await findRecentDuplicateLead(payload);
+        const landed = await findRecentDuplicateLead(payload, userId);
         if (landed) return landed;
 
         try {
           return await insertOnce();
         } catch (retryErr: any) {
-          const afterRetry = await findRecentDuplicateLead(payload);
+          const afterRetry = await findRecentDuplicateLead(payload, userId);
           if (afterRetry) return afterRetry;
           throw retryErr;
         }
