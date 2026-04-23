@@ -57,9 +57,11 @@ function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => 
       return;
     }
     try {
+      const { notes, ...rest } = form;
       await createLead.mutateAsync({
-        ...form,
+        ...rest,
         company_name: form.company_name || null,
+        internal_notes: notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
         created_by: user?.id ?? null,
