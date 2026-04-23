@@ -503,6 +503,11 @@ export default function EmployeeDetail() {
       setTempPwLoading(false);
     }
   };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Link to="/employees" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-foreground truncate">{emp.full_name || 'Employee'}</h1>
           <p className="text-sm text-muted-foreground">{emp.role_title || 'No role'} · {emp.employee_id || 'No ID'}</p>
@@ -513,6 +518,9 @@ export default function EmployeeDetail() {
           <>
             <Button size="sm" variant="default" className="gap-1.5" onClick={() => setInviteOpen(true)}>
               <Send className="h-3.5 w-3.5" /> Send Invite
+            </Button>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => { setTempPwResult(null); setTempPwOpen(true); }}>
+              <RotateCcw className="h-3.5 w-3.5" /> Set Temp Password
             </Button>
             <Button size="sm" variant="outline" className="gap-1.5" onClick={openEditDialog}>
               <Pencil className="h-3.5 w-3.5" /> Edit
@@ -528,6 +536,58 @@ export default function EmployeeDetail() {
           </>
         )}
       </div>
+
+      {/* Temp Password Dialog */}
+      <Dialog open={tempPwOpen} onOpenChange={(o) => { setTempPwOpen(o); if (!o) setTempPwResult(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Temporary Password</DialogTitle>
+            <DialogDescription>
+              Generate a one-time temporary password for <strong>{emp.full_name || 'this employee'}</strong>. Share it with them privately — they should change it after signing in.
+            </DialogDescription>
+          </DialogHeader>
+          {!tempPwResult ? (
+            <div className="text-sm text-muted-foreground">
+              Click "Generate Password" to create a secure 12-character password and apply it to their account.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {tempPwResult.email && (
+                <div>
+                  <Label className="text-xs">Email</Label>
+                  <Input readOnly value={tempPwResult.email} onFocus={(e) => e.currentTarget.select()} />
+                </div>
+              )}
+              <div>
+                <Label className="text-xs">Temporary Password</Label>
+                <Input readOnly value={tempPwResult.password} className="font-mono" onFocus={(e) => e.currentTarget.select()} />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(tempPwResult.password);
+                  toast({ title: 'Password copied to clipboard' });
+                }}
+              >
+                Copy Password
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                ⚠ This password will not be shown again. Share it securely.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setTempPwOpen(false)}>Close</Button>
+            {!tempPwResult && (
+              <Button onClick={handleSetTempPassword} disabled={tempPwLoading}>
+                {tempPwLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Generate Password
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-1">
