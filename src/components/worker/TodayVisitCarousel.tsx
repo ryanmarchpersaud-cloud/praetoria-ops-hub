@@ -62,11 +62,9 @@ type QuickBookAction = 'visit' | 'job' | 'customer' | 'property' | 'lead' | 'quo
 const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; color: string }[] = [
   { label: 'New Visit', icon: ClipboardList, action: 'visit', color: 'text-blue-600' },
   { label: 'New Job', icon: Briefcase, action: 'job', color: 'text-indigo-600' },
-  { label: 'New Customer', icon: UserPlus, action: 'customer', color: 'text-emerald-600' },
   { label: 'New Property', icon: Home, action: 'property', color: 'text-amber-600' },
   { label: 'New Lead', icon: Send, action: 'lead', color: 'text-violet-600' },
   { label: 'New Quote', icon: FileText, action: 'quote', color: 'text-cyan-600' },
-  { label: 'New Invoice', icon: Receipt, action: 'invoice', color: 'text-rose-600' },
   { label: 'New Request', icon: CalendarPlus, action: 'request', color: 'text-orange-600' },
   { label: 'New Incident', icon: AlertTriangle, action: 'incident', color: 'text-red-600' },
   { label: 'New Task', icon: ClipboardCheck, action: 'task', color: 'text-teal-600' },
