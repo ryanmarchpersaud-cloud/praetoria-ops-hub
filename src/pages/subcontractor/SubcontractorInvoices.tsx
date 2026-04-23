@@ -410,8 +410,8 @@ export default function SubcontractorInvoices() {
       ) : (
         <div className="space-y-2">
           {invoices.map((inv: any) => (
-            <Link key={inv.id} to={`/subcontractor/invoices/${inv.id}`} className="block">
-              <Card className="hover:bg-muted/30 transition-colors">
+            <Card key={inv.id} className="overflow-hidden">
+              <Link to={`/subcontractor/invoices/${inv.id}`} className="block hover:bg-muted/30 transition-colors">
                 <CardContent className="p-3 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">{inv.invoice_number}</p>
@@ -426,8 +426,28 @@ export default function SubcontractorInvoices() {
                   </div>
                   <StatusChip status={inv.status} />
                 </CardContent>
-              </Card>
-            </Link>
+              </Link>
+              {inv.status === 'rejected' && (
+                <div className="border-t border-destructive/20 bg-destructive/5 p-3 space-y-2">
+                  {inv.admin_review_notes && (
+                    <div className="flex gap-2 text-xs text-destructive">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">
+                        <span className="font-medium">Admin reason: </span>{inv.admin_review_notes}
+                      </p>
+                    </div>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full gap-1.5"
+                    onClick={(e) => { e.preventDefault(); openEditDialog(inv); }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> Edit & Resubmit
+                  </Button>
+                </div>
+              )}
+            </Card>
           ))}
         </div>
       )}
