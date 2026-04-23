@@ -48,11 +48,24 @@ export default function Quotes() {
           <h1 className="text-xl md:text-2xl font-bold">Quotes</h1>
           <p className="text-xs md:text-sm text-muted-foreground">{allQuotes.length} total</p>
         </div>
-        {canManageQuotes && (
-          <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
-            <Plus className="h-4 w-4" /> New Quote
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" className="gap-1.5">
+            <Link to="/quotes/follow-ups">
+              <CalendarClock className="h-4 w-4" />
+              <span className="hidden sm:inline">Follow-ups</span>
+              {overdueCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">
+                  {overdueCount}
+                </span>
+              )}
+            </Link>
           </Button>
-        )}
+          {canManageQuotes && (
+            <Button onClick={() => setCreateOpen(true)} className="gap-1.5">
+              <Plus className="h-4 w-4" /> New Quote
+            </Button>
+          )}
+        </div>
       </div>
 
       <CreateQuoteDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
