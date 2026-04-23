@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { hashLeadPayload, logLeadSubmission } from '@/lib/leadSubmissionLog';
 
 type Lead = Database['public']['Tables']['leads']['Row'];
 type LeadInsert = Database['public']['Tables']['leads']['Insert'];
@@ -85,6 +86,9 @@ export function useCreateLead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (lead: LeadInsert) => {
+      const startedAt = Date.now();
+      const payloadHash = hashLeadPayload(lead as Record<string, unknown>);
+
       // IMPORTANT (iOS): Use getSession() which reads the cached session
       // synchronously from local storage. supabase.auth.getUser() makes a
       // network round-trip to /auth/v1/user that iOS Safari frequently
@@ -93,8 +97,15 @@ export function useCreateLead() {
       // silently abort before the lead is ever inserted.
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData.session?.user?.id;
+
+      // Fire-and-forget "started" marker so we always have a record of the
+      // attempt — even if everything below fails before the insert resolves.
+      void logLeadSubmission({ outcome: 'started', startedAt, payloadHash, userId });
+
       if (!userId) {
-        throw new Error('You must be signed in to submit a lead.');
+        const err = new Error('You must be signed in to submit a lead.');
+        void logLeadSubmission({ outcome: 'error', startedAt, payloadHash, userId, error: err, extra: { stage: 'auth' } });
+        throw err;
       }
 
       const payload: LeadInsert = {
@@ -106,7 +117,17 @@ export function useCreateLead() {
       // return that one instead of creating a duplicate. Scoped by created_by
       // so we never collapse two different users' leads into one.
       const preExisting = await findRecentDuplicateLead(payload, userId);
-      if (preExisting) return preExisting;
+      if (preExisting) {
+        void logLeadSubmission({
+          outcome: 'duplicate',
+          startedAt,
+          payloadHash,
+          userId,
+          recordId: preExisting.id,
+          extra: { stage: 'pre_check' },
+        });
+        return preExisting;
+      }
 
       const insertOnce = async () => {
         const { data, error } = await supabase
@@ -138,19 +159,61 @@ export function useCreateLead() {
       };
 
       try {
-        return await insertOnce();
+        const inserted = await insertOnce();
+        void logLeadSubmission({
+          outcome: 'success',
+          startedAt,
+          payloadHash,
+          userId,
+          recordId: inserted.id,
+          extra: { stage: 'insert', attempt: 1 },
+        });
+        return inserted;
       } catch (err: any) {
-        if (!isTransientError(err)) throw err;
+        if (!isTransientError(err)) {
+          void logLeadSubmission({ outcome: 'error', startedAt, payloadHash, userId, error: err, extra: { stage: 'insert', attempt: 1 } });
+          throw err;
+        }
 
         // The insert may have actually landed before the network failed.
         const landed = await findRecentDuplicateLead(payload, userId);
-        if (landed) return landed;
+        if (landed) {
+          void logLeadSubmission({
+            outcome: 'duplicate',
+            startedAt,
+            payloadHash,
+            userId,
+            recordId: landed.id,
+            extra: { stage: 'post_failure_recovery', attempt: 1 },
+          });
+          return landed;
+        }
 
         try {
-          return await insertOnce();
+          const retried = await insertOnce();
+          void logLeadSubmission({
+            outcome: 'success',
+            startedAt,
+            payloadHash,
+            userId,
+            recordId: retried.id,
+            extra: { stage: 'insert', attempt: 2 },
+          });
+          return retried;
         } catch (retryErr: any) {
           const afterRetry = await findRecentDuplicateLead(payload, userId);
-          if (afterRetry) return afterRetry;
+          if (afterRetry) {
+            void logLeadSubmission({
+              outcome: 'duplicate',
+              startedAt,
+              payloadHash,
+              userId,
+              recordId: afterRetry.id,
+              extra: { stage: 'post_failure_recovery', attempt: 2 },
+            });
+            return afterRetry;
+          }
+          void logLeadSubmission({ outcome: 'error', startedAt, payloadHash, userId, error: retryErr, extra: { stage: 'insert', attempt: 2 } });
           throw retryErr;
         }
       }
