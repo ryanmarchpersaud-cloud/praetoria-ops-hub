@@ -280,7 +280,7 @@ export default function QuoteFollowUps() {
                             {format(new Date(q.follow_up_due_at), 'MMM d, yyyy p')}
                           </TableCell>
                           <TableCell className="text-right">
-                            <DueDateEditor quoteId={q.id} current={q.follow_up_due_at} onUpdated={refetch} />
+                            <DueDateEditor quoteId={q.id} quoteNumber={q.quote_number} current={q.follow_up_due_at} onUpdated={refetch} />
                           </TableCell>
                         </TableRow>
                       ))}
