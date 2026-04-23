@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLead, useUpdateLead } from '@/hooks/useLeads';
 import { useQuotes, useCreateQuote } from '@/hooks/useQuotes';
+import { supabase } from '@/integrations/supabase/client';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,13 +86,51 @@ export default function LeadDetail() {
   };
 
   const handleCreateQuote = async () => {
-    if (!id) return;
+    if (!id || !lead) return;
     try {
+      // Quotes require a customer_id (uuid NOT NULL). If this lead isn't yet
+      // tied to a customer, auto-create one from the lead's contact info so
+      // the quotation flow works in one tap from the lead detail page.
+      let customerId = (lead as any).customer_id as string | null;
+
+      if (!customerId) {
+        const firstName = (lead.first_name || '').trim() || 'New';
+        const lastName = (lead.last_name || '').trim() || 'Customer';
+
+        const { data: newCustomer, error: customerErr } = await supabase
+          .from('customers')
+          .insert({
+            first_name: firstName,
+            last_name: lastName,
+            company_name: lead.company_name || null,
+            email: lead.email || null,
+            phone: lead.phone || null,
+            address_line_1: lead.address_line_1 || null,
+            city: lead.city || null,
+            province: lead.province || null,
+            postal_code: lead.postal_code || null,
+            customer_status: 'Active',
+            referral_source: lead.lead_source || null,
+          })
+          .select('id')
+          .single();
+
+        if (customerErr) throw customerErr;
+        customerId = newCustomer.id;
+
+        // Link the new customer back to the lead so future actions reuse it.
+        try {
+          await updateLead.mutateAsync({ id, customer_id: customerId } as any);
+        } catch {
+          // Non-fatal: quote creation can still proceed even if back-link fails.
+        }
+      }
+
       const q = await createQuote.mutateAsync({
         lead_id: id,
         quote_number: '',
-        service_category: lead?.service_type as any || 'Other',
-        customer_id: lead?.customer_id || '',
+        service_category: (lead?.service_type as any) || 'Other',
+        customer_id: customerId,
       });
       navigate(`/quotes/${q.id}`);
     } catch (err: any) {
