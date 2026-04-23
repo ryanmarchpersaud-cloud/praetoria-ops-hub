@@ -14,7 +14,9 @@ import {
   Paperclip,
   FileIcon,
   ChevronDown,
+  Clock,
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { downscaleImageIfLarge, iosLog, isIOSWebView, yieldToBrowser } from '@/lib/iosDebug';
 
@@ -34,7 +36,23 @@ interface IncidentPhotoUploadProps {
   onAttachmentsChange?: (attachments: IncidentAttachment[]) => void;
   maxPhotos?: number;
   maxAttachments?: number;
+  /** Notifies parent when uploads are active or a deferred iOS batch is pending,
+   *  so the submit button can be disabled to prevent double-submits. */
+  onBusyChange?: (busy: boolean) => void;
 }
+
+type IosBatchItem = {
+  name: string;
+  status: 'pending' | 'uploading' | 'done' | 'failed';
+  error?: string;
+};
+
+type IosBatchState = {
+  kind: 'photo' | 'document';
+  items: IosBatchItem[];
+  pendingCount: number; // files the user picked but we deferred past the cap
+  totalPicked: number;
+} | null;
 
 type StatusMessage =
   | { type: 'success'; text: string }
@@ -63,6 +81,7 @@ export default function IncidentPhotoUpload({
   onAttachmentsChange,
   maxPhotos = 5,
   maxAttachments = 10,
+  onBusyChange,
 }: IncidentPhotoUploadProps) {
   const { toast } = useToast();
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -74,6 +93,8 @@ export default function IncidentPhotoUpload({
   const [status, setStatus] = useState<StatusMessage>(null);
   const [pendingCategory, setPendingCategory] = useState<string>('Insurance');
   const [showAddMoreOptions, setShowAddMoreOptions] = useState(false);
+  const [iosBatch, setIosBatch] = useState<IosBatchState>(null);
+  const isIOS = isIOSWebView();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -81,6 +102,14 @@ export default function IncidentPhotoUpload({
       isMountedRef.current = false;
     };
   }, []);
+
+  // Keep parent informed so the submit button can lock while uploads/pending
+  // batches are still in flight on iOS.
+  const hasPendingIosBatch = !!iosBatch && iosBatch.pendingCount > 0;
+  const busy = uploading || docUploading || hasPendingIosBatch;
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
 
   const showStatus = (msg: StatusMessage) => {
     setStatus(msg);
@@ -130,13 +159,26 @@ export default function IncidentPhotoUpload({
 
     // iOS WKWebView can OOM-crash when decoding many full-resolution photos
     // back-to-back. Cap the batch on iOS and ask the user to add more after.
-    const iosBatchCap = isIOSWebView() ? 3 : remaining;
-    const toUpload = Array.from(files).slice(0, Math.min(remaining, iosBatchCap));
-    if (isIOSWebView() && files.length > iosBatchCap) {
-      toast({
-        title: `Uploading first ${iosBatchCap} photos`,
-        description: `iPhone limits how many large photos can be processed at once. Add the rest after these finish.`,
+    const iosBatchCap = isIOS ? 3 : remaining;
+    const batchSize = Math.min(remaining, iosBatchCap);
+    const toUpload = Array.from(files).slice(0, batchSize);
+    const deferredCount = isIOS ? Math.max(0, files.length - batchSize) : 0;
+
+    if (isIOS) {
+      // Seed the per-file iOS progress card so the user sees exactly what's
+      // queued and what's still waiting after the first batch finishes.
+      setIosBatch({
+        kind: 'photo',
+        items: toUpload.map((f) => ({ name: f.name, status: 'pending' })),
+        pendingCount: deferredCount,
+        totalPicked: files.length,
       });
+      if (deferredCount > 0) {
+        toast({
+          title: `Uploading first ${batchSize} of ${files.length} photos`,
+          description: `iPhone limits how many large photos can be processed at once. The remaining ${deferredCount} will stay queued — submit is locked until they're added.`,
+        });
+      }
     }
     setUploading(true);
     setStatus(null);
@@ -146,7 +188,15 @@ export default function IncidentPhotoUpload({
 
     try {
       const newUrls: string[] = [];
-      for (const rawFile of toUpload) {
+      for (let idx = 0; idx < toUpload.length; idx++) {
+        const rawFile = toUpload[idx];
+        if (isIOS) {
+          setIosBatch((prev) => prev && {
+            ...prev,
+            items: prev.items.map((it, i) => i === idx ? { ...it, status: 'uploading' } : it),
+          });
+        }
+
         // iPhone photos (HEIC/large JPEG) are 4–8 MB and freeze Safari on
         // serial uploads. Downscale on the main thread before uploading.
         let file = rawFile;
@@ -164,6 +214,12 @@ export default function IncidentPhotoUpload({
         if (file.size > 10 * 1024 * 1024) {
           failures.push(`${file.name}: exceeds 10 MB`);
           toast({ title: `${file.name} exceeds 10 MB limit`, variant: 'destructive' });
+          if (isIOS) {
+            setIosBatch((prev) => prev && {
+              ...prev,
+              items: prev.items.map((it, i) => i === idx ? { ...it, status: 'failed', error: 'over 10 MB' } : it),
+            });
+          }
           continue;
         }
 
@@ -177,12 +233,24 @@ export default function IncidentPhotoUpload({
         if (uploadError) {
           failures.push(`${file.name}: ${uploadError.message}`);
           toast({ title: 'Upload failed', description: uploadError.message, variant: 'destructive' });
+          if (isIOS) {
+            setIosBatch((prev) => prev && {
+              ...prev,
+              items: prev.items.map((it, i) => i === idx ? { ...it, status: 'failed', error: uploadError.message } : it),
+            });
+          }
           continue;
         }
 
         const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
         newUrls.push(urlData.publicUrl);
         successCount += 1;
+        if (isIOS) {
+          setIosBatch((prev) => prev && {
+            ...prev,
+            items: prev.items.map((it, i) => i === idx ? { ...it, status: 'done' } : it),
+          });
+        }
 
         // Yield to the event loop between photos so iOS WKWebView can
         // reclaim graphics memory before the next decode.
@@ -220,6 +288,13 @@ export default function IncidentPhotoUpload({
       if (isMountedRef.current) setUploading(false);
       if (cameraRef.current) cameraRef.current.value = '';
       if (galleryRef.current) galleryRef.current.value = '';
+      // If there are no deferred files left, clear the iOS batch card after a
+      // short delay so the user can see the final per-file results.
+      if (isIOS && deferredCount === 0 && isMountedRef.current) {
+        window.setTimeout(() => {
+          if (isMountedRef.current) setIosBatch(null);
+        }, 4000);
+      }
     }
   };
 
@@ -248,13 +323,24 @@ export default function IncidentPhotoUpload({
       return;
     }
 
-    const iosBatchCap = isIOSWebView() ? 3 : remaining;
-    const toUpload = Array.from(files).slice(0, Math.min(remaining, iosBatchCap));
-    if (isIOSWebView() && files.length > iosBatchCap) {
-      toast({
-        title: `Uploading first ${iosBatchCap} files`,
-        description: `iPhone limits how many large files can be processed at once. Add the rest after these finish.`,
+    const iosBatchCap = isIOS ? 3 : remaining;
+    const batchSize = Math.min(remaining, iosBatchCap);
+    const toUpload = Array.from(files).slice(0, batchSize);
+    const deferredCount = isIOS ? Math.max(0, files.length - batchSize) : 0;
+
+    if (isIOS) {
+      setIosBatch({
+        kind: 'document',
+        items: toUpload.map((f) => ({ name: f.name, status: 'pending' })),
+        pendingCount: deferredCount,
+        totalPicked: files.length,
       });
+      if (deferredCount > 0) {
+        toast({
+          title: `Uploading first ${batchSize} of ${files.length} files`,
+          description: `iPhone limits how many large files can be processed at once. The remaining ${deferredCount} will stay queued — submit is locked until they're added.`,
+        });
+      }
     }
     setDocUploading(true);
     setStatus(null);
@@ -264,7 +350,15 @@ export default function IncidentPhotoUpload({
     const newAttachments: IncidentAttachment[] = [];
 
     try {
-      for (const rawFile of toUpload) {
+      for (let idx = 0; idx < toUpload.length; idx++) {
+        const rawFile = toUpload[idx];
+        if (isIOS) {
+          setIosBatch((prev) => prev && {
+            ...prev,
+            items: prev.items.map((it, i) => i === idx ? { ...it, status: 'uploading' } : it),
+          });
+        }
+
         // Compress image documents (insurance card photos, licence shots,
         // damage photos) before upload so iPhone HEIC/JPEG don't stall.
         // Leave PDFs and other docs untouched.
@@ -277,8 +371,18 @@ export default function IncidentPhotoUpload({
           }
         }
 
+        const markFailed = (msg: string) => {
+          failures.push(`${file.name}: ${msg}`);
+          if (isIOS) {
+            setIosBatch((prev) => prev && {
+              ...prev,
+              items: prev.items.map((it, i) => i === idx ? { ...it, status: 'failed', error: msg } : it),
+            });
+          }
+        };
+
         if (file.size > 25 * 1024 * 1024) {
-          failures.push(`${file.name}: exceeds 25 MB`);
+          markFailed('exceeds 25 MB');
           continue;
         }
 
@@ -290,7 +394,7 @@ export default function IncidentPhotoUpload({
           .upload(path, file, { upsert: false, contentType: file.type || undefined });
 
         if (uploadError) {
-          failures.push(`${file.name}: ${uploadError.message}`);
+          markFailed(uploadError.message);
           continue;
         }
 
@@ -299,7 +403,7 @@ export default function IncidentPhotoUpload({
           .createSignedUrl(path, 60 * 60 * 24 * 7);
 
         if (signedError || !signed?.signedUrl) {
-          failures.push(`${file.name}: could not generate access link`);
+          markFailed('could not generate access link');
           continue;
         }
 
@@ -312,6 +416,12 @@ export default function IncidentPhotoUpload({
           category: pendingCategory,
         });
         successCount += 1;
+        if (isIOS) {
+          setIosBatch((prev) => prev && {
+            ...prev,
+            items: prev.items.map((it, i) => i === idx ? { ...it, status: 'done' } : it),
+          });
+        }
         await yieldToBrowser(50);
       }
 
@@ -341,6 +451,11 @@ export default function IncidentPhotoUpload({
     } finally {
       if (isMountedRef.current) setDocUploading(false);
       if (docRef.current) docRef.current.value = '';
+      if (isIOS && deferredCount === 0 && isMountedRef.current) {
+        window.setTimeout(() => {
+          if (isMountedRef.current) setIosBatch(null);
+        }, 4000);
+      }
     }
   };
 
@@ -479,6 +594,77 @@ export default function IncidentPhotoUpload({
             </div>
           )}
         </div>
+
+        {iosBatch && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                iPhone upload batch
+              </p>
+              <span className="text-[10px] text-muted-foreground">
+                {iosBatch.items.filter(i => i.status === 'done').length}/{iosBatch.items.length} in this batch
+              </span>
+            </div>
+            <Progress
+              value={
+                iosBatch.items.length === 0
+                  ? 0
+                  : (iosBatch.items.filter(i => i.status === 'done' || i.status === 'failed').length /
+                      iosBatch.items.length) * 100
+              }
+              className="h-1.5"
+            />
+            <ul className="space-y-1">
+              {iosBatch.items.map((it, i) => (
+                <li key={`${it.name}-${i}`} className="flex items-center gap-2 text-[11px]">
+                  {it.status === 'done' && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />}
+                  {it.status === 'uploading' && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-primary" />}
+                  {it.status === 'pending' && <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                  {it.status === 'failed' && <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />}
+                  <span className="truncate flex-1">{it.name}</span>
+                  {it.status === 'failed' && it.error && (
+                    <span className="text-destructive truncate max-w-[40%]">{it.error}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {iosBatch.pendingCount > 0 ? (
+              <div className="flex items-start gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-2">
+                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                <div className="flex-1 space-y-1">
+                  <p className="text-[11px] leading-snug text-amber-700 dark:text-amber-400">
+                    {iosBatch.pendingCount} more {iosBatch.kind === 'photo' ? 'photo' : 'file'}
+                    {iosBatch.pendingCount === 1 ? '' : 's'} still need to be added.
+                    Submit is locked until they're uploaded or you skip them.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[11px]"
+                      disabled={anyUploadBusy}
+                      onClick={() => triggerNativePicker(iosBatch.kind === 'photo' ? galleryRef : docRef)}
+                    >
+                      Add next batch
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[11px]"
+                      onClick={() => setIosBatch(null)}
+                    >
+                      Skip remaining
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : !anyUploadBusy ? (
+              <p className="text-[11px] text-muted-foreground">Batch complete — you can submit the report.</p>
+            ) : null}
+          </div>
+        )}
 
         {photos.length > 0 && (
           <div className="space-y-2">

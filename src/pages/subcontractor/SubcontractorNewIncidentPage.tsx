@@ -31,12 +31,21 @@ export default function SubcontractorNewIncidentPage() {
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<IncidentAttachment[]>([]);
+  const [uploadBusy, setUploadBusy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<{ id: string; report_number: string } | null>(null);
 
   const handleSubmit = async () => {
     if (!description.trim() || !user) {
       toast({ title: 'Please provide a description', variant: 'destructive' });
+      return;
+    }
+    if (uploadBusy) {
+      toast({
+        title: 'Uploads still in progress',
+        description: 'Wait for the iPhone batch to finish or skip remaining files before submitting.',
+        variant: 'destructive',
+      });
       return;
     }
     setSubmitting(true);
@@ -166,10 +175,16 @@ export default function SubcontractorNewIncidentPage() {
         onPhotosChange={setPhotos}
         attachments={attachments}
         onAttachmentsChange={setAttachments}
+        onBusyChange={setUploadBusy}
       />
 
-      <Button className="w-full" variant="destructive" onClick={handleSubmit} disabled={submitting || !description.trim()}>
-        {submitting ? 'Submitting…' : 'Submit Incident Report'}
+      <Button
+        className="w-full"
+        variant="destructive"
+        onClick={handleSubmit}
+        disabled={submitting || uploadBusy || !description.trim()}
+      >
+        {submitting ? 'Submitting…' : uploadBusy ? 'Waiting for uploads…' : 'Submit Incident Report'}
       </Button>
     </div>
   );
