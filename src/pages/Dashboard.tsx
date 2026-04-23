@@ -17,6 +17,7 @@ import {
   useDashboardCertifications,
   useDashboardLeads,
   useDashboardActivities,
+  useDashboardSubcontractorInvoices,
 } from '@/hooks/useDashboardData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Clock, CheckCircle, AlertCircle, Activity, ChevronRight } from 'lucide-react';
@@ -36,9 +37,10 @@ export default function Dashboard() {
   const { data: certs = [], isLoading: loadCerts } = useDashboardCertifications();
   const { data: leads = [], isLoading: loadLeads } = useDashboardLeads();
   const { data: activities = [], isLoading: loadAct } = useDashboardActivities();
+  const { data: subInvoices = [], isLoading: loadSubInv } = useDashboardSubcontractorInvoices();
 
   const isWorkflowLoading = loadReq || loadQuotes || loadJobs || loadInv;
-  const isAlertsLoading = loadInv || loadJobs || loadVisits || loadInc || loadCerts;
+  const isAlertsLoading = loadInv || loadJobs || loadVisits || loadInc || loadCerts || loadSubInv;
 
   // Computed from lightweight data
   const newLeads = leads.filter(l => l.status === 'New');
@@ -182,6 +184,7 @@ export default function Dashboard() {
             visits={visits}
             incidents={incidents}
             certifications={certs}
+            subcontractorInvoices={subInvoices}
             isLoading={isAlertsLoading}
           />
           <LiveWorkforcePanel />

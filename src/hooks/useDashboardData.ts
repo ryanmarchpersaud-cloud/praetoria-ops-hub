@@ -134,6 +134,21 @@ export function useDashboardActivities() {
   });
 }
 
+export function useDashboardSubcontractorInvoices() {
+  return useQuery({
+    queryKey: ['dashboard_subcontractor_invoices'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subcontractor_invoices')
+        .select('id, status, amount, submitted_at, invoice_number')
+        .in('status', ['submitted', 'approved'])
+        .order('submitted_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
 export function useDashboardCertifications() {
   return useQuery({
     queryKey: ['dashboard_expiring_certs'],

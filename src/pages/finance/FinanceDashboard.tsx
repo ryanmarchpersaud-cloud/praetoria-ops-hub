@@ -152,6 +152,7 @@ export default function FinanceDashboard() {
             <Button variant="outline" size="sm" onClick={() => nav('/finance/reconciliation')}><Scale className="h-3.5 w-3.5 mr-1" /> Reconcile</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/accounts')}><Landmark className="h-3.5 w-3.5 mr-1" /> Manage Accounts</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/payroll')}><Users className="h-3.5 w-3.5 mr-1" /> Payroll</Button>
+            <Button variant="outline" size="sm" onClick={() => nav('/subcontractors/invoices')}><Receipt className="h-3.5 w-3.5 mr-1" /> Sub Invoices</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/subcontractor-payouts')}><Banknote className="h-3.5 w-3.5 mr-1" /> Payouts</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/remittances')}><FileCheck className="h-3.5 w-3.5 mr-1" /> Remittances</Button>
             <Button variant="outline" size="sm" onClick={() => nav('/finance/tax-slips')}><FileText className="h-3.5 w-3.5 mr-1" /> Tax Slips</Button>
