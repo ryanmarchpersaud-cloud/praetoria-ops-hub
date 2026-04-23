@@ -175,10 +175,16 @@ export default function SubcontractorNewIncidentPage() {
         onPhotosChange={setPhotos}
         attachments={attachments}
         onAttachmentsChange={setAttachments}
+        onBusyChange={setUploadBusy}
       />
 
-      <Button className="w-full" variant="destructive" onClick={handleSubmit} disabled={submitting || !description.trim()}>
-        {submitting ? 'Submitting…' : 'Submit Incident Report'}
+      <Button
+        className="w-full"
+        variant="destructive"
+        onClick={handleSubmit}
+        disabled={submitting || uploadBusy || !description.trim()}
+      >
+        {submitting ? 'Submitting…' : uploadBusy ? 'Waiting for uploads…' : 'Submit Incident Report'}
       </Button>
     </div>
   );
