@@ -287,7 +287,7 @@ function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={createLead.isPending || loading || !user?.id}>
+          <Button onClick={handleSubmit} disabled={createLead.isPending || loading}>
             {loading ? 'Loading…' : createLead.isPending ? 'Submitting…' : 'Submit to Admin'}
           </Button>
         </DialogFooter>
