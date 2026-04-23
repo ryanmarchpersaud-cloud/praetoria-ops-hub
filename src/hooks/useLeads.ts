@@ -40,11 +40,23 @@ export function useCreateLead() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (lead: LeadInsert) => {
-      const { data, error } = await supabase.from('leads').insert(lead).select().single();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('You must be signed in to submit a lead.');
+
+      const payload: LeadInsert = {
+        ...lead,
+        created_by: authData.user.id,
+      };
+
+      const { data, error } = await supabase.from('leads').insert(payload).select().single();
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['leads'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['leads'] });
+      qc.invalidateQueries({ queryKey: ['dashboard_leads'] });
+    },
   });
 }
 

@@ -213,7 +213,7 @@ function VisitCardItem({ visit, workerInitials, now, isDragging, dragMoved }: {
 function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { toast } = useToast();
   const createLead = useCreateLead();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', phone: '',
     address_line_1: '', city: '', province: '', company_name: '', notes: '',
@@ -223,17 +223,19 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
 
   const handleSubmit = async () => {
     if (!form.first_name || !form.last_name) { toast({ title: 'First & last name required', variant: 'destructive' }); return; }
+    if (loading) { toast({ title: 'Just a moment', description: 'Still loading your account.', variant: 'destructive' }); return; }
+    if (!user?.id) { toast({ title: 'Sign-in required', description: 'You must be signed in to submit a lead.', variant: 'destructive' }); return; }
     setSaving(true);
     try {
       const { notes, ...rest } = form;
-      const data = await createLead.mutateAsync({
+      await createLead.mutateAsync({
         ...rest,
         company_name: form.company_name || null,
         province: form.province || null,
         internal_notes: notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
-        created_by: user?.id ?? null,
+        created_by: user.id,
       } as any);
       toast({ title: 'Lead created', description: 'Sent to admin for review and next steps.' });
       setForm({
@@ -275,8 +277,8 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
           </div>
           <div><Label className="text-xs">Notes</Label><Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="What they need, urgency, site notes..." /></div>
           {user && <p className="text-[10px] text-muted-foreground">Submitted by: {user.email}</p>}
-          <Button className="w-full h-11" disabled={saving || !form.first_name || !form.last_name} onClick={handleSubmit}>
-            {saving ? 'Submitting…' : 'Submit Lead'}
+          <Button className="w-full h-11" disabled={saving || loading || !user?.id || !form.first_name || !form.last_name} onClick={handleSubmit}>
+            {loading ? 'Loading…' : saving ? 'Submitting…' : 'Submit Lead'}
           </Button>
         </div>
       </DialogContent>
@@ -302,7 +304,7 @@ const fieldLeadSchema = z.object({
 
 function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const createLead = useCreateLead();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', phone: '', company_name: '',
     service_type: 'Snow & Ice', notes: '', address_line_1: '', city: '',
@@ -331,9 +333,17 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
       toast.error(parsed.error.issues[0]?.message ?? 'Please fix the highlighted fields');
       return;
     }
+    if (loading) {
+      toast.error('Still loading your account. Please try again in a moment.');
+      return;
+    }
+    if (!user?.id) {
+      toast.error('You must be signed in to submit a lead.');
+      return;
+    }
     setSaving(true);
     try {
-      const data = await createLead.mutateAsync({
+      await createLead.mutateAsync({
         first_name: parsed.data.first_name,
         last_name: parsed.data.last_name,
         email: parsed.data.email || null,
@@ -345,7 +355,7 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
         internal_notes: parsed.data.notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
-        created_by: user?.id ?? null,
+        created_by: user.id,
       } as any);
       toast.success('Lead submitted to admin', {
         description: 'Admin will review and follow up — you can keep working.',
@@ -411,8 +421,8 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
             This lead will be sent to admin for review. You don't need to schedule or quote anything — admin will take it from here.
           </div>
           {user && <p className="text-[10px] text-muted-foreground">Submitted by: {user.email}</p>}
-          <Button className="w-full h-11" disabled={saving} onClick={handleSubmit}>
-            {saving ? 'Submitting…' : 'Submit to Admin'}
+          <Button className="w-full h-11" disabled={saving || loading || !user?.id} onClick={handleSubmit}>
+            {loading ? 'Loading…' : saving ? 'Submitting…' : 'Submit to Admin'}
           </Button>
         </div>
       </DialogContent>
