@@ -162,6 +162,7 @@ function QuickPropertyDialog({ open, onClose }: { open: boolean; onClose: () => 
 /* ─── Lead ─── */
 function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const createLead = useCreateLead();
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '', service_type: '', notes: '' });
 
@@ -176,7 +177,10 @@ function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void
       await createLead.mutateAsync({
         ...form,
         service_type: (form.service_type || null) as any,
-      });
+        status: 'New' as any,
+        lead_source: 'Field' as any,
+        created_by: user?.id ?? null,
+      } as any);
       toast({ title: 'Lead created' });
       reset();
       onClose();
