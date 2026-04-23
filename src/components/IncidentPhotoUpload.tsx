@@ -16,7 +16,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { downscaleImageIfLarge, iosLog } from '@/lib/iosDebug';
+import { downscaleImageIfLarge, iosLog, isIOSWebView, yieldToBrowser } from '@/lib/iosDebug';
 
 export type IncidentAttachment = {
   url: string;
