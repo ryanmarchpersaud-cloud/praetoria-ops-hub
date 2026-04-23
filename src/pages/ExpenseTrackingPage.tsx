@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -317,9 +318,16 @@ function SubcontractorInvoicesSection() {
   return (
     <>
       <Separator />
-      <div>
-        <h2 className="text-lg font-bold text-foreground mb-1">Subcontractor Invoices</h2>
-        <p className="text-sm text-muted-foreground mb-4">Invoices submitted by subcontractors for payment. Click a row to review.</p>
+      <div className="flex items-end justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg font-bold text-foreground mb-1">Subcontractor Invoices</h2>
+          <p className="text-sm text-muted-foreground mb-0">Invoices submitted by subcontractors. Click an invoice number to open the full review screen.</p>
+        </div>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/subcontractors/invoices">
+            View all <ExternalLink className="h-3.5 w-3.5 ml-1" />
+          </Link>
+        </Button>
       </div>
       {pending.length > 0 && (
         <Card className="border-amber-200 dark:border-amber-800/30">
@@ -343,27 +351,28 @@ function SubcontractorInvoicesSection() {
               </TableHeader>
               <TableBody>
                 {pending.map((inv: any) => (
-                  <TableRow key={inv.id} className="cursor-pointer" onClick={() => { setSelectedInvoice(inv); setReviewNotes(inv.admin_review_notes || ''); }}>
-                    <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
+                  <TableRow key={inv.id}>
+                    <TableCell className="text-sm font-medium">
+                      <Link to={`/subcontractors/invoices/${inv.id}`} className="text-primary hover:underline">
+                        {inv.invoice_number}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-sm">{inv.subcontractors?.company_name || 'Unknown'}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{format(new Date(inv.invoice_date), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-sm text-right font-medium">${Number(inv.amount).toFixed(2)}</TableCell>
                     <TableCell>
                       {inv.attachment_url ? (
-                        <a href={inv.attachment_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                        <a href={inv.attachment_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs flex items-center gap-1">
                           <Paperclip className="h-3 w-3" /> View
                         </a>
                       ) : <span className="text-xs text-muted-foreground">None</span>}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
-                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs text-green-600" onClick={() => updateStatus(inv.id, 'approved')}>
-                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs text-destructive" onClick={() => updateStatus(inv.id, 'rejected')}>
-                          <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
-                        </Button>
-                      </div>
+                      <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
+                        <Link to={`/subcontractors/invoices/${inv.id}`}>
+                          Review <ExternalLink className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -388,8 +397,12 @@ function SubcontractorInvoicesSection() {
               </TableHeader>
               <TableBody>
                 {processed.map((inv: any) => (
-                  <TableRow key={inv.id} className="cursor-pointer" onClick={() => { setSelectedInvoice(inv); setReviewNotes(inv.admin_review_notes || ''); }}>
-                    <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
+                  <TableRow key={inv.id}>
+                    <TableCell className="text-sm font-medium">
+                      <Link to={`/subcontractors/invoices/${inv.id}`} className="text-primary hover:underline">
+                        {inv.invoice_number}
+                      </Link>
+                    </TableCell>
                     <TableCell className="text-sm">{inv.subcontractors?.company_name || 'Unknown'}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{format(new Date(inv.invoice_date), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-sm text-right font-medium">${Number(inv.amount).toFixed(2)}</TableCell>
