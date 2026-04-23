@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Receipt, DollarSign, FileText, Building2, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowLeft, Receipt, DollarSign, FileText, Building2, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -28,11 +31,17 @@ export default function AdminSubcontractorInvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
 
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('e-transfer');
   const [referenceNumber, setReferenceNumber] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState(false);
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ['admin_sub_invoice', id],
@@ -49,14 +58,84 @@ export default function AdminSubcontractorInvoiceDetail() {
     enabled: !!id,
   });
 
-  const updateStatus = async (status: string) => {
+  const handleApprove = async () => {
     if (!id) return;
-    const updates: any = { status };
-    if (status === 'approved') updates.approved_at = new Date().toISOString();
-    const { error } = await supabase.from('subcontractor_invoices').update(updates).eq('id', id);
+    const { error } = await supabase
+      .from('subcontractor_invoices')
+      .update({ status: 'approved', approved_at: new Date().toISOString() })
+      .eq('id', id);
     if (error) { toast.error(error.message); return; }
-    toast.success(`Invoice ${status}`);
+    toast.success('Invoice approved');
     qc.invalidateQueries({ queryKey: ['admin_sub_invoice', id] });
+  };
+
+  const handleReject = async () => {
+    if (!id || !invoice) return;
+    const reason = rejectReason.trim();
+    if (reason.length < 5) {
+      setRejectError('Please provide a reason of at least 5 characters so the subcontractor knows what to fix.');
+      return;
+    }
+    if (reason.length > 1000) {
+      setRejectError('Reason must be 1000 characters or fewer.');
+      return;
+    }
+    setRejectError(null);
+    setRejecting(true);
+    const sub = invoice.subcontractors as any;
+    try {
+      const { error } = await supabase
+        .from('subcontractor_invoices')
+        .update({
+          status: 'rejected',
+          admin_review_notes: reason,
+          rejected_at: new Date().toISOString(),
+          rejected_by: user?.id ?? null,
+          approved_at: null,
+        })
+        .eq('id', id);
+      if (error) throw error;
+
+      // Activity log for visibility
+      await supabase.from('activities').insert({
+        action_name: `Subcontractor invoice ${invoice.invoice_number} rejected`,
+        record_type: 'subcontractor_invoice',
+        record_id: id,
+        status: 'completed',
+        payload_summary: {
+          invoice_number: invoice.invoice_number,
+          amount: Number(invoice.amount),
+          company: sub?.company_name,
+          reason,
+        },
+      });
+
+      // Best-effort notification email (won't block on failure)
+      if (sub?.email) {
+        try {
+          await callEdgeFunction('send-email', {
+            action: 'subcontractor_invoice_rejected',
+            to: sub.email,
+            contact_name: sub.contact_name,
+            company_name: sub.company_name,
+            invoice_number: invoice.invoice_number,
+            amount: invoice.amount,
+            reason,
+          });
+        } catch (emailErr) {
+          console.error('Rejection email failed:', emailErr);
+        }
+      }
+
+      toast.success('Invoice rejected — subcontractor can now edit and resubmit.');
+      setRejectDialogOpen(false);
+      setRejectReason('');
+      qc.invalidateQueries({ queryKey: ['admin_sub_invoice', id] });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to reject invoice');
+    } finally {
+      setRejecting(false);
+    }
   };
 
   const handleMarkPaid = async () => {
@@ -206,14 +285,25 @@ export default function AdminSubcontractorInvoiceDetail() {
         </CardContent>
       </Card>
 
+      {/* Rejection banner */}
+      {invoice.status === 'rejected' && invoice.admin_review_notes && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Rejected{invoice.rejected_at ? ` on ${format(new Date(invoice.rejected_at), 'MMM d, yyyy')}` : ''}</AlertTitle>
+          <AlertDescription className="whitespace-pre-wrap">
+            <span className="font-medium">Reason: </span>{invoice.admin_review_notes}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Actions */}
       {(invoice.status === 'submitted' || invoice.status === 'pending') && (
         <div className="flex gap-3">
-          <Button className="flex-1 gap-2" onClick={() => updateStatus('approved')}>
+          <Button className="flex-1 gap-2" onClick={handleApprove}>
             <CheckCircle className="h-4 w-4" /> Approve
           </Button>
-          <Button variant="destructive" className="flex-1 gap-2" onClick={() => updateStatus('rejected')}>
-            <XCircle className="h-4 w-4" /> Reject
+          <Button variant="destructive" className="flex-1 gap-2" onClick={() => { setRejectReason(''); setRejectError(null); setRejectDialogOpen(true); }}>
+            <XCircle className="h-4 w-4" /> Reject…
           </Button>
         </div>
       )}
@@ -222,6 +312,51 @@ export default function AdminSubcontractorInvoiceDetail() {
           <DollarSign className="h-4 w-4" /> Mark as Paid
         </Button>
       )}
+      {invoice.status === 'rejected' && (
+        <p className="text-xs text-muted-foreground text-center">
+          The subcontractor can edit and resubmit this invoice from their portal.
+        </p>
+      )}
+
+      {/* Reject Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={(v) => { setRejectDialogOpen(v); if (!v) { setRejectReason(''); setRejectError(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Invoice — {invoice.invoice_number}</DialogTitle>
+            <DialogDescription>
+              Tell the subcontractor what needs to change. They'll be able to edit and resubmit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="reject-reason">Reason for rejection <span className="text-destructive">*</span></Label>
+            <Textarea
+              id="reject-reason"
+              placeholder="e.g. Amount doesn't match the agreed rate. Please update the PDF and resubmit."
+              value={rejectReason}
+              onChange={(e) => { setRejectReason(e.target.value); if (rejectError) setRejectError(null); }}
+              rows={5}
+              maxLength={1000}
+              aria-invalid={!!rejectError}
+              className={rejectError ? 'border-destructive focus-visible:ring-destructive' : ''}
+            />
+            <div className="flex justify-between text-xs">
+              {rejectError ? (
+                <span className="text-destructive">{rejectError}</span>
+              ) : (
+                <span className="text-muted-foreground">Visible to the subcontractor.</span>
+              )}
+              <span className="text-muted-foreground">{rejectReason.length}/1000</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)} disabled={rejecting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleReject} disabled={rejecting} className="gap-2">
+              {rejecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+              {rejecting ? 'Rejecting...' : 'Reject Invoice'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Payment Dialog */}
       <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>

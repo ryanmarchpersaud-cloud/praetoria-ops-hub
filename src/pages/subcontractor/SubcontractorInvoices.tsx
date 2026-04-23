@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Receipt, Plus, FileUp, Loader2, Paperclip } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Receipt, Plus, FileUp, Loader2, Paperclip, AlertCircle, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
@@ -30,6 +31,17 @@ const invoiceSchema = z.object({
     .instanceof(File, { message: 'Please attach your invoice (PDF or image)' })
     .refine((f) => ACCEPTED_FILE_TYPES.includes(f.type), 'File must be a PDF or image (JPG, PNG, WebP)')
     .refine((f) => f.size <= MAX_FILE_SIZE, 'File must be 10MB or smaller'),
+});
+
+// When editing a rejected invoice, the subcontractor may keep the existing attachment
+// or upload a replacement — the file becomes optional.
+const editInvoiceSchema = invoiceSchema.extend({
+  file: z
+    .instanceof(File)
+    .refine((f) => ACCEPTED_FILE_TYPES.includes(f.type), 'File must be a PDF or image (JPG, PNG, WebP)')
+    .refine((f) => f.size <= MAX_FILE_SIZE, 'File must be 10MB or smaller')
+    .nullable()
+    .optional(),
 });
 
 type InvoiceErrors = Partial<Record<'amount' | 'invoiceDate' | 'file', string>>;
@@ -65,6 +77,7 @@ export default function SubcontractorInvoices() {
     }
   }, [searchParams, setSearchParams]);
   const [submitting, setSubmitting] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any | null>(null);
   const [amount, setAmount] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [periodStart, setPeriodStart] = useState('');
@@ -72,6 +85,8 @@ export default function SubcontractorInvoices() {
   const [notes, setNotes] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<InvoiceErrors>({});
+
+  const isEditMode = !!editingInvoice;
 
   const totals = {
     pending: invoices.filter((i: any) => i.status === 'submitted' || i.status === 'pending').reduce((s: number, i: any) => s + Number(i.amount), 0),
@@ -87,7 +102,21 @@ export default function SubcontractorInvoices() {
     setNotes('');
     setSelectedFile(null);
     setErrors({});
+    setEditingInvoice(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const openEditDialog = (inv: any) => {
+    setEditingInvoice(inv);
+    setAmount(String(inv.amount ?? ''));
+    setInvoiceDate(inv.invoice_date || format(new Date(), 'yyyy-MM-dd'));
+    setPeriodStart(inv.service_period_start || '');
+    setPeriodEnd(inv.service_period_end || '');
+    setNotes(inv.notes || '');
+    setSelectedFile(null);
+    setErrors({});
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -96,7 +125,8 @@ export default function SubcontractorInvoices() {
       return;
     }
 
-    const result = invoiceSchema.safeParse({
+    const schema = isEditMode ? editInvoiceSchema : invoiceSchema;
+    const result = schema.safeParse({
       amount,
       invoiceDate,
       file: selectedFile,
@@ -118,8 +148,8 @@ export default function SubcontractorInvoices() {
 
     setSubmitting(true);
     try {
-      // Upload required attachment
-      let attachmentUrl: string | null = null;
+      // Upload replacement attachment if a new file was chosen.
+      let attachmentUrl: string | null = isEditMode ? (editingInvoice?.attachment_url ?? null) : null;
       if (selectedFile) {
         const ext = selectedFile.name.split('.').pop();
         const filePath = `${profile.id}/invoices/${Date.now()}-invoice.${ext}`;
@@ -134,46 +164,82 @@ export default function SubcontractorInvoices() {
         attachmentUrl = publicUrl;
       }
 
-      // Generate invoice number: SUB-INV-XXXXX
-      const { count } = await supabase
-        .from('subcontractor_invoices')
-        .select('*', { count: 'exact', head: true })
-        .eq('subcontractor_id', profile.id);
-      const invoiceNumber = `SUB-INV-${String((count || 0) + 1).padStart(5, '0')}`;
+      if (isEditMode && editingInvoice) {
+        // Resubmit a previously rejected invoice — keep number, clear rejection state.
+        const { error: updErr } = await supabase
+          .from('subcontractor_invoices')
+          .update({
+            amount: parsedAmount,
+            invoice_date: invoiceDate,
+            service_period_start: periodStart || null,
+            service_period_end: periodEnd || null,
+            notes: notes || null,
+            attachment_url: attachmentUrl,
+            status: 'submitted',
+            admin_review_notes: null,
+            rejected_at: null,
+            rejected_by: null,
+            submitted_at: new Date().toISOString(),
+          })
+          .eq('id', editingInvoice.id);
+        if (updErr) throw updErr;
 
-      const { data: insertedInvoice, error: dbError } = await supabase
-        .from('subcontractor_invoices')
-        .insert({
-          subcontractor_id: profile.id,
-          invoice_number: invoiceNumber,
-          amount: parsedAmount,
-          invoice_date: invoiceDate,
-          service_period_start: periodStart || null,
-          service_period_end: periodEnd || null,
-          notes: notes || null,
-          attachment_url: attachmentUrl,
-          status: 'submitted',
-        })
-        .select('id')
-        .single();
+        await supabase.from('activities').insert({
+          user_id: user?.id,
+          action_name: 'subcontractor_invoice_resubmitted',
+          record_type: 'subcontractor_invoice',
+          record_id: editingInvoice.id,
+          status: 'completed',
+          payload_summary: {
+            invoice_number: editingInvoice.invoice_number,
+            amount: parsedAmount,
+            company: profile.company_name,
+          },
+        });
 
-      if (dbError) throw dbError;
+        toast.success(`Invoice ${editingInvoice.invoice_number} resubmitted for review.`);
+      } else {
+        // Brand-new invoice
+        const { count } = await supabase
+          .from('subcontractor_invoices')
+          .select('*', { count: 'exact', head: true })
+          .eq('subcontractor_id', profile.id);
+        const invoiceNumber = `SUB-INV-${String((count || 0) + 1).padStart(5, '0')}`;
 
-      // Log activity for admin visibility
-      await supabase.from('activities').insert({
-        user_id: user?.id,
-        action_name: 'subcontractor_invoice_submitted',
-        record_type: 'subcontractor_invoice',
-        record_id: insertedInvoice.id,
-        status: 'completed',
-        payload_summary: {
-          invoice_number: invoiceNumber,
-          amount: parsedAmount,
-          company: profile.company_name,
-        },
-      });
+        const { data: insertedInvoice, error: dbError } = await supabase
+          .from('subcontractor_invoices')
+          .insert({
+            subcontractor_id: profile.id,
+            invoice_number: invoiceNumber,
+            amount: parsedAmount,
+            invoice_date: invoiceDate,
+            service_period_start: periodStart || null,
+            service_period_end: periodEnd || null,
+            notes: notes || null,
+            attachment_url: attachmentUrl,
+            status: 'submitted',
+          })
+          .select('id')
+          .single();
 
-      toast.success(`Invoice ${invoiceNumber} submitted successfully!`);
+        if (dbError) throw dbError;
+
+        await supabase.from('activities').insert({
+          user_id: user?.id,
+          action_name: 'subcontractor_invoice_submitted',
+          record_type: 'subcontractor_invoice',
+          record_id: insertedInvoice.id,
+          status: 'completed',
+          payload_summary: {
+            invoice_number: invoiceNumber,
+            amount: parsedAmount,
+            company: profile.company_name,
+          },
+        });
+
+        toast.success(`Invoice ${invoiceNumber} submitted successfully!`);
+      }
+
       queryClient.invalidateQueries({ queryKey: ['subcontractor_invoices'] });
       resetForm();
       setOpen(false);
@@ -197,8 +263,17 @@ export default function SubcontractorInvoices() {
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Submit Invoice</DialogTitle>
+              <DialogTitle>{isEditMode ? `Edit & Resubmit ${editingInvoice?.invoice_number}` : 'Submit Invoice'}</DialogTitle>
             </DialogHeader>
+            {isEditMode && editingInvoice?.admin_review_notes && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Admin rejected this invoice</AlertTitle>
+                <AlertDescription className="whitespace-pre-wrap">
+                  <span className="font-medium">Reason: </span>{editingInvoice.admin_review_notes}
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-4 pt-2">
               <div className="space-y-1.5">
                 <Label htmlFor="inv-amount">Invoice Amount (CAD) <span className="text-destructive">*</span></Label>
@@ -256,7 +331,9 @@ export default function SubcontractorInvoices() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="inv-file">Attach Invoice (PDF or image) <span className="text-destructive">*</span></Label>
+                <Label htmlFor="inv-file">
+                  {isEditMode ? 'Replace Invoice PDF (optional)' : <>Attach Invoice (PDF or image) <span className="text-destructive">*</span></>}
+                </Label>
                 <Input
                   id="inv-file"
                   ref={fileInputRef}
@@ -272,8 +349,22 @@ export default function SubcontractorInvoices() {
                 />
                 {errors.file ? (
                   <p id="inv-file-err" className="text-xs text-destructive">{errors.file}</p>
+                ) : isEditMode ? (
+                  <p id="inv-file-help" className="text-[11px] text-muted-foreground">
+                    Leave blank to keep the existing PDF, or upload a new one (PDF/JPG/PNG/WebP, max 10MB).
+                  </p>
                 ) : (
                   <p id="inv-file-help" className="text-[11px] text-muted-foreground">Required. PDF, JPG, PNG, or WebP — max 10MB.</p>
+                )}
+                {isEditMode && !selectedFile && editingInvoice?.attachment_url && (
+                  <a
+                    href={editingInvoice.attachment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    <Paperclip className="h-3 w-3" /> View current attachment
+                  </a>
                 )}
                 {selectedFile && !errors.file && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -283,7 +374,7 @@ export default function SubcontractorInvoices() {
               </div>
               <Button onClick={handleSubmit} disabled={submitting} className="w-full gap-2">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
-                {submitting ? 'Submitting...' : 'Submit Invoice'}
+                {submitting ? (isEditMode ? 'Resubmitting...' : 'Submitting...') : (isEditMode ? 'Resubmit Invoice' : 'Submit Invoice')}
               </Button>
               <p className="text-[10px] text-muted-foreground text-center">
                 Invoices are reviewed by admin. Payment terms are Net 30.
@@ -319,8 +410,8 @@ export default function SubcontractorInvoices() {
       ) : (
         <div className="space-y-2">
           {invoices.map((inv: any) => (
-            <Link key={inv.id} to={`/subcontractor/invoices/${inv.id}`} className="block">
-              <Card className="hover:bg-muted/30 transition-colors">
+            <Card key={inv.id} className="overflow-hidden">
+              <Link to={`/subcontractor/invoices/${inv.id}`} className="block hover:bg-muted/30 transition-colors">
                 <CardContent className="p-3 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-foreground">{inv.invoice_number}</p>
@@ -335,8 +426,28 @@ export default function SubcontractorInvoices() {
                   </div>
                   <StatusChip status={inv.status} />
                 </CardContent>
-              </Card>
-            </Link>
+              </Link>
+              {inv.status === 'rejected' && (
+                <div className="border-t border-destructive/20 bg-destructive/5 p-3 space-y-2">
+                  {inv.admin_review_notes && (
+                    <div className="flex gap-2 text-xs text-destructive">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">
+                        <span className="font-medium">Admin reason: </span>{inv.admin_review_notes}
+                      </p>
+                    </div>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full gap-1.5"
+                    onClick={(e) => { e.preventDefault(); openEditDialog(inv); }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> Edit & Resubmit
+                  </Button>
+                </div>
+              )}
+            </Card>
           ))}
         </div>
       )}
