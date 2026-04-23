@@ -89,6 +89,40 @@ export default function AdminIncidentDetailPage() {
     enabled: !!id,
   });
 
+  const { data: reporter } = useQuery({
+    queryKey: ['incident_reporter', (report as any)?.user_id, (report as any)?.subcontractor_id, (report as any)?.reporter_type],
+    queryFn: async () => {
+      const r: any = report;
+      if (!r) return null;
+      // Subcontractor — prefer company/contact name
+      if (r.reporter_type === 'subcontractor' && r.subcontractor_id) {
+        const { data } = await supabase
+          .from('subcontractors')
+          .select('company_name, contact_name')
+          .eq('id', r.subcontractor_id)
+          .maybeSingle();
+        if (data) return (data as any).contact_name || (data as any).company_name || null;
+      }
+      // Worker — prefer worker_profiles.full_name, fallback to profiles.display_name
+      if (r.user_id) {
+        const { data: wp } = await supabase
+          .from('worker_profiles')
+          .select('full_name')
+          .eq('user_id', r.user_id)
+          .maybeSingle();
+        if (wp?.full_name) return wp.full_name;
+        const { data: p } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('user_id', r.user_id)
+          .maybeSingle();
+        if (p?.display_name) return p.display_name;
+      }
+      return null;
+    },
+    enabled: !!report,
+  });
+
   const { data: shares } = useQuery({
     queryKey: ['incident_shares', id],
     queryFn: async () => {
@@ -200,7 +234,9 @@ export default function AdminIncidentDetailPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold">{report.incident_type}</h1>
             <Badge variant="outline" className="font-mono text-xs">{r.report_number || report.id.slice(0, 8).toUpperCase()}</Badge>
-            <Badge variant="outline" className="capitalize">{report.reporter_type}</Badge>
+            <Badge variant="outline" className="capitalize">
+              {reporter ? `${reporter} (${report.reporter_type})` : report.reporter_type}
+            </Badge>
             <Badge variant="outline" className={statusColors[report.follow_up_status] ?? ''}>
               {report.follow_up_status}
             </Badge>
