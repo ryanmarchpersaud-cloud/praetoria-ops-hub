@@ -226,10 +226,12 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
     if (!form.first_name || !form.last_name) { toast({ title: 'First & last name required', variant: 'destructive' }); return; }
     setSaving(true);
     try {
+      const { notes, ...rest } = form;
       const data = await createLead.mutateAsync({
-        ...form,
+        ...rest,
         company_name: form.company_name || null,
         province: form.province || null,
+        internal_notes: notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
         created_by: user?.id ?? null,
