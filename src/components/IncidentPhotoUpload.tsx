@@ -248,7 +248,14 @@ export default function IncidentPhotoUpload({
       return;
     }
 
-    const toUpload = Array.from(files).slice(0, remaining);
+    const iosBatchCap = isIOSWebView() ? 3 : remaining;
+    const toUpload = Array.from(files).slice(0, Math.min(remaining, iosBatchCap));
+    if (isIOSWebView() && files.length > iosBatchCap) {
+      toast({
+        title: `Uploading first ${iosBatchCap} files`,
+        description: `iPhone limits how many large files can be processed at once. Add the rest after these finish.`,
+      });
+    }
     setDocUploading(true);
     setStatus(null);
 
@@ -305,6 +312,7 @@ export default function IncidentPhotoUpload({
           category: pendingCategory,
         });
         successCount += 1;
+        await yieldToBrowser(50);
       }
 
       if (!isMountedRef.current) return;
