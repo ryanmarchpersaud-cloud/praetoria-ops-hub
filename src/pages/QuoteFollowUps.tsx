@@ -244,7 +244,7 @@ export default function QuoteFollowUps() {
                         <p className={cn('text-[11px]', meta.tone)}>
                           {format(new Date(q.follow_up_due_at), 'MMM d, p')}
                         </p>
-                        <DueDateEditor quoteId={q.id} current={q.follow_up_due_at} onUpdated={refetch} />
+                        <DueDateEditor quoteId={q.id} quoteNumber={q.quote_number} current={q.follow_up_due_at} onUpdated={refetch} />
                       </div>
                     </div>
                   ))}
