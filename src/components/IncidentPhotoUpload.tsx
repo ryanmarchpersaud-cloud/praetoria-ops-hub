@@ -323,13 +323,24 @@ export default function IncidentPhotoUpload({
       return;
     }
 
-    const iosBatchCap = isIOSWebView() ? 3 : remaining;
-    const toUpload = Array.from(files).slice(0, Math.min(remaining, iosBatchCap));
-    if (isIOSWebView() && files.length > iosBatchCap) {
-      toast({
-        title: `Uploading first ${iosBatchCap} files`,
-        description: `iPhone limits how many large files can be processed at once. Add the rest after these finish.`,
+    const iosBatchCap = isIOS ? 3 : remaining;
+    const batchSize = Math.min(remaining, iosBatchCap);
+    const toUpload = Array.from(files).slice(0, batchSize);
+    const deferredCount = isIOS ? Math.max(0, files.length - batchSize) : 0;
+
+    if (isIOS) {
+      setIosBatch({
+        kind: 'document',
+        items: toUpload.map((f) => ({ name: f.name, status: 'pending' })),
+        pendingCount: deferredCount,
+        totalPicked: files.length,
       });
+      if (deferredCount > 0) {
+        toast({
+          title: `Uploading first ${batchSize} of ${files.length} files`,
+          description: `iPhone limits how many large files can be processed at once. The remaining ${deferredCount} will stay queued — submit is locked until they're added.`,
+        });
+      }
     }
     setDocUploading(true);
     setStatus(null);
@@ -339,7 +350,15 @@ export default function IncidentPhotoUpload({
     const newAttachments: IncidentAttachment[] = [];
 
     try {
-      for (const rawFile of toUpload) {
+      for (let idx = 0; idx < toUpload.length; idx++) {
+        const rawFile = toUpload[idx];
+        if (isIOS) {
+          setIosBatch((prev) => prev && {
+            ...prev,
+            items: prev.items.map((it, i) => i === idx ? { ...it, status: 'uploading' } : it),
+          });
+        }
+
         // Compress image documents (insurance card photos, licence shots,
         // damage photos) before upload so iPhone HEIC/JPEG don't stall.
         // Leave PDFs and other docs untouched.
@@ -352,8 +371,18 @@ export default function IncidentPhotoUpload({
           }
         }
 
+        const markFailed = (msg: string) => {
+          failures.push(`${file.name}: ${msg}`);
+          if (isIOS) {
+            setIosBatch((prev) => prev && {
+              ...prev,
+              items: prev.items.map((it, i) => i === idx ? { ...it, status: 'failed', error: msg } : it),
+            });
+          }
+        };
+
         if (file.size > 25 * 1024 * 1024) {
-          failures.push(`${file.name}: exceeds 25 MB`);
+          markFailed('exceeds 25 MB');
           continue;
         }
 
@@ -365,7 +394,7 @@ export default function IncidentPhotoUpload({
           .upload(path, file, { upsert: false, contentType: file.type || undefined });
 
         if (uploadError) {
-          failures.push(`${file.name}: ${uploadError.message}`);
+          markFailed(uploadError.message);
           continue;
         }
 
@@ -374,7 +403,7 @@ export default function IncidentPhotoUpload({
           .createSignedUrl(path, 60 * 60 * 24 * 7);
 
         if (signedError || !signed?.signedUrl) {
-          failures.push(`${file.name}: could not generate access link`);
+          markFailed('could not generate access link');
           continue;
         }
 
@@ -387,6 +416,12 @@ export default function IncidentPhotoUpload({
           category: pendingCategory,
         });
         successCount += 1;
+        if (isIOS) {
+          setIosBatch((prev) => prev && {
+            ...prev,
+            items: prev.items.map((it, i) => i === idx ? { ...it, status: 'done' } : it),
+          });
+        }
         await yieldToBrowser(50);
       }
 
@@ -416,6 +451,11 @@ export default function IncidentPhotoUpload({
     } finally {
       if (isMountedRef.current) setDocUploading(false);
       if (docRef.current) docRef.current.value = '';
+      if (isIOS && deferredCount === 0 && isMountedRef.current) {
+        window.setTimeout(() => {
+          if (isMountedRef.current) setIosBatch(null);
+        }, 4000);
+      }
     }
   };
 
