@@ -212,7 +212,7 @@ function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void
         phone: parsed.data.phone || null,
         company_name: parsed.data.company_name || null,
         service_type: parsed.data.service_type as any,
-        notes: parsed.data.notes || null,
+        internal_notes: parsed.data.notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
         created_by: user?.id ?? null,
