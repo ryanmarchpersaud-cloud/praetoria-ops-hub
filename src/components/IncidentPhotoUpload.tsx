@@ -595,6 +595,77 @@ export default function IncidentPhotoUpload({
           )}
         </div>
 
+        {iosBatch && (
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                iPhone upload batch
+              </p>
+              <span className="text-[10px] text-muted-foreground">
+                {iosBatch.items.filter(i => i.status === 'done').length}/{iosBatch.items.length} in this batch
+              </span>
+            </div>
+            <Progress
+              value={
+                iosBatch.items.length === 0
+                  ? 0
+                  : (iosBatch.items.filter(i => i.status === 'done' || i.status === 'failed').length /
+                      iosBatch.items.length) * 100
+              }
+              className="h-1.5"
+            />
+            <ul className="space-y-1">
+              {iosBatch.items.map((it, i) => (
+                <li key={`${it.name}-${i}`} className="flex items-center gap-2 text-[11px]">
+                  {it.status === 'done' && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />}
+                  {it.status === 'uploading' && <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-primary" />}
+                  {it.status === 'pending' && <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                  {it.status === 'failed' && <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />}
+                  <span className="truncate flex-1">{it.name}</span>
+                  {it.status === 'failed' && it.error && (
+                    <span className="text-destructive truncate max-w-[40%]">{it.error}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {iosBatch.pendingCount > 0 ? (
+              <div className="flex items-start gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-2">
+                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                <div className="flex-1 space-y-1">
+                  <p className="text-[11px] leading-snug text-amber-700 dark:text-amber-400">
+                    {iosBatch.pendingCount} more {iosBatch.kind === 'photo' ? 'photo' : 'file'}
+                    {iosBatch.pendingCount === 1 ? '' : 's'} still need to be added.
+                    Submit is locked until they're uploaded or you skip them.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-[11px]"
+                      disabled={anyUploadBusy}
+                      onClick={() => triggerNativePicker(iosBatch.kind === 'photo' ? galleryRef : docRef)}
+                    >
+                      Add next batch
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-[11px]"
+                      onClick={() => setIosBatch(null)}
+                    >
+                      Skip remaining
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : !anyUploadBusy ? (
+              <p className="text-[11px] text-muted-foreground">Batch complete — you can submit the report.</p>
+            ) : null}
+          </div>
+        )}
+
         {photos.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
