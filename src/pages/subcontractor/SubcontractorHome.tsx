@@ -71,7 +71,8 @@ export default function SubcontractorHome() {
       case 'property': setQuickBookDialog('property'); break;
       case 'lead': setQuickBookDialog('lead'); break;
       case 'quote': setQuickBookDialog('quote'); break;
-      case 'invoice': setQuickBookDialog('invoice'); break;
+      // Subcontractors submit their own invoices (for us to pay them) via the dedicated flow.
+      case 'invoice': navigate('/subcontractor/invoices?new=1'); break;
       case 'request': setRequestOpen(true); break;
       case 'incident': navigate('/subcontractor/incidents/new'); break;
       case 'task': setTaskOpen(true); break;
