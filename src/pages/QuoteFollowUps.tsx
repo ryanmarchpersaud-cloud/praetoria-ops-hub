@@ -50,7 +50,17 @@ const bucketMeta: Record<Bucket, { label: string; tone: string; icon: any }> = {
   later: { label: 'Later', tone: 'text-muted-foreground', icon: CheckCircle2 },
 };
 
-function DueDateEditor({ quoteId, current, onUpdated }: { quoteId: string; current: string; onUpdated?: () => void }) {
+function DueDateEditor({
+  quoteId,
+  quoteNumber,
+  current,
+  onUpdated,
+}: {
+  quoteId: string;
+  quoteNumber?: string | null;
+  current: string;
+  onUpdated?: () => void;
+}) {
   const updateQuote = useUpdateQuote();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -61,7 +71,15 @@ function DueDateEditor({ quoteId, current, onUpdated }: { quoteId: string; curre
       // Preserve time portion of original due date when changing the date.
       const original = new Date(current);
       date.setHours(original.getHours() || 9, original.getMinutes() || 0, 0, 0);
-      await updateQuote.mutateAsync({ id: quoteId, follow_up_due_at: date.toISOString() } as any);
+      const nextIso = date.toISOString();
+      await updateQuote.mutateAsync({ id: quoteId, follow_up_due_at: nextIso } as any);
+      void logQuoteFollowUpChange({
+        quoteId,
+        quoteNumber,
+        previousDueAt: current,
+        nextDueAt: nextIso,
+        source: 'follow_ups_view',
+      });
       toast({ title: 'Follow-up updated', description: format(date, 'PPP p') });
       setOpen(false);
       onUpdated?.();
@@ -73,6 +91,13 @@ function DueDateEditor({ quoteId, current, onUpdated }: { quoteId: string; curre
   const handleClear = async () => {
     try {
       await updateQuote.mutateAsync({ id: quoteId, follow_up_due_at: null } as any);
+      void logQuoteFollowUpChange({
+        quoteId,
+        quoteNumber,
+        previousDueAt: current,
+        nextDueAt: null,
+        source: 'follow_ups_view',
+      });
       toast({ title: 'Follow-up cleared' });
       setOpen(false);
       onUpdated?.();
