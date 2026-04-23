@@ -43,6 +43,7 @@ export function SubcontractorQuickBookDialogs({ activeDialog, onClose }: Props) 
 /* ─── Customer ─── */
 function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const createCustomer = useCreateCustomer();
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '' });
 
@@ -54,8 +55,12 @@ function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => 
       return;
     }
     try {
-      await createCustomer.mutateAsync(form);
-      toast({ title: 'Customer created' });
+      await createCustomer.mutateAsync({
+        ...form,
+        company_name: form.company_name || null,
+        created_by: user?.id ?? null,
+      } as any);
+      toast({ title: 'Customer created', description: 'Sent to admin for finalization.' });
       reset();
       onClose();
     } catch (e: any) {
