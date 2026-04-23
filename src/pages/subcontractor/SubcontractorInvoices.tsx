@@ -14,6 +14,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+const invoiceSchema = z.object({
+  amount: z
+    .string()
+    .min(1, 'Amount is required')
+    .refine((v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0, 'Enter a valid amount greater than $0')
+    .refine((v) => parseFloat(v) <= 1000000, 'Amount cannot exceed $1,000,000'),
+  invoiceDate: z.string().min(1, 'Invoice date is required'),
+  file: z
+    .instanceof(File, { message: 'Please attach your invoice (PDF or image)' })
+    .refine((f) => ACCEPTED_FILE_TYPES.includes(f.type), 'File must be a PDF or image (JPG, PNG, WebP)')
+    .refine((f) => f.size <= MAX_FILE_SIZE, 'File must be 10MB or smaller'),
+});
+
+type InvoiceErrors = Partial<Record<'amount' | 'invoiceDate' | 'file', string>>;
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
