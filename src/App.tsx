@@ -335,6 +335,7 @@ function AppRoutes() {
       <Route path="/leads" element={<AdminRoute><ModuleGuard module="ops"><Leads /></ModuleGuard></AdminRoute>} />
       <Route path="/leads/:id" element={<AdminRoute><ModuleGuard module="ops"><LeadDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/quotes" element={<AdminRoute><ModuleGuard module="ops"><Quotes /></ModuleGuard></AdminRoute>} />
+      <Route path="/quotes/follow-ups" element={<AdminRoute><ModuleGuard module="ops"><QuoteFollowUps /></ModuleGuard></AdminRoute>} />
       <Route path="/quotes/:id" element={<AdminRoute><ModuleGuard module="ops"><QuoteDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/quotes/:id/print" element={<AdminRoute><ModuleGuard module="ops"><QuotePrint /></ModuleGuard></AdminRoute>} />
       <Route path="/customers" element={<AdminRoute><ModuleGuard module="opsOrFinance"><Customers /></ModuleGuard></AdminRoute>} />
