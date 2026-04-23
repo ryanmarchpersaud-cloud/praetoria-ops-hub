@@ -36,7 +36,23 @@ interface IncidentPhotoUploadProps {
   onAttachmentsChange?: (attachments: IncidentAttachment[]) => void;
   maxPhotos?: number;
   maxAttachments?: number;
+  /** Notifies parent when uploads are active or a deferred iOS batch is pending,
+   *  so the submit button can be disabled to prevent double-submits. */
+  onBusyChange?: (busy: boolean) => void;
 }
+
+type IosBatchItem = {
+  name: string;
+  status: 'pending' | 'uploading' | 'done' | 'failed';
+  error?: string;
+};
+
+type IosBatchState = {
+  kind: 'photo' | 'document';
+  items: IosBatchItem[];
+  pendingCount: number; // files the user picked but we deferred past the cap
+  totalPicked: number;
+} | null;
 
 type StatusMessage =
   | { type: 'success'; text: string }
