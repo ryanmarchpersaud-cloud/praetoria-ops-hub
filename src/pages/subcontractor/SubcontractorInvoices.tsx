@@ -201,23 +201,40 @@ export default function SubcontractorInvoices() {
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-1.5">
-                <Label>Invoice Amount (CAD) *</Label>
+                <Label htmlFor="inv-amount">Invoice Amount (CAD) <span className="text-destructive">*</span></Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                   <Input
+                    id="inv-amount"
                     type="number"
                     step="0.01"
                     min="0"
                     placeholder="0.00"
                     value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    className="pl-7"
+                    onChange={e => { setAmount(e.target.value); if (errors.amount) setErrors(p => ({ ...p, amount: undefined })); }}
+                    className={`pl-7 ${errors.amount ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    aria-invalid={!!errors.amount}
+                    aria-describedby={errors.amount ? 'inv-amount-err' : undefined}
                   />
                 </div>
+                {errors.amount && (
+                  <p id="inv-amount-err" className="text-xs text-destructive">{errors.amount}</p>
+                )}
               </div>
               <div className="space-y-1.5">
-                <Label>Invoice Date *</Label>
-                <Input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
+                <Label htmlFor="inv-date">Invoice Date <span className="text-destructive">*</span></Label>
+                <Input
+                  id="inv-date"
+                  type="date"
+                  value={invoiceDate}
+                  onChange={e => { setInvoiceDate(e.target.value); if (errors.invoiceDate) setErrors(p => ({ ...p, invoiceDate: undefined })); }}
+                  className={errors.invoiceDate ? 'border-destructive focus-visible:ring-destructive' : ''}
+                  aria-invalid={!!errors.invoiceDate}
+                  aria-describedby={errors.invoiceDate ? 'inv-date-err' : undefined}
+                />
+                {errors.invoiceDate && (
+                  <p id="inv-date-err" className="text-xs text-destructive">{errors.invoiceDate}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -239,14 +256,26 @@ export default function SubcontractorInvoices() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Attach Invoice (PDF, Image)</Label>
+                <Label htmlFor="inv-file">Attach Invoice (PDF or image) <span className="text-destructive">*</span></Label>
                 <Input
+                  id="inv-file"
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
-                  onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={e => {
+                    setSelectedFile(e.target.files?.[0] || null);
+                    if (errors.file) setErrors(p => ({ ...p, file: undefined }));
+                  }}
+                  className={errors.file ? 'border-destructive focus-visible:ring-destructive' : ''}
+                  aria-invalid={!!errors.file}
+                  aria-describedby={errors.file ? 'inv-file-err' : 'inv-file-help'}
                 />
-                {selectedFile && (
+                {errors.file ? (
+                  <p id="inv-file-err" className="text-xs text-destructive">{errors.file}</p>
+                ) : (
+                  <p id="inv-file-help" className="text-[11px] text-muted-foreground">Required. PDF, JPG, PNG, or WebP — max 10MB.</p>
+                )}
+                {selectedFile && !errors.file && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Paperclip className="h-3 w-3" /> {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)
                   </p>
