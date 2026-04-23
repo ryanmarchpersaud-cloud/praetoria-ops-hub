@@ -331,7 +331,9 @@ export default function SubcontractorInvoices() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="inv-file">Attach Invoice (PDF or image) <span className="text-destructive">*</span></Label>
+                <Label htmlFor="inv-file">
+                  {isEditMode ? 'Replace Invoice PDF (optional)' : <>Attach Invoice (PDF or image) <span className="text-destructive">*</span></>}
+                </Label>
                 <Input
                   id="inv-file"
                   ref={fileInputRef}
@@ -347,8 +349,22 @@ export default function SubcontractorInvoices() {
                 />
                 {errors.file ? (
                   <p id="inv-file-err" className="text-xs text-destructive">{errors.file}</p>
+                ) : isEditMode ? (
+                  <p id="inv-file-help" className="text-[11px] text-muted-foreground">
+                    Leave blank to keep the existing PDF, or upload a new one (PDF/JPG/PNG/WebP, max 10MB).
+                  </p>
                 ) : (
                   <p id="inv-file-help" className="text-[11px] text-muted-foreground">Required. PDF, JPG, PNG, or WebP — max 10MB.</p>
+                )}
+                {isEditMode && !selectedFile && editingInvoice?.attachment_url && (
+                  <a
+                    href={editingInvoice.attachment_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    <Paperclip className="h-3 w-3" /> View current attachment
+                  </a>
                 )}
                 {selectedFile && !errors.file && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -358,7 +374,7 @@ export default function SubcontractorInvoices() {
               </div>
               <Button onClick={handleSubmit} disabled={submitting} className="w-full gap-2">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
-                {submitting ? 'Submitting...' : 'Submit Invoice'}
+                {submitting ? (isEditMode ? 'Resubmitting...' : 'Submitting...') : (isEditMode ? 'Resubmit Invoice' : 'Submit Invoice')}
               </Button>
               <p className="text-[10px] text-muted-foreground text-center">
                 Invoices are reviewed by admin. Payment terms are Net 30.
