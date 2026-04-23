@@ -484,10 +484,25 @@ export default function EmployeeDetail() {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link to="/employees" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
+  const [tempPwOpen, setTempPwOpen] = useState(false);
+  const [tempPwLoading, setTempPwLoading] = useState(false);
+  const [tempPwResult, setTempPwResult] = useState<{ password: string; email: string | null } | null>(null);
+
+  const handleSetTempPassword = async () => {
+    if (!userId) return;
+    setTempPwLoading(true);
+    setTempPwResult(null);
+    try {
+      const result = await callEdgeFunction('admin-set-temp-password', { user_id: userId });
+      if (result?.error) throw new Error(result.error);
+      setTempPwResult({ password: result.password, email: result.email });
+      toast({ title: 'Temporary password generated' });
+    } catch (err: any) {
+      toast({ title: err.message || 'Failed to set password', variant: 'destructive' });
+    } finally {
+      setTempPwLoading(false);
+    }
+  };
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-foreground truncate">{emp.full_name || 'Employee'}</h1>
           <p className="text-sm text-muted-foreground">{emp.role_title || 'No role'} · {emp.employee_id || 'No ID'}</p>
