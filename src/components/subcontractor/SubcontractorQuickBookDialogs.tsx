@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useCreateCustomer, useCustomers } from '@/hooks/useCustomers';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useCreateProperty } from '@/hooks/useProperties';
 import { useCreateLead } from '@/hooks/useLeads';
 import { useCreateJob } from '@/hooks/useJobs';
@@ -44,10 +44,10 @@ export function SubcontractorQuickBookDialogs({ activeDialog, onClose }: Props) 
 function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { toast } = useToast();
   const { user } = useAuth();
-  const createCustomer = useCreateCustomer();
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '' });
+  const createLead = useCreateLead();
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '', notes: '' });
 
-  const reset = () => setForm({ first_name: '', last_name: '', email: '', phone: '', company_name: '' });
+  const reset = () => setForm({ first_name: '', last_name: '', email: '', phone: '', company_name: '', notes: '' });
 
   const handleSubmit = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) {
@@ -55,12 +55,14 @@ function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => 
       return;
     }
     try {
-      await createCustomer.mutateAsync({
+      await createLead.mutateAsync({
         ...form,
         company_name: form.company_name || null,
+        status: 'New' as any,
+        lead_source: 'Field' as any,
         created_by: user?.id ?? null,
       } as any);
-      toast({ title: 'Customer created', description: 'Sent to admin for finalization.' });
+      toast({ title: 'Lead created', description: 'Sent to admin for review and next steps.' });
       reset();
       onClose();
     } catch (e: any) {
@@ -72,8 +74,8 @@ function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => 
     <Dialog open={open} onOpenChange={() => { reset(); onClose(); }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>New Customer</DialogTitle>
-          <DialogDescription>Add a new customer to the system.</DialogDescription>
+          <DialogTitle>New Customer Lead</DialogTitle>
+          <DialogDescription>Capture a potential customer from the field.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
@@ -83,10 +85,11 @@ function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => 
           <div><Label>Company</Label><Input value={form.company_name} onChange={e => setForm(f => ({ ...f, company_name: e.target.value }))} /></div>
           <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
           <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+          <div><Label>Notes</Label><Textarea rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={createCustomer.isPending}>{createCustomer.isPending ? 'Saving…' : 'Create'}</Button>
+          <Button onClick={handleSubmit} disabled={createLead.isPending}>{createLead.isPending ? 'Submitting…' : 'Submit Lead'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

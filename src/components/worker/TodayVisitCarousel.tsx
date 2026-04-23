@@ -210,12 +210,12 @@ function VisitCardItem({ visit, workerInitials, now, isDragging, dragMoved }: {
 /* ─── Inline Create Customer Form ─── */
 function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { toast } = useToast();
-  const createCustomer = useCreateCustomer();
+  const createLead = useCreateLead();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', phone: '',
-    address_line_1: '', city: '', province: '', company_name: '',
+    address_line_1: '', city: '', province: '', company_name: '', notes: '',
   });
   const [saving, setSaving] = useState(false);
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -224,15 +224,17 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
     if (!form.first_name || !form.last_name) { toast({ title: 'First & last name required', variant: 'destructive' }); return; }
     setSaving(true);
     try {
-      const data = await createCustomer.mutateAsync({
+      const data = await createLead.mutateAsync({
         ...form,
         company_name: form.company_name || null,
         province: form.province || null,
+        status: 'New' as any,
+        lead_source: 'Field' as any,
         created_by: user?.id ?? null,
       } as any);
-      toast({ title: 'Customer created' });
+      toast({ title: 'Lead created', description: 'Sent to admin for review and next steps.' });
       onOpenChange(false);
-      navigate(`/customers/${data.id}`);
+      navigate(`/leads/${data.id}`);
     } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
     finally { setSaving(false); }
   };
@@ -241,8 +243,8 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md mx-3 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-base">New Customer</DialogTitle>
-          <DialogDescription>Add a new customer from the field.</DialogDescription>
+          <DialogTitle className="text-base">New Customer Lead</DialogTitle>
+          <DialogDescription>Capture a potential customer from the field for admin review.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
@@ -265,9 +267,10 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
               </Select>
             </div>
           </div>
-          {user && <p className="text-[10px] text-muted-foreground">Created by: {user.email}</p>}
+          <div><Label className="text-xs">Notes</Label><Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="What they need, urgency, site notes..." /></div>
+          {user && <p className="text-[10px] text-muted-foreground">Submitted by: {user.email}</p>}
           <Button className="w-full h-11" disabled={saving || !form.first_name || !form.last_name} onClick={handleSubmit}>
-            {saving ? 'Creating…' : 'Create Customer'}
+            {saving ? 'Submitting…' : 'Submit Lead'}
           </Button>
         </div>
       </DialogContent>
