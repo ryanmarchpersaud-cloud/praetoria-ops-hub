@@ -285,14 +285,25 @@ export default function AdminSubcontractorInvoiceDetail() {
         </CardContent>
       </Card>
 
+      {/* Rejection banner */}
+      {invoice.status === 'rejected' && invoice.admin_review_notes && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Rejected{invoice.rejected_at ? ` on ${format(new Date(invoice.rejected_at), 'MMM d, yyyy')}` : ''}</AlertTitle>
+          <AlertDescription className="whitespace-pre-wrap">
+            <span className="font-medium">Reason: </span>{invoice.admin_review_notes}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Actions */}
       {(invoice.status === 'submitted' || invoice.status === 'pending') && (
         <div className="flex gap-3">
-          <Button className="flex-1 gap-2" onClick={() => updateStatus('approved')}>
+          <Button className="flex-1 gap-2" onClick={handleApprove}>
             <CheckCircle className="h-4 w-4" /> Approve
           </Button>
-          <Button variant="destructive" className="flex-1 gap-2" onClick={() => updateStatus('rejected')}>
-            <XCircle className="h-4 w-4" /> Reject
+          <Button variant="destructive" className="flex-1 gap-2" onClick={() => { setRejectReason(''); setRejectError(null); setRejectDialogOpen(true); }}>
+            <XCircle className="h-4 w-4" /> Reject…
           </Button>
         </div>
       )}
@@ -301,6 +312,51 @@ export default function AdminSubcontractorInvoiceDetail() {
           <DollarSign className="h-4 w-4" /> Mark as Paid
         </Button>
       )}
+      {invoice.status === 'rejected' && (
+        <p className="text-xs text-muted-foreground text-center">
+          The subcontractor can edit and resubmit this invoice from their portal.
+        </p>
+      )}
+
+      {/* Reject Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={(v) => { setRejectDialogOpen(v); if (!v) { setRejectReason(''); setRejectError(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Invoice — {invoice.invoice_number}</DialogTitle>
+            <DialogDescription>
+              Tell the subcontractor what needs to change. They'll be able to edit and resubmit.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="reject-reason">Reason for rejection <span className="text-destructive">*</span></Label>
+            <Textarea
+              id="reject-reason"
+              placeholder="e.g. Amount doesn't match the agreed rate. Please update the PDF and resubmit."
+              value={rejectReason}
+              onChange={(e) => { setRejectReason(e.target.value); if (rejectError) setRejectError(null); }}
+              rows={5}
+              maxLength={1000}
+              aria-invalid={!!rejectError}
+              className={rejectError ? 'border-destructive focus-visible:ring-destructive' : ''}
+            />
+            <div className="flex justify-between text-xs">
+              {rejectError ? (
+                <span className="text-destructive">{rejectError}</span>
+              ) : (
+                <span className="text-muted-foreground">Visible to the subcontractor.</span>
+              )}
+              <span className="text-muted-foreground">{rejectReason.length}/1000</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)} disabled={rejecting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleReject} disabled={rejecting} className="gap-2">
+              {rejecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+              {rejecting ? 'Rejecting...' : 'Reject Invoice'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Payment Dialog */}
       <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
