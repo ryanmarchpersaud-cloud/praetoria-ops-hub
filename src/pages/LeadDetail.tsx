@@ -86,23 +86,41 @@ export default function LeadDetail() {
   };
 
   const handleCreateQuote = async () => {
-    if (!id || !lead) return;
+    if (!id || !lead) {
+      toast({ title: 'Cannot create quote', description: 'Lead is still loading. Please try again in a moment.', variant: 'destructive' });
+      return;
+    }
+
+    // Pre-flight validation: surface clear, human-readable errors instead of
+    // letting the request fail with a raw "invalid input syntax for type uuid"
+    // (or similar) error from the database.
+    const firstName = (lead.first_name || '').trim();
+    const lastName = (lead.last_name || '').trim();
+    const companyName = (lead.company_name || '').trim();
+
+    const missing: string[] = [];
+    if (!firstName && !lastName && !companyName) missing.push('a contact name or company');
+    if (!lead.email && !lead.phone) missing.push('an email or phone number');
+
+    if (missing.length > 0) {
+      toast({
+        title: 'Cannot create quote',
+        description: `This lead is missing ${missing.join(' and ')}. Please update the lead details and try again.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
-      // Quotes require a customer_id (uuid NOT NULL). If this lead isn't yet
-      // tied to a customer, auto-create one from the lead's contact info so
-      // the quotation flow works in one tap from the lead detail page.
       let customerId = (lead as any).customer_id as string | null;
 
       if (!customerId) {
-        const firstName = (lead.first_name || '').trim() || 'New';
-        const lastName = (lead.last_name || '').trim() || 'Customer';
-
         const { data: newCustomer, error: customerErr } = await supabase
           .from('customers')
           .insert({
-            first_name: firstName,
-            last_name: lastName,
-            company_name: lead.company_name || null,
+            first_name: firstName || 'New',
+            last_name: lastName || 'Customer',
+            company_name: companyName || null,
             email: lead.email || null,
             phone: lead.phone || null,
             address_line_1: lead.address_line_1 || null,
@@ -115,15 +133,30 @@ export default function LeadDetail() {
           .select('id')
           .single();
 
-        if (customerErr) throw customerErr;
+        if (customerErr) {
+          toast({
+            title: 'Could not create customer',
+            description: customerErr.message || 'We were unable to create a customer record from this lead.',
+            variant: 'destructive',
+          });
+          return;
+        }
         customerId = newCustomer.id;
 
-        // Link the new customer back to the lead so future actions reuse it.
         try {
           await updateLead.mutateAsync({ id, customer_id: customerId } as any);
         } catch {
           // Non-fatal: quote creation can still proceed even if back-link fails.
         }
+      }
+
+      if (!customerId) {
+        toast({
+          title: 'Cannot create quote',
+          description: 'No customer is linked to this lead and one could not be created automatically.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       const q = await createQuote.mutateAsync({
@@ -132,9 +165,21 @@ export default function LeadDetail() {
         service_category: (lead?.service_type as any) || 'Other',
         customer_id: customerId,
       });
+      toast({ title: 'Quote created', description: 'Opening the new quote…' });
       navigate(`/quotes/${q.id}`);
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      const raw = err?.message || '';
+      let friendly = raw;
+      if (/invalid input syntax for type uuid/i.test(raw)) {
+        friendly = 'This lead is missing required customer information. Please complete the contact details first.';
+      } else if (/violates row-level security/i.test(raw) || /permission denied/i.test(raw)) {
+        friendly = 'You do not have permission to create a quote for this lead.';
+      } else if (/duplicate key/i.test(raw)) {
+        friendly = 'A quote with the same reference already exists. Please refresh and try again.';
+      } else if (!friendly) {
+        friendly = 'Something went wrong while creating the quote. Please try again.';
+      }
+      toast({ title: 'Could not create quote', description: friendly, variant: 'destructive' });
     }
   };
 
