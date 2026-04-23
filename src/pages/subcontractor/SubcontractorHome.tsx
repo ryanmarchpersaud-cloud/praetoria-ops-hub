@@ -28,7 +28,7 @@ const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; col
   { label: 'New Property', icon: Home, action: 'property', color: 'text-amber-600' },
   { label: 'New Lead', icon: Send, action: 'lead', color: 'text-violet-600' },
   { label: 'New Quote', icon: FileText, action: 'quote', color: 'text-cyan-600' },
-  { label: 'New Invoice', icon: Receipt, action: 'invoice', color: 'text-rose-600' },
+  { label: 'Submit Invoice', icon: Receipt, action: 'invoice', color: 'text-rose-600' },
   { label: 'New Request', icon: CalendarPlus, action: 'request', color: 'text-orange-600' },
   { label: 'New Incident', icon: AlertTriangle, action: 'incident', color: 'text-red-600' },
   { label: 'New Task', icon: ClipboardCheck, action: 'task', color: 'text-teal-600' },
@@ -71,7 +71,8 @@ export default function SubcontractorHome() {
       case 'property': setQuickBookDialog('property'); break;
       case 'lead': setQuickBookDialog('lead'); break;
       case 'quote': setQuickBookDialog('quote'); break;
-      case 'invoice': setQuickBookDialog('invoice'); break;
+      // Subcontractors submit their own invoices (for us to pay them) via the dedicated flow.
+      case 'invoice': navigate('/subcontractor/invoices?new=1'); break;
       case 'request': setRequestOpen(true); break;
       case 'incident': navigate('/subcontractor/incidents/new'); break;
       case 'task': setTaskOpen(true); break;
