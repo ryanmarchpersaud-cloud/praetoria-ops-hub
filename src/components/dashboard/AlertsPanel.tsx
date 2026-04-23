@@ -19,10 +19,11 @@ interface Props {
   visits: any[];
   incidents: any[];
   certifications: any[];
+  subcontractorInvoices?: any[];
   isLoading: boolean;
 }
 
-export function AlertsPanel({ invoices, jobs, visits, incidents, certifications, isLoading }: Props) {
+export function AlertsPanel({ invoices, jobs, visits, incidents, certifications, subcontractorInvoices = [], isLoading }: Props) {
   const alerts: AlertItem[] = [];
 
   // Past due invoices
@@ -86,6 +87,20 @@ export function AlertsPanel({ invoices, jobs, visits, incidents, certifications,
       icon: Award,
       iconClass: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40',
       link: '/employees',
+    });
+  }
+
+  // Subcontractor invoices needing review
+  const pendingSubInv = subcontractorInvoices.filter((i: any) => i.status === 'submitted');
+  if (pendingSubInv.length > 0) {
+    const total = pendingSubInv.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
+    alerts.push({
+      id: 'pending-sub-invoices',
+      label: `${pendingSubInv.length} subcontractor invoice${pendingSubInv.length > 1 ? 's' : ''} to review`,
+      detail: `$${total.toLocaleString(undefined, { maximumFractionDigits: 0 })} pending approval`,
+      icon: Receipt,
+      iconClass: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40',
+      link: '/subcontractors/invoices',
     });
   }
 

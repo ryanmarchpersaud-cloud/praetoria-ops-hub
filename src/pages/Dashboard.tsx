@@ -184,6 +184,7 @@ export default function Dashboard() {
             visits={visits}
             incidents={incidents}
             certifications={certs}
+            subcontractorInvoices={subInvoices}
             isLoading={isAlertsLoading}
           />
           <LiveWorkforcePanel />
