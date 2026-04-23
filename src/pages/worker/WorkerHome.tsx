@@ -293,7 +293,7 @@ export default function WorkerHome() {
         </Link>
       </div>
 
-      {/* Today's Visits Carousel (Jobber-style) */}
+      {/* Today's Visits / Quick Book */}
       <TodayVisitCarousel visits={todayVisits as any} workerInitials={initials} />
 
       {/* Empty state when no visits today */}
@@ -302,7 +302,8 @@ export default function WorkerHome() {
           <CardContent className="py-8 text-center">
             <Calendar className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No visits assigned for today</p>
-            <Link to="/worker/schedule" className="text-xs text-primary mt-1 inline-block">View schedule →</Link>
+            <p className="text-xs text-muted-foreground mt-1">Quick Book is still available below for new leads and field intake.</p>
+            <Link to="/worker/schedule" className="text-xs text-primary mt-2 inline-block">View schedule →</Link>
           </CardContent>
         </Card>
       )}

@@ -224,7 +224,6 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
   const handleSubmit = async () => {
     if (!form.first_name || !form.last_name) { toast({ title: 'First & last name required', variant: 'destructive' }); return; }
     if (loading) { toast({ title: 'Just a moment', description: 'Still loading your account.', variant: 'destructive' }); return; }
-    if (!user?.id) { toast({ title: 'Sign-in required', description: 'You must be signed in to submit a lead.', variant: 'destructive' }); return; }
     setSaving(true);
     try {
       const { notes, ...rest } = form;
@@ -235,7 +234,6 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
         internal_notes: notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
-        created_by: user.id,
       } as any);
       toast({ title: 'Lead created', description: 'Sent to admin for review and next steps.' });
       setForm({
@@ -277,7 +275,7 @@ function CreateCustomerInline({ open, onOpenChange }: { open: boolean; onOpenCha
           </div>
           <div><Label className="text-xs">Notes</Label><Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="What they need, urgency, site notes..." /></div>
           {user && <p className="text-[10px] text-muted-foreground">Submitted by: {user.email}</p>}
-          <Button className="w-full h-11" disabled={saving || loading || !user?.id || !form.first_name || !form.last_name} onClick={handleSubmit}>
+          <Button className="w-full h-11" disabled={saving || loading || !form.first_name || !form.last_name} onClick={handleSubmit}>
             {loading ? 'Loading…' : saving ? 'Submitting…' : 'Submit Lead'}
           </Button>
         </div>
@@ -337,10 +335,6 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
       toast.error('Still loading your account. Please try again in a moment.');
       return;
     }
-    if (!user?.id) {
-      toast.error('You must be signed in to submit a lead.');
-      return;
-    }
     setSaving(true);
     try {
       await createLead.mutateAsync({
@@ -355,7 +349,6 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
         internal_notes: parsed.data.notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
-        created_by: user.id,
       } as any);
       toast.success('Lead submitted to admin', {
         description: 'Admin will review and follow up — you can keep working.',
@@ -421,7 +414,7 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
             This lead will be sent to admin for review. You don't need to schedule or quote anything — admin will take it from here.
           </div>
           {user && <p className="text-[10px] text-muted-foreground">Submitted by: {user.email}</p>}
-          <Button className="w-full h-11" disabled={saving || loading || !user?.id} onClick={handleSubmit}>
+          <Button className="w-full h-11" disabled={saving || loading} onClick={handleSubmit}>
             {loading ? 'Loading…' : saving ? 'Submitting…' : 'Submit to Admin'}
           </Button>
         </div>
@@ -560,8 +553,6 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
     }
   };
 
-  if (visits.length === 0) return null;
-
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -569,10 +560,12 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
           <p className="text-base font-bold text-foreground">
             {visits.length} visit{visits.length !== 1 ? 's' : ''} today
           </p>
-          {completedCount > 0 && (
+          {completedCount > 0 ? (
             <p className="text-xs text-muted-foreground">
               {completedCount} visit{completedCount !== 1 ? 's' : ''} complete
             </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Quick Book stays available even when you have no assigned visits.</p>
           )}
         </div>
         <Link to="/worker/schedule" className="flex items-center gap-0.5 text-xs font-medium text-primary hover:underline">
