@@ -197,6 +197,31 @@ export default function SubcontractorInvoices() {
           },
         });
 
+        // Notify ops/admin in-app + email
+        await supabase.from('notifications' as any).insert({
+          event: 'subcontractor_invoice_submitted',
+          channel: 'in_app',
+          audience: 'admin',
+          record_type: 'subcontractor_invoice',
+          record_id: editingInvoice.id,
+          subject: `Resubmitted Subcontractor Invoice ${editingInvoice.invoice_number}`,
+          body: `${profile.company_name || 'A subcontractor'} resubmitted invoice ${editingInvoice.invoice_number} for $${parsedAmount.toFixed(2)}.`,
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+        });
+        supabase.functions.invoke('send-email', {
+          body: {
+            action: 'subcontractor_invoice_submitted',
+            company_name: profile.company_name,
+            contact_name: profile.contact_name,
+            invoice_number: editingInvoice.invoice_number,
+            amount: parsedAmount,
+            invoice_date: invoiceDate,
+            attachment_url: attachmentUrl,
+            is_resubmission: true,
+          },
+        }).catch((e) => console.error('Email notify failed:', e));
+
         toast.success(`Invoice ${editingInvoice.invoice_number} resubmitted for review.`);
       } else {
         // Brand-new invoice
