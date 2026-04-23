@@ -37,7 +37,7 @@ export function SubcontractorFAB() {
     { icon: AlertTriangle, label: 'Report Issue', color: 'bg-rose-500', action: '/subcontractor/incidents/new' },
     { icon: Navigation, label: 'Open Directions', color: 'bg-indigo-500', action: '/subcontractor/schedule?action=directions' },
     { icon: MessageSquare, label: 'Contact Admin', color: 'bg-slate-500', action: () => setQuickAction('contact_admin') },
-    { icon: Receipt, label: 'Submit Invoice', color: 'bg-cyan-500', action: '/subcontractor/invoices' },
+    { icon: Receipt, label: 'Submit Invoice', color: 'bg-cyan-500', action: '/subcontractor/invoices?new=1' },
     { icon: FileUp, label: 'Upload Document', color: 'bg-teal-500', action: '/subcontractor/documents' },
     { icon: CalendarDays, label: 'View Schedule', color: 'bg-sky-500', action: '/subcontractor/schedule' },
   ];
