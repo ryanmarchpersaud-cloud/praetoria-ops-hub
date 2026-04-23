@@ -45,7 +45,7 @@ export function SubcontractorQuickBookDialogs({ activeDialog, onClose }: Props) 
 /* ─── Customer ─── */
 function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const createLead = useCreateLead();
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '', notes: '' });
 
@@ -56,6 +56,14 @@ function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => 
       toast({ title: 'First and last name are required', variant: 'destructive' });
       return;
     }
+    if (loading) {
+      toast({ title: 'Just a moment', description: 'Still loading your account.', variant: 'destructive' });
+      return;
+    }
+    if (!user?.id) {
+      toast({ title: 'Sign-in required', description: 'You must be signed in to submit a lead.', variant: 'destructive' });
+      return;
+    }
     try {
       const { notes, ...rest } = form;
       await createLead.mutateAsync({
@@ -64,7 +72,7 @@ function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => 
         internal_notes: notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
-        created_by: user?.id ?? null,
+        created_by: user.id,
       } as any);
       toast({ title: 'Lead created', description: 'Sent to admin for review and next steps.' });
       reset();
@@ -93,7 +101,7 @@ function QuickCustomerDialog({ open, onClose }: { open: boolean; onClose: () => 
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={createLead.isPending}>{createLead.isPending ? 'Submitting…' : 'Submit Lead'}</Button>
+          <Button onClick={handleSubmit} disabled={createLead.isPending || loading || !user?.id}>{loading ? 'Loading…' : createLead.isPending ? 'Submitting…' : 'Submit Lead'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -178,7 +186,7 @@ const subFieldLeadSchema = z.object({
 });
 
 function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const createLead = useCreateLead();
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '', service_type: 'Snow & Ice', notes: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -204,6 +212,14 @@ function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void
       toast.error(parsed.error.issues[0]?.message ?? 'Please fix the highlighted fields');
       return;
     }
+    if (loading) {
+      toast.error('Still loading your account. Please try again in a moment.');
+      return;
+    }
+    if (!user?.id) {
+      toast.error('You must be signed in to submit a lead.');
+      return;
+    }
     try {
       await createLead.mutateAsync({
         first_name: parsed.data.first_name,
@@ -215,7 +231,7 @@ function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void
         internal_notes: parsed.data.notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
-        created_by: user?.id ?? null,
+        created_by: user.id,
       } as any);
       toast.success('Lead submitted to admin', {
         description: 'Admin will review and follow up — you can keep working.',
@@ -281,8 +297,8 @@ function QuickLeadDialog({ open, onClose }: { open: boolean; onClose: () => void
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={createLead.isPending}>
-            {createLead.isPending ? 'Submitting…' : 'Submit to Admin'}
+          <Button onClick={handleSubmit} disabled={createLead.isPending || loading || !user?.id}>
+            {loading ? 'Loading…' : createLead.isPending ? 'Submitting…' : 'Submit to Admin'}
           </Button>
         </DialogFooter>
       </DialogContent>
