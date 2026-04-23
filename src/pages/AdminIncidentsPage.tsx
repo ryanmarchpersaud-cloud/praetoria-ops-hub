@@ -33,7 +33,35 @@ export default function AdminIncidentsPage() {
         .select('*')
         .order('date_time', { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      const rows = data ?? [];
+
+      // Collect unique IDs to resolve names
+      const userIds = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
+      const subIds = Array.from(new Set(rows.map((r: any) => r.subcontractor_id).filter(Boolean)));
+
+      const [wpRes, profRes, subRes] = await Promise.all([
+        userIds.length
+          ? supabase.from('worker_profiles').select('user_id, full_name').in('user_id', userIds)
+          : Promise.resolve({ data: [] as any[] }),
+        userIds.length
+          ? supabase.from('profiles').select('user_id, display_name').in('user_id', userIds)
+          : Promise.resolve({ data: [] as any[] }),
+        subIds.length
+          ? supabase.from('subcontractors').select('id, company_name, contact_name').in('id', subIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const wpMap = new Map((wpRes.data ?? []).map((x: any) => [x.user_id, x.full_name]));
+      const pMap = new Map((profRes.data ?? []).map((x: any) => [x.user_id, x.display_name]));
+      const sMap = new Map((subRes.data ?? []).map((x: any) => [x.id, x.contact_name || x.company_name]));
+
+      return rows.map((r: any) => ({
+        ...r,
+        reporter_name:
+          r.reporter_type === 'subcontractor' && r.subcontractor_id
+            ? sMap.get(r.subcontractor_id) || null
+            : wpMap.get(r.user_id) || pMap.get(r.user_id) || null,
+      }));
     },
   });
 
@@ -43,6 +71,7 @@ export default function AdminIncidentsPage() {
         r.description?.toLowerCase().includes(search.toLowerCase()) ||
         r.location?.toLowerCase().includes(search.toLowerCase()) ||
         r.reporter_type.toLowerCase().includes(search.toLowerCase()) ||
+        r.reporter_name?.toLowerCase().includes(search.toLowerCase()) ||
         r.report_number?.toLowerCase().includes(search.toLowerCase())
       )
     : reports;
@@ -93,7 +122,9 @@ export default function AdminIncidentsPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs font-mono text-muted-foreground">{r.report_number}</span>
                       <p className="text-sm font-medium">{r.incident_type}</p>
-                      <Badge variant="outline" className="text-[10px] capitalize">{r.reporter_type}</Badge>
+                      <Badge variant="outline" className="text-[10px] capitalize">
+                        {r.reporter_name ? `${r.reporter_name} · ${r.reporter_type}` : r.reporter_type}
+                      </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {format(new Date(r.date_time), 'MMM d, yyyy · h:mm a')}
