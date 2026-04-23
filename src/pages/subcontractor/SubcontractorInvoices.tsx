@@ -14,6 +14,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { z } from 'zod';
+
+const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+const invoiceSchema = z.object({
+  amount: z
+    .string()
+    .min(1, 'Amount is required')
+    .refine((v) => !isNaN(parseFloat(v)) && parseFloat(v) > 0, 'Enter a valid amount greater than $0')
+    .refine((v) => parseFloat(v) <= 1000000, 'Amount cannot exceed $1,000,000'),
+  invoiceDate: z.string().min(1, 'Invoice date is required'),
+  file: z
+    .instanceof(File, { message: 'Please attach your invoice (PDF or image)' })
+    .refine((f) => ACCEPTED_FILE_TYPES.includes(f.type), 'File must be a PDF or image (JPG, PNG, WebP)')
+    .refine((f) => f.size <= MAX_FILE_SIZE, 'File must be 10MB or smaller'),
+});
+
+type InvoiceErrors = Partial<Record<'amount' | 'invoiceDate' | 'file', string>>;
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -52,6 +71,7 @@ export default function SubcontractorInvoices() {
   const [periodEnd, setPeriodEnd] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<InvoiceErrors>({});
 
   const totals = {
     pending: invoices.filter((i: any) => i.status === 'submitted' || i.status === 'pending').reduce((s: number, i: any) => s + Number(i.amount), 0),
@@ -66,24 +86,39 @@ export default function SubcontractorInvoices() {
     setPeriodEnd('');
     setNotes('');
     setSelectedFile(null);
+    setErrors({});
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async () => {
-    if (!profile || !amount || !invoiceDate) {
-      toast.error('Please enter the invoice amount and date.');
+    if (!profile) {
+      toast.error('Profile not loaded yet. Please try again.');
       return;
     }
 
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      toast.error('Please enter a valid amount.');
+    const result = invoiceSchema.safeParse({
+      amount,
+      invoiceDate,
+      file: selectedFile,
+    });
+
+    if (!result.success) {
+      const fieldErrors: InvoiceErrors = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as keyof InvoiceErrors;
+        if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast.error('Please fix the highlighted fields before submitting.');
       return;
     }
+
+    setErrors({});
+    const parsedAmount = parseFloat(amount);
 
     setSubmitting(true);
     try {
-      // Upload attachment if provided
+      // Upload required attachment
       let attachmentUrl: string | null = null;
       if (selectedFile) {
         const ext = selectedFile.name.split('.').pop();
@@ -166,23 +201,40 @@ export default function SubcontractorInvoices() {
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-1.5">
-                <Label>Invoice Amount (CAD) *</Label>
+                <Label htmlFor="inv-amount">Invoice Amount (CAD) <span className="text-destructive">*</span></Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
                   <Input
+                    id="inv-amount"
                     type="number"
                     step="0.01"
                     min="0"
                     placeholder="0.00"
                     value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    className="pl-7"
+                    onChange={e => { setAmount(e.target.value); if (errors.amount) setErrors(p => ({ ...p, amount: undefined })); }}
+                    className={`pl-7 ${errors.amount ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    aria-invalid={!!errors.amount}
+                    aria-describedby={errors.amount ? 'inv-amount-err' : undefined}
                   />
                 </div>
+                {errors.amount && (
+                  <p id="inv-amount-err" className="text-xs text-destructive">{errors.amount}</p>
+                )}
               </div>
               <div className="space-y-1.5">
-                <Label>Invoice Date *</Label>
-                <Input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
+                <Label htmlFor="inv-date">Invoice Date <span className="text-destructive">*</span></Label>
+                <Input
+                  id="inv-date"
+                  type="date"
+                  value={invoiceDate}
+                  onChange={e => { setInvoiceDate(e.target.value); if (errors.invoiceDate) setErrors(p => ({ ...p, invoiceDate: undefined })); }}
+                  className={errors.invoiceDate ? 'border-destructive focus-visible:ring-destructive' : ''}
+                  aria-invalid={!!errors.invoiceDate}
+                  aria-describedby={errors.invoiceDate ? 'inv-date-err' : undefined}
+                />
+                {errors.invoiceDate && (
+                  <p id="inv-date-err" className="text-xs text-destructive">{errors.invoiceDate}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -204,14 +256,26 @@ export default function SubcontractorInvoices() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Attach Invoice (PDF, Image)</Label>
+                <Label htmlFor="inv-file">Attach Invoice (PDF or image) <span className="text-destructive">*</span></Label>
                 <Input
+                  id="inv-file"
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx"
-                  onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={e => {
+                    setSelectedFile(e.target.files?.[0] || null);
+                    if (errors.file) setErrors(p => ({ ...p, file: undefined }));
+                  }}
+                  className={errors.file ? 'border-destructive focus-visible:ring-destructive' : ''}
+                  aria-invalid={!!errors.file}
+                  aria-describedby={errors.file ? 'inv-file-err' : 'inv-file-help'}
                 />
-                {selectedFile && (
+                {errors.file ? (
+                  <p id="inv-file-err" className="text-xs text-destructive">{errors.file}</p>
+                ) : (
+                  <p id="inv-file-help" className="text-[11px] text-muted-foreground">Required. PDF, JPG, PNG, or WebP — max 10MB.</p>
+                )}
+                {selectedFile && !errors.file && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
                     <Paperclip className="h-3 w-3" /> {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)
                   </p>
