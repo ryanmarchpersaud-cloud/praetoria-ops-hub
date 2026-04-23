@@ -40,6 +40,14 @@ export default function SubcontractorNewIncidentPage() {
       toast({ title: 'Please provide a description', variant: 'destructive' });
       return;
     }
+    if (uploadBusy) {
+      toast({
+        title: 'Uploads still in progress',
+        description: 'Wait for the iPhone batch to finish or skip remaining files before submitting.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.from('incident_reports').insert([{
