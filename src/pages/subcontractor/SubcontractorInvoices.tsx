@@ -33,6 +33,17 @@ const invoiceSchema = z.object({
     .refine((f) => f.size <= MAX_FILE_SIZE, 'File must be 10MB or smaller'),
 });
 
+// When editing a rejected invoice, the subcontractor may keep the existing attachment
+// or upload a replacement — the file becomes optional.
+const editInvoiceSchema = invoiceSchema.extend({
+  file: z
+    .instanceof(File)
+    .refine((f) => ACCEPTED_FILE_TYPES.includes(f.type), 'File must be a PDF or image (JPG, PNG, WebP)')
+    .refine((f) => f.size <= MAX_FILE_SIZE, 'File must be 10MB or smaller')
+    .nullable()
+    .optional(),
+});
+
 type InvoiceErrors = Partial<Record<'amount' | 'invoiceDate' | 'file', string>>;
 
 function StatusChip({ status }: { status: string }) {
