@@ -484,9 +484,6 @@ export default function EmployeeDetail() {
     }
   };
 
-  const [tempPwOpen, setTempPwOpen] = useState(false);
-  const [tempPwLoading, setTempPwLoading] = useState(false);
-  const [tempPwResult, setTempPwResult] = useState<{ password: string; email: string | null } | null>(null);
 
   const handleSetTempPassword = async () => {
     if (!userId) return;
