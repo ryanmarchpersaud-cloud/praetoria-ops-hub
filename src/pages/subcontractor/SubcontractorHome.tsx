@@ -67,7 +67,7 @@ export default function SubcontractorHome() {
     switch (action) {
       case 'visit': setVisitOpen(true); break;
       case 'job': setQuickBookDialog('job'); break;
-      case 'customer': setQuickBookDialog('customer'); break;
+      case 'customer': setQuickBookDialog('lead'); break;
       case 'property': setQuickBookDialog('property'); break;
       case 'lead': setQuickBookDialog('lead'); break;
       case 'quote': setQuickBookDialog('quote'); break;
