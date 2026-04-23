@@ -341,7 +341,7 @@ function CreateLeadInline({ open, onOpenChange }: { open: boolean; onOpenChange:
         service_type: parsed.data.service_type as any,
         address_line_1: parsed.data.address_line_1 || null,
         city: parsed.data.city || null,
-        notes: parsed.data.notes || null,
+        internal_notes: parsed.data.notes || null,
         status: 'New' as any,
         lead_source: 'Field' as any,
         created_by: user?.id ?? null,
