@@ -71,6 +71,7 @@ export default function SubcontractorInvoices() {
   const [periodEnd, setPeriodEnd] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<InvoiceErrors>({});
 
   const totals = {
     pending: invoices.filter((i: any) => i.status === 'submitted' || i.status === 'pending').reduce((s: number, i: any) => s + Number(i.amount), 0),
@@ -85,24 +86,39 @@ export default function SubcontractorInvoices() {
     setPeriodEnd('');
     setNotes('');
     setSelectedFile(null);
+    setErrors({});
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async () => {
-    if (!profile || !amount || !invoiceDate) {
-      toast.error('Please enter the invoice amount and date.');
+    if (!profile) {
+      toast.error('Profile not loaded yet. Please try again.');
       return;
     }
 
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      toast.error('Please enter a valid amount.');
+    const result = invoiceSchema.safeParse({
+      amount,
+      invoiceDate,
+      file: selectedFile,
+    });
+
+    if (!result.success) {
+      const fieldErrors: InvoiceErrors = {};
+      for (const issue of result.error.issues) {
+        const key = issue.path[0] as keyof InvoiceErrors;
+        if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast.error('Please fix the highlighted fields before submitting.');
       return;
     }
+
+    setErrors({});
+    const parsedAmount = parseFloat(amount);
 
     setSubmitting(true);
     try {
-      // Upload attachment if provided
+      // Upload required attachment
       let attachmentUrl: string | null = null;
       if (selectedFile) {
         const ext = selectedFile.name.split('.').pop();
