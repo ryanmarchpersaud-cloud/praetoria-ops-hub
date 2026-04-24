@@ -39,6 +39,7 @@ export default function Customers() {
   const [billingSameAsService, setBillingSameAsService] = useState(true);
   const [requiresPo, setRequiresPo] = useState(false);
   const [portalAccess, setPortalAccess] = useState(false);
+  const [isProtected, setIsProtected] = useState(false);
   const { data: customers = [], isLoading } = useCustomers(search || undefined);
   const createCustomer = useCreateCustomer();
   const { toast } = useToast();
