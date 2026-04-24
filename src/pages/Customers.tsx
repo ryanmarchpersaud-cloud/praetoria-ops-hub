@@ -267,6 +267,7 @@ export default function Customers() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="relative max-w-sm">
