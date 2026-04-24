@@ -78,7 +78,24 @@ function buildFullAddress(property: any): string {
 function openDirections(property: any) {
   const addr = buildFullAddress(property);
   if (!addr) return;
-  window.open(`https://maps.google.com/maps?daddr=${encodeURIComponent(addr)}`, '_blank');
+  const encoded = encodeURIComponent(addr);
+  // On iOS (Capacitor WKWebView), window.open('_blank') is frequently a no-op.
+  // Use Apple Maps universal link on iOS so it launches the Maps app reliably,
+  // and Google Maps on Android/desktop. Fall back to location.href when
+  // window.open returns null (popup blocked / WKWebView).
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+    (ua.includes('Mac') && typeof document !== 'undefined' && 'ontouchend' in document);
+  const url = isIOS
+    ? `https://maps.apple.com/?daddr=${encoded}&dirflg=d`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
+  iosLog('directions:open', { isIOS, addr });
+  try {
+    const win = window.open(url, '_blank');
+    if (!win) window.location.href = url;
+  } catch {
+    window.location.href = url;
+  }
 }
 
 export default function WorkerVisitExec() {
