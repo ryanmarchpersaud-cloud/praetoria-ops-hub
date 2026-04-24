@@ -349,7 +349,7 @@ export default function CustomersImport() {
               <h2 className="font-semibold text-sm">Step 3 — Review & import</h2>
               <p className="text-xs text-muted-foreground">
                 <CheckCircle2 className="inline h-3.5 w-3.5 text-primary mr-1" /> {stats.ready} ready ·{' '}
-                <AlertTriangle className="inline h-3.5 w-3.5 text-amber-500 mr-1" /> {stats.duplicates} duplicate ·{' '}
+                <AlertTriangle className="inline h-3.5 w-3.5 text-muted-foreground mr-1" /> {stats.duplicates} duplicate ·{' '}
                 <X className="inline h-3.5 w-3.5 text-destructive mr-1" /> {stats.invalid} invalid
               </p>
             </div>
