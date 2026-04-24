@@ -99,6 +99,7 @@ export default function Customers() {
       setBillingSameAsService(true);
       setRequiresPo(false);
       setPortalAccess(false);
+      setIsProtected(false);
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
