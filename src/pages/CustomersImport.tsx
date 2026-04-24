@@ -387,7 +387,7 @@ export default function CustomersImport() {
                     <TableCell className="text-xs text-muted-foreground">{i + 1}</TableCell>
                     <TableCell>
                       {r.status === 'ready' && <Badge variant="outline" className="text-primary border-primary/30">Ready</Badge>}
-                      {r.status === 'duplicate' && <Badge variant="outline" className="text-amber-600 border-amber-300" title={r.message}>Duplicate</Badge>}
+                      {r.status === 'duplicate' && <Badge variant="secondary" title={r.message}>Duplicate</Badge>}
                       {r.status === 'invalid' && <Badge variant="outline" className="text-destructive border-destructive/30" title={r.message}>Invalid</Badge>}
                     </TableCell>
                     <TableCell className="text-sm">{[r.values.first_name, r.values.last_name].filter(Boolean).join(' ') || '—'}</TableCell>
