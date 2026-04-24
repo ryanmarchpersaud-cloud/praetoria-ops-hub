@@ -1240,6 +1240,7 @@ export type Database = {
           email: string | null
           first_name: string
           id: string
+          is_protected: boolean
           last_name: string
           notes: string | null
           operating_name: string | null
@@ -1283,6 +1284,7 @@ export type Database = {
           email?: string | null
           first_name: string
           id?: string
+          is_protected?: boolean
           last_name: string
           notes?: string | null
           operating_name?: string | null
@@ -1326,6 +1328,7 @@ export type Database = {
           email?: string | null
           first_name?: string
           id?: string
+          is_protected?: boolean
           last_name?: string
           notes?: string | null
           operating_name?: string | null
