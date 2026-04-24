@@ -258,6 +258,10 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
+function SignedInPortalRouteShell({ children }: { children: React.ReactNode }) {
+  return <div className="signed-in-portal-route-shell">{children}</div>;
+}
+
 function WorkerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, canAccessWorkerPortal, isActiveUser, isLoading } = useAuthorization();
@@ -268,7 +272,7 @@ function WorkerRoute({ children }: { children: React.ReactNode }) {
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
   if (!canAccessWorkerPortal) return <Navigate to="/access-denied" replace />;
-  return <>{children}</>;
+  return <SignedInPortalRouteShell>{children}</SignedInPortalRouteShell>;
 }
 
 function PortalRoute({ children }: { children: React.ReactNode }) {
@@ -298,7 +302,7 @@ function SubcontractorRoute({ children }: { children: React.ReactNode }) {
   if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (!canAccessSubcontractorPortal && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
-  return <>{children}</>;
+  return <SignedInPortalRouteShell>{children}</SignedInPortalRouteShell>;
 }
 
 function LoginRoute() {
