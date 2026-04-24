@@ -292,7 +292,12 @@ export default function Customers() {
               customers.map(c => (
                 <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/customers/${c.id}`)}>
                   <TableCell className="font-medium">
-                    <Link to={`/customers/${c.id}`} className="hover:text-primary">{c.first_name} {c.last_name}</Link>
+                    <Link to={`/customers/${c.id}`} className="hover:text-primary inline-flex items-center gap-1.5">
+                      {(c as any).is_protected && (
+                        <ShieldCheck className="h-4 w-4 text-primary shrink-0" aria-label="Protected real customer" />
+                      )}
+                      <span>{c.first_name} {c.last_name}</span>
+                    </Link>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.company_name || '—'}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.customer_type || '—'}</TableCell>
