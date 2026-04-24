@@ -91,6 +91,7 @@ export default function Customers() {
         preferred_communication_method: g('preferred_communication_method'),
         referral_source: g('referral_source'),
         notes: g('notes'),
+        is_protected: isProtected,
       });
       toast({ title: 'Customer created' });
       setDialogOpen(false);
