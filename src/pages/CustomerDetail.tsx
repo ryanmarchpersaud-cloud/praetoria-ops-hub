@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
@@ -215,14 +216,33 @@ export default function CustomerDetail() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-lg md:text-xl font-bold">{customer.first_name} {customer.last_name}</h1>
+          <h1 className="text-lg md:text-xl font-bold flex items-center gap-2 flex-wrap">
+            {form?.is_protected && (
+              <ShieldCheck className="h-5 w-5 text-primary shrink-0" aria-label="Protected real customer" />
+            )}
+            <span>{customer.first_name} {customer.last_name}</span>
+          </h1>
           <div className="flex items-center gap-2 flex-wrap">
             {customer.company_name && <span className="text-xs text-muted-foreground">{customer.company_name}</span>}
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{customer.customer_type}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{customer.account_type}</span>
+            {form?.is_protected && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold inline-flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3" /> Protected
+              </span>
+            )}
           </div>
         </div>
       </div>
+
+      {form?.is_protected && (
+        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary flex items-start gap-2">
+          <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
+          <div>
+            <strong>Protected real customer.</strong> Automation and AI assistants will not modify this record or send anything to this customer. Only admins should make changes.
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2 flex-wrap">
         <Button onClick={handleSave} className="flex-1 h-11" disabled={updateCustomer.isPending}>
@@ -268,6 +288,15 @@ export default function CustomerDetail() {
                   <select value={form?.account_type || 'Individual'} onChange={e => set('account_type', e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
                     {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 mt-1">
+                <Switch checked={!!form?.is_protected} onCheckedChange={(v) => set('is_protected', v)} id="cd_is_protected" />
+                <div className="flex-1">
+                  <Label htmlFor="cd_is_protected" className="cursor-pointer text-xs flex items-center gap-1.5 font-semibold">
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Protected real customer
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">When on, automation and AI assistants will not modify this customer or send them anything.</p>
                 </div>
               </div>
             </CardContent>

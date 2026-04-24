@@ -1,0 +1,2 @@
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS is_protected BOOLEAN NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_customers_is_protected ON public.customers(is_protected) WHERE is_protected = true;
