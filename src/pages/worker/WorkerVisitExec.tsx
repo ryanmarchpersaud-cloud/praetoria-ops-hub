@@ -21,29 +21,14 @@ import { cn } from '@/lib/utils';
 import { sendNotification } from '@/hooks/useNotifications';
 import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
 import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
+import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog } from '@/lib/iosDebug';
 
 // ── Image compression ──
-async function compressImage(file: File, maxWidth = 1920, quality = 0.82): Promise<File> {
-  if (!file.type.startsWith('image/') || file.size < 200_000) return file;
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      if (img.width <= maxWidth && file.size < 1_500_000) { resolve(file); return; }
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => resolve(blob && blob.size < file.size ? new File([blob], file.name, { type: 'image/jpeg' }) : file),
-        'image/jpeg', quality
-      );
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
-    img.src = url;
-  });
+// Delegates to the iOS-safe downscaler that uses createImageBitmap (off-main-thread,
+// deterministic memory release) to avoid WKWebView OOM crashes when handling
+// full-resolution iPhone camera photos (often 4-8MB / 12MP+).
+async function compressImage(file: File): Promise<File> {
+  return downscaleImageIfLarge(file);
 }
 
 const TAG_COLORS: Record<string, string> = {
@@ -93,7 +78,24 @@ function buildFullAddress(property: any): string {
 function openDirections(property: any) {
   const addr = buildFullAddress(property);
   if (!addr) return;
-  window.open(`https://maps.google.com/maps?daddr=${encodeURIComponent(addr)}`, '_blank');
+  const encoded = encodeURIComponent(addr);
+  // On iOS (Capacitor WKWebView), window.open('_blank') is frequently a no-op.
+  // Use Apple Maps universal link on iOS so it launches the Maps app reliably,
+  // and Google Maps on Android/desktop. Fall back to location.href when
+  // window.open returns null (popup blocked / WKWebView).
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+    (ua.includes('Mac') && typeof document !== 'undefined' && 'ontouchend' in document);
+  const url = isIOS
+    ? `https://maps.apple.com/?daddr=${encoded}&dirflg=d`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
+  iosLog('directions:open', { isIOS, addr });
+  try {
+    const win = window.open(url, '_blank');
+    if (!win) window.location.href = url;
+  } catch {
+    window.location.href = url;
+  }
 }
 
 export default function WorkerVisitExec() {
