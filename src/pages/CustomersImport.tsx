@@ -9,7 +9,6 @@ import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useCustomers, useCreateCustomer } from '@/hooks/useCustomers';
 import { ArrowLeft, Upload, ShieldCheck, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { CUSTOMER_TYPES, PROVINCES } from '@/lib/constants';
