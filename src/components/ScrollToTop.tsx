@@ -9,15 +9,21 @@ export default function ScrollToTop() {
       window.history.scrollRestoration = 'manual';
     }
 
+    const portalScrollShells = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-portal-scroll-shell]')
+    );
+    const hasPortalScrollShell = portalScrollShells.length > 0;
+
     const resetScroll = () => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      document
-        .querySelectorAll<HTMLElement>('[data-portal-scroll-shell]')
-        .forEach((element) => {
-          element.scrollTop = 0;
-        });
+      if (!hasPortalScrollShell) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+
+      portalScrollShells.forEach((element) => {
+        element.scrollTop = 0;
+      });
     };
 
     resetScroll();

@@ -197,29 +197,30 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Shared portal shell breathing room.
-     Apply the real device top inset on the scroll shell itself so iPhone
-     signed-in portal pages stay below the unsafe area after auth. */
-  .safe-area-top-buffer,
-  .worker-portal-shell {
+  /* Shared signed-in mobile portal contract:
+     the authenticated route wrapper owns the real iPhone unsafe-area inset,
+     while the worker/subcontractor shell only adds the local visual buffer and
+     acts as the actual scroll container. */
+  .safe-area-top-buffer {
     padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
   }
 
-  /* Regression guard for signed-in worker/subcontractor shells.
-     The Apr 22 portal-shell changes moved these authenticated views onto a
-     safe-area path that can report 0px on some iPhone webviews after auth or
-     returning from the photo picker. Keep a minimum notch-safe clearance only
-     on those signed-in mobile shells, without affecting Android. */
+  .signed-in-portal-route-shell {
+    min-height: 100dvh;
+  }
+
+  .worker-portal-shell {
+    min-height: 100dvh;
+    padding-top: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
   @supports (-webkit-touch-callout: none) {
     @media (max-width: 767px) {
-      :root {
-        /* 🎚️ Single knob: increase to push ALL iPhone headers further down,
-           decrease to bring them up. Affects portal shell + page header rows. */
-        --ios-header-baseline: 28px;
-      }
-
-      [data-portal-scroll-shell] {
-        padding-top: max(76px, calc(env(safe-area-inset-top, 0px) + var(--ios-header-baseline)));
+      .signed-in-portal-route-shell {
+        padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
       }
     }
   }
@@ -236,12 +237,9 @@
     flex-wrap: wrap;
   }
 
-  /* iPhone safety net for subpage headers — uses the same baseline knob
-     so subpage titles + action buttons shift together with the shell. */
   @supports (-webkit-touch-callout: none) {
     @media (max-width: 767px) {
       .page-header-row {
-        margin-top: max(12px, calc(env(safe-area-inset-top, 0px) + var(--ios-header-baseline) - 24px));
         flex-wrap: nowrap;
       }
     }

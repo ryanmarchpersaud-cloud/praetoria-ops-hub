@@ -8,9 +8,8 @@ export function WorkerLayout({ children }: { children: ReactNode }) {
   return (
     <div
       data-portal-scroll-shell
-      className="bg-background pb-20 safe-area-x"
+      className="worker-portal-shell bg-background pb-20 safe-area-x"
       style={{
-        paddingTop: 'env(safe-area-inset-top, 44px)',
         minHeight: '100dvh',
         boxSizing: 'border-box',
         display: 'flex',
@@ -18,7 +17,7 @@ export function WorkerLayout({ children }: { children: ReactNode }) {
       }}
     >
       <AnnouncementBanner />
-      <div className="max-w-lg mx-auto">
+      <div className="w-full max-w-lg mx-auto flex-1 min-h-0">
         {children}
         <ServiceLinksSection variant="compact" />
       </div>
