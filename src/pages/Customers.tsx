@@ -246,6 +246,17 @@ export default function Customers() {
               <SectionHeader>Notes</SectionHeader>
               <div><Label>Internal Notes</Label><Textarea name="notes" rows={2} /></div>
 
+              {/* ── Protected (real customer) ── */}
+              <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3">
+                <Switch checked={isProtected} onCheckedChange={setIsProtected} id="is_protected" />
+                <div className="flex-1">
+                  <Label htmlFor="is_protected" className="cursor-pointer text-sm flex items-center gap-1.5 font-medium">
+                    <ShieldCheck className="h-4 w-4 text-primary" /> Protected real customer
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Mark migrated/real customers so automation and AI assistants will not modify or message them.</p>
+                </div>
+              </div>
+
               <Button type="submit" className="w-full" disabled={createCustomer.isPending}>
                 {createCustomer.isPending ? 'Creating...' : 'Add Customer'}
               </Button>
