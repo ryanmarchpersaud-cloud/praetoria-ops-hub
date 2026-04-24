@@ -290,6 +290,15 @@ export default function CustomerDetail() {
                   </select>
                 </div>
               </div>
+              <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 mt-1">
+                <Switch checked={!!form?.is_protected} onCheckedChange={(v) => set('is_protected', v)} id="cd_is_protected" />
+                <div className="flex-1">
+                  <Label htmlFor="cd_is_protected" className="cursor-pointer text-xs flex items-center gap-1.5 font-semibold">
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Protected real customer
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">When on, automation and AI assistants will not modify this customer or send them anything.</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
