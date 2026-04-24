@@ -114,7 +114,7 @@ export default function Customers() {
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open);
-          if (!open) { setAccountType('Individual'); setBillingSameAsService(true); setRequiresPo(false); setPortalAccess(false); }
+          if (!open) { setAccountType('Individual'); setBillingSameAsService(true); setRequiresPo(false); setPortalAccess(false); setIsProtected(false); }
         }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" /> New Customer</Button>
