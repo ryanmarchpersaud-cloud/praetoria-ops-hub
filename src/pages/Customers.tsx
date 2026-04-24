@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, ChevronRight, Building2, User, ShieldCheck } from 'lucide-react';
+import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
@@ -112,13 +112,17 @@ export default function Customers() {
           <h1 className="text-2xl font-bold">Customers</h1>
           <p className="text-sm text-muted-foreground">{customers.length} total customers</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) { setAccountType('Individual'); setBillingSameAsService(true); setRequiresPo(false); setPortalAccess(false); setIsProtected(false); }
-        }}>
-          <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" /> New Customer</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/customers/import"><Upload className="h-4 w-4 mr-2" /> Import from Jobber</Link>
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) { setAccountType('Individual'); setBillingSameAsService(true); setRequiresPo(false); setPortalAccess(false); setIsProtected(false); }
+          }}>
+            <DialogTrigger asChild>
+              <Button><Plus className="h-4 w-4 mr-2" /> New Customer</Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Add Customer</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-3">
@@ -263,6 +267,7 @@ export default function Customers() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="relative max-w-sm">
