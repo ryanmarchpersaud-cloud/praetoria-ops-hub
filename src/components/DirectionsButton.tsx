@@ -56,7 +56,7 @@ export function DirectionsButton({ address, city, province, postalCode, classNam
           'w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center active:scale-95 transition-transform',
           className
         )}
-        onClick={e => e.stopPropagation()}
+        onClick={e => handleDirectionsClick(e, url)}
         title="Get directions"
       >
         <Navigation className="h-3.5 w-3.5 text-primary" />
@@ -74,7 +74,7 @@ export function DirectionsButton({ address, city, province, postalCode, classNam
           'inline-flex items-center gap-1 text-[11px] font-medium text-primary active:opacity-70 transition-opacity',
           className
         )}
-        onClick={e => e.stopPropagation()}
+        onClick={e => handleDirectionsClick(e, url)}
       >
         <Navigation className="h-3 w-3" />
         Directions
@@ -91,7 +91,7 @@ export function DirectionsButton({ address, city, province, postalCode, classNam
         'inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium active:scale-95 transition-transform shadow-sm',
         className
       )}
-      onClick={e => e.stopPropagation()}
+      onClick={e => handleDirectionsClick(e, url)}
     >
       <Navigation className="h-4 w-4" />
       Get Directions
