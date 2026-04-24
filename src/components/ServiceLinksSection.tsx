@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan, HardHat, Handshake } from 'lucide-react';
+import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan, HardHat, Handshake, Fence } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CleaningPartnerDialog } from '@/components/CleaningPartnerDialog';
 import { ConstructionPartnerDialog } from '@/components/ConstructionPartnerDialog';
@@ -32,6 +32,13 @@ const activeServices = [
     label: 'Repairs • Handyman • Property care',
     icon: Wrench,
     color: 'text-orange-500',
+  },
+  {
+    name: 'Fencing & Decking',
+    url: 'https://fencinganddecking.praetoriagroup.ca',
+    label: 'Custom fences, decks & outdoor builds',
+    icon: Fence,
+    color: 'text-green-600',
   },
 ];
 
