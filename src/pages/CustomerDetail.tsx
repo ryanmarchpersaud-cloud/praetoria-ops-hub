@@ -227,6 +227,13 @@ export default function CustomerDetail() {
             {customer.company_name && <span className="text-xs text-muted-foreground">{customer.company_name}</span>}
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{customer.customer_type}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{customer.account_type}</span>
+            {(() => {
+              const s = (form?.customer_status || customer.customer_status || 'Active') as string;
+              const cls = s === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : s === 'Lost' ? 'bg-rose-50 text-rose-700 border-rose-200'
+                : 'bg-amber-50 text-amber-700 border-amber-200';
+              return <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cls}`}>{s}</span>;
+            })()}
             {form?.is_protected && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold inline-flex items-center gap-1">
                 <ShieldCheck className="h-3 w-3" /> Protected
