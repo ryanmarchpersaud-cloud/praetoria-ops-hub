@@ -337,6 +337,11 @@ export default function Customers() {
                       <span>{c.first_name} {c.last_name}</span>
                     </Link>
                   </TableCell>
+                  <TableCell>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${STATUS_STYLES[(c as any).customer_status || 'Active'] || STATUS_STYLES.Active}`}>
+                      {(c as any).customer_status || 'Active'}
+                    </span>
+                  </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.company_name || '—'}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.customer_type || '—'}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.email || '—'}</TableCell>
