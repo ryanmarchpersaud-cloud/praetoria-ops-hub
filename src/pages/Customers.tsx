@@ -11,8 +11,14 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES } from '@/lib/constants';
+import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+
+const STATUS_STYLES: Record<string, string> = {
+  Active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Lost: 'bg-rose-50 text-rose-700 border-rose-200',
+  Paused: 'bg-amber-50 text-amber-700 border-amber-200',
+};
 
 const SelectField = ({ label, name, options, defaultValue }: { label: string; name: string; options: readonly string[]; defaultValue?: string }) => (
   <div>
