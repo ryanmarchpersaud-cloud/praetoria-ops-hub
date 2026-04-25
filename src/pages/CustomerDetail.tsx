@@ -127,6 +127,7 @@ export default function CustomerDetail() {
         first_name: form.first_name, last_name: form.last_name,
         customer_type: form.customer_type || 'Residential',
         account_type: form.account_type || 'Individual',
+        customer_status: form.customer_status || 'Active',
         company_name: form.company_name || null,
         company_legal_name: form.company_legal_name || null,
         operating_name: form.operating_name || null,
