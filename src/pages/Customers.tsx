@@ -11,8 +11,14 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES } from '@/lib/constants';
+import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+
+const STATUS_STYLES: Record<string, string> = {
+  Active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Lost: 'bg-rose-50 text-rose-700 border-rose-200',
+  Paused: 'bg-amber-50 text-amber-700 border-amber-200',
+};
 
 const SelectField = ({ label, name, options, defaultValue }: { label: string; name: string; options: readonly string[]; defaultValue?: string }) => (
   <div>
@@ -34,13 +40,17 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => (
 export default function Customers() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Lost' | 'Paused'>('Active');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [accountType, setAccountType] = useState('Individual');
   const [billingSameAsService, setBillingSameAsService] = useState(true);
   const [requiresPo, setRequiresPo] = useState(false);
   const [portalAccess, setPortalAccess] = useState(false);
   const [isProtected, setIsProtected] = useState(false);
-  const { data: customers = [], isLoading } = useCustomers(search || undefined);
+  const { data: allCustomers = [], isLoading } = useCustomers(search || undefined);
+  const customers = statusFilter === 'All'
+    ? allCustomers
+    : allCustomers.filter((c: any) => (c.customer_status || 'Active') === statusFilter);
   const createCustomer = useCreateCustomer();
   const { toast } = useToast();
 
@@ -270,9 +280,31 @@ export default function Customers() {
         </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search customers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search customers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {(['Active', 'Lost', 'Paused', 'All'] as const).map(s => {
+            const count = s === 'All' ? allCustomers.length : allCustomers.filter((c: any) => (c.customer_status || 'Active') === s).length;
+            const active = statusFilter === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:bg-muted'
+                }`}
+              >
+                {s} <span className={active ? 'opacity-80' : 'opacity-60'}>({count})</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card overflow-auto">
@@ -280,6 +312,7 @@ export default function Customers() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="hidden md:table-cell">Company</TableHead>
               <TableHead className="hidden md:table-cell">Type</TableHead>
               <TableHead className="hidden md:table-cell">Email</TableHead>
@@ -290,9 +323,9 @@ export default function Customers() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : customers.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
             ) : (
               customers.map(c => (
                 <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/customers/${c.id}`)}>
@@ -303,6 +336,11 @@ export default function Customers() {
                       )}
                       <span>{c.first_name} {c.last_name}</span>
                     </Link>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${STATUS_STYLES[(c as any).customer_status || 'Active'] || STATUS_STYLES.Active}`}>
+                      {(c as any).customer_status || 'Active'}
+                    </span>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.company_name || '—'}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.customer_type || '—'}</TableCell>

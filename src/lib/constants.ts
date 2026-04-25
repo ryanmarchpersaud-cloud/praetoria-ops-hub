@@ -55,6 +55,8 @@ export const INVOICE_STATUSES = ['Draft', 'Sent', 'Viewed', 'Paid', 'Partially P
 
 export const CUSTOMER_TYPES = ['Residential', 'Commercial', 'Contractor', 'Property Manager', 'Other'] as const;
 export const ACCOUNT_TYPES = ['Individual', 'Company'] as const;
+export const CUSTOMER_STATUSES = ['Active', 'Lost', 'Paused'] as const;
+export type CustomerStatus = typeof CUSTOMER_STATUSES[number];
 export const BILLING_METHODS = ['Email', 'Mail', 'Portal', 'Other'] as const;
 export const COMMUNICATION_METHODS = ['Email', 'Phone', 'Text / SMS', 'Portal'] as const;
 

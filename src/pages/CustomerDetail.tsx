@@ -20,7 +20,7 @@ import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedg
 import { useBillingProfile } from '@/hooks/useInvoices';
 import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInvoiceDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES } from '@/lib/constants';
+import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function CustomerDetail() {
@@ -127,6 +127,7 @@ export default function CustomerDetail() {
         first_name: form.first_name, last_name: form.last_name,
         customer_type: form.customer_type || 'Residential',
         account_type: form.account_type || 'Individual',
+        customer_status: form.customer_status || 'Active',
         company_name: form.company_name || null,
         company_legal_name: form.company_legal_name || null,
         operating_name: form.operating_name || null,
@@ -226,6 +227,13 @@ export default function CustomerDetail() {
             {customer.company_name && <span className="text-xs text-muted-foreground">{customer.company_name}</span>}
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{customer.customer_type}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{customer.account_type}</span>
+            {(() => {
+              const s = (form?.customer_status || customer.customer_status || 'Active') as string;
+              const cls = s === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : s === 'Lost' ? 'bg-rose-50 text-rose-700 border-rose-200'
+                : 'bg-amber-50 text-amber-700 border-amber-200';
+              return <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cls}`}>{s}</span>;
+            })()}
             {form?.is_protected && (
               <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold inline-flex items-center gap-1">
                 <ShieldCheck className="h-3 w-3" /> Protected
@@ -289,6 +297,19 @@ export default function CustomerDetail() {
                     {ACCOUNT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
+              </div>
+              <div>
+                <Label className="text-xs">Customer Status</Label>
+                <select
+                  value={form?.customer_status || 'Active'}
+                  onChange={e => set('customer_status', e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10"
+                >
+                  {CUSTOMER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  <strong>Active</strong> = current customer. <strong>Paused</strong> = service temporarily on hold. <strong>Lost</strong> = no longer a customer.
+                </p>
               </div>
               <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 mt-1">
                 <Switch checked={!!form?.is_protected} onCheckedChange={(v) => set('is_protected', v)} id="cd_is_protected" />
