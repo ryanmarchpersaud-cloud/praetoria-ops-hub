@@ -1244,6 +1244,7 @@ export type Database = {
           last_name: string
           notes: string | null
           operating_name: string | null
+          pause_reason: string | null
           phone: string | null
           portal_access_enabled: boolean
           postal_code: string | null
@@ -1288,6 +1289,7 @@ export type Database = {
           last_name: string
           notes?: string | null
           operating_name?: string | null
+          pause_reason?: string | null
           phone?: string | null
           portal_access_enabled?: boolean
           postal_code?: string | null
@@ -1332,6 +1334,7 @@ export type Database = {
           last_name?: string
           notes?: string | null
           operating_name?: string | null
+          pause_reason?: string | null
           phone?: string | null
           portal_access_enabled?: boolean
           postal_code?: string | null
