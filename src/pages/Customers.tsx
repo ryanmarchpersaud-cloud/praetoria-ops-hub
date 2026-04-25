@@ -280,9 +280,31 @@ export default function Customers() {
         </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search customers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search customers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {(['Active', 'Lost', 'Paused', 'All'] as const).map(s => {
+            const count = s === 'All' ? allCustomers.length : allCustomers.filter((c: any) => (c.customer_status || 'Active') === s).length;
+            const active = statusFilter === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  active
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-muted-foreground border-border hover:bg-muted'
+                }`}
+              >
+                {s} <span className={active ? 'opacity-80' : 'opacity-60'}>({count})</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card overflow-auto">
