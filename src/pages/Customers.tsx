@@ -40,13 +40,17 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => (
 export default function Customers() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Lost' | 'Paused'>('Active');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [accountType, setAccountType] = useState('Individual');
   const [billingSameAsService, setBillingSameAsService] = useState(true);
   const [requiresPo, setRequiresPo] = useState(false);
   const [portalAccess, setPortalAccess] = useState(false);
   const [isProtected, setIsProtected] = useState(false);
-  const { data: customers = [], isLoading } = useCustomers(search || undefined);
+  const { data: allCustomers = [], isLoading } = useCustomers(search || undefined);
+  const customers = statusFilter === 'All'
+    ? allCustomers
+    : allCustomers.filter((c: any) => (c.customer_status || 'Active') === statusFilter);
   const createCustomer = useCreateCustomer();
   const { toast } = useToast();
 
