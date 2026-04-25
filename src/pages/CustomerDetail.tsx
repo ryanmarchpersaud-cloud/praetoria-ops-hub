@@ -128,6 +128,7 @@ export default function CustomerDetail() {
         customer_type: form.customer_type || 'Residential',
         account_type: form.account_type || 'Individual',
         customer_status: form.customer_status || 'Active',
+        pause_reason: (form.customer_status === 'Paused' || form.customer_status === 'Lost') ? (form.pause_reason || null) : null,
         company_name: form.company_name || null,
         company_legal_name: form.company_legal_name || null,
         operating_name: form.operating_name || null,
