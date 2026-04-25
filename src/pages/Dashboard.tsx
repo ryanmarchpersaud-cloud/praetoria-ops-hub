@@ -188,6 +188,7 @@ export default function Dashboard() {
             subcontractorInvoices={subInvoices}
             isLoading={isAlertsLoading}
           />
+          <CustomerStatusWidget />
           <LiveWorkforcePanel />
           <BusinessPerformance
             invoices={invoices}
