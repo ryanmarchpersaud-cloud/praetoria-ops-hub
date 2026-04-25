@@ -6,6 +6,7 @@ import { TodayAppointments } from '@/components/dashboard/TodayAppointments';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { BusinessPerformance } from '@/components/dashboard/BusinessPerformance';
 import { LiveWorkforcePanel } from '@/components/dashboard/LiveWorkforcePanel';
+import { CustomerStatusWidget } from '@/components/dashboard/CustomerStatusWidget';
 import {
   useDashboardRequests,
   useDashboardQuotes,
