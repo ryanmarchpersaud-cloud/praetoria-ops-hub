@@ -311,6 +311,25 @@ export default function CustomerDetail() {
                   <strong>Active</strong> = current customer. <strong>Paused</strong> = service temporarily on hold. <strong>Lost</strong> = no longer a customer.
                 </p>
               </div>
+              {(form?.customer_status === 'Paused' || form?.customer_status === 'Lost') && (
+                <div>
+                  <Label className="text-xs">
+                    {form?.customer_status === 'Paused' ? 'Pausing reason & notes' : 'Reason lost & notes'}
+                  </Label>
+                  <Textarea
+                    value={form?.pause_reason || ''}
+                    onChange={e => set('pause_reason', e.target.value)}
+                    placeholder={form?.customer_status === 'Paused'
+                      ? 'e.g. Customer travelling until June, equipment repair pending, seasonal hold...'
+                      : 'e.g. Price too high, switched providers, property sold...'}
+                    rows={3}
+                    className="text-sm"
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Recorded for internal reference. Not visible to the customer.
+                  </p>
+                </div>
+              )}
               <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 mt-1">
                 <Switch checked={!!form?.is_protected} onCheckedChange={(v) => set('is_protected', v)} id="cd_is_protected" />
                 <div className="flex-1">
