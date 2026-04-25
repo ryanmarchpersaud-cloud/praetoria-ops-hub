@@ -298,6 +298,19 @@ export default function CustomerDetail() {
                   </select>
                 </div>
               </div>
+              <div>
+                <Label className="text-xs">Customer Status</Label>
+                <select
+                  value={form?.customer_status || 'Active'}
+                  onChange={e => set('customer_status', e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10"
+                >
+                  {CUSTOMER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  <strong>Active</strong> = current customer. <strong>Paused</strong> = service temporarily on hold. <strong>Lost</strong> = no longer a customer.
+                </p>
+              </div>
               <div className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 mt-1">
                 <Switch checked={!!form?.is_protected} onCheckedChange={(v) => set('is_protected', v)} id="cd_is_protected" />
                 <div className="flex-1">
