@@ -312,6 +312,7 @@ export default function Customers() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="hidden md:table-cell">Company</TableHead>
               <TableHead className="hidden md:table-cell">Type</TableHead>
               <TableHead className="hidden md:table-cell">Email</TableHead>
@@ -322,9 +323,9 @@ export default function Customers() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : customers.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
             ) : (
               customers.map(c => (
                 <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/customers/${c.id}`)}>
