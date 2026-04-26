@@ -1047,6 +1047,59 @@ export default function QuoteDetail() {
       </div>
 
       {/* Delete confirmation */}
+      {/* Catalog edit/create dialog */}
+      <Dialog open={!!catalogEdit} onOpenChange={(o) => !o && setCatalogEdit(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{catalogEdit?.id ? 'Edit catalog item' : 'New catalog item'}</DialogTitle>
+            <DialogDescription>Changes apply to this item across all future quotes, jobs, and invoices.</DialogDescription>
+          </DialogHeader>
+          {catalogEdit && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Item name</Label>
+                <Input value={catalogEdit.name} onChange={(e) => setCatalogEdit({ ...catalogEdit, name: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Category</Label>
+                <select
+                  value={catalogEdit.service_category}
+                  onChange={(e) => setCatalogEdit({ ...catalogEdit, service_category: e.target.value })}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  {SERVICE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs">Unit price ($)</Label>
+                <Input type="number" step="0.01" value={catalogEdit.unit_price}
+                  onChange={(e) => setCatalogEdit({ ...catalogEdit, unit_price: Number(e.target.value) })} />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setCatalogEdit(null)}>Cancel</Button>
+                <Button onClick={saveCatalogEdit}>{catalogEdit.id ? 'Save' : 'Create'}</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Catalog delete confirmation */}
+      <Dialog open={!!catalogDeleteId} onOpenChange={(o) => !o && setCatalogDeleteId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remove catalog item?</DialogTitle>
+            <DialogDescription>
+              The item will be archived and hidden from the catalog picker. Existing quotes and invoices that already use it are not affected.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setCatalogDeleteId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmCatalogDelete}>Remove</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
