@@ -443,6 +443,7 @@ export default function QuotePrint() {
             <p className="mt-1">Thank you for choosing Praetoria Group.</p>
           </div>
         </div>
+        </div>
       </div>
     </>
   );
