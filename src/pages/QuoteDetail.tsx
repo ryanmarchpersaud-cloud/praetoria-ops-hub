@@ -97,6 +97,7 @@ export default function QuoteDetail() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // Fetch linked job if converted
   const { data: linkedJob } = useQuery({
