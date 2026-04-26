@@ -219,21 +219,7 @@ export default function QuotePrint() {
             </div>
           </div>
           <div className="text-right">
-            <div
-              className="text-xs font-semibold uppercase tracking-widest text-[#3b5bdb] print:text-sm"
-            >
-              Quote
-            </div>
-            <p
-              className="text-xl font-bold mt-1 print:text-2xl"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              {exportData.quoteNumber}
-            </p>
-            <div className="mt-2">
-              <PrintStatusBadge status={exportData.status} />
-            </div>
-            <p className="text-xs text-[#6b7280] mt-2 print:text-sm">
+            <p className="text-xs text-[#6b7280] print:text-sm">
               Issued: {format(new Date(exportData.createdAt), 'MMMM d, yyyy')}
             </p>
             {exportData.validUntil && (
@@ -241,36 +227,57 @@ export default function QuotePrint() {
                 Valid until: {format(new Date(exportData.validUntil), 'MMMM d, yyyy')}
               </p>
             )}
+            <div className="mt-2">
+              <PrintStatusBadge status={exportData.status} />
+            </div>
           </div>
         </div>
 
         {/* ── Brand Accent Bar ── */}
         <div className="h-[2px] bg-[#3b5bdb] mb-8 print:mb-10" />
 
-        {/* ── Client Information ── */}
-        {exportData.client && (
-          <div className="mb-8 print:mb-10">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
-              Prepared For
-            </p>
-            <p className="font-semibold text-sm print:text-base">{exportData.client.name}</p>
-            {exportData.client.company && (
-              <p className="text-sm text-[#374151] print:text-base">{exportData.client.company}</p>
-            )}
-            <div className="text-xs text-[#6b7280] mt-1 space-y-0.5 print:text-sm">
-              {exportData.client.address && <p>{exportData.client.address}</p>}
-              {(exportData.client.city || exportData.client.province || exportData.client.postalCode) && (
-                <p>
-                  {[exportData.client.city, exportData.client.province, exportData.client.postalCode]
-                    .filter(Boolean)
-                    .join(', ')}
+        {/* ── Client Information + Big Quotation Title ── */}
+        <div className="grid grid-cols-2 gap-6 mb-8 print:mb-10 items-start">
+          <div>
+            {exportData.client && (
+              <>
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
+                  Prepared For
                 </p>
-              )}
-              {exportData.client.email && <p>{exportData.client.email}</p>}
-              {exportData.client.phone && <p>{exportData.client.phone}</p>}
-            </div>
+                <p className="font-semibold text-sm print:text-base">{exportData.client.name}</p>
+                {exportData.client.company && (
+                  <p className="text-sm text-[#374151] print:text-base">{exportData.client.company}</p>
+                )}
+                <div className="text-xs text-[#6b7280] mt-1 space-y-0.5 print:text-sm">
+                  {exportData.client.address && <p>{exportData.client.address}</p>}
+                  {(exportData.client.city || exportData.client.province || exportData.client.postalCode) && (
+                    <p>
+                      {[exportData.client.city, exportData.client.province, exportData.client.postalCode]
+                        .filter(Boolean)
+                        .join(', ')}
+                    </p>
+                  )}
+                  {exportData.client.email && <p>{exportData.client.email}</p>}
+                  {exportData.client.phone && <p>{exportData.client.phone}</p>}
+                </div>
+              </>
+            )}
           </div>
-        )}
+          <div className="text-right">
+            <h2
+              className="text-4xl md:text-5xl print:text-6xl font-extrabold tracking-tight leading-none"
+              style={{ color: theme.accent, fontFamily: "'DM Sans', sans-serif" }}
+            >
+              QUOTATION
+            </h2>
+            <p
+              className="mt-2 text-lg font-bold print:text-xl text-[#1a1a2e]"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            >
+              {exportData.quoteNumber}
+            </p>
+          </div>
+        </div>
 
         {/* ── Service & Scope ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 print:mb-10 print:grid-cols-2">
@@ -471,6 +478,7 @@ export default function QuotePrint() {
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-6 print:text-xs print:mb-8">
                 Client Signature
               </p>
+              <div className="h-8 print:h-9" />
               <div className="border-b border-[#9ca3af] mb-1" />
               <p className="text-[10px] text-[#9ca3af] print:text-xs">Signature & Date</p>
             </div>
@@ -478,9 +486,9 @@ export default function QuotePrint() {
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-6 print:text-xs print:mb-8">
                 Praetoria Group
               </p>
-              <div className="relative h-14 mb-0 print:h-16 flex items-end">
+              <div className="h-8 print:h-9 flex items-end">
                 <span
-                  className="text-3xl print:text-4xl text-[#1a1a2e] leading-none pb-1"
+                  className="text-xl print:text-2xl text-[#1a1a2e] leading-none"
                   style={{ fontFamily: "'Great Vibes', 'Brush Script MT', cursive" }}
                 >
                   Ryan Steven Persaud
