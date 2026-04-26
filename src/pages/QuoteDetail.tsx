@@ -144,6 +144,49 @@ export default function QuoteDetail() {
     return acc;
   }, {});
 
+  // Order categories by master list, then any extras alphabetically at the end
+  const orderedCatalogGroups: Array<[string, any[]]> = (() => {
+    const entries: Array<[string, any[]]> = [];
+    const seen = new Set<string>();
+    for (const cat of SERVICE_CATEGORIES) {
+      if (catalogGrouped[cat]) { entries.push([cat, catalogGrouped[cat]]); seen.add(cat); }
+    }
+    for (const [cat, items] of Object.entries(catalogGrouped)) {
+      if (!seen.has(cat)) entries.push([cat, items as any[]]);
+    }
+    return entries;
+  })();
+
+  // Brand colors per category (matches mem://project/service-categories-master)
+  const CATEGORY_COLORS: Record<string, string> = {
+    'Snow & Ice': '#2563EB',
+    'Maintenance & Repairs': '#DC2626',
+    'Property Care & Landscaping': '#F97316',
+    'Property Management': '#16A34A',
+    'Electrical': '#7C3AED',
+    'Plumbing': '#0D9488',
+    'Carpentry & Renovations': '#92400E',
+    'Roofing & Exteriors': '#374151',
+    'Painting & Finishing': '#EAB308',
+    'Cleaning Services': '#0EA5E9',
+    'Heating, Ventilation & Air Conditioning': '#F43F5E',
+    'Concrete & Masonry': '#6B7280',
+    'Security & Smart Home': '#111827',
+    'Fencing & Decking': '#7c2d12',
+    'Junk Removal': '#c2410c',
+    'Power Washing': '#0891B2',
+    'Tiling & Flooring': '#A16207',
+    'Gutter Cleaning & Repair': '#65A30D',
+    'Window Cleaning': '#0284C7',
+    'Pest Control': '#854D0E',
+    'Moving & Hauling': '#9333EA',
+    'Insulation & Drywall': '#B91C1C',
+    'Appliance Install & Repair': '#0F766E',
+    'Garage Doors': '#475569',
+    'Locksmith Services': '#1E40AF',
+    'Other': '#64748B',
+  };
+
   useEffect(() => { if (quote) setForm(quote); }, [quote]);
   useEffect(() => {
     if (lineItems.length > 0) {
@@ -649,16 +692,25 @@ export default function QuoteDetail() {
                           <CommandInput placeholder="Search services..." className="text-base h-12" />
                           <CommandList className="max-h-[28rem]">
                             <CommandEmpty>No items found.</CommandEmpty>
-                            {Object.entries(catalogGrouped).map(([cat, products]) => (
-                              <CommandGroup key={cat} heading={cat} className="[&_[cmdk-group-heading]]:text-sm [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:py-2">
-                                {(products as any[]).map((p: any) => (
-                                  <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between py-3 text-base">
-                                    <span className="truncate">{p.name}</span>
-                                    <span className="text-muted-foreground text-sm ml-2 shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            ))}
+                            {orderedCatalogGroups.map(([cat, products]) => {
+                              const color = CATEGORY_COLORS[cat] || '#64748B';
+                              const slug = `cat-${cat.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
+                              return (
+                                <CommandGroup
+                                  key={cat}
+                                  heading={cat}
+                                  className={`${slug} [&_[cmdk-group-heading]]:text-lg [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-tight [&_[cmdk-group-heading]]:text-white [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2.5 [&_[cmdk-group-heading]]:my-2 [&_[cmdk-group-heading]]:rounded-md [&_[cmdk-group-heading]]:shadow-sm`}
+                                >
+                                  <style>{`.${slug} [cmdk-group-heading] { background-color: ${color} !important; }`}</style>
+                                  {(products as any[]).map((p: any) => (
+                                    <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between py-3 text-base">
+                                      <span className="truncate">{p.name}</span>
+                                      <span className="text-muted-foreground text-sm ml-2 shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              );
+                            })}
                           </CommandList>
                         </Command>
                       </PopoverContent>
