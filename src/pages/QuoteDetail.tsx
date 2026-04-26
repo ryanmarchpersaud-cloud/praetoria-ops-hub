@@ -188,6 +188,12 @@ export default function QuoteDetail() {
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
         approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
         tax_rate: Number(form.tax_rate || 0.13),
+        recurring_pricing_enabled: !!form.recurring_pricing_enabled,
+        price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
+        price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
+        price_biweekly: form.price_biweekly === '' || form.price_biweekly == null ? null : Number(form.price_biweekly),
+        price_monthly: form.price_monthly === '' || form.price_monthly == null ? null : Number(form.price_monthly),
+        recurring_pricing_notes: form.recurring_pricing_notes || null,
       });
       await upsertItems.mutateAsync({
         quoteId: id,
