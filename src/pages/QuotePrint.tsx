@@ -346,8 +346,16 @@ export default function QuotePrint() {
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-6 print:text-xs print:mb-8">
                 Praetoria Group
               </p>
+              <div className="relative h-12 mb-0">
+                <img
+                  src="/images/ryan-signature.png"
+                  alt="Ryan Steven Persaud"
+                  className="absolute bottom-0 left-0 h-14 w-auto object-contain print:h-16"
+                  style={{ maxWidth: '85%' }}
+                />
+              </div>
               <div className="border-b border-[#9ca3af] mb-1" />
-              <p className="text-[10px] text-[#9ca3af] print:text-xs">Authorized Representative</p>
+              <p className="text-[10px] text-[#9ca3af] print:text-xs">Ryan Steven Persaud · Authorized Representative</p>
             </div>
           </div>
 
