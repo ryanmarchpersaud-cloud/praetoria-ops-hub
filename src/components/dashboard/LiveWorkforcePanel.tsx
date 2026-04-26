@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Users, CheckCircle2, ChevronRight, LogOut, Loader2, Activity, AlertTriangle } from 'lucide-react';
+import { Clock, Users, CheckCircle2, ChevronRight, LogOut, Loader2, Activity, AlertTriangle, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAdminLiveWorkforce, useAdminForceClockOut } from '@/hooks/useTimesheets';
 import { formatDistanceToNow } from 'date-fns';
