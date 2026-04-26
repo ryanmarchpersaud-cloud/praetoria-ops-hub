@@ -40,10 +40,13 @@ export function CustomerStatusWidget() {
   return (
     <Card>
       <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-sm flex items-center gap-1.5">
-          <Users className="h-4 w-4" /> Customer Status
+        <CardTitle className="text-base md:text-lg font-extrabold tracking-tight flex items-center gap-2">
+          <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-100 dark:bg-blue-950/40">
+            <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          </span>
+          Customer Status
         </CardTitle>
-        <span className="text-[10px] text-muted-foreground">Last 30 days</span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Last 30 days</span>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="mb-2 flex items-baseline justify-between">
