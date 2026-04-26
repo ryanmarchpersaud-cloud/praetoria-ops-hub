@@ -145,6 +145,8 @@ export default function Dashboard() {
             isLoadingEmployees={loadEmp}
           />
 
+          <TomorrowSchedule />
+
           {/* Legacy list cards */}
           <div className="grid md:grid-cols-2 gap-3">
             <DashboardListCard
