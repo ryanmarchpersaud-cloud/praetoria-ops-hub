@@ -509,22 +509,76 @@ Deno.serve(async (req) => {
     // ─── Quote Sent (customer-facing) ───
     if (action === "quote_sent") {
       const { customer_email, customer_name, quote_number, service_category, total, quote_id, custom_message } = params;
-      if (!customer_email) return json({ error: "Missing customer_email" }, 400);
+      const sb = getServiceClient();
+      let quoteRecord: Record<string, unknown> = { quote_number, service_category, total, id: quote_id };
+      let clientRecord: Record<string, unknown> | null = null;
+      let quoteLineItems: Record<string, unknown>[] = [];
 
-      const replyTo = resolveReplyTo(service_category, "operational");
+      if (quote_id) {
+        const { data: dbQuote, error: dbQuoteError } = await sb
+          .from("quotes")
+          .select("*, customers(*), leads(*)")
+          .eq("id", quote_id)
+          .maybeSingle();
+        if (dbQuoteError) return json({ error: dbQuoteError.message }, 500);
+        if (dbQuote) {
+          quoteRecord = dbQuote as Record<string, unknown>;
+          clientRecord = ((dbQuote as Record<string, unknown>).customers || (dbQuote as Record<string, unknown>).leads || null) as Record<string, unknown> | null;
+        }
+
+        const { data: dbItems, error: itemsError } = await sb
+          .from("quote_line_items")
+          .select("item_name, description, quantity, unit_price, line_total, sort_order")
+          .eq("quote_id", quote_id)
+          .order("sort_order");
+        if (itemsError) return json({ error: itemsError.message }, 500);
+        quoteLineItems = (dbItems || []) as Record<string, unknown>[];
+      }
+
+      const resolvedEmail = String(customer_email || clientRecord?.email || "");
+      if (!resolvedEmail) return json({ error: "Missing customer_email" }, 400);
+
+      const resolvedName = String(
+        customer_name ||
+          [clientRecord?.first_name, clientRecord?.last_name].filter(Boolean).join(" ").trim() ||
+          clientRecord?.company_name ||
+          "Valued Customer"
+      );
+      const resolvedQuoteNumber = String(quoteRecord.quote_number || quote_number || "");
+      const resolvedCategory = String(quoteRecord.service_category || service_category || "Property Services");
+      const subtotalFromItems = quoteLineItems.reduce((sum, item) => sum + Number(item.line_total || 0), 0);
+      const taxRate = Number(quoteRecord.tax_rate || 0.13);
+      const resolvedSubtotal = Number(quoteRecord.subtotal || subtotalFromItems || 0);
+      const resolvedTax = Number(quoteRecord.tax || (resolvedSubtotal * taxRate) || 0);
+      const resolvedTotal = Number(quoteRecord.total || total || (resolvedSubtotal + resolvedTax) || 0);
+      const pdfBase64 = generateQuotePdfBase64(
+        { ...quoteRecord, subtotal: resolvedSubtotal, tax: resolvedTax, total: resolvedTotal, tax_rate: taxRate, service_category: resolvedCategory, quote_number: resolvedQuoteNumber },
+        clientRecord,
+        quoteLineItems,
+      );
+
+      const replyTo = resolveReplyTo(resolvedCategory, "operational");
+      const itemsHtml = quoteLineItems.length > 0
+        ? `<table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+            ${quoteLineItems.map((item) => `<tr><td style="padding:8px 0;border-bottom:1px solid #e5e7eb;"><strong>${escapeHtml(item.item_name)}</strong>${item.description ? `<br/><span style="color:#71717a;font-size:12px;">${escapeHtml(item.description)}</span>` : ""}</td><td style="padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap;">$${formatMoney(item.line_total)}</td></tr>`).join("")}
+          </table>`
+        : "";
 
       const result = await sendViaResend({
-        to: customer_email,
-        subject: `Quote ${quote_number || ""} — ${service_category || "Service"} — $${total || "0.00"} CAD`,
+        to: resolvedEmail,
+        subject: `Quote ${resolvedQuoteNumber} — ${resolvedCategory} — $${formatMoney(resolvedTotal)} CAD`,
         html: wrapHtml("Your Quote is Ready", `
-          <p>Dear ${customer_name || "Valued Customer"},</p>
-          <p>Please find your quote <strong>${quote_number || ""}</strong> for <strong>${service_category || "services"}</strong>, totalling <strong>$${total || "0.00"} CAD</strong> (incl. tax).</p>
-          ${custom_message ? `<p style="background:#f0f9ff;padding:12px;border-radius:6px;font-style:italic;">${custom_message}</p>` : ""}
-          <p>This quote is valid for 30 days from the issued date. Please reply to this email or call us to proceed.</p>
+          <p>Dear ${escapeHtml(resolvedName)},</p>
+          <p>Your attached PDF quotation <strong>${escapeHtml(resolvedQuoteNumber)}</strong> is for <strong>${escapeHtml(resolvedCategory)}</strong>, totalling <strong>$${formatMoney(resolvedTotal)} CAD</strong> (incl. tax).</p>
+          ${itemsHtml}
+          ${quoteRecord.scope_of_work ? `<p><strong>Scope of work:</strong><br/>${escapeHtml(quoteRecord.scope_of_work).replace(/\n/g, "<br/>")}</p>` : ""}
+          ${custom_message ? `<p style="background:#f0f9ff;padding:12px;border-radius:6px;font-style:italic;">${escapeHtml(custom_message)}</p>` : ""}
+          <p>The full customer-ready quotation PDF is attached to this email. This quote is valid for 30 days from the issued date. Please reply to this email or call us to proceed.</p>
           <p>You can also view your quotes in your <a href="https://praetoria-ops-hub.lovable.app/portal/quotes">customer portal</a>.</p>
           <p>Best regards,<br/>Praetoria Group</p>
         `),
         reply_to: replyTo,
+        attachments: [{ filename: `${resolvedQuoteNumber || "quote"}.pdf`, content: pdfBase64, content_type: "application/pdf" }],
       });
 
       const logEntry: IntegrationEntry = {
@@ -532,12 +586,12 @@ Deno.serve(async (req) => {
         event_name: "email.quote_sent",
         channel: "email",
         status: result.ok ? "success" : "failed",
-        recipient: customer_email,
+        recipient: resolvedEmail,
         record_type: "quote",
-        record_id: quote_id,
+        record_id: String(quote_id || quoteRecord.id || ""),
         provider_response_id: result.id,
         error_message: result.error,
-        metadata: { quote_number, service_category, total, reply_to: replyTo },
+        metadata: { quote_number: resolvedQuoteNumber, service_category: resolvedCategory, total: formatMoney(resolvedTotal), reply_to: replyTo, pdf_attached: true, line_item_count: quoteLineItems.length },
       };
       await logIntegration(logEntry);
       await notifyN8n(logEntry);
