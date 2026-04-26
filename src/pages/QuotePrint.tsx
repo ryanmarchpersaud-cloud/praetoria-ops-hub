@@ -70,6 +70,52 @@ function PrintStatusBadge({ status }: { status: string }) {
   );
 }
 
+// ─── Service category theming for the printed quote ───
+type ServiceTheme = {
+  label: string;
+  accent: string;
+  tint: string;
+  icon: JSX.Element;
+};
+
+function svgIcon(path: string, color: string) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+      <path d={path} />
+    </svg>
+  );
+}
+
+function getServiceTheme(category?: string | null): ServiceTheme {
+  switch (category) {
+    case 'Landscaping & Grounds':
+      return { label: 'Landscaping & Grounds', accent: '#15803d', tint: 'rgba(34,197,94,0.05)',
+        icon: svgIcon('M12 2 L6 11 H9 L4 19 H10 V22 H14 V19 H20 L15 11 H18 Z', '#15803d') };
+    case 'Snow & Ice':
+      return { label: 'Snow & Ice Management', accent: '#0369a1', tint: 'rgba(14,165,233,0.05)',
+        icon: svgIcon('M12 2 V22 M2 12 H22 M4.9 4.9 L19.1 19.1 M19.1 4.9 L4.9 19.1', '#0369a1') };
+    case 'Junk Removal':
+      return { label: 'Junk Removal', accent: '#c2410c', tint: 'rgba(249,115,22,0.06)',
+        icon: svgIcon('M3 7 H15 V17 H3 Z M15 10 H19 L21 13 V17 H15 Z', '#c2410c') };
+    case 'Property Care & Maintenance':
+    case 'Property Management':
+      return { label: category!, accent: '#a16207', tint: 'rgba(234,179,8,0.06)',
+        icon: svgIcon('M14 6 a4 4 0 1 0 4 4 L21 13 L18 16 L14 12 L6 20 L4 18 L12 10 Z', '#a16207') };
+    case 'Cleaning Services':
+      return { label: 'Cleaning Services', accent: '#0e7490', tint: 'rgba(6,182,212,0.05)',
+        icon: svgIcon('M9 2 H15 V8 L19 12 V22 H5 V12 L9 8 Z', '#0e7490') };
+    case 'Power Washing':
+      return { label: 'Power Washing', accent: '#1d4ed8', tint: 'rgba(59,130,246,0.05)',
+        icon: svgIcon('M3 12 H10 L14 8 V16 L10 12 Z M16 6 V18 M19 9 V15', '#1d4ed8') };
+    case 'Gutter Cleaning':
+      return { label: 'Gutter Cleaning', accent: '#0e7490', tint: 'rgba(8,145,178,0.05)',
+        icon: svgIcon('M3 8 H21 V12 H3 Z M5 12 V18 M19 12 V18', '#0e7490') };
+    default:
+      return { label: category || 'Property Services', accent: '#1a1a2e', tint: 'rgba(26,26,46,0.04)',
+        icon: svgIcon('M3 11 L12 4 L21 11 V21 H14 V14 H10 V21 H3 Z', '#1a1a2e') };
+  }
+}
+
 export default function QuotePrint() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -89,6 +135,7 @@ export default function QuotePrint() {
 
   const exportData = getQuoteDataForExport(quote, lineItems);
   const { subtotal, tax, total, taxRate } = exportData;
+  const theme = getServiceTheme(exportData.serviceCategory);
 
   const handlePrint = () => window.print();
 
@@ -114,8 +161,27 @@ export default function QuotePrint() {
       {/* ── Printable Document ── */}
       <div
         id="quote-pdf-content"
-        className="print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen"
+        className="relative print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen overflow-hidden"
+        style={{ backgroundColor: theme.tint }}
       >
+        {/* ── Service Watermark (decorative) ── */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex items-center justify-center print:flex"
+          style={{ opacity: 0.06 }}
+        >
+          <div className="w-[420px] h-[420px]" style={{ color: theme.accent }}>
+            {theme.icon}
+          </div>
+        </div>
+
+        {/* ── Service accent strip ── */}
+        <div
+          className="absolute top-0 left-0 right-0 h-1.5 print:h-2"
+          style={{ backgroundColor: theme.accent }}
+        />
+
+        <div className="relative">
         {/* ── Company Header ── */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div className="flex items-start gap-4">
@@ -376,6 +442,7 @@ export default function QuotePrint() {
             <p>support@praetoriagroup.ca · (306) 737-6269</p>
             <p className="mt-1">Thank you for choosing Praetoria Group.</p>
           </div>
+        </div>
         </div>
       </div>
     </>
