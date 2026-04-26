@@ -226,15 +226,15 @@ function DashboardListCard({
 }) {
   return (
     <Card>
-      <CardHeader className="pb-1.5 px-3 md:px-6 pt-3 md:pt-6">
+      <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs md:text-sm flex items-center gap-2">
-            <span className={cn('w-6 h-6 rounded-lg flex items-center justify-center', iconBg)}>
-              <Icon className={cn('h-3.5 w-3.5', iconColor)} />
+          <CardTitle className="text-base md:text-lg font-extrabold tracking-tight flex items-center gap-2">
+            <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconBg)}>
+              <Icon className={cn('h-4 w-4', iconColor)} />
             </span>
             {title}
           </CardTitle>
-          <Link to={viewAllLink} className="text-[10px] md:text-xs text-primary flex items-center gap-0.5 hover:underline">
+          <Link to={viewAllLink} className="text-[11px] md:text-xs font-semibold text-primary flex items-center gap-0.5 hover:underline">
             View all <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
