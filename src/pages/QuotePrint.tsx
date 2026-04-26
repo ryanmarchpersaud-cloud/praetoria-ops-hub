@@ -449,13 +449,27 @@ export default function QuotePrint() {
           );
         })()}
 
-        {exportData.agentSummary && (
-          <div className="mb-8 print:mb-10 bg-[#f9fafb] rounded-lg p-4 print:bg-[#f9fafb] border border-[#e5e7eb]">
+        {(exportData.customerNotes || exportData.agentSummary) && (
+          <div className="mb-6 print:mb-8 bg-[#f9fafb] rounded-lg p-4 print:bg-[#f9fafb] border border-[#e5e7eb]">
             <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
               Notes
             </p>
             <p className="text-sm text-[#374151] leading-relaxed whitespace-pre-wrap print:text-base">
-              {exportData.agentSummary}
+              {exportData.customerNotes || exportData.agentSummary}
+            </p>
+          </div>
+        )}
+
+        {exportData.workmanshipWarranty && (
+          <div
+            className="mb-6 print:mb-8 rounded-lg p-4 border"
+            style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}
+          >
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#15803d' }}>
+              Workmanship Warranty
+            </p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap print:text-base" style={{ color: '#14532d' }}>
+              {exportData.workmanshipWarranty}
             </p>
           </div>
         )}
@@ -466,13 +480,19 @@ export default function QuotePrint() {
             <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
               Terms & Conditions
             </p>
-            <ol className="text-xs text-[#6b7280] space-y-1.5 list-decimal list-inside print:text-sm">
-              <li>This quote is valid for 30 days from the issued date.</li>
-              <li>Payment terms: Net 30 from project completion date.</li>
-              <li>Prices do not include additional scope changes unless separately quoted.</li>
-              <li>All work performed in accordance with applicable local regulations and standards.</li>
-              <li>Acceptance of this quote constitutes agreement to the terms stated herein.</li>
-            </ol>
+            {exportData.termsConditions ? (
+              <p className="text-xs text-[#6b7280] leading-relaxed whitespace-pre-wrap print:text-sm">
+                {exportData.termsConditions}
+              </p>
+            ) : (
+              <ol className="text-xs text-[#6b7280] space-y-1.5 list-decimal list-inside print:text-sm">
+                <li>This quote is valid for 30 days from the issued date.</li>
+                <li>Payment terms: Net 30 from project completion date.</li>
+                <li>Prices do not include additional scope changes unless separately quoted.</li>
+                <li>All work performed in accordance with applicable local regulations and standards.</li>
+                <li>Acceptance of this quote constitutes agreement to the terms stated herein.</li>
+              </ol>
+            )}
           </div>
 
           {/* ── Acceptance Block ── */}
