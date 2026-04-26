@@ -78,8 +78,8 @@ export default function QuotePrint() {
   const { data: companySettings } = useQuery({
     queryKey: ['company_settings_signature'],
     queryFn: async () => {
-      const { data } = await supabase.from('company_settings').select('signature_url').limit(1).maybeSingle();
-      return data as { signature_url: string | null } | null;
+      const { data } = await supabase.from('company_settings').select('*').limit(1).maybeSingle();
+      return data as any;
     },
   });
   const signatureUrl = (companySettings?.signature_url as string | null) || '/images/ryan-signature.png';
