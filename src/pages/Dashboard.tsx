@@ -97,6 +97,22 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Conversion Funnel + Pending Approvals row */}
+      <div className="grid lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3">
+          <ConversionFunnel
+            leads={leads}
+            quotes={dashQuotes}
+            jobs={jobs}
+            invoices={invoices}
+            isLoading={loadLeads || loadQuotes || loadJobs || loadInv}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <PendingApprovalsHub />
+        </div>
+      </div>
+
       {/* Workflow Cards (new ops) */}
       <WorkflowCards
         requests={requests}
