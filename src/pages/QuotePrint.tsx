@@ -1,9 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuote, useQuoteLineItems } from '@/hooks/useQuotes';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { ArrowLeft, Printer, Download, FileText } from 'lucide-react';
+import { ArrowLeft, Printer, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // ─── Formatting helpers (shared for future server-side PDF generation) ───
