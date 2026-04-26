@@ -20,10 +20,37 @@ import { Search, Plus, MoreHorizontal, Package, Pencil, Archive, Copy, XCircle, 
 import { toast } from 'sonner';
 
 const PRODUCT_TYPES = ['Service', 'Package', 'Add-On', 'Inspection', 'Recurring Plan', 'Material / Product'];
-const SERVICE_CATEGORIES = [
-  'Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance',
-  'Cleaning Services', 'Power Washing', 'Property Inspection', 'Bylaw / Compliance', 'Property Management',
-];
+import { SERVICE_CATEGORIES } from '@/lib/constants';
+
+// Brand colors for each of the 25 service categories (matches mem://project/service-categories-master)
+const CATEGORY_COLORS: Record<string, string> = {
+  'Snow & Ice': '#2563EB',
+  'Maintenance & Repairs': '#DC2626',
+  'Property Care & Landscaping': '#F97316',
+  'Property Management': '#16A34A',
+  'Electrical': '#7C3AED',
+  'Plumbing': '#0D9488',
+  'Carpentry & Renovations': '#92400E',
+  'Roofing & Exteriors': '#374151',
+  'Painting & Finishing': '#EAB308',
+  'Cleaning Services': '#0EA5E9',
+  'Heating, Ventilation & Air Conditioning': '#F43F5E',
+  'Concrete & Masonry': '#6B7280',
+  'Security & Smart Home': '#111827',
+  'Fencing & Decking': '#7c2d12',
+  'Junk Removal': '#c2410c',
+  'Power Washing': '#0891B2',
+  'Tiling & Flooring': '#A16207',
+  'Gutter Cleaning & Repair': '#65A30D',
+  'Window Cleaning': '#0284C7',
+  'Pest Control': '#854D0E',
+  'Moving & Hauling': '#9333EA',
+  'Insulation & Drywall': '#B91C1C',
+  'Appliance Install & Repair': '#0F766E',
+  'Garage Doors': '#475569',
+  'Locksmith Services': '#1E40AF',
+  'Other': '#64748B',
+};
 const PRICE_TYPES = ['Flat Rate', 'Hourly', 'Per Visit', 'Per Month', 'Per Unit', 'Custom Quote'];
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Archived'];
 const BOOK_AS_OPTIONS = ['Job', 'Visit', 'Assignment'];
