@@ -21,6 +21,8 @@ import { BusinessHealthScore } from '@/components/dashboard/BusinessHealthScore'
 import { GoalProgressRings } from '@/components/dashboard/GoalProgressRings';
 import { SparklineKPIStrip } from '@/components/dashboard/SparklineKPIStrip';
 import { ServiceRevenueBreakdown } from '@/components/dashboard/ServiceRevenueBreakdown';
+import { CashFlowWaterfall } from '@/components/dashboard/CashFlowWaterfall';
+import { RecentWinsTicker } from '@/components/dashboard/RecentWinsTicker';
 import {
   useDashboardRequests,
   useDashboardQuotes,
@@ -106,6 +108,9 @@ export default function Dashboard() {
         isLoading={loadInv || loadJobs || loadQuotes || loadLeads}
       />
 
+      {/* Recent Wins live ticker */}
+      <RecentWinsTicker />
+
       {/* Quick Create action bar */}
       <QuickActionBar />
 
@@ -129,6 +134,9 @@ export default function Dashboard() {
           <ARAgingPanel invoices={invoices} isLoading={loadInv} />
         </div>
       </div>
+
+      {/* Cash Flow waterfall */}
+      <CashFlowWaterfall invoices={invoices} isLoading={loadInv} />
 
       {/* Conversion Funnel + Pending Approvals row */}
       <div className="grid lg:grid-cols-5 gap-4">
