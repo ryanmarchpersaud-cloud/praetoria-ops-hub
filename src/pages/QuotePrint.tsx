@@ -219,21 +219,7 @@ export default function QuotePrint() {
             </div>
           </div>
           <div className="text-right">
-            <div
-              className="text-xs font-semibold uppercase tracking-widest text-[#3b5bdb] print:text-sm"
-            >
-              Quote
-            </div>
-            <p
-              className="text-xl font-bold mt-1 print:text-2xl"
-              style={{ fontFamily: "'JetBrains Mono', monospace" }}
-            >
-              {exportData.quoteNumber}
-            </p>
-            <div className="mt-2">
-              <PrintStatusBadge status={exportData.status} />
-            </div>
-            <p className="text-xs text-[#6b7280] mt-2 print:text-sm">
+            <p className="text-xs text-[#6b7280] print:text-sm">
               Issued: {format(new Date(exportData.createdAt), 'MMMM d, yyyy')}
             </p>
             {exportData.validUntil && (
@@ -241,6 +227,9 @@ export default function QuotePrint() {
                 Valid until: {format(new Date(exportData.validUntil), 'MMMM d, yyyy')}
               </p>
             )}
+            <div className="mt-2">
+              <PrintStatusBadge status={exportData.status} />
+            </div>
           </div>
         </div>
 
