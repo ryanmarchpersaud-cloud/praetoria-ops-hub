@@ -75,6 +75,14 @@ export default function QuotePrint() {
   const navigate = useNavigate();
   const { data: quote, isLoading } = useQuote(id);
   const { data: lineItems = [] } = useQuoteLineItems(id);
+  const { data: companySettings } = useQuery({
+    queryKey: ['company_settings_signature'],
+    queryFn: async () => {
+      const { data } = await supabase.from('company_settings').select('signature_url').limit(1).maybeSingle();
+      return data as { signature_url: string | null } | null;
+    },
+  });
+  const signatureUrl = (companySettings?.signature_url as string | null) || '/images/ryan-signature.png';
 
   if (isLoading) return <div className="p-8 text-muted-foreground">Loading...</div>;
   if (!quote) return <div className="p-8 text-muted-foreground">Quote not found</div>;
