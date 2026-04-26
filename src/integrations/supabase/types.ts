@@ -7994,6 +7994,26 @@ export type Database = {
         | "Property Inspection"
         | "Gutter Cleaning"
         | "Bylaw / Compliance"
+        | "Maintenance & Repairs"
+        | "Property Care & Landscaping"
+        | "Electrical"
+        | "Plumbing"
+        | "Carpentry & Renovations"
+        | "Roofing & Exteriors"
+        | "Painting & Finishing"
+        | "Heating, Ventilation & Air Conditioning"
+        | "Concrete & Masonry"
+        | "Security & Smart Home"
+        | "Fencing & Decking"
+        | "Tiling & Flooring"
+        | "Gutter Cleaning & Repair"
+        | "Window Cleaning"
+        | "Pest Control"
+        | "Moving & Hauling"
+        | "Insulation & Drywall"
+        | "Appliance Install & Repair"
+        | "Garage Doors"
+        | "Locksmith Services"
       service_frequency:
         | "one-time"
         | "weekly"
@@ -8267,6 +8287,26 @@ export const Constants = {
         "Property Inspection",
         "Gutter Cleaning",
         "Bylaw / Compliance",
+        "Maintenance & Repairs",
+        "Property Care & Landscaping",
+        "Electrical",
+        "Plumbing",
+        "Carpentry & Renovations",
+        "Roofing & Exteriors",
+        "Painting & Finishing",
+        "Heating, Ventilation & Air Conditioning",
+        "Concrete & Masonry",
+        "Security & Smart Home",
+        "Fencing & Decking",
+        "Tiling & Flooring",
+        "Gutter Cleaning & Repair",
+        "Window Cleaning",
+        "Pest Control",
+        "Moving & Hauling",
+        "Insulation & Drywall",
+        "Appliance Install & Repair",
+        "Garage Doors",
+        "Locksmith Services",
       ],
       service_frequency: [
         "one-time",
