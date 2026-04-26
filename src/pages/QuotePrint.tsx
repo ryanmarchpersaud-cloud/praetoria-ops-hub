@@ -161,8 +161,27 @@ export default function QuotePrint() {
       {/* ── Printable Document ── */}
       <div
         id="quote-pdf-content"
-        className="print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen"
+        className="relative print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen overflow-hidden"
+        style={{ backgroundColor: theme.tint }}
       >
+        {/* ── Service Watermark (decorative) ── */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex items-center justify-center print:flex"
+          style={{ opacity: 0.06 }}
+        >
+          <div className="w-[420px] h-[420px]" style={{ color: theme.accent }}>
+            {theme.icon}
+          </div>
+        </div>
+
+        {/* ── Service accent strip ── */}
+        <div
+          className="absolute top-0 left-0 right-0 h-1.5 print:h-2"
+          style={{ backgroundColor: theme.accent }}
+        />
+
+        <div className="relative">
         {/* ── Company Header ── */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
           <div className="flex items-start gap-4">
