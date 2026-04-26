@@ -354,7 +354,7 @@ export default function QuotePrint() {
           {/* ── Footer ── */}
           <div className="text-center pt-8 text-xs text-[#9ca3af] print:text-sm print:pt-12 pb-4">
             <p className="font-medium text-[#6b7280]">Praetoria Group</p>
-            <p>info@praetoriagroup.ca · (306) 737-6269</p>
+            <p>support@praetoriagroup.ca · (306) 737-6269</p>
             <p className="mt-1">Thank you for choosing Praetoria Group.</p>
           </div>
         </div>
