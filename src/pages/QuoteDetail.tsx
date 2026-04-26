@@ -22,7 +22,9 @@ import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES } from '@/lib/constants';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Pencil, Trash } from 'lucide-react';
 import { ConvertQuoteToJobDialog } from '@/components/ConvertQuoteToJobDialog';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
 import { Badge } from '@/components/ui/badge';
@@ -92,10 +94,14 @@ export default function QuoteDetail() {
   const { toast } = useToast();
   const { canManageQuotes } = useActionPermissions();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+  const { isAdmin } = useUserRole();
 
   const [form, setForm] = useState<any>({});
   const [items, setItems] = useState<LineItemForm[]>([]);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [catalogEdit, setCatalogEdit] = useState<{ id: string | null; name: string; service_category: string; unit_price: number } | null>(null);
+  const [catalogDeleteId, setCatalogDeleteId] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
@@ -237,6 +243,46 @@ export default function QuoteDetail() {
     setItems(updated);
     recalculate(updated);
     setCatalogOpen(false);
+  };
+
+  const saveCatalogEdit = async () => {
+    if (!catalogEdit) return;
+    const payload = {
+      name: catalogEdit.name.trim(),
+      service_category: catalogEdit.service_category,
+      unit_price: Number(catalogEdit.unit_price) || 0,
+    };
+    if (!payload.name) {
+      toast({ title: 'Name required', variant: 'destructive' });
+      return;
+    }
+    if (catalogEdit.id) {
+      const { error } = await supabase.from('products_services').update(payload).eq('id', catalogEdit.id);
+      if (error) { toast({ title: 'Update failed', description: error.message, variant: 'destructive' }); return; }
+      toast({ title: 'Catalog item updated' });
+    } else {
+      const { error } = await supabase.from('products_services').insert({
+        ...payload,
+        product_type: 'Service',
+        price_type: 'Flat Rate',
+        unit_label: 'flat',
+        status: 'Active',
+        taxable: true,
+      });
+      if (error) { toast({ title: 'Create failed', description: error.message, variant: 'destructive' }); return; }
+      toast({ title: 'Catalog item added' });
+    }
+    setCatalogEdit(null);
+    queryClient.invalidateQueries({ queryKey: ['products_services_active'] });
+  };
+
+  const confirmCatalogDelete = async () => {
+    if (!catalogDeleteId) return;
+    const { error } = await supabase.from('products_services').update({ status: 'Archived' }).eq('id', catalogDeleteId);
+    if (error) { toast({ title: 'Delete failed', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Catalog item removed' });
+    setCatalogDeleteId(null);
+    queryClient.invalidateQueries({ queryKey: ['products_services_active'] });
   };
 
   const addItem = () => {
@@ -690,6 +736,19 @@ export default function QuoteDetail() {
                       <PopoverContent className="w-[28rem] sm:w-[32rem] p-0" align="end">
                         <Command>
                           <CommandInput placeholder="Search services..." className="text-base h-12" />
+                          {isAdmin && (
+                            <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
+                              <span className="text-xs text-muted-foreground">Admin: hover an item to edit or delete</span>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="h-7 gap-1"
+                                onClick={() => setCatalogEdit({ id: null, name: '', service_category: 'Roofing & Exteriors', unit_price: 0 })}
+                              >
+                                <Plus className="h-3 w-3" /> New
+                              </Button>
+                            </div>
+                          )}
                           <CommandList className="max-h-[28rem]">
                             <CommandEmpty>No items found.</CommandEmpty>
                             {orderedCatalogGroups.map(([cat, products]) => {
@@ -703,9 +762,39 @@ export default function QuoteDetail() {
                                 >
                                   <style>{`.${slug} [cmdk-group-heading] { background-color: ${color} !important; }`}</style>
                                   {(products as any[]).map((p: any) => (
-                                    <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between py-3 text-base">
-                                      <span className="truncate">{p.name}</span>
-                                      <span className="text-muted-foreground text-sm ml-2 shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                    <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="group flex items-center justify-between py-3 text-base gap-2">
+                                      <span className="truncate flex-1">{p.name}</span>
+                                      <span className="text-muted-foreground text-sm shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                      {isAdmin && (
+                                        <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-aria-selected:opacity-100 transition-opacity">
+                                          <button
+                                            type="button"
+                                            aria-label="Edit catalog item"
+                                            className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              setCatalogEdit({ id: p.id, name: p.name, service_category: p.service_category || 'Other', unit_price: Number(p.unit_price) || 0 });
+                                            }}
+                                          >
+                                            <Pencil className="h-3.5 w-3.5" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            aria-label="Delete catalog item"
+                                            className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              setCatalogDeleteId(p.id);
+                                            }}
+                                          >
+                                            <Trash className="h-3.5 w-3.5" />
+                                          </button>
+                                        </span>
+                                      )}
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
@@ -958,6 +1047,59 @@ export default function QuoteDetail() {
       </div>
 
       {/* Delete confirmation */}
+      {/* Catalog edit/create dialog */}
+      <Dialog open={!!catalogEdit} onOpenChange={(o) => !o && setCatalogEdit(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{catalogEdit?.id ? 'Edit catalog item' : 'New catalog item'}</DialogTitle>
+            <DialogDescription>Changes apply to this item across all future quotes, jobs, and invoices.</DialogDescription>
+          </DialogHeader>
+          {catalogEdit && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Item name</Label>
+                <Input value={catalogEdit.name} onChange={(e) => setCatalogEdit({ ...catalogEdit, name: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Category</Label>
+                <select
+                  value={catalogEdit.service_category}
+                  onChange={(e) => setCatalogEdit({ ...catalogEdit, service_category: e.target.value })}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  {SERVICE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs">Unit price ($)</Label>
+                <Input type="number" step="0.01" value={catalogEdit.unit_price}
+                  onChange={(e) => setCatalogEdit({ ...catalogEdit, unit_price: Number(e.target.value) })} />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setCatalogEdit(null)}>Cancel</Button>
+                <Button onClick={saveCatalogEdit}>{catalogEdit.id ? 'Save' : 'Create'}</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Catalog delete confirmation */}
+      <Dialog open={!!catalogDeleteId} onOpenChange={(o) => !o && setCatalogDeleteId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remove catalog item?</DialogTitle>
+            <DialogDescription>
+              The item will be archived and hidden from the catalog picker. Existing quotes and invoices that already use it are not affected.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setCatalogDeleteId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmCatalogDelete}>Remove</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
