@@ -594,6 +594,9 @@ export default function QuotePrint() {
                 <p className="text-[8px] font-mono text-[#16A34A] mt-1 print:text-[9px]">
                   Android
                 </p>
+                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Coming Soon
+                </p>
               </div>
 
               {/* Apple App Store */}
