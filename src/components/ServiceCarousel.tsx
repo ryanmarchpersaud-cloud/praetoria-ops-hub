@@ -13,15 +13,33 @@ import {
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 
-/** Map promo id → database service_category enum value */
+/** Map promo id → database service_category enum value (matches SERVICE_CATEGORIES in src/lib/constants.ts) */
 const PROMO_TO_CATEGORY: Record<string, string> = {
   'snow-ice': 'Snow & Ice',
-  'landscaping': 'Landscaping & Grounds',
-  'junk-removal': 'Junk Removal',
-  'maintenance': 'Property Care & Maintenance',
+  'maintenance-repairs': 'Maintenance & Repairs',
+  'landscaping': 'Property Care & Landscaping',
   'property-management': 'Property Management',
-  'power-washing': 'Power Washing',
+  'electrical': 'Electrical',
+  'plumbing': 'Plumbing',
+  'carpentry-renovations': 'Carpentry & Renovations',
+  'roofing-exteriors': 'Roofing & Exteriors',
+  'painting-finishing': 'Painting & Finishing',
   'cleaning': 'Cleaning Services',
+  'hvac': 'Heating, Ventilation & Air Conditioning',
+  'concrete-masonry': 'Concrete & Masonry',
+  'security-smart-home': 'Security & Smart Home',
+  'fencing-decking': 'Fencing & Decking',
+  'junk-removal': 'Junk Removal',
+  'power-washing': 'Power Washing',
+  'tiling-flooring': 'Tiling & Flooring',
+  'gutter-cleaning': 'Gutter Cleaning & Repair',
+  'window-cleaning': 'Window Cleaning',
+  'pest-control': 'Pest Control',
+  'moving-hauling': 'Moving & Hauling',
+  'insulation-drywall': 'Insulation & Drywall',
+  'appliance-repair': 'Appliance Install & Repair',
+  'garage-doors': 'Garage Doors',
+  'locksmith': 'Locksmith Services',
   'other': 'Other',
 };
 
