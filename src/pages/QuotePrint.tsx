@@ -358,7 +358,7 @@ export default function QuotePrint() {
               </p>
               <div className="relative h-12 mb-0">
                 <img
-                  src="/images/ryan-signature.png"
+                  src={signatureUrl}
                   alt="Ryan Steven Persaud"
                   className="absolute bottom-0 left-0 h-14 w-auto object-contain print:h-16"
                   style={{ maxWidth: '85%' }}
