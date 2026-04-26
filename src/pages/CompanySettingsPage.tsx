@@ -62,6 +62,8 @@ export default function CompanySettingsPage() {
   const [dirty, setDirty] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [signatureUploading, setSignatureUploading] = useState(false);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,6 +86,30 @@ export default function CompanySettingsPage() {
     } finally {
       setLogoUploading(false);
       if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Signature must be under 2 MB');
+      return;
+    }
+    setSignatureUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `authorized-signature-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('attachments').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      update('signature_url', urlData.publicUrl);
+      toast.success('Signature uploaded — remember to Save');
+    } catch (err: any) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setSignatureUploading(false);
+      if (signatureInputRef.current) signatureInputRef.current.value = '';
     }
   };
 
