@@ -245,6 +245,46 @@ export default function QuoteDetail() {
     setCatalogOpen(false);
   };
 
+  const saveCatalogEdit = async () => {
+    if (!catalogEdit) return;
+    const payload = {
+      name: catalogEdit.name.trim(),
+      service_category: catalogEdit.service_category,
+      unit_price: Number(catalogEdit.unit_price) || 0,
+    };
+    if (!payload.name) {
+      toast({ title: 'Name required', variant: 'destructive' });
+      return;
+    }
+    if (catalogEdit.id) {
+      const { error } = await supabase.from('products_services').update(payload).eq('id', catalogEdit.id);
+      if (error) { toast({ title: 'Update failed', description: error.message, variant: 'destructive' }); return; }
+      toast({ title: 'Catalog item updated' });
+    } else {
+      const { error } = await supabase.from('products_services').insert({
+        ...payload,
+        product_type: 'Service',
+        price_type: 'Flat Rate',
+        unit_label: 'flat',
+        status: 'Active',
+        taxable: true,
+      });
+      if (error) { toast({ title: 'Create failed', description: error.message, variant: 'destructive' }); return; }
+      toast({ title: 'Catalog item added' });
+    }
+    setCatalogEdit(null);
+    queryClient.invalidateQueries({ queryKey: ['products_services_active'] });
+  };
+
+  const confirmCatalogDelete = async () => {
+    if (!catalogDeleteId) return;
+    const { error } = await supabase.from('products_services').update({ status: 'Archived' }).eq('id', catalogDeleteId);
+    if (error) { toast({ title: 'Delete failed', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Catalog item removed' });
+    setCatalogDeleteId(null);
+    queryClient.invalidateQueries({ queryKey: ['products_services_active'] });
+  };
+
   const addItem = () => {
     setItems([...items, { item_name: '', description: '', quantity: 1, unit_price: 0, line_total: 0, sort_order: items.length, _key: newKey() }]);
   };
