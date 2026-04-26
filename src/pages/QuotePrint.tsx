@@ -89,6 +89,7 @@ export default function QuotePrint() {
 
   const exportData = getQuoteDataForExport(quote, lineItems);
   const { subtotal, tax, total, taxRate } = exportData;
+  const theme = getServiceTheme(exportData.serviceCategory);
 
   const handlePrint = () => window.print();
 
