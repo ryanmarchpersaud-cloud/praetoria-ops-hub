@@ -478,6 +478,7 @@ export default function QuotePrint() {
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-6 print:text-xs print:mb-8">
                 Client Signature
               </p>
+              <div className="h-8 print:h-9" />
               <div className="border-b border-[#9ca3af] mb-1" />
               <p className="text-[10px] text-[#9ca3af] print:text-xs">Signature & Date</p>
             </div>
@@ -485,9 +486,9 @@ export default function QuotePrint() {
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-6 print:text-xs print:mb-8">
                 Praetoria Group
               </p>
-              <div className="relative h-14 mb-0 print:h-16 flex items-end">
+              <div className="h-8 print:h-9 flex items-end">
                 <span
-                  className="text-3xl print:text-4xl text-[#1a1a2e] leading-none pb-1"
+                  className="text-xl print:text-2xl text-[#1a1a2e] leading-none"
                   style={{ fontFamily: "'Great Vibes', 'Brush Script MT', cursive" }}
                 >
                   Ryan Steven Persaud
