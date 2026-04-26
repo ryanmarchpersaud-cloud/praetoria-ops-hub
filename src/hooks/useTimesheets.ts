@@ -157,20 +157,25 @@ export function useAdminLiveWorkforce() {
         .not('clock_out', 'is', null);
       if (doneErr) throw doneErr;
 
-      // Resolve worker names
+      // Resolve worker names + hourly rates
       const userIds = Array.from(new Set([...(active ?? []), ...(today_done ?? [])].map((r: any) => r.user_id)));
-      let nameMap = new Map<string, string>();
+      const nameMap = new Map<string, string>();
+      const rateMap = new Map<string, number>();
       if (userIds.length) {
         const { data: profiles } = await supabase
           .from('worker_profiles')
-          .select('user_id, full_name')
+          .select('user_id, full_name, hourly_rate')
           .in('user_id', userIds);
-        (profiles ?? []).forEach((p: any) => nameMap.set(p.user_id, p.full_name));
+        (profiles ?? []).forEach((p: any) => {
+          nameMap.set(p.user_id, p.full_name);
+          rateMap.set(p.user_id, Number(p.hourly_rate ?? 0));
+        });
       }
 
       const activeSessions = (active ?? []).map((a: any) => ({
         ...a,
         full_name: nameMap.get(a.user_id) ?? 'Unknown',
+        hourly_rate: rateMap.get(a.user_id) ?? 0,
         elapsed_hours: (Date.now() - new Date(a.clock_in).getTime()) / 3_600_000,
       }));
 
