@@ -188,6 +188,12 @@ export default function QuoteDetail() {
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
         approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
         tax_rate: Number(form.tax_rate || 0.13),
+        recurring_pricing_enabled: !!form.recurring_pricing_enabled,
+        price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
+        price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
+        price_biweekly: form.price_biweekly === '' || form.price_biweekly == null ? null : Number(form.price_biweekly),
+        price_monthly: form.price_monthly === '' || form.price_monthly == null ? null : Number(form.price_monthly),
+        recurring_pricing_notes: form.recurring_pricing_notes || null,
       });
       await upsertItems.mutateAsync({
         quoteId: id,
@@ -231,6 +237,12 @@ export default function QuoteDetail() {
         service_category: form.service_category, scope_of_work: form.scope_of_work,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
         tax_rate: Number(form.tax_rate || 0.13),
+        recurring_pricing_enabled: !!form.recurring_pricing_enabled,
+        price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
+        price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
+        price_biweekly: form.price_biweekly === '' || form.price_biweekly == null ? null : Number(form.price_biweekly),
+        price_monthly: form.price_monthly === '' || form.price_monthly == null ? null : Number(form.price_monthly),
+        recurring_pricing_notes: form.recurring_pricing_notes || null,
       };
       if (newStatus === 'Sent') { updates.sent_status = 'Sent'; updates.sent_at = new Date().toISOString(); }
       await updateQuote.mutateAsync(updates);
@@ -412,6 +424,84 @@ export default function QuoteDetail() {
                 <Textarea value={form.scope_of_work || ''} onChange={e => set('scope_of_work', e.target.value)} rows={3} disabled={isSentOrApproved} />
               </div>
             </CardContent>
+          </Card>
+
+          {/* ── Recurring Service Pricing (optional) ── */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span>Recurring Service Pricing</span>
+                <label className="flex items-center gap-2 text-xs font-normal text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!form.recurring_pricing_enabled}
+                    onChange={e => set('recurring_pricing_enabled', e.target.checked)}
+                    disabled={isSentOrApproved}
+                    className="h-4 w-4"
+                  />
+                  Show on quote
+                </label>
+              </CardTitle>
+            </CardHeader>
+            {form.recurring_pricing_enabled && (
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Optional. Use these to give the client recurring-service price options (e.g. lawn care). Leave any field blank to hide it. Prices are pre-tax and shown separately from the quote total.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Per Cut ($)</Label>
+                    <Input
+                      type="number" step="0.01" min={0}
+                      value={form.price_per_cut ?? ''}
+                      onChange={e => set('price_per_cut', e.target.value)}
+                      placeholder="e.g. 65.00"
+                      disabled={isSentOrApproved}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Weekly ($)</Label>
+                    <Input
+                      type="number" step="0.01" min={0}
+                      value={form.price_weekly ?? ''}
+                      onChange={e => set('price_weekly', e.target.value)}
+                      placeholder="e.g. 60.00"
+                      disabled={isSentOrApproved}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Biweekly ($)</Label>
+                    <Input
+                      type="number" step="0.01" min={0}
+                      value={form.price_biweekly ?? ''}
+                      onChange={e => set('price_biweekly', e.target.value)}
+                      placeholder="e.g. 75.00"
+                      disabled={isSentOrApproved}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Monthly ($)</Label>
+                    <Input
+                      type="number" step="0.01" min={0}
+                      value={form.price_monthly ?? ''}
+                      onChange={e => set('price_monthly', e.target.value)}
+                      placeholder="e.g. 220.00"
+                      disabled={isSentOrApproved}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Notes (optional)</Label>
+                  <Textarea
+                    rows={2}
+                    value={form.recurring_pricing_notes || ''}
+                    onChange={e => set('recurring_pricing_notes', e.target.value)}
+                    placeholder="e.g. Weekly rate assumes a season of May–October. Per cut billed after each visit."
+                    disabled={isSentOrApproved}
+                  />
+                </div>
+              </CardContent>
+            )}
           </Card>
 
           {/* ── Line Items ── */}
