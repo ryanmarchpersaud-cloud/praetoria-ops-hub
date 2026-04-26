@@ -642,17 +642,17 @@ export default function QuoteDetail() {
                           <Package className="h-3 w-3" /> Catalog
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 p-0" align="end">
+                      <PopoverContent className="w-[28rem] sm:w-[32rem] p-0" align="end">
                         <Command>
-                          <CommandInput placeholder="Search services..." />
-                          <CommandList className="max-h-64">
+                          <CommandInput placeholder="Search services..." className="text-base h-12" />
+                          <CommandList className="max-h-[28rem]">
                             <CommandEmpty>No items found.</CommandEmpty>
                             {Object.entries(catalogGrouped).map(([cat, products]) => (
-                              <CommandGroup key={cat} heading={cat}>
+                              <CommandGroup key={cat} heading={cat} className="[&_[cmdk-group-heading]]:text-sm [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:py-2">
                                 {(products as any[]).map((p: any) => (
-                                  <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between">
+                                  <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between py-3 text-base">
                                     <span className="truncate">{p.name}</span>
-                                    <span className="text-muted-foreground text-xs ml-2">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                    <span className="text-muted-foreground text-sm ml-2 shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
