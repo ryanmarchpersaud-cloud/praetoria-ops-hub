@@ -137,12 +137,6 @@ export function LiveWorkforcePanel() {
             </p>
           </div>
         )}
-            </div>
-            <div className="text-2xl font-bold text-violet-900 dark:text-violet-100">
-              {isLoading ? '—' : (data?.total_today_hours ?? 0).toFixed(1)}
-            </div>
-          </div>
-        </div>
 
         {/* Active sessions list */}
         <div className="space-y-2">
