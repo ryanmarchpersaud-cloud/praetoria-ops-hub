@@ -236,30 +236,48 @@ export default function QuotePrint() {
         {/* ── Brand Accent Bar ── */}
         <div className="h-[2px] bg-[#3b5bdb] mb-8 print:mb-10" />
 
-        {/* ── Client Information ── */}
-        {exportData.client && (
-          <div className="mb-8 print:mb-10">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
-              Prepared For
-            </p>
-            <p className="font-semibold text-sm print:text-base">{exportData.client.name}</p>
-            {exportData.client.company && (
-              <p className="text-sm text-[#374151] print:text-base">{exportData.client.company}</p>
-            )}
-            <div className="text-xs text-[#6b7280] mt-1 space-y-0.5 print:text-sm">
-              {exportData.client.address && <p>{exportData.client.address}</p>}
-              {(exportData.client.city || exportData.client.province || exportData.client.postalCode) && (
-                <p>
-                  {[exportData.client.city, exportData.client.province, exportData.client.postalCode]
-                    .filter(Boolean)
-                    .join(', ')}
+        {/* ── Client Information + Big Quotation Title ── */}
+        <div className="grid grid-cols-2 gap-6 mb-8 print:mb-10 items-start">
+          <div>
+            {exportData.client && (
+              <>
+                <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
+                  Prepared For
                 </p>
-              )}
-              {exportData.client.email && <p>{exportData.client.email}</p>}
-              {exportData.client.phone && <p>{exportData.client.phone}</p>}
-            </div>
+                <p className="font-semibold text-sm print:text-base">{exportData.client.name}</p>
+                {exportData.client.company && (
+                  <p className="text-sm text-[#374151] print:text-base">{exportData.client.company}</p>
+                )}
+                <div className="text-xs text-[#6b7280] mt-1 space-y-0.5 print:text-sm">
+                  {exportData.client.address && <p>{exportData.client.address}</p>}
+                  {(exportData.client.city || exportData.client.province || exportData.client.postalCode) && (
+                    <p>
+                      {[exportData.client.city, exportData.client.province, exportData.client.postalCode]
+                        .filter(Boolean)
+                        .join(', ')}
+                    </p>
+                  )}
+                  {exportData.client.email && <p>{exportData.client.email}</p>}
+                  {exportData.client.phone && <p>{exportData.client.phone}</p>}
+                </div>
+              </>
+            )}
           </div>
-        )}
+          <div className="text-right">
+            <h2
+              className="text-4xl md:text-5xl print:text-6xl font-extrabold tracking-tight leading-none"
+              style={{ color: theme.accent, fontFamily: "'DM Sans', sans-serif" }}
+            >
+              QUOTATION
+            </h2>
+            <p
+              className="mt-2 text-lg font-bold print:text-xl text-[#1a1a2e]"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            >
+              {exportData.quoteNumber}
+            </p>
+          </div>
+        </div>
 
         {/* ── Service & Scope ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 print:mb-10 print:grid-cols-2">
