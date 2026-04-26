@@ -262,6 +262,11 @@ export function useAdminLiveWorkforce() {
           carryover_hours: round2(totalActiveCarryoverHours),
           carryover_count: activeCarryover,
         },
+        labor_cost: {
+          total_today: totalLaborCostToday,
+          workers_without_rate: workersWithoutRate,
+          per_worker: workerCosts,
+        },
       };
     },
     refetchInterval: 60_000, // refresh every minute
