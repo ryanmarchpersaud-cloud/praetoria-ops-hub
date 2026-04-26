@@ -411,6 +411,9 @@ export default function QuoteDetail() {
 
   const isConverted = !!(quote as any).converted_job_id || !!linkedJob;
 
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sortableIds = items.map((it, idx) => it._key || it.id || `idx-${idx}`);
+
   return (
     <div className="space-y-4 animate-fade-in">
       {/* ── Header ── */}
