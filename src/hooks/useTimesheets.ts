@@ -216,10 +216,6 @@ export function useAdminLiveWorkforce() {
     refetchInterval: 60_000, // refresh every minute
   });
 }
-    },
-    refetchInterval: 60_000, // refresh every minute
-  });
-}
 
 /* ────────────────────────────────────────────────────────────────────────────
    HR: per-employee timesheet history (admin/HR view)
