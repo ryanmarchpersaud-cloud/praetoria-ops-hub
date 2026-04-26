@@ -58,8 +58,8 @@ export function OperationsMap({ visits, jobs, employees, requests, isLoading }: 
     return (
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <CardTitle className="text-base md:text-xl font-extrabold tracking-tight flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
               <MapPin className="h-4 w-4 text-primary" />
             </span>
             Operations Control
@@ -81,8 +81,8 @@ export function OperationsMap({ visits, jobs, employees, requests, isLoading }: 
     <Card>
       <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-5">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm md:text-base flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <CardTitle className="text-base md:text-xl font-extrabold tracking-tight flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
               <MapPin className="h-4 w-4 text-primary" />
             </span>
             Operations Control

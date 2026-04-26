@@ -120,13 +120,13 @@ export function AlertsPanel({ invoices, jobs, visits, incidents, certifications,
   return (
     <Card>
       <CardHeader className="pb-2 px-4 pt-4">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <span className="w-7 h-7 rounded-lg flex items-center justify-center bg-destructive/10">
+        <CardTitle className="text-base md:text-lg font-extrabold tracking-tight flex items-center gap-2">
+          <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/15">
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </span>
           Alerts
           {!isLoading && alerts.length > 0 && (
-            <span className="ml-auto text-[10px] font-medium bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">
+            <span className="ml-auto text-[11px] font-bold bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">
               {alerts.length}
             </span>
           )}

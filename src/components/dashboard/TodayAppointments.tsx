@@ -28,8 +28,8 @@ export function TodayAppointments({ visits, employees, isLoadingVisits, isLoadin
     <Card>
       <CardHeader className="pb-2 px-4 pt-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg flex items-center justify-center bg-primary/10">
+          <CardTitle className="text-base md:text-lg font-extrabold tracking-tight flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/15">
               <Calendar className="h-4 w-4 text-primary" />
             </span>
             Today's Appointments

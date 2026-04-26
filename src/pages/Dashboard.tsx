@@ -62,18 +62,18 @@ export default function Dashboard() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-lg md:text-2xl font-bold">Operations Dashboard</h1>
-        <p className="text-muted-foreground text-[11px] md:text-sm">Praetoria Group — Command Center</p>
+      <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 md:p-5">
+        <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">Operations Dashboard</h1>
+        <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">Praetoria Group — Command Center</p>
       </div>
 
       {/* Quick stats — 3×2 grid (legacy) */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 md:gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
         {stats.map(s => (
-          <Link key={s.label} to={s.link} className={`rounded-lg border p-2.5 md:p-4 transition-all hover:shadow-sm active:scale-[0.97] ${s.bg}`}>
-            <s.icon className={`h-3.5 w-3.5 ${s.color} mb-1`} />
-            <p className="text-lg md:text-2xl font-bold leading-none text-foreground">{s.value}</p>
-            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{s.label}</p>
+          <Link key={s.label} to={s.link} className={`rounded-xl border p-3 md:p-4 transition-all hover:shadow-md active:scale-[0.97] ${s.bg}`}>
+            <s.icon className={`h-5 w-5 md:h-6 md:w-6 ${s.color} mb-1.5`} />
+            <p className="text-2xl md:text-3xl font-extrabold leading-none text-foreground tabular-nums">{s.value}</p>
+            <p className="text-[11px] md:text-xs font-semibold text-muted-foreground mt-1 uppercase tracking-wide">{s.label}</p>
           </Link>
         ))}
       </div>
@@ -226,15 +226,15 @@ function DashboardListCard({
 }) {
   return (
     <Card>
-      <CardHeader className="pb-1.5 px-3 md:px-6 pt-3 md:pt-6">
+      <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xs md:text-sm flex items-center gap-2">
-            <span className={cn('w-6 h-6 rounded-lg flex items-center justify-center', iconBg)}>
-              <Icon className={cn('h-3.5 w-3.5', iconColor)} />
+          <CardTitle className="text-base md:text-lg font-extrabold tracking-tight flex items-center gap-2">
+            <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconBg)}>
+              <Icon className={cn('h-4 w-4', iconColor)} />
             </span>
             {title}
           </CardTitle>
-          <Link to={viewAllLink} className="text-[10px] md:text-xs text-primary flex items-center gap-0.5 hover:underline">
+          <Link to={viewAllLink} className="text-[11px] md:text-xs font-semibold text-primary flex items-center gap-0.5 hover:underline">
             View all <ChevronRight className="w-3 h-3" />
           </Link>
         </div>

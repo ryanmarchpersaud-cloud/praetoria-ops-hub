@@ -24,11 +24,11 @@ function WorkflowCard({ title, icon: Icon, iconClass, link, stats, isLoading }: 
     <Link to={link}>
       <Card className="hover:shadow-md transition-all cursor-pointer active:scale-[0.98] h-full">
         <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconClass)}>
-              <Icon className="h-4 w-4" />
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className={cn('w-9 h-9 rounded-lg flex items-center justify-center', iconClass)}>
+              <Icon className="h-5 w-5" />
             </span>
-            <h3 className="text-sm font-semibold">{title}</h3>
+            <h3 className="text-base md:text-lg font-extrabold tracking-tight">{title}</h3>
           </div>
           {isLoading ? (
             <div className="space-y-2">
@@ -39,11 +39,11 @@ function WorkflowCard({ title, icon: Icon, iconClass, link, stats, isLoading }: 
             <div className="space-y-1.5">
               {stats.map(s => (
                 <div key={s.label} className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">{s.label}</span>
-                  <span className="font-semibold tabular-nums">
+                  <span className="text-muted-foreground font-medium">{s.label}</span>
+                  <span className="font-bold tabular-nums text-foreground">
                     {s.count}
                     {s.total !== undefined && (
-                      <span className="text-muted-foreground ml-1">
+                      <span className="text-muted-foreground ml-1 font-medium">
                         (${s.total.toLocaleString(undefined, { maximumFractionDigits: 0 })})
                       </span>
                     )}
