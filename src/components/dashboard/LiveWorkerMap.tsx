@@ -32,7 +32,7 @@ function useLiveWorkerMap() {
         supabase
           .from('visits')
           .select(`
-            id, visit_number, service_type, scheduled_start_time, visit_status,
+            id, visit_number, service_category, scheduled_start_time, visit_status,
             assigned_worker_id,
             properties(property_name, city, latitude, longitude)
           `)
@@ -83,7 +83,7 @@ function useLiveWorkerMap() {
           id: v.id,
           workerName: v.assigned_worker_id ? nameMap.get(v.assigned_worker_id) ?? 'Unassigned' : 'Unassigned',
           visitNumber: v.visit_number,
-          serviceType: v.service_type,
+          serviceType: v.service_category,
           propertyName: prop.property_name,
           city: prop.city,
           lat: Number(prop.latitude),
