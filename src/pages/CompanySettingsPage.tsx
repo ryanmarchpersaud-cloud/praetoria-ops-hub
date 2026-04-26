@@ -62,6 +62,8 @@ export default function CompanySettingsPage() {
   const [dirty, setDirty] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const [signatureUploading, setSignatureUploading] = useState(false);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,6 +86,30 @@ export default function CompanySettingsPage() {
     } finally {
       setLogoUploading(false);
       if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Signature must be under 2 MB');
+      return;
+    }
+    setSignatureUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `authorized-signature-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('attachments').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      update('signature_url', urlData.publicUrl);
+      toast.success('Signature uploaded — remember to Save');
+    } catch (err: any) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setSignatureUploading(false);
+      if (signatureInputRef.current) signatureInputRef.current.value = '';
     }
   };
 
@@ -204,6 +230,54 @@ export default function CompanySettingsPage() {
                         accept="image/png,image/jpeg,image/svg+xml,image/webp"
                         className="hidden"
                         onChange={handleLogoUpload}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Separator />
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Authorized Representative Signature</Label>
+                  <p className="text-[11px] text-muted-foreground">This signature appears in the Praetoria Group signature box on every printed quote PDF.</p>
+                  <div className="flex items-start gap-4 pt-1">
+                    <div className="h-24 w-48 rounded-lg border border-border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+                      {form.signature_url ? (
+                        <img src={form.signature_url} alt="Authorized signature" className="h-full w-full object-contain" />
+                      ) : (
+                        <Image className="h-8 w-8 text-muted-foreground/40" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          disabled={signatureUploading}
+                          onClick={() => signatureInputRef.current?.click()}
+                        >
+                          {signatureUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          {form.signature_url ? 'Replace' : 'Upload'}
+                        </Button>
+                        {form.signature_url && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1.5 text-destructive hover:text-destructive"
+                            onClick={() => update('signature_url', null)}
+                          >
+                            <X className="h-3.5 w-3.5" /> Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Transparent PNG recommended. Max 2 MB.</p>
+                      <input
+                        ref={signatureInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        className="hidden"
+                        onChange={handleSignatureUpload}
                       />
                     </div>
                   </div>

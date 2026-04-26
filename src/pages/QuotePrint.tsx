@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuote, useQuoteLineItems } from '@/hooks/useQuotes';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ArrowLeft, Printer, Download, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -73,6 +75,14 @@ export default function QuotePrint() {
   const navigate = useNavigate();
   const { data: quote, isLoading } = useQuote(id);
   const { data: lineItems = [] } = useQuoteLineItems(id);
+  const { data: companySettings } = useQuery({
+    queryKey: ['company_settings_signature'],
+    queryFn: async () => {
+      const { data } = await supabase.from('company_settings').select('*').limit(1).maybeSingle();
+      return data as any;
+    },
+  });
+  const signatureUrl = (companySettings?.signature_url as string | null) || '/images/ryan-signature.png';
 
   if (isLoading) return <div className="p-8 text-muted-foreground">Loading...</div>;
   if (!quote) return <div className="p-8 text-muted-foreground">Quote not found</div>;
@@ -348,7 +358,7 @@ export default function QuotePrint() {
               </p>
               <div className="relative h-12 mb-0">
                 <img
-                  src="/images/ryan-signature.png"
+                  src={signatureUrl}
                   alt="Ryan Steven Persaud"
                   className="absolute bottom-0 left-0 h-14 w-auto object-contain print:h-16"
                   style={{ maxWidth: '85%' }}
