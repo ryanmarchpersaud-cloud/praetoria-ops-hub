@@ -93,11 +93,17 @@ export function LiveWorkforcePanel() {
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="flex items-center justify-between rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 px-2.5 py-1.5">
-                <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
-                  <CheckCircle2 className="h-3 w-3" />
-                  <span>Completed today</span>
+                <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 min-w-0">
+                  <CheckCircle2 className="h-3 w-3 shrink-0" />
+                  <span className="truncate">Completed today</span>
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1.5 text-[9px] font-semibold uppercase tracking-wide border-blue-300 dark:border-blue-700 bg-blue-100/60 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200"
+                  >
+                    Done
+                  </Badge>
                 </div>
-                <span className="font-mono font-semibold text-blue-900 dark:text-blue-100">
+                <span className="font-mono font-semibold text-blue-900 dark:text-blue-100 shrink-0">
                   {data.breakdown.completed_today_hours.toFixed(1)}h
                   <span className="text-[10px] text-blue-700/70 dark:text-blue-300/70 ml-1">
                     ({data.breakdown.completed_today_count})
@@ -105,11 +111,21 @@ export function LiveWorkforcePanel() {
                 </span>
               </div>
               <div className="flex items-center justify-between rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 px-2.5 py-1.5">
-                <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
-                  <Activity className="h-3 w-3" />
-                  <span>Active today</span>
+                <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 min-w-0">
+                  <Activity className="h-3 w-3 shrink-0" />
+                  <span className="truncate">Active today</span>
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1.5 text-[9px] font-semibold uppercase tracking-wide border-emerald-300 dark:border-emerald-700 bg-emerald-100/60 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200"
+                  >
+                    <span className="relative mr-1 flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    </span>
+                    Live
+                  </Badge>
                 </div>
-                <span className="font-mono font-semibold text-emerald-900 dark:text-emerald-100">
+                <span className="font-mono font-semibold text-emerald-900 dark:text-emerald-100 shrink-0">
                   {data.breakdown.active_today_hours.toFixed(1)}h
                   <span className="text-[10px] text-emerald-700/70 dark:text-emerald-300/70 ml-1">
                     ({data.breakdown.active_today_count})
@@ -119,11 +135,17 @@ export function LiveWorkforcePanel() {
             </div>
             {data.breakdown.carryover_count > 0 && (
               <div className="flex items-center justify-between rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 px-2.5 py-1.5 text-xs">
-                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                  <AlertTriangle className="h-3 w-3" />
-                  <span>Carryover from yesterday (not in total)</span>
+                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300 min-w-0">
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                  <span className="truncate">Carryover from yesterday</span>
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1.5 text-[9px] font-semibold uppercase tracking-wide border-amber-300 dark:border-amber-700 bg-amber-100/60 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200"
+                  >
+                    Not in total
+                  </Badge>
                 </div>
-                <span className="font-mono font-semibold text-amber-900 dark:text-amber-100">
+                <span className="font-mono font-semibold text-amber-900 dark:text-amber-100 shrink-0">
                   {data.breakdown.carryover_hours.toFixed(1)}h
                   <span className="text-[10px] text-amber-700/70 dark:text-amber-300/70 ml-1">
                     ({data.breakdown.carryover_count})
