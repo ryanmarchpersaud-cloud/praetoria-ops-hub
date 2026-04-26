@@ -178,21 +178,44 @@ export function useAdminLiveWorkforce() {
         return sum + (new Date(r.clock_out).getTime() - new Date(r.clock_in).getTime()) / 3_600_000;
       }, 0);
 
-      // Include in-progress hours from sessions that started today
-      const totalActiveTodayHours = (active ?? []).reduce((sum: number, r: any) => {
+      // Active sessions split: started today vs carryover from a prior day
+      let totalActiveTodayHours = 0;
+      let totalActiveCarryoverHours = 0;
+      let activeStartedToday = 0;
+      let activeCarryover = 0;
+      (active ?? []).forEach((r: any) => {
         const start = new Date(r.clock_in).getTime();
-        if (start < today.getTime()) return sum; // started before today; skip from "today" total
-        return sum + (Date.now() - start) / 3_600_000;
-      }, 0);
+        const elapsed = (Date.now() - start) / 3_600_000;
+        if (start >= today.getTime()) {
+          totalActiveTodayHours += elapsed;
+          activeStartedToday += 1;
+        } else {
+          totalActiveCarryoverHours += elapsed;
+          activeCarryover += 1;
+        }
+      });
 
       const totalTodayHours = totalCompletedTodayHours + totalActiveTodayHours;
+      const round2 = (n: number) => Math.round(n * 100) / 100;
 
       return {
         active_sessions: activeSessions,
         completed_today: today_done?.length ?? 0,
-        total_today_hours: Math.round(totalTodayHours * 100) / 100,
+        total_today_hours: round2(totalTodayHours),
         active_count: activeSessions.length,
+        breakdown: {
+          completed_today_hours: round2(totalCompletedTodayHours),
+          completed_today_count: today_done?.length ?? 0,
+          active_today_hours: round2(totalActiveTodayHours),
+          active_today_count: activeStartedToday,
+          carryover_hours: round2(totalActiveCarryoverHours),
+          carryover_count: activeCarryover,
+        },
       };
+    },
+    refetchInterval: 60_000, // refresh every minute
+  });
+}
     },
     refetchInterval: 60_000, // refresh every minute
   });
