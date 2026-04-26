@@ -168,18 +168,31 @@ export default function QuotePrint() {
       {/* ── Printable Document ── */}
       <div
         id="quote-pdf-content"
-        className="relative print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen overflow-hidden"
-        style={{ backgroundColor: theme.tint }}
+        className="relative print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 pt-10 md:pt-14 print:pt-12 print:p-0 print:px-10 print:max-w-none print:bg-white min-h-screen overflow-hidden"
       >
-        {/* ── Service Watermark (decorative) ── */}
+        {/* ── Service Watermark (multiple scattered icons) ── */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 flex items-center justify-center print:flex"
-          style={{ opacity: 0.06 }}
+          className="pointer-events-none absolute inset-0 print:block"
+          style={{ opacity: 0.05 }}
         >
-          <div className="w-[420px] h-[420px]" style={{ color: theme.accent }}>
-            {theme.icon}
-          </div>
+          {[
+            { top: '12%', left: '8%', size: 110 },
+            { top: '28%', left: '72%', size: 90 },
+            { top: '46%', left: '20%', size: 130 },
+            { top: '40%', left: '55%', size: 80 },
+            { top: '64%', left: '78%', size: 100 },
+            { top: '76%', left: '10%', size: 95 },
+            { top: '88%', left: '48%', size: 85 },
+          ].map((p, i) => (
+            <div
+              key={i}
+              className="absolute"
+              style={{ top: p.top, left: p.left, width: p.size, height: p.size, color: theme.accent }}
+            >
+              {theme.icon}
+            </div>
+          ))}
         </div>
 
         {/* ── Service accent strip ── */}
