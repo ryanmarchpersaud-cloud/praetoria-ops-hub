@@ -659,6 +659,7 @@ export type Database = {
           quote_prefix: string | null
           request_prefix: string | null
           secondary_color: string | null
+          signature_url: string | null
           support_email: string | null
           updated_at: string
           website: string | null
@@ -705,6 +706,7 @@ export type Database = {
           quote_prefix?: string | null
           request_prefix?: string | null
           secondary_color?: string | null
+          signature_url?: string | null
           support_email?: string | null
           updated_at?: string
           website?: string | null
@@ -751,6 +753,7 @@ export type Database = {
           quote_prefix?: string | null
           request_prefix?: string | null
           secondary_color?: string | null
+          signature_url?: string | null
           support_email?: string | null
           updated_at?: string
           website?: string | null
