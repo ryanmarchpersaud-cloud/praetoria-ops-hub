@@ -101,7 +101,8 @@ const SYNTHETIC_PAYLOADS: Record<string, Record<string, unknown>> = {
 
 // ── Generic synthetic test handler ─────────────────────────────────────
 async function handleSyntheticTest(
-  supabase: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
   actionKey: string,
 ) {
   const n8nUrl = Deno.env.get("N8N_WEBHOOK_URL");
