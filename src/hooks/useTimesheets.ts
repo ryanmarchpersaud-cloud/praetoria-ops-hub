@@ -179,9 +179,35 @@ export function useAdminLiveWorkforce() {
         elapsed_hours: (Date.now() - new Date(a.clock_in).getTime()) / 3_600_000,
       }));
 
-      const totalCompletedTodayHours = (today_done ?? []).reduce((sum: number, r: any) => {
-        return sum + (new Date(r.clock_out).getTime() - new Date(r.clock_in).getTime()) / 3_600_000;
-      }, 0);
+      // Per-worker hours + cost aggregation (today only — excludes carryover)
+      const perWorker = new Map<string, {
+        user_id: string;
+        full_name: string;
+        hourly_rate: number;
+        completed_hours: number;
+        active_hours: number;
+      }>();
+      const ensure = (uid: string) => {
+        let row = perWorker.get(uid);
+        if (!row) {
+          row = {
+            user_id: uid,
+            full_name: nameMap.get(uid) ?? 'Unknown',
+            hourly_rate: rateMap.get(uid) ?? 0,
+            completed_hours: 0,
+            active_hours: 0,
+          };
+          perWorker.set(uid, row);
+        }
+        return row;
+      };
+
+      let totalCompletedTodayHours = 0;
+      (today_done ?? []).forEach((r: any) => {
+        const hrs = (new Date(r.clock_out).getTime() - new Date(r.clock_in).getTime()) / 3_600_000;
+        totalCompletedTodayHours += hrs;
+        ensure(r.user_id).completed_hours += hrs;
+      });
 
       // Active sessions split: started today vs carryover from a prior day
       let totalActiveTodayHours = 0;
@@ -194,6 +220,7 @@ export function useAdminLiveWorkforce() {
         if (start >= today.getTime()) {
           totalActiveTodayHours += elapsed;
           activeStartedToday += 1;
+          ensure(r.user_id).active_hours += elapsed;
         } else {
           totalActiveCarryoverHours += elapsed;
           activeCarryover += 1;
@@ -202,6 +229,25 @@ export function useAdminLiveWorkforce() {
 
       const totalTodayHours = totalCompletedTodayHours + totalActiveTodayHours;
       const round2 = (n: number) => Math.round(n * 100) / 100;
+
+      const workerCosts = Array.from(perWorker.values())
+        .map((w) => {
+          const hours = w.completed_hours + w.active_hours;
+          return {
+            user_id: w.user_id,
+            full_name: w.full_name,
+            hourly_rate: w.hourly_rate,
+            hours: round2(hours),
+            completed_hours: round2(w.completed_hours),
+            active_hours: round2(w.active_hours),
+            cost: round2(hours * w.hourly_rate),
+          };
+        })
+        .filter((w) => w.hours > 0)
+        .sort((a, b) => b.cost - a.cost);
+
+      const totalLaborCostToday = round2(workerCosts.reduce((s, w) => s + w.cost, 0));
+      const workersWithoutRate = workerCosts.filter((w) => w.hourly_rate <= 0).length;
 
       return {
         active_sessions: activeSessions,
