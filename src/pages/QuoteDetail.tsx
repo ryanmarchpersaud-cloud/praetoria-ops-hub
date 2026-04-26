@@ -426,6 +426,84 @@ export default function QuoteDetail() {
             </CardContent>
           </Card>
 
+          {/* ── Recurring Service Pricing (optional) ── */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span>Recurring Service Pricing</span>
+                <label className="flex items-center gap-2 text-xs font-normal text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!form.recurring_pricing_enabled}
+                    onChange={e => set('recurring_pricing_enabled', e.target.checked)}
+                    disabled={isSentOrApproved}
+                    className="h-4 w-4"
+                  />
+                  Show on quote
+                </label>
+              </CardTitle>
+            </CardHeader>
+            {form.recurring_pricing_enabled && (
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Optional. Use these to give the client recurring-service price options (e.g. lawn care). Leave any field blank to hide it. Prices are pre-tax and shown separately from the quote total.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Per Cut ($)</Label>
+                    <Input
+                      type="number" step="0.01" min={0}
+                      value={form.price_per_cut ?? ''}
+                      onChange={e => set('price_per_cut', e.target.value)}
+                      placeholder="e.g. 65.00"
+                      disabled={isSentOrApproved}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Weekly ($)</Label>
+                    <Input
+                      type="number" step="0.01" min={0}
+                      value={form.price_weekly ?? ''}
+                      onChange={e => set('price_weekly', e.target.value)}
+                      placeholder="e.g. 60.00"
+                      disabled={isSentOrApproved}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Biweekly ($)</Label>
+                    <Input
+                      type="number" step="0.01" min={0}
+                      value={form.price_biweekly ?? ''}
+                      onChange={e => set('price_biweekly', e.target.value)}
+                      placeholder="e.g. 75.00"
+                      disabled={isSentOrApproved}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Monthly ($)</Label>
+                    <Input
+                      type="number" step="0.01" min={0}
+                      value={form.price_monthly ?? ''}
+                      onChange={e => set('price_monthly', e.target.value)}
+                      placeholder="e.g. 220.00"
+                      disabled={isSentOrApproved}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Notes (optional)</Label>
+                  <Textarea
+                    rows={2}
+                    value={form.recurring_pricing_notes || ''}
+                    onChange={e => set('recurring_pricing_notes', e.target.value)}
+                    placeholder="e.g. Weekly rate assumes a season of May–October. Per cut billed after each visit."
+                    disabled={isSentOrApproved}
+                  />
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
           {/* ── Line Items ── */}
           <Card>
             <CardHeader className="pb-2">
