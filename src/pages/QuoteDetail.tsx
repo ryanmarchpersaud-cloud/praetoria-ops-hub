@@ -193,7 +193,30 @@ export default function QuoteDetail() {
     'Other': '#64748B',
   };
 
-  useEffect(() => { if (quote) setForm(quote); }, [quote]);
+  useEffect(() => {
+    if (!quote) return;
+    setForm(quote);
+    // For brand-new quotes (no customer-facing text yet), pre-fill from company defaults.
+    const needsDefaults = !(quote as any).workmanship_warranty && !(quote as any).terms_conditions && !(quote as any).customer_notes;
+    if (needsDefaults) {
+      (async () => {
+        const { data } = await supabase
+          .from('company_settings')
+          .select('default_workmanship_warranty, default_terms_conditions, default_quote_notes')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          setForm((p: any) => ({
+            ...p,
+            workmanship_warranty: p.workmanship_warranty || (data as any).default_workmanship_warranty || '',
+            terms_conditions: p.terms_conditions || (data as any).default_terms_conditions || '',
+            customer_notes: p.customer_notes || (data as any).default_quote_notes || '',
+          }));
+        }
+      })();
+    }
+  }, [quote]);
   useEffect(() => {
     if (lineItems.length > 0) {
       setItems(lineItems.map((li, idx) => ({
