@@ -387,17 +387,48 @@ export default function EmployeeDetail() {
     if (!userId) return;
     setEditSaving(true);
     try {
+      const oldRate = emp?.hourly_rate != null ? Number(emp.hourly_rate) : null;
+      const newRate = editForm.hourly_rate ? Number(editForm.hourly_rate) : null;
+
       const { error } = await supabase.from('worker_profiles').update({
         ...editForm,
-        hourly_rate: editForm.hourly_rate ? Number(editForm.hourly_rate) : null,
+        hourly_rate: newRate,
         date_of_birth: editForm.date_of_birth || null,
         driver_license_expiry: editForm.driver_license_expiry || null,
         hire_date: editForm.hire_date || null,
         employee_id: editForm.employee_id || null,
       }).eq('user_id', userId);
       if (error) throw error;
+
+      // Log hourly rate change to activity log
+      if (oldRate !== newRate) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          await supabase.from('activities').insert({
+            user_id: user?.id ?? null,
+            workflow_name: 'HR',
+            action_name: 'employee.hourly_rate_changed',
+            record_type: 'worker_profile',
+            record_id: emp?.id ?? null,
+            status: 'completed',
+            payload_summary: {
+              worker_user_id: userId,
+              worker_name: emp?.full_name ?? null,
+              old_rate: oldRate,
+              new_rate: newRate,
+              changed_by_user_id: user?.id ?? null,
+              changed_by_email: user?.email ?? null,
+              changed_at: new Date().toISOString(),
+            },
+          });
+        } catch (logErr) {
+          console.warn('[activity] failed to log hourly rate change', logErr);
+        }
+      }
+
       toast({ title: 'Employee updated successfully.' });
       queryClient.invalidateQueries({ queryKey: ['employee'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       setEditOpen(false);
     } catch (err: any) {
       toast({ title: err.message || 'Save failed.', variant: 'destructive' });
