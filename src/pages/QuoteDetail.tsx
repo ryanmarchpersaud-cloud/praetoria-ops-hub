@@ -966,8 +966,45 @@ export default function QuoteDetail() {
             </CardContent>
           </Card>
 
+          {/* ── Customer-Facing Sections (appear on the printed/sent quote) ── */}
+          <CollapsibleSection title="Customer Notes, Warranty & Terms" defaultOpen={true}>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              These sections appear on the quote sent to the customer. Defaults can be set in Company Settings → Documents.
+            </p>
+            <div>
+              <Label className="text-xs font-semibold">Customer Notes</Label>
+              <Textarea
+                value={form.customer_notes || ''}
+                onChange={e => set('customer_notes', e.target.value)}
+                rows={3}
+                placeholder="Friendly note shown to the customer (e.g. thank-you, scheduling info, what's included)"
+                disabled={isSentOrApproved}
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold">Workmanship Warranty</Label>
+              <Textarea
+                value={form.workmanship_warranty || ''}
+                onChange={e => set('workmanship_warranty', e.target.value)}
+                rows={4}
+                placeholder="e.g. Praetoria Group warrants all labour and workmanship for 12 months from completion date…"
+                disabled={isSentOrApproved}
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold">Terms & Conditions</Label>
+              <Textarea
+                value={form.terms_conditions || ''}
+                onChange={e => set('terms_conditions', e.target.value)}
+                rows={6}
+                placeholder="e.g. Quote valid for 30 days. Payment Net 30. Scope changes billed separately…"
+                disabled={isSentOrApproved}
+              />
+            </div>
+          </CollapsibleSection>
+
           {/* ── Notes (collapsible) ── */}
-          <CollapsibleSection title="Notes & Settings" defaultOpen={false}>
+          <CollapsibleSection title="Internal Notes & Settings" defaultOpen={false}>
             <div>
               <Label className="text-xs">Agent Summary</Label>
               <Textarea value={form.agent_summary || ''} onChange={e => set('agent_summary', e.target.value)} rows={3} placeholder="AI-generated or agent notes" />
