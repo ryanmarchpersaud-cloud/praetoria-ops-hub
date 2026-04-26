@@ -13,6 +13,9 @@ import { QuickActionBar } from '@/components/dashboard/QuickActionBar';
 import { ConversionFunnel } from '@/components/dashboard/ConversionFunnel';
 import { TomorrowSchedule } from '@/components/dashboard/TomorrowSchedule';
 import { PendingApprovalsHub } from '@/components/dashboard/PendingApprovalsHub';
+import { TopPerformersLeaderboard } from '@/components/dashboard/TopPerformersLeaderboard';
+import { ServiceMixDonut } from '@/components/dashboard/ServiceMixDonut';
+import { JobsCompletedBarChart } from '@/components/dashboard/JobsCompletedBarChart';
 import {
   useDashboardRequests,
   useDashboardQuotes,
