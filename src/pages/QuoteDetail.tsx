@@ -694,22 +694,20 @@ export default function QuoteDetail() {
                             <CommandEmpty>No items found.</CommandEmpty>
                             {orderedCatalogGroups.map(([cat, products]) => {
                               const color = CATEGORY_COLORS[cat] || '#64748B';
+                              const slug = `cat-${cat.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
                               return (
                                 <CommandGroup
                                   key={cat}
                                   heading={cat}
-                                  className="[&_[cmdk-group-heading]]:text-lg [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-tight [&_[cmdk-group-heading]]:text-white [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2.5 [&_[cmdk-group-heading]]:my-2 [&_[cmdk-group-heading]]:rounded-md [&_[cmdk-group-heading]]:shadow-sm"
-                                  style={{ ['--cat-color' as any]: color }}
+                                  className={`${slug} [&_[cmdk-group-heading]]:text-lg [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-tight [&_[cmdk-group-heading]]:text-white [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2.5 [&_[cmdk-group-heading]]:my-2 [&_[cmdk-group-heading]]:rounded-md [&_[cmdk-group-heading]]:shadow-sm`}
                                 >
-                                  <style>{`[data-cat="${cat.replace(/"/g, '\\"')}"] [cmdk-group-heading] { background-color: ${color}; }`}</style>
-                                  <div data-cat={cat} className="contents">
-                                    {(products as any[]).map((p: any) => (
-                                      <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between py-3 text-base">
-                                        <span className="truncate">{p.name}</span>
-                                        <span className="text-muted-foreground text-sm ml-2 shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
-                                      </CommandItem>
-                                    ))}
-                                  </div>
+                                  <style>{`.${slug} [cmdk-group-heading] { background-color: ${color} !important; }`}</style>
+                                  {(products as any[]).map((p: any) => (
+                                    <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between py-3 text-base">
+                                      <span className="truncate">{p.name}</span>
+                                      <span className="text-muted-foreground text-sm ml-2 shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                    </CommandItem>
+                                  ))}
                                 </CommandGroup>
                               );
                             })}
