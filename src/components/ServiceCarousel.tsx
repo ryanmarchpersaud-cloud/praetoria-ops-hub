@@ -88,7 +88,10 @@ export function ServiceCarousel() {
     <>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-foreground">Services</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            Services <span className="text-muted-foreground font-medium">· All {SERVICE_PROMOS.length}</span>
+          </h2>
+          <span className="text-[10px] text-muted-foreground hidden md:inline">Scroll →</span>
         </div>
         <div className="flex gap-2.5 pb-2 overflow-x-auto scrollbar-hide -mx-3 px-3">
           {SERVICE_PROMOS.map((promo) => (
