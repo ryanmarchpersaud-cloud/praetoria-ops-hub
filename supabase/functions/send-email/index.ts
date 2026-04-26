@@ -235,6 +235,179 @@ function wrapHtml(title: string, body: string): string {
 </body></html>`;
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatMoney(value: unknown): string {
+  const amount = Number(value || 0);
+  return amount.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function normalizePdfText(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u2022/g, "-")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "");
+}
+
+function pdfText(value: unknown): string {
+  return normalizePdfText(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function buildPdf(pages: string[]): string {
+  const encoder = new TextEncoder();
+  const objects: string[] = [];
+  objects.push("<< /Type /Catalog /Pages 2 0 R >>");
+  objects.push(`<< /Type /Pages /Kids [${pages.map((_, i) => `${3 + i * 2} 0 R`).join(" ")}] /Count ${pages.length} >>`);
+  pages.forEach((content, i) => {
+    const contentObject = 4 + i * 2;
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents ${contentObject} 0 R >>`);
+    objects.push(`<< /Length ${encoder.encode(content).length} >>\nstream\n${content}\nendstream`);
+  });
+
+  let pdf = "%PDF-1.4\n";
+  const offsets: number[] = [];
+  objects.forEach((object, index) => {
+    offsets.push(encoder.encode(pdf).length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = encoder.encode(pdf).length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  pdf += offsets.map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`).join("");
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return bytesToBase64(encoder.encode(pdf));
+}
+
+function generateQuotePdfBase64(quote: Record<string, unknown>, client: Record<string, unknown> | null, lineItems: Record<string, unknown>[]): string {
+  const pages: string[] = [];
+  let ops = "";
+  let y = 744;
+  const left = 48;
+  const right = 564;
+
+  const newPage = () => {
+    pages.push(ops);
+    ops = "";
+    y = 744;
+  };
+  const ensureSpace = (height = 24) => {
+    if (y - height < 62) newPage();
+  };
+  const text = (value: unknown, x = left, size = 10, font: "F1" | "F2" = "F1") => {
+    ensureSpace(size + 8);
+    ops += `BT /${font} ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\n`;
+    y -= size + 6;
+  };
+  const line = () => {
+    ensureSpace(12);
+    ops += `0.82 0.84 0.87 RG ${left} ${y} m ${right} ${y} l S\n`;
+    y -= 14;
+  };
+  const wrapped = (value: unknown, x = left, size = 10, maxChars = 88) => {
+    const words = normalizePdfText(value).split(/\s+/).filter(Boolean);
+    let current = "";
+    for (const word of words) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (candidate.length > maxChars && current) {
+        text(current, x, size);
+        current = word;
+      } else {
+        current = candidate;
+      }
+    }
+    if (current) text(current, x, size);
+  };
+
+  ops += "0.10 0.10 0.18 rg 48 760 516 4 re f\n";
+  text("PRAETORIA GROUP", left, 18, "F2");
+  text("Property Services & Maintenance | Regina, Saskatchewan", left, 9);
+  text("support@praetoriagroup.ca | (306) 737-6269", left, 9);
+  y = 710;
+  text("QUOTATION", 398, 24, "F2");
+  text(quote.quote_number || "", 398, 12, "F2");
+  y = 674;
+  line();
+
+  text("Prepared For", left, 9, "F2");
+  text(`${client?.first_name || ""} ${client?.last_name || ""}`.trim() || client?.company_name || "Valued Customer", left, 12, "F2");
+  if (client?.company_name) text(client.company_name, left, 10);
+  if (client?.address_line_1) text(client.address_line_1, left, 9);
+  const location = [client?.city, client?.province, client?.postal_code].filter(Boolean).join(", ");
+  if (location) text(location, left, 9);
+  if (client?.email) text(client.email, left, 9);
+
+  y += 92;
+  text("Service Category", 360, 9, "F2");
+  text(quote.service_category || "Property Services", 360, 11, "F2");
+  text("Total", 360, 9, "F2");
+  text(`$${formatMoney(quote.total)} CAD`, 360, 16, "F2");
+  y -= 26;
+  line();
+
+  if (quote.scope_of_work) {
+    text("Scope of Work", left, 10, "F2");
+    wrapped(quote.scope_of_work, left, 10, 92);
+    y -= 8;
+  }
+
+  text("Line Items", left, 10, "F2");
+  line();
+  text("Item", left, 9, "F2");
+  y += 15;
+  text("Qty", 344, 9, "F2");
+  y += 15;
+  text("Unit", 404, 9, "F2");
+  y += 15;
+  text("Total", 488, 9, "F2");
+  line();
+
+  lineItems.forEach((item) => {
+    ensureSpace(44);
+    text(item.item_name || "Service", left, 10, "F2");
+    if (item.description) wrapped(item.description, left + 12, 8, 58);
+    y += item.description ? 31 : 15;
+    text(String(Number(item.quantity || 0)), 344, 9);
+    y += 15;
+    text(`$${formatMoney(item.unit_price)}`, 404, 9);
+    y += 15;
+    text(`$${formatMoney(item.line_total)}`, 488, 9, "F2");
+    y -= item.description ? 16 : 0;
+    line();
+  });
+
+  y -= 4;
+  text(`Subtotal: $${formatMoney(quote.subtotal)}`, 392, 10);
+  text(`Tax (${(Number(quote.tax_rate || 0.13) * 100).toFixed(0)}%): $${formatMoney(quote.tax)}`, 392, 10);
+  text(`Total (CAD): $${formatMoney(quote.total)}`, 392, 13, "F2");
+
+  y -= 20;
+  text("Terms & Conditions", left, 10, "F2");
+  wrapped("This quote is valid for 30 days from the issued date. Payment terms are Net 30 from project completion unless otherwise agreed. Prices do not include additional scope changes unless separately quoted.", left, 9, 92);
+  y -= 16;
+  text("Praetoria Group", left, 10, "F2");
+  text("Ryan Steven Persaud - Authorized Representative", left, 9);
+
+  pages.push(ops);
+  return buildPdf(pages);
+}
+
 // ── Main handler ─────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -336,22 +509,76 @@ Deno.serve(async (req) => {
     // ─── Quote Sent (customer-facing) ───
     if (action === "quote_sent") {
       const { customer_email, customer_name, quote_number, service_category, total, quote_id, custom_message } = params;
-      if (!customer_email) return json({ error: "Missing customer_email" }, 400);
+      const sb = getServiceClient();
+      let quoteRecord: Record<string, unknown> = { quote_number, service_category, total, id: quote_id };
+      let clientRecord: Record<string, unknown> | null = null;
+      let quoteLineItems: Record<string, unknown>[] = [];
 
-      const replyTo = resolveReplyTo(service_category, "operational");
+      if (quote_id) {
+        const { data: dbQuote, error: dbQuoteError } = await sb
+          .from("quotes")
+          .select("*, customers(*), leads(*)")
+          .eq("id", quote_id)
+          .maybeSingle();
+        if (dbQuoteError) return json({ error: dbQuoteError.message }, 500);
+        if (dbQuote) {
+          quoteRecord = dbQuote as Record<string, unknown>;
+          clientRecord = ((dbQuote as Record<string, unknown>).customers || (dbQuote as Record<string, unknown>).leads || null) as Record<string, unknown> | null;
+        }
+
+        const { data: dbItems, error: itemsError } = await sb
+          .from("quote_line_items")
+          .select("item_name, description, quantity, unit_price, line_total, sort_order")
+          .eq("quote_id", quote_id)
+          .order("sort_order");
+        if (itemsError) return json({ error: itemsError.message }, 500);
+        quoteLineItems = (dbItems || []) as Record<string, unknown>[];
+      }
+
+      const resolvedEmail = String(customer_email || clientRecord?.email || "");
+      if (!resolvedEmail) return json({ error: "Missing customer_email" }, 400);
+
+      const resolvedName = String(
+        customer_name ||
+          [clientRecord?.first_name, clientRecord?.last_name].filter(Boolean).join(" ").trim() ||
+          clientRecord?.company_name ||
+          "Valued Customer"
+      );
+      const resolvedQuoteNumber = String(quoteRecord.quote_number || quote_number || "");
+      const resolvedCategory = String(quoteRecord.service_category || service_category || "Property Services");
+      const subtotalFromItems = quoteLineItems.reduce((sum, item) => sum + Number(item.line_total || 0), 0);
+      const taxRate = Number(quoteRecord.tax_rate || 0.13);
+      const resolvedSubtotal = Number(quoteRecord.subtotal || subtotalFromItems || 0);
+      const resolvedTax = Number(quoteRecord.tax || (resolvedSubtotal * taxRate) || 0);
+      const resolvedTotal = Number(quoteRecord.total || total || (resolvedSubtotal + resolvedTax) || 0);
+      const pdfBase64 = generateQuotePdfBase64(
+        { ...quoteRecord, subtotal: resolvedSubtotal, tax: resolvedTax, total: resolvedTotal, tax_rate: taxRate, service_category: resolvedCategory, quote_number: resolvedQuoteNumber },
+        clientRecord,
+        quoteLineItems,
+      );
+
+      const replyTo = resolveReplyTo(resolvedCategory, "operational");
+      const itemsHtml = quoteLineItems.length > 0
+        ? `<table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+            ${quoteLineItems.map((item) => `<tr><td style="padding:8px 0;border-bottom:1px solid #e5e7eb;"><strong>${escapeHtml(item.item_name)}</strong>${item.description ? `<br/><span style="color:#71717a;font-size:12px;">${escapeHtml(item.description)}</span>` : ""}</td><td style="padding:8px 0;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap;">$${formatMoney(item.line_total)}</td></tr>`).join("")}
+          </table>`
+        : "";
 
       const result = await sendViaResend({
-        to: customer_email,
-        subject: `Quote ${quote_number || ""} — ${service_category || "Service"} — $${total || "0.00"} CAD`,
+        to: resolvedEmail,
+        subject: `Quote ${resolvedQuoteNumber} — ${resolvedCategory} — $${formatMoney(resolvedTotal)} CAD`,
         html: wrapHtml("Your Quote is Ready", `
-          <p>Dear ${customer_name || "Valued Customer"},</p>
-          <p>Please find your quote <strong>${quote_number || ""}</strong> for <strong>${service_category || "services"}</strong>, totalling <strong>$${total || "0.00"} CAD</strong> (incl. tax).</p>
-          ${custom_message ? `<p style="background:#f0f9ff;padding:12px;border-radius:6px;font-style:italic;">${custom_message}</p>` : ""}
-          <p>This quote is valid for 30 days from the issued date. Please reply to this email or call us to proceed.</p>
+          <p>Dear ${escapeHtml(resolvedName)},</p>
+          <p>Your attached PDF quotation <strong>${escapeHtml(resolvedQuoteNumber)}</strong> is for <strong>${escapeHtml(resolvedCategory)}</strong>, totalling <strong>$${formatMoney(resolvedTotal)} CAD</strong> (incl. tax).</p>
+          ${itemsHtml}
+          ${quoteRecord.scope_of_work ? `<p><strong>Scope of work:</strong><br/>${escapeHtml(quoteRecord.scope_of_work).replace(/\n/g, "<br/>")}</p>` : ""}
+          ${custom_message ? `<p style="background:#f0f9ff;padding:12px;border-radius:6px;font-style:italic;">${escapeHtml(custom_message)}</p>` : ""}
+          <p>The full customer-ready quotation PDF is attached to this email. This quote is valid for 30 days from the issued date. Please reply to this email or call us to proceed.</p>
           <p>You can also view your quotes in your <a href="https://praetoria-ops-hub.lovable.app/portal/quotes">customer portal</a>.</p>
           <p>Best regards,<br/>Praetoria Group</p>
         `),
         reply_to: replyTo,
+        attachments: [{ filename: `${resolvedQuoteNumber || "quote"}.pdf`, content: pdfBase64, content_type: "application/pdf" }],
       });
 
       const logEntry: IntegrationEntry = {
@@ -359,12 +586,12 @@ Deno.serve(async (req) => {
         event_name: "email.quote_sent",
         channel: "email",
         status: result.ok ? "success" : "failed",
-        recipient: customer_email,
+        recipient: resolvedEmail,
         record_type: "quote",
-        record_id: quote_id,
+        record_id: String(quote_id || quoteRecord.id || ""),
         provider_response_id: result.id,
         error_message: result.error,
-        metadata: { quote_number, service_category, total, reply_to: replyTo },
+        metadata: { quote_number: resolvedQuoteNumber, service_category: resolvedCategory, total: formatMoney(resolvedTotal), reply_to: replyTo, pdf_attached: true, line_item_count: quoteLineItems.length },
       };
       await logIntegration(logEntry);
       await notifyN8n(logEntry);
