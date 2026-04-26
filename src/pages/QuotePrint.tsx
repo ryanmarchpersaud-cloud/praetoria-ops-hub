@@ -510,19 +510,19 @@ export default function QuotePrint() {
             <div className="grid grid-cols-3 md:grid-cols-5 print:grid-cols-5 gap-1.5 print:gap-2 text-[9px] print:text-[10px]">
               {[
                 { name: 'Snow & Ice', color: '#2563EB' },
-                { name: 'Maintenance & Repairs', color: '#DC2626', soon: true },
+                { name: 'Maintenance & Repairs', color: '#DC2626' },
                 { name: 'Property Care & Landscaping', color: '#F97316' },
-                { name: 'Property Management', color: '#16A34A', soon: true },
-                { name: 'Electrical', color: '#7C3AED', soon: true },
-                { name: 'Plumbing', color: '#0D9488', soon: true },
-                { name: 'Carpentry & Renovations', color: '#92400E', soon: true },
-                { name: 'Roofing & Exteriors', color: '#374151', soon: true },
-                { name: 'Painting & Finishing', color: '#EAB308', soon: true },
+                { name: 'Property Management', color: '#16A34A' },
+                { name: 'Electrical', color: '#7C3AED' },
+                { name: 'Plumbing', color: '#0D9488' },
+                { name: 'Carpentry & Renovations', color: '#92400E' },
+                { name: 'Roofing & Exteriors', color: '#374151' },
+                { name: 'Painting & Finishing', color: '#EAB308' },
                 { name: 'Cleaning Services', color: '#0EA5E9' },
-                { name: 'HVAC', color: '#F43F5E', soon: true },
-                { name: 'Concrete & Masonry', color: '#6B7280', soon: true },
-                { name: 'Security & Smart Home', color: '#111827', soon: true },
-                { name: 'Fencing & Decking', color: '#7c2d12', soon: true },
+                { name: 'HVAC', color: '#F43F5E' },
+                { name: 'Concrete & Masonry', color: '#6B7280' },
+                { name: 'Security & Smart Home', color: '#111827' },
+                { name: 'Fencing & Decking', color: '#7c2d12' },
                 { name: 'Junk Removal', color: '#c2410c' },
               ].map((s) => (
                 <div
@@ -535,20 +535,71 @@ export default function QuotePrint() {
                     style={{ backgroundColor: s.color }}
                   />
                   <div className="pt-0.5">{s.name}</div>
-                  {s.soon && (
-                    <div
-                      className="mt-1 text-[7px] print:text-[7px] uppercase tracking-wider font-bold"
-                      style={{ color: '#9ca3af' }}
-                    >
-                      Coming Soon
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
             <p className="text-center text-[10px] text-[#6b7280] mt-3 italic print:text-xs">
               One trusted partner for all your property needs — ask us about bundling for preferred rates.
             </p>
+          </div>
+
+          {/* ── Customer Portal & App Promotion ── */}
+          <div className="mt-6 pt-5 border-t border-[#e5e7eb] print:mt-8">
+            <p className="text-center text-[10px] uppercase tracking-[0.2em] font-bold mb-3 print:text-xs text-[#1a1a2e]">
+              Manage Everything in One Place
+            </p>
+            <div className="grid grid-cols-3 gap-3 print:gap-4">
+              {/* Customer Portal */}
+              <div className="rounded-lg border-2 border-[#1a1a2e]/15 bg-[#1a1a2e]/[0.03] p-3 text-center">
+                <div className="flex justify-center mb-1.5">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1a1a2e" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="14" rx="2" />
+                    <path d="M3 10 H21 M8 18 V21 M16 18 V21 M6 21 H18" />
+                  </svg>
+                </div>
+                <p className="text-[10px] font-bold text-[#1a1a2e] print:text-xs">Customer Portal</p>
+                <p className="text-[8px] text-[#6b7280] mt-0.5 print:text-[9px] leading-tight">
+                  View quotes, invoices & service history
+                </p>
+                <p className="text-[8px] font-mono text-[#3b5bdb] mt-1 print:text-[9px] break-all">
+                  praetoriagroup.ca/portal
+                </p>
+              </div>
+
+              {/* Google Play */}
+              <div className="rounded-lg border-2 border-[#16A34A]/25 bg-[#16A34A]/[0.04] p-3 text-center">
+                <div className="flex justify-center mb-1.5">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#16A34A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 3 L19 12 L5 21 Z" />
+                    <path d="M5 3 L15 13 M5 21 L15 11" />
+                  </svg>
+                </div>
+                <p className="text-[10px] font-bold text-[#1a1a2e] print:text-xs">Praetoria Group App</p>
+                <p className="text-[8px] text-[#6b7280] mt-0.5 print:text-[9px] leading-tight">
+                  Get it on Google Play
+                </p>
+                <p className="text-[8px] font-mono text-[#16A34A] mt-1 print:text-[9px]">
+                  Android
+                </p>
+              </div>
+
+              {/* Apple App Store */}
+              <div className="rounded-lg border-2 border-[#111827]/25 bg-[#111827]/[0.04] p-3 text-center">
+                <div className="flex justify-center mb-1.5">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 3 a4 4 0 0 0-3 3" />
+                    <path d="M19 17 c-1 2-2 3-3.5 3 c-1 0-1.7-0.6-3-0.6 c-1.3 0-2 0.6-3 0.6 c-1.5 0-3-1.5-4-3.5 c-2-4-1-9 2-10 c1.5-0.5 3 0.5 4 0.5 c1 0 2.5-1 4.2-0.8 c1.7 0.2 3 1 3.8 2.3 c-3.4 2-2.8 6.7 0.5 8.5 z" />
+                  </svg>
+                </div>
+                <p className="text-[10px] font-bold text-[#1a1a2e] print:text-xs">Praetoria Group App</p>
+                <p className="text-[8px] text-[#6b7280] mt-0.5 print:text-[9px] leading-tight">
+                  Download on the App Store
+                </p>
+                <p className="text-[8px] font-mono text-[#111827] mt-1 print:text-[9px]">
+                  iOS
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* ── Footer ── */}
