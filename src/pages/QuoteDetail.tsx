@@ -237,6 +237,12 @@ export default function QuoteDetail() {
         service_category: form.service_category, scope_of_work: form.scope_of_work,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
         tax_rate: Number(form.tax_rate || 0.13),
+        recurring_pricing_enabled: !!form.recurring_pricing_enabled,
+        price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
+        price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
+        price_biweekly: form.price_biweekly === '' || form.price_biweekly == null ? null : Number(form.price_biweekly),
+        price_monthly: form.price_monthly === '' || form.price_monthly == null ? null : Number(form.price_monthly),
+        recurring_pricing_notes: form.recurring_pricing_notes || null,
       };
       if (newStatus === 'Sent') { updates.sent_status = 'Sent'; updates.sent_at = new Date().toISOString(); }
       await updateQuote.mutateAsync(updates);
