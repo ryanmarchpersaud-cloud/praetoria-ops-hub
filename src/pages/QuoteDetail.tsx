@@ -11,7 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle, Receipt, LinkIcon } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle, Receipt, LinkIcon, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/integrations/supabase/client';
 import { logQuoteFollowUpChange } from '@/lib/quoteFollowUpLog';
 import { QuoteEmailPreview } from '@/components/QuoteEmailPreview';
@@ -35,7 +38,27 @@ interface LineItemForm {
   unit_price: number;
   line_total: number;
   sort_order: number;
+  _key?: string;
 }
+
+function SortableLineRow({
+  id, children, className,
+}: { id: string; children: (handleProps: { attributes: any; listeners: any }) => React.ReactNode; className?: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+    position: 'relative',
+  };
+  return (
+    <div ref={setNodeRef} style={style} className={className}>
+      {children({ attributes, listeners })}
+    </div>
+  );
+}
+
 
 function CollapsibleSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -74,6 +97,7 @@ export default function QuoteDetail() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // Fetch linked job if converted
   const { data: linkedJob } = useQuery({
@@ -121,10 +145,11 @@ export default function QuoteDetail() {
   useEffect(() => { if (quote) setForm(quote); }, [quote]);
   useEffect(() => {
     if (lineItems.length > 0) {
-      setItems(lineItems.map(li => ({
+      setItems(lineItems.map((li, idx) => ({
         id: li.id, item_name: li.item_name, description: li.description || '',
         quantity: Number(li.quantity), unit_price: Number(li.unit_price),
         line_total: Number(li.line_total), sort_order: li.sort_order || 0,
+        _key: li.id || `row-${idx}-${Math.random().toString(36).slice(2, 8)}`,
       })));
     }
   }, [lineItems]);
@@ -150,6 +175,8 @@ export default function QuoteDetail() {
     recalculate(updated);
   };
 
+  const newKey = () => `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   const addFromCatalog = (product: any) => {
     const price = Number(product.unit_price) || 0;
     const newItem: LineItemForm = {
@@ -159,6 +186,7 @@ export default function QuoteDetail() {
       unit_price: price,
       line_total: price,
       sort_order: items.length,
+      _key: newKey(),
     };
     const updated = [...items, newItem];
     setItems(updated);
@@ -167,7 +195,7 @@ export default function QuoteDetail() {
   };
 
   const addItem = () => {
-    setItems([...items, { item_name: '', description: '', quantity: 1, unit_price: 0, line_total: 0, sort_order: items.length }]);
+    setItems([...items, { item_name: '', description: '', quantity: 1, unit_price: 0, line_total: 0, sort_order: items.length, _key: newKey() }]);
   };
 
   const removeItem = (idx: number) => {
@@ -175,6 +203,17 @@ export default function QuoteDetail() {
     setItems(updated);
     recalculate(updated);
   };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex(i => (i._key || i.id) === active.id);
+    const newIndex = items.findIndex(i => (i._key || i.id) === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const reordered = arrayMove(items, oldIndex, newIndex).map((it, idx) => ({ ...it, sort_order: idx }));
+    setItems(reordered);
+  };
+
 
   const handleSave = async () => {
     if (!id) return;
@@ -372,6 +411,7 @@ export default function QuoteDetail() {
   };
 
   const isConverted = !!(quote as any).converted_job_id || !!linkedJob;
+  const sortableIds = items.map((it, idx) => it._key || it.id || `idx-${idx}`);
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -602,17 +642,17 @@ export default function QuoteDetail() {
                           <Package className="h-3 w-3" /> Catalog
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 p-0" align="end">
+                      <PopoverContent className="w-[28rem] sm:w-[32rem] p-0" align="end">
                         <Command>
-                          <CommandInput placeholder="Search services..." />
-                          <CommandList className="max-h-64">
+                          <CommandInput placeholder="Search services..." className="text-base h-12" />
+                          <CommandList className="max-h-[28rem]">
                             <CommandEmpty>No items found.</CommandEmpty>
                             {Object.entries(catalogGrouped).map(([cat, products]) => (
-                              <CommandGroup key={cat} heading={cat}>
+                              <CommandGroup key={cat} heading={cat} className="[&_[cmdk-group-heading]]:text-sm [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:py-2">
                                 {(products as any[]).map((p: any) => (
-                                  <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between">
+                                  <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between py-3 text-base">
                                     <span className="truncate">{p.name}</span>
-                                    <span className="text-muted-foreground text-xs ml-2">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                    <span className="text-muted-foreground text-sm ml-2 shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
@@ -635,60 +675,103 @@ export default function QuoteDetail() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* Desktop: grid view */}
-                  <div className="hidden md:block space-y-2">
-                    <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">
-                      <div className="col-span-3">Item</div>
-                      <div className="col-span-3">Description</div>
-                      <div className="col-span-2 text-center">Qty</div>
-                      <div className="col-span-2 text-right">Price</div>
-                      <div className="col-span-1 text-right">Total</div>
-                      <div className="col-span-1"></div>
-                    </div>
-                    {items.map((item, idx) => (
-                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-3"><Input value={item.item_name} onChange={e => updateItem(idx, 'item_name', e.target.value)} placeholder="Item" disabled={isSentOrApproved} className="h-9" /></div>
-                        <div className="col-span-3"><Input value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder="Desc" disabled={isSentOrApproved} className="h-9" /></div>
-                        <div className="col-span-2"><Input type="number" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="text-center h-9" disabled={isSentOrApproved} /></div>
-                        <div className="col-span-2"><Input type="number" value={item.unit_price} onChange={e => updateItem(idx, 'unit_price', Number(e.target.value))} className="text-right h-9" disabled={isSentOrApproved} /></div>
-                        <div className="col-span-1 text-sm font-medium text-right mono">${item.line_total.toFixed(2)}</div>
-                        <div className="col-span-1">{!isSentOrApproved && <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-8 w-8"><Trash2 className="h-3 w-3" /></Button>}</div>
+                  <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+                      {/* Desktop: grid view */}
+                      <div className="hidden md:block space-y-2">
+                        <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">
+                          <div className="col-span-1"></div>
+                          <div className="col-span-2">Item</div>
+                          <div className="col-span-3">Description</div>
+                          <div className="col-span-2 text-center">Qty</div>
+                          <div className="col-span-2 text-right">Price</div>
+                          <div className="col-span-1 text-right">Total</div>
+                          <div className="col-span-1"></div>
+                        </div>
+                        {items.map((item, idx) => {
+                          const rowId = item._key || item.id || `idx-${idx}`;
+                          return (
+                            <SortableLineRow key={rowId} id={rowId}>
+                              {({ attributes, listeners }) => (
+                                <div className="grid grid-cols-12 gap-2 items-center bg-background rounded-md">
+                                  <div className="col-span-1 flex justify-center">
+                                    {!isSentOrApproved && (
+                                      <button
+                                        type="button"
+                                        {...attributes}
+                                        {...listeners}
+                                        aria-label="Drag to reorder"
+                                        className="touch-none cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground"
+                                      >
+                                        <GripVertical className="h-4 w-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                  <div className="col-span-2"><Input value={item.item_name} onChange={e => updateItem(idx, 'item_name', e.target.value)} placeholder="Item" disabled={isSentOrApproved} className="h-9" /></div>
+                                  <div className="col-span-3"><Input value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder="Desc" disabled={isSentOrApproved} className="h-9" /></div>
+                                  <div className="col-span-2"><Input type="number" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="text-center h-9" disabled={isSentOrApproved} /></div>
+                                  <div className="col-span-2"><Input type="number" value={item.unit_price} onChange={e => updateItem(idx, 'unit_price', Number(e.target.value))} className="text-right h-9" disabled={isSentOrApproved} /></div>
+                                  <div className="col-span-1 text-sm font-medium text-right mono">${item.line_total.toFixed(2)}</div>
+                                  <div className="col-span-1">{!isSentOrApproved && <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-8 w-8"><Trash2 className="h-3 w-3" /></Button>}</div>
+                                </div>
+                              )}
+                            </SortableLineRow>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Mobile: card view */}
-                  <div className="md:hidden space-y-2">
-                    {items.map((item, idx) => (
-                      <div key={idx} className="border rounded-lg p-3 space-y-2 bg-muted/20">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 space-y-2">
-                            <Input value={item.item_name} onChange={e => updateItem(idx, 'item_name', e.target.value)} placeholder="Item name" disabled={isSentOrApproved} className="h-9 font-medium" />
-                            <Input value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder="Description" disabled={isSentOrApproved} className="h-9 text-sm" />
-                          </div>
-                          {!isSentOrApproved && (
-                            <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-9 w-9 shrink-0">
-                              <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                            </Button>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 items-end">
-                          <div>
-                            <Label className="text-[10px] text-muted-foreground">Qty</Label>
-                            <Input type="number" inputMode="decimal" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="h-9 text-center" disabled={isSentOrApproved} />
-                          </div>
-                          <div>
-                            <Label className="text-[10px] text-muted-foreground">Price</Label>
-                            <Input type="number" inputMode="decimal" value={item.unit_price} onChange={e => updateItem(idx, 'unit_price', Number(e.target.value))} className="h-9 text-right" disabled={isSentOrApproved} />
-                          </div>
-                          <div className="text-right pb-1">
-                            <Label className="text-[10px] text-muted-foreground">Total</Label>
-                            <p className="text-sm font-semibold mono">${item.line_total.toFixed(2)}</p>
-                          </div>
-                        </div>
+                      {/* Mobile: card view */}
+                      <div className="md:hidden space-y-2">
+                        {items.map((item, idx) => {
+                          const rowId = item._key || item.id || `idx-${idx}`;
+                          return (
+                            <SortableLineRow key={rowId} id={rowId}>
+                              {({ attributes, listeners }) => (
+                                <div className="border rounded-lg p-3 space-y-2 bg-muted/20">
+                                  <div className="flex items-start justify-between gap-2">
+                                    {!isSentOrApproved && (
+                                      <button
+                                        type="button"
+                                        {...attributes}
+                                        {...listeners}
+                                        aria-label="Drag to reorder"
+                                        className="touch-none cursor-grab active:cursor-grabbing p-1 -ml-1 text-muted-foreground hover:text-foreground"
+                                      >
+                                        <GripVertical className="h-5 w-5" />
+                                      </button>
+                                    )}
+                                    <div className="flex-1 space-y-2">
+                                      <Input value={item.item_name} onChange={e => updateItem(idx, 'item_name', e.target.value)} placeholder="Item name" disabled={isSentOrApproved} className="h-9 font-medium" />
+                                      <Input value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} placeholder="Description" disabled={isSentOrApproved} className="h-9 text-sm" />
+                                    </div>
+                                    {!isSentOrApproved && (
+                                      <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-9 w-9 shrink-0">
+                                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2 items-end">
+                                    <div>
+                                      <Label className="text-[10px] text-muted-foreground">Qty</Label>
+                                      <Input type="number" inputMode="decimal" value={item.quantity === 0 ? '' : item.quantity} onChange={e => updateItem(idx, 'quantity', e.target.value === '' ? 0 : Number(e.target.value))} min={0} className="h-9 text-center" disabled={isSentOrApproved} />
+                                    </div>
+                                    <div>
+                                      <Label className="text-[10px] text-muted-foreground">Price</Label>
+                                      <Input type="number" inputMode="decimal" value={item.unit_price} onChange={e => updateItem(idx, 'unit_price', Number(e.target.value))} className="h-9 text-right" disabled={isSentOrApproved} />
+                                    </div>
+                                    <div className="text-right pb-1">
+                                      <Label className="text-[10px] text-muted-foreground">Total</Label>
+                                      <p className="text-sm font-semibold mono">${item.line_total.toFixed(2)}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </SortableLineRow>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
 
                   {/* Totals */}
                   <Separator />
