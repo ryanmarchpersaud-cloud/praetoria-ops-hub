@@ -235,6 +235,179 @@ function wrapHtml(title: string, body: string): string {
 </body></html>`;
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatMoney(value: unknown): string {
+  const amount = Number(value || 0);
+  return amount.toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function normalizePdfText(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .replace(/\u2022/g, "-")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "");
+}
+
+function pdfText(value: unknown): string {
+  return normalizePdfText(value).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function buildPdf(pages: string[]): string {
+  const encoder = new TextEncoder();
+  const objects: string[] = [];
+  objects.push("<< /Type /Catalog /Pages 2 0 R >>");
+  objects.push(`<< /Type /Pages /Kids [${pages.map((_, i) => `${3 + i * 2} 0 R`).join(" ")}] /Count ${pages.length} >>`);
+  pages.forEach((content, i) => {
+    const contentObject = 4 + i * 2;
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> >> >> /Contents ${contentObject} 0 R >>`);
+    objects.push(`<< /Length ${encoder.encode(content).length} >>\nstream\n${content}\nendstream`);
+  });
+
+  let pdf = "%PDF-1.4\n";
+  const offsets: number[] = [];
+  objects.forEach((object, index) => {
+    offsets.push(encoder.encode(pdf).length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = encoder.encode(pdf).length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  pdf += offsets.map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`).join("");
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return bytesToBase64(encoder.encode(pdf));
+}
+
+function generateQuotePdfBase64(quote: Record<string, unknown>, client: Record<string, unknown> | null, lineItems: Record<string, unknown>[]): string {
+  const pages: string[] = [];
+  let ops = "";
+  let y = 744;
+  const left = 48;
+  const right = 564;
+
+  const newPage = () => {
+    pages.push(ops);
+    ops = "";
+    y = 744;
+  };
+  const ensureSpace = (height = 24) => {
+    if (y - height < 62) newPage();
+  };
+  const text = (value: unknown, x = left, size = 10, font: "F1" | "F2" = "F1") => {
+    ensureSpace(size + 8);
+    ops += `BT /${font} ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\n`;
+    y -= size + 6;
+  };
+  const line = () => {
+    ensureSpace(12);
+    ops += `0.82 0.84 0.87 RG ${left} ${y} m ${right} ${y} l S\n`;
+    y -= 14;
+  };
+  const wrapped = (value: unknown, x = left, size = 10, maxChars = 88) => {
+    const words = normalizePdfText(value).split(/\s+/).filter(Boolean);
+    let current = "";
+    for (const word of words) {
+      const candidate = current ? `${current} ${word}` : word;
+      if (candidate.length > maxChars && current) {
+        text(current, x, size);
+        current = word;
+      } else {
+        current = candidate;
+      }
+    }
+    if (current) text(current, x, size);
+  };
+
+  ops += "0.10 0.10 0.18 rg 48 760 516 4 re f\n";
+  text("PRAETORIA GROUP", left, 18, "F2");
+  text("Property Services & Maintenance | Regina, Saskatchewan", left, 9);
+  text("support@praetoriagroup.ca | (306) 737-6269", left, 9);
+  y = 710;
+  text("QUOTATION", 398, 24, "F2");
+  text(quote.quote_number || "", 398, 12, "F2");
+  y = 674;
+  line();
+
+  text("Prepared For", left, 9, "F2");
+  text(`${client?.first_name || ""} ${client?.last_name || ""}`.trim() || client?.company_name || "Valued Customer", left, 12, "F2");
+  if (client?.company_name) text(client.company_name, left, 10);
+  if (client?.address_line_1) text(client.address_line_1, left, 9);
+  const location = [client?.city, client?.province, client?.postal_code].filter(Boolean).join(", ");
+  if (location) text(location, left, 9);
+  if (client?.email) text(client.email, left, 9);
+
+  y += 92;
+  text("Service Category", 360, 9, "F2");
+  text(quote.service_category || "Property Services", 360, 11, "F2");
+  text("Total", 360, 9, "F2");
+  text(`$${formatMoney(quote.total)} CAD`, 360, 16, "F2");
+  y -= 26;
+  line();
+
+  if (quote.scope_of_work) {
+    text("Scope of Work", left, 10, "F2");
+    wrapped(quote.scope_of_work, left, 10, 92);
+    y -= 8;
+  }
+
+  text("Line Items", left, 10, "F2");
+  line();
+  text("Item", left, 9, "F2");
+  y += 15;
+  text("Qty", 344, 9, "F2");
+  y += 15;
+  text("Unit", 404, 9, "F2");
+  y += 15;
+  text("Total", 488, 9, "F2");
+  line();
+
+  lineItems.forEach((item) => {
+    ensureSpace(44);
+    text(item.item_name || "Service", left, 10, "F2");
+    if (item.description) wrapped(item.description, left + 12, 8, 58);
+    y += item.description ? 31 : 15;
+    text(String(Number(item.quantity || 0)), 344, 9);
+    y += 15;
+    text(`$${formatMoney(item.unit_price)}`, 404, 9);
+    y += 15;
+    text(`$${formatMoney(item.line_total)}`, 488, 9, "F2");
+    y -= item.description ? 16 : 0;
+    line();
+  });
+
+  y -= 4;
+  text(`Subtotal: $${formatMoney(quote.subtotal)}`, 392, 10);
+  text(`Tax (${(Number(quote.tax_rate || 0.13) * 100).toFixed(0)}%): $${formatMoney(quote.tax)}`, 392, 10);
+  text(`Total (CAD): $${formatMoney(quote.total)}`, 392, 13, "F2");
+
+  y -= 20;
+  text("Terms & Conditions", left, 10, "F2");
+  wrapped("This quote is valid for 30 days from the issued date. Payment terms are Net 30 from project completion unless otherwise agreed. Prices do not include additional scope changes unless separately quoted.", left, 9, 92);
+  y -= 16;
+  text("Praetoria Group", left, 10, "F2");
+  text("Ryan Steven Persaud - Authorized Representative", left, 9);
+
+  pages.push(ops);
+  return buildPdf(pages);
+}
+
 // ── Main handler ─────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
