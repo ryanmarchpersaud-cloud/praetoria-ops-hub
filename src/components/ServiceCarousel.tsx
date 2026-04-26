@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { SERVICE_PROMOS, type ServicePromo } from '@/lib/servicePromos';
 import { cn } from '@/lib/utils';
-import { ChevronRight, FileText, Briefcase, ClipboardList, Eye, Plus } from 'lucide-react';
+import { ChevronRight, ChevronLeft, FileText, Briefcase, ClipboardList, Eye, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   Drawer,
@@ -80,9 +80,47 @@ function ServiceChip({ promo, onClick }: { promo: ServicePromo; onClick: () => v
 
 export function ServiceCarousel() {
   const [selected, setSelected] = useState<ServicePromo | null>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const actions = selected ? buildActions(selected.id) : [];
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      el.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [updateScrollState]);
+
+  const scrollBy = (dir: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const amount = Math.max(el.clientWidth * 0.8, 300);
+    el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
+  };
+
+  // Mouse wheel: convert vertical scroll into horizontal scroll while hovering the row
+  const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      el.scrollLeft += e.deltaY;
+    }
+  };
 
   return (
     <>
@@ -91,12 +129,59 @@ export function ServiceCarousel() {
           <h2 className="text-sm font-semibold text-foreground">
             Services <span className="text-muted-foreground font-medium">· All {SERVICE_PROMOS.length}</span>
           </h2>
-          <span className="text-[10px] text-muted-foreground hidden md:inline">Scroll →</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Scroll services left"
+              onClick={() => scrollBy('left')}
+              disabled={!canLeft}
+              className={cn(
+                'h-7 w-7 rounded-full border border-border bg-background flex items-center justify-center transition-all',
+                'hover:bg-muted active:scale-95',
+                !canLeft && 'opacity-40 cursor-not-allowed',
+              )}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Scroll services right"
+              onClick={() => scrollBy('right')}
+              disabled={!canRight}
+              className={cn(
+                'h-7 w-7 rounded-full border border-border bg-background flex items-center justify-center transition-all',
+                'hover:bg-muted active:scale-95',
+                !canRight && 'opacity-40 cursor-not-allowed',
+              )}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2.5 pb-2 overflow-x-auto scrollbar-hide -mx-3 px-3">
-          {SERVICE_PROMOS.map((promo) => (
-            <ServiceChip key={promo.id} promo={promo} onClick={() => setSelected(promo)} />
-          ))}
+        <div className="relative">
+          {/* Left fade */}
+          <div
+            className={cn(
+              'pointer-events-none absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background to-transparent z-10 transition-opacity',
+              canLeft ? 'opacity-100' : 'opacity-0',
+            )}
+          />
+          {/* Right fade */}
+          <div
+            className={cn(
+              'pointer-events-none absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background to-transparent z-10 transition-opacity',
+              canRight ? 'opacity-100' : 'opacity-0',
+            )}
+          />
+          <div
+            ref={scrollRef}
+            onWheel={onWheel}
+            className="flex gap-2.5 pb-2 overflow-x-auto scrollbar-hide scroll-smooth"
+          >
+            {SERVICE_PROMOS.map((promo) => (
+              <ServiceChip key={promo.id} promo={promo} onClick={() => setSelected(promo)} />
+            ))}
+          </div>
         </div>
       </div>
 
