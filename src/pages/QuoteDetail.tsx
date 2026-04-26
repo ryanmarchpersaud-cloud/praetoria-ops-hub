@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle, Receipt, LinkIcon, GripVertical } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -42,9 +43,9 @@ interface LineItemForm {
 }
 
 function SortableLineRow({
-  id, children, className,
-}: { id: string; children: (handleProps: { attributes: any; listeners: any }) => React.ReactNode; className?: string }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  id, disabled, children, className,
+}: { id: string; disabled?: boolean; children: (handleProps: { attributes: any; listeners: any; setActivatorNodeRef: (element: HTMLElement | null) => void }) => React.ReactNode; className?: string }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id, disabled });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -54,7 +55,7 @@ function SortableLineRow({
   };
   return (
     <div ref={setNodeRef} style={style} className={className}>
-      {children({ attributes, listeners })}
+      {children({ attributes, listeners, setActivatorNodeRef })}
     </div>
   );
 }
@@ -90,6 +91,7 @@ export default function QuoteDetail() {
   const upsertItems = useUpsertLineItems();
   const { toast } = useToast();
   const { canManageQuotes } = useActionPermissions();
+  const isMobile = useIsMobile();
 
   const [form, setForm] = useState<any>({});
   const [items, setItems] = useState<LineItemForm[]>([]);
