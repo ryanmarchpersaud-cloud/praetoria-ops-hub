@@ -193,7 +193,30 @@ export default function QuoteDetail() {
     'Other': '#64748B',
   };
 
-  useEffect(() => { if (quote) setForm(quote); }, [quote]);
+  useEffect(() => {
+    if (!quote) return;
+    setForm(quote);
+    // For brand-new quotes (no customer-facing text yet), pre-fill from company defaults.
+    const needsDefaults = !(quote as any).workmanship_warranty && !(quote as any).terms_conditions && !(quote as any).customer_notes;
+    if (needsDefaults) {
+      (async () => {
+        const { data } = await supabase
+          .from('company_settings')
+          .select('default_workmanship_warranty, default_terms_conditions, default_quote_notes')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          setForm((p: any) => ({
+            ...p,
+            workmanship_warranty: p.workmanship_warranty || (data as any).default_workmanship_warranty || '',
+            terms_conditions: p.terms_conditions || (data as any).default_terms_conditions || '',
+            customer_notes: p.customer_notes || (data as any).default_quote_notes || '',
+          }));
+        }
+      })();
+    }
+  }, [quote]);
   useEffect(() => {
     if (lineItems.length > 0) {
       setItems(lineItems.map((li, idx) => ({
@@ -316,6 +339,9 @@ export default function QuoteDetail() {
       await updateQuote.mutateAsync({
         id, service_category: form.service_category, scope_of_work: form.scope_of_work,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
+        customer_notes: form.customer_notes || null,
+        workmanship_warranty: form.workmanship_warranty || null,
+        terms_conditions: form.terms_conditions || null,
         approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
         tax_rate: Number(form.tax_rate || 0.11),
         recurring_pricing_enabled: !!form.recurring_pricing_enabled,
@@ -366,6 +392,9 @@ export default function QuoteDetail() {
         id, approval_status: newStatus as any,
         service_category: form.service_category, scope_of_work: form.scope_of_work,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
+        customer_notes: form.customer_notes || null,
+        workmanship_warranty: form.workmanship_warranty || null,
+        terms_conditions: form.terms_conditions || null,
         tax_rate: Number(form.tax_rate || 0.11),
         recurring_pricing_enabled: !!form.recurring_pricing_enabled,
         price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
@@ -937,8 +966,45 @@ export default function QuoteDetail() {
             </CardContent>
           </Card>
 
+          {/* ── Customer-Facing Sections (appear on the printed/sent quote) ── */}
+          <CollapsibleSection title="Customer Notes, Warranty & Terms" defaultOpen={true}>
+            <p className="text-[11px] text-muted-foreground -mt-1">
+              These sections appear on the quote sent to the customer. Defaults can be set in Company Settings → Documents.
+            </p>
+            <div>
+              <Label className="text-xs font-semibold">Customer Notes</Label>
+              <Textarea
+                value={form.customer_notes || ''}
+                onChange={e => set('customer_notes', e.target.value)}
+                rows={3}
+                placeholder="Friendly note shown to the customer (e.g. thank-you, scheduling info, what's included)"
+                disabled={isSentOrApproved}
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold">Workmanship Warranty</Label>
+              <Textarea
+                value={form.workmanship_warranty || ''}
+                onChange={e => set('workmanship_warranty', e.target.value)}
+                rows={4}
+                placeholder="e.g. Praetoria Group warrants all labour and workmanship for 12 months from completion date…"
+                disabled={isSentOrApproved}
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold">Terms & Conditions</Label>
+              <Textarea
+                value={form.terms_conditions || ''}
+                onChange={e => set('terms_conditions', e.target.value)}
+                rows={6}
+                placeholder="e.g. Quote valid for 30 days. Payment Net 30. Scope changes billed separately…"
+                disabled={isSentOrApproved}
+              />
+            </div>
+          </CollapsibleSection>
+
           {/* ── Notes (collapsible) ── */}
-          <CollapsibleSection title="Notes & Settings" defaultOpen={false}>
+          <CollapsibleSection title="Internal Notes & Settings" defaultOpen={false}>
             <div>
               <Label className="text-xs">Agent Summary</Label>
               <Textarea value={form.agent_summary || ''} onChange={e => set('agent_summary', e.target.value)} rows={3} placeholder="AI-generated or agent notes" />

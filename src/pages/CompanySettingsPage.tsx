@@ -411,6 +411,14 @@ export default function CompanySettingsPage() {
                 <Toggle {...f} label="Tax Enabled by Default" field="default_tax_enabled" desc="Apply tax to new items by default" />
                 <Field {...f} label="Default Tax Rate" field="default_tax_rate" type="number" placeholder="0.05" />
                 <Toggle {...f} label="Internal Notes Visible by Default" field="internal_notes_visible_default" desc="Show internal notes to staff on new records" />
+                <Separator />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Quote Default Templates</p>
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Pre-fills the matching sections on every new quote. You can still edit them per quote.
+                </p>
+                <Field {...f} type="textarea" label="Default Customer Notes" field="default_quote_notes" placeholder="Thank you for the opportunity to quote on this project…" />
+                <Field {...f} type="textarea" label="Default Workmanship Warranty" field="default_workmanship_warranty" placeholder="Praetoria Group warrants all labour and workmanship for 12 months from completion date…" />
+                <Field {...f} type="textarea" label="Default Terms & Conditions" field="default_terms_conditions" placeholder="1. Quote valid for 30 days. 2. Payment Net 30. 3. Scope changes billed separately…" />
               </CardContent>
             </Card>
           </TabsContent>
