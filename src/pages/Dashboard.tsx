@@ -13,6 +13,9 @@ import { QuickActionBar } from '@/components/dashboard/QuickActionBar';
 import { ConversionFunnel } from '@/components/dashboard/ConversionFunnel';
 import { TomorrowSchedule } from '@/components/dashboard/TomorrowSchedule';
 import { PendingApprovalsHub } from '@/components/dashboard/PendingApprovalsHub';
+import { TopPerformersLeaderboard } from '@/components/dashboard/TopPerformersLeaderboard';
+import { ServiceMixDonut } from '@/components/dashboard/ServiceMixDonut';
+import { JobsCompletedBarChart } from '@/components/dashboard/JobsCompletedBarChart';
 import {
   useDashboardRequests,
   useDashboardQuotes,
@@ -111,6 +114,13 @@ export default function Dashboard() {
         <div className="lg:col-span-2">
           <PendingApprovalsHub />
         </div>
+      </div>
+
+      {/* Performance Insights row */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <TopPerformersLeaderboard />
+        <ServiceMixDonut invoices={invoices} jobs={jobs} isLoading={loadInv || loadJobs} />
+        <JobsCompletedBarChart />
       </div>
 
       {/* Workflow Cards (new ops) */}

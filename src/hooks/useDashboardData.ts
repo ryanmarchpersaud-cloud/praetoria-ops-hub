@@ -36,7 +36,7 @@ export function useDashboardJobs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('jobs')
-        .select('id, status, job_title, job_number, scheduled_date, customer_id, assigned_to, created_at')
+        .select('id, status, job_title, job_number, scheduled_date, customer_id, assigned_to, created_at, service_category')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -50,7 +50,7 @@ export function useDashboardInvoices() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('invoices')
-        .select('id, status, total, balance_due, due_date, issue_date, paid_at, amount_paid, created_at, customers(first_name, last_name, company_name)')
+        .select('id, status, total, balance_due, due_date, issue_date, paid_at, amount_paid, created_at, job_id, jobs(service_category), customers(first_name, last_name, company_name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data ?? [];
