@@ -91,6 +91,45 @@ export function useClockOut() {
   });
 }
 
+/**
+ * Admin force clock-out: closes any worker's open timesheet.
+ * Adds an audit note explaining who closed it.
+ */
+export function useAdminForceClockOut() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ id, workerName }: { id: string; workerName?: string }) => {
+      const now = new Date().toISOString();
+      // Get existing notes to append rather than overwrite
+      const { data: existing } = await supabase
+        .from('timesheets')
+        .select('notes')
+        .eq('id', id)
+        .maybeSingle();
+      const adminLabel = user?.email ?? 'admin';
+      const stamp = new Date().toLocaleString();
+      const auditLine = `[Force clock-out by ${adminLabel} on ${stamp}]`;
+      const newNotes = existing?.notes ? `${existing.notes}\n${auditLine}` : auditLine;
+
+      const { data, error } = await supabase
+        .from('timesheets')
+        .update({ clock_out: now, notes: newNotes } as any)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['active_timesheet'] });
+      qc.invalidateQueries({ queryKey: ['timesheets'] });
+      qc.invalidateQueries({ queryKey: ['admin_live_workforce'] });
+      qc.invalidateQueries({ queryKey: ['employee_timesheets_admin'] });
+    },
+  });
+}
+
 /* ────────────────────────────────────────────────────────────────────────────
    ADMIN: Live workforce — currently clocked-in workers + today's hours summary
    ──────────────────────────────────────────────────────────────────────────── */
