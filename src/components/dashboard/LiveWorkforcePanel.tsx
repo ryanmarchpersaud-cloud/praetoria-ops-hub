@@ -160,6 +160,57 @@ export function LiveWorkforcePanel() {
           </div>
         )}
 
+        {/* Labor cost today (Hours × hourly rate) */}
+        {!isLoading && data?.labor_cost && (
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                <DollarSign className="h-3 w-3" />
+                Labor Cost Today
+              </span>
+              <span className="text-sm font-bold font-mono text-foreground">
+                ${data.labor_cost.total_today.toFixed(2)}
+              </span>
+            </div>
+            {data.labor_cost.per_worker.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">No worked hours today.</p>
+            ) : (
+              <div className="space-y-1">
+                {data.labor_cost.per_worker.map((w: any) => (
+                  <div
+                    key={w.user_id}
+                    className="flex items-center justify-between text-xs rounded-md border bg-card px-2.5 py-1.5"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate">{w.full_name}</div>
+                      <div className="text-[10px] text-muted-foreground font-mono">
+                        {w.hours.toFixed(2)}h × ${w.hourly_rate.toFixed(2)}/h
+                        {w.hourly_rate <= 0 && (
+                          <span className="ml-1 text-amber-600 dark:text-amber-400">
+                            (no rate set)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="font-mono font-semibold shrink-0">
+                      ${w.cost.toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {data.labor_cost.workers_without_rate > 0 && (
+              <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-snug flex items-start gap-1">
+                <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                {data.labor_cost.workers_without_rate} worker(s) have no hourly rate set — their cost shows as $0. Set it under HR → Compensation.
+              </p>
+            )}
+            <p className="text-[10px] text-muted-foreground leading-snug">
+              Cost = (Completed today + Active today) × worker's hourly rate. Carryover hours excluded.
+            </p>
+          </div>
+        )}
+
         {/* Active sessions list */}
         <div className="space-y-2">
           <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
