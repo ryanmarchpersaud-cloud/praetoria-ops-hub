@@ -111,7 +111,8 @@ async function handleSyntheticTest(
   const template = SYNTHETIC_PAYLOADS[actionKey];
   if (!template) return json({ error: `Unknown test action '${actionKey}'` }, 400);
 
-  const payload = { ...template, timestamp: new Date().toISOString() };
+  // deno-lint-ignore no-explicit-any
+  const payload: any = { ...template, timestamp: new Date().toISOString() };
 
   let handoffOk = false;
   let handoffMessage = "";
