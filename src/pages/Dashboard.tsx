@@ -68,12 +68,12 @@ export default function Dashboard() {
       </div>
 
       {/* Quick stats — 3×2 grid (legacy) */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 md:gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
         {stats.map(s => (
-          <Link key={s.label} to={s.link} className={`rounded-lg border p-2.5 md:p-4 transition-all hover:shadow-sm active:scale-[0.97] ${s.bg}`}>
-            <s.icon className={`h-3.5 w-3.5 ${s.color} mb-1`} />
-            <p className="text-lg md:text-2xl font-bold leading-none text-foreground">{s.value}</p>
-            <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{s.label}</p>
+          <Link key={s.label} to={s.link} className={`rounded-xl border p-3 md:p-4 transition-all hover:shadow-md active:scale-[0.97] ${s.bg}`}>
+            <s.icon className={`h-5 w-5 md:h-6 md:w-6 ${s.color} mb-1.5`} />
+            <p className="text-2xl md:text-3xl font-extrabold leading-none text-foreground tabular-nums">{s.value}</p>
+            <p className="text-[11px] md:text-xs font-semibold text-muted-foreground mt-1 uppercase tracking-wide">{s.label}</p>
           </Link>
         ))}
       </div>
