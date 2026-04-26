@@ -74,9 +74,9 @@ export function BusinessPerformance({ invoices, jobs, isLoading }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2 px-4 pt-4">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <span className="w-7 h-7 rounded-lg flex items-center justify-center bg-primary/10">
-            <TrendingUp className="h-4 w-4 text-primary" />
+        <CardTitle className="text-base md:text-lg font-extrabold tracking-tight flex items-center gap-2">
+          <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-100 dark:bg-emerald-950/40">
+            <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           </span>
           Business Performance
         </CardTitle>
