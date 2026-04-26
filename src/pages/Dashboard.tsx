@@ -7,6 +7,9 @@ import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { BusinessPerformance } from '@/components/dashboard/BusinessPerformance';
 import { LiveWorkforcePanel } from '@/components/dashboard/LiveWorkforcePanel';
 import { CustomerStatusWidget } from '@/components/dashboard/CustomerStatusWidget';
+import { RevenueTrendChart } from '@/components/dashboard/RevenueTrendChart';
+import { ARAgingPanel } from '@/components/dashboard/ARAgingPanel';
+import { QuickActionBar } from '@/components/dashboard/QuickActionBar';
 import {
   useDashboardRequests,
   useDashboardQuotes,
@@ -67,6 +70,9 @@ export default function Dashboard() {
         <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">Praetoria Group — Command Center</p>
       </div>
 
+      {/* Quick Create action bar */}
+      <QuickActionBar />
+
       {/* Quick stats — 3×2 grid (legacy) */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
         {stats.map(s => (
@@ -76,6 +82,16 @@ export default function Dashboard() {
             <p className="text-[11px] md:text-xs font-semibold text-muted-foreground mt-1 uppercase tracking-wide">{s.label}</p>
           </Link>
         ))}
+      </div>
+
+      {/* Revenue + AR row */}
+      <div className="grid lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3">
+          <RevenueTrendChart invoices={invoices} isLoading={loadInv} />
+        </div>
+        <div className="lg:col-span-2">
+          <ARAgingPanel invoices={invoices} isLoading={loadInv} />
+        </div>
       </div>
 
       {/* Workflow Cards (new ops) */}
