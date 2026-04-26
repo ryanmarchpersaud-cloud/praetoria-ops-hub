@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Plus, Save, Trash2, ChevronDown, ChevronRight, Phone, Mail, FileText, Briefcase, Package, Archive, AlertTriangle, Receipt, LinkIcon, GripVertical } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -42,9 +43,9 @@ interface LineItemForm {
 }
 
 function SortableLineRow({
-  id, children, className,
-}: { id: string; children: (handleProps: { attributes: any; listeners: any }) => React.ReactNode; className?: string }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  id, disabled, children, className,
+}: { id: string; disabled?: boolean; children: (handleProps: { attributes: any; listeners: any; setActivatorNodeRef: (element: HTMLElement | null) => void }) => React.ReactNode; className?: string }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id, disabled });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -54,7 +55,7 @@ function SortableLineRow({
   };
   return (
     <div ref={setNodeRef} style={style} className={className}>
-      {children({ attributes, listeners })}
+      {children({ attributes, listeners, setActivatorNodeRef })}
     </div>
   );
 }
@@ -90,6 +91,7 @@ export default function QuoteDetail() {
   const upsertItems = useUpsertLineItems();
   const { toast } = useToast();
   const { canManageQuotes } = useActionPermissions();
+  const isMobile = useIsMobile();
 
   const [form, setForm] = useState<any>({});
   const [items, setItems] = useState<LineItemForm[]>([]);
@@ -677,27 +679,28 @@ export default function QuoteDetail() {
                 <div className="space-y-3">
                   <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-                      {/* Desktop: grid view */}
-                      <div className="hidden md:block space-y-2">
-                        <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">
-                          <div className="col-span-1"></div>
-                          <div className="col-span-2">Item</div>
-                          <div className="col-span-3">Description</div>
-                          <div className="col-span-2 text-center">Qty</div>
-                          <div className="col-span-2 text-right">Price</div>
-                          <div className="col-span-1 text-right">Total</div>
-                          <div className="col-span-1"></div>
-                        </div>
-                        {items.map((item, idx) => {
-                          const rowId = item._key || item.id || `idx-${idx}`;
-                          return (
-                            <SortableLineRow key={rowId} id={rowId}>
-                              {({ attributes, listeners }) => (
-                                <div className="grid grid-cols-12 gap-2 items-center bg-background rounded-md">
+                      {!isMobile ? (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">
+                            <div className="col-span-1"></div>
+                            <div className="col-span-2">Item</div>
+                            <div className="col-span-3">Description</div>
+                            <div className="col-span-2 text-center">Qty</div>
+                            <div className="col-span-2 text-right">Price</div>
+                            <div className="col-span-1 text-right">Total</div>
+                            <div className="col-span-1"></div>
+                          </div>
+                          {items.map((item, idx) => {
+                            const rowId = item._key || item.id || `idx-${idx}`;
+                            return (
+                              <SortableLineRow key={rowId} id={rowId} disabled={isSentOrApproved}>
+                                {({ attributes, listeners, setActivatorNodeRef }) => (
+                                  <div className="grid grid-cols-12 gap-2 items-center bg-background rounded-md">
                                   <div className="col-span-1 flex justify-center">
                                     {!isSentOrApproved && (
                                       <button
                                         type="button"
+                                         ref={setActivatorNodeRef}
                                         {...attributes}
                                         {...listeners}
                                         aria-label="Drag to reorder"
@@ -713,25 +716,25 @@ export default function QuoteDetail() {
                                   <div className="col-span-2"><Input type="number" value={item.unit_price} onChange={e => updateItem(idx, 'unit_price', Number(e.target.value))} className="text-right h-9" disabled={isSentOrApproved} /></div>
                                   <div className="col-span-1 text-sm font-medium text-right mono">${item.line_total.toFixed(2)}</div>
                                   <div className="col-span-1">{!isSentOrApproved && <Button variant="ghost" size="icon" onClick={() => removeItem(idx)} className="h-8 w-8"><Trash2 className="h-3 w-3" /></Button>}</div>
-                                </div>
-                              )}
-                            </SortableLineRow>
-                          );
-                        })}
-                      </div>
-
-                      {/* Mobile: card view */}
-                      <div className="md:hidden space-y-2">
-                        {items.map((item, idx) => {
-                          const rowId = item._key || item.id || `idx-${idx}`;
-                          return (
-                            <SortableLineRow key={rowId} id={rowId}>
-                              {({ attributes, listeners }) => (
-                                <div className="border rounded-lg p-3 space-y-2 bg-muted/20">
+                                  </div>
+                                )}
+                              </SortableLineRow>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {items.map((item, idx) => {
+                            const rowId = item._key || item.id || `idx-${idx}`;
+                            return (
+                              <SortableLineRow key={rowId} id={rowId} disabled={isSentOrApproved}>
+                                {({ attributes, listeners, setActivatorNodeRef }) => (
+                                  <div className="border rounded-lg p-3 space-y-2 bg-muted/20">
                                   <div className="flex items-start justify-between gap-2">
                                     {!isSentOrApproved && (
                                       <button
                                         type="button"
+                                         ref={setActivatorNodeRef}
                                         {...attributes}
                                         {...listeners}
                                         aria-label="Drag to reorder"
@@ -764,12 +767,13 @@ export default function QuoteDetail() {
                                       <p className="text-sm font-semibold mono">${item.line_total.toFixed(2)}</p>
                                     </div>
                                   </div>
-                                </div>
-                              )}
-                            </SortableLineRow>
-                          );
-                        })}
-                      </div>
+                                  </div>
+                                )}
+                              </SortableLineRow>
+                            );
+                          })}
+                        </div>
+                      )}
                     </SortableContext>
                   </DndContext>
 
