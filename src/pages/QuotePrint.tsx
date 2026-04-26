@@ -507,23 +507,42 @@ export default function QuotePrint() {
             >
               Explore Our Full Range of Services
             </p>
-            <div className="grid grid-cols-4 gap-2 print:gap-3 text-[10px] print:text-xs">
+            <div className="grid grid-cols-3 md:grid-cols-5 print:grid-cols-5 gap-1.5 print:gap-2 text-[9px] print:text-[10px]">
               {[
-                { name: 'Snow & Ice', color: '#0369a1' },
-                { name: 'Landscaping', color: '#15803d' },
+                { name: 'Snow & Ice', color: '#2563EB' },
+                { name: 'Maintenance & Repairs', color: '#DC2626', soon: true },
+                { name: 'Property Care & Landscaping', color: '#F97316' },
+                { name: 'Property Management', color: '#16A34A', soon: true },
+                { name: 'Electrical', color: '#7C3AED', soon: true },
+                { name: 'Plumbing', color: '#0D9488', soon: true },
+                { name: 'Carpentry & Renovations', color: '#92400E', soon: true },
+                { name: 'Roofing & Exteriors', color: '#374151', soon: true },
+                { name: 'Painting & Finishing', color: '#EAB308', soon: true },
+                { name: 'Cleaning Services', color: '#0EA5E9' },
+                { name: 'HVAC', color: '#F43F5E', soon: true },
+                { name: 'Concrete & Masonry', color: '#6B7280', soon: true },
+                { name: 'Security & Smart Home', color: '#111827', soon: true },
+                { name: 'Fencing & Decking', color: '#7c2d12', soon: true },
                 { name: 'Junk Removal', color: '#c2410c' },
-                { name: 'Property Maintenance', color: '#a16207' },
-                { name: 'Fencing & Decking', color: '#7c2d12' },
-                { name: 'Roofing & Exterior', color: '#475569' },
-                { name: 'Cleaning Services', color: '#0e7490' },
-                { name: 'Power Washing', color: '#1d4ed8' },
               ].map((s) => (
                 <div
                   key={s.name}
-                  className="rounded-md border px-2 py-2 text-center font-semibold leading-tight"
-                  style={{ borderColor: `${s.color}40`, color: s.color, backgroundColor: `${s.color}08` }}
+                  className="relative rounded-md border px-1.5 py-2 text-center font-semibold leading-tight overflow-hidden"
+                  style={{ borderColor: `${s.color}55`, color: s.color, backgroundColor: `${s.color}0D` }}
                 >
-                  {s.name}
+                  <div
+                    className="absolute top-0 left-0 right-0 h-[3px]"
+                    style={{ backgroundColor: s.color }}
+                  />
+                  <div className="pt-0.5">{s.name}</div>
+                  {s.soon && (
+                    <div
+                      className="mt-1 text-[7px] print:text-[7px] uppercase tracking-wider font-bold"
+                      style={{ color: '#9ca3af' }}
+                    >
+                      Coming Soon
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
