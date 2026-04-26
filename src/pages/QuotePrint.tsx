@@ -390,7 +390,52 @@ export default function QuotePrint() {
           </div>
         </div>
 
-        {/* ── Notes (if present — client-facing summary only) ── */}
+        {/* ── Recurring Service Pricing Options ── */}
+        {exportData.recurringPricing && (() => {
+          const rp = exportData.recurringPricing;
+          const rows = [
+            { label: 'Per Cut (One-Time)', sub: 'Pay only when service is performed', value: rp.perCut },
+            { label: 'Weekly Service', sub: 'Service every 7 days', value: rp.weekly },
+            { label: 'Biweekly Service', sub: 'Service every 14 days', value: rp.biweekly },
+            { label: 'Monthly Service', sub: 'One service visit per month', value: rp.monthly },
+          ].filter(r => r.value != null && r.value > 0);
+          if (rows.length === 0 && !rp.notes) return null;
+          return (
+            <div className="mb-8 print:mb-10 rounded-lg border-2 overflow-hidden" style={{ borderColor: theme.accent }}>
+              <div className="px-4 py-2.5" style={{ backgroundColor: theme.tint }}>
+                <p className="text-[10px] uppercase tracking-widest font-bold print:text-xs" style={{ color: theme.accent }}>
+                  Recurring Service Pricing Options
+                </p>
+                <p className="text-[11px] text-[#6b7280] print:text-sm mt-0.5">
+                  Choose the service frequency that best fits your needs. Prices below are per visit / per month before tax.
+                </p>
+              </div>
+              {rows.length > 0 && (
+                <table className="w-full text-sm print:text-base">
+                  <tbody>
+                    {rows.map((r, i) => (
+                      <tr key={i} className="border-t" style={{ borderColor: '#e5e7eb' }}>
+                        <td className="px-4 py-2.5">
+                          <p className="font-semibold text-[#1a1a2e]">{r.label}</p>
+                          <p className="text-[11px] text-[#6b7280] print:text-xs">{r.sub}</p>
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-bold text-[#1a1a2e]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          ${formatCurrency(r.value as number)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {rp.notes && (
+                <div className="px-4 py-2.5 border-t text-[11px] text-[#6b7280] print:text-sm whitespace-pre-wrap" style={{ borderColor: '#e5e7eb' }}>
+                  {rp.notes}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {exportData.agentSummary && (
           <div className="mb-8 print:mb-10 bg-[#f9fafb] rounded-lg p-4 print:bg-[#f9fafb] border border-[#e5e7eb]">
             <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
