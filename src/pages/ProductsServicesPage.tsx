@@ -825,24 +825,17 @@ export default function ProductsServicesPage() {
                           return (
                             <React.Fragment key={category}>
                               <TableRow className="hover:bg-transparent border-0">
-                                <TableCell
-                                  colSpan={9}
-                                  className="py-4 px-4 border-l-4"
-                                  style={{
-                                    borderLeftColor: color,
-                                    backgroundColor: `${color}14`,
-                                  }}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <h3
-                                      className="text-xl md:text-2xl font-extrabold tracking-tight uppercase"
-                                      style={{ color }}
-                                    >
+                                <TableCell colSpan={9} className="p-0">
+                                  <div
+                                    className="flex items-center justify-between gap-4 px-6 py-5 my-2 rounded-lg shadow-sm"
+                                    style={{ backgroundColor: color }}
+                                  >
+                                    <h3 className="text-2xl md:text-3xl font-extrabold tracking-tight uppercase text-white drop-shadow-sm">
                                       {category}
                                     </h3>
                                     <span
-                                      className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                                      style={{ backgroundColor: color, color: 'white' }}
+                                      className="text-sm font-bold px-3 py-1.5 rounded-full bg-white"
+                                      style={{ color }}
                                     >
                                       {items.length} item{items.length !== 1 ? 's' : ''}
                                     </span>
