@@ -25,7 +25,7 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     subtotal: Number(quote.subtotal || 0),
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
-    taxRate: Number(quote.tax_rate || 0.13),
+    taxRate: Number(quote.tax_rate || 0.11),
     recurringPricing: quote.recurring_pricing_enabled ? {
       perCut: quote.price_per_cut != null ? Number(quote.price_per_cut) : null,
       weekly: quote.price_weekly != null ? Number(quote.price_weekly) : null,
