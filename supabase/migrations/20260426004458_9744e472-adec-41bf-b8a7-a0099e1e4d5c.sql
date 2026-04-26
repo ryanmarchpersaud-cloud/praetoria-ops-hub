@@ -1,0 +1,7 @@
+ALTER TABLE public.quotes
+  ADD COLUMN IF NOT EXISTS recurring_pricing_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS price_per_cut NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS price_weekly NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS price_biweekly NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS price_monthly NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS recurring_pricing_notes TEXT;

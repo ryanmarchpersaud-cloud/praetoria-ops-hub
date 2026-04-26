@@ -5307,7 +5307,13 @@ export type Database = {
           id: string
           internal_notes: string | null
           lead_id: string | null
+          price_biweekly: number | null
+          price_monthly: number | null
+          price_per_cut: number | null
+          price_weekly: number | null
           quote_number: string
+          recurring_pricing_enabled: boolean
+          recurring_pricing_notes: string | null
           request_id: string | null
           scope_of_work: string | null
           sent_at: string | null
@@ -5337,7 +5343,13 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           lead_id?: string | null
+          price_biweekly?: number | null
+          price_monthly?: number | null
+          price_per_cut?: number | null
+          price_weekly?: number | null
           quote_number: string
+          recurring_pricing_enabled?: boolean
+          recurring_pricing_notes?: string | null
           request_id?: string | null
           scope_of_work?: string | null
           sent_at?: string | null
@@ -5367,7 +5379,13 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           lead_id?: string | null
+          price_biweekly?: number | null
+          price_monthly?: number | null
+          price_per_cut?: number | null
+          price_weekly?: number | null
           quote_number?: string
+          recurring_pricing_enabled?: boolean
+          recurring_pricing_notes?: string | null
           request_id?: string | null
           scope_of_work?: string | null
           sent_at?: string | null
