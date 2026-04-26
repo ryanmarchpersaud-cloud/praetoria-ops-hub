@@ -17,6 +17,9 @@ import { TopPerformersLeaderboard } from '@/components/dashboard/TopPerformersLe
 import { ServiceMixDonut } from '@/components/dashboard/ServiceMixDonut';
 import { JobsCompletedBarChart } from '@/components/dashboard/JobsCompletedBarChart';
 import { LiveWorkerMap } from '@/components/dashboard/LiveWorkerMap';
+import { BusinessHealthScore } from '@/components/dashboard/BusinessHealthScore';
+import { GoalProgressRings } from '@/components/dashboard/GoalProgressRings';
+import { SparklineKPIStrip } from '@/components/dashboard/SparklineKPIStrip';
 import {
   useDashboardRequests,
   useDashboardQuotes,
@@ -76,6 +79,31 @@ export default function Dashboard() {
         <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">Operations Dashboard</h1>
         <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">Praetoria Group — Command Center</p>
       </div>
+
+      {/* Premium hero — Health Score + Goal Rings */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        <BusinessHealthScore
+          invoices={invoices}
+          quotes={dashQuotes}
+          visits={visits}
+          leads={leads}
+          isLoading={loadInv || loadQuotes || loadVisits || loadLeads}
+        />
+        <GoalProgressRings
+          invoices={invoices}
+          visits={visits}
+          isLoading={loadInv || loadVisits}
+        />
+      </div>
+
+      {/* Sparkline KPI Strip */}
+      <SparklineKPIStrip
+        invoices={invoices}
+        jobs={jobs}
+        quotes={dashQuotes}
+        leads={leads}
+        isLoading={loadInv || loadJobs || loadQuotes || loadLeads}
+      />
 
       {/* Quick Create action bar */}
       <QuickActionBar />
