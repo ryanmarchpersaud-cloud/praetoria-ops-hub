@@ -736,6 +736,19 @@ export default function QuoteDetail() {
                       <PopoverContent className="w-[28rem] sm:w-[32rem] p-0" align="end">
                         <Command>
                           <CommandInput placeholder="Search services..." className="text-base h-12" />
+                          {isAdmin && (
+                            <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
+                              <span className="text-xs text-muted-foreground">Admin: hover an item to edit or delete</span>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="h-7 gap-1"
+                                onClick={() => setCatalogEdit({ id: null, name: '', service_category: 'Roofing & Exteriors', unit_price: 0 })}
+                              >
+                                <Plus className="h-3 w-3" /> New
+                              </Button>
+                            </div>
+                          )}
                           <CommandList className="max-h-[28rem]">
                             <CommandEmpty>No items found.</CommandEmpty>
                             {orderedCatalogGroups.map(([cat, products]) => {
@@ -749,9 +762,39 @@ export default function QuoteDetail() {
                                 >
                                   <style>{`.${slug} [cmdk-group-heading] { background-color: ${color} !important; }`}</style>
                                   {(products as any[]).map((p: any) => (
-                                    <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="flex justify-between py-3 text-base">
-                                      <span className="truncate">{p.name}</span>
-                                      <span className="text-muted-foreground text-sm ml-2 shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                    <CommandItem key={p.id} onSelect={() => addFromCatalog(p)} className="group flex items-center justify-between py-3 text-base gap-2">
+                                      <span className="truncate flex-1">{p.name}</span>
+                                      <span className="text-muted-foreground text-sm shrink-0">${Number(p.unit_price || 0).toFixed(2)}</span>
+                                      {isAdmin && (
+                                        <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-aria-selected:opacity-100 transition-opacity">
+                                          <button
+                                            type="button"
+                                            aria-label="Edit catalog item"
+                                            className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              setCatalogEdit({ id: p.id, name: p.name, service_category: p.service_category || 'Other', unit_price: Number(p.unit_price) || 0 });
+                                            }}
+                                          >
+                                            <Pencil className="h-3.5 w-3.5" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            aria-label="Delete catalog item"
+                                            className="h-7 w-7 inline-flex items-center justify-center rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              e.stopPropagation();
+                                              setCatalogDeleteId(p.id);
+                                            }}
+                                          >
+                                            <Trash className="h-3.5 w-3.5" />
+                                          </button>
+                                        </span>
+                                      )}
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
