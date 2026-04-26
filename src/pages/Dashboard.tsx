@@ -20,6 +20,7 @@ import { LiveWorkerMap } from '@/components/dashboard/LiveWorkerMap';
 import { BusinessHealthScore } from '@/components/dashboard/BusinessHealthScore';
 import { GoalProgressRings } from '@/components/dashboard/GoalProgressRings';
 import { SparklineKPIStrip } from '@/components/dashboard/SparklineKPIStrip';
+import { ServiceRevenueBreakdown } from '@/components/dashboard/ServiceRevenueBreakdown';
 import {
   useDashboardRequests,
   useDashboardQuotes,
@@ -151,6 +152,13 @@ export default function Dashboard() {
         <ServiceMixDonut invoices={invoices} jobs={jobs} isLoading={loadInv || loadJobs} />
         <JobsCompletedBarChart />
       </div>
+
+      {/* Full 25-service revenue breakdown */}
+      <ServiceRevenueBreakdown
+        invoices={invoices}
+        jobs={jobs}
+        isLoading={loadInv || loadJobs}
+      />
 
       {/* Workflow Cards (new ops) */}
       <WorkflowCards
