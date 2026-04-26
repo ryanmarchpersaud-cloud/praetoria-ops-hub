@@ -1,9 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuote, useQuoteLineItems } from '@/hooks/useQuotes';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { ArrowLeft, Printer, Download, FileText } from 'lucide-react';
+import { ArrowLeft, Printer, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // ─── Formatting helpers (shared for future server-side PDF generation) ───
@@ -128,14 +126,6 @@ export default function QuotePrint() {
   const navigate = useNavigate();
   const { data: quote, isLoading } = useQuote(id);
   const { data: lineItems = [] } = useQuoteLineItems(id);
-  const { data: companySettings } = useQuery({
-    queryKey: ['company_settings_signature'],
-    queryFn: async () => {
-      const { data } = await supabase.from('company_settings').select('*').limit(1).maybeSingle();
-      return data as any;
-    },
-  });
-  const signatureUrl = (companySettings?.signature_url as string | null) || '/images/ryan-signature.png';
 
   if (isLoading) return <div className="p-8 text-muted-foreground">Loading...</div>;
   if (!quote) return <div className="p-8 text-muted-foreground">Quote not found</div>;
@@ -168,18 +158,31 @@ export default function QuotePrint() {
       {/* ── Printable Document ── */}
       <div
         id="quote-pdf-content"
-        className="relative print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 print:p-0 print:max-w-none print:bg-white min-h-screen overflow-hidden"
-        style={{ backgroundColor: theme.tint }}
+        className="relative print:mt-0 mt-16 max-w-[800px] mx-auto bg-white text-[#1a1a2e] p-6 md:p-10 pt-10 md:pt-14 print:pt-12 print:p-0 print:px-10 print:max-w-none print:bg-white min-h-screen overflow-hidden"
       >
-        {/* ── Service Watermark (decorative) ── */}
+        {/* ── Service Watermark (multiple scattered icons) ── */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 flex items-center justify-center print:flex"
-          style={{ opacity: 0.06 }}
+          className="pointer-events-none absolute inset-0 print:block"
+          style={{ opacity: 0.05 }}
         >
-          <div className="w-[420px] h-[420px]" style={{ color: theme.accent }}>
-            {theme.icon}
-          </div>
+          {[
+            { top: '12%', left: '8%', size: 110 },
+            { top: '28%', left: '72%', size: 90 },
+            { top: '46%', left: '20%', size: 130 },
+            { top: '40%', left: '55%', size: 80 },
+            { top: '64%', left: '78%', size: 100 },
+            { top: '76%', left: '10%', size: 95 },
+            { top: '88%', left: '48%', size: 85 },
+          ].map((p, i) => (
+            <div
+              key={i}
+              className="absolute"
+              style={{ top: p.top, left: p.left, width: p.size, height: p.size, color: theme.accent }}
+            >
+              {theme.icon}
+            </div>
+          ))}
         </div>
 
         {/* ── Service accent strip ── */}
@@ -475,13 +478,13 @@ export default function QuotePrint() {
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-6 print:text-xs print:mb-8">
                 Praetoria Group
               </p>
-              <div className="relative h-16 mb-0 print:h-20">
-                <img
-                  src={signatureUrl}
-                  alt="Ryan Steven Persaud"
-                  className="absolute bottom-0 left-0 h-20 w-auto object-contain print:h-24"
-                  style={{ maxWidth: '100%' }}
-                />
+              <div className="relative h-14 mb-0 print:h-16 flex items-end">
+                <span
+                  className="text-3xl print:text-4xl text-[#1a1a2e] leading-none pb-1"
+                  style={{ fontFamily: "'Great Vibes', 'Brush Script MT', cursive" }}
+                >
+                  Ryan Steven Persaud
+                </span>
               </div>
               <div className="border-b border-[#9ca3af] mb-1" />
               <p className="text-[10px] text-[#9ca3af] print:text-xs">Ryan Steven Persaud · Authorized Representative</p>
