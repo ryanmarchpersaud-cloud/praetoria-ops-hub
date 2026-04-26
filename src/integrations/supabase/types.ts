@@ -629,10 +629,13 @@ export type Database = {
           date_format: string | null
           default_due_days: number | null
           default_payment_terms: string | null
+          default_quote_notes: string | null
           default_service_area: string | null
           default_tax_enabled: boolean | null
           default_tax_rate: number | null
+          default_terms_conditions: string | null
           default_timezone: string | null
+          default_workmanship_warranty: string | null
           deposit_required: boolean | null
           description: string | null
           display_name: string | null
@@ -676,10 +679,13 @@ export type Database = {
           date_format?: string | null
           default_due_days?: number | null
           default_payment_terms?: string | null
+          default_quote_notes?: string | null
           default_service_area?: string | null
           default_tax_enabled?: boolean | null
           default_tax_rate?: number | null
+          default_terms_conditions?: string | null
           default_timezone?: string | null
+          default_workmanship_warranty?: string | null
           deposit_required?: boolean | null
           description?: string | null
           display_name?: string | null
@@ -723,10 +729,13 @@ export type Database = {
           date_format?: string | null
           default_due_days?: number | null
           default_payment_terms?: string | null
+          default_quote_notes?: string | null
           default_service_area?: string | null
           default_tax_enabled?: boolean | null
           default_tax_rate?: number | null
+          default_terms_conditions?: string | null
           default_timezone?: string | null
+          default_workmanship_warranty?: string | null
           deposit_required?: boolean | null
           description?: string | null
           display_name?: string | null
@@ -5328,6 +5337,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_id: string
+          customer_notes: string | null
           email_delivery_status: string | null
           email_ready: boolean
           email_sent_at: string | null
@@ -5351,8 +5361,10 @@ export type Database = {
           subtotal: number | null
           tax: number | null
           tax_rate: number
+          terms_conditions: string | null
           total: number | null
           updated_at: string
+          workmanship_warranty: string | null
         }
         Insert: {
           agent_summary?: string | null
@@ -5364,6 +5376,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id: string
+          customer_notes?: string | null
           email_delivery_status?: string | null
           email_ready?: boolean
           email_sent_at?: string | null
@@ -5387,8 +5400,10 @@ export type Database = {
           subtotal?: number | null
           tax?: number | null
           tax_rate?: number
+          terms_conditions?: string | null
           total?: number | null
           updated_at?: string
+          workmanship_warranty?: string | null
         }
         Update: {
           agent_summary?: string | null
@@ -5400,6 +5415,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string
+          customer_notes?: string | null
           email_delivery_status?: string | null
           email_ready?: boolean
           email_sent_at?: string | null
@@ -5423,8 +5439,10 @@ export type Database = {
           subtotal?: number | null
           tax?: number | null
           tax_rate?: number
+          terms_conditions?: string | null
           total?: number | null
           updated_at?: string
+          workmanship_warranty?: string | null
         }
         Relationships: [
           {
