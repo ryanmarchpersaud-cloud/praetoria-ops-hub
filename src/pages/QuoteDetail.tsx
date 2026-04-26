@@ -94,10 +94,14 @@ export default function QuoteDetail() {
   const { toast } = useToast();
   const { canManageQuotes } = useActionPermissions();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+  const { isAdmin } = useUserRole();
 
   const [form, setForm] = useState<any>({});
   const [items, setItems] = useState<LineItemForm[]>([]);
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [catalogEdit, setCatalogEdit] = useState<{ id: string | null; name: string; service_category: string; unit_price: number } | null>(null);
+  const [catalogDeleteId, setCatalogDeleteId] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
