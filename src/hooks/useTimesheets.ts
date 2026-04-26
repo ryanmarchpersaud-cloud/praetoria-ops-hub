@@ -174,9 +174,18 @@ export function useAdminLiveWorkforce() {
         elapsed_hours: (Date.now() - new Date(a.clock_in).getTime()) / 3_600_000,
       }));
 
-      const totalTodayHours = (today_done ?? []).reduce((sum: number, r: any) => {
+      const totalCompletedTodayHours = (today_done ?? []).reduce((sum: number, r: any) => {
         return sum + (new Date(r.clock_out).getTime() - new Date(r.clock_in).getTime()) / 3_600_000;
       }, 0);
+
+      // Include in-progress hours from sessions that started today
+      const totalActiveTodayHours = (active ?? []).reduce((sum: number, r: any) => {
+        const start = new Date(r.clock_in).getTime();
+        if (start < today.getTime()) return sum; // started before today; skip from "today" total
+        return sum + (Date.now() - start) / 3_600_000;
+      }, 0);
+
+      const totalTodayHours = totalCompletedTodayHours + totalActiveTodayHours;
 
       return {
         active_sessions: activeSessions,
