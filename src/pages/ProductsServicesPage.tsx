@@ -327,6 +327,28 @@ export default function ProductsServicesPage() {
     return true;
   });
 
+  // Group filtered items by service category, preserving the master ordering
+  const grouped = (() => {
+    const map = new Map<string, Product[]>();
+    for (const p of filtered) {
+      const key = p.service_category || 'Other';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(p);
+    }
+    const ordered: Array<{ category: string; items: Product[] }> = [];
+    const seen = new Set<string>();
+    for (const cat of SERVICE_CATEGORIES) {
+      if (map.has(cat)) {
+        ordered.push({ category: cat, items: map.get(cat)! });
+        seen.add(cat);
+      }
+    }
+    for (const [cat, items] of map.entries()) {
+      if (!seen.has(cat)) ordered.push({ category: cat, items });
+    }
+    return ordered;
+  })();
+
   const counts = {
     total: products.length,
     active: products.filter((p) => p.status === 'Active').length,
