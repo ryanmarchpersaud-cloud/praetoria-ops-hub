@@ -144,10 +144,11 @@ export default function QuoteDetail() {
   useEffect(() => { if (quote) setForm(quote); }, [quote]);
   useEffect(() => {
     if (lineItems.length > 0) {
-      setItems(lineItems.map(li => ({
+      setItems(lineItems.map((li, idx) => ({
         id: li.id, item_name: li.item_name, description: li.description || '',
         quantity: Number(li.quantity), unit_price: Number(li.unit_price),
         line_total: Number(li.line_total), sort_order: li.sort_order || 0,
+        _key: li.id || `row-${idx}-${Math.random().toString(36).slice(2, 8)}`,
       })));
     }
   }, [lineItems]);
@@ -173,6 +174,8 @@ export default function QuoteDetail() {
     recalculate(updated);
   };
 
+  const newKey = () => `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   const addFromCatalog = (product: any) => {
     const price = Number(product.unit_price) || 0;
     const newItem: LineItemForm = {
@@ -182,6 +185,7 @@ export default function QuoteDetail() {
       unit_price: price,
       line_total: price,
       sort_order: items.length,
+      _key: newKey(),
     };
     const updated = [...items, newItem];
     setItems(updated);
@@ -190,7 +194,7 @@ export default function QuoteDetail() {
   };
 
   const addItem = () => {
-    setItems([...items, { item_name: '', description: '', quantity: 1, unit_price: 0, line_total: 0, sort_order: items.length }]);
+    setItems([...items, { item_name: '', description: '', quantity: 1, unit_price: 0, line_total: 0, sort_order: items.length, _key: newKey() }]);
   };
 
   const removeItem = (idx: number) => {
@@ -198,6 +202,17 @@ export default function QuoteDetail() {
     setItems(updated);
     recalculate(updated);
   };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex(i => (i._key || i.id) === active.id);
+    const newIndex = items.findIndex(i => (i._key || i.id) === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const reordered = arrayMove(items, oldIndex, newIndex).map((it, idx) => ({ ...it, sort_order: idx }));
+    setItems(reordered);
+  };
+
 
   const handleSave = async () => {
     if (!id) return;
