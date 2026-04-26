@@ -19,6 +19,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { supabase } from '@/integrations/supabase/client';
+import { handleProtectedCustomerError } from '@/lib/protectedCustomers';
 import { SERVICE_CATEGORIES, JOB_STATUSES, JOB_PRIORITIES } from '@/lib/constants';
 import {
   Briefcase, User, MapPin, Calendar, Clock, Users, FileText,
@@ -406,6 +407,10 @@ export default function JobNew() {
         navigate('/jobs');
       }
     } catch (err: any) {
+      if (handleProtectedCustomerError(err)) {
+        setSaving(false);
+        return;
+      }
       toast({ title: 'Error creating job', description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);

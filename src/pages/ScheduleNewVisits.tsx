@@ -17,6 +17,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { handleProtectedCustomerError } from '@/lib/protectedCustomers';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
@@ -798,6 +799,7 @@ export default function ScheduleNewVisits() {
     const selectedJobs = recurringJobs.filter((j: any) => selectedJobIds.has(j.id));
     let successCount = 0;
     let errorCount = 0;
+    let protectedCount = 0;
 
     for (const job of selectedJobs) {
       try {
@@ -817,7 +819,11 @@ export default function ScheduleNewVisits() {
         successCount++;
       } catch (err: any) {
         errorCount++;
-        console.error(`Failed to create visit for job ${job.job_number}:`, err.message);
+        if (handleProtectedCustomerError(err)) {
+          protectedCount++;
+        } else {
+          console.error(`Failed to create visit for job ${job.job_number}:`, err.message);
+        }
       }
     }
 
