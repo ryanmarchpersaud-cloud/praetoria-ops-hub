@@ -312,7 +312,7 @@ export function AICopilot() {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-5 right-5 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[540px] max-h-[calc(100vh-6rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
+        <div className="fixed bottom-5 right-5 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[540px] max-h-[calc(100vh-6rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in print:hidden">
           {/* Header */}
           <div className="flex items-center gap-2 px-4 py-3 border-b bg-primary/5 shrink-0">
             <Bot className="h-5 w-5 text-primary" />
