@@ -322,6 +322,20 @@
     display: none !important;
   }
 
+  /* Hide Lovable preview badge / floating helper widgets when printing */
+  #lovable-badge,
+  [data-lovable-badge],
+  [class*="lovable-badge"],
+  [id*="lovable"],
+  iframe[src*="lovable"],
+  [data-testid*="lovable"],
+  [aria-label*="Lovable"],
+  .fixed.bottom-4.right-4,
+  .fixed.bottom-6.right-6 {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
   /* Hide the app sidebar/layout chrome */
   [data-sidebar],
   nav,

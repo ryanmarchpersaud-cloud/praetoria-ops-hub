@@ -108,20 +108,27 @@ export default function QuotePrint() {
       >
         {/* ── Company Header ── */}
         <div className="flex justify-between items-start mb-8 print:mb-10">
-          <div>
-            <h1
-              className="text-2xl font-bold tracking-tight text-[#1a1a2e] print:text-3xl"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            >
-              PRAETORIA GROUP
-            </h1>
-            <p className="text-xs text-[#6b7280] mt-0.5 print:text-sm">
-              Property Services & Maintenance
-            </p>
-            <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
-              <p>Toronto, Ontario, Canada</p>
-              <p>info@praetoriagroup.ca</p>
-              <p>(306) 737-6269</p>
+          <div className="flex items-start gap-4">
+            <img
+              src="/images/praetoria-logo-white.png"
+              alt="Praetoria Group"
+              className="h-16 w-16 object-contain rounded-md bg-[#1a1a2e] p-1.5 print:h-20 print:w-20"
+            />
+            <div>
+              <h1
+                className="text-2xl font-bold tracking-tight text-[#1a1a2e] print:text-3xl"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+              >
+                PRAETORIA GROUP
+              </h1>
+              <p className="text-xs text-[#6b7280] mt-0.5 print:text-sm">
+                Property Services & Maintenance
+              </p>
+              <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
+                <p>Toronto, Ontario, Canada</p>
+                <p>support@praetoriagroup.ca</p>
+                <p>(306) 737-6269</p>
+              </div>
             </div>
           </div>
           <div className="text-right">
@@ -347,7 +354,7 @@ export default function QuotePrint() {
           {/* ── Footer ── */}
           <div className="text-center pt-8 text-xs text-[#9ca3af] print:text-sm print:pt-12 pb-4">
             <p className="font-medium text-[#6b7280]">Praetoria Group</p>
-            <p>info@praetoriagroup.ca · (306) 737-6269</p>
+            <p>support@praetoriagroup.ca · (306) 737-6269</p>
             <p className="mt-1">Thank you for choosing Praetoria Group.</p>
           </div>
         </div>
