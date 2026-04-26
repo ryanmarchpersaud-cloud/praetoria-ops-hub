@@ -62,9 +62,9 @@ export default function Dashboard() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-lg md:text-2xl font-bold">Operations Dashboard</h1>
-        <p className="text-muted-foreground text-[11px] md:text-sm">Praetoria Group — Command Center</p>
+      <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 md:p-5">
+        <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">Operations Dashboard</h1>
+        <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">Praetoria Group — Command Center</p>
       </div>
 
       {/* Quick stats — 3×2 grid (legacy) */}
