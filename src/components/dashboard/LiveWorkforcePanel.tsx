@@ -80,6 +80,70 @@ export function LiveWorkforcePanel() {
           </div>
         </div>
 
+        {/* Hours Today breakdown */}
+        {!isLoading && data?.breakdown && (
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Hours Today — Breakdown
+              </span>
+              <span className="text-[11px] font-mono text-muted-foreground">
+                Total {(data.total_today_hours ?? 0).toFixed(1)}h
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center justify-between rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 px-2.5 py-1.5">
+                <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
+                  <CheckCircle2 className="h-3 w-3" />
+                  <span>Completed today</span>
+                </div>
+                <span className="font-mono font-semibold text-blue-900 dark:text-blue-100">
+                  {data.breakdown.completed_today_hours.toFixed(1)}h
+                  <span className="text-[10px] text-blue-700/70 dark:text-blue-300/70 ml-1">
+                    ({data.breakdown.completed_today_count})
+                  </span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 px-2.5 py-1.5">
+                <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                  <Activity className="h-3 w-3" />
+                  <span>Active today</span>
+                </div>
+                <span className="font-mono font-semibold text-emerald-900 dark:text-emerald-100">
+                  {data.breakdown.active_today_hours.toFixed(1)}h
+                  <span className="text-[10px] text-emerald-700/70 dark:text-emerald-300/70 ml-1">
+                    ({data.breakdown.active_today_count})
+                  </span>
+                </span>
+              </div>
+            </div>
+            {data.breakdown.carryover_count > 0 && (
+              <div className="flex items-center justify-between rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 px-2.5 py-1.5 text-xs">
+                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>Carryover from yesterday (not in total)</span>
+                </div>
+                <span className="font-mono font-semibold text-amber-900 dark:text-amber-100">
+                  {data.breakdown.carryover_hours.toFixed(1)}h
+                  <span className="text-[10px] text-amber-700/70 dark:text-amber-300/70 ml-1">
+                    ({data.breakdown.carryover_count})
+                  </span>
+                </span>
+              </div>
+            )}
+            <p className="text-[10px] text-muted-foreground leading-snug">
+              Hours Today = Completed today + Active today. Carryover shifts started before midnight
+              are tracked separately so totals stay accurate per day.
+            </p>
+          </div>
+        )}
+            </div>
+            <div className="text-2xl font-bold text-violet-900 dark:text-violet-100">
+              {isLoading ? '—' : (data?.total_today_hours ?? 0).toFixed(1)}
+            </div>
+          </div>
+        </div>
+
         {/* Active sessions list */}
         <div className="space-y-2">
           <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
