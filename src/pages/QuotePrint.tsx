@@ -135,7 +135,8 @@ export default function QuotePrint() {
                 Property Services & Maintenance
               </p>
               <div className="mt-3 text-xs text-[#6b7280] space-y-0.5 print:text-sm">
-                <p>Toronto, Ontario, Canada</p>
+                <p>2282 Toronto Street</p>
+                <p>Regina, Saskatchewan S4P 1N4</p>
                 <p>support@praetoriagroup.ca</p>
                 <p>(306) 737-6269</p>
               </div>
