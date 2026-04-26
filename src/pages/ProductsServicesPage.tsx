@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { SettingsLayout } from '@/components/SettingsLayout';
@@ -18,12 +18,41 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Search, Plus, MoreHorizontal, Package, Pencil, Archive, Copy, XCircle, Check, Globe, CalendarCheck, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { SERVICE_CATEGORIES } from '@/lib/constants';
 
 const PRODUCT_TYPES = ['Service', 'Package', 'Add-On', 'Inspection', 'Recurring Plan', 'Material / Product'];
-const SERVICE_CATEGORIES = [
-  'Snow & Ice', 'Landscaping & Grounds', 'Junk Removal', 'Property Care & Maintenance',
-  'Cleaning Services', 'Power Washing', 'Property Inspection', 'Bylaw / Compliance', 'Property Management',
-];
+
+// Brand colors for each of the 25 service categories (matches mem://project/service-categories-master)
+
+// Brand colors for each of the 25 service categories (matches mem://project/service-categories-master)
+const CATEGORY_COLORS: Record<string, string> = {
+  'Snow & Ice': '#2563EB',
+  'Maintenance & Repairs': '#DC2626',
+  'Property Care & Landscaping': '#F97316',
+  'Property Management': '#16A34A',
+  'Electrical': '#7C3AED',
+  'Plumbing': '#0D9488',
+  'Carpentry & Renovations': '#92400E',
+  'Roofing & Exteriors': '#374151',
+  'Painting & Finishing': '#EAB308',
+  'Cleaning Services': '#0EA5E9',
+  'Heating, Ventilation & Air Conditioning': '#F43F5E',
+  'Concrete & Masonry': '#6B7280',
+  'Security & Smart Home': '#111827',
+  'Fencing & Decking': '#7c2d12',
+  'Junk Removal': '#c2410c',
+  'Power Washing': '#0891B2',
+  'Tiling & Flooring': '#A16207',
+  'Gutter Cleaning & Repair': '#65A30D',
+  'Window Cleaning': '#0284C7',
+  'Pest Control': '#854D0E',
+  'Moving & Hauling': '#9333EA',
+  'Insulation & Drywall': '#B91C1C',
+  'Appliance Install & Repair': '#0F766E',
+  'Garage Doors': '#475569',
+  'Locksmith Services': '#1E40AF',
+  'Other': '#64748B',
+};
 const PRICE_TYPES = ['Flat Rate', 'Hourly', 'Per Visit', 'Per Month', 'Per Unit', 'Custom Quote'];
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Archived'];
 const BOOK_AS_OPTIONS = ['Job', 'Visit', 'Assignment'];
@@ -326,6 +355,28 @@ export default function ProductsServicesPage() {
     if (typeFilter !== 'all' && p.product_type !== typeFilter) return false;
     return true;
   });
+
+  // Group filtered items by service category, preserving the master ordering
+  const grouped = (() => {
+    const map = new Map<string, Product[]>();
+    for (const p of filtered) {
+      const key = p.service_category || 'Other';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(p);
+    }
+    const ordered: Array<{ category: string; items: Product[] }> = [];
+    const seen = new Set<string>();
+    for (const cat of SERVICE_CATEGORIES) {
+      if (map.has(cat)) {
+        ordered.push({ category: cat, items: map.get(cat)! });
+        seen.add(cat);
+      }
+    }
+    for (const [cat, items] of map.entries()) {
+      if (!seen.has(cat)) ordered.push({ category: cat, items });
+    }
+    return ordered;
+  })();
 
   const counts = {
     total: products.length,
@@ -769,81 +820,113 @@ export default function ProductsServicesPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filtered.map((p) => (
-                          <TableRow key={p.id} className={`cursor-pointer ${p.status !== 'Active' ? 'opacity-60' : ''}`} onClick={() => openEdit(p)}>
-                            <TableCell>
-                              <div className="min-w-0">
-                                <p className="font-medium text-foreground truncate">{p.name}</p>
-                                {p.internal_item_code && <p className="text-[10px] text-muted-foreground font-mono">{p.internal_item_code}</p>}
-                                {p.description && <p className="text-xs text-muted-foreground truncate max-w-[240px]">{p.description}</p>}
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              <Badge variant="outline">{p.product_type}</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">{p.service_category}</Badge>
-                            </TableCell>
-                            <TableCell className="hidden lg:table-cell text-right font-medium whitespace-nowrap">
-                              {p.price_type === 'Custom Quote' ? (
-                                <span className="text-muted-foreground text-xs">Custom</span>
-                              ) : (
-                                <>
-                                  ${Number(p.unit_price).toFixed(2)}
-                                  <span className="text-xs text-muted-foreground ml-1">/ {p.unit_label || 'flat'}</span>
-                                </>
-                              )}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell text-center">
-                              {p.taxable ? <Check className="h-4 w-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
-                            </TableCell>
-                            <TableCell className="hidden lg:table-cell text-center">
-                              {p.online_booking_enabled ? <CalendarCheck className="h-4 w-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
-                            </TableCell>
-                            <TableCell className="hidden lg:table-cell text-center">
-                              {p.customer_visible ? <Globe className="h-4 w-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={p.status === 'Active' ? 'default' : p.status === 'Archived' ? 'secondary' : 'outline'}>
-                                {p.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => openEdit(p)}>
-                                    <Pencil className="h-3.5 w-3.5 mr-2" />Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => duplicateMutation.mutate(p)}>
-                                    <Copy className="h-3.5 w-3.5 mr-2" />Duplicate
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  {p.status === 'Active' ? (
-                                    <DropdownMenuItem onClick={() => statusMutation.mutate({ id: p.id, status: 'Inactive' })}>
-                                      <XCircle className="h-3.5 w-3.5 mr-2" />Deactivate
-                                    </DropdownMenuItem>
-                                  ) : p.status === 'Inactive' ? (
-                                    <>
-                                      <DropdownMenuItem onClick={() => statusMutation.mutate({ id: p.id, status: 'Active' })}>
-                                        <Package className="h-3.5 w-3.5 mr-2" />Reactivate
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => statusMutation.mutate({ id: p.id, status: 'Archived' })}>
-                                        <Archive className="h-3.5 w-3.5 mr-2" />Archive
-                                      </DropdownMenuItem>
-                                    </>
-                                  ) : (
-                                    <DropdownMenuItem onClick={() => statusMutation.mutate({ id: p.id, status: 'Active' })}>
-                                      <Package className="h-3.5 w-3.5 mr-2" />Reactivate
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {grouped.map(({ category, items }) => {
+                          const color = CATEGORY_COLORS[category] || '#64748B';
+                          return (
+                            <React.Fragment key={category}>
+                              <TableRow className="hover:bg-transparent border-0">
+                                <TableCell
+                                  colSpan={9}
+                                  className="py-4 px-4 border-l-4"
+                                  style={{
+                                    borderLeftColor: color,
+                                    backgroundColor: `${color}14`,
+                                  }}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <h3
+                                      className="text-xl md:text-2xl font-extrabold tracking-tight uppercase"
+                                      style={{ color }}
+                                    >
+                                      {category}
+                                    </h3>
+                                    <span
+                                      className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                                      style={{ backgroundColor: color, color: 'white' }}
+                                    >
+                                      {items.length} item{items.length !== 1 ? 's' : ''}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                              {items.map((p) => (
+                                <TableRow key={p.id} className={`cursor-pointer ${p.status !== 'Active' ? 'opacity-60' : ''}`} onClick={() => openEdit(p)}>
+                                  <TableCell>
+                                    <div className="min-w-0">
+                                      <p className="font-medium text-foreground truncate">{p.name}</p>
+                                      {p.internal_item_code && <p className="text-[10px] text-muted-foreground font-mono">{p.internal_item_code}</p>}
+                                      {p.description && <p className="text-xs text-muted-foreground truncate max-w-[240px]">{p.description}</p>}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="hidden md:table-cell">
+                                    <Badge variant="outline">{p.product_type}</Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="secondary">{p.service_category}</Badge>
+                                  </TableCell>
+                                  <TableCell className="hidden lg:table-cell text-right font-medium whitespace-nowrap">
+                                    {p.price_type === 'Custom Quote' ? (
+                                      <span className="text-muted-foreground text-xs">Custom</span>
+                                    ) : (
+                                      <>
+                                        ${Number(p.unit_price).toFixed(2)}
+                                        <span className="text-xs text-muted-foreground ml-1">/ {p.unit_label || 'flat'}</span>
+                                      </>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="hidden md:table-cell text-center">
+                                    {p.taxable ? <Check className="h-4 w-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
+                                  </TableCell>
+                                  <TableCell className="hidden lg:table-cell text-center">
+                                    {p.online_booking_enabled ? <CalendarCheck className="h-4 w-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
+                                  </TableCell>
+                                  <TableCell className="hidden lg:table-cell text-center">
+                                    {p.customer_visible ? <Globe className="h-4 w-4 text-primary mx-auto" /> : <span className="text-muted-foreground">—</span>}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={p.status === 'Active' ? 'default' : p.status === 'Archived' ? 'secondary' : 'outline'}>
+                                      {p.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell onClick={(e) => e.stopPropagation()}>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => openEdit(p)}>
+                                          <Pencil className="h-3.5 w-3.5 mr-2" />Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => duplicateMutation.mutate(p)}>
+                                          <Copy className="h-3.5 w-3.5 mr-2" />Duplicate
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        {p.status === 'Active' ? (
+                                          <DropdownMenuItem onClick={() => statusMutation.mutate({ id: p.id, status: 'Inactive' })}>
+                                            <XCircle className="h-3.5 w-3.5 mr-2" />Deactivate
+                                          </DropdownMenuItem>
+                                        ) : p.status === 'Inactive' ? (
+                                          <>
+                                            <DropdownMenuItem onClick={() => statusMutation.mutate({ id: p.id, status: 'Active' })}>
+                                              <Package className="h-3.5 w-3.5 mr-2" />Reactivate
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => statusMutation.mutate({ id: p.id, status: 'Archived' })}>
+                                              <Archive className="h-3.5 w-3.5 mr-2" />Archive
+                                            </DropdownMenuItem>
+                                          </>
+                                        ) : (
+                                          <DropdownMenuItem onClick={() => statusMutation.mutate({ id: p.id, status: 'Active' })}>
+                                            <Package className="h-3.5 w-3.5 mr-2" />Reactivate
+                                          </DropdownMenuItem>
+                                        )}
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </React.Fragment>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
