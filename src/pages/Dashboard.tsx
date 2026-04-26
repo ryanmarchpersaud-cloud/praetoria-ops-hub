@@ -10,6 +10,9 @@ import { CustomerStatusWidget } from '@/components/dashboard/CustomerStatusWidge
 import { RevenueTrendChart } from '@/components/dashboard/RevenueTrendChart';
 import { ARAgingPanel } from '@/components/dashboard/ARAgingPanel';
 import { QuickActionBar } from '@/components/dashboard/QuickActionBar';
+import { ConversionFunnel } from '@/components/dashboard/ConversionFunnel';
+import { TomorrowSchedule } from '@/components/dashboard/TomorrowSchedule';
+import { PendingApprovalsHub } from '@/components/dashboard/PendingApprovalsHub';
 import {
   useDashboardRequests,
   useDashboardQuotes,
