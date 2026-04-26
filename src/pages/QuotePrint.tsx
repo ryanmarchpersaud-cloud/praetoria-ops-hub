@@ -499,8 +499,41 @@ export default function QuotePrint() {
             </div>
           </div>
 
+          {/* ── Our Other Services ── */}
+          <div className="mt-10 pt-6 border-t border-[#e5e7eb] print:mt-12">
+            <p
+              className="text-center text-[10px] uppercase tracking-[0.2em] font-bold mb-4 print:text-xs"
+              style={{ color: theme.accent }}
+            >
+              Explore Our Full Range of Services
+            </p>
+            <div className="grid grid-cols-4 gap-2 print:gap-3 text-[10px] print:text-xs">
+              {[
+                { name: 'Snow & Ice', color: '#0369a1' },
+                { name: 'Landscaping', color: '#15803d' },
+                { name: 'Junk Removal', color: '#c2410c' },
+                { name: 'Property Maintenance', color: '#a16207' },
+                { name: 'Fencing & Decking', color: '#7c2d12' },
+                { name: 'Roofing & Exterior', color: '#475569' },
+                { name: 'Cleaning Services', color: '#0e7490' },
+                { name: 'Power Washing', color: '#1d4ed8' },
+              ].map((s) => (
+                <div
+                  key={s.name}
+                  className="rounded-md border px-2 py-2 text-center font-semibold leading-tight"
+                  style={{ borderColor: `${s.color}40`, color: s.color, backgroundColor: `${s.color}08` }}
+                >
+                  {s.name}
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-[10px] text-[#6b7280] mt-3 italic print:text-xs">
+              One trusted partner for all your property needs — ask us about bundling for preferred rates.
+            </p>
+          </div>
+
           {/* ── Footer ── */}
-          <div className="text-center pt-8 text-xs text-[#9ca3af] print:text-sm print:pt-12 pb-4">
+          <div className="text-center pt-6 text-xs text-[#9ca3af] print:text-sm print:pt-8 pb-4">
             <p className="font-medium text-[#6b7280]">Praetoria Group</p>
             <p>support@praetoriagroup.ca · (306) 737-6269</p>
             <p className="mt-1">Thank you for choosing Praetoria Group.</p>
