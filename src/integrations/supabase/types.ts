@@ -5244,6 +5244,35 @@ export type Database = {
           },
         ]
       }
+      protected_customers: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          customer_id: string
+          reason: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          customer_id: string
+          reason?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          customer_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "protected_customers_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_line_items: {
         Row: {
           created_at: string
@@ -7811,6 +7840,10 @@ export type Database = {
         }[]
       }
       can_submit_field_lead: { Args: { _user_id: string }; Returns: boolean }
+      customer_id_for_property: {
+        Args: { _property_id: string }
+        Returns: string
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -7845,6 +7878,10 @@ export type Database = {
       }
       is_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
       is_ops_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_protected_customer: {
+        Args: { _customer_id: string }
+        Returns: boolean
+      }
       is_staff_or_admin: { Args: { _user_id: string }; Returns: boolean }
       is_sub_assigned_to_job: {
         Args: { _job_id: string; _user_id: string }
