@@ -7,6 +7,9 @@ import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { BusinessPerformance } from '@/components/dashboard/BusinessPerformance';
 import { LiveWorkforcePanel } from '@/components/dashboard/LiveWorkforcePanel';
 import { CustomerStatusWidget } from '@/components/dashboard/CustomerStatusWidget';
+import { RevenueTrendChart } from '@/components/dashboard/RevenueTrendChart';
+import { ARAgingPanel } from '@/components/dashboard/ARAgingPanel';
+import { QuickActionBar } from '@/components/dashboard/QuickActionBar';
 import {
   useDashboardRequests,
   useDashboardQuotes,
