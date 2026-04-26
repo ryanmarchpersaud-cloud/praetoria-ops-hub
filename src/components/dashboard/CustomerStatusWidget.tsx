@@ -34,6 +34,9 @@ export function CustomerStatusWidget() {
     { label: 'Lost', value: data?.Lost ?? 0, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50 border-rose-100 dark:bg-rose-950/30 dark:border-rose-900/40' },
   ];
 
+  const total = data?.total ?? 0;
+  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+
   return (
     <Card>
       <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
@@ -43,6 +46,10 @@ export function CustomerStatusWidget() {
         <span className="text-[10px] text-muted-foreground">Last 30 days</span>
       </CardHeader>
       <CardContent className="pt-0">
+        <div className="mb-2 flex items-baseline justify-between">
+          <p className="text-[11px] text-muted-foreground">Total updated</p>
+          <p className="text-lg font-bold leading-none">{isLoading ? '—' : total}</p>
+        </div>
         <div className="grid grid-cols-3 gap-2">
           {items.map(i => (
             <Link
@@ -54,7 +61,9 @@ export function CustomerStatusWidget() {
               <p className="text-xl font-bold leading-none text-foreground">
                 {isLoading ? '—' : i.value}
               </p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{i.label}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {i.label} · {isLoading ? '—' : `${pct(i.value)}%`}
+              </p>
             </Link>
           ))}
         </div>
