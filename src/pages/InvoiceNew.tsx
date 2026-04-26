@@ -177,8 +177,9 @@ export default function InvoiceNew() {
                 <SelectContent>
                   <SelectItem value="0">No Tax (0%)</SelectItem>
                   <SelectItem value="0.05">GST Only (5%)</SelectItem>
-                  <SelectItem value="0.08">PST Only (8%)</SelectItem>
-                  <SelectItem value="0.11">HST (13%)</SelectItem>
+                  <SelectItem value="0.06">PST Only (6%)</SelectItem>
+                  <SelectItem value="0.11">GST + PST (11%)</SelectItem>
+                  <SelectItem value="0.13">HST (13%)</SelectItem>
                   <SelectItem value="0.15">HST (15%)</SelectItem>
                 </SelectContent>
               </Select>
