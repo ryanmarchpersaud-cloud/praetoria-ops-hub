@@ -137,11 +137,6 @@ export default function Dashboard() {
 
       {/* Cash Flow waterfall */}
       <CashFlowWaterfall invoices={invoices} isLoading={loadInv} />
-        </div>
-        <div className="lg:col-span-2">
-          <ARAgingPanel invoices={invoices} isLoading={loadInv} />
-        </div>
-      </div>
 
       {/* Conversion Funnel + Pending Approvals row */}
       <div className="grid lg:grid-cols-5 gap-4">
