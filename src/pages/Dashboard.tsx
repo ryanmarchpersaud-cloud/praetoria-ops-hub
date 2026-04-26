@@ -10,6 +10,9 @@ import { CustomerStatusWidget } from '@/components/dashboard/CustomerStatusWidge
 import { RevenueTrendChart } from '@/components/dashboard/RevenueTrendChart';
 import { ARAgingPanel } from '@/components/dashboard/ARAgingPanel';
 import { QuickActionBar } from '@/components/dashboard/QuickActionBar';
+import { ConversionFunnel } from '@/components/dashboard/ConversionFunnel';
+import { TomorrowSchedule } from '@/components/dashboard/TomorrowSchedule';
+import { PendingApprovalsHub } from '@/components/dashboard/PendingApprovalsHub';
 import {
   useDashboardRequests,
   useDashboardQuotes,
@@ -94,6 +97,22 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Conversion Funnel + Pending Approvals row */}
+      <div className="grid lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3">
+          <ConversionFunnel
+            leads={leads}
+            quotes={dashQuotes}
+            jobs={jobs}
+            invoices={invoices}
+            isLoading={loadLeads || loadQuotes || loadJobs || loadInv}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <PendingApprovalsHub />
+        </div>
+      </div>
+
       {/* Workflow Cards (new ops) */}
       <WorkflowCards
         requests={requests}
@@ -125,6 +144,8 @@ export default function Dashboard() {
             isLoadingVisits={loadVisits}
             isLoadingEmployees={loadEmp}
           />
+
+          <TomorrowSchedule />
 
           {/* Legacy list cards */}
           <div className="grid md:grid-cols-2 gap-3">
