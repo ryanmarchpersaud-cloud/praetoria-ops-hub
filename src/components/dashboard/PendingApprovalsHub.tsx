@@ -44,7 +44,7 @@ export function PendingApprovalsHub() {
       icon: Clock,
       color: 'text-blue-600',
       bg: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/50',
-      link: '/hr/timesheets',
+      link: '/finance/payroll',
     },
     {
       key: 'subInvoices',
