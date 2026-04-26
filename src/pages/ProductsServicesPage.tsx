@@ -18,9 +18,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Search, Plus, MoreHorizontal, Package, Pencil, Archive, Copy, XCircle, Check, Globe, CalendarCheck, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { SERVICE_CATEGORIES } from '@/lib/constants';
 
 const PRODUCT_TYPES = ['Service', 'Package', 'Add-On', 'Inspection', 'Recurring Plan', 'Material / Product'];
-import { SERVICE_CATEGORIES } from '@/lib/constants';
+
+// Brand colors for each of the 25 service categories (matches mem://project/service-categories-master)
 
 // Brand colors for each of the 25 service categories (matches mem://project/service-categories-master)
 const CATEGORY_COLORS: Record<string, string> = {
