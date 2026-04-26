@@ -1,13 +1,39 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Users, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Clock, Users, CheckCircle2, ChevronRight, LogOut, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAdminLiveWorkforce } from '@/hooks/useTimesheets';
+import { useAdminLiveWorkforce, useAdminForceClockOut } from '@/hooks/useTimesheets';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export function LiveWorkforcePanel() {
   const { data, isLoading } = useAdminLiveWorkforce();
+  const forceOut = useAdminForceClockOut();
+  const { toast } = useToast();
+  const [target, setTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const handleConfirm = async () => {
+    if (!target) return;
+    try {
+      await forceOut.mutateAsync({ id: target.id, workerName: target.name });
+      toast({ title: 'Worker clocked out', description: `${target.name} has been clocked out.` });
+      setTarget(null);
+    } catch (e: any) {
+      toast({ title: 'Could not clock out', description: e?.message ?? 'Please try again.', variant: 'destructive' });
+    }
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -70,9 +96,9 @@ export function LiveWorkforcePanel() {
               {data.active_sessions.map((s: any) => (
                 <div
                   key={s.id}
-                  className="flex items-center justify-between rounded-md border bg-card p-2.5 hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-between gap-2 rounded-md border bg-card p-2.5 hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="relative flex h-2 w-2 shrink-0">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -84,15 +110,52 @@ export function LiveWorkforcePanel() {
                       </div>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="shrink-0 font-mono text-[11px]">
-                    {s.elapsed_hours.toFixed(1)}h
-                  </Badge>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge variant="secondary" className="font-mono text-[11px]">
+                      {s.elapsed_hours.toFixed(1)}h
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-[11px]"
+                      onClick={() => setTarget({ id: s.id, name: s.full_name })}
+                      title="Force clock out this worker"
+                    >
+                      <LogOut className="h-3 w-3 mr-1" />
+                      Clock out
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </CardContent>
+
+      <AlertDialog open={!!target} onOpenChange={(o) => !o && setTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clock out {target?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will close their open shift using the current time. A note will be added to the
+              timesheet showing it was clocked out by an admin. They can adjust hours later if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={forceOut.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm} disabled={forceOut.isPending}>
+              {forceOut.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                  Clocking out…
+                </>
+              ) : (
+                'Yes, clock them out'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
