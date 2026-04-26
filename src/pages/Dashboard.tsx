@@ -16,6 +16,7 @@ import { PendingApprovalsHub } from '@/components/dashboard/PendingApprovalsHub'
 import { TopPerformersLeaderboard } from '@/components/dashboard/TopPerformersLeaderboard';
 import { ServiceMixDonut } from '@/components/dashboard/ServiceMixDonut';
 import { JobsCompletedBarChart } from '@/components/dashboard/JobsCompletedBarChart';
+import { LiveWorkerMap } from '@/components/dashboard/LiveWorkerMap';
 import {
   useDashboardRequests,
   useDashboardQuotes,
@@ -140,6 +141,9 @@ export default function Dashboard() {
         requests={requests}
         isLoading={loadVisits || loadJobs || loadEmp || loadReq}
       />
+
+      {/* Live Worker Map */}
+      <LiveWorkerMap />
 
       {/* Service Carousel */}
       <ServiceCarousel />
