@@ -116,6 +116,13 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Performance Insights row */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <TopPerformersLeaderboard />
+        <ServiceMixDonut invoices={invoices} jobs={jobs} isLoading={loadInv || loadJobs} />
+        <JobsCompletedBarChart />
+      </div>
+
       {/* Workflow Cards (new ops) */}
       <WorkflowCards
         requests={requests}
