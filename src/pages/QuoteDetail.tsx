@@ -38,7 +38,27 @@ interface LineItemForm {
   unit_price: number;
   line_total: number;
   sort_order: number;
+  _key?: string;
 }
+
+function SortableLineRow({
+  id, children, className,
+}: { id: string; children: (handleProps: { attributes: any; listeners: any }) => React.ReactNode; className?: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+    position: 'relative',
+  };
+  return (
+    <div ref={setNodeRef} style={style} className={className}>
+      {children({ attributes, listeners })}
+    </div>
+  );
+}
+
 
 function CollapsibleSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
