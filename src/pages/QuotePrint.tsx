@@ -519,11 +519,21 @@ export default function QuotePrint() {
                 { name: 'Roofing & Exteriors', color: '#374151' },
                 { name: 'Painting & Finishing', color: '#EAB308' },
                 { name: 'Cleaning Services', color: '#0EA5E9' },
-                { name: 'HVAC', color: '#F43F5E' },
+                { name: 'Heating, Ventilation & Air Conditioning', color: '#F43F5E' },
                 { name: 'Concrete & Masonry', color: '#6B7280' },
                 { name: 'Security & Smart Home', color: '#111827' },
                 { name: 'Fencing & Decking', color: '#7c2d12' },
                 { name: 'Junk Removal', color: '#c2410c' },
+                { name: 'Power Washing', color: '#0891B2' },
+                { name: 'Tiling & Flooring', color: '#A16207' },
+                { name: 'Gutter Cleaning & Repair', color: '#65A30D' },
+                { name: 'Window Cleaning', color: '#0284C7' },
+                { name: 'Pest Control', color: '#854D0E' },
+                { name: 'Moving & Hauling', color: '#9333EA' },
+                { name: 'Insulation & Drywall', color: '#B91C1C' },
+                { name: 'Appliance Install & Repair', color: '#0F766E' },
+                { name: 'Garage Doors', color: '#475569' },
+                { name: 'Locksmith Services', color: '#1E40AF' },
               ].map((s) => (
                 <div
                   key={s.name}
