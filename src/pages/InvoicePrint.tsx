@@ -85,7 +85,7 @@ export default function InvoicePrint() {
   const subtotal = Number(invoice.subtotal || 0);
   const tax = Number(invoice.tax || 0);
   const total = Number(invoice.total || 0);
-  const taxRate = Number(invoice.tax_rate || 0.13);
+  const taxRate = Number(invoice.tax_rate || 0.11);
   const amountPaid = Number(invoice.amount_paid || 0);
   const balanceDue = Number(invoice.balance_due || 0);
 

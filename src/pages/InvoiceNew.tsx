@@ -31,7 +31,7 @@ export default function InvoiceNew() {
     property_id: '',
     issue_date: today,
     due_date: defaultDue,
-    tax_rate: '0.13',
+    tax_rate: '0.11',
     customer_memo: '',
     internal_notes: '',
   });
@@ -72,7 +72,7 @@ export default function InvoiceNew() {
         invoice_number: '',
         issue_date: form.issue_date,
         due_date: form.due_date,
-        tax_rate: parseFloat(form.tax_rate) || 0.13,
+        tax_rate: parseFloat(form.tax_rate) || 0.11,
         customer_memo: form.customer_memo || null,
         internal_notes: form.internal_notes || null,
         status: 'Draft',
@@ -177,7 +177,8 @@ export default function InvoiceNew() {
                 <SelectContent>
                   <SelectItem value="0">No Tax (0%)</SelectItem>
                   <SelectItem value="0.05">GST Only (5%)</SelectItem>
-                  <SelectItem value="0.08">PST Only (8%)</SelectItem>
+                  <SelectItem value="0.06">PST Only (6%)</SelectItem>
+                  <SelectItem value="0.11">GST + PST (11%)</SelectItem>
                   <SelectItem value="0.13">HST (13%)</SelectItem>
                   <SelectItem value="0.15">HST (15%)</SelectItem>
                 </SelectContent>

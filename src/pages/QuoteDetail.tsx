@@ -163,7 +163,7 @@ export default function QuoteDetail() {
 
   const recalculate = (updatedItems: LineItemForm[]) => {
     const subtotal = updatedItems.reduce((sum, i) => sum + i.line_total, 0);
-    const taxRate = Number(form.tax_rate || 0.13);
+    const taxRate = Number(form.tax_rate || 0.11);
     setForm((p: any) => ({ ...p, subtotal, tax: subtotal * taxRate, total: subtotal + subtotal * taxRate }));
   };
 
@@ -228,7 +228,7 @@ export default function QuoteDetail() {
         id, service_category: form.service_category, scope_of_work: form.scope_of_work,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
         approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
-        tax_rate: Number(form.tax_rate || 0.13),
+        tax_rate: Number(form.tax_rate || 0.11),
         recurring_pricing_enabled: !!form.recurring_pricing_enabled,
         price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
         price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
@@ -277,7 +277,7 @@ export default function QuoteDetail() {
         id, approval_status: newStatus as any,
         service_category: form.service_category, scope_of_work: form.scope_of_work,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
-        tax_rate: Number(form.tax_rate || 0.13),
+        tax_rate: Number(form.tax_rate || 0.11),
         recurring_pricing_enabled: !!form.recurring_pricing_enabled,
         price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
         price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
@@ -311,7 +311,7 @@ export default function QuoteDetail() {
             const subtotal = items
               .filter(i => i.item_name)
               .reduce((sum, i) => sum + Number(i.quantity || 0) * Number(i.unit_price || 0), 0);
-            const taxRate = Number(form.tax_rate || 0.13);
+            const taxRate = Number(form.tax_rate || 0.11);
             const total = subtotal + subtotal * taxRate;
 
             const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-email', {
@@ -784,7 +784,7 @@ export default function QuoteDetail() {
                       Subtotal: <span className="font-medium text-foreground ml-1">${Number(form.subtotal || 0).toFixed(2)}</span>
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Tax ({((Number(form.tax_rate) || 0.13) * 100).toFixed(0)}%):
+                      Tax ({((Number(form.tax_rate) || 0.11) * 100).toFixed(0)}%):
                       <span className="font-medium text-foreground ml-1">${Number(form.tax || 0).toFixed(2)}</span>
                     </p>
                     <p className="text-base font-bold mt-1">
@@ -810,7 +810,7 @@ export default function QuoteDetail() {
               <div>
                 <Label className="text-xs">Tax Rate (%)</Label>
                 <Input type="number" inputMode="decimal" step="0.01"
-                  value={((Number(form.tax_rate) || 0.13) * 100).toFixed(2)}
+                  value={((Number(form.tax_rate) || 0.11) * 100).toFixed(2)}
                   onChange={e => {
                     const rate = Number(e.target.value) / 100;
                     const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
