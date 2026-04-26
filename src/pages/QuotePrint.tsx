@@ -28,6 +28,13 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
     taxRate: Number(quote.tax_rate || 0.13),
+    recurringPricing: quote.recurring_pricing_enabled ? {
+      perCut: quote.price_per_cut != null ? Number(quote.price_per_cut) : null,
+      weekly: quote.price_weekly != null ? Number(quote.price_weekly) : null,
+      biweekly: quote.price_biweekly != null ? Number(quote.price_biweekly) : null,
+      monthly: quote.price_monthly != null ? Number(quote.price_monthly) : null,
+      notes: quote.recurring_pricing_notes || '',
+    } : null,
     client: source ? {
       name: `${source.first_name} ${source.last_name}`,
       company: source.company_name,
