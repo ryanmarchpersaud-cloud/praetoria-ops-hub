@@ -339,6 +339,9 @@ export default function QuoteDetail() {
       await updateQuote.mutateAsync({
         id, service_category: form.service_category, scope_of_work: form.scope_of_work,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
+        customer_notes: form.customer_notes || null,
+        workmanship_warranty: form.workmanship_warranty || null,
+        terms_conditions: form.terms_conditions || null,
         approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
         tax_rate: Number(form.tax_rate || 0.11),
         recurring_pricing_enabled: !!form.recurring_pricing_enabled,
