@@ -109,9 +109,10 @@ serve(async (req) => {
     return new Response(JSON.stringify({ synced: false, message: "No card on file" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error syncing payment method:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500,
     });
   }
