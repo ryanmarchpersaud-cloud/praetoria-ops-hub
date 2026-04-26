@@ -357,11 +357,11 @@ export default function QuotePrint() {
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-6 print:text-xs print:mb-8">
                 Praetoria Group
               </p>
-              <div className="relative h-24 mb-0 print:h-28">
+              <div className="relative h-16 mb-0 print:h-20">
                 <img
                   src={signatureUrl}
                   alt="Ryan Steven Persaud"
-                  className="absolute bottom-0 left-0 h-28 w-auto object-contain print:h-32"
+                  className="absolute bottom-0 left-0 h-20 w-auto object-contain print:h-24"
                   style={{ maxWidth: '100%' }}
                 />
               </div>
