@@ -246,7 +246,92 @@ export default function QuoteDetail() {
       };
       if (newStatus === 'Sent') { updates.sent_status = 'Sent'; updates.sent_at = new Date().toISOString(); }
       await updateQuote.mutateAsync(updates);
-      toast({ title: `Quote ${newStatus.toLowerCase()}` });
+
+      // ─── Auto-send the quote email when transitioning to "Sent" ───
+      if (newStatus === 'Sent') {
+        const lead = (quote as any)?.leads;
+        const customer = (quote as any)?.customers;
+        const clientInfo = lead || customer;
+        const recipientEmail: string | undefined = clientInfo?.email;
+        const recipientName: string | undefined =
+          clientInfo?.name ||
+          [clientInfo?.first_name, clientInfo?.last_name].filter(Boolean).join(' ').trim() ||
+          undefined;
+
+        if (!recipientEmail) {
+          toast({
+            title: 'Quote marked as Sent — but no email on file',
+            description: 'Add an email address to this customer to deliver the quote.',
+            variant: 'destructive',
+          });
+        } else {
+          try {
+            // Compute total from saved items + tax_rate (DB trigger recalculates, but we estimate locally)
+            const subtotal = items
+              .filter(i => i.item_name)
+              .reduce((sum, i) => sum + Number(i.quantity || 0) * Number(i.unit_price || 0), 0);
+            const taxRate = Number(form.tax_rate || 0.13);
+            const total = subtotal + subtotal * taxRate;
+
+            const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-email', {
+              body: {
+                action: 'quote_sent',
+                customer_email: recipientEmail,
+                customer_name: recipientName,
+                quote_number: quote?.quote_number,
+                service_category: form.service_category,
+                total: total.toFixed(2),
+                quote_id: id,
+              },
+            });
+            if (emailError) throw emailError;
+
+            // Persist delivery status on the quote
+            await supabase
+              .from('quotes')
+              .update({
+                email_delivery_status: emailResult?.ok ? 'sent' : 'failed',
+                email_sent_at: new Date().toISOString(),
+              } as any)
+              .eq('id', id);
+
+            // Activity log
+            await supabase.from('activities').insert({
+              action_name: 'quote_email_sent',
+              record_type: 'quote',
+              record_id: id,
+              status: 'completed',
+              payload_summary: {
+                quote_number: quote?.quote_number,
+                recipient: recipientEmail,
+                triggered_from: 'status_change_to_sent',
+                email_sent: emailResult?.ok ?? false,
+              },
+            });
+
+            toast({
+              title: emailResult?.ok ? 'Quote sent by email' : 'Quote marked Sent — email failed',
+              description: emailResult?.ok
+                ? `Delivered to ${recipientEmail}`
+                : (emailResult?.error || 'The email provider reported an issue.'),
+              variant: emailResult?.ok ? 'default' : 'destructive',
+            });
+          } catch (emailErr: any) {
+            // Don't roll back the status — surface the error so the admin can retry
+            await supabase
+              .from('quotes')
+              .update({ email_delivery_status: 'failed' } as any)
+              .eq('id', id);
+            toast({
+              title: 'Quote marked Sent — email failed',
+              description: emailErr?.message || 'Unable to send email. You can resend from the Email Quote panel.',
+              variant: 'destructive',
+            });
+          }
+        }
+      } else {
+        toast({ title: `Quote ${newStatus.toLowerCase()}` });
+      }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
