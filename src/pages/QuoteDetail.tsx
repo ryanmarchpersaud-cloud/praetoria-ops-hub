@@ -144,6 +144,49 @@ export default function QuoteDetail() {
     return acc;
   }, {});
 
+  // Order categories by master list, then any extras alphabetically at the end
+  const orderedCatalogGroups: Array<[string, any[]]> = (() => {
+    const entries: Array<[string, any[]]> = [];
+    const seen = new Set<string>();
+    for (const cat of SERVICE_CATEGORIES) {
+      if (catalogGrouped[cat]) { entries.push([cat, catalogGrouped[cat]]); seen.add(cat); }
+    }
+    for (const [cat, items] of Object.entries(catalogGrouped)) {
+      if (!seen.has(cat)) entries.push([cat, items as any[]]);
+    }
+    return entries;
+  })();
+
+  // Brand colors per category (matches mem://project/service-categories-master)
+  const CATEGORY_COLORS: Record<string, string> = {
+    'Snow & Ice': '#2563EB',
+    'Maintenance & Repairs': '#DC2626',
+    'Property Care & Landscaping': '#F97316',
+    'Property Management': '#16A34A',
+    'Electrical': '#7C3AED',
+    'Plumbing': '#0D9488',
+    'Carpentry & Renovations': '#92400E',
+    'Roofing & Exteriors': '#374151',
+    'Painting & Finishing': '#EAB308',
+    'Cleaning Services': '#0EA5E9',
+    'Heating, Ventilation & Air Conditioning': '#F43F5E',
+    'Concrete & Masonry': '#6B7280',
+    'Security & Smart Home': '#111827',
+    'Fencing & Decking': '#7c2d12',
+    'Junk Removal': '#c2410c',
+    'Power Washing': '#0891B2',
+    'Tiling & Flooring': '#A16207',
+    'Gutter Cleaning & Repair': '#65A30D',
+    'Window Cleaning': '#0284C7',
+    'Pest Control': '#854D0E',
+    'Moving & Hauling': '#9333EA',
+    'Insulation & Drywall': '#B91C1C',
+    'Appliance Install & Repair': '#0F766E',
+    'Garage Doors': '#475569',
+    'Locksmith Services': '#1E40AF',
+    'Other': '#64748B',
+  };
+
   useEffect(() => { if (quote) setForm(quote); }, [quote]);
   useEffect(() => {
     if (lineItems.length > 0) {
