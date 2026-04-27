@@ -196,10 +196,23 @@ export default function Quotes() {
                     <TableRow key={q.id} className={`cursor-pointer hover:bg-muted/50 ${isOverdue ? 'bg-destructive/5' : ''}`} onClick={() => navigate(`/quotes/${q.id}`)}>
                       <TableCell><Link to={`/quotes/${q.id}`} className="font-medium mono text-sm hover:text-primary">{q.quote_number}</Link></TableCell>
                       <TableCell className="text-sm">
-                        <div>
-                          {q.leads?.first_name} {q.leads?.last_name}
-                          {q.leads?.company_name && <span className="block text-xs text-muted-foreground">{q.leads.company_name}</span>}
-                        </div>
+                        {(() => {
+                          const c = q.customers || q.leads;
+                          if (!c) return <span className="text-muted-foreground">—</span>;
+                          const name = [c.first_name, c.last_name].filter(Boolean).join(' ').trim();
+                          const primary = c.company_name || name || 'Unknown';
+                          const secondary = c.company_name && name ? name : null;
+                          const target = q.customer_id ? `/customers/${q.customer_id}` : (q.lead_id ? `/leads/${q.lead_id}` : null);
+                          const content = (
+                            <div>
+                              <div>{primary}</div>
+                              {secondary && <span className="block text-xs text-muted-foreground">{secondary}</span>}
+                            </div>
+                          );
+                          return target ? (
+                            <Link to={target} onClick={(e) => e.stopPropagation()} className="hover:text-primary hover:underline">{content}</Link>
+                          ) : content;
+                        })()}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{q.service_category}</TableCell>
                       <TableCell className="text-sm font-medium text-right mono">${Number(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
