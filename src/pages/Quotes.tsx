@@ -136,10 +136,12 @@ export default function Quotes() {
                         <p className="font-medium mono text-sm">{q.quote_number}</p>
                         <StatusBadge status={q.approval_status} showIcon={false} />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {q.leads?.first_name} {q.leads?.last_name}
-                        {q.leads?.company_name && ` — ${q.leads.company_name}`}
-                      </p>
+                      {(() => {
+                        const c = q.customers || q.leads;
+                        const name = c ? [c.first_name, c.last_name].filter(Boolean).join(' ').trim() : '';
+                        const display = c ? (c.company_name ? `${c.company_name}${name ? ` — ${name}` : ''}` : name || 'Unknown') : 'Unknown';
+                        return <p className="text-xs text-muted-foreground mt-0.5 truncate">{display}</p>;
+                      })()}
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className="text-[11px] text-muted-foreground">{q.service_category}</span>
                         {isOverdue && (
