@@ -52,8 +52,12 @@ function ClientResponseBadge({ q }: { q: any }) {
     label = 'Review';
     cls = 'bg-warning/10 text-warning border-warning/30';
     title = 'Internal review needed before sending';
+  } else if (status === 'Draft') {
+    label = '○ Draft';
+    cls = 'bg-muted text-muted-foreground border-border';
+    title = 'Draft — not yet sent to client';
   } else {
-    return null; // Draft and unknown — no badge
+    return null;
   }
 
   return (
