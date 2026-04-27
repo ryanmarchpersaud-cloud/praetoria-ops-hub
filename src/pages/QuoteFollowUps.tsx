@@ -25,6 +25,8 @@ interface QuoteRow {
   service_category: string;
   customers?: any;
   leads?: any;
+  customer_id?: string | null;
+  lead_id?: string | null;
   bucket: Bucket;
 }
 
@@ -33,6 +35,13 @@ function clientName(q: any) {
   if (!c) return 'Unknown';
   const name = [c.first_name, c.last_name].filter(Boolean).join(' ').trim();
   return c.company_name ? `${c.company_name}${name ? ` — ${name}` : ''}` : name || 'Unknown';
+}
+
+function ClientLink({ q, className }: { q: any; className?: string }) {
+  const target = q.customer_id ? `/customers/${q.customer_id}` : (q.lead_id ? `/leads/${q.lead_id}` : null);
+  const label = clientName(q);
+  if (!target) return <span className={className}>{label}</span>;
+  return <Link to={target} className={cn('hover:text-primary hover:underline', className)}>{label}</Link>;
 }
 
 function bucketFor(due: Date): Bucket {
