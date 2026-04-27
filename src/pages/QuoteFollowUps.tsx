@@ -147,6 +147,8 @@ export default function QuoteFollowUps() {
         service_category: q.service_category,
         customers: q.customers,
         leads: q.leads,
+        customer_id: q.customer_id,
+        lead_id: q.lead_id,
         bucket: bucketFor(new Date(q.follow_up_due_at)),
       }))
       .sort((a, b) => new Date(a.follow_up_due_at).getTime() - new Date(b.follow_up_due_at).getTime());
