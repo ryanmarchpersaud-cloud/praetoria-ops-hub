@@ -186,7 +186,12 @@ export default function Quotes() {
                         const c = q.customers || q.leads;
                         const name = c ? [c.first_name, c.last_name].filter(Boolean).join(' ').trim() : '';
                         const display = c ? (c.company_name ? `${c.company_name}${name ? ` — ${name}` : ''}` : name || 'Unknown') : 'Unknown';
-                        return <p className="text-xs text-muted-foreground mt-0.5 truncate">{display}</p>;
+                        return (
+                          <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+                            <p className="text-xs text-muted-foreground truncate">{display}</p>
+                            <ClientResponseBadge q={q} />
+                          </div>
+                        );
                       })()}
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className="text-[11px] text-muted-foreground">{q.service_category}</span>
