@@ -245,7 +245,7 @@ export default function QuoteFollowUps() {
                         <Link to={`/quotes/${q.id}`} className="font-medium mono text-sm hover:text-primary">
                           {q.quote_number}
                         </Link>
-                        <p className="text-xs text-muted-foreground truncate">{clientName(q)}</p>
+                        <ClientLink q={q} className="text-xs text-muted-foreground truncate block" />
                         <div className="flex items-center gap-2 mt-1">
                           <StatusBadge status={q.approval_status} showIcon={false} />
                           <span className="text-[11px] text-muted-foreground">${q.total.toLocaleString()}</span>
