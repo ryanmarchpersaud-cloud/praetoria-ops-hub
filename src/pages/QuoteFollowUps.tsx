@@ -283,7 +283,7 @@ export default function QuoteFollowUps() {
                               {q.quote_number}
                             </Link>
                           </TableCell>
-                          <TableCell className="text-sm">{clientName(q)}</TableCell>
+                          <TableCell className="text-sm"><ClientLink q={q} /></TableCell>
                           <TableCell className="text-sm text-muted-foreground">{q.service_category}</TableCell>
                           <TableCell className="text-sm text-right mono">${q.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
                           <TableCell><StatusBadge status={q.approval_status} /></TableCell>
