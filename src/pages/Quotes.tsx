@@ -20,6 +20,52 @@ const statusMeta: Record<string, { icon: typeof FileEdit; color: string; label: 
   Declined: { icon: XCircle, color: 'text-destructive', label: 'Declined' },
 };
 
+/**
+ * Tiny inline badge shown next to the client name so admins can see at a glance
+ * whether a client accepted, declined, or hasn't replied to a quote.
+ */
+function ClientResponseBadge({ q }: { q: any }) {
+  const status = q.approval_status as string | undefined;
+  const overdue = q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && status === 'Sent';
+
+  let label = '';
+  let cls = '';
+  let title = '';
+
+  if (status === 'Approved') {
+    label = '✓ Accepted';
+    cls = 'bg-success/15 text-success border-success/30';
+    title = 'Client accepted this quote';
+  } else if (status === 'Declined') {
+    label = '✕ Declined';
+    cls = 'bg-destructive/15 text-destructive border-destructive/30';
+    title = 'Client declined this quote';
+  } else if (status === 'Sent' && overdue) {
+    label = '⏰ No reply';
+    cls = 'bg-warning/15 text-warning border-warning/30';
+    title = 'Sent — follow-up overdue, client hasn\'t responded';
+  } else if (status === 'Sent') {
+    label = '… Awaiting';
+    cls = 'bg-primary/10 text-primary border-primary/30';
+    title = 'Sent to client — awaiting reply';
+  } else if (status === 'Needs review') {
+    label = 'Review';
+    cls = 'bg-warning/10 text-warning border-warning/30';
+    title = 'Internal review needed before sending';
+  } else {
+    return null; // Draft and unknown — no badge
+  }
+
+  return (
+    <span
+      title={title}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded-full border text-[10px] font-medium leading-none whitespace-nowrap ${cls}`}
+    >
+      {label}
+    </span>
+  );
+}
+
 export default function Quotes() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -140,7 +186,12 @@ export default function Quotes() {
                         const c = q.customers || q.leads;
                         const name = c ? [c.first_name, c.last_name].filter(Boolean).join(' ').trim() : '';
                         const display = c ? (c.company_name ? `${c.company_name}${name ? ` — ${name}` : ''}` : name || 'Unknown') : 'Unknown';
-                        return <p className="text-xs text-muted-foreground mt-0.5 truncate">{display}</p>;
+                        return (
+                          <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+                            <p className="text-xs text-muted-foreground truncate">{display}</p>
+                            <ClientResponseBadge q={q} />
+                          </div>
+                        );
                       })()}
                       <div className="flex items-center gap-2 mt-1.5">
                         <span className="text-[11px] text-muted-foreground">{q.service_category}</span>
@@ -205,7 +256,10 @@ export default function Quotes() {
                           const target = q.customer_id ? `/customers/${q.customer_id}` : (q.lead_id ? `/leads/${q.lead_id}` : null);
                           const content = (
                             <div>
-                              <div>{primary}</div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span>{primary}</span>
+                                <ClientResponseBadge q={q} />
+                              </div>
                               {secondary && <span className="block text-xs text-muted-foreground">{secondary}</span>}
                             </div>
                           );
