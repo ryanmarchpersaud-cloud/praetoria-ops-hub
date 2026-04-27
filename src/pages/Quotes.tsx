@@ -256,7 +256,10 @@ export default function Quotes() {
                           const target = q.customer_id ? `/customers/${q.customer_id}` : (q.lead_id ? `/leads/${q.lead_id}` : null);
                           const content = (
                             <div>
-                              <div>{primary}</div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span>{primary}</span>
+                                <ClientResponseBadge q={q} />
+                              </div>
                               {secondary && <span className="block text-xs text-muted-foreground">{secondary}</span>}
                             </div>
                           );
