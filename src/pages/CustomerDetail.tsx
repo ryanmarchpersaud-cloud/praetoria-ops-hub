@@ -500,6 +500,7 @@ export default function CustomerDetail() {
             title="Properties"
             icon={Building2}
             count={(properties as any[]).length}
+            accent="slate"
             emptyText="No properties linked"
             createLink={`/properties?new=1&customer_id=${id}`}
             createLabel="Add"
@@ -517,6 +518,7 @@ export default function CustomerDetail() {
             title="Requests"
             icon={MessageSquarePlus}
             count={requests.length}
+            accent="purple"
             emptyText="No requests"
             createLink={`/requests?new=1&customer_id=${id}`}
             createLabel="New"
@@ -534,6 +536,7 @@ export default function CustomerDetail() {
             title="Quotes"
             icon={FileText}
             count={quotes.length}
+            accent="blue"
             emptyText="No quotes"
             createLink={`/quotes?new=1&customer_id=${id}`}
             createLabel="New"
@@ -552,6 +555,7 @@ export default function CustomerDetail() {
             title="Jobs"
             icon={Briefcase}
             count={jobs.length}
+            accent="green"
             emptyText="No jobs"
             createLink={`/jobs/new?customer_id=${id}`}
             createLabel="New"
@@ -569,6 +573,7 @@ export default function CustomerDetail() {
             title="Invoices"
             icon={Receipt}
             count={invoices.length}
+            accent="amber"
             emptyText="No invoices"
             createLink={`/invoices/new?customer_id=${id}`}
             createLabel="New"
@@ -587,6 +592,7 @@ export default function CustomerDetail() {
             title="Agreements"
             icon={FileSignature}
             count={agreements.length}
+            accent="rose"
             emptyText="No agreements"
             createLink="/agreements"
             createLabel="New"
@@ -813,8 +819,19 @@ interface RelatedItem {
   mono?: boolean;
 }
 
+type AccentColor = 'slate' | 'purple' | 'blue' | 'green' | 'amber' | 'rose';
+
+const ACCENT_STYLES: Record<AccentColor, { badge: string; icon: string; ring: string }> = {
+  slate:  { badge: 'bg-slate-100 text-slate-700 ring-slate-200',   icon: 'text-slate-600',  ring: 'ring-slate-200' },
+  purple: { badge: 'bg-purple-100 text-purple-700 ring-purple-200', icon: 'text-purple-600', ring: 'ring-purple-200' },
+  blue:   { badge: 'bg-blue-100 text-blue-700 ring-blue-200',       icon: 'text-blue-600',   ring: 'ring-blue-200' },
+  green:  { badge: 'bg-green-100 text-green-700 ring-green-200',    icon: 'text-green-600',  ring: 'ring-green-200' },
+  amber:  { badge: 'bg-amber-100 text-amber-800 ring-amber-200',    icon: 'text-amber-600',  ring: 'ring-amber-200' },
+  rose:   { badge: 'bg-rose-100 text-rose-700 ring-rose-200',       icon: 'text-rose-600',   ring: 'ring-rose-200' },
+};
+
 function RelatedRecordCard({
-  title, icon: Icon, count, emptyText, items, createLink, createLabel,
+  title, icon: Icon, count, emptyText, items, createLink, createLabel, accent = 'slate',
 }: {
   title: string;
   icon: React.ElementType;
@@ -823,13 +840,25 @@ function RelatedRecordCard({
   items: RelatedItem[];
   createLink?: string;
   createLabel?: string;
+  accent?: AccentColor;
 }) {
+  const styles = ACCENT_STYLES[accent];
+  const hasItems = count > 0;
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Icon className="h-3.5 w-3.5" /> {title} ({count})
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-2 min-w-0">
+            <Icon className={`h-4 w-4 shrink-0 ${hasItems ? styles.icon : 'text-muted-foreground'}`} />
+            <span className="truncate">{title}</span>
+            <span
+              className={`inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full text-sm font-bold tabular-nums ring-1 ${
+                hasItems ? styles.badge : 'bg-muted text-muted-foreground ring-border'
+              }`}
+              aria-label={`${count} ${title}`}
+            >
+              {count}
+            </span>
           </CardTitle>
           {createLink && (
             <Link to={createLink}>
