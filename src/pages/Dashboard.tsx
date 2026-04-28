@@ -23,6 +23,7 @@ import { SparklineKPIStrip } from '@/components/dashboard/SparklineKPIStrip';
 import { ServiceRevenueBreakdown } from '@/components/dashboard/ServiceRevenueBreakdown';
 import { CashFlowWaterfall } from '@/components/dashboard/CashFlowWaterfall';
 import { RecentWinsTicker } from '@/components/dashboard/RecentWinsTicker';
+import { MarketingIntelligence } from '@/components/dashboard/MarketingIntelligence';
 import {
   useDashboardRequests,
   useDashboardQuotes,
