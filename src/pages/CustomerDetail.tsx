@@ -500,6 +500,7 @@ export default function CustomerDetail() {
             title="Properties"
             icon={Building2}
             count={(properties as any[]).length}
+            accent="slate"
             emptyText="No properties linked"
             createLink={`/properties?new=1&customer_id=${id}`}
             createLabel="Add"
@@ -517,6 +518,7 @@ export default function CustomerDetail() {
             title="Requests"
             icon={MessageSquarePlus}
             count={requests.length}
+            accent="purple"
             emptyText="No requests"
             createLink={`/requests?new=1&customer_id=${id}`}
             createLabel="New"
@@ -534,6 +536,7 @@ export default function CustomerDetail() {
             title="Quotes"
             icon={FileText}
             count={quotes.length}
+            accent="blue"
             emptyText="No quotes"
             createLink={`/quotes?new=1&customer_id=${id}`}
             createLabel="New"
@@ -552,6 +555,7 @@ export default function CustomerDetail() {
             title="Jobs"
             icon={Briefcase}
             count={jobs.length}
+            accent="green"
             emptyText="No jobs"
             createLink={`/jobs/new?customer_id=${id}`}
             createLabel="New"
@@ -569,6 +573,7 @@ export default function CustomerDetail() {
             title="Invoices"
             icon={Receipt}
             count={invoices.length}
+            accent="amber"
             emptyText="No invoices"
             createLink={`/invoices/new?customer_id=${id}`}
             createLabel="New"
@@ -587,6 +592,7 @@ export default function CustomerDetail() {
             title="Agreements"
             icon={FileSignature}
             count={agreements.length}
+            accent="rose"
             emptyText="No agreements"
             createLink="/agreements"
             createLabel="New"
