@@ -1013,11 +1013,26 @@ export default function QuoteDetail() {
               <Label className="text-xs">Internal Notes</Label>
               <Textarea value={form.internal_notes || ''} onChange={e => set('internal_notes', e.target.value)} rows={2} placeholder="Staff-only notes" />
             </div>
+            <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2">
+              <div className="space-y-0.5">
+                <Label className="text-xs font-medium">Tax exempt (no tax for this customer)</Label>
+                <p className="text-xs text-muted-foreground">Toggle on to zero out tax on this quote.</p>
+              </div>
+              <Switch
+                checked={Number(form.tax_rate || 0) === 0}
+                disabled={isSentOrApproved}
+                onCheckedChange={(checked) => {
+                  const rate = checked ? 0 : 0.11;
+                  const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
+                  setForm((p: any) => ({ ...p, tax_rate: rate, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
+                }}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Tax Rate (%)</Label>
                 <Input type="number" inputMode="decimal" step="0.01"
-                  value={((Number(form.tax_rate) || 0.11) * 100).toFixed(2)}
+                  value={((Number(form.tax_rate) || 0) * 100).toFixed(2)}
                   onChange={e => {
                     const rate = Number(e.target.value) / 100;
                     const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
