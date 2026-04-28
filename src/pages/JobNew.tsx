@@ -70,6 +70,7 @@ export default function JobNew() {
   const { data: employees = [] } = useEmployees();
   const { data: subcontractors = [] } = useAllSubcontractors();
   const createCustomer = useCreateCustomer();
+  const createProperty = useCreateProperty();
   const createVisit = useCreateVisit();
 
   // Catalog
