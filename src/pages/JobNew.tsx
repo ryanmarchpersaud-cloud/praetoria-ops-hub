@@ -14,7 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { useCustomers, useCreateCustomer } from '@/hooks/useCustomers';
-import { useProperties } from '@/hooks/useProperties';
+import { useProperties, useCreateProperty } from '@/hooks/useProperties';
+import { PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
