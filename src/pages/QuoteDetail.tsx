@@ -1033,13 +1033,15 @@ export default function QuoteDetail() {
               <div>
                 <Label className="text-xs">Tax Rate (%)</Label>
                 <Input type="number" inputMode="decimal" step="0.01"
-                  value={((Number(form.tax_rate) || 0) * 100).toFixed(2)}
+                  value={form.tax_rate_display ?? ((form.tax_rate == null || form.tax_rate === '' ? 0.11 : Number(form.tax_rate)) * 100).toFixed(2)}
                   onChange={e => {
-                    const rate = Number(e.target.value) / 100;
+                    const raw = e.target.value;
+                    const rate = raw === '' ? 0 : Number(raw) / 100;
                     const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
-                    setForm((p: any) => ({ ...p, tax_rate: rate, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
+                    setForm((p: any) => ({ ...p, tax_rate: rate, tax_rate_display: raw, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
                   }}
-                  disabled={isSentOrApproved} className="h-10" />
+                  onBlur={() => setForm((p: any) => ({ ...p, tax_rate_display: undefined }))}
+                  disabled={isSentOrApproved || Number(form.tax_rate || 0) === 0} className="h-10" />
               </div>
               <div>
                 <Label className="text-xs">Follow-up Due</Label>
