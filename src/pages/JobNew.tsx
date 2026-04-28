@@ -993,6 +993,87 @@ export default function JobNew() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ══════════════════════════════════════════
+          NEW PROPERTY DIALOG
+         ══════════════════════════════════════════ */}
+      <Dialog open={showNewProperty} onOpenChange={setShowNewProperty}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" /> Add Property for {selectedCustomer ? `${selectedCustomer.first_name} ${selectedCustomer.last_name}` : 'Client'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Property Name *</Label>
+              <Input value={newProperty.property_name} onChange={e => setNewProperty(p => ({ ...p, property_name: e.target.value }))} placeholder="e.g. Main Residence, Office Building" className="h-9" />
+            </div>
+            <div>
+              <Label className="text-xs">Address</Label>
+              <Input value={newProperty.address_line_1} onChange={e => setNewProperty(p => ({ ...p, address_line_1: e.target.value }))} placeholder="Street address" className="h-9" />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">City</Label>
+                <Input value={newProperty.city} onChange={e => setNewProperty(p => ({ ...p, city: e.target.value }))} className="h-9" />
+              </div>
+              <div>
+                <Label className="text-xs">Province</Label>
+                <Select value={newProperty.province} onValueChange={v => setNewProperty(p => ({ ...p, province: v }))}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PROVINCES.map(pr => <SelectItem key={pr} value={pr}>{pr}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Postal Code</Label>
+                <Input value={newProperty.postal_code} onChange={e => setNewProperty(p => ({ ...p, postal_code: e.target.value }))} className="h-9" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Property Type</Label>
+              <Select value={newProperty.property_type} onValueChange={v => setNewProperty(p => ({ ...p, property_type: v }))}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PROPERTY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Access / Gate Notes (optional)</Label>
+              <Textarea value={newProperty.access_notes} onChange={e => setNewProperty(p => ({ ...p, access_notes: e.target.value }))} rows={2} className="text-sm" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewProperty(false)}>Cancel</Button>
+            <Button
+              disabled={!customerId || !newProperty.property_name || createProperty.isPending}
+              onClick={async () => {
+                try {
+                  const created: any = await createProperty.mutateAsync({
+                    customer_id: customerId,
+                    property_name: newProperty.property_name,
+                    address_line_1: newProperty.address_line_1 || null,
+                    city: newProperty.city || null,
+                    province: newProperty.province || null,
+                    postal_code: newProperty.postal_code || null,
+                    property_type: newProperty.property_type as any,
+                    access_notes: newProperty.access_notes || null,
+                  });
+                  toast({ title: 'Property created', description: newProperty.property_name });
+                  if (created?.id) setPropertyId(created.id);
+                  setShowNewProperty(false);
+                  setNewProperty({ property_name: '', address_line_1: '', city: '', province: 'SK', postal_code: '', property_type: 'Residential', access_notes: '' });
+                } catch (err: any) {
+                  if (handleProtectedCustomerError(err, toast)) return;
+                  toast({ title: 'Failed to create property', description: err.message, variant: 'destructive' });
+                }
+              }}>
+              {createProperty.isPending ? 'Creating…' : 'Create Property'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
