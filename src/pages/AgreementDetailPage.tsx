@@ -256,9 +256,18 @@ function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null })
       </CardHeader>
       <CardContent>
         <iframe src={signedUrl} className="w-full h-[600px] border rounded" title="Agreement PDF" />
-        <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(signedUrl, '_blank')}>
-          <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
-        </Button>
+        <div className="mt-2 flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <a href={signedUrl} target="_blank" rel="noopener noreferrer">
+              <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
+            </a>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <a href={signedUrl} download>
+              <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
+            </a>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
