@@ -272,9 +272,18 @@ export default function AgreementSignPage() {
                 <FileText className="h-4 w-4 text-primary" /> Agreement Document (PDF)
               </h3>
               <iframe src={pdfSignedUrl} className="w-full h-[500px] border rounded" title="Agreement PDF" />
-              <Button variant="outline" size="sm" className="mt-2" onClick={() => window.open(pdfSignedUrl, '_blank')}>
-                <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
-              </Button>
+              <div className="mt-2 flex gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <a href={pdfSignedUrl} target="_blank" rel="noopener noreferrer">
+                    <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
+                  </a>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <a href={pdfSignedUrl} download>
+                    <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
+                  </a>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
