@@ -512,10 +512,18 @@ export default function JobNew() {
 
             {/* Property selector */}
             <div>
-              <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> Property / Location</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> Property / Location</Label>
+                {customerId && (
+                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs"
+                    onClick={() => setShowNewProperty(true)}>
+                    <Plus className="h-3 w-3 mr-1" /> Add property
+                  </Button>
+                )}
+              </div>
               <Select value={propertyId} onValueChange={setPropertyId} disabled={!customerId}>
                 <SelectTrigger className="h-10">
-                  <SelectValue placeholder={customerId ? (filteredProperties.length === 0 ? 'No properties found' : 'Select property...') : 'Select client first'} />
+                  <SelectValue placeholder={customerId ? (filteredProperties.length === 0 ? 'No properties yet — click + Add property' : 'Select property...') : 'Select client first'} />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredProperties.map((p: any) => (
@@ -528,6 +536,11 @@ export default function JobNew() {
                   ))}
                 </SelectContent>
               </Select>
+              {customerId && filteredProperties.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  This client has no properties yet. Click <span className="font-semibold">+ Add property</span> above to create one.
+                </p>
+              )}
               {selectedProperty && (
                 <div className="mt-1.5 space-y-1">
                   {selectedProperty.access_notes && (
