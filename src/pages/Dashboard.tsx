@@ -155,6 +155,15 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Marketing & Conversion Intelligence */}
+      <MarketingIntelligence
+        leads={leads}
+        quotes={dashQuotes}
+        jobs={jobs}
+        invoices={invoices}
+        isLoading={loadLeads || loadQuotes || loadJobs || loadInv}
+      />
+
       {/* Performance Insights row */}
       <div className="grid lg:grid-cols-3 gap-4">
         <TopPerformersLeaderboard />
