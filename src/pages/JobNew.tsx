@@ -15,13 +15,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useToast } from '@/hooks/use-toast';
 import { useCustomers, useCreateCustomer } from '@/hooks/useCustomers';
 import { useProperties, useCreateProperty } from '@/hooks/useProperties';
-import { PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { supabase } from '@/integrations/supabase/client';
 import { handleProtectedCustomerError } from '@/lib/protectedCustomers';
-import { SERVICE_CATEGORIES, JOB_STATUSES, JOB_PRIORITIES } from '@/lib/constants';
+import { SERVICE_CATEGORIES, JOB_STATUSES, JOB_PRIORITIES, PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
 import {
   Briefcase, User, MapPin, Calendar, Clock, Users, FileText,
   Settings2, DollarSign, Plus, Trash2, ChevronDown, Copy,
