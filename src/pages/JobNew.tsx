@@ -1065,7 +1065,7 @@ export default function JobNew() {
                   setShowNewProperty(false);
                   setNewProperty({ property_name: '', address_line_1: '', city: '', province: 'SK', postal_code: '', property_type: 'Residential', access_notes: '' });
                 } catch (err: any) {
-                  if (handleProtectedCustomerError(err, toast)) return;
+                  if (handleProtectedCustomerError(err)) return;
                   toast({ title: 'Failed to create property', description: err.message, variant: 'destructive' });
                 }
               }}>
