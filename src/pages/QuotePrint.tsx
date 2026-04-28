@@ -107,9 +107,9 @@ function hexToRgba(hex: string, alpha: number): string {
 // and with src/lib/constants.ts SERVICE_CATEGORIES.
 const CATEGORY_COLORS: Record<string, string> = {
   'Snow & Ice': '#2563EB',
-  'Maintenance & Repairs': '#DC2626',
-  'Property Care & Landscaping': '#F97316',
-  'Property Management': '#16A34A',
+  'Maintenance & Repairs': '#EAB308',
+  'Property Care & Landscaping': '#16A34A',
+  'Property Management': '#0F766E',
   'Electrical': '#7C3AED',
   'Plumbing': '#0D9488',
   'Carpentry & Renovations': '#92400E',
@@ -573,9 +573,9 @@ export default function QuotePrint() {
             <div className="grid grid-cols-3 md:grid-cols-5 print:grid-cols-5 gap-1.5 print:gap-2 text-[9px] print:text-[10px]">
               {[
                 { name: 'Snow & Ice', color: '#2563EB' },
-                { name: 'Maintenance & Repairs', color: '#DC2626' },
-                { name: 'Property Care & Landscaping', color: '#F97316' },
-                { name: 'Property Management', color: '#16A34A' },
+                { name: 'Maintenance & Repairs', color: '#EAB308' },
+                { name: 'Property Care & Landscaping', color: '#16A34A' },
+                { name: 'Property Management', color: '#0F766E' },
                 { name: 'Electrical', color: '#7C3AED' },
                 { name: 'Plumbing', color: '#0D9488' },
                 { name: 'Carpentry & Renovations', color: '#92400E' },
