@@ -111,7 +111,7 @@ export function useDashboardLeads() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('leads')
-        .select('id, status, first_name, last_name, company_name, service_type, created_at')
+        .select('id, status, first_name, last_name, company_name, service_type, lead_source, created_at')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data ?? [];
