@@ -133,6 +133,13 @@ export default function JobNew() {
   const [showNewClient, setShowNewClient] = useState(false);
   const [newClient, setNewClient] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '' });
 
+  // New property dialog
+  const [showNewProperty, setShowNewProperty] = useState(false);
+  const [newProperty, setNewProperty] = useState({
+    property_name: '', address_line_1: '', city: '', province: 'SK', postal_code: '',
+    property_type: 'Residential' as string, access_notes: '',
+  });
+
   // Saving state
   const [saving, setSaving] = useState(false);
   const [showWorkerDropdown, setShowWorkerDropdown] = useState(false);
