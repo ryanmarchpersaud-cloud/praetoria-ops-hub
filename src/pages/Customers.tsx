@@ -61,7 +61,7 @@ export default function Customers() {
     const fd = new FormData(e.currentTarget);
     const g = (k: string) => (fd.get(k) as string) || null;
     try {
-      await createCustomer.mutateAsync({
+      const created = await createCustomer.mutateAsync({
         first_name: fd.get('first_name') as string,
         last_name: fd.get('last_name') as string,
         customer_type: g('customer_type') || 'Residential',
@@ -73,36 +73,41 @@ export default function Customers() {
         email: g('email'),
         phone: g('phone'),
         secondary_email: g('secondary_email'),
-        // Billing contact
         billing_contact_name: g('billing_contact_name'),
         billing_contact_email: g('billing_contact_email'),
         billing_contact_phone: g('billing_contact_phone'),
         accounts_payable_email: g('accounts_payable_email'),
         preferred_billing_method: g('preferred_billing_method'),
         requires_po_number: requiresPo,
-        // Site contact
         site_contact_name: g('site_contact_name'),
         site_contact_phone: g('site_contact_phone'),
         site_contact_email: g('site_contact_email'),
         project_notes: g('project_notes'),
-        // Service address
         address_line_1: g('address_line_1'),
         city: g('city'),
         province: g('province'),
         postal_code: g('postal_code'),
-        // Billing address
         billing_address_same_as_service: billingSameAsService,
         billing_address_line_1: billingSameAsService ? null : g('billing_address_line_1'),
         billing_city: billingSameAsService ? null : g('billing_city'),
         billing_province: billingSameAsService ? null : g('billing_province'),
         billing_postal_code: billingSameAsService ? null : g('billing_postal_code'),
-        // Portal / comms
         portal_access_enabled: portalAccess,
         preferred_communication_method: g('preferred_communication_method'),
         referral_source: g('referral_source'),
         notes: g('notes'),
         is_protected: isProtected,
       });
+      if (isProtected && created?.id) {
+        try {
+          await supabase.from('protected_customers').upsert(
+            { customer_id: created.id, reason: 'Real client — only Ryan may act on this account' },
+            { onConflict: 'customer_id' },
+          );
+        } catch (e) {
+          console.warn('protected_customers sync failed', e);
+        }
+      }
       toast({ title: 'Customer created' });
       setDialogOpen(false);
       setAccountType('Individual');
