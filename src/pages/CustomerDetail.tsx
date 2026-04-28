@@ -157,7 +157,21 @@ export default function CustomerDetail() {
         preferred_communication_method: form.preferred_communication_method || null,
         referral_source: form.referral_source || null,
         notes: form.notes || null,
+        is_protected: !!form.is_protected,
       });
+      // Sync the protected_customers guard table so the DB trigger blocks automation writes.
+      try {
+        if (form.is_protected) {
+          await supabase.from('protected_customers').upsert(
+            { customer_id: id, reason: 'Real client — only Ryan may act on this account' },
+            { onConflict: 'customer_id' },
+          );
+        } else {
+          await supabase.from('protected_customers').delete().eq('customer_id', id);
+        }
+      } catch (e) {
+        console.warn('protected_customers sync failed', e);
+      }
       toast({ title: 'Customer saved' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
