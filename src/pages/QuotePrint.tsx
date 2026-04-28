@@ -94,34 +94,74 @@ function svgIcon(path: string, color: string) {
   );
 }
 
+// Hex → rgba helper for tint backgrounds
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Master 25-category color map — must stay in sync with the swatch grid below
+// and with src/lib/constants.ts SERVICE_CATEGORIES.
+const CATEGORY_COLORS: Record<string, string> = {
+  'Snow & Ice': '#2563EB',
+  'Maintenance & Repairs': '#DC2626',
+  'Property Care & Landscaping': '#F97316',
+  'Property Management': '#16A34A',
+  'Electrical': '#7C3AED',
+  'Plumbing': '#0D9488',
+  'Carpentry & Renovations': '#92400E',
+  'Roofing & Exteriors': '#374151',
+  'Painting & Finishing': '#EAB308',
+  'Cleaning Services': '#0EA5E9',
+  'Heating, Ventilation & Air Conditioning': '#F43F5E',
+  'Concrete & Masonry': '#6B7280',
+  'Security & Smart Home': '#111827',
+  'Fencing & Decking': '#7c2d12',
+  'Junk Removal': '#c2410c',
+  'Power Washing': '#0891B2',
+  'Tiling & Flooring': '#A16207',
+  'Gutter Cleaning & Repair': '#65A30D',
+  'Window Cleaning': '#0284C7',
+  'Pest Control': '#854D0E',
+  'Moving & Hauling': '#9333EA',
+  'Insulation & Drywall': '#B91C1C',
+  'Appliance Install & Repair': '#0F766E',
+  'Garage Doors': '#475569',
+  'Locksmith Services': '#1E40AF',
+};
+
+// Per-category icon paths (fallback to a generic property/home icon)
+const CATEGORY_ICON_PATHS: Record<string, string> = {
+  'Snow & Ice': 'M12 2 V22 M2 12 H22 M4.9 4.9 L19.1 19.1 M19.1 4.9 L4.9 19.1',
+  'Property Care & Landscaping': 'M12 2 L6 11 H9 L4 19 H10 V22 H14 V19 H20 L15 11 H18 Z',
+  'Property Management': 'M3 11 L12 4 L21 11 V21 H14 V14 H10 V21 H3 Z',
+  'Junk Removal': 'M3 7 H15 V17 H3 Z M15 10 H19 L21 13 V17 H15 Z',
+  'Cleaning Services': 'M9 2 H15 V8 L19 12 V22 H5 V12 L9 8 Z',
+  'Power Washing': 'M3 12 H10 L14 8 V16 L10 12 Z M16 6 V18 M19 9 V15',
+  'Gutter Cleaning & Repair': 'M3 8 H21 V12 H3 Z M5 12 V18 M19 12 V18',
+  'Maintenance & Repairs': 'M14 6 a4 4 0 1 0 4 4 L21 13 L18 16 L14 12 L6 20 L4 18 L12 10 Z',
+};
+const DEFAULT_ICON_PATH = 'M3 11 L12 4 L21 11 V21 H14 V14 H10 V21 H3 Z';
+
 function getServiceTheme(category?: string | null): ServiceTheme {
-  switch (category) {
-    case 'Landscaping & Grounds':
-      return { label: 'Landscaping & Grounds', accent: '#15803d', tint: 'rgba(34,197,94,0.05)',
-        icon: svgIcon('M12 2 L6 11 H9 L4 19 H10 V22 H14 V19 H20 L15 11 H18 Z', '#15803d') };
-    case 'Snow & Ice':
-      return { label: 'Snow & Ice Management', accent: '#0369a1', tint: 'rgba(14,165,233,0.05)',
-        icon: svgIcon('M12 2 V22 M2 12 H22 M4.9 4.9 L19.1 19.1 M19.1 4.9 L4.9 19.1', '#0369a1') };
-    case 'Junk Removal':
-      return { label: 'Junk Removal', accent: '#c2410c', tint: 'rgba(249,115,22,0.06)',
-        icon: svgIcon('M3 7 H15 V17 H3 Z M15 10 H19 L21 13 V17 H15 Z', '#c2410c') };
-    case 'Property Care & Maintenance':
-    case 'Property Management':
-      return { label: category!, accent: '#a16207', tint: 'rgba(234,179,8,0.06)',
-        icon: svgIcon('M14 6 a4 4 0 1 0 4 4 L21 13 L18 16 L14 12 L6 20 L4 18 L12 10 Z', '#a16207') };
-    case 'Cleaning Services':
-      return { label: 'Cleaning Services', accent: '#0e7490', tint: 'rgba(6,182,212,0.05)',
-        icon: svgIcon('M9 2 H15 V8 L19 12 V22 H5 V12 L9 8 Z', '#0e7490') };
-    case 'Power Washing':
-      return { label: 'Power Washing', accent: '#1d4ed8', tint: 'rgba(59,130,246,0.05)',
-        icon: svgIcon('M3 12 H10 L14 8 V16 L10 12 Z M16 6 V18 M19 9 V15', '#1d4ed8') };
-    case 'Gutter Cleaning':
-      return { label: 'Gutter Cleaning', accent: '#0e7490', tint: 'rgba(8,145,178,0.05)',
-        icon: svgIcon('M3 8 H21 V12 H3 Z M5 12 V18 M19 12 V18', '#0e7490') };
-    default:
-      return { label: category || 'Property Services', accent: '#1a1a2e', tint: 'rgba(26,26,46,0.04)',
-        icon: svgIcon('M3 11 L12 4 L21 11 V21 H14 V14 H10 V21 H3 Z', '#1a1a2e') };
-  }
+  // Legacy aliases from older quotes
+  const aliasMap: Record<string, string> = {
+    'Landscaping & Grounds': 'Property Care & Landscaping',
+    'Property Care & Maintenance': 'Maintenance & Repairs',
+    'Gutter Cleaning': 'Gutter Cleaning & Repair',
+  };
+  const key = category ? (aliasMap[category] || category) : '';
+  const accent = CATEGORY_COLORS[key] || '#1a1a2e';
+  const iconPath = CATEGORY_ICON_PATHS[key] || DEFAULT_ICON_PATH;
+  return {
+    label: key || 'Property Services',
+    accent,
+    tint: hexToRgba(accent, 0.06),
+    icon: svgIcon(iconPath, accent),
+  };
 }
 
 export default function QuotePrint() {
