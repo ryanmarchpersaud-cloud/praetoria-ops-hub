@@ -14,13 +14,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { useCustomers, useCreateCustomer } from '@/hooks/useCustomers';
-import { useProperties } from '@/hooks/useProperties';
+import { useProperties, useCreateProperty } from '@/hooks/useProperties';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAllSubcontractors } from '@/hooks/useSubcontractor';
 import { useCreateVisit } from '@/hooks/useVisits';
 import { supabase } from '@/integrations/supabase/client';
 import { handleProtectedCustomerError } from '@/lib/protectedCustomers';
-import { SERVICE_CATEGORIES, JOB_STATUSES, JOB_PRIORITIES } from '@/lib/constants';
+import { SERVICE_CATEGORIES, JOB_STATUSES, JOB_PRIORITIES, PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
 import {
   Briefcase, User, MapPin, Calendar, Clock, Users, FileText,
   Settings2, DollarSign, Plus, Trash2, ChevronDown, Copy,
@@ -70,6 +70,7 @@ export default function JobNew() {
   const { data: employees = [] } = useEmployees();
   const { data: subcontractors = [] } = useAllSubcontractors();
   const createCustomer = useCreateCustomer();
+  const createProperty = useCreateProperty();
   const createVisit = useCreateVisit();
 
   // Catalog
@@ -131,6 +132,13 @@ export default function JobNew() {
   // New client dialog
   const [showNewClient, setShowNewClient] = useState(false);
   const [newClient, setNewClient] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '' });
+
+  // New property dialog
+  const [showNewProperty, setShowNewProperty] = useState(false);
+  const [newProperty, setNewProperty] = useState({
+    property_name: '', address_line_1: '', city: '', province: 'SK', postal_code: '',
+    property_type: 'Residential' as string, access_notes: '',
+  });
 
   // Saving state
   const [saving, setSaving] = useState(false);
@@ -504,10 +512,18 @@ export default function JobNew() {
 
             {/* Property selector */}
             <div>
-              <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> Property / Location</Label>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-xs font-medium flex items-center gap-1"><MapPin className="h-3 w-3" /> Property / Location</Label>
+                {customerId && (
+                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs"
+                    onClick={() => setShowNewProperty(true)}>
+                    <Plus className="h-3 w-3 mr-1" /> Add property
+                  </Button>
+                )}
+              </div>
               <Select value={propertyId} onValueChange={setPropertyId} disabled={!customerId}>
                 <SelectTrigger className="h-10">
-                  <SelectValue placeholder={customerId ? (filteredProperties.length === 0 ? 'No properties found' : 'Select property...') : 'Select client first'} />
+                  <SelectValue placeholder={customerId ? (filteredProperties.length === 0 ? 'No properties yet — click + Add property' : 'Select property...') : 'Select client first'} />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredProperties.map((p: any) => (
@@ -520,6 +536,11 @@ export default function JobNew() {
                   ))}
                 </SelectContent>
               </Select>
+              {customerId && filteredProperties.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  This client has no properties yet. Click <span className="font-semibold">+ Add property</span> above to create one.
+                </p>
+              )}
               {selectedProperty && (
                 <div className="mt-1.5 space-y-1">
                   {selectedProperty.access_notes && (
@@ -802,19 +823,25 @@ export default function JobNew() {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)} placeholder="Search catalog to add line item..." className="h-9 pl-8 text-sm" />
+              <Input value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)} placeholder={`Search ${catalogItems.length} catalog items…`} className="h-9 pl-8 text-sm" />
             </div>
             <Button type="button" variant="outline" size="sm" onClick={() => addLineItem()} className="h-9 shrink-0">
               <Plus className="h-4 w-4 mr-1" /> Manual
             </Button>
           </div>
 
-          {catalogSearch && (
-            <div className="border rounded-lg max-h-44 overflow-y-auto divide-y bg-card">
-              {filteredCatalog.length === 0 ? (
-                <p className="text-xs text-muted-foreground p-3">No catalog items found</p>
-              ) : (
-                filteredCatalog.slice(0, 12).map(item => (
+          {/* Always show browsable catalog list */}
+          <div className="border rounded-lg max-h-64 overflow-y-auto divide-y bg-card">
+            {catalogItems.length === 0 ? (
+              <p className="text-xs text-muted-foreground p-3">Loading catalog…</p>
+            ) : filteredCatalog.length === 0 ? (
+              <p className="text-xs text-muted-foreground p-3">No items match "{catalogSearch}"</p>
+            ) : (
+              <>
+                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground bg-muted/30 sticky top-0">
+                  {catalogSearch ? `${filteredCatalog.length} match${filteredCatalog.length === 1 ? '' : 'es'}` : `Browse all ${catalogItems.length} items`} — click to add
+                </div>
+                {(catalogSearch ? filteredCatalog : filteredCatalog).slice(0, catalogSearch ? 50 : 100).map(item => (
                   <button key={item.id} type="button" className="w-full text-left px-3 py-2.5 hover:bg-muted/50 transition-colors flex items-center justify-between"
                     onClick={() => { addLineItem(item); setCatalogSearch(''); }}>
                     <div>
@@ -823,10 +850,16 @@ export default function JobNew() {
                     </div>
                     <span className="text-sm font-semibold">${item.unit_price?.toFixed(2) || '0.00'}</span>
                   </button>
-                ))
-              )}
-            </div>
-          )}
+                ))}
+                {!catalogSearch && filteredCatalog.length > 100 && (
+                  <p className="text-[11px] text-muted-foreground p-2 text-center bg-muted/20">
+                    Showing first 100 of {filteredCatalog.length}. Search above to narrow down.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
 
           {/* Line items table */}
           {lineItems.length > 0 ? (
@@ -956,6 +989,87 @@ export default function JobNew() {
             <Button variant="outline" onClick={() => setShowNewClient(false)}>Cancel</Button>
             <Button onClick={handleCreateClient} disabled={createCustomer.isPending}>
               {createCustomer.isPending ? 'Creating...' : 'Create Client'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══════════════════════════════════════════
+          NEW PROPERTY DIALOG
+         ══════════════════════════════════════════ */}
+      <Dialog open={showNewProperty} onOpenChange={setShowNewProperty}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><MapPin className="h-5 w-5" /> Add Property for {selectedCustomer ? `${selectedCustomer.first_name} ${selectedCustomer.last_name}` : 'Client'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Property Name *</Label>
+              <Input value={newProperty.property_name} onChange={e => setNewProperty(p => ({ ...p, property_name: e.target.value }))} placeholder="e.g. Main Residence, Office Building" className="h-9" />
+            </div>
+            <div>
+              <Label className="text-xs">Address</Label>
+              <Input value={newProperty.address_line_1} onChange={e => setNewProperty(p => ({ ...p, address_line_1: e.target.value }))} placeholder="Street address" className="h-9" />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">City</Label>
+                <Input value={newProperty.city} onChange={e => setNewProperty(p => ({ ...p, city: e.target.value }))} className="h-9" />
+              </div>
+              <div>
+                <Label className="text-xs">Province</Label>
+                <Select value={newProperty.province} onValueChange={v => setNewProperty(p => ({ ...p, province: v }))}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PROVINCES.map(pr => <SelectItem key={pr} value={pr}>{pr}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Postal Code</Label>
+                <Input value={newProperty.postal_code} onChange={e => setNewProperty(p => ({ ...p, postal_code: e.target.value }))} className="h-9" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Property Type</Label>
+              <Select value={newProperty.property_type} onValueChange={v => setNewProperty(p => ({ ...p, property_type: v }))}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PROPERTY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Access / Gate Notes (optional)</Label>
+              <Textarea value={newProperty.access_notes} onChange={e => setNewProperty(p => ({ ...p, access_notes: e.target.value }))} rows={2} className="text-sm" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewProperty(false)}>Cancel</Button>
+            <Button
+              disabled={!customerId || !newProperty.property_name || createProperty.isPending}
+              onClick={async () => {
+                try {
+                  const created: any = await createProperty.mutateAsync({
+                    customer_id: customerId,
+                    property_name: newProperty.property_name,
+                    address_line_1: newProperty.address_line_1 || null,
+                    city: newProperty.city || null,
+                    province: newProperty.province || null,
+                    postal_code: newProperty.postal_code || null,
+                    property_type: newProperty.property_type as any,
+                    access_notes: newProperty.access_notes || null,
+                  });
+                  toast({ title: 'Property created', description: newProperty.property_name });
+                  if (created?.id) setPropertyId(created.id);
+                  setShowNewProperty(false);
+                  setNewProperty({ property_name: '', address_line_1: '', city: '', province: 'SK', postal_code: '', property_type: 'Residential', access_notes: '' });
+                } catch (err: any) {
+                  if (handleProtectedCustomerError(err)) return;
+                  toast({ title: 'Failed to create property', description: err.message, variant: 'destructive' });
+                }
+              }}>
+              {createProperty.isPending ? 'Creating…' : 'Create Property'}
             </Button>
           </DialogFooter>
         </DialogContent>
