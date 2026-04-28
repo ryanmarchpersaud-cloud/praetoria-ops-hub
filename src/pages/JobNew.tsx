@@ -823,19 +823,25 @@ export default function JobNew() {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)} placeholder="Search catalog to add line item..." className="h-9 pl-8 text-sm" />
+              <Input value={catalogSearch} onChange={e => setCatalogSearch(e.target.value)} placeholder={`Search ${catalogItems.length} catalog items…`} className="h-9 pl-8 text-sm" />
             </div>
             <Button type="button" variant="outline" size="sm" onClick={() => addLineItem()} className="h-9 shrink-0">
               <Plus className="h-4 w-4 mr-1" /> Manual
             </Button>
           </div>
 
-          {catalogSearch && (
-            <div className="border rounded-lg max-h-44 overflow-y-auto divide-y bg-card">
-              {filteredCatalog.length === 0 ? (
-                <p className="text-xs text-muted-foreground p-3">No catalog items found</p>
-              ) : (
-                filteredCatalog.slice(0, 12).map(item => (
+          {/* Always show browsable catalog list */}
+          <div className="border rounded-lg max-h-64 overflow-y-auto divide-y bg-card">
+            {catalogItems.length === 0 ? (
+              <p className="text-xs text-muted-foreground p-3">Loading catalog…</p>
+            ) : filteredCatalog.length === 0 ? (
+              <p className="text-xs text-muted-foreground p-3">No items match "{catalogSearch}"</p>
+            ) : (
+              <>
+                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground bg-muted/30 sticky top-0">
+                  {catalogSearch ? `${filteredCatalog.length} match${filteredCatalog.length === 1 ? '' : 'es'}` : `Browse all ${catalogItems.length} items`} — click to add
+                </div>
+                {(catalogSearch ? filteredCatalog : filteredCatalog).slice(0, catalogSearch ? 50 : 100).map(item => (
                   <button key={item.id} type="button" className="w-full text-left px-3 py-2.5 hover:bg-muted/50 transition-colors flex items-center justify-between"
                     onClick={() => { addLineItem(item); setCatalogSearch(''); }}>
                     <div>
@@ -844,10 +850,16 @@ export default function JobNew() {
                     </div>
                     <span className="text-sm font-semibold">${item.unit_price?.toFixed(2) || '0.00'}</span>
                   </button>
-                ))
-              )}
-            </div>
-          )}
+                ))}
+                {!catalogSearch && filteredCatalog.length > 100 && (
+                  <p className="text-[11px] text-muted-foreground p-2 text-center bg-muted/20">
+                    Showing first 100 of {filteredCatalog.length}. Search above to narrow down.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
 
           {/* Line items table */}
           {lineItems.length > 0 ? (
