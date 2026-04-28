@@ -1,0 +1,1 @@
+UPDATE public.products_services SET description = 'Routine lawn and grounds maintenance service including turf cutting, trimming, edging, and seasonal cleanup to keep the property tidy and presentable throughout the season.' WHERE id = 'c61d4e48-5d68-45a2-a746-e72a886fe427';
