@@ -87,9 +87,14 @@ export function OperationsMap({ visits, jobs, employees, requests, isLoading }: 
             </span>
             Operations Control
           </CardTitle>
-          <Link to="/schedule" className="text-[10px] md:text-xs text-primary flex items-center gap-0.5 hover:underline">
-            Dispatch <ChevronRight className="w-3 h-3" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl md:text-3xl font-black tracking-wider text-blue-600">
+              REKIBUL
+            </span>
+            <Link to="/schedule" className="text-[10px] md:text-xs text-primary flex items-center gap-0.5 hover:underline">
+              Dispatch <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-3 md:px-6 pb-3 md:pb-5 space-y-3">
