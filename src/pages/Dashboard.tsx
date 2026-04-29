@@ -79,9 +79,14 @@ export default function Dashboard() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
-      <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 md:p-5">
-        <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">Operations Dashboard</h1>
-        <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">Praetoria Group — Command Center</p>
+      <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 md:p-5 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">Operations Dashboard</h1>
+          <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">Praetoria Group — Command Center</p>
+        </div>
+        <span className="text-3xl md:text-5xl font-black tracking-widest text-blue-600 shrink-0">
+          REKIBUL
+        </span>
       </div>
 
       {/* Premium hero — Health Score + Goal Rings */}
