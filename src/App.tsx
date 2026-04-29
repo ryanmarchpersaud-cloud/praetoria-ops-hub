@@ -89,7 +89,7 @@ import WorkerMore from "./pages/worker/WorkerMore";
 import WorkerVisitExec from "./pages/worker/WorkerVisitExec";
 import WorkerPropertyDetail from "./pages/worker/WorkerPropertyDetail";
 import WorkerJobDetail from "./pages/worker/WorkerJobDetail";
-import WorkerWeatherDetail from "./pages/worker/WorkerWeatherDetail";
+
 import WorkerSettings from "./pages/worker/WorkerSettings";
 import WorkerProfilePage from "./pages/worker/WorkerProfilePage";
 import WorkerEmploymentPage from "./pages/worker/WorkerEmploymentPage";
@@ -110,7 +110,7 @@ import WorkerExpensesPage from "./pages/worker/WorkerExpensesPage";
 import WorkerEmergencySafetyPage from "./pages/worker/WorkerEmergencySafetyPage";
 import WorkerMessagesPage from "./pages/worker/WorkerMessagesPage";
 import WorkerAgreementsPage from "./pages/worker/WorkerAgreementsPage";
-import WeatherDetail from "./pages/WeatherDetail";
+
 const TasksPage = lazy(() => import("./pages/TasksPage"));
 const WorkerTasksPage = lazy(() => import("./pages/worker/WorkerTasksPage"));
 
@@ -453,7 +453,7 @@ function AppRoutes() {
       {/* Email Directory */}
       <Route path="/email-directory" element={<AdminRoute><ModuleGuard module="opsOrFinance"><EmailDirectoryPage /></ModuleGuard></AdminRoute>} />
 
-      <Route path="/weather" element={<StaffRoute><WeatherDetail /></StaffRoute>} />
+      
 
       {/* Customer portal routes */}
       <Route path="/portal" element={<PortalRoute><PortalDashboard /></PortalRoute>} />
@@ -480,7 +480,7 @@ function AppRoutes() {
       <Route path="/worker/visit/:id" element={<WorkerRoute><WorkerLayout><WorkerVisitExec /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/property/:id" element={<WorkerRoute><WorkerLayout><WorkerPropertyDetail /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/job/:id" element={<WorkerRoute><WorkerLayout><WorkerJobDetail /></WorkerLayout></WorkerRoute>} />
-      <Route path="/worker/weather" element={<WorkerRoute><WorkerLayout><WorkerWeatherDetail /></WorkerLayout></WorkerRoute>} />
+      
       <Route path="/worker/more" element={<WorkerRoute><WorkerLayout><WorkerMore /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/profile" element={<WorkerRoute><WorkerLayout><WorkerProfilePage /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/employment" element={<WorkerRoute><WorkerLayout><WorkerEmploymentPage /></WorkerLayout></WorkerRoute>} />
