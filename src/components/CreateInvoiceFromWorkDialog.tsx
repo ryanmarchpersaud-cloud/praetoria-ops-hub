@@ -62,7 +62,7 @@ export function CreateInvoiceFromWorkDialog({
 
   const [issueDate, setIssueDate] = useState(today);
   const [dueDate, setDueDate] = useState(defaultDue);
-  const [taxRate, setTaxRate] = useState('0.05');
+  const [taxRate, setTaxRate] = useState('0.11');
   const [customerMemo, setCustomerMemo] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [saving, setSaving] = useState(false);
