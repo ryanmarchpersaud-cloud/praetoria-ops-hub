@@ -299,6 +299,28 @@ export default function InvoicePrint() {
           </div>
         )}
 
+        {/* Payment Options */}
+        <div
+          className="mb-6 print:mb-8 rounded-lg p-4 border"
+          style={{ backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }}
+        >
+          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#1d4ed8' }}>
+            Payment Options
+          </p>
+          <ul className="text-xs text-[#1e3a8a] space-y-1 print:text-sm">
+            <li><span className="font-bold">Interac e-Transfer:</span> payments@praetoriasnowandice.ca</li>
+            <li>
+              <span className="font-bold">Credit Card via Stripe:</span>{' '}
+              <a href="https://buy.stripe.com/bJe7sN87JdXN7PIbtb28800" className="underline break-all" style={{ color: '#1d4ed8' }}>
+                https://buy.stripe.com/bJe7sN87JdXN7PIbtb28800
+              </a>
+            </li>
+            <li className="text-[#374151] italic">
+              You'll also be able to pay by credit card through your secure online portal once it's set up (we'll email your login).
+            </li>
+          </ul>
+        </div>
+
         {/* Payment Terms */}
         <div className="border-t border-[#e5e7eb] pt-6 print:pt-8 space-y-5">
           <div>
@@ -310,39 +332,130 @@ export default function InvoicePrint() {
               <li>For questions, contact {companyEmail}.</li>
             </ol>
           </div>
-        </div>
 
-        {/* Spacer to push footer down */}
-        <div className="flex-grow" />
+          {/* ── Explore Our Full Range of Services ── */}
+          <div className="mt-10 pt-6 border-t border-[#e5e7eb] print:mt-12">
+            <p
+              className="text-center text-[10px] uppercase tracking-[0.2em] font-bold mb-4 print:text-xs"
+              style={{ color: accentColor }}
+            >
+              Explore Our Full Range of Services
+            </p>
+            <div className="grid grid-cols-3 md:grid-cols-5 print:grid-cols-5 gap-1.5 print:gap-2 text-[9px] print:text-[10px]">
+              {[
+                { name: 'Snow & Ice', color: '#2563EB' },
+                { name: 'Maintenance & Repairs', color: '#EAB308' },
+                { name: 'Property Care & Landscaping', color: '#16A34A' },
+                { name: 'Property Management', color: '#0F766E' },
+                { name: 'Electrical', color: '#7C3AED' },
+                { name: 'Plumbing', color: '#0D9488' },
+                { name: 'Carpentry & Renovations', color: '#92400E' },
+                { name: 'Roofing & Exteriors', color: '#374151' },
+                { name: 'Painting & Finishing', color: '#EAB308' },
+                { name: 'Cleaning Services', color: '#0EA5E9' },
+                { name: 'Heating, Ventilation & Air Conditioning', color: '#F43F5E' },
+                { name: 'Concrete & Masonry', color: '#6B7280' },
+                { name: 'Security & Smart Home', color: '#111827' },
+                { name: 'Fencing & Decking', color: '#7c2d12' },
+                { name: 'Junk Removal', color: '#c2410c' },
+                { name: 'Power Washing', color: '#0891B2' },
+                { name: 'Tiling & Flooring', color: '#A16207' },
+                { name: 'Gutter Cleaning & Repair', color: '#65A30D' },
+                { name: 'Window Cleaning', color: '#0284C7' },
+                { name: 'Pest Control', color: '#854D0E' },
+                { name: 'Moving & Hauling', color: '#9333EA' },
+                { name: 'Insulation & Drywall', color: '#B91C1C' },
+                { name: 'Appliance Install & Repair', color: '#0F766E' },
+                { name: 'Garage Doors', color: '#475569' },
+                { name: 'Locksmith Services', color: '#1E40AF' },
+              ].map((s) => (
+                <div
+                  key={s.name}
+                  className="relative rounded-md border px-1.5 py-2 text-center font-semibold leading-tight overflow-hidden"
+                  style={{ borderColor: `${s.color}55`, color: s.color, backgroundColor: `${s.color}0D` }}
+                >
+                  <div
+                    className="absolute top-0 left-0 right-0 h-[3px]"
+                    style={{ backgroundColor: s.color }}
+                  />
+                  <div className="pt-0.5">{s.name}</div>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-[10px] text-[#6b7280] mt-3 italic print:text-xs">
+              One trusted partner for all your property needs — ask us about bundling for preferred rates.
+            </p>
+          </div>
 
-        {/* Service Cards Footer */}
-        <div className="border-t border-[#e5e7eb] mt-10 pt-6 print:mt-8 print:pt-6">
-          <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-4 print:text-xs text-center">Our Services</p>
-          <div className="flex justify-center items-center gap-1.5 flex-wrap print:gap-1">
-            {SERVICE_CARDS.map((svc) => (
-              <div key={svc.label} className="flex flex-col items-center w-[90px] print:w-[80px]">
-                <img
-                  src={svc.img}
-                  alt={svc.label}
-                  className="h-16 w-16 object-contain print:h-14 print:w-14 rounded"
-                />
+          {/* ── Customer Portal & App Promotion ── */}
+          <div className="mt-6 pt-5 border-t border-[#e5e7eb] print:mt-8">
+            <p className="text-center text-[10px] uppercase tracking-[0.2em] font-bold mb-3 print:text-xs text-[#1a1a2e]">
+              Manage Everything in One Place
+            </p>
+            <div className="grid grid-cols-3 gap-3 print:gap-4">
+              <div className="rounded-lg border-2 border-[#1a1a2e]/15 bg-[#1a1a2e]/[0.03] p-3 text-center">
+                <div className="flex justify-center mb-1.5">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1a1a2e" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="14" rx="2" />
+                    <path d="M3 10 H21 M8 18 V21 M16 18 V21 M6 21 H18" />
+                  </svg>
+                </div>
+                <p className="text-[10px] font-bold text-[#1a1a2e] print:text-xs">Customer Portal</p>
+                <p className="text-[8px] text-[#6b7280] mt-0.5 print:text-[9px] leading-tight">
+                  View quotes, invoices & service history
+                </p>
+                <p className="text-[8px] font-mono text-[#3b5bdb] mt-1 print:text-[9px] break-all">
+                  praetoriagroup.ca/portal
+                </p>
+                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Coming Soon
+                </p>
               </div>
-            ))}
+              <div className="rounded-lg border-2 border-[#16A34A]/25 bg-[#16A34A]/[0.04] p-3 text-center">
+                <div className="flex justify-center mb-1.5">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#16A34A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 3 L19 12 L5 21 Z" />
+                    <path d="M5 3 L15 13 M5 21 L15 11" />
+                  </svg>
+                </div>
+                <p className="text-[10px] font-bold text-[#1a1a2e] print:text-xs">Praetoria Group App</p>
+                <p className="text-[8px] text-[#6b7280] mt-0.5 print:text-[9px] leading-tight">
+                  Get it on Google Play
+                </p>
+                <p className="text-[8px] font-mono text-[#16A34A] mt-1 print:text-[9px]">Android</p>
+                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Coming Soon
+                </p>
+              </div>
+              <div className="rounded-lg border-2 border-[#111827]/25 bg-[#111827]/[0.04] p-3 text-center">
+                <div className="flex justify-center mb-1.5">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 3 a4 4 0 0 0-3 3" />
+                    <path d="M19 17 c-1 2-2 3-3.5 3 c-1 0-1.7-0.6-3-0.6 c-1.3 0-2 0.6-3 0.6 c-1.5 0-3-1.5-4-3.5 c-2-4-1-9 2-10 c1.5-0.5 3 0.5 4 0.5 c1 0 2.5-1 4.2-0.8 c1.7 0.2 3 1 3.8 2.3 c-3.4 2-2.8 6.7 0.5 8.5 z" />
+                  </svg>
+                </div>
+                <p className="text-[10px] font-bold text-[#1a1a2e] print:text-xs">Praetoria Group App</p>
+                <p className="text-[8px] text-[#6b7280] mt-0.5 print:text-[9px] leading-tight">
+                  Download on the App Store
+                </p>
+                <p className="text-[8px] font-mono text-[#111827] mt-1 print:text-[9px]">iOS</p>
+                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Coming Soon
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Company description */}
-          <p className="text-[10px] text-[#9ca3af] text-center mt-4 max-w-lg mx-auto leading-relaxed print:text-xs">
-            Praetoria Group provides snow &amp; ice management, landscaping &amp; grounds care, junk removal, property maintenance, cleaning services, power washing, and property management.
-          </p>
-
-          {/* Company Footer */}
-          <div className="text-center pt-4 text-xs text-[#9ca3af] print:text-sm print:pt-3 pb-4">
-            <p className="font-bold text-[#374151]">{companyName}</p>
-            <p>{companyAddress}</p>
+          {/* ── Footer ── */}
+          <div className="text-center pt-6 text-xs text-[#9ca3af] print:text-sm print:pt-8 pb-4">
+            <p className="font-medium text-[#6b7280]">{companyName}</p>
             <p>{companyEmail} · {companyPhone}</p>
-            <p className="mt-1 text-[10px] print:text-xs">Thank you for your business.</p>
+            <p className="mt-1">Thank you for your business.</p>
           </div>
         </div>
+
+        {/* Spacer */}
+        <div className="flex-grow" />
       </div>
     </>
   );
