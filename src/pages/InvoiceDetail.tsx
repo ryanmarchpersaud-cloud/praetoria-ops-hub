@@ -345,6 +345,16 @@ export default function InvoiceDetail() {
             <Send className="h-3.5 w-3.5 mr-1.5" /> Send Invoice
           </Button>
         )}
+        {canSend && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleStatusChange('Sent', { sent_at: new Date().toISOString() })}
+            title="Move from Draft to Sent without emailing the customer (use after delivering printed copy)"
+          >
+            <FileCheck className="h-3.5 w-3.5 mr-1.5" /> Mark as Sent
+          </Button>
+        )}
         {canResend && (
           <Button size="sm" variant="outline" onClick={() => {
             const customerName = `${invoice.customers?.first_name || ''} ${invoice.customers?.last_name || ''}`.trim();
