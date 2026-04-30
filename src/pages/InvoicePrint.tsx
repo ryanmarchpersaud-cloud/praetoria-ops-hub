@@ -130,6 +130,7 @@ export default function InvoicePrint() {
               <p>{companyAddress}</p>
               <p>{companyEmail}</p>
               <p>{companyPhone}</p>
+              <p className="font-semibold text-[#374151]">Business No.: 761634088</p>
             </div>
           </div>
           <div className="text-right">
