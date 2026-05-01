@@ -51,7 +51,7 @@ function downloadICS(expenses: any[]) {
     const dt = e.next_due_date.replace(/-/g, '');
     lines.push('BEGIN:VEVENT');
     lines.push(`UID:${e.id}@personal.praetoriagroup.ca`);
-    lines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15)}Z`);
+    lines.push(`DTSTAMP:${new Date().toISOString().replace(/[-]|[:]|[.]/g, '').slice(0, 15)}Z`);
     lines.push(`DTSTART;VALUE=DATE:${dt}`);
     lines.push(`SUMMARY:Pay ${e.account_name} — ${fmt(e.minimum_amount)}`);
     lines.push(`DESCRIPTION:${CATEGORY_META[e.category]?.label || e.category}${e.is_business_writeoff ? ' (Business write-off)' : ''}`);
