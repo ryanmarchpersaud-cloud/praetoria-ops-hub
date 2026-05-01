@@ -191,6 +191,7 @@ export default function LeadDetail() {
 
   return (
     <div className="space-y-4 animate-fade-in max-w-4xl">
+      <FlaggedPersonAlert email={form.email} phone={form.phone} compact />
       {/* ── Header ── */}
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => navigate('/leads')}>

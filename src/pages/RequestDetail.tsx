@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
+import { FlaggedPersonAlert } from '@/components/FlaggedPersonAlert';
 
 const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled'];
 
