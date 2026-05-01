@@ -1189,32 +1189,41 @@ export type Database = {
       }
       customer_warnings: {
         Row: {
+          auto_generated: boolean
           created_at: string | null
+          created_by: string | null
           customer_id: string
           description: string | null
           id: string
           is_active: boolean | null
           severity: string
+          source: string | null
           updated_at: string | null
           warning_type: string
         }
         Insert: {
+          auto_generated?: boolean
           created_at?: string | null
+          created_by?: string | null
           customer_id: string
           description?: string | null
           id?: string
           is_active?: boolean | null
           severity?: string
+          source?: string | null
           updated_at?: string | null
           warning_type?: string
         }
         Update: {
+          auto_generated?: boolean
           created_at?: string | null
+          created_by?: string | null
           customer_id?: string
           description?: string | null
           id?: string
           is_active?: boolean | null
           severity?: string
+          source?: string | null
           updated_at?: string | null
           warning_type?: string
         }
@@ -7858,6 +7867,10 @@ export type Database = {
         }[]
       }
       can_submit_field_lead: { Args: { _user_id: string }; Returns: boolean }
+      customer_has_active_warnings: {
+        Args: { _customer_id: string }
+        Returns: boolean
+      }
       customer_id_for_property: {
         Args: { _property_id: string }
         Returns: string
@@ -7918,6 +7931,13 @@ export type Database = {
         Returns: boolean
       }
       is_worker_role: { Args: { _user_id: string }; Returns: boolean }
+      match_flagged_customers: {
+        Args: { _email: string; _phone: string }
+        Returns: {
+          customer_id: string
+          match_field: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
