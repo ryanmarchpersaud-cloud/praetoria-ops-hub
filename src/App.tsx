@@ -28,6 +28,7 @@ import Customers from "./pages/Customers";
 import CustomerDetail from "./pages/CustomerDetail";
 import CustomersImport from "./pages/CustomersImport";
 import CustomerWatchlistPage from "./pages/CustomerWatchlistPage";
+import PersonalAccountsPage from "./pages/PersonalAccountsPage";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import Jobs from "./pages/Jobs";
