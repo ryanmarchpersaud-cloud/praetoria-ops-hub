@@ -28,6 +28,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { Pencil, Trash } from 'lucide-react';
 import { ConvertQuoteToJobDialog } from '@/components/ConvertQuoteToJobDialog';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
+import { FlaggedPersonAlert } from '@/components/FlaggedPersonAlert';
 import { Badge } from '@/components/ui/badge';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -536,6 +537,11 @@ export default function QuoteDetail() {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      <FlaggedPersonAlert
+        email={(quote as any)?.leads?.email}
+        phone={(quote as any)?.leads?.phone}
+        compact
+      />
       {/* ── Header ── */}
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => navigate('/quotes')}>

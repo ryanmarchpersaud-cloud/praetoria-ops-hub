@@ -16,6 +16,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SERVICE_CATEGORIES, LEAD_STATUSES, LEAD_SOURCES, URGENCY_LEVELS, PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+import { FlaggedPersonAlert } from '@/components/FlaggedPersonAlert';
 
 function CollapsibleSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -190,6 +191,7 @@ export default function LeadDetail() {
 
   return (
     <div className="space-y-4 animate-fade-in max-w-4xl">
+      <FlaggedPersonAlert email={form.email} phone={form.phone} compact />
       {/* ── Header ── */}
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => navigate('/leads')}>
