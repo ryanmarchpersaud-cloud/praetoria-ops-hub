@@ -227,6 +227,7 @@ export default function PersonalAccountsPage() {
   const delIncome = useDeleteIncome();
   const markPaid = useMarkPaid();
   const seed = useSeedFromNotepad();
+  const { unlocked, lock } = useSessionUnlock();
 
   const [expenseDialog, setExpenseDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [fundingDialog, setFundingDialog] = useState(false);
