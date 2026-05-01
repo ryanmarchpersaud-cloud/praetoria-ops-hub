@@ -537,6 +537,11 @@ export default function QuoteDetail() {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      <FlaggedPersonAlert
+        email={(quote as any)?.leads?.email}
+        phone={(quote as any)?.leads?.phone}
+        compact
+      />
       {/* ── Header ── */}
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => navigate('/quotes')}>

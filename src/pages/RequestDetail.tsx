@@ -111,6 +111,11 @@ export default function RequestDetail() {
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
+      <FlaggedPersonAlert
+        email={(request?.customers as any)?.email}
+        phone={(request?.customers as any)?.phone}
+        compact
+      />
       {/* Header */}
       <div className="flex items-start gap-2">
         <Link to="/requests" className="text-muted-foreground hover:text-foreground mt-1">
