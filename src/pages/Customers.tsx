@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload } from 'lucide-react';
+import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
@@ -129,6 +129,9 @@ export default function Customers() {
           <p className="text-sm text-muted-foreground">{customers.length} total customers</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" asChild className="border-destructive/40 text-destructive hover:bg-destructive/5">
+            <Link to="/customers/watchlist"><ShieldAlert className="h-4 w-4 mr-2" /> Watchlist</Link>
+          </Button>
           <Button variant="outline" asChild>
             <Link to="/customers/import"><Upload className="h-4 w-4 mr-2" /> Import from Jobber</Link>
           </Button>
