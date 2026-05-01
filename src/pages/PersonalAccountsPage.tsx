@@ -264,6 +264,11 @@ export default function PersonalAccountsPage() {
     );
   }
 
+  // ---- PIN gate (after claim, before content) ----
+  if (!unlocked) {
+    return <PersonalPinGate ownerEmail={user?.email} onUnlocked={() => {}} />;
+  }
+
   // ---- Computed metrics ----
   const expenses = expensesQ.data || [];
   const funding = fundingQ.data || [];
