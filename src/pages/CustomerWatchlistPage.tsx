@@ -1,15 +1,21 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, ShieldAlert, Search, Bot, User, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertTriangle, ShieldAlert, Search, Bot, User, ExternalLink, Plus, Loader2 } from 'lucide-react';
 import { WARNING_TYPES } from '@/components/CustomerWarningsEditor';
+import { useToast } from '@/hooks/use-toast';
+import { PROVINCES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
 
 type Row = {
@@ -93,13 +99,18 @@ export default function CustomerWatchlistPage() {
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
       <div className="rounded-xl border border-destructive/30 bg-gradient-to-r from-destructive/10 via-destructive/5 to-transparent p-4 md:p-5">
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-          <ShieldAlert className="h-7 w-7 text-destructive" />
-          Customer Watchlist
-        </h1>
-        <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">
-          Customers flagged for non-payment, broken contracts, complaints, or other concerns. New requests, leads, and quotes from these people will trigger a red banner.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+              <ShieldAlert className="h-7 w-7 text-destructive" />
+              Customer Watchlist
+            </h1>
+            <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">
+              Customers flagged for non-payment, broken contracts, bad reviews, or other concerns. New requests, leads, and quotes from these people will trigger a red banner.
+            </p>
+          </div>
+          <FlagNewCustomerDialog />
+        </div>
       </div>
 
       {/* Stats */}
@@ -256,3 +267,208 @@ function StatCard({ label, value, color }: { label: string; value: number; color
     </Card>
   );
 }
+
+/* ─── Flag a New Customer Dialog ─────────────────────────── */
+
+function FlagNewCustomerDialog() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    company_name: '',
+    email: '',
+    phone: '',
+    city: '',
+    province: 'Saskatchewan',
+    warning_type: 'bad_review',
+    severity: 'high',
+    description: '',
+  });
+
+  const reset = () => setForm({
+    first_name: '', last_name: '', company_name: '', email: '', phone: '',
+    city: '', province: 'Saskatchewan', warning_type: 'bad_review', severity: 'high', description: '',
+  });
+
+  const set = (k: keyof typeof form, v: string) => setForm(prev => ({ ...prev, [k]: v }));
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.first_name.trim() && !form.company_name.trim()) {
+      toast({ title: 'Name required', description: 'Enter at least a first name or a company name.', variant: 'destructive' });
+      return;
+    }
+    if (!form.description.trim()) {
+      toast({ title: 'Reason required', description: 'Briefly describe why this customer is flagged.', variant: 'destructive' });
+      return;
+    }
+    setSaving(true);
+    try {
+      // Create the customer
+      const { data: cust, error: custErr } = await supabase
+        .from('customers')
+        .insert({
+          first_name: form.first_name.trim() || form.company_name.trim() || 'Unknown',
+          last_name: form.last_name.trim() || '(flagged)',
+          company_name: form.company_name.trim() || null,
+          email: form.email.trim() || null,
+          phone: form.phone.trim() || null,
+          city: form.city.trim() || null,
+          province: form.province || null,
+          account_type: form.company_name.trim() ? 'Company' : 'Individual',
+          customer_type: 'Residential',
+          customer_status: 'Lost',
+        } as any)
+        .select('id')
+        .single();
+      if (custErr) throw custErr;
+
+      // Add the warning
+      const { error: warnErr } = await supabase
+        .from('customer_warnings')
+        .insert({
+          customer_id: cust.id,
+          warning_type: form.warning_type,
+          severity: form.severity,
+          description: form.description.trim(),
+          is_active: true,
+          auto_generated: false,
+          source: 'manual:watchlist_dialog',
+        } as any);
+      if (warnErr) throw warnErr;
+
+      toast({ title: 'Customer flagged', description: 'Added to the Watchlist.' });
+      qc.invalidateQueries({ queryKey: ['customer_watchlist'] });
+      qc.invalidateQueries({ queryKey: ['customers'] });
+      reset();
+      setOpen(false);
+    } catch (err: any) {
+      toast({ title: 'Could not flag customer', description: err.message || 'Unknown error', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" className="shrink-0 font-semibold">
+          <Plus className="h-4 w-4 mr-1.5" /> Flag New Customer
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-destructive">
+            <ShieldAlert className="h-5 w-5" /> Flag a New Customer
+          </DialogTitle>
+          <DialogDescription>
+            Create a customer record and add them to the Watchlist in one step. Fill in whatever info you have — the rest can be left blank.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSave} className="space-y-4">
+          {/* Identity */}
+          <div className="space-y-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Who are they?</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">First name</Label>
+                <Input value={form.first_name} onChange={e => set('first_name', e.target.value)} placeholder="John" />
+              </div>
+              <div>
+                <Label className="text-xs">Last name</Label>
+                <Input value={form.last_name} onChange={e => set('last_name', e.target.value)} placeholder="Smith" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Company name (if any)</Label>
+              <Input value={form.company_name} onChange={e => set('company_name', e.target.value)} placeholder="Acme Inc." />
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="space-y-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Contact info (any you have)</p>
+            <div>
+              <Label className="text-xs">Email</Label>
+              <Input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="name@example.com" />
+            </div>
+            <div>
+              <Label className="text-xs">Phone</Label>
+              <Input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="(306) 555-1234" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">City</Label>
+                <Input value={form.city} onChange={e => set('city', e.target.value)} placeholder="Regina" />
+              </div>
+              <div>
+                <Label className="text-xs">Province</Label>
+                <Select value={form.province} onValueChange={(v) => set('province', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PROVINCES.map((p: any) => (
+                      <SelectItem key={typeof p === 'string' ? p : p.value} value={typeof p === 'string' ? p : p.value}>
+                        {typeof p === 'string' ? p : p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground italic">💡 Email + phone are what the system uses to auto-detect them next time they try to book.</p>
+          </div>
+
+          {/* Warning */}
+          <div className="space-y-2 rounded-lg border-2 border-destructive/40 bg-destructive/5 p-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-destructive">Why are they flagged?</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Reason</Label>
+                <Select value={form.warning_type} onValueChange={(v) => set('warning_type', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {WARNING_TYPES.map(t => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Severity</Label>
+                <Select value={form.severity} onValueChange={(v) => set('severity', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high">🔴 High</SelectItem>
+                    <SelectItem value="medium">🟡 Medium</SelectItem>
+                    <SelectItem value="low">⚪ Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Notes / what happened *</Label>
+              <Textarea
+                rows={3}
+                value={form.description}
+                onChange={e => set('description', e.target.value)}
+                placeholder="e.g. Left a 1-star Google review on March 12 saying we damaged their lawn — investigated and false."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
+            <Button type="submit" variant="destructive" disabled={saving}>
+              {saving ? <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Saving...</> : <><ShieldAlert className="h-4 w-4 mr-1.5" /> Flag Customer</>}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
