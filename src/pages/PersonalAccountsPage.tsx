@@ -15,7 +15,9 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Lock, Plus, Sprout, Calendar as CalIcon, Printer, Download, FileText, Trash2, Pencil, CheckCircle2, CreditCard, Wallet, Receipt, Repeat, Briefcase, AlertTriangle, TrendingUp, TrendingDown, Copy } from 'lucide-react';
+import { Lock, Plus, Sprout, Calendar as CalIcon, Printer, Download, FileText, Trash2, Pencil, CheckCircle2, CreditCard, Wallet, Receipt, Repeat, Briefcase, AlertTriangle, TrendingUp, TrendingDown, Copy, LockKeyhole } from 'lucide-react';
+import PersonalPinGate from '@/components/PersonalPinGate';
+import { useSessionUnlock } from '@/hooks/usePersonalAccountsPin';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -225,6 +227,7 @@ export default function PersonalAccountsPage() {
   const delIncome = useDeleteIncome();
   const markPaid = useMarkPaid();
   const seed = useSeedFromNotepad();
+  const { unlocked, lock } = useSessionUnlock();
 
   const [expenseDialog, setExpenseDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [fundingDialog, setFundingDialog] = useState(false);
@@ -259,6 +262,11 @@ export default function PersonalAccountsPage() {
         </Card>
       </div>
     );
+  }
+
+  // ---- PIN gate (after claim, before content) ----
+  if (!unlocked) {
+    return <PersonalPinGate ownerEmail={user?.email} onUnlocked={() => {}} />;
   }
 
   // ---- Computed metrics ----
@@ -306,6 +314,7 @@ export default function PersonalAccountsPage() {
           <p className="text-sm text-muted-foreground">Private — only visible to {user?.email}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => { lock(); toast.success('Vault locked'); }} className="border-amber-300 text-amber-700 hover:bg-amber-50"><LockKeyhole className="h-4 w-4 mr-1" />Lock Now</Button>
           <Button size="sm" variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" />Print</Button>
           <Button size="sm" variant="outline" onClick={() => downloadCSV('personal-expenses.csv', expenses.map((e: any) => ({
             account: e.account_name, category: e.category, minimum: e.minimum_amount, full: e.full_amount, due_day: e.due_day, next_due: e.next_due_date, business_writeoff: e.is_business_writeoff,

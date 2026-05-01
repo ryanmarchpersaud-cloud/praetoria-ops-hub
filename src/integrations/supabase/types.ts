@@ -4865,6 +4865,39 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_account_pin: {
+        Row: {
+          created_at: string
+          failed_attempts: number
+          id: string
+          last_unlocked_at: string | null
+          locked_until: string | null
+          pin_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          failed_attempts?: number
+          id?: string
+          last_unlocked_at?: string | null
+          locked_until?: string | null
+          pin_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          failed_attempts?: number
+          id?: string
+          last_unlocked_at?: string | null
+          locked_until?: string | null
+          pin_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       personal_expense_payments: {
         Row: {
           amount_paid: number
