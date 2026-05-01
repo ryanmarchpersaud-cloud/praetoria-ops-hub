@@ -99,13 +99,18 @@ export default function CustomerWatchlistPage() {
     <div className="space-y-4 animate-fade-in">
       {/* Header */}
       <div className="rounded-xl border border-destructive/30 bg-gradient-to-r from-destructive/10 via-destructive/5 to-transparent p-4 md:p-5">
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-          <ShieldAlert className="h-7 w-7 text-destructive" />
-          Customer Watchlist
-        </h1>
-        <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">
-          Customers flagged for non-payment, broken contracts, complaints, or other concerns. New requests, leads, and quotes from these people will trigger a red banner.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+              <ShieldAlert className="h-7 w-7 text-destructive" />
+              Customer Watchlist
+            </h1>
+            <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">
+              Customers flagged for non-payment, broken contracts, bad reviews, or other concerns. New requests, leads, and quotes from these people will trigger a red banner.
+            </p>
+          </div>
+          <FlagNewCustomerDialog />
+        </div>
       </div>
 
       {/* Stats */}
