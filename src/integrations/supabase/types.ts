@@ -4850,6 +4850,209 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_account_owners: {
+        Row: {
+          added_at: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personal_expense_payments: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          expense_id: string
+          funding_source_id: string | null
+          id: string
+          notes: string | null
+          owner_id: string
+          paid_date: string
+          payment_type: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          expense_id: string
+          funding_source_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_id: string
+          paid_date?: string
+          payment_type?: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          expense_id?: string
+          funding_source_id?: string | null
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          paid_date?: string
+          payment_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_expense_payments_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "personal_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_expense_payments_funding_source_id_fkey"
+            columns: ["funding_source_id"]
+            isOneToOne: false
+            referencedRelation: "personal_funding_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_expenses: {
+        Row: {
+          account_name: string
+          category: string
+          created_at: string
+          due_day: number
+          full_amount: number | null
+          funding_source_id: string | null
+          id: string
+          is_active: boolean
+          is_business_writeoff: boolean
+          minimum_amount: number
+          next_due_date: string | null
+          notes: string | null
+          owner_id: string
+          position: number
+          reminder_days_before: number
+          updated_at: string
+        }
+        Insert: {
+          account_name: string
+          category: string
+          created_at?: string
+          due_day: number
+          full_amount?: number | null
+          funding_source_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_business_writeoff?: boolean
+          minimum_amount?: number
+          next_due_date?: string | null
+          notes?: string | null
+          owner_id: string
+          position?: number
+          reminder_days_before?: number
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string
+          category?: string
+          created_at?: string
+          due_day?: number
+          full_amount?: number | null
+          funding_source_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_business_writeoff?: boolean
+          minimum_amount?: number
+          next_due_date?: string | null
+          notes?: string | null
+          owner_id?: string
+          position?: number
+          reminder_days_before?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_expenses_funding_source_id_fkey"
+            columns: ["funding_source_id"]
+            isOneToOne: false
+            referencedRelation: "personal_funding_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personal_funding_sources: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          last4: string | null
+          name: string
+          owner_id: string
+          source_type: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last4?: string | null
+          name: string
+          owner_id: string
+          source_type?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last4?: string | null
+          name?: string
+          owner_id?: string
+          source_type?: string
+        }
+        Relationships: []
+      }
+      personal_income: {
+        Row: {
+          created_at: string
+          expected_day: number | null
+          id: string
+          income_type: string
+          is_active: boolean
+          monthly_amount: number
+          notes: string | null
+          owner_id: string
+          source_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expected_day?: number | null
+          id?: string
+          income_type?: string
+          is_active?: boolean
+          monthly_amount?: number
+          notes?: string | null
+          owner_id: string
+          source_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expected_day?: number | null
+          id?: string
+          income_type?: string
+          is_active?: boolean
+          monthly_amount?: number
+          notes?: string | null
+          owner_id?: string
+          source_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       portal_settings: {
         Row: {
           allow_approve_quotes: boolean | null
@@ -7909,6 +8112,10 @@ export type Database = {
       }
       is_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
       is_ops_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_personal_account_owner: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       is_protected_customer: {
         Args: { _customer_id: string }
         Returns: boolean
