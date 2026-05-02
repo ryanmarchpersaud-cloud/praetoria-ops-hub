@@ -165,6 +165,11 @@ function FundingSourceDialog({ open, onOpenChange, editing, onSave }: any) {
             <div><Label>Credit Limit</Label><Input type="number" step="0.01" value={form.credit_limit ?? ''} onChange={e => setForm({ ...form, credit_limit: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="(if applicable)" /></div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Interest Rate (APR %)</Label><Input type="number" step="0.01" value={form.interest_rate ?? ''} onChange={e => setForm({ ...form, interest_rate: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="e.g. 19.99" /></div>
+            <div><Label>Minimum Payment ($/mo)</Label><Input type="number" step="0.01" value={form.minimum_payment ?? ''} onChange={e => setForm({ ...form, minimum_payment: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="Required monthly min" /></div>
+          </div>
+
           <div><Label>Notes</Label><Textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
         </div>
         <DialogFooter><Button onClick={() => { onSave(form); onOpenChange(false); }}>Save</Button></DialogFooter>
