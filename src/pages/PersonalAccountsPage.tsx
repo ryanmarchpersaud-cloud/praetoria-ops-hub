@@ -354,6 +354,68 @@ export default function PersonalAccountsPage() {
   const totalBalances = fundingLimitsData.reduce((s: number, f: any) => s + f.Balance, 0);
   const totalAvailable = totalLimits - totalBalances;
 
+  // Debt Payoff Planner — Snowball (smallest first) vs Avalanche (highest APR first)
+  const [payoffStrategy, setPayoffStrategy] = useState<'snowball' | 'avalanche'>('avalanche');
+  const [extraPayment, setExtraPayment] = useState<number>(500);
+
+  const debts = funding
+    .filter((f: any) => Number(f.current_balance || 0) > 0)
+    .map((f: any) => ({
+      id: f.id,
+      name: f.name,
+      balance: Number(f.current_balance || 0),
+      apr: Number(f.interest_rate || 0),
+      minimum: Number(f.minimum_payment || 0) || Math.max(25, Number(f.current_balance || 0) * 0.02),
+    }));
+
+  const totalDebt = debts.reduce((s, d) => s + d.balance, 0);
+  const totalMinPayments = debts.reduce((s, d) => s + d.minimum, 0);
+
+  const simulatePayoff = (strategy: 'snowball' | 'avalanche', extra: number) => {
+    const list = debts.map(d => ({ ...d }));
+    if (list.length === 0) return { months: 0, totalInterest: 0, payoffDate: null as Date | null, schedule: [] as any[] };
+    let month = 0;
+    let totalInterest = 0;
+    const schedule: any[] = [];
+    const maxMonths = 600;
+    while (list.some(d => d.balance > 0.01) && month < maxMonths) {
+      month++;
+      // Sort active debts by strategy
+      const active = list.filter(d => d.balance > 0.01);
+      active.sort((a, b) => strategy === 'snowball' ? a.balance - b.balance : b.apr - a.apr);
+      // Apply interest + minimums
+      let extraPool = extra;
+      for (const d of list) {
+        if (d.balance <= 0.01) continue;
+        const interest = (d.balance * (d.apr / 100)) / 12;
+        totalInterest += interest;
+        d.balance += interest;
+        const pay = Math.min(d.minimum, d.balance);
+        d.balance -= pay;
+      }
+      // Apply extra to top-priority debt
+      for (const target of active) {
+        const live = list.find(d => d.id === target.id)!;
+        if (live.balance <= 0.01) continue;
+        const apply = Math.min(extraPool, live.balance);
+        live.balance -= apply;
+        extraPool -= apply;
+        if (extraPool <= 0) break;
+      }
+      const remaining = list.reduce((s, d) => s + Math.max(0, d.balance), 0);
+      schedule.push({ month, remaining: Math.round(remaining) });
+    }
+    const payoffDate = new Date();
+    payoffDate.setMonth(payoffDate.getMonth() + month);
+    return { months: month, totalInterest, payoffDate, schedule };
+  };
+
+  const minOnlyPlan = simulatePayoff(payoffStrategy, 0);
+  const acceleratedPlan = simulatePayoff(payoffStrategy, extraPayment);
+  const interestSaved = Math.max(0, minOnlyPlan.totalInterest - acceleratedPlan.totalInterest);
+  const monthsSaved = Math.max(0, minOnlyPlan.months - acceleratedPlan.months);
+  const payoffOrder = [...debts].sort((a, b) => payoffStrategy === 'snowball' ? a.balance - b.balance : b.apr - a.apr);
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto print:p-0">
       {/* Header */}
