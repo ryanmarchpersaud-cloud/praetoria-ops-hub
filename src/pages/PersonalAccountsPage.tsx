@@ -150,11 +150,13 @@ function FundingSourceDialog({ open, onOpenChange, editing, onSave }: any) {
                 <SelectTrigger><SelectValue placeholder="Full / Minimum / Partial" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Not specified —</SelectItem>
-                  <SelectItem value="full">Full</SelectItem>
-                  <SelectItem value="minimum">Minimum</SelectItem>
-                  <SelectItem value="partial">Partial</SelectItem>
+                  <SelectItem value="full">Full (paid off entirely)</SelectItem>
+                  <SelectItem value="minimum">Minimum (only required min)</SelectItem>
+                  <SelectItem value="partial">Partial (regular installment, e.g. mortgage)</SelectItem>
+                  <SelectItem value="scheduled">Scheduled (auto-debit / fixed)</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">Tip: For mortgages or loans paid in fixed monthly installments, "Partial" is correct — you're paying down a long-term balance.</p>
             </div>
           </div>
 
