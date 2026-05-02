@@ -165,6 +165,11 @@ function FundingSourceDialog({ open, onOpenChange, editing, onSave }: any) {
             <div><Label>Credit Limit</Label><Input type="number" step="0.01" value={form.credit_limit ?? ''} onChange={e => setForm({ ...form, credit_limit: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="(if applicable)" /></div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Interest Rate (APR %)</Label><Input type="number" step="0.01" value={form.interest_rate ?? ''} onChange={e => setForm({ ...form, interest_rate: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="e.g. 19.99" /></div>
+            <div><Label>Minimum Payment ($/mo)</Label><Input type="number" step="0.01" value={form.minimum_payment ?? ''} onChange={e => setForm({ ...form, minimum_payment: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="Required monthly min" /></div>
+          </div>
+
           <div><Label>Notes</Label><Textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
         </div>
         <DialogFooter><Button onClick={() => { onSave(form); onOpenChange(false); }}>Save</Button></DialogFooter>
@@ -354,6 +359,68 @@ export default function PersonalAccountsPage() {
   const totalBalances = fundingLimitsData.reduce((s: number, f: any) => s + f.Balance, 0);
   const totalAvailable = totalLimits - totalBalances;
 
+  // Debt Payoff Planner — Snowball (smallest first) vs Avalanche (highest APR first)
+  const [payoffStrategy, setPayoffStrategy] = useState<'snowball' | 'avalanche'>('avalanche');
+  const [extraPayment, setExtraPayment] = useState<number>(500);
+
+  const debts = funding
+    .filter((f: any) => Number(f.current_balance || 0) > 0)
+    .map((f: any) => ({
+      id: f.id,
+      name: f.name,
+      balance: Number(f.current_balance || 0),
+      apr: Number(f.interest_rate || 0),
+      minimum: Number(f.minimum_payment || 0) || Math.max(25, Number(f.current_balance || 0) * 0.02),
+    }));
+
+  const totalDebt = debts.reduce((s, d) => s + d.balance, 0);
+  const totalMinPayments = debts.reduce((s, d) => s + d.minimum, 0);
+
+  const simulatePayoff = (strategy: 'snowball' | 'avalanche', extra: number) => {
+    const list = debts.map(d => ({ ...d }));
+    if (list.length === 0) return { months: 0, totalInterest: 0, payoffDate: null as Date | null, schedule: [] as any[] };
+    let month = 0;
+    let totalInterest = 0;
+    const schedule: any[] = [];
+    const maxMonths = 600;
+    while (list.some(d => d.balance > 0.01) && month < maxMonths) {
+      month++;
+      // Sort active debts by strategy
+      const active = list.filter(d => d.balance > 0.01);
+      active.sort((a, b) => strategy === 'snowball' ? a.balance - b.balance : b.apr - a.apr);
+      // Apply interest + minimums
+      let extraPool = extra;
+      for (const d of list) {
+        if (d.balance <= 0.01) continue;
+        const interest = (d.balance * (d.apr / 100)) / 12;
+        totalInterest += interest;
+        d.balance += interest;
+        const pay = Math.min(d.minimum, d.balance);
+        d.balance -= pay;
+      }
+      // Apply extra to top-priority debt
+      for (const target of active) {
+        const live = list.find(d => d.id === target.id)!;
+        if (live.balance <= 0.01) continue;
+        const apply = Math.min(extraPool, live.balance);
+        live.balance -= apply;
+        extraPool -= apply;
+        if (extraPool <= 0) break;
+      }
+      const remaining = list.reduce((s, d) => s + Math.max(0, d.balance), 0);
+      schedule.push({ month, remaining: Math.round(remaining) });
+    }
+    const payoffDate = new Date();
+    payoffDate.setMonth(payoffDate.getMonth() + month);
+    return { months: month, totalInterest, payoffDate, schedule };
+  };
+
+  const minOnlyPlan = simulatePayoff(payoffStrategy, 0);
+  const acceleratedPlan = simulatePayoff(payoffStrategy, extraPayment);
+  const interestSaved = Math.max(0, minOnlyPlan.totalInterest - acceleratedPlan.totalInterest);
+  const monthsSaved = Math.max(0, minOnlyPlan.months - acceleratedPlan.months);
+  const payoffOrder = [...debts].sort((a, b) => payoffStrategy === 'snowball' ? a.balance - b.balance : b.apr - a.apr);
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto print:p-0">
       {/* Header */}
@@ -407,6 +474,7 @@ export default function PersonalAccountsPage() {
           <TabsTrigger value="funding">Funding Sources ({funding.length})</TabsTrigger>
           <TabsTrigger value="history">Payment History ({payments.length})</TabsTrigger>
           <TabsTrigger value="monthly">Monthly Summary</TabsTrigger>
+          <TabsTrigger value="payoff">💪 Debt Payoff</TabsTrigger>
         </TabsList>
 
         {/* Expenses */}
@@ -650,6 +718,123 @@ export default function PersonalAccountsPage() {
               </tbody>
             </table>
           </CardContent></Card>
+        </TabsContent>
+
+        {/* Debt Payoff Planner */}
+        <TabsContent value="payoff" className="space-y-4">
+          {debts.length === 0 ? (
+            <Card><CardContent className="p-8 text-center text-muted-foreground">
+              Add a <strong>Current Balance</strong> to your funding sources to use the Debt Payoff Planner.
+            </CardContent></Card>
+          ) : (
+            <>
+              {/* Strategy controls */}
+              <Card>
+                <CardHeader><CardTitle className="text-base">Plan Your Path to Debt-Free 💪</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Strategy</Label>
+                      <Select value={payoffStrategy} onValueChange={(v: any) => setPayoffStrategy(v)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="avalanche">🏔️ Avalanche — Highest interest first (saves most $)</SelectItem>
+                          <SelectItem value="snowball">⛄ Snowball — Smallest balance first (quick wins)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {payoffStrategy === 'avalanche'
+                          ? 'Mathematically optimal — kills the most expensive interest first.'
+                          : 'Psychologically rewarding — knock out small debts fast for momentum.'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Extra Monthly Payment ($)</Label>
+                      <Input type="number" step="50" value={extraPayment} onChange={e => setExtraPayment(parseFloat(e.target.value) || 0)} />
+                      <p className="text-xs text-muted-foreground mt-1">Above your minimums — applied to top-priority debt.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Summary KPIs */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Debt</p><p className="text-2xl font-bold text-red-600">{fmt(totalDebt)}</p></CardContent></Card>
+                <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Required Monthly Min</p><p className="text-2xl font-bold">{fmt(totalMinPayments)}</p></CardContent></Card>
+                <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Debt-Free Date</p><p className="text-xl font-bold text-green-600">{acceleratedPlan.payoffDate ? format(acceleratedPlan.payoffDate, 'MMM yyyy') : '—'}</p><p className="text-xs text-muted-foreground">{acceleratedPlan.months} months</p></CardContent></Card>
+                <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Interest Cost</p><p className="text-2xl font-bold text-amber-600">{fmt(acceleratedPlan.totalInterest)}</p></CardContent></Card>
+              </div>
+
+              {/* Savings comparison */}
+              {extraPayment > 0 && (
+                <Card className="border-green-500 border-2 bg-green-50/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <TrendingDown className="h-8 w-8 text-green-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-green-900">By paying an extra {fmt(extraPayment)}/month you'll save:</p>
+                        <p className="text-xl font-bold text-green-700">{fmt(interestSaved)} in interest · {monthsSaved} months sooner debt-free</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Payoff order */}
+              <Card>
+                <CardHeader><CardTitle className="text-base">Attack Order ({payoffStrategy === 'avalanche' ? 'Avalanche' : 'Snowball'})</CardTitle></CardHeader>
+                <CardContent className="p-0 overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="p-2 text-left">#</th>
+                        <th className="p-2 text-left">Debt</th>
+                        <th className="p-2 text-right">Balance</th>
+                        <th className="p-2 text-right">APR</th>
+                        <th className="p-2 text-right">Min Payment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payoffOrder.map((d, i) => (
+                        <tr key={d.id} className="border-t">
+                          <td className="p-2"><Badge variant={i === 0 ? 'default' : 'outline'}>{i + 1}</Badge></td>
+                          <td className="p-2 font-medium">{d.name} {i === 0 && <span className="text-xs text-primary">← attack first</span>}</td>
+                          <td className="p-2 text-right font-mono text-red-600">{fmt(d.balance)}</td>
+                          <td className="p-2 text-right font-mono">{d.apr ? `${d.apr.toFixed(2)}%` : '—'}</td>
+                          <td className="p-2 text-right font-mono">{fmt(d.minimum)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+
+              {/* Payoff timeline chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Debt Payoff Timeline</CardTitle>
+                  <p className="text-xs text-muted-foreground">Remaining balance month-by-month with your current plan.</p>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={acceleratedPlan.schedule.filter((_, idx) => idx % Math.max(1, Math.floor(acceleratedPlan.schedule.length / 60)) === 0)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" label={{ value: 'Months', position: 'insideBottom', offset: -5 }} />
+                      <YAxis tickFormatter={(v) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
+                      <Tooltip formatter={(v: any) => fmt(v)} labelFormatter={(l) => `Month ${l}`} />
+                      <Line type="monotone" dataKey="remaining" stroke="#16a34a" strokeWidth={3} dot={false} name="Remaining Debt" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4 text-sm text-blue-900">
+                  <strong>💡 Tip:</strong> Add the <strong>APR %</strong> and <strong>Minimum Payment</strong> to each funding source (edit any card) for the most accurate forecast. Without APR, interest is assumed at 0%.
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
       </Tabs>
 
