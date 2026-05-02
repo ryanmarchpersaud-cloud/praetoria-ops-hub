@@ -471,16 +471,50 @@ export default function PersonalAccountsPage() {
 
         {/* Funding Sources */}
         <TabsContent value="funding" className="space-y-2">
-          <div className="flex justify-end print:hidden"><Button size="sm" onClick={() => setFundingDialog(true)}><Plus className="h-4 w-4 mr-1" />Add Funding Source</Button></div>
-          <Card><CardContent className="p-0">
+          <div className="flex justify-end print:hidden"><Button size="sm" onClick={() => setFundingDialog({ open: true, editing: {} })}><Plus className="h-4 w-4 mr-1" />Add Funding Source</Button></div>
+          <Card><CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50"><tr className="text-left"><th className="p-2">Name</th><th className="p-2">Type</th><th className="p-2">Last 4</th><th className="p-2 text-right">Total Linked Expenses</th></tr></thead>
+              <thead className="bg-muted/50">
+                <tr className="text-left">
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Type</th>
+                  <th className="p-2">Last 4</th>
+                  <th className="p-2">Last Paid</th>
+                  <th className="p-2">Month</th>
+                  <th className="p-2 text-right">Amount</th>
+                  <th className="p-2">Type</th>
+                  <th className="p-2 text-right">Balance</th>
+                  <th className="p-2 text-right">Limit</th>
+                  <th className="p-2 text-right">Linked Exp.</th>
+                  <th className="p-2 print:hidden">Actions</th>
+                </tr>
+              </thead>
               <tbody>
                 {funding.map((f: any) => {
                   const linked = expenses.filter((e: any) => e.funding_source_id === f.id).reduce((s: number, e: any) => s + Number(e.minimum_amount), 0);
-                  return <tr key={f.id} className="border-t"><td className="p-2 font-medium">{f.name}</td><td className="p-2 capitalize">{f.source_type.replace('_', ' ')}</td><td className="p-2">{f.last4 ? `••••${f.last4}` : '—'}</td><td className="p-2 text-right font-mono">{fmt(linked)}</td></tr>;
+                  const lpd = f.last_paid_date ? parseISO(f.last_paid_date) : null;
+                  return (
+                    <tr key={f.id} className="border-t hover:bg-muted/30">
+                      <td className="p-2 font-medium">{f.name}</td>
+                      <td className="p-2 capitalize">{f.source_type.replace('_', ' ')}</td>
+                      <td className="p-2">{f.last4 ? `••••${f.last4}` : '—'}</td>
+                      <td className="p-2">{lpd ? format(lpd, 'MMM d, yyyy') : '—'}</td>
+                      <td className="p-2">{lpd ? format(lpd, 'MMMM') : '—'}</td>
+                      <td className="p-2 text-right font-mono">{f.last_paid_amount != null ? fmt(f.last_paid_amount) : '—'}</td>
+                      <td className="p-2">{f.last_payment_type ? <Badge variant="outline" className="capitalize">{f.last_payment_type}</Badge> : '—'}</td>
+                      <td className="p-2 text-right font-mono text-red-600">{f.current_balance != null ? fmt(f.current_balance) : '—'}</td>
+                      <td className="p-2 text-right font-mono text-muted-foreground">{f.credit_limit != null ? fmt(f.credit_limit) : '—'}</td>
+                      <td className="p-2 text-right font-mono">{fmt(linked)}</td>
+                      <td className="p-2 print:hidden">
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setFundingDialog({ open: true, editing: f })}><Pencil className="h-3 w-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Delete "${f.name}"?`)) delFunding.mutate(f.id); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
                 })}
-                {funding.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No funding sources yet — add cards or accounts to track which one each expense comes from.</td></tr>}
+                {funding.length === 0 && <tr><td colSpan={11} className="p-6 text-center text-muted-foreground">No funding sources yet — add cards or accounts to track which one each expense comes from.</td></tr>}
               </tbody>
             </table>
           </CardContent></Card>
