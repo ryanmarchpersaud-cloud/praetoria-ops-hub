@@ -507,7 +507,7 @@ export default function PersonalAccountsPage() {
                       <td className="p-2 text-right font-mono">{f.last_paid_amount != null ? fmt(f.last_paid_amount) : '—'}</td>
                       <td className="p-2">{f.last_payment_type ? <Badge variant="outline" className="capitalize">{f.last_payment_type}</Badge> : '—'}</td>
                       <td className="p-2 text-right font-mono text-red-600">{f.current_balance != null ? fmt(f.current_balance) : '—'}</td>
-                      <td className="p-2 text-right font-mono text-muted-foreground">{f.credit_limit != null ? fmt(f.credit_limit) : '—'}</td>
+                      <td className="p-2 text-right font-mono font-semibold text-green-600">{f.credit_limit != null ? fmt(f.credit_limit) : '—'}</td>
                       <td className="p-2 text-right font-mono">{fmt(linked)}</td>
                       <td className="p-2 print:hidden">
                         <div className="flex gap-1">
