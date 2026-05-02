@@ -150,11 +150,13 @@ function FundingSourceDialog({ open, onOpenChange, editing, onSave }: any) {
                 <SelectTrigger><SelectValue placeholder="Full / Minimum / Partial" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">— Not specified —</SelectItem>
-                  <SelectItem value="full">Full</SelectItem>
-                  <SelectItem value="minimum">Minimum</SelectItem>
-                  <SelectItem value="partial">Partial</SelectItem>
+                  <SelectItem value="full">Full (paid off entirely)</SelectItem>
+                  <SelectItem value="minimum">Minimum (only required min)</SelectItem>
+                  <SelectItem value="partial">Partial (regular installment, e.g. mortgage)</SelectItem>
+                  <SelectItem value="scheduled">Scheduled (auto-debit / fixed)</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">Tip: For mortgages or loans paid in fixed monthly installments, "Partial" is correct — you're paying down a long-term balance.</p>
             </div>
           </div>
 
@@ -339,6 +341,19 @@ export default function PersonalAccountsPage() {
     return { month: format(d, 'MMM'), Expenses: totalMinMonthly, Income: totalIncome, Net: totalIncome - totalMinMonthly };
   });
 
+  // Funding sources: limits vs current balance (for chart)
+  const fundingLimitsData = funding
+    .filter((f: any) => Number(f.credit_limit || 0) > 0 || Number(f.current_balance || 0) > 0)
+    .map((f: any) => ({
+      name: f.name.length > 14 ? f.name.slice(0, 12) + '…' : f.name,
+      Limit: Number(f.credit_limit || 0),
+      Balance: Number(f.current_balance || 0),
+      Available: Math.max(0, Number(f.credit_limit || 0) - Number(f.current_balance || 0)),
+    }));
+  const totalLimits = fundingLimitsData.reduce((s: number, f: any) => s + f.Limit, 0);
+  const totalBalances = fundingLimitsData.reduce((s: number, f: any) => s + f.Balance, 0);
+  const totalAvailable = totalLimits - totalBalances;
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto print:p-0">
       {/* Header */}
@@ -468,6 +483,32 @@ export default function PersonalAccountsPage() {
             <Card><CardHeader><CardTitle className="text-base">Income vs Expenses (This Month)</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><BarChart data={incomeVsExpense}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip formatter={(v: any) => fmt(v)} /><Legend /><Bar dataKey="Income" fill="#16a34a" /><Bar dataKey="Expenses" fill="#dc2626" /></BarChart></ResponsiveContainer></CardContent></Card>
             {bySource.length > 0 && <Card><CardHeader><CardTitle className="text-base">By Funding Source</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><BarChart data={bySource}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip formatter={(v: any) => fmt(v)} /><Bar dataKey="value" fill="#0F172A" /></BarChart></ResponsiveContainer></CardContent></Card>}
             <Card><CardHeader><CardTitle className="text-base">12-Month Cash Flow Forecast</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><LineChart data={forecast}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" /><YAxis /><Tooltip formatter={(v: any) => fmt(v)} /><Legend /><Line type="monotone" dataKey="Income" stroke="#16a34a" strokeWidth={2} /><Line type="monotone" dataKey="Expenses" stroke="#dc2626" strokeWidth={2} /><Line type="monotone" dataKey="Net" stroke="#0F172A" strokeWidth={3} /></LineChart></ResponsiveContainer></CardContent></Card>
+
+            {/* NEW: Funding Source Limits vs Balances */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Funding Sources — Limits vs Balances</CardTitle>
+                <p className="text-xs text-muted-foreground">Total Limits: <span className="text-green-600 font-semibold">{fmt(totalLimits)}</span> · Owed: <span className="text-red-600 font-semibold">{fmt(totalBalances)}</span> · Available: <span className="text-blue-600 font-semibold">{fmt(totalAvailable)}</span></p>
+              </CardHeader>
+              <CardContent>
+                {fundingLimitsData.length === 0 ? (
+                  <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground text-center px-4">Add a Credit Limit and Current Balance to your funding sources to see this chart.</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={fundingLimitsData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
+                      <YAxis tickFormatter={(v) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
+                      <Tooltip formatter={(v: any) => fmt(v)} />
+                      <Legend />
+                      <Bar dataKey="Limit" fill="#16a34a" />
+                      <Bar dataKey="Balance" fill="#dc2626" />
+                      <Bar dataKey="Available" fill="#0ea5e9" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
@@ -505,7 +546,7 @@ export default function PersonalAccountsPage() {
                       <td className="p-2 text-right font-mono">{f.last_paid_amount != null ? fmt(f.last_paid_amount) : '—'}</td>
                       <td className="p-2">{f.last_payment_type ? <Badge variant="outline" className="capitalize">{f.last_payment_type}</Badge> : '—'}</td>
                       <td className="p-2 text-right font-mono text-red-600">{f.current_balance != null ? fmt(f.current_balance) : '—'}</td>
-                      <td className="p-2 text-right font-mono text-muted-foreground">{f.credit_limit != null ? fmt(f.credit_limit) : '—'}</td>
+                      <td className="p-2 text-right font-mono font-semibold text-green-600">{f.credit_limit != null ? fmt(f.credit_limit) : '—'}</td>
                       <td className="p-2 text-right font-mono">{fmt(linked)}</td>
                       <td className="p-2 print:hidden">
                         <div className="flex gap-1">
@@ -519,8 +560,27 @@ export default function PersonalAccountsPage() {
                 })}
                 {funding.length === 0 && <tr><td colSpan={11} className="p-6 text-center text-muted-foreground">No funding sources yet — add cards or accounts to track which one each expense comes from.</td></tr>}
               </tbody>
+              {funding.length > 0 && (() => {
+                const totLimit = funding.reduce((s: number, f: any) => s + Number(f.credit_limit || 0), 0);
+                const totBalance = funding.reduce((s: number, f: any) => s + Number(f.current_balance || 0), 0);
+                const totLinked = funding.reduce((s: number, f: any) => s + expenses.filter((e: any) => e.funding_source_id === f.id).reduce((ss: number, e: any) => ss + Number(e.minimum_amount), 0), 0);
+                return (
+                  <tfoot className="bg-muted/30 font-bold">
+                    <tr>
+                      <td className="p-2" colSpan={7}>TOTALS ({funding.length} sources)</td>
+                      <td className="p-2 text-right font-mono text-red-600">{fmt(totBalance)}</td>
+                      <td className="p-2 text-right font-mono text-green-600">{fmt(totLimit)}</td>
+                      <td className="p-2 text-right font-mono">{fmt(totLinked)}</td>
+                      <td className="print:hidden"></td>
+                    </tr>
+                  </tfoot>
+                );
+              })()}
             </table>
           </CardContent></Card>
+          <p className="text-xs text-muted-foreground px-1">
+            💡 <strong>Linked Exp.</strong> shows the total of all monthly bills assigned to this card (in the Expenses tab, set "Funding Source" on each bill). If it shows $0, none of your expenses are linked to that card yet.
+          </p>
         </TabsContent>
 
         {/* History */}
