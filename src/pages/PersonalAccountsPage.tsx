@@ -719,6 +719,123 @@ export default function PersonalAccountsPage() {
             </table>
           </CardContent></Card>
         </TabsContent>
+
+        {/* Debt Payoff Planner */}
+        <TabsContent value="payoff" className="space-y-4">
+          {debts.length === 0 ? (
+            <Card><CardContent className="p-8 text-center text-muted-foreground">
+              Add a <strong>Current Balance</strong> to your funding sources to use the Debt Payoff Planner.
+            </CardContent></Card>
+          ) : (
+            <>
+              {/* Strategy controls */}
+              <Card>
+                <CardHeader><CardTitle className="text-base">Plan Your Path to Debt-Free 💪</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Strategy</Label>
+                      <Select value={payoffStrategy} onValueChange={(v: any) => setPayoffStrategy(v)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="avalanche">🏔️ Avalanche — Highest interest first (saves most $)</SelectItem>
+                          <SelectItem value="snowball">⛄ Snowball — Smallest balance first (quick wins)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {payoffStrategy === 'avalanche'
+                          ? 'Mathematically optimal — kills the most expensive interest first.'
+                          : 'Psychologically rewarding — knock out small debts fast for momentum.'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label>Extra Monthly Payment ($)</Label>
+                      <Input type="number" step="50" value={extraPayment} onChange={e => setExtraPayment(parseFloat(e.target.value) || 0)} />
+                      <p className="text-xs text-muted-foreground mt-1">Above your minimums — applied to top-priority debt.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Summary KPIs */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Debt</p><p className="text-2xl font-bold text-red-600">{fmt(totalDebt)}</p></CardContent></Card>
+                <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Required Monthly Min</p><p className="text-2xl font-bold">{fmt(totalMinPayments)}</p></CardContent></Card>
+                <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Debt-Free Date</p><p className="text-xl font-bold text-green-600">{acceleratedPlan.payoffDate ? format(acceleratedPlan.payoffDate, 'MMM yyyy') : '—'}</p><p className="text-xs text-muted-foreground">{acceleratedPlan.months} months</p></CardContent></Card>
+                <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Interest Cost</p><p className="text-2xl font-bold text-amber-600">{fmt(acceleratedPlan.totalInterest)}</p></CardContent></Card>
+              </div>
+
+              {/* Savings comparison */}
+              {extraPayment > 0 && (
+                <Card className="border-green-500 border-2 bg-green-50/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <TrendingDown className="h-8 w-8 text-green-600" />
+                      <div>
+                        <p className="text-sm font-semibold text-green-900">By paying an extra {fmt(extraPayment)}/month you'll save:</p>
+                        <p className="text-xl font-bold text-green-700">{fmt(interestSaved)} in interest · {monthsSaved} months sooner debt-free</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Payoff order */}
+              <Card>
+                <CardHeader><CardTitle className="text-base">Attack Order ({payoffStrategy === 'avalanche' ? 'Avalanche' : 'Snowball'})</CardTitle></CardHeader>
+                <CardContent className="p-0 overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="p-2 text-left">#</th>
+                        <th className="p-2 text-left">Debt</th>
+                        <th className="p-2 text-right">Balance</th>
+                        <th className="p-2 text-right">APR</th>
+                        <th className="p-2 text-right">Min Payment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payoffOrder.map((d, i) => (
+                        <tr key={d.id} className="border-t">
+                          <td className="p-2"><Badge variant={i === 0 ? 'default' : 'outline'}>{i + 1}</Badge></td>
+                          <td className="p-2 font-medium">{d.name} {i === 0 && <span className="text-xs text-primary">← attack first</span>}</td>
+                          <td className="p-2 text-right font-mono text-red-600">{fmt(d.balance)}</td>
+                          <td className="p-2 text-right font-mono">{d.apr ? `${d.apr.toFixed(2)}%` : '—'}</td>
+                          <td className="p-2 text-right font-mono">{fmt(d.minimum)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CardContent>
+              </Card>
+
+              {/* Payoff timeline chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Debt Payoff Timeline</CardTitle>
+                  <p className="text-xs text-muted-foreground">Remaining balance month-by-month with your current plan.</p>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={acceleratedPlan.schedule.filter((_, idx) => idx % Math.max(1, Math.floor(acceleratedPlan.schedule.length / 60)) === 0)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" label={{ value: 'Months', position: 'insideBottom', offset: -5 }} />
+                      <YAxis tickFormatter={(v) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
+                      <Tooltip formatter={(v: any) => fmt(v)} labelFormatter={(l) => `Month ${l}`} />
+                      <Line type="monotone" dataKey="remaining" stroke="#16a34a" strokeWidth={3} dot={false} name="Remaining Debt" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4 text-sm text-blue-900">
+                  <strong>💡 Tip:</strong> Add the <strong>APR %</strong> and <strong>Minimum Payment</strong> to each funding source (edit any card) for the most accurate forecast. Without APR, interest is assumed at 0%.
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
       </Tabs>
 
       {/* Dialogs */}
