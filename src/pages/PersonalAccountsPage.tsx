@@ -474,6 +474,7 @@ export default function PersonalAccountsPage() {
           <TabsTrigger value="funding">Funding Sources ({funding.length})</TabsTrigger>
           <TabsTrigger value="history">Payment History ({payments.length})</TabsTrigger>
           <TabsTrigger value="monthly">Monthly Summary</TabsTrigger>
+          <TabsTrigger value="payoff">💪 Debt Payoff</TabsTrigger>
         </TabsList>
 
         {/* Expenses */}
