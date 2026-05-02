@@ -598,6 +598,42 @@ export default function PersonalAccountsPage() {
       <FundingSourceDialog open={fundingDialog.open} onOpenChange={(v: boolean) => setFundingDialog({ open: v, editing: v ? fundingDialog.editing : null })} editing={fundingDialog.editing} onSave={(f: any) => upsertFunding.mutate(f)} />
       <IncomeDialog open={incomeDialog.open} onOpenChange={(v: boolean) => setIncomeDialog({ open: v, editing: v ? incomeDialog.editing : null })} editing={incomeDialog.editing} onSave={(f: any) => upsertIncome.mutate(f)} />
       <MarkPaidDialog open={paidDialog.open} onOpenChange={(v: boolean) => setPaidDialog({ open: v, expense: v ? paidDialog.expense : null })} expense={paidDialog.expense} fundingSources={funding} onConfirm={(p: any) => markPaid.mutate({ expense_id: paidDialog.expense.id, ...p })} />
+
+      {/* Per-card payment history */}
+      <Dialog open={cardHistoryDialog.open} onOpenChange={(v) => setCardHistoryDialog({ open: v, card: v ? cardHistoryDialog.card : null })}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Payment History — {cardHistoryDialog.card?.name}</DialogTitle></DialogHeader>
+          {(() => {
+            const cardPayments = payments.filter((p: any) => p.funding_source_id === cardHistoryDialog.card?.id);
+            const total = cardPayments.reduce((s: number, p: any) => s + Number(p.amount_paid), 0);
+            return (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <Card><CardContent className="p-3"><p className="text-xs text-muted-foreground">Total Payments</p><p className="text-xl font-bold">{cardPayments.length}</p></CardContent></Card>
+                  <Card><CardContent className="p-3"><p className="text-xs text-muted-foreground">Total Paid (All Time)</p><p className="text-xl font-bold font-mono">{fmt(total)}</p></CardContent></Card>
+                </div>
+                <Card><CardContent className="p-0">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50"><tr className="text-left"><th className="p-2">Date</th><th className="p-2">Month</th><th className="p-2">Bill</th><th className="p-2">Type</th><th className="p-2 text-right">Amount</th></tr></thead>
+                    <tbody>
+                      {cardPayments.map((p: any) => (
+                        <tr key={p.id} className="border-t">
+                          <td className="p-2">{format(parseISO(p.paid_date), 'MMM d, yyyy')}</td>
+                          <td className="p-2 text-muted-foreground">{format(parseISO(p.paid_date), 'MMMM yyyy')}</td>
+                          <td className="p-2">{p.personal_expenses?.account_name || <span className="italic text-muted-foreground">Card payment</span>}</td>
+                          <td className="p-2"><Badge variant="outline" className="capitalize">{p.payment_type}</Badge></td>
+                          <td className="p-2 text-right font-mono">{fmt(p.amount_paid)}</td>
+                        </tr>
+                      ))}
+                      {cardPayments.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No payments yet on this card.</td></tr>}
+                    </tbody>
+                  </table>
+                </CardContent></Card>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
