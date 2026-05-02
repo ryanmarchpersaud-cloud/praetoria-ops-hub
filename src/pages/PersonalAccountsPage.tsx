@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   useIsPersonalOwner, useClaimPersonalOwnership, usePersonalExpenses, usePersonalFundingSources,
   usePersonalIncome, usePersonalPayments, useUpsertPersonalExpense, useDeletePersonalExpense,
-  useUpsertFundingSource, useUpsertIncome, useDeleteIncome, useMarkPaid, useSeedFromNotepad,
+  useUpsertFundingSource, useDeleteFundingSource, useUpsertIncome, useDeleteIncome, useMarkPaid, useSeedFromNotepad,
 } from '@/hooks/usePersonalAccounts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
