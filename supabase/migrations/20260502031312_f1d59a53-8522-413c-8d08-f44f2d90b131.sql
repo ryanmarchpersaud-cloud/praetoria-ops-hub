@@ -1,0 +1,1 @@
+ALTER TABLE public.personal_expense_payments ALTER COLUMN expense_id DROP NOT NULL;

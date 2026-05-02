@@ -4902,7 +4902,7 @@ export type Database = {
         Row: {
           amount_paid: number
           created_at: string
-          expense_id: string
+          expense_id: string | null
           funding_source_id: string | null
           id: string
           notes: string | null
@@ -4913,7 +4913,7 @@ export type Database = {
         Insert: {
           amount_paid: number
           created_at?: string
-          expense_id: string
+          expense_id?: string | null
           funding_source_id?: string | null
           id?: string
           notes?: string | null
@@ -4924,7 +4924,7 @@ export type Database = {
         Update: {
           amount_paid?: number
           created_at?: string
-          expense_id?: string
+          expense_id?: string | null
           funding_source_id?: string | null
           id?: string
           notes?: string | null
