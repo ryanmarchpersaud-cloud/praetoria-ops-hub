@@ -525,14 +525,68 @@ export default function PersonalAccountsPage() {
 
         {/* History */}
         <TabsContent value="history" className="space-y-2">
-          <Card><CardContent className="p-0">
+          <Card><CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50"><tr className="text-left"><th className="p-2">Paid Date</th><th className="p-2">Account</th><th className="p-2">Type</th><th className="p-2 text-right">Amount</th></tr></thead>
+              <thead className="bg-muted/50"><tr className="text-left">
+                <th className="p-2">Paid Date</th>
+                <th className="p-2">Month</th>
+                <th className="p-2">Bill / Account</th>
+                <th className="p-2">Paid From (Card)</th>
+                <th className="p-2">Type</th>
+                <th className="p-2 text-right">Amount</th>
+              </tr></thead>
               <tbody>
                 {payments.map((p: any) => (
-                  <tr key={p.id} className="border-t"><td className="p-2">{format(parseISO(p.paid_date), 'MMM d, yyyy')}</td><td className="p-2 font-medium">{p.personal_expenses?.account_name || '—'}</td><td className="p-2 capitalize">{p.payment_type}</td><td className="p-2 text-right font-mono">{fmt(p.amount_paid)}</td></tr>
+                  <tr key={p.id} className="border-t">
+                    <td className="p-2">{format(parseISO(p.paid_date), 'MMM d, yyyy')}</td>
+                    <td className="p-2 text-muted-foreground">{format(parseISO(p.paid_date), 'MMMM yyyy')}</td>
+                    <td className="p-2 font-medium">{p.personal_expenses?.account_name || <span className="italic text-muted-foreground">Card payment</span>}</td>
+                    <td className="p-2">{p.personal_funding_sources?.name ? `${p.personal_funding_sources.name}${p.personal_funding_sources.last4 ? ` ••${p.personal_funding_sources.last4}` : ''}` : '—'}</td>
+                    <td className="p-2"><Badge variant="outline" className="capitalize">{p.payment_type}</Badge></td>
+                    <td className="p-2 text-right font-mono">{fmt(p.amount_paid)}</td>
+                  </tr>
                 ))}
-                {payments.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No payments recorded yet. Click ✓ on any expense to mark it paid.</td></tr>}
+                {payments.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No payments recorded yet. Click ✓ on any expense or edit a card's "Last Paid" to log one.</td></tr>}
+              </tbody>
+            </table>
+          </CardContent></Card>
+        </TabsContent>
+
+        {/* Monthly Summary */}
+        <TabsContent value="monthly" className="space-y-2">
+          <Card><CardContent className="p-0 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50"><tr className="text-left">
+                <th className="p-2">Month</th>
+                <th className="p-2 text-center"># Payments</th>
+                <th className="p-2 text-right">Total Paid</th>
+                <th className="p-2 text-right">Full</th>
+                <th className="p-2 text-right">Minimum</th>
+                <th className="p-2 text-right">Partial</th>
+              </tr></thead>
+              <tbody>
+                {(() => {
+                  const groups: Record<string, any> = {};
+                  payments.forEach((p: any) => {
+                    const key = format(parseISO(p.paid_date), 'yyyy-MM');
+                    if (!groups[key]) groups[key] = { label: format(parseISO(p.paid_date), 'MMMM yyyy'), count: 0, total: 0, full: 0, minimum: 0, partial: 0 };
+                    groups[key].count += 1;
+                    groups[key].total += Number(p.amount_paid);
+                    groups[key][p.payment_type] = (groups[key][p.payment_type] || 0) + Number(p.amount_paid);
+                  });
+                  const rows = Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+                  if (rows.length === 0) return <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No payments yet to summarize.</td></tr>;
+                  return rows.map(([key, g]: any) => (
+                    <tr key={key} className="border-t hover:bg-muted/30">
+                      <td className="p-2 font-medium">{g.label}</td>
+                      <td className="p-2 text-center">{g.count}</td>
+                      <td className="p-2 text-right font-mono font-bold">{fmt(g.total)}</td>
+                      <td className="p-2 text-right font-mono text-green-700">{g.full ? fmt(g.full) : '—'}</td>
+                      <td className="p-2 text-right font-mono text-amber-700">{g.minimum ? fmt(g.minimum) : '—'}</td>
+                      <td className="p-2 text-right font-mono text-blue-700">{g.partial ? fmt(g.partial) : '—'}</td>
+                    </tr>
+                  ));
+                })()}
               </tbody>
             </table>
           </CardContent></Card>
