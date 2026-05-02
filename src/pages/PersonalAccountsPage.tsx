@@ -255,6 +255,7 @@ export default function PersonalAccountsPage() {
   const upsertExpense = useUpsertPersonalExpense();
   const delExpense = useDeletePersonalExpense();
   const upsertFunding = useUpsertFundingSource();
+  const delFunding = useDeleteFundingSource();
   const upsertIncome = useUpsertIncome();
   const delIncome = useDeleteIncome();
   const markPaid = useMarkPaid();
