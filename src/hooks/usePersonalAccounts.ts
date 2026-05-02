@@ -165,6 +165,22 @@ export function useUpsertFundingSource() {
   });
 }
 
+export function useDeleteFundingSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('personal_funding_sources').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['personal_funding'] });
+      qc.invalidateQueries({ queryKey: ['personal_expenses'] });
+      toast.success('Deleted');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
 export function useUpsertIncome() {
   const { user } = useAuth();
   const qc = useQueryClient();

@@ -5018,30 +5018,48 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
+          credit_limit: number | null
+          current_balance: number | null
           id: string
           is_active: boolean
+          last_paid_amount: number | null
+          last_paid_date: string | null
+          last_payment_type: string | null
           last4: string | null
           name: string
+          notes: string | null
           owner_id: string
           source_type: string
         }
         Insert: {
           color?: string | null
           created_at?: string
+          credit_limit?: number | null
+          current_balance?: number | null
           id?: string
           is_active?: boolean
+          last_paid_amount?: number | null
+          last_paid_date?: string | null
+          last_payment_type?: string | null
           last4?: string | null
           name: string
+          notes?: string | null
           owner_id: string
           source_type?: string
         }
         Update: {
           color?: string | null
           created_at?: string
+          credit_limit?: number | null
+          current_balance?: number | null
           id?: string
           is_active?: boolean
+          last_paid_amount?: number | null
+          last_paid_date?: string | null
+          last_payment_type?: string | null
           last4?: string | null
           name?: string
+          notes?: string | null
           owner_id?: string
           source_type?: string
         }

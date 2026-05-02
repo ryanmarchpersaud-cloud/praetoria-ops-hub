@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   useIsPersonalOwner, useClaimPersonalOwnership, usePersonalExpenses, usePersonalFundingSources,
   usePersonalIncome, usePersonalPayments, useUpsertPersonalExpense, useDeletePersonalExpense,
-  useUpsertFundingSource, useUpsertIncome, useDeleteIncome, useMarkPaid, useSeedFromNotepad,
+  useUpsertFundingSource, useDeleteFundingSource, useUpsertIncome, useDeleteIncome, useMarkPaid, useSeedFromNotepad,
 } from '@/hooks/usePersonalAccounts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -110,28 +110,60 @@ function ExpenseDialog({ open, onOpenChange, editing, fundingSources, onSave }: 
   );
 }
 
-function FundingSourceDialog({ open, onOpenChange, onSave }: any) {
+function FundingSourceDialog({ open, onOpenChange, editing, onSave }: any) {
   const [form, setForm] = useState<any>({ source_type: 'credit_card' });
+  // Reset form whenever dialog opens with new "editing" target
+  React.useEffect(() => {
+    if (open) setForm(editing && editing.id ? { ...editing } : { source_type: 'credit_card' });
+  }, [open, editing]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Add Funding Source</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{editing?.id ? 'Edit' : 'Add'} Funding Source</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>Name *</Label><Input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Capital One Visa" /></div>
-          <div><Label>Type</Label>
-            <Select value={form.source_type} onValueChange={v => setForm({ ...form, source_type: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bank">Bank Account</SelectItem>
-                <SelectItem value="credit_card">Credit Card</SelectItem>
-                <SelectItem value="debit_card">Debit Card</SelectItem>
-                <SelectItem value="line_of_credit">Line of Credit</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Type</Label>
+              <Select value={form.source_type} onValueChange={v => setForm({ ...form, source_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank">Bank Account</SelectItem>
+                  <SelectItem value="credit_card">Credit Card</SelectItem>
+                  <SelectItem value="debit_card">Debit Card</SelectItem>
+                  <SelectItem value="line_of_credit">Line of Credit</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Last 4 digits</Label><Input maxLength={4} value={form.last4 || ''} onChange={e => setForm({ ...form, last4: e.target.value })} /></div>
           </div>
-          <div><Label>Last 4 digits (optional)</Label><Input maxLength={4} value={form.last4 || ''} onChange={e => setForm({ ...form, last4: e.target.value })} /></div>
+
+          <div className="rounded border p-3 space-y-3 bg-muted/30">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Last Payment</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Last Paid Date</Label><Input type="date" value={form.last_paid_date || ''} onChange={e => setForm({ ...form, last_paid_date: e.target.value || null })} /></div>
+              <div><Label>Amount Paid</Label><Input type="number" step="0.01" value={form.last_paid_amount ?? ''} onChange={e => setForm({ ...form, last_paid_amount: e.target.value === '' ? null : parseFloat(e.target.value) })} /></div>
+            </div>
+            <div><Label>Payment Type</Label>
+              <Select value={form.last_payment_type || 'none'} onValueChange={v => setForm({ ...form, last_payment_type: v === 'none' ? null : v })}>
+                <SelectTrigger><SelectValue placeholder="Full / Minimum / Partial" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Not specified —</SelectItem>
+                  <SelectItem value="full">Full</SelectItem>
+                  <SelectItem value="minimum">Minimum</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Current Balance</Label><Input type="number" step="0.01" value={form.current_balance ?? ''} onChange={e => setForm({ ...form, current_balance: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="What you owe" /></div>
+            <div><Label>Credit Limit</Label><Input type="number" step="0.01" value={form.credit_limit ?? ''} onChange={e => setForm({ ...form, credit_limit: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="(if applicable)" /></div>
+          </div>
+
+          <div><Label>Notes</Label><Textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
         </div>
         <DialogFooter><Button onClick={() => { onSave(form); onOpenChange(false); }}>Save</Button></DialogFooter>
       </DialogContent>
@@ -223,6 +255,7 @@ export default function PersonalAccountsPage() {
   const upsertExpense = useUpsertPersonalExpense();
   const delExpense = useDeletePersonalExpense();
   const upsertFunding = useUpsertFundingSource();
+  const delFunding = useDeleteFundingSource();
   const upsertIncome = useUpsertIncome();
   const delIncome = useDeleteIncome();
   const markPaid = useMarkPaid();
@@ -230,7 +263,7 @@ export default function PersonalAccountsPage() {
   const { unlocked, lock } = useSessionUnlock();
 
   const [expenseDialog, setExpenseDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
-  const [fundingDialog, setFundingDialog] = useState(false);
+  const [fundingDialog, setFundingDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [incomeDialog, setIncomeDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [paidDialog, setPaidDialog] = useState<{ open: boolean; expense: any }>({ open: false, expense: null });
 
@@ -438,16 +471,50 @@ export default function PersonalAccountsPage() {
 
         {/* Funding Sources */}
         <TabsContent value="funding" className="space-y-2">
-          <div className="flex justify-end print:hidden"><Button size="sm" onClick={() => setFundingDialog(true)}><Plus className="h-4 w-4 mr-1" />Add Funding Source</Button></div>
-          <Card><CardContent className="p-0">
+          <div className="flex justify-end print:hidden"><Button size="sm" onClick={() => setFundingDialog({ open: true, editing: {} })}><Plus className="h-4 w-4 mr-1" />Add Funding Source</Button></div>
+          <Card><CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50"><tr className="text-left"><th className="p-2">Name</th><th className="p-2">Type</th><th className="p-2">Last 4</th><th className="p-2 text-right">Total Linked Expenses</th></tr></thead>
+              <thead className="bg-muted/50">
+                <tr className="text-left">
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Type</th>
+                  <th className="p-2">Last 4</th>
+                  <th className="p-2">Last Paid</th>
+                  <th className="p-2">Month</th>
+                  <th className="p-2 text-right">Amount</th>
+                  <th className="p-2">Type</th>
+                  <th className="p-2 text-right">Balance</th>
+                  <th className="p-2 text-right">Limit</th>
+                  <th className="p-2 text-right">Linked Exp.</th>
+                  <th className="p-2 print:hidden">Actions</th>
+                </tr>
+              </thead>
               <tbody>
                 {funding.map((f: any) => {
                   const linked = expenses.filter((e: any) => e.funding_source_id === f.id).reduce((s: number, e: any) => s + Number(e.minimum_amount), 0);
-                  return <tr key={f.id} className="border-t"><td className="p-2 font-medium">{f.name}</td><td className="p-2 capitalize">{f.source_type.replace('_', ' ')}</td><td className="p-2">{f.last4 ? `••••${f.last4}` : '—'}</td><td className="p-2 text-right font-mono">{fmt(linked)}</td></tr>;
+                  const lpd = f.last_paid_date ? parseISO(f.last_paid_date) : null;
+                  return (
+                    <tr key={f.id} className="border-t hover:bg-muted/30">
+                      <td className="p-2 font-medium">{f.name}</td>
+                      <td className="p-2 capitalize">{f.source_type.replace('_', ' ')}</td>
+                      <td className="p-2">{f.last4 ? `••••${f.last4}` : '—'}</td>
+                      <td className="p-2">{lpd ? format(lpd, 'MMM d, yyyy') : '—'}</td>
+                      <td className="p-2">{lpd ? format(lpd, 'MMMM') : '—'}</td>
+                      <td className="p-2 text-right font-mono">{f.last_paid_amount != null ? fmt(f.last_paid_amount) : '—'}</td>
+                      <td className="p-2">{f.last_payment_type ? <Badge variant="outline" className="capitalize">{f.last_payment_type}</Badge> : '—'}</td>
+                      <td className="p-2 text-right font-mono text-red-600">{f.current_balance != null ? fmt(f.current_balance) : '—'}</td>
+                      <td className="p-2 text-right font-mono text-muted-foreground">{f.credit_limit != null ? fmt(f.credit_limit) : '—'}</td>
+                      <td className="p-2 text-right font-mono">{fmt(linked)}</td>
+                      <td className="p-2 print:hidden">
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setFundingDialog({ open: true, editing: f })}><Pencil className="h-3 w-3" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Delete "${f.name}"?`)) delFunding.mutate(f.id); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
                 })}
-                {funding.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No funding sources yet — add cards or accounts to track which one each expense comes from.</td></tr>}
+                {funding.length === 0 && <tr><td colSpan={11} className="p-6 text-center text-muted-foreground">No funding sources yet — add cards or accounts to track which one each expense comes from.</td></tr>}
               </tbody>
             </table>
           </CardContent></Card>
@@ -471,7 +538,7 @@ export default function PersonalAccountsPage() {
 
       {/* Dialogs */}
       <ExpenseDialog open={expenseDialog.open} onOpenChange={(v: boolean) => setExpenseDialog({ open: v, editing: v ? expenseDialog.editing : null })} editing={expenseDialog.editing} fundingSources={funding} onSave={(f: any) => upsertExpense.mutate(f)} />
-      <FundingSourceDialog open={fundingDialog} onOpenChange={setFundingDialog} onSave={(f: any) => upsertFunding.mutate(f)} />
+      <FundingSourceDialog open={fundingDialog.open} onOpenChange={(v: boolean) => setFundingDialog({ open: v, editing: v ? fundingDialog.editing : null })} editing={fundingDialog.editing} onSave={(f: any) => upsertFunding.mutate(f)} />
       <IncomeDialog open={incomeDialog.open} onOpenChange={(v: boolean) => setIncomeDialog({ open: v, editing: v ? incomeDialog.editing : null })} editing={incomeDialog.editing} onSave={(f: any) => upsertIncome.mutate(f)} />
       <MarkPaidDialog open={paidDialog.open} onOpenChange={(v: boolean) => setPaidDialog({ open: v, expense: v ? paidDialog.expense : null })} expense={paidDialog.expense} fundingSources={funding} onConfirm={(p: any) => markPaid.mutate({ expense_id: paidDialog.expense.id, ...p })} />
     </div>
