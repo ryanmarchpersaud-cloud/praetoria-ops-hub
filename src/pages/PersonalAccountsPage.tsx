@@ -509,6 +509,7 @@ export default function PersonalAccountsPage() {
                       <td className="p-2 text-right font-mono">{fmt(linked)}</td>
                       <td className="p-2 print:hidden">
                         <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" title="View payment history" onClick={() => setCardHistoryDialog({ open: true, card: f })}><Eye className="h-3 w-3" /></Button>
                           <Button size="sm" variant="ghost" onClick={() => setFundingDialog({ open: true, editing: f })}><Pencil className="h-3 w-3" /></Button>
                           <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Delete "${f.name}"?`)) delFunding.mutate(f.id); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
                         </div>
