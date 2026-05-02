@@ -5021,11 +5021,13 @@ export type Database = {
           credit_limit: number | null
           current_balance: number | null
           id: string
+          interest_rate: number | null
           is_active: boolean
           last_paid_amount: number | null
           last_paid_date: string | null
           last_payment_type: string | null
           last4: string | null
+          minimum_payment: number | null
           name: string
           notes: string | null
           owner_id: string
@@ -5037,11 +5039,13 @@ export type Database = {
           credit_limit?: number | null
           current_balance?: number | null
           id?: string
+          interest_rate?: number | null
           is_active?: boolean
           last_paid_amount?: number | null
           last_paid_date?: string | null
           last_payment_type?: string | null
           last4?: string | null
+          minimum_payment?: number | null
           name: string
           notes?: string | null
           owner_id: string
@@ -5053,11 +5057,13 @@ export type Database = {
           credit_limit?: number | null
           current_balance?: number | null
           id?: string
+          interest_rate?: number | null
           is_active?: boolean
           last_paid_amount?: number | null
           last_paid_date?: string | null
           last_payment_type?: string | null
           last4?: string | null
+          minimum_payment?: number | null
           name?: string
           notes?: string | null
           owner_id?: string
