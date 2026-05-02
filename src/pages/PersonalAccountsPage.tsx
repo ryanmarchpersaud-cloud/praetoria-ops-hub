@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Lock, Plus, Sprout, Calendar as CalIcon, Printer, Download, FileText, Trash2, Pencil, CheckCircle2, CreditCard, Wallet, Receipt, Repeat, Briefcase, AlertTriangle, TrendingUp, TrendingDown, Copy, LockKeyhole } from 'lucide-react';
+import { Lock, Plus, Sprout, Calendar as CalIcon, Printer, Download, FileText, Trash2, Pencil, CheckCircle2, CreditCard, Wallet, Receipt, Repeat, Briefcase, AlertTriangle, TrendingUp, TrendingDown, Copy, LockKeyhole, Eye } from 'lucide-react';
 import PersonalPinGate from '@/components/PersonalPinGate';
 import { useSessionUnlock } from '@/hooks/usePersonalAccountsPin';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
@@ -266,6 +266,7 @@ export default function PersonalAccountsPage() {
   const [fundingDialog, setFundingDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [incomeDialog, setIncomeDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [paidDialog, setPaidDialog] = useState<{ open: boolean; expense: any }>({ open: false, expense: null });
+  const [cardHistoryDialog, setCardHistoryDialog] = useState<{ open: boolean; card: any }>({ open: false, card: null });
 
   // ---- Loading / not-claimed gates ----
   if (isOwnerQ.isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
@@ -390,6 +391,7 @@ export default function PersonalAccountsPage() {
           <TabsTrigger value="charts">Charts</TabsTrigger>
           <TabsTrigger value="funding">Funding Sources ({funding.length})</TabsTrigger>
           <TabsTrigger value="history">Payment History ({payments.length})</TabsTrigger>
+          <TabsTrigger value="monthly">Monthly Summary</TabsTrigger>
         </TabsList>
 
         {/* Expenses */}
@@ -507,6 +509,7 @@ export default function PersonalAccountsPage() {
                       <td className="p-2 text-right font-mono">{fmt(linked)}</td>
                       <td className="p-2 print:hidden">
                         <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" title="View payment history" onClick={() => setCardHistoryDialog({ open: true, card: f })}><Eye className="h-3 w-3" /></Button>
                           <Button size="sm" variant="ghost" onClick={() => setFundingDialog({ open: true, editing: f })}><Pencil className="h-3 w-3" /></Button>
                           <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Delete "${f.name}"?`)) delFunding.mutate(f.id); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
                         </div>
@@ -522,14 +525,68 @@ export default function PersonalAccountsPage() {
 
         {/* History */}
         <TabsContent value="history" className="space-y-2">
-          <Card><CardContent className="p-0">
+          <Card><CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50"><tr className="text-left"><th className="p-2">Paid Date</th><th className="p-2">Account</th><th className="p-2">Type</th><th className="p-2 text-right">Amount</th></tr></thead>
+              <thead className="bg-muted/50"><tr className="text-left">
+                <th className="p-2">Paid Date</th>
+                <th className="p-2">Month</th>
+                <th className="p-2">Bill / Account</th>
+                <th className="p-2">Paid From (Card)</th>
+                <th className="p-2">Type</th>
+                <th className="p-2 text-right">Amount</th>
+              </tr></thead>
               <tbody>
                 {payments.map((p: any) => (
-                  <tr key={p.id} className="border-t"><td className="p-2">{format(parseISO(p.paid_date), 'MMM d, yyyy')}</td><td className="p-2 font-medium">{p.personal_expenses?.account_name || '—'}</td><td className="p-2 capitalize">{p.payment_type}</td><td className="p-2 text-right font-mono">{fmt(p.amount_paid)}</td></tr>
+                  <tr key={p.id} className="border-t">
+                    <td className="p-2">{format(parseISO(p.paid_date), 'MMM d, yyyy')}</td>
+                    <td className="p-2 text-muted-foreground">{format(parseISO(p.paid_date), 'MMMM yyyy')}</td>
+                    <td className="p-2 font-medium">{p.personal_expenses?.account_name || <span className="italic text-muted-foreground">Card payment</span>}</td>
+                    <td className="p-2">{p.personal_funding_sources?.name ? `${p.personal_funding_sources.name}${p.personal_funding_sources.last4 ? ` ••${p.personal_funding_sources.last4}` : ''}` : '—'}</td>
+                    <td className="p-2"><Badge variant="outline" className="capitalize">{p.payment_type}</Badge></td>
+                    <td className="p-2 text-right font-mono">{fmt(p.amount_paid)}</td>
+                  </tr>
                 ))}
-                {payments.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No payments recorded yet. Click ✓ on any expense to mark it paid.</td></tr>}
+                {payments.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No payments recorded yet. Click ✓ on any expense or edit a card's "Last Paid" to log one.</td></tr>}
+              </tbody>
+            </table>
+          </CardContent></Card>
+        </TabsContent>
+
+        {/* Monthly Summary */}
+        <TabsContent value="monthly" className="space-y-2">
+          <Card><CardContent className="p-0 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50"><tr className="text-left">
+                <th className="p-2">Month</th>
+                <th className="p-2 text-center"># Payments</th>
+                <th className="p-2 text-right">Total Paid</th>
+                <th className="p-2 text-right">Full</th>
+                <th className="p-2 text-right">Minimum</th>
+                <th className="p-2 text-right">Partial</th>
+              </tr></thead>
+              <tbody>
+                {(() => {
+                  const groups: Record<string, any> = {};
+                  payments.forEach((p: any) => {
+                    const key = format(parseISO(p.paid_date), 'yyyy-MM');
+                    if (!groups[key]) groups[key] = { label: format(parseISO(p.paid_date), 'MMMM yyyy'), count: 0, total: 0, full: 0, minimum: 0, partial: 0 };
+                    groups[key].count += 1;
+                    groups[key].total += Number(p.amount_paid);
+                    groups[key][p.payment_type] = (groups[key][p.payment_type] || 0) + Number(p.amount_paid);
+                  });
+                  const rows = Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+                  if (rows.length === 0) return <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No payments yet to summarize.</td></tr>;
+                  return rows.map(([key, g]: any) => (
+                    <tr key={key} className="border-t hover:bg-muted/30">
+                      <td className="p-2 font-medium">{g.label}</td>
+                      <td className="p-2 text-center">{g.count}</td>
+                      <td className="p-2 text-right font-mono font-bold">{fmt(g.total)}</td>
+                      <td className="p-2 text-right font-mono text-green-700">{g.full ? fmt(g.full) : '—'}</td>
+                      <td className="p-2 text-right font-mono text-amber-700">{g.minimum ? fmt(g.minimum) : '—'}</td>
+                      <td className="p-2 text-right font-mono text-blue-700">{g.partial ? fmt(g.partial) : '—'}</td>
+                    </tr>
+                  ));
+                })()}
               </tbody>
             </table>
           </CardContent></Card>
@@ -541,6 +598,42 @@ export default function PersonalAccountsPage() {
       <FundingSourceDialog open={fundingDialog.open} onOpenChange={(v: boolean) => setFundingDialog({ open: v, editing: v ? fundingDialog.editing : null })} editing={fundingDialog.editing} onSave={(f: any) => upsertFunding.mutate(f)} />
       <IncomeDialog open={incomeDialog.open} onOpenChange={(v: boolean) => setIncomeDialog({ open: v, editing: v ? incomeDialog.editing : null })} editing={incomeDialog.editing} onSave={(f: any) => upsertIncome.mutate(f)} />
       <MarkPaidDialog open={paidDialog.open} onOpenChange={(v: boolean) => setPaidDialog({ open: v, expense: v ? paidDialog.expense : null })} expense={paidDialog.expense} fundingSources={funding} onConfirm={(p: any) => markPaid.mutate({ expense_id: paidDialog.expense.id, ...p })} />
+
+      {/* Per-card payment history */}
+      <Dialog open={cardHistoryDialog.open} onOpenChange={(v) => setCardHistoryDialog({ open: v, card: v ? cardHistoryDialog.card : null })}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Payment History — {cardHistoryDialog.card?.name}</DialogTitle></DialogHeader>
+          {(() => {
+            const cardPayments = payments.filter((p: any) => p.funding_source_id === cardHistoryDialog.card?.id);
+            const total = cardPayments.reduce((s: number, p: any) => s + Number(p.amount_paid), 0);
+            return (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <Card><CardContent className="p-3"><p className="text-xs text-muted-foreground">Total Payments</p><p className="text-xl font-bold">{cardPayments.length}</p></CardContent></Card>
+                  <Card><CardContent className="p-3"><p className="text-xs text-muted-foreground">Total Paid (All Time)</p><p className="text-xl font-bold font-mono">{fmt(total)}</p></CardContent></Card>
+                </div>
+                <Card><CardContent className="p-0">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50"><tr className="text-left"><th className="p-2">Date</th><th className="p-2">Month</th><th className="p-2">Bill</th><th className="p-2">Type</th><th className="p-2 text-right">Amount</th></tr></thead>
+                    <tbody>
+                      {cardPayments.map((p: any) => (
+                        <tr key={p.id} className="border-t">
+                          <td className="p-2">{format(parseISO(p.paid_date), 'MMM d, yyyy')}</td>
+                          <td className="p-2 text-muted-foreground">{format(parseISO(p.paid_date), 'MMMM yyyy')}</td>
+                          <td className="p-2">{p.personal_expenses?.account_name || <span className="italic text-muted-foreground">Card payment</span>}</td>
+                          <td className="p-2"><Badge variant="outline" className="capitalize">{p.payment_type}</Badge></td>
+                          <td className="p-2 text-right font-mono">{fmt(p.amount_paid)}</td>
+                        </tr>
+                      ))}
+                      {cardPayments.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No payments yet on this card.</td></tr>}
+                    </tbody>
+                  </table>
+                </CardContent></Card>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

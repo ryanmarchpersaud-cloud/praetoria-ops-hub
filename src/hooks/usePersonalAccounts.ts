@@ -96,10 +96,10 @@ export function usePersonalPayments() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('personal_expense_payments')
-        .select('*, personal_expenses(account_name, category)')
+        .select('*, personal_expenses(account_name, category), personal_funding_sources(name, source_type, last4)')
         .eq('owner_id', user!.id)
         .order('paid_date', { ascending: false })
-        .limit(200);
+        .limit(500);
       if (error) throw error;
       return data ?? [];
     },
@@ -149,16 +149,52 @@ export function useUpsertFundingSource() {
   return useMutation({
     mutationFn: async (row: any) => {
       const payload = { ...row, owner_id: user!.id };
+      let savedId = row.id;
       if (row.id) {
+        // Detect new payment edit (last_paid_date + amount changed vs prior row)
+        const { data: prior } = await supabase
+          .from('personal_funding_sources')
+          .select('last_paid_date, last_paid_amount, last_payment_type')
+          .eq('id', row.id)
+          .maybeSingle();
         const { error } = await supabase.from('personal_funding_sources').update(payload).eq('id', row.id);
         if (error) throw error;
+
+        const isNewPayment =
+          row.last_paid_date && row.last_paid_amount != null && Number(row.last_paid_amount) > 0 &&
+          (prior?.last_paid_date !== row.last_paid_date || Number(prior?.last_paid_amount || 0) !== Number(row.last_paid_amount));
+
+        if (isNewPayment) {
+          await supabase.from('personal_expense_payments').insert({
+            owner_id: user!.id,
+            expense_id: null,
+            funding_source_id: row.id,
+            amount_paid: Number(row.last_paid_amount),
+            paid_date: row.last_paid_date,
+            payment_type: row.last_payment_type || 'full',
+            notes: 'Logged via card edit',
+          });
+        }
       } else {
-        const { error } = await supabase.from('personal_funding_sources').insert(payload);
+        const { data, error } = await supabase.from('personal_funding_sources').insert(payload).select('id').single();
         if (error) throw error;
+        savedId = data.id;
+        if (row.last_paid_date && row.last_paid_amount != null && Number(row.last_paid_amount) > 0) {
+          await supabase.from('personal_expense_payments').insert({
+            owner_id: user!.id,
+            expense_id: null,
+            funding_source_id: savedId,
+            amount_paid: Number(row.last_paid_amount),
+            paid_date: row.last_paid_date,
+            payment_type: row.last_payment_type || 'full',
+            notes: 'Logged via card edit',
+          });
+        }
       }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['personal_funding'] });
+      qc.invalidateQueries({ queryKey: ['personal_payments'] });
       toast.success('Saved');
     },
     onError: (e: any) => toast.error(e.message),
