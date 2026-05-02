@@ -263,7 +263,7 @@ export default function PersonalAccountsPage() {
   const { unlocked, lock } = useSessionUnlock();
 
   const [expenseDialog, setExpenseDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
-  const [fundingDialog, setFundingDialog] = useState(false);
+  const [fundingDialog, setFundingDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [incomeDialog, setIncomeDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [paidDialog, setPaidDialog] = useState<{ open: boolean; expense: any }>({ open: false, expense: null });
 
