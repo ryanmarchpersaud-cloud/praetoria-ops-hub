@@ -110,28 +110,60 @@ function ExpenseDialog({ open, onOpenChange, editing, fundingSources, onSave }: 
   );
 }
 
-function FundingSourceDialog({ open, onOpenChange, onSave }: any) {
+function FundingSourceDialog({ open, onOpenChange, editing, onSave }: any) {
   const [form, setForm] = useState<any>({ source_type: 'credit_card' });
+  // Reset form whenever dialog opens with new "editing" target
+  React.useEffect(() => {
+    if (open) setForm(editing && editing.id ? { ...editing } : { source_type: 'credit_card' });
+  }, [open, editing]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Add Funding Source</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{editing?.id ? 'Edit' : 'Add'} Funding Source</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>Name *</Label><Input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Capital One Visa" /></div>
-          <div><Label>Type</Label>
-            <Select value={form.source_type} onValueChange={v => setForm({ ...form, source_type: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bank">Bank Account</SelectItem>
-                <SelectItem value="credit_card">Credit Card</SelectItem>
-                <SelectItem value="debit_card">Debit Card</SelectItem>
-                <SelectItem value="line_of_credit">Line of Credit</SelectItem>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Type</Label>
+              <Select value={form.source_type} onValueChange={v => setForm({ ...form, source_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank">Bank Account</SelectItem>
+                  <SelectItem value="credit_card">Credit Card</SelectItem>
+                  <SelectItem value="debit_card">Debit Card</SelectItem>
+                  <SelectItem value="line_of_credit">Line of Credit</SelectItem>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Last 4 digits</Label><Input maxLength={4} value={form.last4 || ''} onChange={e => setForm({ ...form, last4: e.target.value })} /></div>
           </div>
-          <div><Label>Last 4 digits (optional)</Label><Input maxLength={4} value={form.last4 || ''} onChange={e => setForm({ ...form, last4: e.target.value })} /></div>
+
+          <div className="rounded border p-3 space-y-3 bg-muted/30">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Last Payment</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Last Paid Date</Label><Input type="date" value={form.last_paid_date || ''} onChange={e => setForm({ ...form, last_paid_date: e.target.value || null })} /></div>
+              <div><Label>Amount Paid</Label><Input type="number" step="0.01" value={form.last_paid_amount ?? ''} onChange={e => setForm({ ...form, last_paid_amount: e.target.value === '' ? null : parseFloat(e.target.value) })} /></div>
+            </div>
+            <div><Label>Payment Type</Label>
+              <Select value={form.last_payment_type || 'none'} onValueChange={v => setForm({ ...form, last_payment_type: v === 'none' ? null : v })}>
+                <SelectTrigger><SelectValue placeholder="Full / Minimum / Partial" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Not specified —</SelectItem>
+                  <SelectItem value="full">Full</SelectItem>
+                  <SelectItem value="minimum">Minimum</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Current Balance</Label><Input type="number" step="0.01" value={form.current_balance ?? ''} onChange={e => setForm({ ...form, current_balance: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="What you owe" /></div>
+            <div><Label>Credit Limit</Label><Input type="number" step="0.01" value={form.credit_limit ?? ''} onChange={e => setForm({ ...form, credit_limit: e.target.value === '' ? null : parseFloat(e.target.value) })} placeholder="(if applicable)" /></div>
+          </div>
+
+          <div><Label>Notes</Label><Textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
         </div>
         <DialogFooter><Button onClick={() => { onSave(form); onOpenChange(false); }}>Save</Button></DialogFooter>
       </DialogContent>
