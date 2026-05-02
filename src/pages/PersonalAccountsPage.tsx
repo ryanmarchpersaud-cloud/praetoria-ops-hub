@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Lock, Plus, Sprout, Calendar as CalIcon, Printer, Download, FileText, Trash2, Pencil, CheckCircle2, CreditCard, Wallet, Receipt, Repeat, Briefcase, AlertTriangle, TrendingUp, TrendingDown, Copy, LockKeyhole } from 'lucide-react';
+import { Lock, Plus, Sprout, Calendar as CalIcon, Printer, Download, FileText, Trash2, Pencil, CheckCircle2, CreditCard, Wallet, Receipt, Repeat, Briefcase, AlertTriangle, TrendingUp, TrendingDown, Copy, LockKeyhole, Eye } from 'lucide-react';
 import PersonalPinGate from '@/components/PersonalPinGate';
 import { useSessionUnlock } from '@/hooks/usePersonalAccountsPin';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
