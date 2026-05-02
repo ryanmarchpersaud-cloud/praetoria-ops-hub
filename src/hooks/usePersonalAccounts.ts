@@ -96,10 +96,10 @@ export function usePersonalPayments() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('personal_expense_payments')
-        .select('*, personal_expenses(account_name, category)')
+        .select('*, personal_expenses(account_name, category), personal_funding_sources(name, source_type, last4)')
         .eq('owner_id', user!.id)
         .order('paid_date', { ascending: false })
-        .limit(200);
+        .limit(500);
       if (error) throw error;
       return data ?? [];
     },
