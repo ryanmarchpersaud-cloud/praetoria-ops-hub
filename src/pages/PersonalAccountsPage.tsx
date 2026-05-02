@@ -521,8 +521,27 @@ export default function PersonalAccountsPage() {
                 })}
                 {funding.length === 0 && <tr><td colSpan={11} className="p-6 text-center text-muted-foreground">No funding sources yet — add cards or accounts to track which one each expense comes from.</td></tr>}
               </tbody>
+              {funding.length > 0 && (() => {
+                const totLimit = funding.reduce((s: number, f: any) => s + Number(f.credit_limit || 0), 0);
+                const totBalance = funding.reduce((s: number, f: any) => s + Number(f.current_balance || 0), 0);
+                const totLinked = funding.reduce((s: number, f: any) => s + expenses.filter((e: any) => e.funding_source_id === f.id).reduce((ss: number, e: any) => ss + Number(e.minimum_amount), 0), 0);
+                return (
+                  <tfoot className="bg-muted/30 font-bold">
+                    <tr>
+                      <td className="p-2" colSpan={7}>TOTALS ({funding.length} sources)</td>
+                      <td className="p-2 text-right font-mono text-red-600">{fmt(totBalance)}</td>
+                      <td className="p-2 text-right font-mono text-green-600">{fmt(totLimit)}</td>
+                      <td className="p-2 text-right font-mono">{fmt(totLinked)}</td>
+                      <td className="print:hidden"></td>
+                    </tr>
+                  </tfoot>
+                );
+              })()}
             </table>
           </CardContent></Card>
+          <p className="text-xs text-muted-foreground px-1">
+            💡 <strong>Linked Exp.</strong> shows the total of all monthly bills assigned to this card (in the Expenses tab, set "Funding Source" on each bill). If it shows $0, none of your expenses are linked to that card yet.
+          </p>
         </TabsContent>
 
         {/* History */}
