@@ -266,6 +266,7 @@ export default function PersonalAccountsPage() {
   const [fundingDialog, setFundingDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [incomeDialog, setIncomeDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [paidDialog, setPaidDialog] = useState<{ open: boolean; expense: any }>({ open: false, expense: null });
+  const [cardHistoryDialog, setCardHistoryDialog] = useState<{ open: boolean; card: any }>({ open: false, card: null });
 
   // ---- Loading / not-claimed gates ----
   if (isOwnerQ.isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
