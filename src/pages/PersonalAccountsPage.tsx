@@ -538,7 +538,7 @@ export default function PersonalAccountsPage() {
 
       {/* Dialogs */}
       <ExpenseDialog open={expenseDialog.open} onOpenChange={(v: boolean) => setExpenseDialog({ open: v, editing: v ? expenseDialog.editing : null })} editing={expenseDialog.editing} fundingSources={funding} onSave={(f: any) => upsertExpense.mutate(f)} />
-      <FundingSourceDialog open={fundingDialog} onOpenChange={setFundingDialog} onSave={(f: any) => upsertFunding.mutate(f)} />
+      <FundingSourceDialog open={fundingDialog.open} onOpenChange={(v: boolean) => setFundingDialog({ open: v, editing: v ? fundingDialog.editing : null })} editing={fundingDialog.editing} onSave={(f: any) => upsertFunding.mutate(f)} />
       <IncomeDialog open={incomeDialog.open} onOpenChange={(v: boolean) => setIncomeDialog({ open: v, editing: v ? incomeDialog.editing : null })} editing={incomeDialog.editing} onSave={(f: any) => upsertIncome.mutate(f)} />
       <MarkPaidDialog open={paidDialog.open} onOpenChange={(v: boolean) => setPaidDialog({ open: v, expense: v ? paidDialog.expense : null })} expense={paidDialog.expense} fundingSources={funding} onConfirm={(p: any) => markPaid.mutate({ expense_id: paidDialog.expense.id, ...p })} />
     </div>
