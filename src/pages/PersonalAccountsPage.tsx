@@ -483,6 +483,32 @@ export default function PersonalAccountsPage() {
             <Card><CardHeader><CardTitle className="text-base">Income vs Expenses (This Month)</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><BarChart data={incomeVsExpense}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip formatter={(v: any) => fmt(v)} /><Legend /><Bar dataKey="Income" fill="#16a34a" /><Bar dataKey="Expenses" fill="#dc2626" /></BarChart></ResponsiveContainer></CardContent></Card>
             {bySource.length > 0 && <Card><CardHeader><CardTitle className="text-base">By Funding Source</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><BarChart data={bySource}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip formatter={(v: any) => fmt(v)} /><Bar dataKey="value" fill="#0F172A" /></BarChart></ResponsiveContainer></CardContent></Card>}
             <Card><CardHeader><CardTitle className="text-base">12-Month Cash Flow Forecast</CardTitle></CardHeader><CardContent><ResponsiveContainer width="100%" height={300}><LineChart data={forecast}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" /><YAxis /><Tooltip formatter={(v: any) => fmt(v)} /><Legend /><Line type="monotone" dataKey="Income" stroke="#16a34a" strokeWidth={2} /><Line type="monotone" dataKey="Expenses" stroke="#dc2626" strokeWidth={2} /><Line type="monotone" dataKey="Net" stroke="#0F172A" strokeWidth={3} /></LineChart></ResponsiveContainer></CardContent></Card>
+
+            {/* NEW: Funding Source Limits vs Balances */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Funding Sources — Limits vs Balances</CardTitle>
+                <p className="text-xs text-muted-foreground">Total Limits: <span className="text-green-600 font-semibold">{fmt(totalLimits)}</span> · Owed: <span className="text-red-600 font-semibold">{fmt(totalBalances)}</span> · Available: <span className="text-blue-600 font-semibold">{fmt(totalAvailable)}</span></p>
+              </CardHeader>
+              <CardContent>
+                {fundingLimitsData.length === 0 ? (
+                  <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground text-center px-4">Add a Credit Limit and Current Balance to your funding sources to see this chart.</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={fundingLimitsData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
+                      <YAxis tickFormatter={(v) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
+                      <Tooltip formatter={(v: any) => fmt(v)} />
+                      <Legend />
+                      <Bar dataKey="Limit" fill="#16a34a" />
+                      <Bar dataKey="Balance" fill="#dc2626" />
+                      <Bar dataKey="Available" fill="#0ea5e9" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
