@@ -341,6 +341,19 @@ export default function PersonalAccountsPage() {
     return { month: format(d, 'MMM'), Expenses: totalMinMonthly, Income: totalIncome, Net: totalIncome - totalMinMonthly };
   });
 
+  // Funding sources: limits vs current balance (for chart)
+  const fundingLimitsData = funding
+    .filter((f: any) => Number(f.credit_limit || 0) > 0 || Number(f.current_balance || 0) > 0)
+    .map((f: any) => ({
+      name: f.name.length > 14 ? f.name.slice(0, 12) + '…' : f.name,
+      Limit: Number(f.credit_limit || 0),
+      Balance: Number(f.current_balance || 0),
+      Available: Math.max(0, Number(f.credit_limit || 0) - Number(f.current_balance || 0)),
+    }));
+  const totalLimits = fundingLimitsData.reduce((s: number, f: any) => s + f.Limit, 0);
+  const totalBalances = fundingLimitsData.reduce((s: number, f: any) => s + f.Balance, 0);
+  const totalAvailable = totalLimits - totalBalances;
+
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto print:p-0">
       {/* Header */}
