@@ -165,20 +165,9 @@ export function CustomerWorkOverview({ customerId }: Props) {
       });
     });
 
-    communications.forEach((c: any) => all.push({
-      id: c.id,
-      type: 'communication',
-      number: '',
-      title: c.action_name || 'Communication',
-      date: c.created_at,
-      status: c.status || '',
-      amount: 0,
-      link: `/activity?focus=${c.id}`,
-    }));
-
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return all;
-  }, [requests, quotes, jobs, invoices, visits, communications]);
+  }, [requests, quotes, jobs, invoices, visits]);
 
   const filtered = tab === 'all' ? items : items.filter(i => i.type === tab);
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
