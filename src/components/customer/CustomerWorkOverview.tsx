@@ -82,7 +82,18 @@ export function CustomerWorkOverview({ customerId }: Props) {
     enabled: !!customerId,
   });
 
-  const isLoading = loadingReq || loadingQ || loadingJ || loadingI;
+  const { data: visits = [], isLoading: loadingV } = useQuery({
+    queryKey: ['cwo_visits', customerId],
+    queryFn: async () => {
+      const { data } = await supabase.from('visits')
+        .select('id, visit_number, title, status, service_date, scheduled_start_time, jobs(job_number, job_title)')
+        .eq('customer_id', customerId).order('service_date', { ascending: false });
+      return data || [];
+    },
+    enabled: !!customerId,
+  });
+
+  const isLoading = loadingReq || loadingQ || loadingJ || loadingI || loadingV;
 
   const items = useMemo((): WorkItem[] => {
     const all: WorkItem[] = [];
