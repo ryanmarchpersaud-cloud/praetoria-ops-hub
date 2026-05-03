@@ -191,22 +191,24 @@ export function CreateInvoiceFromWorkDialog({
 
       if (normalizedLineItems.length > 0) {
         const items = normalizedLineItems.map((li: any, idx: number) => {
-          const unitPrice = taxIncluded && validatedTaxRate > 0 ? money(li.unit_price / (1 + validatedTaxRate)) : li.unit_price;
+          const grossLineTotal = Number(li.line_total || li.quantity * li.unit_price || 0);
+          const grossUnitPrice = li.quantity > 0 ? grossLineTotal / li.quantity : li.unit_price;
+          const unitPrice = taxIncluded && validatedTaxRate > 0 ? money(grossUnitPrice / (1 + validatedTaxRate)) : money(grossUnitPrice);
           return ({
-          invoice_id: invoice.id,
-          item_name: li.item_name,
-          description: li.description || null,
-          quantity: li.quantity,
-          unit_price: unitPrice,
-          line_total: money(li.quantity * unitPrice),
-          sort_order: Number.isInteger(Number(li.sort_order)) ? Number(li.sort_order) : idx,
-        });
+            invoice_id: invoice.id,
+            item_name: li.item_name,
+            description: li.description || null,
+            quantity: li.quantity,
+            unit_price: unitPrice,
+            line_total: money(li.quantity * unitPrice),
+            sort_order: Number.isInteger(Number(li.sort_order)) ? Number(li.sort_order) : idx,
+          });
         });
         const { error: itemsError } = await supabase.from('invoice_line_items').insert(items as any);
         if (itemsError) throw itemsError;
       }
 
-      if (jobId) {
+      if (jobId && (sourceRecord?.status === 'Completed' || sourceRecord?.status === 'Closed')) {
         const { error: jobUpdateError } = await supabase.from('jobs').update({ billing_status: 'invoiced' } as any).eq('id', jobId);
         if (jobUpdateError) throw jobUpdateError;
       }
