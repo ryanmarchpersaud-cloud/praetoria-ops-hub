@@ -61,6 +61,7 @@ export default function InvoiceDetail() {
   const [draftIssueDate, setDraftIssueDate] = useState('');
   const [draftDueDate, setDraftDueDate] = useState('');
   const [draftPropertyId, setDraftPropertyId] = useState<string>('');
+  const [forceLineItemEditor, setForceLineItemEditor] = useState(false);
 
   // Properties for this customer (for Property selector when editing)
   const { data: customerProperties = [] } = useQuery({
@@ -79,6 +80,7 @@ export default function InvoiceDetail() {
   });
 
   // Confirmation dialogs
+  const [confirmEdit, setConfirmEdit] = useState(false);
   const [confirmSend, setConfirmSend] = useState(false);
   const [confirmVoid, setConfirmVoid] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -98,7 +100,7 @@ export default function InvoiceDetail() {
   if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="flex items-center justify-center py-16 text-muted-foreground">Invoice not found</div>;
 
-  const isDraft = invoice.status === 'Draft';
+  const isDraft = invoice.status === 'Draft' || forceLineItemEditor;
   const total = Number(invoice.total || 0);
   const amountPaid = Number(invoice.amount_paid || 0);
   const balanceDue = Number(invoice.balance_due ?? total - amountPaid);
@@ -132,6 +134,7 @@ export default function InvoiceDetail() {
   const handleStatusChange = async (newStatus: string, extra?: Record<string, any>) => {
     try {
       await updateInvoice.mutateAsync({ id: invoice.id, status: newStatus, ...extra });
+      setForceLineItemEditor(newStatus === 'Draft');
       toast.success(`Invoice marked as ${newStatus}`);
 
       // Fire invoice_overdue notification
@@ -213,8 +216,8 @@ export default function InvoiceDetail() {
           });
         } catch { /* non-critical */ }
       }
-    } catch {
-      toast.error('Failed to update invoice');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update invoice');
     }
   };
 
@@ -284,7 +287,7 @@ export default function InvoiceDetail() {
   const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
   const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
   const canCollectFromCard = canRecordPayment && billingProfile?.payment_method_present && (billingProfile as any)?.default_payment_method_id;
-  const canEditSent = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canEditInvoiceDrafts;
+  const canEditSent = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canEditInvoiceDrafts && !forceLineItemEditor;
   const billingMode = (invoice as any).billing_mode;
 
   const openReceiptCompose = () => {
@@ -395,11 +398,7 @@ export default function InvoiceDetail() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => {
-              if (confirm(`Edit ${invoice.invoice_number}?\n\nThis will revert the invoice back to Draft so you can change line items. You'll need to Resend it to the customer when done.`)) {
-                handleStatusChange('Draft');
-              }
-            }}
+            onClick={() => setConfirmEdit(true)}
             title="Revert to Draft to edit line items, then resend"
           >
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Invoice
@@ -698,6 +697,31 @@ export default function InvoiceDetail() {
       </div>
 
       {/* ═══ CONFIRMATION DIALOGS ═══ */}
+
+      {/* Edit Confirmation */}
+      <Dialog open={confirmEdit} onOpenChange={setConfirmEdit}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit Invoice?</DialogTitle>
+            <DialogDescription>
+              This will move {invoice.invoice_number} back to Draft so you can change line items. You will need to resend it to the customer when done.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmEdit(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                setConfirmEdit(false);
+                handleStatusChange('Draft');
+              }}
+              disabled={updateInvoice.isPending}
+            >
+              {updateInvoice.isPending ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Pencil className="h-3.5 w-3.5 mr-1.5" />}
+              Edit Invoice
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Send / Resend — Polished Email Compose Dialog */}
       <Dialog open={confirmSend} onOpenChange={(open) => { setConfirmSend(open); if (!open) setEmailAttachments([]); }}>
