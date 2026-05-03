@@ -398,11 +398,7 @@ export default function InvoiceDetail() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => {
-              if (confirm(`Edit ${invoice.invoice_number}?\n\nThis will revert the invoice back to Draft so you can change line items. You'll need to Resend it to the customer when done.`)) {
-                handleStatusChange('Draft');
-              }
-            }}
+            onClick={() => setConfirmEdit(true)}
             title="Revert to Draft to edit line items, then resend"
           >
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Invoice
