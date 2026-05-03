@@ -18,7 +18,7 @@ interface Props {
 
 type WorkItem = {
   id: string;
-  type: 'request' | 'quote' | 'job' | 'invoice' | 'visit' | 'communication';
+  type: 'request' | 'quote' | 'job' | 'invoice' | 'visit';
   number: string;
   title: string;
   date: string;
