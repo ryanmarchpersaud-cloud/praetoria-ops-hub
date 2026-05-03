@@ -20,7 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   ArrowLeft, Send, RotateCcw, CheckCircle, Ban, AlertCircle, CreditCard, Printer, Save, Loader2,
   LinkIcon, Briefcase, FileText, Receipt, DollarSign, Eye, EyeOff, CalendarDays, Tag, Undo2, Mail,
-  Paperclip, X, Upload, FileCheck
+  Paperclip, X, Upload, FileCheck, Pencil
 } from 'lucide-react';
 import { RefundDialog } from '@/components/RefundDialog';
 import { RecordPaymentDialog } from '@/components/finance/RecordPaymentDialog';
