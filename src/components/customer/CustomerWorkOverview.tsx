@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquarePlus, FileText, Briefcase, Receipt, ClipboardCheck, ChevronRight, ChevronLeft, AlertCircle, Plus, MapPin, MessageCircle } from 'lucide-react';
+import { MessageSquarePlus, FileText, Briefcase, Receipt, ClipboardCheck, ChevronRight, ChevronLeft, AlertCircle, Plus, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
