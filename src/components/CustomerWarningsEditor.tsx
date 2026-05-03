@@ -260,18 +260,18 @@ export function CustomerWarningsEditor({ customerId }: CustomerWarningsEditorPro
               </div>
             </div>
             <div>
-              <Label className="text-xs">Description *</Label>
+              <Label className="text-xs">Description (optional)</Label>
               <Textarea
                 value={newWarning.description}
                 onChange={e => setNewWarning(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
-                placeholder="Describe the issue..."
+                placeholder="Optional notes — leave blank to use the warning type as the description."
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
-            <Button onClick={handleAdd} disabled={saving || !newWarning.description.trim()}>
+            <Button onClick={handleAdd} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
               Add Warning
             </Button>
