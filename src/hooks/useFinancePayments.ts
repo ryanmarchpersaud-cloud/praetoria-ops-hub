@@ -43,8 +43,22 @@ export function useRecordPayment() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (payment: any) => {
+      // Map dialog fields → actual finance_payments columns (customer_id/notes don't exist on this table)
+      const insertRow: any = {
+        payment_type: payment.payment_type,
+        payment_date: payment.payment_date,
+        amount: payment.amount,
+        payment_method: payment.payment_method ?? null,
+        account_id: payment.account_id ?? null,
+        reference_number: payment.reference_number ?? null,
+        internal_note: payment.notes ?? payment.internal_note ?? null,
+        bill_id: payment.bill_id ?? null,
+        invoice_id: payment.invoice_id ?? null,
+        expense_id: payment.expense_id ?? null,
+        entered_by: user?.id,
+      };
       const { data, error } = await supabase.from('finance_payments')
-        .insert({ ...payment, entered_by: user?.id })
+        .insert(insertRow)
         .select().single();
       if (error) throw error;
 
