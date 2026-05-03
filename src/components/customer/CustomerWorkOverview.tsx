@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquarePlus, FileText, Briefcase, Receipt, ClipboardCheck, ChevronRight, ChevronLeft, AlertCircle, Plus, MapPin } from 'lucide-react';
+import { MessageSquarePlus, FileText, Briefcase, Receipt, ClipboardCheck, ChevronRight, ChevronLeft, AlertCircle, Plus, MapPin, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,7 @@ interface Props {
 
 type WorkItem = {
   id: string;
-  type: 'request' | 'quote' | 'job' | 'invoice' | 'visit';
+  type: 'request' | 'quote' | 'job' | 'invoice' | 'visit' | 'communication';
   number: string;
   title: string;
   date: string;
@@ -34,12 +34,13 @@ const ICON_MAP = {
   job: Briefcase,
   invoice: Receipt,
   visit: MapPin,
+  communication: MessageCircle,
 };
 
 const ITEMS_PER_PAGE = 10;
 
 export function CustomerWorkOverview({ customerId }: Props) {
-  const [tab, setTab] = useState<'all' | 'request' | 'quote' | 'job' | 'invoice' | 'visit'>('all');
+  const [tab, setTab] = useState<'all' | 'request' | 'quote' | 'job' | 'invoice' | 'visit' | 'communication'>('all');
   const [page, setPage] = useState(1);
 
   const { data: requests = [], isLoading: loadingReq } = useQuery({
@@ -85,15 +86,45 @@ export function CustomerWorkOverview({ customerId }: Props) {
   const { data: visits = [], isLoading: loadingV } = useQuery({
     queryKey: ['cwo_visits', customerId],
     queryFn: async () => {
-      const { data } = await supabase.from('visits')
-        .select('id, visit_number, title, status, service_date, scheduled_start_time, jobs(job_number, job_title)')
+      const { data, error } = await supabase.from('visits')
+        .select('id, visit_number, visit_status, visit_type, service_date, scheduled_start_time, jobs(job_number, job_title)')
         .eq('customer_id', customerId).order('service_date', { ascending: false });
+      if (error) console.error('cwo_visits error', error);
       return data || [];
     },
     enabled: !!customerId,
   });
 
-  const isLoading = loadingReq || loadingQ || loadingJ || loadingI || loadingV;
+  const { data: communications = [], isLoading: loadingC } = useQuery({
+    queryKey: ['cwo_communications', customerId],
+    queryFn: async () => {
+      // Pull activity log entries related to this customer (direct + via their invoices/quotes/jobs/requests)
+      const [invIds, quoteIds, jobIds, reqIds] = await Promise.all([
+        supabase.from('invoices').select('id').eq('customer_id', customerId),
+        supabase.from('quotes').select('id').eq('customer_id', customerId),
+        supabase.from('jobs').select('id').eq('customer_id', customerId),
+        supabase.from('service_requests').select('id').eq('customer_id', customerId),
+      ]);
+      const ids = [
+        customerId,
+        ...(invIds.data || []).map((r: any) => r.id),
+        ...(quoteIds.data || []).map((r: any) => r.id),
+        ...(jobIds.data || []).map((r: any) => r.id),
+        ...(reqIds.data || []).map((r: any) => r.id),
+      ];
+      const { data, error } = await supabase
+        .from('activities')
+        .select('id, action_name, record_type, status, created_at')
+        .in('record_id', ids)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) console.error('cwo_comms error', error);
+      return data || [];
+    },
+    enabled: !!customerId,
+  });
+
+  const isLoading = loadingReq || loadingQ || loadingJ || loadingI || loadingV || loadingC;
 
   const items = useMemo((): WorkItem[] => {
     const all: WorkItem[] = [];
@@ -126,17 +157,28 @@ export function CustomerWorkOverview({ customerId }: Props) {
         id: v.id,
         type: 'visit',
         number: v.visit_number || '',
-        title: v.title || v.jobs?.job_title || 'Visit',
+        title: v.jobs?.job_title || v.visit_type || 'Visit',
         date: dt,
-        status: v.status,
+        status: v.visit_status,
         amount: 0,
         link: `/visits/${v.id}`,
       });
     });
 
+    communications.forEach((c: any) => all.push({
+      id: c.id,
+      type: 'communication',
+      number: '',
+      title: c.action_name || 'Communication',
+      date: c.created_at,
+      status: c.status || '',
+      amount: 0,
+      link: `/activity?focus=${c.id}`,
+    }));
+
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return all;
-  }, [requests, quotes, jobs, invoices, visits]);
+  }, [requests, quotes, jobs, invoices, visits, communications]);
 
   const filtered = tab === 'all' ? items : items.filter(i => i.type === tab);
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
@@ -149,6 +191,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
     job: items.filter(i => i.type === 'job').length,
     invoice: items.filter(i => i.type === 'invoice').length,
     visit: items.filter(i => i.type === 'visit').length,
+    communication: items.filter(i => i.type === 'communication').length,
   };
 
   const requiresInvoicingCount = items.filter(i => i.requiresInvoicing).length;
@@ -175,7 +218,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
       <CardContent className="space-y-3">
         <Tabs value={tab} onValueChange={(v) => { setTab(v as any); setPage(1); }}>
           <TabsList className="h-8">
-            {(['all', 'request', 'quote', 'job', 'visit', 'invoice'] as const).map(t => {
+            {(['all', 'request', 'quote', 'job', 'visit', 'invoice', 'communication'] as const).map(t => {
               const Icon = t === 'all' ? ClipboardCheck : ICON_MAP[t];
               const label = t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1) + 's';
               return (
