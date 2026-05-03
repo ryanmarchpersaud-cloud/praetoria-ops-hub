@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquarePlus, FileText, Briefcase, Receipt, ClipboardCheck, ChevronRight, ChevronLeft, AlertCircle, Plus } from 'lucide-react';
+import { MessageSquarePlus, FileText, Briefcase, Receipt, ClipboardCheck, ChevronRight, ChevronLeft, AlertCircle, Plus, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,7 @@ interface Props {
 
 type WorkItem = {
   id: string;
-  type: 'request' | 'quote' | 'job' | 'invoice';
+  type: 'request' | 'quote' | 'job' | 'invoice' | 'visit';
   number: string;
   title: string;
   date: string;
@@ -33,12 +33,13 @@ const ICON_MAP = {
   quote: FileText,
   job: Briefcase,
   invoice: Receipt,
+  visit: MapPin,
 };
 
 const ITEMS_PER_PAGE = 10;
 
 export function CustomerWorkOverview({ customerId }: Props) {
-  const [tab, setTab] = useState<'all' | 'request' | 'quote' | 'job' | 'invoice'>('all');
+  const [tab, setTab] = useState<'all' | 'request' | 'quote' | 'job' | 'invoice' | 'visit'>('all');
   const [page, setPage] = useState(1);
 
   const { data: requests = [], isLoading: loadingReq } = useQuery({
@@ -81,7 +82,18 @@ export function CustomerWorkOverview({ customerId }: Props) {
     enabled: !!customerId,
   });
 
-  const isLoading = loadingReq || loadingQ || loadingJ || loadingI;
+  const { data: visits = [], isLoading: loadingV } = useQuery({
+    queryKey: ['cwo_visits', customerId],
+    queryFn: async () => {
+      const { data } = await supabase.from('visits')
+        .select('id, visit_number, title, status, service_date, scheduled_start_time, jobs(job_number, job_title)')
+        .eq('customer_id', customerId).order('service_date', { ascending: false });
+      return data || [];
+    },
+    enabled: !!customerId,
+  });
+
+  const isLoading = loadingReq || loadingQ || loadingJ || loadingI || loadingV;
 
   const items = useMemo((): WorkItem[] => {
     const all: WorkItem[] = [];
@@ -108,9 +120,23 @@ export function CustomerWorkOverview({ customerId }: Props) {
       date: i.created_at, status: i.status, amount: Number(i.total || 0), link: `/invoices/${i.id}`,
     }));
 
+    visits.forEach((v: any) => {
+      const dt = v.scheduled_start_time || v.service_date;
+      all.push({
+        id: v.id,
+        type: 'visit',
+        number: v.visit_number || '',
+        title: v.title || v.jobs?.job_title || 'Visit',
+        date: dt,
+        status: v.status,
+        amount: 0,
+        link: `/visits/${v.id}`,
+      });
+    });
+
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return all;
-  }, [requests, quotes, jobs, invoices]);
+  }, [requests, quotes, jobs, invoices, visits]);
 
   const filtered = tab === 'all' ? items : items.filter(i => i.type === tab);
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
@@ -122,6 +148,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
     quote: items.filter(i => i.type === 'quote').length,
     job: items.filter(i => i.type === 'job').length,
     invoice: items.filter(i => i.type === 'invoice').length,
+    visit: items.filter(i => i.type === 'visit').length,
   };
 
   const requiresInvoicingCount = items.filter(i => i.requiresInvoicing).length;
@@ -148,7 +175,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
       <CardContent className="space-y-3">
         <Tabs value={tab} onValueChange={(v) => { setTab(v as any); setPage(1); }}>
           <TabsList className="h-8">
-            {(['all', 'request', 'quote', 'job', 'invoice'] as const).map(t => {
+            {(['all', 'request', 'quote', 'job', 'visit', 'invoice'] as const).map(t => {
               const Icon = t === 'all' ? ClipboardCheck : ICON_MAP[t];
               const label = t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1) + 's';
               return (
