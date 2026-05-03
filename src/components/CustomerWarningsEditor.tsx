@@ -88,17 +88,15 @@ export function CustomerWarningsEditor({ customerId }: CustomerWarningsEditorPro
   useEffect(() => { loadWarnings(); }, [customerId]);
 
   const handleAdd = async () => {
-    if (!newWarning.description?.trim()) {
-      toast({ title: 'Description is required', variant: 'destructive' });
-      return;
-    }
     setSaving(true);
     try {
+      const typeInfo = WARNING_TYPES.find(t => t.value === newWarning.warning_type);
+      const description = newWarning.description?.trim() || (typeInfo?.label ?? 'Customer warning');
       const { error } = await supabase.from('customer_warnings').insert({
         customer_id: customerId,
         warning_type: newWarning.warning_type,
         severity: newWarning.severity,
-        description: newWarning.description,
+        description,
         is_active: true,
       } as any);
       if (error) throw error;
