@@ -18,7 +18,7 @@ interface Props {
 
 type WorkItem = {
   id: string;
-  type: 'request' | 'quote' | 'job' | 'invoice';
+  type: 'request' | 'quote' | 'job' | 'invoice' | 'visit';
   number: string;
   title: string;
   date: string;
@@ -33,6 +33,7 @@ const ICON_MAP = {
   quote: FileText,
   job: Briefcase,
   invoice: Receipt,
+  visit: MapPin,
 };
 
 const ITEMS_PER_PAGE = 10;
