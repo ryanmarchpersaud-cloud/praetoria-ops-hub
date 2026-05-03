@@ -80,10 +80,12 @@ export function useRecordPayment() {
         if (inv) {
           const newPaid = Number(inv.amount_paid) + Number(payment.amount);
           const newBalance = Number(inv.total) - newPaid;
+          const isFullyPaid = newBalance <= 0.005;
           await supabase.from('invoices').update({
             amount_paid: Math.min(newPaid, Number(inv.total)),
             balance_due: Math.max(newBalance, 0),
-            status: newBalance <= 0 ? 'Paid' : 'Partially Paid',
+            status: isFullyPaid ? 'Paid' : 'Partially Paid',
+            ...(isFullyPaid ? { paid_at: payment.payment_date ? new Date(payment.payment_date + 'T12:00:00').toISOString() : new Date().toISOString() } : {}),
           }).eq('id', payment.invoice_id);
         }
       }
