@@ -167,3 +167,37 @@ export function useDashboardCertifications() {
     },
   });
 }
+
+/**
+ * Build a per-invoice category allocation map by joining invoice line items
+ * to products_services on item_name. Used to attribute revenue for invoices
+ * that aren't linked to a job (or whose job has no service_category).
+ * Returns: Map<invoice_id, Map<category, amount>>
+ */
+export function useInvoiceLineCategoryMap() {
+  return useQuery({
+    queryKey: ['invoice_line_category_map'],
+    queryFn: async () => {
+      const [{ data: lines, error: e1 }, { data: products, error: e2 }] = await Promise.all([
+        supabase.from('invoice_line_items').select('invoice_id, item_name, line_total'),
+        supabase.from('products_services').select('name, service_category'),
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+      const nameToCat = new Map<string, string>();
+      for (const p of products ?? []) {
+        if (p.name && p.service_category) nameToCat.set(p.name.toLowerCase().trim(), p.service_category);
+      }
+      const result = new Map<string, Map<string, number>>();
+      for (const l of lines ?? []) {
+        if (!l.invoice_id) continue;
+        const cat = nameToCat.get((l.item_name ?? '').toLowerCase().trim());
+        if (!cat) continue;
+        const inner = result.get(l.invoice_id) ?? new Map<string, number>();
+        inner.set(cat, (inner.get(cat) ?? 0) + Number(l.line_total ?? 0));
+        result.set(l.invoice_id, inner);
+      }
+      return result;
+    },
+  });
+}
