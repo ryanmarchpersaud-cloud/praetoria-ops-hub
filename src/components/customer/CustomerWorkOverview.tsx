@@ -39,7 +39,7 @@ const ICON_MAP = {
 const ITEMS_PER_PAGE = 10;
 
 export function CustomerWorkOverview({ customerId }: Props) {
-  const [tab, setTab] = useState<'all' | 'request' | 'quote' | 'job' | 'invoice'>('all');
+  const [tab, setTab] = useState<'all' | 'request' | 'quote' | 'job' | 'invoice' | 'visit'>('all');
   const [page, setPage] = useState(1);
 
   const { data: requests = [], isLoading: loadingReq } = useQuery({
