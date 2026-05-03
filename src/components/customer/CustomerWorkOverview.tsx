@@ -34,7 +34,7 @@ const ICON_MAP = {
   job: Briefcase,
   invoice: Receipt,
   visit: MapPin,
-  communication: MessageCircle,
+  
 };
 
 const ITEMS_PER_PAGE = 10;
