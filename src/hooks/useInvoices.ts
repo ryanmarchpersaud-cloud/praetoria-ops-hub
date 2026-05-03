@@ -83,6 +83,7 @@ export function useUpdateInvoice() {
       return data;
     },
     onSuccess: (data: any) => {
+      qc.setQueryData(['invoice', data.id], data);
       qc.invalidateQueries({ queryKey: ['invoices'] });
       qc.invalidateQueries({ queryKey: ['invoice', data.id] });
     },
