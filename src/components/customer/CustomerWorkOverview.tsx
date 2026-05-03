@@ -120,9 +120,23 @@ export function CustomerWorkOverview({ customerId }: Props) {
       date: i.created_at, status: i.status, amount: Number(i.total || 0), link: `/invoices/${i.id}`,
     }));
 
+    visits.forEach((v: any) => {
+      const dt = v.scheduled_start_time || v.service_date;
+      all.push({
+        id: v.id,
+        type: 'visit',
+        number: v.visit_number || '',
+        title: v.title || v.jobs?.job_title || 'Visit',
+        date: dt,
+        status: v.status,
+        amount: 0,
+        link: `/visits/${v.id}`,
+      });
+    });
+
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return all;
-  }, [requests, quotes, jobs, invoices]);
+  }, [requests, quotes, jobs, invoices, visits]);
 
   const filtered = tab === 'all' ? items : items.filter(i => i.type === tab);
   const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
