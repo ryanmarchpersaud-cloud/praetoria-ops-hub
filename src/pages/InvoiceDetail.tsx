@@ -80,6 +80,7 @@ export default function InvoiceDetail() {
   });
 
   // Confirmation dialogs
+  const [confirmEdit, setConfirmEdit] = useState(false);
   const [confirmSend, setConfirmSend] = useState(false);
   const [confirmVoid, setConfirmVoid] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -286,7 +287,7 @@ export default function InvoiceDetail() {
   const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
   const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
   const canCollectFromCard = canRecordPayment && billingProfile?.payment_method_present && (billingProfile as any)?.default_payment_method_id;
-  const canEditSent = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canEditInvoiceDrafts;
+  const canEditSent = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canEditInvoiceDrafts && !forceLineItemEditor;
   const billingMode = (invoice as any).billing_mode;
 
   const openReceiptCompose = () => {
