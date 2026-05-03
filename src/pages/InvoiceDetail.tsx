@@ -20,7 +20,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   ArrowLeft, Send, RotateCcw, CheckCircle, Ban, AlertCircle, CreditCard, Printer, Save, Loader2,
   LinkIcon, Briefcase, FileText, Receipt, DollarSign, Eye, EyeOff, CalendarDays, Tag, Undo2, Mail,
-  Paperclip, X, Upload, FileCheck
+  Paperclip, X, Upload, FileCheck, Pencil
 } from 'lucide-react';
 import { RefundDialog } from '@/components/RefundDialog';
 import { RecordPaymentDialog } from '@/components/finance/RecordPaymentDialog';
@@ -284,6 +284,7 @@ export default function InvoiceDetail() {
   const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
   const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
   const canCollectFromCard = canRecordPayment && billingProfile?.payment_method_present && (billingProfile as any)?.default_payment_method_id;
+  const canEditSent = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canEditInvoiceDrafts;
   const billingMode = (invoice as any).billing_mode;
 
   const openReceiptCompose = () => {
@@ -390,6 +391,20 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
+        {canEditSent && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (confirm(`Edit ${invoice.invoice_number}?\n\nThis will revert the invoice back to Draft so you can change line items. You'll need to Resend it to the customer when done.`)) {
+                handleStatusChange('Draft');
+              }
+            }}
+            title="Revert to Draft to edit line items, then resend"
+          >
+            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Invoice
+          </Button>
+        )}
         {canRefund && (
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setRefundOpen(true)}>
             <Undo2 className="h-3.5 w-3.5 mr-1.5" /> Refund
