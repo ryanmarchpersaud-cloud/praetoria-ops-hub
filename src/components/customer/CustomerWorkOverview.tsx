@@ -148,6 +148,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
     quote: items.filter(i => i.type === 'quote').length,
     job: items.filter(i => i.type === 'job').length,
     invoice: items.filter(i => i.type === 'invoice').length,
+    visit: items.filter(i => i.type === 'visit').length,
   };
 
   const requiresInvoicingCount = items.filter(i => i.requiresInvoicing).length;
