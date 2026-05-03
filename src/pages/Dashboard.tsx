@@ -36,6 +36,7 @@ import {
   useDashboardLeads,
   useDashboardActivities,
   useDashboardSubcontractorInvoices,
+  useInvoiceLineCategoryMap,
 } from '@/hooks/useDashboardData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Clock, CheckCircle, AlertCircle, Activity, ChevronRight } from 'lucide-react';
