@@ -232,8 +232,12 @@ export function CreateInvoiceFromWorkDialog({
     }
   };
 
-  const subtotal = normalizedLineItems.reduce((sum, li) => sum + Number(li.line_total || 0), 0);
   const parsedTaxRate = Number(taxRate || '0');
+  const displayLineItems = normalizedLineItems.map((li: any) => {
+    const grossLineTotal = Number(li.line_total || li.quantity * li.unit_price || 0);
+    return taxIncluded && Number.isFinite(parsedTaxRate) && parsedTaxRate > 0 ? money(grossLineTotal / (1 + parsedTaxRate)) : grossLineTotal;
+  });
+  const subtotal = displayLineItems.reduce((sum, lineTotal) => sum + Number(lineTotal || 0), 0);
   const tax = subtotal * (Number.isFinite(parsedTaxRate) ? parsedTaxRate : 0);
   const total = subtotal + tax;
 
@@ -295,6 +299,12 @@ export function CreateInvoiceFromWorkDialog({
             <Label className="text-xs">Tax Rate</Label>
             <Input type="number" inputMode="decimal" min="0" max="1" step="0.01" value={taxRate} onChange={e => setTaxRate(e.target.value)} />
           </div>
+          {normalizedLineItems.length > 0 && (
+            <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-3">
+              <Checkbox id="tax_included" checked={taxIncluded} onCheckedChange={(checked) => setTaxIncluded(checked === true)} />
+              <Label htmlFor="tax_included" className="text-xs cursor-pointer">Line item prices include tax</Label>
+            </div>
+          )}
           <div><Label className="text-xs">Customer Memo</Label><Textarea value={customerMemo} onChange={e => setCustomerMemo(e.target.value)} rows={2} /></div>
           <div><Label className="text-xs">Internal Notes</Label><Textarea value={internalNotes} onChange={e => setInternalNotes(e.target.value)} rows={2} /></div>
         </div>
