@@ -218,7 +218,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
       <CardContent className="space-y-3">
         <Tabs value={tab} onValueChange={(v) => { setTab(v as any); setPage(1); }}>
           <TabsList className="h-8">
-            {(['all', 'request', 'quote', 'job', 'visit', 'invoice'] as const).map(t => {
+            {(['all', 'request', 'quote', 'job', 'visit', 'invoice', 'communication'] as const).map(t => {
               const Icon = t === 'all' ? ClipboardCheck : ICON_MAP[t];
               const label = t === 'all' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1) + 's';
               return (
