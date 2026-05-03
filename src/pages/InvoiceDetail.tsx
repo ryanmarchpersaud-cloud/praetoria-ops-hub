@@ -391,6 +391,20 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
+        {canEditSent && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (confirm(`Edit ${invoice.invoice_number}?\n\nThis will revert the invoice back to Draft so you can change line items. You'll need to Resend it to the customer when done.`)) {
+                handleStatusChange('Draft');
+              }
+            }}
+            title="Revert to Draft to edit line items, then resend"
+          >
+            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Invoice
+          </Button>
+        )}
         {canRefund && (
           <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setRefundOpen(true)}>
             <Undo2 className="h-3.5 w-3.5 mr-1.5" /> Refund
