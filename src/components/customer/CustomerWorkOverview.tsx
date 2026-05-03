@@ -86,15 +86,45 @@ export function CustomerWorkOverview({ customerId }: Props) {
   const { data: visits = [], isLoading: loadingV } = useQuery({
     queryKey: ['cwo_visits', customerId],
     queryFn: async () => {
-      const { data } = await supabase.from('visits')
-        .select('id, visit_number, title, status, service_date, scheduled_start_time, jobs(job_number, job_title)')
+      const { data, error } = await supabase.from('visits')
+        .select('id, visit_number, visit_status, visit_type, service_date, scheduled_start_time, jobs(job_number, job_title)')
         .eq('customer_id', customerId).order('service_date', { ascending: false });
+      if (error) console.error('cwo_visits error', error);
       return data || [];
     },
     enabled: !!customerId,
   });
 
-  const isLoading = loadingReq || loadingQ || loadingJ || loadingI || loadingV;
+  const { data: communications = [], isLoading: loadingC } = useQuery({
+    queryKey: ['cwo_communications', customerId],
+    queryFn: async () => {
+      // Pull activity log entries related to this customer (direct + via their invoices/quotes/jobs/requests)
+      const [invIds, quoteIds, jobIds, reqIds] = await Promise.all([
+        supabase.from('invoices').select('id').eq('customer_id', customerId),
+        supabase.from('quotes').select('id').eq('customer_id', customerId),
+        supabase.from('jobs').select('id').eq('customer_id', customerId),
+        supabase.from('service_requests').select('id').eq('customer_id', customerId),
+      ]);
+      const ids = [
+        customerId,
+        ...(invIds.data || []).map((r: any) => r.id),
+        ...(quoteIds.data || []).map((r: any) => r.id),
+        ...(jobIds.data || []).map((r: any) => r.id),
+        ...(reqIds.data || []).map((r: any) => r.id),
+      ];
+      const { data, error } = await supabase
+        .from('activities')
+        .select('id, action_name, record_type, status, created_at')
+        .in('record_id', ids)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) console.error('cwo_comms error', error);
+      return data || [];
+    },
+    enabled: !!customerId,
+  });
+
+  const isLoading = loadingReq || loadingQ || loadingJ || loadingI || loadingV || loadingC;
 
   const items = useMemo((): WorkItem[] => {
     const all: WorkItem[] = [];
