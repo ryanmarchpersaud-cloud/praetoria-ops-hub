@@ -38,6 +38,7 @@ const SERVICE_COLORS: Record<string, string> = {
 };
 
 interface Invoice {
+  id?: string;
   total?: number | null;
   issue_date?: string | null;
   created_at?: string | null;
@@ -58,10 +59,12 @@ const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
 export function ServiceRevenueBreakdown({
   invoices,
   jobs,
+  lineCategoryMap,
   isLoading,
 }: {
   invoices: Invoice[];
   jobs: Job[];
+  lineCategoryMap?: Map<string, Map<string, number>>;
   isLoading?: boolean;
 }) {
   const [range, setRange] = useState<RangeKey>('90');
@@ -84,18 +87,40 @@ export function ServiceRevenueBreakdown({
       const dt = inv.issue_date ?? inv.created_at;
       if (!dt) continue;
       const d = new Date(dt);
-      const cat =
-        inv.jobs?.service_category ||
-        (inv.job_id ? jobCat.get(inv.job_id) : null) ||
-        'Other';
-      const bucket = tally.get(cat) ?? tally.get('Other')!;
-      const amt = Number(inv.total ?? 0);
+      const inWindow = !cutoff || d >= cutoff;
+      const inPrev = !!prevCutoffStart && d >= prevCutoffStart && cutoff !== null && d < cutoff;
+      if (!inWindow && !inPrev) continue;
 
-      if (!cutoff || d >= cutoff) {
-        bucket.revenue += amt;
-        if (inv.job_id) bucket.jobs.add(inv.job_id);
-      } else if (prevCutoffStart && d >= prevCutoffStart && d < cutoff) {
-        bucket.prev += amt;
+      const jobCategory =
+        inv.jobs?.service_category ||
+        (inv.job_id ? jobCat.get(inv.job_id) : null);
+
+      // Build per-category allocation: prefer line-item mapping when available,
+      // fall back to the job's category, else "Other".
+      const total = Number(inv.total ?? 0);
+      const allocations: { cat: string; amt: number }[] = [];
+      const lineMap = inv.id ? lineCategoryMap?.get(inv.id) : undefined;
+      if (lineMap && lineMap.size > 0) {
+        const sumLines = Array.from(lineMap.values()).reduce((s, v) => s + v, 0);
+        if (sumLines > 0) {
+          for (const [cat, amt] of lineMap.entries()) {
+            allocations.push({ cat, amt: total * (amt / sumLines) });
+          }
+        }
+      }
+      if (allocations.length === 0) {
+        allocations.push({ cat: jobCategory || 'Other', amt: total });
+      }
+
+      for (const { cat, amt } of allocations) {
+        const bucket = tally.get(cat) ?? tally.get('Other')!;
+        if (inWindow) {
+          bucket.revenue += amt;
+          if (inv.job_id) bucket.jobs.add(inv.job_id);
+          else if (inv.id) bucket.jobs.add(`inv:${inv.id}`);
+        } else if (inPrev) {
+          bucket.prev += amt;
+        }
       }
     }
 

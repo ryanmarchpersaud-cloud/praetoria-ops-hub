@@ -36,6 +36,7 @@ import {
   useDashboardLeads,
   useDashboardActivities,
   useDashboardSubcontractorInvoices,
+  useInvoiceLineCategoryMap,
 } from '@/hooks/useDashboardData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, Clock, CheckCircle, AlertCircle, Activity, ChevronRight } from 'lucide-react';
@@ -56,6 +57,7 @@ export default function Dashboard() {
   const { data: leads = [], isLoading: loadLeads } = useDashboardLeads();
   const { data: activities = [], isLoading: loadAct } = useDashboardActivities();
   const { data: subInvoices = [], isLoading: loadSubInv } = useDashboardSubcontractorInvoices();
+  const { data: lineCategoryMap } = useInvoiceLineCategoryMap();
 
   const isWorkflowLoading = loadReq || loadQuotes || loadJobs || loadInv;
   const isAlertsLoading = loadInv || loadJobs || loadVisits || loadInc || loadCerts || loadSubInv;
@@ -175,6 +177,7 @@ export default function Dashboard() {
       <ServiceRevenueBreakdown
         invoices={invoices}
         jobs={jobs}
+        lineCategoryMap={lineCategoryMap}
         isLoading={loadInv || loadJobs}
       />
 
