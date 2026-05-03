@@ -61,6 +61,7 @@ export default function InvoiceDetail() {
   const [draftIssueDate, setDraftIssueDate] = useState('');
   const [draftDueDate, setDraftDueDate] = useState('');
   const [draftPropertyId, setDraftPropertyId] = useState<string>('');
+  const [forceLineItemEditor, setForceLineItemEditor] = useState(false);
 
   // Properties for this customer (for Property selector when editing)
   const { data: customerProperties = [] } = useQuery({
@@ -98,7 +99,7 @@ export default function InvoiceDetail() {
   if (isLoading) return <div className="flex items-center justify-center py-16 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="flex items-center justify-center py-16 text-muted-foreground">Invoice not found</div>;
 
-  const isDraft = invoice.status === 'Draft';
+  const isDraft = invoice.status === 'Draft' || forceLineItemEditor;
   const total = Number(invoice.total || 0);
   const amountPaid = Number(invoice.amount_paid || 0);
   const balanceDue = Number(invoice.balance_due ?? total - amountPaid);
@@ -132,6 +133,7 @@ export default function InvoiceDetail() {
   const handleStatusChange = async (newStatus: string, extra?: Record<string, any>) => {
     try {
       await updateInvoice.mutateAsync({ id: invoice.id, status: newStatus, ...extra });
+      setForceLineItemEditor(newStatus === 'Draft');
       toast.success(`Invoice marked as ${newStatus}`);
 
       // Fire invoice_overdue notification
@@ -213,8 +215,8 @@ export default function InvoiceDetail() {
           });
         } catch { /* non-critical */ }
       }
-    } catch {
-      toast.error('Failed to update invoice');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update invoice');
     }
   };
 
