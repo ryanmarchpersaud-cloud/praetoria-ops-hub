@@ -64,7 +64,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
   const { data: jobs = [], isLoading: loadingJ } = useQuery({
     queryKey: ['cwo_jobs', customerId],
     queryFn: async () => {
-      const { data } = await supabase.from('jobs').select('id, job_number, job_title, status, created_at, scheduled_date, billing_status, total_price')
+      const { data } = await supabase.from('jobs').select('id, job_number, job_title, status, created_at, scheduled_date, billing_status, estimated_total, job_line_items(line_total)')
         .eq('customer_id', customerId).order('created_at', { ascending: false });
       return data || [];
     },
@@ -98,7 +98,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
 
     jobs.forEach((j: any) => all.push({
       id: j.id, type: 'job', number: j.job_number, title: j.job_title || 'Job',
-      date: j.scheduled_date || j.created_at, status: j.status, amount: Number(j.total_price || 0),
+      date: j.scheduled_date || j.created_at, status: j.status, amount: (j.job_line_items || []).reduce((sum: number, item: any) => sum + Number(item.line_total || 0), 0) || Number(j.estimated_total || 0),
       requiresInvoicing: (j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced',
       link: `/jobs/${j.id}`,
     }));
