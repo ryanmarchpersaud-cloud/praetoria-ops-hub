@@ -38,6 +38,7 @@ const SERVICE_COLORS: Record<string, string> = {
 };
 
 interface Invoice {
+  id?: string;
   total?: number | null;
   issue_date?: string | null;
   created_at?: string | null;
@@ -58,10 +59,12 @@ const RANGES: { key: RangeKey; label: string; days: number | null }[] = [
 export function ServiceRevenueBreakdown({
   invoices,
   jobs,
+  lineCategoryMap,
   isLoading,
 }: {
   invoices: Invoice[];
   jobs: Job[];
+  lineCategoryMap?: Map<string, Map<string, number>>;
   isLoading?: boolean;
 }) {
   const [range, setRange] = useState<RangeKey>('90');
