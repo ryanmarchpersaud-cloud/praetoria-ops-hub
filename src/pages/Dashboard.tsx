@@ -57,6 +57,7 @@ export default function Dashboard() {
   const { data: leads = [], isLoading: loadLeads } = useDashboardLeads();
   const { data: activities = [], isLoading: loadAct } = useDashboardActivities();
   const { data: subInvoices = [], isLoading: loadSubInv } = useDashboardSubcontractorInvoices();
+  const { data: lineCategoryMap } = useInvoiceLineCategoryMap();
 
   const isWorkflowLoading = loadReq || loadQuotes || loadJobs || loadInv;
   const isAlertsLoading = loadInv || loadJobs || loadVisits || loadInc || loadCerts || loadSubInv;
