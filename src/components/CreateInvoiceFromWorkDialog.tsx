@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -49,6 +50,8 @@ const createInvoiceDraftSchema = z.object({
   message: 'Due date must be on or after the issue date',
 });
 
+const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
 export function CreateInvoiceFromWorkDialog({
   open, onOpenChange, sourceType, sourceRecord, lineItems = [],
   customerId, propertyId, jobId, visitId, quoteId, requestId, billingMode,
@@ -62,7 +65,8 @@ export function CreateInvoiceFromWorkDialog({
 
   const [issueDate, setIssueDate] = useState(today);
   const [dueDate, setDueDate] = useState(defaultDue);
-  const [taxRate, setTaxRate] = useState('0.11');
+  const [taxRate, setTaxRate] = useState('0.05');
+  const [taxIncluded, setTaxIncluded] = useState(sourceType === 'job');
   const [customerMemo, setCustomerMemo] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -126,6 +130,7 @@ export function CreateInvoiceFromWorkDialog({
 
   useEffect(() => {
     if (open && sourceRecord) {
+      setTaxIncluded(sourceType === 'job');
       const label = sourceType === 'quote' ? sourceRecord.quote_number
         : sourceType === 'job' ? sourceRecord.job_number
         : sourceRecord.visit_number;
@@ -185,15 +190,18 @@ export function CreateInvoiceFromWorkDialog({
       if (error) throw error;
 
       if (normalizedLineItems.length > 0) {
-        const items = normalizedLineItems.map((li: any, idx: number) => ({
+        const items = normalizedLineItems.map((li: any, idx: number) => {
+          const unitPrice = taxIncluded && validatedTaxRate > 0 ? money(li.unit_price / (1 + validatedTaxRate)) : li.unit_price;
+          return ({
           invoice_id: invoice.id,
           item_name: li.item_name,
           description: li.description || null,
           quantity: li.quantity,
-          unit_price: li.unit_price,
-          line_total: li.line_total,
+          unit_price: unitPrice,
+          line_total: money(li.quantity * unitPrice),
           sort_order: Number.isInteger(Number(li.sort_order)) ? Number(li.sort_order) : idx,
-        }));
+        });
+        });
         const { error: itemsError } = await supabase.from('invoice_line_items').insert(items as any);
         if (itemsError) throw itemsError;
       }
