@@ -284,6 +284,7 @@ export default function InvoiceDetail() {
   const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
   const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
   const canCollectFromCard = canRecordPayment && billingProfile?.payment_method_present && (billingProfile as any)?.default_payment_method_id;
+  const canEditSent = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canEditInvoiceDrafts;
   const billingMode = (invoice as any).billing_mode;
 
   const openReceiptCompose = () => {
