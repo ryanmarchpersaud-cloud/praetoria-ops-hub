@@ -12,6 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { format, addDays } from 'date-fns';
 
+const GST_RATE = 0.05;
+const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,15 +32,16 @@ export function SelectJobsToInvoiceDialog({ open, onOpenChange, customerId, cust
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ['uninvoiced_jobs', customerId],
     queryFn: async () => {
-      const { data } = await supabase.from('jobs')
-        .select('id, job_number, job_title, status, billing_status, total_price, properties(property_name, city)')
+      const { data, error } = await supabase.from('jobs')
+        .select('id, job_number, job_title, status, billing_status, estimated_total, properties(id, property_name, city), job_line_items(line_total)')
         .eq('customer_id', customerId)
         .order('created_at', { ascending: false });
+      if (error) throw error;
       return (data || []).map((j: any) => ({
         ...j,
         address: j.properties?.property_name ? `${j.properties.property_name}${j.properties.city ? ', ' + j.properties.city : ''}` : '—',
-        uninvoiced: Number(j.total_price || 0),
-        subtotal: Number(j.total_price || 0),
+        uninvoiced: (j.job_line_items || []).reduce((sum: number, item: any) => sum + Number(item.line_total || 0), 0) || Number(j.estimated_total || 0),
+        subtotal: (j.job_line_items || []).reduce((sum: number, item: any) => sum + Number(item.line_total || 0), 0) || Number(j.estimated_total || 0),
         requiresInvoicing: (j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced',
       }));
     },
@@ -68,7 +72,7 @@ export function SelectJobsToInvoiceDialog({ open, onOpenChange, customerId, cust
         property_id: selectedJobs[0]?.properties?.id || null,
         issue_date: today,
         due_date: dueDate,
-        tax_rate: 0.05, // SK GST
+        tax_rate: GST_RATE, // SK GST
         status: 'Draft' as any,
         billing_mode: 'quoted_fixed' as any,
         internal_notes: `Combined invoice from ${selectedJobs.length} job(s)`,
@@ -81,16 +85,18 @@ export function SelectJobsToInvoiceDialog({ open, onOpenChange, customerId, cust
         item_name: `${j.job_number} ${j.job_title}`,
         description: j.address,
         quantity: 1,
-        unit_price: j.subtotal,
+        unit_price: money(j.subtotal / (1 + GST_RATE)),
         sort_order: idx,
       }));
       if (lineItems.length > 0) {
         await supabase.from('invoice_line_items').insert(lineItems as any);
       }
 
-      // Mark jobs as invoiced
+      // Mark completed/closed jobs as fully invoiced; leave ongoing monthly jobs available for future billing cycles.
       for (const j of selectedJobs) {
-        await supabase.from('jobs').update({ billing_status: 'invoiced' } as any).eq('id', j.id);
+        if (j.status === 'Completed' || j.status === 'Closed') {
+          await supabase.from('jobs').update({ billing_status: 'invoiced' } as any).eq('id', j.id);
+        }
       }
 
       qc.invalidateQueries({ queryKey: ['invoices'] });

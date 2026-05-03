@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -49,6 +50,8 @@ const createInvoiceDraftSchema = z.object({
   message: 'Due date must be on or after the issue date',
 });
 
+const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
 export function CreateInvoiceFromWorkDialog({
   open, onOpenChange, sourceType, sourceRecord, lineItems = [],
   customerId, propertyId, jobId, visitId, quoteId, requestId, billingMode,
@@ -62,7 +65,8 @@ export function CreateInvoiceFromWorkDialog({
 
   const [issueDate, setIssueDate] = useState(today);
   const [dueDate, setDueDate] = useState(defaultDue);
-  const [taxRate, setTaxRate] = useState('0.11');
+  const [taxRate, setTaxRate] = useState('0.05');
+  const [taxIncluded, setTaxIncluded] = useState(sourceType === 'job');
   const [customerMemo, setCustomerMemo] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -126,6 +130,7 @@ export function CreateInvoiceFromWorkDialog({
 
   useEffect(() => {
     if (open && sourceRecord) {
+      setTaxIncluded(sourceType === 'job');
       const label = sourceType === 'quote' ? sourceRecord.quote_number
         : sourceType === 'job' ? sourceRecord.job_number
         : sourceRecord.visit_number;
@@ -185,20 +190,25 @@ export function CreateInvoiceFromWorkDialog({
       if (error) throw error;
 
       if (normalizedLineItems.length > 0) {
-        const items = normalizedLineItems.map((li: any, idx: number) => ({
-          invoice_id: invoice.id,
-          item_name: li.item_name,
-          description: li.description || null,
-          quantity: li.quantity,
-          unit_price: li.unit_price,
-          line_total: li.line_total,
-          sort_order: Number.isInteger(Number(li.sort_order)) ? Number(li.sort_order) : idx,
-        }));
+        const items = normalizedLineItems.map((li: any, idx: number) => {
+          const grossLineTotal = Number(li.line_total || li.quantity * li.unit_price || 0);
+          const grossUnitPrice = li.quantity > 0 ? grossLineTotal / li.quantity : li.unit_price;
+          const unitPrice = taxIncluded && validatedTaxRate > 0 ? money(grossUnitPrice / (1 + validatedTaxRate)) : money(grossUnitPrice);
+          return ({
+            invoice_id: invoice.id,
+            item_name: li.item_name,
+            description: li.description || null,
+            quantity: li.quantity,
+            unit_price: unitPrice,
+            line_total: money(li.quantity * unitPrice),
+            sort_order: Number.isInteger(Number(li.sort_order)) ? Number(li.sort_order) : idx,
+          });
+        });
         const { error: itemsError } = await supabase.from('invoice_line_items').insert(items as any);
         if (itemsError) throw itemsError;
       }
 
-      if (jobId) {
+      if (jobId && (sourceRecord?.status === 'Completed' || sourceRecord?.status === 'Closed')) {
         const { error: jobUpdateError } = await supabase.from('jobs').update({ billing_status: 'invoiced' } as any).eq('id', jobId);
         if (jobUpdateError) throw jobUpdateError;
       }
@@ -222,8 +232,12 @@ export function CreateInvoiceFromWorkDialog({
     }
   };
 
-  const subtotal = normalizedLineItems.reduce((sum, li) => sum + Number(li.line_total || 0), 0);
   const parsedTaxRate = Number(taxRate || '0');
+  const displayLineItems = normalizedLineItems.map((li: any) => {
+    const grossLineTotal = Number(li.line_total || li.quantity * li.unit_price || 0);
+    return taxIncluded && Number.isFinite(parsedTaxRate) && parsedTaxRate > 0 ? money(grossLineTotal / (1 + parsedTaxRate)) : grossLineTotal;
+  });
+  const subtotal = displayLineItems.reduce((sum, lineTotal) => sum + Number(lineTotal || 0), 0);
   const tax = subtotal * (Number.isFinite(parsedTaxRate) ? parsedTaxRate : 0);
   const total = subtotal + tax;
 
@@ -285,6 +299,12 @@ export function CreateInvoiceFromWorkDialog({
             <Label className="text-xs">Tax Rate</Label>
             <Input type="number" inputMode="decimal" min="0" max="1" step="0.01" value={taxRate} onChange={e => setTaxRate(e.target.value)} />
           </div>
+          {normalizedLineItems.length > 0 && (
+            <div className="flex items-center gap-2 rounded-md border bg-muted/30 p-3">
+              <Checkbox id="tax_included" checked={taxIncluded} onCheckedChange={(checked) => setTaxIncluded(checked === true)} />
+              <Label htmlFor="tax_included" className="text-xs cursor-pointer">Line item prices include tax</Label>
+            </div>
+          )}
           <div><Label className="text-xs">Customer Memo</Label><Textarea value={customerMemo} onChange={e => setCustomerMemo(e.target.value)} rows={2} /></div>
           <div><Label className="text-xs">Internal Notes</Label><Textarea value={internalNotes} onChange={e => setInternalNotes(e.target.value)} rows={2} /></div>
         </div>
