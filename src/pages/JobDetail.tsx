@@ -219,6 +219,7 @@ export default function JobDetail() {
   const isClosed = form.status === 'Closed';
   const isOneTime = !form.service_frequency || form.service_frequency === 'one-time';
   const billingStatus = (form as any).billing_status || 'not_billable';
+  const canCreateInvoice = canManageJobs && (!(isCompleted || isClosed) || billingStatus !== 'invoiced');
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -244,7 +245,7 @@ export default function JobDetail() {
             <Save className="h-4 w-4 mr-2" /> Save Job
           </Button>
         )}
-        {(isCompleted || isClosed) && canManageJobs && (
+        {canCreateInvoice && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleCreateInvoice}>
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>
@@ -520,7 +521,7 @@ export default function JobDetail() {
         jobId={id}
         quoteId={(job as any).quote_id}
         requestId={(job as any).request_id}
-        billingMode={(form as any).billing_mode || null}
+        billingMode={(form as any).billing_type || null}
       />
     </div>
   );
