@@ -177,6 +177,7 @@ export default function Dashboard() {
       <ServiceRevenueBreakdown
         invoices={invoices}
         jobs={jobs}
+        lineCategoryMap={lineCategoryMap}
         isLoading={loadInv || loadJobs}
       />
 
