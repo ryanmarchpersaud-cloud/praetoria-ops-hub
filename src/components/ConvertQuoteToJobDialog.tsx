@@ -329,14 +329,69 @@ export function ConvertQuoteToJobDialog({ open, onOpenChange, quote, lead, lineI
               </div>
               <div>
                 <Label className="text-xs">Property</Label>
-                <Select value={propertyId} onValueChange={setPropertyId}>
-                  <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
-                  <SelectContent>
-                    {customerProperties.map((p: any) => (
-                      <SelectItem key={p.id} value={p.id}>{p.property_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {customerProperties.length === 0 ? (
+                  <div className="space-y-2">
+                    <Alert>
+                      <AlertTriangle className="h-3 w-3" />
+                      <AlertDescription className="text-xs">
+                        This customer has no property on file. Create one from their address to continue.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={saving || !customerId}
+                      onClick={async () => {
+                        setSaving(true);
+                        try {
+                          const { data: cust } = await supabase
+                            .from('customers')
+                            .select('first_name,last_name,company_name,address_line_1,city,province,postal_code')
+                            .eq('id', customerId)
+                            .maybeSingle();
+                          if (!cust?.address_line_1) {
+                            toast({ title: 'No address on customer', description: 'Add a service address to the customer first.', variant: 'destructive' });
+                            return;
+                          }
+                          const name = cust.company_name || [cust.first_name, cust.last_name].filter(Boolean).join(' ') || 'Service Address';
+                          const { data: newProp, error } = await supabase
+                            .from('properties')
+                            .insert({
+                              customer_id: customerId,
+                              property_name: `${name} — ${cust.address_line_1}`,
+                              address_line_1: cust.address_line_1,
+                              city: cust.city,
+                              province: cust.province,
+                              postal_code: cust.postal_code,
+                            })
+                            .select('id')
+                            .single();
+                          if (error) throw error;
+                          await qc.invalidateQueries({ queryKey: ['properties'] });
+                          setPropertyId(newProp.id);
+                          toast({ title: 'Property created from customer address' });
+                        } catch (e: any) {
+                          toast({ title: 'Failed to create property', description: e.message, variant: 'destructive' });
+                        } finally {
+                          setSaving(false);
+                        }
+                      }}
+                    >
+                      {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                      Use customer's address as property
+                    </Button>
+                  </div>
+                ) : (
+                  <Select value={propertyId} onValueChange={setPropertyId}>
+                    <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
+                    <SelectContent>
+                      {customerProperties.map((p: any) => (
+                        <SelectItem key={p.id} value={p.id}>{p.property_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
             <div>
