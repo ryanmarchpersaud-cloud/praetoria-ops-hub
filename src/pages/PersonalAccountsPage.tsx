@@ -4,6 +4,7 @@ import {
   useIsPersonalOwner, useClaimPersonalOwnership, usePersonalExpenses, usePersonalFundingSources,
   usePersonalIncome, usePersonalPayments, useUpsertPersonalExpense, useDeletePersonalExpense,
   useUpsertFundingSource, useDeleteFundingSource, useUpsertIncome, useDeleteIncome, useMarkPaid, useSeedFromNotepad,
+  useUpdatePayment, useDeletePayment,
 } from '@/hooks/usePersonalAccounts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
