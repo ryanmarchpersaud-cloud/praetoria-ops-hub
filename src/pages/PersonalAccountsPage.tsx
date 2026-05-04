@@ -920,6 +920,7 @@ export default function PersonalAccountsPage() {
       <FundingSourceDialog open={fundingDialog.open} onOpenChange={(v: boolean) => setFundingDialog({ open: v, editing: v ? fundingDialog.editing : null })} editing={fundingDialog.editing} onSave={(f: any) => upsertFunding.mutate(f)} />
       <IncomeDialog open={incomeDialog.open} onOpenChange={(v: boolean) => setIncomeDialog({ open: v, editing: v ? incomeDialog.editing : null })} editing={incomeDialog.editing} onSave={(f: any) => upsertIncome.mutate(f)} />
       <MarkPaidDialog open={paidDialog.open} onOpenChange={(v: boolean) => setPaidDialog({ open: v, expense: v ? paidDialog.expense : null })} expense={paidDialog.expense} fundingSources={funding} onConfirm={(p: any) => markPaid.mutate({ expense_id: paidDialog.expense.id, ...p })} />
+      <EditPaymentDialog open={editPaymentDialog.open} onOpenChange={(v: boolean) => setEditPaymentDialog({ open: v, payment: v ? editPaymentDialog.payment : null })} payment={editPaymentDialog.payment} fundingSources={funding} onSave={(p: any) => updatePayment.mutate(p)} />
 
       {/* Per-card payment history */}
       <Dialog open={cardHistoryDialog.open} onOpenChange={(v) => setCardHistoryDialog({ open: v, card: v ? cardHistoryDialog.card : null })}>
