@@ -47,6 +47,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
 
 const viewAsItems = [
   { title: 'Worker Portal', url: '/worker', icon: Smartphone, badge: 'Worker view' },
+  { title: 'Subcontractor Portal', url: '/subcontractor', icon: HardHat, badge: 'Subcontractor view' },
   { title: 'Customer Portal', url: '/portal/properties', icon: Eye, badge: 'Customer view' },
 ];
 
