@@ -680,6 +680,7 @@ export default function PersonalAccountsPage() {
                 <th className="p-2">Paid From (Card)</th>
                 <th className="p-2">Type</th>
                 <th className="p-2 text-right">Amount</th>
+                <th className="p-2 text-right print:hidden">Actions</th>
               </tr></thead>
               <tbody>
                 {payments.map((p: any) => (
@@ -690,9 +691,15 @@ export default function PersonalAccountsPage() {
                     <td className="p-2">{p.personal_funding_sources?.name ? `${p.personal_funding_sources.name}${p.personal_funding_sources.last4 ? ` ••${p.personal_funding_sources.last4}` : ''}` : '—'}</td>
                     <td className="p-2"><Badge variant="outline" className="capitalize">{p.payment_type}</Badge></td>
                     <td className="p-2 text-right font-mono">{fmt(p.amount_paid)}</td>
+                    <td className="p-2 text-right print:hidden">
+                      <div className="flex gap-1 justify-end">
+                        <Button size="sm" variant="ghost" title="Edit payment" onClick={() => setEditPaymentDialog({ open: true, payment: p })}><Pencil className="h-3 w-3" /></Button>
+                        <Button size="sm" variant="ghost" title="Delete payment" onClick={() => { if (confirm(`Delete payment of ${fmt(p.amount_paid)} on ${format(parseISO(p.paid_date), 'MMM d, yyyy')}?`)) deletePayment.mutate(p.id); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
-                {payments.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No payments recorded yet. Click ✓ on any expense or edit a card's "Last Paid" to log one.</td></tr>}
+                {payments.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No payments recorded yet. Click ✓ on any expense or edit a card's "Last Paid" to log one.</td></tr>}
               </tbody>
             </table>
           </CardContent></Card>
