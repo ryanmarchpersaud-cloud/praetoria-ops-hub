@@ -110,6 +110,23 @@ export default function CustomerDetail() {
     enabled: !!id,
   });
 
+  const { data: lastLogin } = useQuery({
+    queryKey: ['customer_last_login', customer?.user_id],
+    queryFn: async () => {
+      if (!customer?.user_id) return null;
+      const { data } = await supabase
+        .from('audit_log')
+        .select('created_at')
+        .eq('actor_user_id', customer.user_id)
+        .eq('action', 'auth.login')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data?.created_at ?? null;
+    },
+    enabled: !!customer?.user_id,
+  });
+
   if (isLoading) return (
     <div className="space-y-4 p-4">
       <Skeleton className="h-8 w-48" />
