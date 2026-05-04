@@ -13,7 +13,7 @@ function useTomorrowVisits() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, scheduled_start_time, service_type, status, assigned_worker_id, jobs(job_title), customers(first_name, last_name, company_name), properties(property_name, city)')
+        .select('id, visit_number, scheduled_start_time, service_category, visit_status, assigned_worker_id, jobs(job_title), customers(first_name, last_name, company_name), properties(property_name, city)')
         .eq('service_date', tomorrow)
         .order('scheduled_start_time', { ascending: true });
       if (error) throw error;
@@ -62,7 +62,7 @@ export function TomorrowSchedule() {
                         {cust || v.properties?.property_name || v.visit_number}
                       </p>
                       <p className="text-[10px] text-muted-foreground truncate">
-                        {v.service_type ?? 'Service'}
+                        {v.service_category ?? 'Service'}
                         {v.properties?.city ? ` · ${v.properties.city}` : ''}
                       </p>
                     </div>
