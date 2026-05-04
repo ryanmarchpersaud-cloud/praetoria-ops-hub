@@ -327,6 +327,8 @@ export default function PersonalAccountsPage() {
   const [paidDialog, setPaidDialog] = useState<{ open: boolean; expense: any }>({ open: false, expense: null });
   const [editPaymentDialog, setEditPaymentDialog] = useState<{ open: boolean; payment: any }>({ open: false, payment: null });
   const [cardHistoryDialog, setCardHistoryDialog] = useState<{ open: boolean; card: any }>({ open: false, card: null });
+  const [payoffStrategy, setPayoffStrategy] = useState<'snowball' | 'avalanche'>('avalanche');
+  const [extraPayment, setExtraPayment] = useState<number>(500);
 
   // ---- Loading / not-claimed gates ----
   if (isOwnerQ.isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
