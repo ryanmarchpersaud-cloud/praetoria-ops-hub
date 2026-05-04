@@ -316,6 +316,8 @@ export default function PersonalAccountsPage() {
   const upsertIncome = useUpsertIncome();
   const delIncome = useDeleteIncome();
   const markPaid = useMarkPaid();
+  const updatePayment = useUpdatePayment();
+  const deletePayment = useDeletePayment();
   const seed = useSeedFromNotepad();
   const { unlocked, lock } = useSessionUnlock();
 
