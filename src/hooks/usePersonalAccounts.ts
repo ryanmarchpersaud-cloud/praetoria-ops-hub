@@ -251,6 +251,39 @@ export function useDeleteIncome() {
   });
 }
 
+export function useUpdatePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (p: { id: string; amount_paid?: number; paid_date?: string; payment_type?: string; funding_source_id?: string | null }) => {
+      const { id, ...rest } = p;
+      const { error } = await supabase.from('personal_expense_payments').update(rest).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['personal_payments'] });
+      qc.invalidateQueries({ queryKey: ['personal_expenses'] });
+      toast.success('Payment updated');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+export function useDeletePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('personal_expense_payments').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['personal_payments'] });
+      qc.invalidateQueries({ queryKey: ['personal_expenses'] });
+      toast.success('Payment deleted');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
 export function useMarkPaid() {
   const { user } = useAuth();
   const qc = useQueryClient();

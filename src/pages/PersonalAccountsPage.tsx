@@ -4,6 +4,7 @@ import {
   useIsPersonalOwner, useClaimPersonalOwnership, usePersonalExpenses, usePersonalFundingSources,
   usePersonalIncome, usePersonalPayments, useUpsertPersonalExpense, useDeletePersonalExpense,
   useUpsertFundingSource, useDeleteFundingSource, useUpsertIncome, useDeleteIncome, useMarkPaid, useSeedFromNotepad,
+  useUpdatePayment, useDeletePayment,
 } from '@/hooks/usePersonalAccounts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -249,6 +250,55 @@ function MarkPaidDialog({ open, onOpenChange, expense, fundingSources, onConfirm
   );
 }
 
+function EditPaymentDialog({ open, onOpenChange, payment, fundingSources, onSave }: any) {
+  const [amount, setAmount] = useState(0);
+  const [date, setDate] = useState('');
+  const [type, setType] = useState('full');
+  const [fund, setFund] = useState('none');
+  React.useEffect(() => {
+    if (open && payment) {
+      setAmount(Number(payment.amount_paid) || 0);
+      setDate(payment.paid_date || format(new Date(), 'yyyy-MM-dd'));
+      setType(payment.payment_type || 'full');
+      setFund(payment.funding_source_id || 'none');
+    }
+  }, [open, payment]);
+  if (!payment) return null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Edit Payment — {payment.personal_expenses?.account_name || 'Card payment'}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(parseFloat(e.target.value))} /></div>
+            <div><Label>Paid Date *</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
+          </div>
+          <div><Label>Payment Type</Label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="full">Full</SelectItem><SelectItem value="minimum">Minimum</SelectItem><SelectItem value="partial">Partial</SelectItem></SelectContent>
+            </Select>
+          </div>
+          <div><Label>Paid From</Label>
+            <Select value={fund} onValueChange={setFund}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Not specified —</SelectItem>
+                {fundingSources.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => { onSave({ id: payment.id, amount_paid: amount, paid_date: date, payment_type: type, funding_source_id: fund === 'none' ? null : fund }); onOpenChange(false); }}>
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ============ Main page ============
 
 export default function PersonalAccountsPage() {
@@ -266,6 +316,8 @@ export default function PersonalAccountsPage() {
   const upsertIncome = useUpsertIncome();
   const delIncome = useDeleteIncome();
   const markPaid = useMarkPaid();
+  const updatePayment = useUpdatePayment();
+  const deletePayment = useDeletePayment();
   const seed = useSeedFromNotepad();
   const { unlocked, lock } = useSessionUnlock();
 
@@ -273,6 +325,7 @@ export default function PersonalAccountsPage() {
   const [fundingDialog, setFundingDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [incomeDialog, setIncomeDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [paidDialog, setPaidDialog] = useState<{ open: boolean; expense: any }>({ open: false, expense: null });
+  const [editPaymentDialog, setEditPaymentDialog] = useState<{ open: boolean; payment: any }>({ open: false, payment: null });
   const [cardHistoryDialog, setCardHistoryDialog] = useState<{ open: boolean; card: any }>({ open: false, card: null });
 
   // ---- Loading / not-claimed gates ----
@@ -679,6 +732,7 @@ export default function PersonalAccountsPage() {
                 <th className="p-2">Paid From (Card)</th>
                 <th className="p-2">Type</th>
                 <th className="p-2 text-right">Amount</th>
+                <th className="p-2 text-right print:hidden">Actions</th>
               </tr></thead>
               <tbody>
                 {payments.map((p: any) => (
@@ -689,9 +743,15 @@ export default function PersonalAccountsPage() {
                     <td className="p-2">{p.personal_funding_sources?.name ? `${p.personal_funding_sources.name}${p.personal_funding_sources.last4 ? ` ••${p.personal_funding_sources.last4}` : ''}` : '—'}</td>
                     <td className="p-2"><Badge variant="outline" className="capitalize">{p.payment_type}</Badge></td>
                     <td className="p-2 text-right font-mono">{fmt(p.amount_paid)}</td>
+                    <td className="p-2 text-right print:hidden">
+                      <div className="flex gap-1 justify-end">
+                        <Button size="sm" variant="ghost" title="Edit payment" onClick={() => setEditPaymentDialog({ open: true, payment: p })}><Pencil className="h-3 w-3" /></Button>
+                        <Button size="sm" variant="ghost" title="Delete payment" onClick={() => { if (confirm(`Delete payment of ${fmt(p.amount_paid)} on ${format(parseISO(p.paid_date), 'MMM d, yyyy')}?`)) deletePayment.mutate(p.id); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
-                {payments.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No payments recorded yet. Click ✓ on any expense or edit a card's "Last Paid" to log one.</td></tr>}
+                {payments.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No payments recorded yet. Click ✓ on any expense or edit a card's "Last Paid" to log one.</td></tr>}
               </tbody>
             </table>
           </CardContent></Card>
@@ -860,6 +920,7 @@ export default function PersonalAccountsPage() {
       <FundingSourceDialog open={fundingDialog.open} onOpenChange={(v: boolean) => setFundingDialog({ open: v, editing: v ? fundingDialog.editing : null })} editing={fundingDialog.editing} onSave={(f: any) => upsertFunding.mutate(f)} />
       <IncomeDialog open={incomeDialog.open} onOpenChange={(v: boolean) => setIncomeDialog({ open: v, editing: v ? incomeDialog.editing : null })} editing={incomeDialog.editing} onSave={(f: any) => upsertIncome.mutate(f)} />
       <MarkPaidDialog open={paidDialog.open} onOpenChange={(v: boolean) => setPaidDialog({ open: v, expense: v ? paidDialog.expense : null })} expense={paidDialog.expense} fundingSources={funding} onConfirm={(p: any) => markPaid.mutate({ expense_id: paidDialog.expense.id, ...p })} />
+      <EditPaymentDialog open={editPaymentDialog.open} onOpenChange={(v: boolean) => setEditPaymentDialog({ open: v, payment: v ? editPaymentDialog.payment : null })} payment={editPaymentDialog.payment} fundingSources={funding} onSave={(p: any) => updatePayment.mutate(p)} />
 
       {/* Per-card payment history */}
       <Dialog open={cardHistoryDialog.open} onOpenChange={(v) => setCardHistoryDialog({ open: v, card: v ? cardHistoryDialog.card : null })}>
