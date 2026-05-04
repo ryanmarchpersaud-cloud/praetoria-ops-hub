@@ -250,6 +250,55 @@ function MarkPaidDialog({ open, onOpenChange, expense, fundingSources, onConfirm
   );
 }
 
+function EditPaymentDialog({ open, onOpenChange, payment, fundingSources, onSave }: any) {
+  const [amount, setAmount] = useState(0);
+  const [date, setDate] = useState('');
+  const [type, setType] = useState('full');
+  const [fund, setFund] = useState('none');
+  React.useEffect(() => {
+    if (open && payment) {
+      setAmount(Number(payment.amount_paid) || 0);
+      setDate(payment.paid_date || format(new Date(), 'yyyy-MM-dd'));
+      setType(payment.payment_type || 'full');
+      setFund(payment.funding_source_id || 'none');
+    }
+  }, [open, payment]);
+  if (!payment) return null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Edit Payment — {payment.personal_expenses?.account_name || 'Card payment'}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Amount *</Label><Input type="number" step="0.01" value={amount} onChange={e => setAmount(parseFloat(e.target.value))} /></div>
+            <div><Label>Paid Date *</Label><Input type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
+          </div>
+          <div><Label>Payment Type</Label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="full">Full</SelectItem><SelectItem value="minimum">Minimum</SelectItem><SelectItem value="partial">Partial</SelectItem></SelectContent>
+            </Select>
+          </div>
+          <div><Label>Paid From</Label>
+            <Select value={fund} onValueChange={setFund}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Not specified —</SelectItem>
+                {fundingSources.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => { onSave({ id: payment.id, amount_paid: amount, paid_date: date, payment_type: type, funding_source_id: fund === 'none' ? null : fund }); onOpenChange(false); }}>
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ============ Main page ============
 
 export default function PersonalAccountsPage() {
