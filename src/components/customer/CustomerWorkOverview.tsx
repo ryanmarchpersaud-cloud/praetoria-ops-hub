@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquarePlus, FileText, Briefcase, Receipt, ClipboardCheck, ChevronRight, ChevronLeft, AlertCircle, Plus, MapPin } from 'lucide-react';
+import { MessageSquarePlus, FileText, Briefcase, Receipt, ClipboardCheck, ChevronRight, ChevronLeft, AlertCircle, Plus, MapPin, Download, Printer, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface Props {
   customerId: string;
@@ -156,10 +157,87 @@ export function CustomerWorkOverview({ customerId }: Props) {
 
   const requiresInvoicingCount = items.filter(i => i.requiresInvoicing).length;
 
+  const { toast } = useToast();
+
+  const exportRows = filtered.map(i => ({
+    Type: i.type,
+    Number: i.number,
+    Title: i.title,
+    Date: i.date ? format(new Date(i.date), 'yyyy-MM-dd') : '',
+    Status: i.status || '',
+    Amount: i.amount ? i.amount.toFixed(2) : '',
+  }));
+
+  const tabLabel = tab === 'all' ? 'Records' : tab.charAt(0).toUpperCase() + tab.slice(1) + 's';
+
+  const handleDownload = () => {
+    if (exportRows.length === 0) { toast({ title: 'Nothing to export' }); return; }
+    const headers = Object.keys(exportRows[0]);
+    const escape = (v: any) => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers.join(','), ...exportRows.map(r => headers.map(h => escape((r as any)[h])).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `customer-${tabLabel.toLowerCase()}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const buildPrintHtml = () => {
+    const rows = exportRows.map(r => `<tr>${Object.values(r).map(v => `<td>${String(v ?? '').replace(/</g, '&lt;')}</td>`).join('')}</tr>`).join('');
+    const headers = exportRows[0] ? Object.keys(exportRows[0]).map(h => `<th>${h}</th>`).join('') : '';
+    return `<!doctype html><html><head><title>${tabLabel}</title>
+      <style>
+        body{font-family:Arial,sans-serif;padding:24px;color:#0F172A}
+        h1{font-size:18px;margin:0 0 4px}
+        .meta{font-size:11px;color:#64748b;margin-bottom:16px}
+        table{width:100%;border-collapse:collapse;font-size:11px}
+        th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left}
+        th{background:#f1f5f9}
+      </style></head><body>
+      <h1>Praetoria Group — Customer ${tabLabel}</h1>
+      <div class="meta">Generated ${format(new Date(), 'MMM d, yyyy')} · ${exportRows.length} records</div>
+      <table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>
+    </body></html>`;
+  };
+
+  const handlePrint = () => {
+    if (exportRows.length === 0) { toast({ title: 'Nothing to print' }); return; }
+    const w = window.open('', '_blank');
+    if (!w) { toast({ title: 'Pop-up blocked', variant: 'destructive' }); return; }
+    w.document.write(buildPrintHtml());
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 300);
+  };
+
+  const handleShare = async () => {
+    if (exportRows.length === 0) { toast({ title: 'Nothing to share' }); return; }
+    const headers = Object.keys(exportRows[0]);
+    const csv = [headers.join(','), ...exportRows.map(r => headers.map(h => (r as any)[h]).join(','))].join('\n');
+    const file = new File([csv], `customer-${tabLabel.toLowerCase()}.csv`, { type: 'text/csv' });
+    try {
+      if ((navigator as any).canShare?.({ files: [file] })) {
+        await (navigator as any).share({ files: [file], title: `Customer ${tabLabel}` });
+        return;
+      }
+    } catch { /* fall through */ }
+    try {
+      await navigator.clipboard.writeText(csv);
+      toast({ title: 'Copied to clipboard', description: 'Paste into your email.' });
+    } catch {
+      handleDownload();
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <ClipboardCheck className="h-4 w-4" /> Work Overview
             {requiresInvoicingCount > 0 && (
@@ -168,11 +246,22 @@ export function CustomerWorkOverview({ customerId }: Props) {
               </Badge>
             )}
           </CardTitle>
-          <Link to={`/jobs/new?customer_id=${customerId}`}>
-            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1">
-              <Plus className="h-3 w-3" /> Create
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={handleDownload} title={`Download ${tabLabel} as CSV`}>
+              <Download className="h-3 w-3" /> CSV
             </Button>
-          </Link>
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={handlePrint} title={`Print ${tabLabel}`}>
+              <Printer className="h-3 w-3" /> Print
+            </Button>
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1" onClick={handleShare} title={`Share ${tabLabel}`}>
+              <Share2 className="h-3 w-3" /> Share
+            </Button>
+            <Link to={`/jobs/new?customer_id=${customerId}`}>
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] gap-1">
+                <Plus className="h-3 w-3" /> Create
+              </Button>
+            </Link>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
