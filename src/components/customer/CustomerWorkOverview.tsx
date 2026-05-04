@@ -201,16 +201,42 @@ export function CustomerWorkOverview({ customerId }: Props) {
   const buildPrintHtml = () => {
     const rows = exportRows.map(r => `<tr>${Object.values(r).map(v => `<td>${String(v ?? '').replace(/</g, '&lt;')}</td>`).join('')}</tr>`).join('');
     const headers = exportRows[0] ? Object.keys(exportRows[0]).map(h => `<th>${h}</th>`).join('') : '';
-    return `<!doctype html><html><head><title>${tabLabel}</title>
+    const customerName = customer
+      ? [customer.first_name, customer.last_name].filter(Boolean).join(' ') || customer.company_name || ''
+      : '';
+    const company = customer?.company_name && customerName !== customer.company_name ? customer.company_name : '';
+    const addrLine = customer ? [customer.address_line_1, customer.city, customer.province, customer.postal_code].filter(Boolean).join(', ') : '';
+    const contactLine = customer ? [customer.email, customer.phone].filter(Boolean).join(' · ') : '';
+    const logoUrl = `${window.location.origin}/invoice-logo.png`;
+    return `<!doctype html><html><head><title>${tabLabel} — ${customerName}</title>
       <style>
         body{font-family:Arial,sans-serif;padding:24px;color:#0F172A}
-        h1{font-size:18px;margin:0 0 4px}
-        .meta{font-size:11px;color:#64748b;margin-bottom:16px}
+        .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0F172A;padding-bottom:12px;margin-bottom:16px}
+        .brand{display:flex;align-items:center;gap:12px}
+        .brand img{height:56px;width:auto}
+        .brand-text strong{font-size:16px;display:block;color:#0F172A}
+        .brand-text span{font-size:10px;color:#64748b}
+        .cust{text-align:right;font-size:11px;line-height:1.5}
+        .cust .name{font-size:14px;font-weight:bold;color:#0F172A}
+        h1{font-size:16px;margin:0 0 4px}
+        .meta{font-size:11px;color:#64748b;margin-bottom:12px}
         table{width:100%;border-collapse:collapse;font-size:11px}
         th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left}
         th{background:#f1f5f9}
       </style></head><body>
-      <h1>Praetoria Group — Customer ${tabLabel}</h1>
+      <div class="header">
+        <div class="brand">
+          <img src="${logoUrl}" alt="Praetoria Group" onerror="this.style.display='none'"/>
+          <div class="brand-text"><strong>Praetoria Group</strong><span>support@praetoriagroup.ca</span></div>
+        </div>
+        <div class="cust">
+          ${customerName ? `<div class="name">${customerName}</div>` : ''}
+          ${company ? `<div>${company}</div>` : ''}
+          ${addrLine ? `<div>${addrLine}</div>` : ''}
+          ${contactLine ? `<div>${contactLine}</div>` : ''}
+        </div>
+      </div>
+      <h1>Customer ${tabLabel}</h1>
       <div class="meta">Generated ${format(new Date(), 'MMM d, yyyy')} · ${exportRows.length} records</div>
       <table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>
     </body></html>`;
