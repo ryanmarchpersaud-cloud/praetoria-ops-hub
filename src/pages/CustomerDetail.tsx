@@ -226,6 +226,23 @@ export default function CustomerDetail() {
 
   const hasPortalAccess = !!customer.user_id;
 
+  const { data: lastLogin } = useQuery({
+    queryKey: ['customer_last_login', customer.user_id],
+    queryFn: async () => {
+      if (!customer.user_id) return null;
+      const { data } = await supabase
+        .from('audit_log')
+        .select('created_at')
+        .eq('actor_user_id', customer.user_id)
+        .eq('action', 'auth.login')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data?.created_at ?? null;
+    },
+    enabled: !!customer.user_id,
+  });
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center gap-2">
