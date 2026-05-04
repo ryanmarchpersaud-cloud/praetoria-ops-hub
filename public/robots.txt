@@ -1,7 +1,13 @@
+# Praetoria Group — robots.txt
+# Public marketing crawl policy. Private data is protected by authentication, not by this file.
+
 User-agent: Googlebot
 Allow: /
 
 User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
 Allow: /
 
 User-agent: Twitterbot
@@ -10,5 +16,100 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
+# AI / LLM search crawlers
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Default policy: allow public marketing pages, protect application/portal routes.
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /worker
+Disallow: /worker/
+Disallow: /customer
+Disallow: /customer/
+Disallow: /portal
+Disallow: /portal/
+Disallow: /subcontractor
+Disallow: /subcontractor/
+Disallow: /api
+Disallow: /api/
+Disallow: /invoices
+Disallow: /invoices/
+Disallow: /invoice/
+Disallow: /quotes
+Disallow: /quotes/
+Disallow: /quote/
+Disallow: /jobs
+Disallow: /jobs/
+Disallow: /job/
+Disallow: /visits
+Disallow: /visits/
+Disallow: /visit/
+Disallow: /leads
+Disallow: /leads/
+Disallow: /lead/
+Disallow: /customers
+Disallow: /customers/
+Disallow: /properties
+Disallow: /properties/
+Disallow: /employees
+Disallow: /employees/
+Disallow: /subcontractors
+Disallow: /subcontractors/
+Disallow: /finance
+Disallow: /finance/
+Disallow: /hr
+Disallow: /hr/
+Disallow: /payroll
+Disallow: /payroll/
+Disallow: /personal-accounts
+Disallow: /personal-accounts/
+Disallow: /private
+Disallow: /private/
+Disallow: /account
+Disallow: /account/
+Disallow: /settings
+Disallow: /settings/
+Disallow: /messaging
+Disallow: /messaging/
+Disallow: /activity
+Disallow: /activity/
+Disallow: /audit-log
+Disallow: /audit-log/
+Disallow: /reset-password
+Disallow: /change-password
+Disallow: /login
+
+Sitemap: https://praetoriagroup.ca/sitemap.xml
