@@ -507,7 +507,24 @@ export default function PersonalAccountsPage() {
                         <td className="p-2">{e.is_business_writeoff && <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100"><Briefcase className="h-3 w-3 mr-1" />Write-off</Badge>}</td>
                         <td className="p-2 print:hidden">
                           <div className="flex gap-1">
-                            <Button size="sm" variant="outline" onClick={() => setPaidDialog({ open: true, expense: e })}><CheckCircle2 className="h-3 w-3" /></Button>
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white h-7 px-2"
+                              title={`Quick pay ${fmt(e.minimum_amount)} today`}
+                              disabled={markPaid.isPending}
+                              onClick={() => {
+                                markPaid.mutate({
+                                  expense_id: e.id,
+                                  amount_paid: Number(e.minimum_amount || 0),
+                                  paid_date: format(today, 'yyyy-MM-dd'),
+                                  payment_type: 'partial',
+                                  funding_source_id: e.funding_source_id || null,
+                                });
+                              }}
+                            >
+                              <CheckCircle2 className="h-3 w-3 mr-1" />Pay
+                            </Button>
+                            <Button size="sm" variant="outline" title="Mark paid with details…" onClick={() => setPaidDialog({ open: true, expense: e })}><CheckCircle2 className="h-3 w-3" /></Button>
                             <Button size="sm" variant="ghost" onClick={() => setExpenseDialog({ open: true, editing: e })}><Pencil className="h-3 w-3" /></Button>
                             <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Delete "${e.account_name}"?`)) delExpense.mutate(e.id); }}><Trash2 className="h-3 w-3 text-red-500" /></Button>
                           </div>
