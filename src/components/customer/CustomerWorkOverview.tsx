@@ -44,6 +44,17 @@ export function CustomerWorkOverview({ customerId }: Props) {
   const [tab, setTab] = useState<'all' | 'request' | 'quote' | 'job' | 'invoice' | 'visit'>('all');
   const [page, setPage] = useState(1);
 
+  const { data: customer } = useQuery({
+    queryKey: ['cwo_customer', customerId],
+    queryFn: async () => {
+      const { data } = await supabase.from('customers')
+        .select('first_name, last_name, company_name, email, phone, address_line_1, city, province, postal_code')
+        .eq('id', customerId).maybeSingle();
+      return data;
+    },
+    enabled: !!customerId,
+  });
+
   const { data: requests = [], isLoading: loadingReq } = useQuery({
     queryKey: ['cwo_requests', customerId],
     queryFn: async () => {
