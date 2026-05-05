@@ -38,6 +38,31 @@ export default function CustomerDetail() {
   const [inviting, setInviting] = useState(false);
   const [invoiceSelectOpen, setInvoiceSelectOpen] = useState(false);
   const [resending, setResending] = useState(false);
+  const [impersonating, setImpersonating] = useState(false);
+  const [impersonateLink, setImpersonateLink] = useState<string | null>(null);
+
+  const handleImpersonate = async () => {
+    if (!id) return;
+    setImpersonating(true);
+    setImpersonateLink(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-impersonate-customer', {
+        body: { customer_id: id, redirect_to: `${window.location.origin}/portal/dashboard` },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const link = (data as any)?.action_link;
+      if (!link) throw new Error('No link returned');
+      setImpersonateLink(link);
+      // Open in a NEW incognito-like window so it doesn't replace your admin session
+      window.open(link, '_blank', 'noopener,noreferrer');
+      toast({ title: 'Portal view opened', description: 'A new tab opened logged in as this customer. She is not notified.' });
+    } catch (e: any) {
+      toast({ title: 'Could not open portal view', description: e?.message || 'Failed', variant: 'destructive' });
+    } finally {
+      setImpersonating(false);
+    }
+  };
 
   if (customer && !form) {
     setForm(customer);
