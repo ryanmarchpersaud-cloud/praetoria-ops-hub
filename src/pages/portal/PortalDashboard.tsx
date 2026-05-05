@@ -29,7 +29,7 @@ export default function PortalDashboard() {
         .from('visits')
         .select('id, visit_number, service_date, visit_status, visit_type, properties(property_name)')
         .eq('customer_id', customer.id)
-        .in('visit_status', ['Scheduled', 'En Route', 'In Progress'] as any)
+        .in('visit_status', ['Planned', 'Scheduled', 'En Route', 'In Progress'] as any)
         .order('service_date', { ascending: true })
         .limit(5);
       if (error) throw error;
