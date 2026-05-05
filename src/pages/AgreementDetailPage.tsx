@@ -62,16 +62,23 @@ export default function AgreementDetailPage() {
   };
 
   const handlePrint = async () => {
-    // If a PDF attachment exists, open it directly — that IS the agreement
+    // If a PDF attachment exists, load it as an in-app blob first so browsers do not block the signed storage URL.
     if (agreement.attachment_url) {
-      const { data, error } = await supabase.storage
-        .from('agreement-attachments')
-        .createSignedUrl(agreement.attachment_url, 3600);
-      if (error || !data?.signedUrl) {
+      const pdfWindow = window.open('', '_blank');
+      try {
+        const pdfUrl = await createAgreementPdfObjectUrl(agreement.attachment_url);
+        if (pdfWindow) {
+          pdfWindow.location.href = pdfUrl;
+        } else {
+          const link = document.createElement('a');
+          link.href = pdfUrl;
+          link.download = `${agreement.title || 'agreement'}.pdf`;
+          link.click();
+        }
+      } catch (error) {
+        pdfWindow?.close();
         toast.error('Could not load attached PDF');
-        return;
       }
-      window.open(resolveSignedStorageUrl(data.signedUrl), '_blank');
       return;
     }
     const w = window.open('', '_blank');
@@ -244,20 +251,22 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null }) {
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!attachmentUrl) return;
-    supabase.storage.from('agreement-attachments')
-      .createSignedUrl(attachmentUrl, 3600)
-      .then(({ data }) => {
-        if (data?.signedUrl) {
-          setSignedUrl(resolveSignedStorageUrl(data.signedUrl));
-        }
-      });
+    let objectUrl: string | null = null;
+    createAgreementPdfObjectUrl(attachmentUrl).then((url) => {
+      objectUrl = url;
+      setPdfUrl(url);
+    }).catch(() => toast.error('Could not preview attached PDF'));
+
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [attachmentUrl]);
 
-  if (!attachmentUrl || !signedUrl) return null;
+  if (!attachmentUrl || !pdfUrl) return null;
 
   return (
     <Card>
@@ -267,15 +276,15 @@ function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null })
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <iframe src={signedUrl} className="w-full h-[600px] border rounded" title="Agreement PDF" />
+        <iframe src={pdfUrl} className="w-full h-[600px] border rounded" title="Agreement PDF" />
         <div className="mt-2 flex gap-2">
           <Button asChild variant="outline" size="sm">
-            <a href={signedUrl} target="_blank" rel="noopener noreferrer">
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
               <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
             </a>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <a href={signedUrl} download>
+            <a href={pdfUrl} download="agreement.pdf">
               <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
             </a>
           </Button>
@@ -285,10 +294,12 @@ function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null })
   );
 }
 
-function resolveSignedStorageUrl(url: string) {
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
+async function createAgreementPdfObjectUrl(attachmentUrl: string) {
+  const { data, error } = await supabase.storage
+    .from('agreement-attachments')
+    .download(attachmentUrl);
 
-  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1${url}`;
+  if (error || !data) throw error || new Error('PDF download failed');
+
+  return URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
 }
