@@ -83,19 +83,21 @@ Deno.serve(async (req) => {
       ?? null;
     if (!action_link) throw new Error('Failed to generate sign-in link');
 
-    // Silent audit log entry
-    await admin.rpc('write_audit_log', {
-      _action: 'admin.impersonate_customer',
-      _target_type: 'customer',
-      _target_id: customer_id,
-      _customer_id: customer_id,
-      _success: true,
-      _before: null,
-      _after: null,
-      _metadata: { admin_user_id: userData.user.id, target_email: customer.email },
-      _ip_address: req.headers.get('x-forwarded-for') ?? null,
-      _user_agent: req.headers.get('user-agent') ?? null,
-    }).catch(() => {});
+    // Silent audit log entry (best-effort)
+    try {
+      await admin.rpc('write_audit_log', {
+        _action: 'admin.impersonate_customer',
+        _target_type: 'customer',
+        _target_id: customer_id,
+        _customer_id: customer_id,
+        _success: true,
+        _before: null,
+        _after: null,
+        _metadata: { admin_user_id: userData.user.id, target_email: customer.email },
+        _ip_address: req.headers.get('x-forwarded-for') ?? null,
+        _user_agent: req.headers.get('user-agent') ?? null,
+      });
+    } catch (_) { /* ignore audit failures */ }
 
     return new Response(JSON.stringify({ success: true, action_link, email: customer.email }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
