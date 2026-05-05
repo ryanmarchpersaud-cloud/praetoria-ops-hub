@@ -219,13 +219,13 @@ export function CustomerWarningsEditor({ customerId }: CustomerWarningsEditorPro
 
       {/* Add Warning Dialog */}
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2">
             <DialogTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" /> Add Customer Warning
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-3 overflow-y-auto px-6 flex-1">
             <div>
               <Label className="text-xs">Warning Type</Label>
               <div className="flex flex-wrap gap-1.5 mt-1">
@@ -272,7 +272,7 @@ export function CustomerWarningsEditor({ customerId }: CustomerWarningsEditorPro
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="p-6 pt-3 border-t bg-card">
             <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
             <Button onClick={handleAdd} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
