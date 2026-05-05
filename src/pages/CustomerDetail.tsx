@@ -47,7 +47,7 @@ export default function CustomerDetail() {
     setImpersonateLink(null);
     try {
       const { data, error } = await supabase.functions.invoke('admin-impersonate-customer', {
-        body: { customer_id: id, redirect_to: `${window.location.origin}/portal/dashboard` },
+        body: { customer_id: id, redirect_to: `${window.location.origin}/portal` },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
