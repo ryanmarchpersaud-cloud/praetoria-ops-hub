@@ -292,6 +292,16 @@ function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null })
   );
 }
 
+async function createAgreementPdfObjectUrl(attachmentUrl: string) {
+  const { data, error } = await supabase.storage
+    .from('agreement-attachments')
+    .download(attachmentUrl);
+
+  if (error || !data) throw error || new Error('PDF download failed');
+
+  return URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+}
+
 function resolveSignedStorageUrl(url: string) {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
