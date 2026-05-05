@@ -22,7 +22,7 @@ type WorkItem = {
   type: 'request' | 'quote' | 'job' | 'invoice' | 'visit';
   number: string;
   title: string;
-  date: string;
+  date: string | null;
   status: string;
   amount: number;
   requiresInvoicing?: boolean;
@@ -39,6 +39,22 @@ const ICON_MAP = {
 };
 
 const ITEMS_PER_PAGE = 10;
+
+const parseSafeDate = (value?: string | null) => {
+  if (!value) return null;
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const parsed = dateOnly
+    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 12)
+    : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatSafeDate = (value: string | null | undefined, pattern: string) => {
+  const parsed = parseSafeDate(value);
+  return parsed ? format(parsed, pattern) : '';
+};
+
+const safeDateTime = (value: string | null | undefined) => parseSafeDate(value)?.getTime() ?? 0;
 
 export function CustomerWorkOverview({ customerId }: Props) {
   const [tab, setTab] = useState<'all' | 'request' | 'quote' | 'job' | 'invoice' | 'visit'>('all');
@@ -135,20 +151,19 @@ export function CustomerWorkOverview({ customerId }: Props) {
     }));
 
     visits.forEach((v: any) => {
-      const dt = v.scheduled_start_time || v.service_date;
       all.push({
         id: v.id,
         type: 'visit',
         number: v.visit_number || '',
         title: v.jobs?.job_title || v.visit_type || 'Visit',
-        date: dt,
+        date: v.service_date || null,
         status: v.visit_status,
         amount: 0,
         link: `/visits/${v.id}`,
       });
     });
 
-    all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    all.sort((a, b) => safeDateTime(b.date) - safeDateTime(a.date));
     return all;
   }, [requests, quotes, jobs, invoices, visits]);
 
@@ -174,7 +189,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
     Type: i.type,
     Number: i.number,
     Title: i.title,
-    Date: i.date ? format(new Date(i.date), 'yyyy-MM-dd') : '',
+    Date: formatSafeDate(i.date, 'yyyy-MM-dd'),
     Status: i.status || '',
     Amount: i.amount ? i.amount.toFixed(2) : '',
   }));
@@ -338,7 +353,7 @@ export function CustomerWorkOverview({ customerId }: Props) {
                       <p className="text-xs font-medium truncate">{item.title}</p>
                     </div>
                     <p className="text-[10px] text-muted-foreground">
-                      {item.date ? format(new Date(item.date), 'MMM d, yyyy') : '—'}
+                      {formatSafeDate(item.date, 'MMM d, yyyy') || '—'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
