@@ -249,7 +249,8 @@ export default function InvoicePrint() {
                   <td className="py-3 px-2 text-right tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.unit_price))}</td>
                   <td className="py-3 pl-2 text-right font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.line_total))}</td>
                 </tr>
-              ))}
+                );
+              })}
               {lineItems.length === 0 && (
                 <tr><td colSpan={7} className="py-8 text-center text-[#9ca3af] italic">No line items</td></tr>
               )}
