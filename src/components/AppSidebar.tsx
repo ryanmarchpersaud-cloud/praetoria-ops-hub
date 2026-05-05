@@ -29,6 +29,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
   { title: 'Properties', url: '/properties', icon: MapPin, accessKey: 'properties' },
   { title: 'Jobs', url: '/jobs', icon: Briefcase, countKey: 'jobs', accessKey: 'jobs' },
   { title: 'Visits', url: '/visits', icon: ClipboardCheck, countKey: 'visits', accessKey: 'visits' },
+  { title: 'Snow Log Archive', url: '/snow-logs', icon: ClipboardCheck, accessKey: 'visits' as SidebarKey },
   { title: 'Invoices', url: '/invoices', icon: Receipt, countKey: 'invoices', accessKey: 'invoices' },
   { title: 'Schedule', url: '/schedule', icon: CalendarDays, accessKey: 'schedule' },
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests' },
