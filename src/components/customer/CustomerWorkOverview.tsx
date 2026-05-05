@@ -247,6 +247,13 @@ export function CustomerWorkOverview({ customerId }: Props) {
   const buildPrintHtml = () => {
     const rows = exportRows.map(r => `<tr>${Object.values(r).map(v => `<td>${String(v ?? '').replace(/</g, '&lt;')}</td>`).join('')}</tr>`).join('');
     const headers = exportRows[0] ? Object.keys(exportRows[0]).map(h => `<th>${h}</th>`).join('') : '';
+    const colCount = exportRows[0] ? Object.keys(exportRows[0]).length : 0;
+    const totalRow = exportTotal > 0
+      ? `<tr><td colspan="${colCount - 1}" style="text-align:right;font-weight:bold;background:#f8fafc">Total</td><td style="font-weight:bold;background:#f8fafc">$${exportTotal.toFixed(2)}</td></tr>`
+      : '';
+    const feeNote = tab === 'visit' && visitMonthlyFeeMap.size > 0
+      ? `<p style="font-size:10px;color:#64748b;margin:8px 0 0">Monthly landscaping fee of $${MONTHLY_LANDSCAPING_FEE.toFixed(2)} is billed on the first visit of each month.</p>`
+      : '';
     const customerName = customer
       ? [customer.first_name, customer.last_name].filter(Boolean).join(' ') || customer.company_name || ''
       : '';
@@ -284,7 +291,8 @@ export function CustomerWorkOverview({ customerId }: Props) {
       </div>
       <h1>Customer ${tabLabel}</h1>
       <div class="meta">Generated ${format(new Date(), 'MMM d, yyyy')} · ${exportRows.length} records</div>
-      <table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>
+      <table><thead><tr>${headers}</tr></thead><tbody>${rows}${totalRow}</tbody></table>
+      ${feeNote}
     </body></html>`;
   };
 
