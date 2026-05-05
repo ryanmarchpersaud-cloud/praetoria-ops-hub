@@ -185,14 +185,45 @@ export function CustomerWorkOverview({ customerId }: Props) {
 
   const { toast } = useToast();
 
-  const exportRows = filtered.map(i => ({
-    Type: i.type,
-    Number: i.number,
-    Title: i.title,
-    Date: formatSafeDate(i.date, 'yyyy-MM-dd'),
-    Status: i.status || '',
-    Amount: i.amount ? i.amount.toFixed(2) : '',
-  }));
+  // Monthly landscaping fee shown on the first visit of each month (visits view only)
+  const MONTHLY_LANDSCAPING_FEE = 265;
+
+  const visitMonthlyFeeMap = useMemo(() => {
+    const map = new Map<string, string>(); // visit id -> month key it represents
+    if (tab !== 'visit') return map;
+    const sortedVisits = [...filtered]
+      .filter(v => v.type === 'visit' && v.date)
+      .sort((a, b) => safeDateTime(a.date) - safeDateTime(b.date));
+    const seenMonths = new Set<string>();
+    for (const v of sortedVisits) {
+      const d = parseSafeDate(v.date);
+      if (!d) continue;
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (!seenMonths.has(key)) {
+        seenMonths.add(key);
+        map.set(v.id, key);
+      }
+    }
+    return map;
+  }, [filtered, tab]);
+
+  const exportRows = filtered.map(i => {
+    const monthlyFee = visitMonthlyFeeMap.has(i.id) ? MONTHLY_LANDSCAPING_FEE : 0;
+    const amt = i.amount || monthlyFee;
+    return {
+      Type: i.type,
+      Number: i.number,
+      Title: i.title + (monthlyFee ? ' (Monthly Landscaping Fee)' : ''),
+      Date: formatSafeDate(i.date, 'yyyy-MM-dd'),
+      Status: i.status || '',
+      Amount: amt ? `$${amt.toFixed(2)}` : '',
+    };
+  });
+
+  const exportTotal = exportRows.reduce((sum, r) => {
+    const n = parseFloat(String(r.Amount).replace(/[^0-9.\-]/g, ''));
+    return sum + (isNaN(n) ? 0 : n);
+  }, 0);
 
   const tabLabel = tab === 'all' ? 'Records' : tab.charAt(0).toUpperCase() + tab.slice(1) + 's';
 
