@@ -193,7 +193,7 @@ export default function PortalDashboard() {
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {format(new Date(v.service_date), 'MMM d')}
+                  {format(parseLocalDate(v.service_date), 'MMM d')}
                 </span>
               </div>
             ))}
@@ -214,7 +214,7 @@ export default function PortalDashboard() {
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {format(new Date(v.service_date), 'MMM d')}
+                  {format(parseLocalDate(v.service_date), 'MMM d')}
                 </span>
               </div>
             ))}
