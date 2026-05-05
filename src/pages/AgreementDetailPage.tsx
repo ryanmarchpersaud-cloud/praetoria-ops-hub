@@ -61,7 +61,19 @@ export default function AgreementDetailPage() {
     toast.success('Signing link copied');
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    // If a PDF attachment exists, open it directly — that IS the agreement
+    if (agreement.attachment_url) {
+      const { data, error } = await supabase.storage
+        .from('agreement-attachments')
+        .createSignedUrl(agreement.attachment_url, 3600);
+      if (error || !data?.signedUrl) {
+        toast.error('Could not load attached PDF');
+        return;
+      }
+      window.open(resolveSignedStorageUrl(data.signedUrl), '_blank');
+      return;
+    }
     const w = window.open('', '_blank');
     if (!w) return;
     w.document.write(`<!DOCTYPE html><html><head><title>${agreement.title}</title>
