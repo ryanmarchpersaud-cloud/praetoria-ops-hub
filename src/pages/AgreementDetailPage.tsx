@@ -251,20 +251,22 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null }) {
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!attachmentUrl) return;
-    supabase.storage.from('agreement-attachments')
-      .createSignedUrl(attachmentUrl, 3600)
-      .then(({ data }) => {
-        if (data?.signedUrl) {
-          setSignedUrl(resolveSignedStorageUrl(data.signedUrl));
-        }
-      });
+    let objectUrl: string | null = null;
+    createAgreementPdfObjectUrl(attachmentUrl).then((url) => {
+      objectUrl = url;
+      setPdfUrl(url);
+    }).catch(() => toast.error('Could not preview attached PDF'));
+
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [attachmentUrl]);
 
-  if (!attachmentUrl || !signedUrl) return null;
+  if (!attachmentUrl || !pdfUrl) return null;
 
   return (
     <Card>
@@ -274,15 +276,15 @@ function AgreementPdfViewer({ attachmentUrl }: { attachmentUrl: string | null })
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <iframe src={signedUrl} className="w-full h-[600px] border rounded" title="Agreement PDF" />
+        <iframe src={pdfUrl} className="w-full h-[600px] border rounded" title="Agreement PDF" />
         <div className="mt-2 flex gap-2">
           <Button asChild variant="outline" size="sm">
-            <a href={signedUrl} target="_blank" rel="noopener noreferrer">
+            <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
               <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
             </a>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <a href={signedUrl} download>
+            <a href={pdfUrl} download="agreement.pdf">
               <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
             </a>
           </Button>
