@@ -14,6 +14,13 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+/** Parse YYYY-MM-DD as local date to avoid UTC->local day shifts. */
+function parseLocalDate(s: string): Date {
+  const m = s?.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return new Date(s);
+}
+
 export default function PortalDashboard() {
   const { user } = useAuth();
   const { data: customer } = useCustomerProfile();

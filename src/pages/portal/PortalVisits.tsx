@@ -40,9 +40,16 @@ type Visit = {
   visit_photos: { id: string; file_url: string; photo_tag: string; caption: string | null }[];
 };
 
+/** Parse YYYY-MM-DD as local date to avoid UTC->local day shifts. */
+function parseLocalDate(s: string): Date {
+  const m = s?.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return new Date(s);
+}
+
 /** Determine season label from a date: Winter 2025–2026, Summer 2025, etc. */
 function getSeasonLabel(dateStr: string) {
-  const d = new Date(dateStr);
+  const d = parseLocalDate(dateStr);
   const month = d.getMonth(); // 0-based
   const year = d.getFullYear();
 
@@ -246,7 +253,7 @@ export default function PortalVisits() {
                                 {hasPhotos && <Camera className="h-3 w-3 text-muted-foreground shrink-0" />}
                               </div>
                               <span className="text-[11px] text-muted-foreground shrink-0">
-                                {new Date(visit.service_date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
+                                {parseLocalDate(visit.service_date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })}
                               </span>
                             </button>
 
