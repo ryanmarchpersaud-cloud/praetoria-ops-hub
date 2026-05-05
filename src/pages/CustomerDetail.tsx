@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
@@ -38,6 +38,31 @@ export default function CustomerDetail() {
   const [inviting, setInviting] = useState(false);
   const [invoiceSelectOpen, setInvoiceSelectOpen] = useState(false);
   const [resending, setResending] = useState(false);
+  const [impersonating, setImpersonating] = useState(false);
+  const [impersonateLink, setImpersonateLink] = useState<string | null>(null);
+
+  const handleImpersonate = async () => {
+    if (!id) return;
+    setImpersonating(true);
+    setImpersonateLink(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-impersonate-customer', {
+        body: { customer_id: id, redirect_to: `${window.location.origin}/portal/dashboard` },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const link = (data as any)?.action_link;
+      if (!link) throw new Error('No link returned');
+      setImpersonateLink(link);
+      // Open in a NEW incognito-like window so it doesn't replace your admin session
+      window.open(link, '_blank', 'noopener,noreferrer');
+      toast({ title: 'Portal view opened', description: 'A new tab opened logged in as this customer. She is not notified.' });
+    } catch (e: any) {
+      toast({ title: 'Could not open portal view', description: e?.message || 'Failed', variant: 'destructive' });
+    } finally {
+      setImpersonating(false);
+    }
+  };
 
   if (customer && !form) {
     setForm(customer);
@@ -309,9 +334,21 @@ export default function CustomerDetail() {
               {resending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               Resend Invite
             </Button>
+            <Button variant="outline" className="h-11 gap-2" onClick={handleImpersonate} disabled={impersonating} title="Open this customer's portal in a new tab — silent, no notification sent.">
+              {impersonating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+              View as Customer
+            </Button>
           </>
         )}
       </div>
+      {impersonateLink && (
+        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary flex items-center justify-between gap-2">
+          <span className="truncate">A new tab opened with the customer's portal view. The customer was <strong>not</strong> notified.</span>
+          <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => { navigator.clipboard.writeText(impersonateLink); toast({ title: 'Link copied' }); }}>
+            <Copy className="h-3 w-3" /> Copy link
+          </Button>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
