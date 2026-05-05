@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const customer_id: string | undefined = body.customer_id;
-    const redirect_to: string = body.redirect_to || 'https://praetoriagroup.ca/portal/dashboard';
+    const redirect_to: string = body.redirect_to || 'https://praetoriagroup.ca/portal';
     if (!customer_id) {
       return new Response(JSON.stringify({ error: 'customer_id is required' }), {
         status: 400,
