@@ -53,7 +53,7 @@ function getSeasonLabel(dateStr: string) {
   return { key: `fall-${year}`, label: `Fall ${year}`, icon: Leaf, sort: year * 10 + 3 };
 }
 
-const VISIBLE_STATUSES = ['Completed', 'In Progress', 'Scheduled', 'En Route', 'Skipped', 'Rescheduled'];
+const VISIBLE_STATUSES = ['Planned', 'Completed', 'In Progress', 'Scheduled', 'En Route', 'Skipped', 'Rescheduled'];
 
 export default function PortalVisits() {
   const { data: customer } = useCustomerProfile();
