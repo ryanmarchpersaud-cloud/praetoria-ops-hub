@@ -303,11 +303,3 @@ async function createAgreementPdfObjectUrl(attachmentUrl: string) {
 
   return URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
 }
-
-function resolveSignedStorageUrl(url: string) {
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-
-  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1${url}`;
-}
