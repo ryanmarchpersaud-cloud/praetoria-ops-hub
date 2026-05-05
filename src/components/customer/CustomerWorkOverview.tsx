@@ -185,43 +185,27 @@ export function CustomerWorkOverview({ customerId }: Props) {
 
   const { toast } = useToast();
 
-  // Monthly landscaping fee shown on the first visit of each month (visits view only)
-  const MONTHLY_LANDSCAPING_FEE = 265;
-
-  const visitMonthlyFeeMap = useMemo(() => {
-    const map = new Map<string, string>(); // visit id -> month key it represents
-    if (tab !== 'visit') return map;
-    const sortedVisits = [...filtered]
-      .filter(v => v.type === 'visit' && v.date)
-      .sort((a, b) => safeDateTime(a.date) - safeDateTime(b.date));
-    const seenMonths = new Set<string>();
-    for (const v of sortedVisits) {
-      const d = parseSafeDate(v.date);
-      if (!d) continue;
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      if (!seenMonths.has(key)) {
-        seenMonths.add(key);
-        map.set(v.id, key);
-      }
-    }
-    return map;
-  }, [filtered, tab]);
+  const isVisitView = tab === 'visit';
 
   const exportRows = filtered.map(i => {
-    const monthlyFee = visitMonthlyFeeMap.has(i.id) ? MONTHLY_LANDSCAPING_FEE : 0;
-    const amt = i.amount || monthlyFee;
-    return {
+    const base: Record<string, string> = {
       Type: i.type,
       Number: i.number,
-      Title: i.title + (monthlyFee ? ' (Monthly Landscaping Fee)' : ''),
+      Title: i.title,
       Date: formatSafeDate(i.date, 'yyyy-MM-dd'),
-      Status: i.status || '',
-      Amount: amt ? `$${amt.toFixed(2)}` : '',
     };
+    if (isVisitView) {
+      base.Day = formatSafeDate(i.date, 'EEEE');
+    }
+    base.Status = i.status || '';
+    if (!isVisitView) {
+      base.Amount = i.amount ? `$${i.amount.toFixed(2)}` : '';
+    }
+    return base;
   });
 
-  const exportTotal = exportRows.reduce((sum, r) => {
-    const n = parseFloat(String(r.Amount).replace(/[^0-9.\-]/g, ''));
+  const exportTotal = isVisitView ? 0 : exportRows.reduce((sum, r) => {
+    const n = parseFloat(String(r.Amount ?? '').replace(/[^0-9.\-]/g, ''));
     return sum + (isNaN(n) ? 0 : n);
   }, 0);
 
@@ -251,8 +235,8 @@ export function CustomerWorkOverview({ customerId }: Props) {
     const totalRow = exportTotal > 0
       ? `<tr><td colspan="${colCount - 1}" style="text-align:right;font-weight:bold;background:#f8fafc">Total</td><td style="font-weight:bold;background:#f8fafc">$${exportTotal.toFixed(2)}</td></tr>`
       : '';
-    const feeNote = tab === 'visit' && visitMonthlyFeeMap.size > 0
-      ? `<p style="font-size:10px;color:#64748b;margin:8px 0 0">Monthly landscaping fee of $${MONTHLY_LANDSCAPING_FEE.toFixed(2)} is billed on the first visit of each month.</p>`
+    const feeNote = isVisitView
+      ? `<p style="font-size:10px;color:#64748b;margin:8px 0 0">This is your scheduled service calendar. Billing is handled separately on your monthly invoice.</p>`
       : '';
     const customerName = customer
       ? [customer.first_name, customer.last_name].filter(Boolean).join(' ') || customer.company_name || ''
