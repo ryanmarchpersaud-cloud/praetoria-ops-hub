@@ -40,6 +40,9 @@ export const WARNING_TYPES = [
   { value: 'parking_restriction', label: '🚗 Parking Restriction', color: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300' },
   { value: 'surveillance', label: '📷 Surveillance / Cameras', color: 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300' },
   { value: 'vip', label: '⭐ VIP / Priority Client', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  { value: 'irrigation_system', label: '💦 Irrigation / Sprinkler System on Lawn', color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400' },
+  { value: 'back_deck', label: '🪵 Back Deck — Watch for Damage', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
+  { value: 'generator_area', label: '⚡ Generator / Equipment Area — Avoid', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
   { value: 'general', label: '📝 General Note', color: 'bg-muted text-muted-foreground' },
 ];
 
