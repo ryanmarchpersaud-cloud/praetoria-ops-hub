@@ -6104,6 +6104,99 @@ export type Database = {
         }
         Relationships: []
       }
+      snow_logs: {
+        Row: {
+          attachment_url: string | null
+          created_at: string
+          created_by: string | null
+          crew_names: string | null
+          customer_id: string | null
+          customer_summary: string | null
+          end_time: string | null
+          id: string
+          internal_notes: string | null
+          materials_notes: string | null
+          property_id: string | null
+          salt_kg: number | null
+          sand_kg: number | null
+          season: string | null
+          service_date: string
+          services_performed: string[] | null
+          snowfall_cm: number | null
+          source: string | null
+          start_time: string | null
+          temperature_c: number | null
+          total_hours: number | null
+          updated_at: string
+          weather_conditions: string | null
+        }
+        Insert: {
+          attachment_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          crew_names?: string | null
+          customer_id?: string | null
+          customer_summary?: string | null
+          end_time?: string | null
+          id?: string
+          internal_notes?: string | null
+          materials_notes?: string | null
+          property_id?: string | null
+          salt_kg?: number | null
+          sand_kg?: number | null
+          season?: string | null
+          service_date: string
+          services_performed?: string[] | null
+          snowfall_cm?: number | null
+          source?: string | null
+          start_time?: string | null
+          temperature_c?: number | null
+          total_hours?: number | null
+          updated_at?: string
+          weather_conditions?: string | null
+        }
+        Update: {
+          attachment_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          crew_names?: string | null
+          customer_id?: string | null
+          customer_summary?: string | null
+          end_time?: string | null
+          id?: string
+          internal_notes?: string | null
+          materials_notes?: string | null
+          property_id?: string | null
+          salt_kg?: number | null
+          sand_kg?: number | null
+          season?: string | null
+          service_date?: string
+          services_performed?: string[] | null
+          snowfall_cm?: number | null
+          source?: string | null
+          start_time?: string | null
+          temperature_c?: number | null
+          total_hours?: number | null
+          updated_at?: string
+          weather_conditions?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "snow_logs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "snow_logs_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_webhook_events: {
         Row: {
           event_id: string
