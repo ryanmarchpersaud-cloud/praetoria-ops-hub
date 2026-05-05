@@ -225,11 +225,20 @@ export default function InvoicePrint() {
               </tr>
             </thead>
             <tbody>
-              {lineItems.map((item: any, idx: number) => (
-                <tr key={item.id} className="border-b border-[#f3f4f6]">
+              {lineItems.map((item: any, idx: number) => {
+                const isTrade = /trade settlement/i.test(`${item.item_name ?? ''} ${item.description ?? ''}`);
+                return (
+                <tr key={item.id} className={`border-b border-[#f3f4f6] ${isTrade ? 'bg-[#fffbeb]' : ''}`}>
                   <td className="py-3 pr-2 text-[#9ca3af]">{idx + 1}</td>
                   <td className="py-3 pr-2">
-                    <p className="font-semibold">{item.item_name}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold">{item.item_name}</p>
+                      {isTrade && (
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-[#fde68a] text-[#92400e] border border-[#f59e0b]">
+                          Trade Settlement
+                        </span>
+                      )}
+                    </div>
                     {item.description && <p className="text-xs text-[#6b7280] mt-0.5 md:hidden print:hidden">{item.description}</p>}
                   </td>
                   <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell">{item.description}</td>
@@ -240,7 +249,8 @@ export default function InvoicePrint() {
                   <td className="py-3 px-2 text-right tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.unit_price))}</td>
                   <td className="py-3 pl-2 text-right font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(Number(item.line_total))}</td>
                 </tr>
-              ))}
+                );
+              })}
               {lineItems.length === 0 && (
                 <tr><td colSpan={7} className="py-8 text-center text-[#9ca3af] italic">No line items</td></tr>
               )}
