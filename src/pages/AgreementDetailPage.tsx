@@ -62,16 +62,23 @@ export default function AgreementDetailPage() {
   };
 
   const handlePrint = async () => {
-    // If a PDF attachment exists, open it directly — that IS the agreement
+    // If a PDF attachment exists, load it as an in-app blob first so browsers do not block the signed storage URL.
     if (agreement.attachment_url) {
-      const { data, error } = await supabase.storage
-        .from('agreement-attachments')
-        .createSignedUrl(agreement.attachment_url, 3600);
-      if (error || !data?.signedUrl) {
+      const pdfWindow = window.open('', '_blank');
+      try {
+        const pdfUrl = await createAgreementPdfObjectUrl(agreement.attachment_url);
+        if (pdfWindow) {
+          pdfWindow.location.href = pdfUrl;
+        } else {
+          const link = document.createElement('a');
+          link.href = pdfUrl;
+          link.download = `${agreement.title || 'agreement'}.pdf`;
+          link.click();
+        }
+      } catch (error) {
+        pdfWindow?.close();
         toast.error('Could not load attached PDF');
-        return;
       }
-      window.open(resolveSignedStorageUrl(data.signedUrl), '_blank');
       return;
     }
     const w = window.open('', '_blank');
