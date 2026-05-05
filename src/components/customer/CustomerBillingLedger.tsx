@@ -159,7 +159,9 @@ export function CustomerBillingLedger({ customerId }: Props) {
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">{item.appliedTo}</td>
                     <td className="px-3 py-2 text-muted-foreground">
-                      {format(new Date(item.date), 'MMM dd, yyyy')}
+                      {item.date && !isNaN(new Date(item.date).getTime())
+                        ? format(new Date(item.date), 'MMM dd, yyyy')
+                        : '—'}
                     </td>
                     <td className={cn(
                       "px-3 py-2 text-right font-mono font-medium",
