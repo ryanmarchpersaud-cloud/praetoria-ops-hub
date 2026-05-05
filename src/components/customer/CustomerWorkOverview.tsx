@@ -185,14 +185,45 @@ export function CustomerWorkOverview({ customerId }: Props) {
 
   const { toast } = useToast();
 
-  const exportRows = filtered.map(i => ({
-    Type: i.type,
-    Number: i.number,
-    Title: i.title,
-    Date: formatSafeDate(i.date, 'yyyy-MM-dd'),
-    Status: i.status || '',
-    Amount: i.amount ? i.amount.toFixed(2) : '',
-  }));
+  // Monthly landscaping fee shown on the first visit of each month (visits view only)
+  const MONTHLY_LANDSCAPING_FEE = 265;
+
+  const visitMonthlyFeeMap = useMemo(() => {
+    const map = new Map<string, string>(); // visit id -> month key it represents
+    if (tab !== 'visit') return map;
+    const sortedVisits = [...filtered]
+      .filter(v => v.type === 'visit' && v.date)
+      .sort((a, b) => safeDateTime(a.date) - safeDateTime(b.date));
+    const seenMonths = new Set<string>();
+    for (const v of sortedVisits) {
+      const d = parseSafeDate(v.date);
+      if (!d) continue;
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (!seenMonths.has(key)) {
+        seenMonths.add(key);
+        map.set(v.id, key);
+      }
+    }
+    return map;
+  }, [filtered, tab]);
+
+  const exportRows = filtered.map(i => {
+    const monthlyFee = visitMonthlyFeeMap.has(i.id) ? MONTHLY_LANDSCAPING_FEE : 0;
+    const amt = i.amount || monthlyFee;
+    return {
+      Type: i.type,
+      Number: i.number,
+      Title: i.title + (monthlyFee ? ' (Monthly Landscaping Fee)' : ''),
+      Date: formatSafeDate(i.date, 'yyyy-MM-dd'),
+      Status: i.status || '',
+      Amount: amt ? `$${amt.toFixed(2)}` : '',
+    };
+  });
+
+  const exportTotal = exportRows.reduce((sum, r) => {
+    const n = parseFloat(String(r.Amount).replace(/[^0-9.\-]/g, ''));
+    return sum + (isNaN(n) ? 0 : n);
+  }, 0);
 
   const tabLabel = tab === 'all' ? 'Records' : tab.charAt(0).toUpperCase() + tab.slice(1) + 's';
 
@@ -216,6 +247,13 @@ export function CustomerWorkOverview({ customerId }: Props) {
   const buildPrintHtml = () => {
     const rows = exportRows.map(r => `<tr>${Object.values(r).map(v => `<td>${String(v ?? '').replace(/</g, '&lt;')}</td>`).join('')}</tr>`).join('');
     const headers = exportRows[0] ? Object.keys(exportRows[0]).map(h => `<th>${h}</th>`).join('') : '';
+    const colCount = exportRows[0] ? Object.keys(exportRows[0]).length : 0;
+    const totalRow = exportTotal > 0
+      ? `<tr><td colspan="${colCount - 1}" style="text-align:right;font-weight:bold;background:#f8fafc">Total</td><td style="font-weight:bold;background:#f8fafc">$${exportTotal.toFixed(2)}</td></tr>`
+      : '';
+    const feeNote = tab === 'visit' && visitMonthlyFeeMap.size > 0
+      ? `<p style="font-size:10px;color:#64748b;margin:8px 0 0">Monthly landscaping fee of $${MONTHLY_LANDSCAPING_FEE.toFixed(2)} is billed on the first visit of each month.</p>`
+      : '';
     const customerName = customer
       ? [customer.first_name, customer.last_name].filter(Boolean).join(' ') || customer.company_name || ''
       : '';
@@ -253,7 +291,8 @@ export function CustomerWorkOverview({ customerId }: Props) {
       </div>
       <h1>Customer ${tabLabel}</h1>
       <div class="meta">Generated ${format(new Date(), 'MMM d, yyyy')} · ${exportRows.length} records</div>
-      <table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>
+      <table><thead><tr>${headers}</tr></thead><tbody>${rows}${totalRow}</tbody></table>
+      ${feeNote}
     </body></html>`;
   };
 
