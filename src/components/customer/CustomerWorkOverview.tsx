@@ -235,8 +235,8 @@ export function CustomerWorkOverview({ customerId }: Props) {
     const totalRow = exportTotal > 0
       ? `<tr><td colspan="${colCount - 1}" style="text-align:right;font-weight:bold;background:#f8fafc">Total</td><td style="font-weight:bold;background:#f8fafc">$${exportTotal.toFixed(2)}</td></tr>`
       : '';
-    const feeNote = tab === 'visit' && visitMonthlyFeeMap.size > 0
-      ? `<p style="font-size:10px;color:#64748b;margin:8px 0 0">Monthly landscaping fee of $${MONTHLY_LANDSCAPING_FEE.toFixed(2)} is billed on the first visit of each month.</p>`
+    const feeNote = isVisitView
+      ? `<p style="font-size:10px;color:#64748b;margin:8px 0 0">This is your scheduled service calendar. Billing is handled separately on your monthly invoice.</p>`
       : '';
     const customerName = customer
       ? [customer.first_name, customer.last_name].filter(Boolean).join(' ') || customer.company_name || ''
