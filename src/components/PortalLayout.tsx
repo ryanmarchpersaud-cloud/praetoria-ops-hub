@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomerProfile } from '@/hooks/useUserRole';
-import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Menu, X, ShieldCheck, Receipt, ChevronRight, Home, Settings2, RefreshCw, Gift, HelpCircle } from 'lucide-react';
+import { MapPin, FileText, ClipboardCheck, Camera, MessageSquarePlus, User, LogOut, Menu, X, ShieldCheck, Receipt, ChevronRight, Home, Settings2, RefreshCw, Gift, HelpCircle, Snowflake } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -17,6 +17,7 @@ const portalNav = [
   { title: 'My Plan', to: '/portal/plan', icon: ShieldCheck, tileColor: 'action-tile-emerald', iconColor: 'text-emerald-600' },
   { title: 'My Quotes', to: '/portal/quotes', icon: FileText, tileColor: 'action-tile-amber', iconColor: 'text-amber-600' },
   { title: 'My Visits', to: '/portal/visits', icon: ClipboardCheck, tileColor: 'action-tile-cyan', iconColor: 'text-cyan-600' },
+  { title: 'Snow History', to: '/portal/snow-history', icon: Snowflake, tileColor: 'action-tile-blue', iconColor: 'text-blue-600' },
   { title: 'Billing', to: '/portal/billing', icon: Receipt, tileColor: 'action-tile-violet', iconColor: 'text-violet-600' },
   { title: 'My Photos', to: '/portal/photos', icon: Camera, tileColor: 'action-tile-rose', iconColor: 'text-rose-600' },
   { title: 'My Requests', to: '/portal/requests', icon: MessageSquarePlus, tileColor: 'action-tile-orange', iconColor: 'text-orange-600' },
