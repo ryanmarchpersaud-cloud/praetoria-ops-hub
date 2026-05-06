@@ -56,7 +56,11 @@ export default function LabourPriceListPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
-            <a href={PRICE_LIST_PDF} download>
+            <a
+              href={PRICE_LIST_PDF}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Download className="h-4 w-4" />
               Download PDF Price List
             </a>
