@@ -2,7 +2,7 @@ import {
   FileSignature,
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
-  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock,
+  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign,
 } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
@@ -30,6 +30,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
   { title: 'Jobs', url: '/jobs', icon: Briefcase, countKey: 'jobs', accessKey: 'jobs' },
   { title: 'Visits', url: '/visits', icon: ClipboardCheck, countKey: 'visits', accessKey: 'visits' },
   { title: 'Snow Log Archive', url: '/snow-logs', icon: ClipboardCheck, accessKey: 'visits' as SidebarKey },
+  { title: 'Labour Price List', url: '/price-list', icon: DollarSign, accessKey: 'quotes' as SidebarKey },
   { title: 'Invoices', url: '/invoices', icon: Receipt, countKey: 'invoices', accessKey: 'invoices' },
   { title: 'Schedule', url: '/schedule', icon: CalendarDays, accessKey: 'schedule' },
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests' },

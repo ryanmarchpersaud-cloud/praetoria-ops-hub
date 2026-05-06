@@ -81,6 +81,7 @@ import PortalHelpPage from "./pages/portal/PortalHelpPage";
 import PortalSnowHistory from "./pages/portal/PortalSnowHistory";
 const PortalAgreementsPage = lazy(() => import("./pages/portal/PortalAgreementsPage"));
 const SnowLogArchivePage = lazy(() => import("./pages/SnowLogArchivePage"));
+const LabourPriceListPage = lazy(() => import("./pages/LabourPriceListPage"));
 
 // Worker pages
 import { WorkerLayout } from "./components/worker/WorkerLayout";
@@ -480,6 +481,7 @@ function AppRoutes() {
       <Route path="/portal/help" element={<PortalRoute><PortalHelpPage /></PortalRoute>} />
       <Route path="/portal/snow-history" element={<PortalRoute><PortalSnowHistory /></PortalRoute>} />
       <Route path="/snow-logs" element={<AdminRoute><ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><SnowLogArchivePage /></Suspense></ModuleGuard></AdminRoute>} />
+      <Route path="/price-list" element={<AdminRoute><ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><LabourPriceListPage /></Suspense></ModuleGuard></AdminRoute>} />
       {/* Worker routes */}
       <Route path="/worker" element={<WorkerRoute><WorkerLayout><WorkerHome /></WorkerLayout></WorkerRoute>} />
       <Route path="/worker/schedule" element={<WorkerRoute><WorkerLayout><WorkerSchedule /></WorkerLayout></WorkerRoute>} />
