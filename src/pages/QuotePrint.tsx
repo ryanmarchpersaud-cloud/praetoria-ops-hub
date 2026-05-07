@@ -88,7 +88,7 @@ type ServiceTheme = {
 
 function svgIcon(path: string, color: string) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
       <path d={path} />
     </svg>
   );
