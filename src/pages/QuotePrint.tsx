@@ -142,7 +142,8 @@ const CATEGORY_ICON_PATHS: Record<string, string> = {
   'Cleaning Services': 'M9 2 H15 V8 L19 12 V22 H5 V12 L9 8 Z',
   'Power Washing': 'M3 12 H10 L14 8 V16 L10 12 Z M16 6 V18 M19 9 V15',
   'Gutter Cleaning & Repair': 'M3 8 H21 V12 H3 Z M5 12 V18 M19 12 V18',
-  'Maintenance & Repairs': 'M14 6 a4 4 0 1 0 4 4 L21 13 L18 16 L14 12 L6 20 L4 18 L12 10 Z',
+  // Maintenance & Repairs — crossed wrench + hammer (toolbox vibe)
+  'Maintenance & Repairs': 'M14 4 a3.5 3.5 0 1 0 3.5 3.5 L21 11 L18.5 13.5 L14.5 9.5 Z M3 21 L11 13 L13 15 L5 23 Z M14 14 L20 20 M16.5 11.5 L22 17 L20 19 L14.5 13.5',
 };
 const DEFAULT_ICON_PATH = 'M3 11 L12 4 L21 11 V21 H14 V14 H10 V21 H3 Z';
 
