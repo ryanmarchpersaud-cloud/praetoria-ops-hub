@@ -333,16 +333,33 @@ export default function QuotePrint() {
           </div>
         </div>
 
-        {exportData.scopeOfWork && (
-          <div className="mb-8 print:mb-10">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
-              Scope of Work
-            </p>
-            <p className="text-sm text-[#374151] leading-relaxed whitespace-pre-wrap print:text-base">
-              {exportData.scopeOfWork}
-            </p>
-          </div>
-        )}
+        {exportData.scopeOfWork && (() => {
+          const scope = exportData.scopeOfWork as string;
+          const m = scope.match(/^JOB SITE \/ WORK LOCATION:\s*(.+?)(\n|$)/i);
+          const jobSite = m?.[1]?.trim();
+          const rest = jobSite ? scope.replace(/^JOB SITE \/ WORK LOCATION:.*\n?\n?/i, '') : scope;
+          return (
+            <div className="mb-8 print:mb-10">
+              <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
+                Scope of Work
+              </p>
+              {jobSite && (
+                <div
+                  className="mb-3 px-3 py-2 rounded-md border-l-4 print:border-l-4"
+                  style={{ background: '#FEF08A', borderLeftColor: theme.accent, color: '#1a1a2e' }}
+                >
+                  <span className="text-[10px] uppercase tracking-widest font-bold mr-2 print:text-xs">Job Site / Work Location:</span>
+                  <span className="text-sm font-semibold print:text-base">{jobSite}</span>
+                </div>
+              )}
+              {rest && (
+                <p className="text-sm text-[#374151] leading-relaxed whitespace-pre-wrap print:text-base">
+                  {rest}
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ── Line Items Table ── */}
         <div className="mb-8 print:mb-10">
