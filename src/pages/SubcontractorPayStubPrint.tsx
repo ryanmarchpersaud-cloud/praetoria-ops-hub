@@ -100,7 +100,7 @@ export default function SubcontractorPayStubPrint() {
 
         <table className="w-full border-collapse text-sm mb-6">
           <thead>
-            <tr className="bg-gray-100 border-b-2 border-black">
+            <tr className="text-white" style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
               <th className="text-left p-2">Date</th>
               <th className="text-left p-2">Service</th>
               <th className="text-left p-2">Time</th>
