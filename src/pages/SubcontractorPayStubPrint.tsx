@@ -69,14 +69,13 @@ export default function SubcontractorPayStubPrint() {
           <Button onClick={() => window.print()} className="gap-2"><Printer className="h-4 w-4" /> Print / Save PDF</Button>
         </div>
 
-        <div className="border-b-2 border-black pb-4 mb-6 flex items-start gap-4">
-          <img src="/invoice-logo.png" alt="Praetoria Group" className="h-20 w-20 object-contain" />
+        <div className="rounded-lg p-6 mb-6 flex items-center gap-6 text-white print:rounded-none" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+          <img src="/invoice-logo.png" alt="Praetoria Group" className="h-32 w-32 object-contain bg-white/10 rounded-lg p-2" />
           <div className="flex-1">
-            <h1 className="text-3xl font-bold">Praetoria Group</h1>
-            <p className="text-sm text-gray-700">Head Office: Regina, Saskatchewan, Canada</p>
-            <p className="text-sm text-gray-700">Email: support@praetoriagroup.ca</p>
-            <p className="text-sm text-gray-700">Web: praetoriagroup.ca</p>
-            <h2 className="text-xl font-semibold mt-3">Subcontractor Pay Stub</h2>
+            <h1 className="text-4xl font-bold tracking-tight">Praetoria Group</h1>
+            <p className="text-sm opacity-90 mt-1">Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
+            <p className="text-sm opacity-90">Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
+            <h2 className="text-lg font-semibold mt-3 inline-block bg-white text-[#0F172A] px-3 py-1 rounded">Subcontractor Pay Stub</h2>
           </div>
         </div>
 
