@@ -37,6 +37,14 @@ function formatMoney(n: number | null | undefined) {
   return `$${Number(n || 0).toFixed(2)}`;
 }
 
+// Parse YYYY-MM-DD date strings as local dates to avoid UTC timezone shifts
+function parseLocalDate(s: string | null | undefined): Date {
+  if (!s) return new Date(NaN);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return new Date(s);
+}
+
 export function SubcontractorPayStubs({ subcontractorId, subcontractorName }: { subcontractorId: string; subcontractorName: string }) {
   const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
