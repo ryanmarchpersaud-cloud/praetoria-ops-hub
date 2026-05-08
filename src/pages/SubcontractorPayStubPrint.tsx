@@ -33,6 +33,25 @@ export default function SubcontractorPayStubPrint() {
 
   const allConfirmed = items.length > 0 && items.every(i => i.is_confirmed);
 
+  // Group by service type for per-service totals
+  const byService: Record<string, { hours: number; total: number }> = {};
+  items.forEach((it) => {
+    if (it.is_mixed && Array.isArray(it.mixed_split)) {
+      it.mixed_split.forEach((m: any) => {
+        const k = m.service_type || 'Other';
+        byService[k] = byService[k] || { hours: 0, total: 0 };
+        byService[k].hours += Number(m.hours || 0);
+        byService[k].total += Number(m.line_total || 0);
+      });
+    } else {
+      const k = it.service_type || 'Other';
+      byService[k] = byService[k] || { hours: 0, total: 0 };
+      byService[k].hours += Number(it.hours || 0);
+      byService[k].total += Number(it.line_total || 0);
+    }
+  });
+  const totalHours = Object.values(byService).reduce((a, b) => a + b.hours, 0);
+
   return (
     <div className="min-h-screen bg-white text-black p-8 print:p-0">
       <div className="max-w-3xl mx-auto">
