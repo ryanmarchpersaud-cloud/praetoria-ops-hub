@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
+import { SubcontractorPayStubs } from '@/components/subcontractor/SubcontractorPayStubs';
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
