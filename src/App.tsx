@@ -383,6 +383,7 @@ function AppRoutes() {
       <Route path="/subcontractors/invoices" element={<AdminRoute><ModuleGuard module="ops"><AdminSubcontractorInvoicesPage /></ModuleGuard></AdminRoute>} />
       <Route path="/subcontractors/invoices/:id" element={<AdminRoute><ModuleGuard module="ops"><AdminSubcontractorInvoiceDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/subcontractors/:id" element={<AdminRoute><ModuleGuard module="ops"><SubcontractorDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/admin/subcontractor-pay-stub/:id/print" element={<AdminRoute><ModuleGuard module="ops"><SubcontractorPayStubPrint /></ModuleGuard></AdminRoute>} />
 
       {/* HR Workspace */}
       <Route path="/hr" element={<AdminRoute><ModuleGuard module="hr"><HRDashboardPage /></ModuleGuard></AdminRoute>} />
