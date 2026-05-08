@@ -122,12 +122,42 @@ export default function SubcontractorPayStubPrint() {
           </tbody>
         </table>
 
-        <div className="ml-auto max-w-xs space-y-1 text-sm mb-6">
-          <div className="flex justify-between"><span>Confirmed Subtotal:</span><span className="font-semibold">{fmt(stub.confirmed_subtotal)}</span></div>
-          <div className="flex justify-between"><span>Pending (unconfirmed):</span><span className="font-semibold text-amber-700">{fmt(stub.pending_subtotal)}</span></div>
-          <div className="flex justify-between border-t-2 border-black pt-1 mt-1 text-base">
-            <span className="font-bold">{allConfirmed ? 'Final Total:' : 'Provisional Total:'}</span>
-            <span className="font-bold">{allConfirmed ? fmt(stub.total) : 'Pending confirmation'}</span>
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          <div>
+            <p className="text-xs uppercase font-semibold text-gray-600 mb-1">Totals by Service Type</p>
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b border-gray-300">
+                  <th className="text-left p-1">Service</th>
+                  <th className="text-right p-1">Hours</th>
+                  <th className="text-right p-1">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(byService).map(([svc, t]) => (
+                  <tr key={svc} className="border-b border-gray-200">
+                    <td className="p-1">{svc}</td>
+                    <td className="p-1 text-right">{t.hours}</td>
+                    <td className="p-1 text-right">{fmt(t.total)}</td>
+                  </tr>
+                ))}
+                <tr className="font-bold border-t border-black">
+                  <td className="p-1">Total</td>
+                  <td className="p-1 text-right">{totalHours}</td>
+                  <td className="p-1 text-right">{fmt(stub.total)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between"><span>Confirmed Subtotal:</span><span className="font-semibold">{fmt(stub.confirmed_subtotal)}</span></div>
+            {Number(stub.pending_subtotal) > 0 && (
+              <div className="flex justify-between"><span>Pending (unconfirmed):</span><span className="font-semibold text-amber-700">{fmt(stub.pending_subtotal)}</span></div>
+            )}
+            <div className="flex justify-between border-t-2 border-black pt-1 mt-1 text-base">
+              <span className="font-bold">{allConfirmed ? 'Total Amount Owed:' : 'Provisional Total:'}</span>
+              <span className="font-bold">{allConfirmed ? fmt(stub.total) : 'Pending confirmation'}</span>
+            </div>
           </div>
         </div>
 
