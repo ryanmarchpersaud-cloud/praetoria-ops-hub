@@ -6,6 +6,12 @@ import { Printer } from 'lucide-react';
 import { format } from 'date-fns';
 
 function fmt(n: number | null | undefined) { return `$${Number(n || 0).toFixed(2)}`; }
+function parseLocalDate(s: string | null | undefined): Date {
+  if (!s) return new Date(NaN);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return new Date(s);
+}
 
 export default function SubcontractorPayStubPrint() {
   const { id } = useParams<{ id: string }>();
