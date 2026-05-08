@@ -69,10 +69,15 @@ export default function SubcontractorPayStubPrint() {
           <Button onClick={() => window.print()} className="gap-2"><Printer className="h-4 w-4" /> Print / Save PDF</Button>
         </div>
 
-        <div className="border-b-2 border-black pb-4 mb-6">
-          <h1 className="text-3xl font-bold">Praetoria Snow & Ice</h1>
-          <p className="text-sm text-gray-600">Regina, Saskatchewan • support@praetoriagroup.ca</p>
-          <h2 className="text-xl font-semibold mt-4">Subcontractor Pay Stub</h2>
+        <div className="border-b-2 border-black pb-4 mb-6 flex items-start gap-4">
+          <img src="/invoice-logo.png" alt="Praetoria Group" className="h-20 w-20 object-contain" />
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold">Praetoria Group</h1>
+            <p className="text-sm text-gray-700">Head Office: Regina, Saskatchewan, Canada</p>
+            <p className="text-sm text-gray-700">Email: support@praetoriagroup.ca</p>
+            <p className="text-sm text-gray-700">Web: praetoriagroup.ca</p>
+            <h2 className="text-xl font-semibold mt-3">Subcontractor Pay Stub</h2>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
@@ -80,6 +85,9 @@ export default function SubcontractorPayStubPrint() {
             <p className="text-gray-600 text-xs uppercase">Subcontractor</p>
             <p className="font-bold text-lg">{sub.contact_name}</p>
             {sub.company_name && <p>{sub.company_name}</p>}
+            {sub.mailing_address && <p>{sub.mailing_address}</p>}
+            {sub.phone && <p>Phone: {sub.phone}</p>}
+            {sub.email && <p>Email: {sub.email}</p>}
           </div>
           <div className="text-right">
             <p className="text-gray-600 text-xs uppercase">Pay Stub #</p>
