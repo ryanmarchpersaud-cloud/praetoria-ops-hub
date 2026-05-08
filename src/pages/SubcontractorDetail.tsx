@@ -692,6 +692,10 @@ export default function SubcontractorDetail() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="paystubs">
+          <SubcontractorPayStubs subcontractorId={sub.id} subcontractorName={sub.contact_name || sub.company_name || 'Subcontractor'} />
+        </TabsContent>
       </Tabs>
 
       {/* ── EDIT SUBCONTRACTOR DIALOG ── */}
