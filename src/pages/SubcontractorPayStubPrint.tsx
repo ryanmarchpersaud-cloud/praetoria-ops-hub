@@ -6,6 +6,12 @@ import { Printer } from 'lucide-react';
 import { format } from 'date-fns';
 
 function fmt(n: number | null | undefined) { return `$${Number(n || 0).toFixed(2)}`; }
+function parseLocalDate(s: string | null | undefined): Date {
+  if (!s) return new Date(NaN);
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  return new Date(s);
+}
 
 export default function SubcontractorPayStubPrint() {
   const { id } = useParams<{ id: string }>();
@@ -79,7 +85,7 @@ export default function SubcontractorPayStubPrint() {
             <p className="text-gray-600 text-xs uppercase">Pay Stub #</p>
             <p className="font-mono font-bold">{stub.pay_stub_number}</p>
             <p className="text-gray-600 text-xs uppercase mt-2">Pay Period</p>
-            <p className="font-semibold">{format(new Date(stub.period_start), 'MMM d, yyyy')} – {format(new Date(stub.period_end), 'MMM d, yyyy')}</p>
+            <p className="font-semibold">{format(parseLocalDate(stub.period_start), 'MMM d, yyyy')} – {format(parseLocalDate(stub.period_end), 'MMM d, yyyy')}</p>
             <p className="text-gray-600 text-xs uppercase mt-2">Status</p>
             <p className="font-semibold capitalize">{stub.status}</p>
           </div>
@@ -100,7 +106,7 @@ export default function SubcontractorPayStubPrint() {
           <tbody>
             {items.map((it) => (
               <tr key={it.id} className="border-b border-gray-200 align-top">
-                <td className="p-2">{format(new Date(it.work_date), 'MMM d, yyyy')}</td>
+                <td className="p-2">{format(parseLocalDate(it.work_date), 'MMM d, yyyy')}</td>
                 <td className="p-2">
                   {it.service_type}
                   {it.is_mixed && Array.isArray(it.mixed_split) && (
@@ -164,7 +170,7 @@ export default function SubcontractorPayStubPrint() {
         {(stub.payment_date || stub.payment_method) && (
           <div className="border-t pt-3 mb-4 text-sm">
             <p className="font-semibold mb-1">Payment Details</p>
-            {stub.payment_date && <p>Date: {format(new Date(stub.payment_date), 'MMM d, yyyy')}</p>}
+            {stub.payment_date && <p>Date: {format(parseLocalDate(stub.payment_date), 'MMM d, yyyy')}</p>}
             {stub.payment_method && <p>Method: {stub.payment_method}</p>}
           </div>
         )}
