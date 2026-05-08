@@ -1,0 +1,1 @@
+DELETE FROM visits WHERE id='7853ba83-32db-4a4b-9635-859b02dea46b';
