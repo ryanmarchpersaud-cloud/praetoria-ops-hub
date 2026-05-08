@@ -69,14 +69,13 @@ export default function SubcontractorPayStubPrint() {
           <Button onClick={() => window.print()} className="gap-2"><Printer className="h-4 w-4" /> Print / Save PDF</Button>
         </div>
 
-        <div className="border-b-2 border-black pb-4 mb-6 flex items-start gap-4">
-          <img src="/invoice-logo.png" alt="Praetoria Group" className="h-20 w-20 object-contain" />
+        <div className="rounded-lg p-6 mb-6 flex items-center gap-6 text-white print:rounded-none" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+          <img src="/invoice-logo.png" alt="Praetoria Group" className="h-32 w-32 object-contain bg-white/10 rounded-lg p-2" />
           <div className="flex-1">
-            <h1 className="text-3xl font-bold">Praetoria Group</h1>
-            <p className="text-sm text-gray-700">Head Office: Regina, Saskatchewan, Canada</p>
-            <p className="text-sm text-gray-700">Email: support@praetoriagroup.ca</p>
-            <p className="text-sm text-gray-700">Web: praetoriagroup.ca</p>
-            <h2 className="text-xl font-semibold mt-3">Subcontractor Pay Stub</h2>
+            <h1 className="text-4xl font-bold tracking-tight">Praetoria Group</h1>
+            <p className="text-sm opacity-90 mt-1">Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
+            <p className="text-sm opacity-90">Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
+            <h2 className="text-lg font-semibold mt-3 inline-block bg-white text-[#0F172A] px-3 py-1 rounded">Subcontractor Pay Stub</h2>
           </div>
         </div>
 
@@ -101,7 +100,7 @@ export default function SubcontractorPayStubPrint() {
 
         <table className="w-full border-collapse text-sm mb-6">
           <thead>
-            <tr className="bg-gray-100 border-b-2 border-black">
+            <tr className="text-white" style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
               <th className="text-left p-2">Date</th>
               <th className="text-left p-2">Service</th>
               <th className="text-left p-2">Time</th>
@@ -197,12 +196,12 @@ export default function SubcontractorPayStubPrint() {
           </div>
         )}
 
-        <div className="border-t pt-4 mt-8 text-sm italic text-gray-700 text-center">
+        <div className="rounded-lg p-4 mt-8 text-sm italic text-center" style={{ background: '#F1F5F9', color: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
           Thank you for your hard work and dedication. At Praetoria Group, we strive to be fair to our workers and our customers, while building a sustainable company that we can all be proud of. We truly appreciate your service.
         </div>
 
-        <div className="border-t-2 border-black pt-3 mt-4 text-xs text-center text-gray-600">
-          Praetoria Group • Regina, Saskatchewan • support@praetoriagroup.ca • Generated {format(new Date(), 'MMM d, yyyy h:mm a')}
+        <div className="rounded-lg pt-3 mt-4 text-xs text-center text-white p-3" style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+          Praetoria Group • 2282 Unit B, Toronto Street, Regina, Saskatchewan • support@praetoriagroup.ca • Generated {format(new Date(), 'MMM d, yyyy h:mm a')}
         </div>
       </div>
     </div>
