@@ -197,8 +197,12 @@ export default function SubcontractorPayStubPrint() {
           </div>
         )}
 
-        <div className="border-t-2 border-black pt-3 mt-8 text-xs text-center text-gray-600">
-          Praetoria Snow & Ice • Generated {format(new Date(), 'MMM d, yyyy h:mm a')}
+        <div className="border-t pt-4 mt-8 text-sm italic text-gray-700 text-center">
+          Thank you for your hard work and dedication. At Praetoria Group, we strive to be fair to our workers and our customers, while building a sustainable company that we can all be proud of. We truly appreciate your service.
+        </div>
+
+        <div className="border-t-2 border-black pt-3 mt-4 text-xs text-center text-gray-600">
+          Praetoria Group • Regina, Saskatchewan • support@praetoriagroup.ca • Generated {format(new Date(), 'MMM d, yyyy h:mm a')}
         </div>
       </div>
     </div>
