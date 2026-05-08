@@ -388,6 +388,7 @@ export default function SubcontractorDetail() {
           <TabsTrigger value="documents" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> Docs</TabsTrigger>
           <TabsTrigger value="invoices" className="gap-1.5"><Receipt className="h-3.5 w-3.5" /> Invoices</TabsTrigger>
           <TabsTrigger value="payments" className="gap-1.5"><DollarSign className="h-3.5 w-3.5" /> Payments</TabsTrigger>
+          <TabsTrigger value="paystubs" className="gap-1.5"><Receipt className="h-3.5 w-3.5" /> Pay Stubs</TabsTrigger>
         </TabsList>
 
         {/* ── Company Tab ── */}
