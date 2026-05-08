@@ -55,6 +55,7 @@ import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import Subcontractors from "./pages/Subcontractors";
 import SubcontractorDetail from "./pages/SubcontractorDetail";
+import SubcontractorPayStubPrint from "./pages/SubcontractorPayStubPrint";
 import AdminSubcontractorInvoiceDetail from "./pages/AdminSubcontractorInvoiceDetail";
 import AdminSubcontractorInvoicesPage from "./pages/AdminSubcontractorInvoicesPage";
 import EmailDirectoryPage from "./pages/EmailDirectoryPage";
@@ -382,6 +383,7 @@ function AppRoutes() {
       <Route path="/subcontractors/invoices" element={<AdminRoute><ModuleGuard module="ops"><AdminSubcontractorInvoicesPage /></ModuleGuard></AdminRoute>} />
       <Route path="/subcontractors/invoices/:id" element={<AdminRoute><ModuleGuard module="ops"><AdminSubcontractorInvoiceDetail /></ModuleGuard></AdminRoute>} />
       <Route path="/subcontractors/:id" element={<AdminRoute><ModuleGuard module="ops"><SubcontractorDetail /></ModuleGuard></AdminRoute>} />
+      <Route path="/admin/subcontractor-pay-stub/:id/print" element={<AdminRoute><ModuleGuard module="ops"><SubcontractorPayStubPrint /></ModuleGuard></AdminRoute>} />
 
       {/* HR Workspace */}
       <Route path="/hr" element={<AdminRoute><ModuleGuard module="hr"><HRDashboardPage /></ModuleGuard></AdminRoute>} />

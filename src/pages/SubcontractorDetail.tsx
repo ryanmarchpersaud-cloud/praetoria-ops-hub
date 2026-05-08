@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
+import { SubcontractorPayStubs } from '@/components/subcontractor/SubcontractorPayStubs';
 
 function StatusChip({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -387,6 +388,7 @@ export default function SubcontractorDetail() {
           <TabsTrigger value="documents" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> Docs</TabsTrigger>
           <TabsTrigger value="invoices" className="gap-1.5"><Receipt className="h-3.5 w-3.5" /> Invoices</TabsTrigger>
           <TabsTrigger value="payments" className="gap-1.5"><DollarSign className="h-3.5 w-3.5" /> Payments</TabsTrigger>
+          <TabsTrigger value="paystubs" className="gap-1.5"><Receipt className="h-3.5 w-3.5" /> Pay Stubs</TabsTrigger>
         </TabsList>
 
         {/* ── Company Tab ── */}
@@ -689,6 +691,10 @@ export default function SubcontractorDetail() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="paystubs">
+          <SubcontractorPayStubs subcontractorId={sub.id} subcontractorName={sub.contact_name || sub.company_name || 'Subcontractor'} />
         </TabsContent>
       </Tabs>
 

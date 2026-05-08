@@ -6472,6 +6472,139 @@ export type Database = {
           },
         ]
       }
+      subcontractor_pay_stub_line_items: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          hourly_rate: number | null
+          hours: number | null
+          id: string
+          is_confirmed: boolean
+          is_mixed: boolean
+          line_total: number
+          mixed_split: Json | null
+          notes: string | null
+          pay_stub_id: string
+          service_type: string
+          sort_order: number
+          start_time: string | null
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          hourly_rate?: number | null
+          hours?: number | null
+          id?: string
+          is_confirmed?: boolean
+          is_mixed?: boolean
+          line_total?: number
+          mixed_split?: Json | null
+          notes?: string | null
+          pay_stub_id: string
+          service_type: string
+          sort_order?: number
+          start_time?: string | null
+          updated_at?: string
+          work_date: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          hourly_rate?: number | null
+          hours?: number | null
+          id?: string
+          is_confirmed?: boolean
+          is_mixed?: boolean
+          line_total?: number
+          mixed_split?: Json | null
+          notes?: string | null
+          pay_stub_id?: string
+          service_type?: string
+          sort_order?: number
+          start_time?: string | null
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_pay_stub_line_items_pay_stub_id_fkey"
+            columns: ["pay_stub_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractor_pay_stubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subcontractor_pay_stubs: {
+        Row: {
+          confirmed_subtotal: number
+          created_at: string
+          created_by: string | null
+          id: string
+          internal_notes: string | null
+          pay_stub_number: string | null
+          payment_date: string | null
+          payment_method: string | null
+          pending_subtotal: number
+          period_end: string
+          period_start: string
+          status: string
+          subcontractor_id: string
+          subcontractor_notes: string | null
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          confirmed_subtotal?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          internal_notes?: string | null
+          pay_stub_number?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          pending_subtotal?: number
+          period_end: string
+          period_start: string
+          status?: string
+          subcontractor_id: string
+          subcontractor_notes?: string | null
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          confirmed_subtotal?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          internal_notes?: string | null
+          pay_stub_number?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          pending_subtotal?: number
+          period_end?: string
+          period_start?: string
+          status?: string
+          subcontractor_id?: string
+          subcontractor_notes?: string | null
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractor_pay_stubs_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subcontractor_payments: {
         Row: {
           amount: number

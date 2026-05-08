@@ -1,0 +1,143 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Printer } from 'lucide-react';
+import { format } from 'date-fns';
+
+function fmt(n: number | null | undefined) { return `$${Number(n || 0).toFixed(2)}`; }
+
+export default function SubcontractorPayStubPrint() {
+  const { id } = useParams<{ id: string }>();
+  const [stub, setStub] = useState<any>(null);
+  const [items, setItems] = useState<any[]>([]);
+  const [sub, setSub] = useState<any>(null);
+  const [includeInternal, setIncludeInternal] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (!id) return;
+      const { data: s } = await supabase.from('subcontractor_pay_stubs').select('*').eq('id', id).single();
+      setStub(s);
+      if (s) {
+        const { data: it } = await supabase.from('subcontractor_pay_stub_line_items')
+          .select('*').eq('pay_stub_id', id).order('work_date', { ascending: true });
+        setItems(it ?? []);
+        const { data: sc } = await supabase.from('subcontractors').select('*').eq('id', s.subcontractor_id).single();
+        setSub(sc);
+      }
+    })();
+  }, [id]);
+
+  if (!stub || !sub) return <div className="p-8">Loading...</div>;
+
+  const allConfirmed = items.length > 0 && items.every(i => i.is_confirmed);
+
+  return (
+    <div className="min-h-screen bg-white text-black p-8 print:p-0">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex justify-between items-start mb-4 print:hidden">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={includeInternal} onChange={(e) => setIncludeInternal(e.target.checked)} />
+            Include internal admin notes on PDF
+          </label>
+          <Button onClick={() => window.print()} className="gap-2"><Printer className="h-4 w-4" /> Print / Save PDF</Button>
+        </div>
+
+        <div className="border-b-2 border-black pb-4 mb-6">
+          <h1 className="text-3xl font-bold">Praetoria Snow & Ice</h1>
+          <p className="text-sm text-gray-600">Regina, Saskatchewan • support@praetoriagroup.ca</p>
+          <h2 className="text-xl font-semibold mt-4">Subcontractor Pay Stub</h2>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+          <div>
+            <p className="text-gray-600 text-xs uppercase">Subcontractor</p>
+            <p className="font-bold text-lg">{sub.contact_name}</p>
+            {sub.company_name && <p>{sub.company_name}</p>}
+          </div>
+          <div className="text-right">
+            <p className="text-gray-600 text-xs uppercase">Pay Stub #</p>
+            <p className="font-mono font-bold">{stub.pay_stub_number}</p>
+            <p className="text-gray-600 text-xs uppercase mt-2">Pay Period</p>
+            <p className="font-semibold">{format(new Date(stub.period_start), 'MMM d, yyyy')} – {format(new Date(stub.period_end), 'MMM d, yyyy')}</p>
+            <p className="text-gray-600 text-xs uppercase mt-2">Status</p>
+            <p className="font-semibold capitalize">{stub.status}</p>
+          </div>
+        </div>
+
+        <table className="w-full border-collapse text-sm mb-6">
+          <thead>
+            <tr className="bg-gray-100 border-b-2 border-black">
+              <th className="text-left p-2">Date</th>
+              <th className="text-left p-2">Service</th>
+              <th className="text-left p-2">Time</th>
+              <th className="text-right p-2">Hours</th>
+              <th className="text-right p-2">Rate</th>
+              <th className="text-right p-2">Total</th>
+              <th className="text-left p-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((it) => (
+              <tr key={it.id} className="border-b border-gray-200 align-top">
+                <td className="p-2">{format(new Date(it.work_date), 'MMM d, yyyy')}</td>
+                <td className="p-2">
+                  {it.service_type}
+                  {it.is_mixed && Array.isArray(it.mixed_split) && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      {it.mixed_split.map((m: any, i: number) => (
+                        <div key={i}>• {m.service_type}: {m.hours}h × ${m.hourly_rate} = {fmt(m.line_total)}</div>
+                      ))}
+                    </div>
+                  )}
+                  {it.notes && <div className="text-xs text-gray-600 mt-1 italic">{it.notes}</div>}
+                </td>
+                <td className="p-2 text-xs">{it.start_time && it.end_time ? `${it.start_time} – ${it.end_time}` : '—'}</td>
+                <td className="p-2 text-right">{it.hours ?? '—'}</td>
+                <td className="p-2 text-right">{it.is_mixed ? 'split' : it.hourly_rate ? `$${Number(it.hourly_rate).toFixed(2)}` : '—'}</td>
+                <td className="p-2 text-right font-semibold">{fmt(it.line_total)}</td>
+                <td className="p-2 text-xs">{it.is_confirmed ? '✓ Confirmed' : 'Pending'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="ml-auto max-w-xs space-y-1 text-sm mb-6">
+          <div className="flex justify-between"><span>Confirmed Subtotal:</span><span className="font-semibold">{fmt(stub.confirmed_subtotal)}</span></div>
+          <div className="flex justify-between"><span>Pending (unconfirmed):</span><span className="font-semibold text-amber-700">{fmt(stub.pending_subtotal)}</span></div>
+          <div className="flex justify-between border-t-2 border-black pt-1 mt-1 text-base">
+            <span className="font-bold">{allConfirmed ? 'Final Total:' : 'Provisional Total:'}</span>
+            <span className="font-bold">{allConfirmed ? fmt(stub.total) : 'Pending confirmation'}</span>
+          </div>
+        </div>
+
+        {(stub.payment_date || stub.payment_method) && (
+          <div className="border-t pt-3 mb-4 text-sm">
+            <p className="font-semibold mb-1">Payment Details</p>
+            {stub.payment_date && <p>Date: {format(new Date(stub.payment_date), 'MMM d, yyyy')}</p>}
+            {stub.payment_method && <p>Method: {stub.payment_method}</p>}
+          </div>
+        )}
+
+        {stub.subcontractor_notes && (
+          <div className="border-t pt-3 mb-4 text-sm">
+            <p className="font-semibold mb-1">Notes</p>
+            <p className="whitespace-pre-wrap">{stub.subcontractor_notes}</p>
+          </div>
+        )}
+
+        {includeInternal && stub.internal_notes && (
+          <div className="border-t pt-3 mb-4 text-sm bg-yellow-50 p-2">
+            <p className="font-semibold mb-1">Internal Admin Notes</p>
+            <p className="whitespace-pre-wrap">{stub.internal_notes}</p>
+          </div>
+        )}
+
+        <div className="border-t-2 border-black pt-3 mt-8 text-xs text-center text-gray-600">
+          Praetoria Snow & Ice • Generated {format(new Date(), 'MMM d, yyyy h:mm a')}
+        </div>
+      </div>
+    </div>
+  );
+}
