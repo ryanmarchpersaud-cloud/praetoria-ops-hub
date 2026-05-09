@@ -400,6 +400,8 @@ export default function QuoteDetail() {
         workmanship_warranty: form.workmanship_warranty || null,
         terms_conditions: form.terms_conditions || null,
         tax_rate: form.tax_rate == null || form.tax_rate === '' ? 0.11 : Number(form.tax_rate),
+        gst_rate: form.gst_rate === '' || form.gst_rate == null ? null : Number(form.gst_rate),
+        pst_rate: form.pst_rate === '' || form.pst_rate == null ? null : Number(form.pst_rate),
         recurring_pricing_enabled: !!form.recurring_pricing_enabled,
         price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
         price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
