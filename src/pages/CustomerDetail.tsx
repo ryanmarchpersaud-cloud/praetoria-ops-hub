@@ -41,7 +41,11 @@ export default function CustomerDetail() {
   const [resending, setResending] = useState(false);
   const [impersonating, setImpersonating] = useState(false);
   const [impersonateLink, setImpersonateLink] = useState<string | null>(null);
-
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const { isAdmin, isOwner } = useAuthorization();
+  const canHardDelete = isAdmin || isOwner;
   const handleImpersonate = async () => {
     if (!id) return;
     setImpersonating(true);
