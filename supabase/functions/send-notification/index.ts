@@ -427,6 +427,19 @@ Deno.serve(async (req) => {
         const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
         if (RESEND_API_KEY && enrichedVars.to_email) {
           try {
+            // For worker_assigned events, build a rich, branded email server-side
+            // using authoritative job/visit data instead of caller-supplied placeholders.
+            let finalSubject = subject;
+            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subject}</h2><div>${notifBody}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
+
+            if (event === "worker_assigned" && (audience === "worker" || audience === "subcontractor")) {
+              const rich = await buildAssignmentEmail(supabase, record_type, record_id, audience, subject);
+              if (rich) {
+                finalSubject = rich.subject;
+                finalHtml = rich.html;
+              }
+            }
+
             const emailRes = await fetch("https://api.resend.com/emails", {
               method: "POST",
               headers: {
@@ -436,14 +449,14 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 from: "Praetoria Group <noreply@praetoriagroup.ca>",
                 to: [enrichedVars.to_email],
-                subject,
-                html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subject}</h2><div>${notifBody}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`,
+                subject: finalSubject,
+                html: finalHtml,
                 reply_to: enrichedVars.reply_to || "ops@praetoriagroup.ca",
               }),
             });
             const emailData = await emailRes.json();
             if (emailRes.ok) {
-              await supabase.from("notifications").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", notif.id);
+              await supabase.from("notifications").update({ status: "sent", sent_at: new Date().toISOString(), subject: finalSubject }).eq("id", notif.id);
               results.push({ channel, status: "sent", notification_id: notif.id, resend_id: emailData.id });
             } else {
               await supabase.from("notifications").update({ status: "failed" }).eq("id", notif.id);
