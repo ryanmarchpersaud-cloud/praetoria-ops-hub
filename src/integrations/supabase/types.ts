@@ -8348,6 +8348,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_customer: { Args: { _customer_id: string }; Returns: Json }
       aggregate_approved_hours: {
         Args: { _end_date: string; _start_date: string }
         Returns: {
