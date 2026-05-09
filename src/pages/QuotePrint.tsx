@@ -29,6 +29,8 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
     taxRate: Number(quote.tax_rate || 0.11),
+    gstRate: quote.gst_rate != null ? Number(quote.gst_rate) : null,
+    pstRate: quote.pst_rate != null ? Number(quote.pst_rate) : null,
     recurringPricing: quote.recurring_pricing_enabled ? {
       perCut: quote.price_per_cut != null ? Number(quote.price_per_cut) : null,
       weekly: quote.price_weekly != null ? Number(quote.price_weekly) : null,
@@ -445,12 +447,44 @@ export default function QuotePrint() {
                 ${formatCurrency(subtotal)}
               </span>
             </div>
-            <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
-              <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                ${formatCurrency(tax)}
-              </span>
-            </div>
+            {(exportData.gstRate != null || exportData.pstRate != null) ? (
+              <>
+                {exportData.gstRate != null && (
+                  <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
+                    <span>GST ({(exportData.gstRate * 100).toFixed(0)}%)</span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                      ${formatCurrency(subtotal * (exportData.gstRate || 0))}
+                    </span>
+                  </div>
+                )}
+                {exportData.pstRate != null && (
+                  <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
+                    <span>PST ({(exportData.pstRate * 100).toFixed(0)}%)</span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                      ${formatCurrency(subtotal * (exportData.pstRate || 0))}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm font-medium text-[#1a1a2e] print:text-base">
+                  <span>Total Tax</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                    ${formatCurrency(tax)}
+                  </span>
+                </div>
+              </>
+            ) : taxRate === 0 ? (
+              <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
+                <span>Tax</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>Exempt</span>
+              </div>
+            ) : (
+              <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
+                <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  ${formatCurrency(tax)}
+                </span>
+              </div>
+            )}
             <div className="h-[1px] bg-[#d1d5db]" />
             <div className="flex justify-between text-lg font-bold pt-1 text-[#1a1a2e] print:text-xl">
               <span>Total (CAD)</span>

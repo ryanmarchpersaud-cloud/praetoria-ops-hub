@@ -346,6 +346,8 @@ export default function QuoteDetail() {
         terms_conditions: form.terms_conditions || null,
         approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
         tax_rate: form.tax_rate == null || form.tax_rate === '' ? 0.11 : Number(form.tax_rate),
+        gst_rate: form.gst_rate === '' || form.gst_rate == null ? null : Number(form.gst_rate),
+        pst_rate: form.pst_rate === '' || form.pst_rate == null ? null : Number(form.pst_rate),
         recurring_pricing_enabled: !!form.recurring_pricing_enabled,
         price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
         price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
@@ -398,6 +400,8 @@ export default function QuoteDetail() {
         workmanship_warranty: form.workmanship_warranty || null,
         terms_conditions: form.terms_conditions || null,
         tax_rate: form.tax_rate == null || form.tax_rate === '' ? 0.11 : Number(form.tax_rate),
+        gst_rate: form.gst_rate === '' || form.gst_rate == null ? null : Number(form.gst_rate),
+        pst_rate: form.pst_rate === '' || form.pst_rate == null ? null : Number(form.pst_rate),
         recurring_pricing_enabled: !!form.recurring_pricing_enabled,
         price_per_cut: form.price_per_cut === '' || form.price_per_cut == null ? null : Number(form.price_per_cut),
         price_weekly: form.price_weekly === '' || form.price_weekly == null ? null : Number(form.price_weekly),
@@ -1031,28 +1035,77 @@ export default function QuoteDetail() {
                 onCheckedChange={(checked) => {
                   const rate = checked ? 0 : 0.11;
                   const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
-                  setForm((p: any) => ({ ...p, tax_rate: rate, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
+                  setForm((p: any) => ({ ...p, tax_rate: rate, gst_rate: checked ? null : p.gst_rate, pst_rate: checked ? null : p.pst_rate, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
                 }}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Tax Rate (%)</Label>
+                <Label className="text-xs">Combined Tax Rate (%)</Label>
                 <Input type="number" inputMode="decimal" step="0.01"
                   value={form.tax_rate_display ?? ((form.tax_rate == null || form.tax_rate === '' ? 0.11 : Number(form.tax_rate)) * 100).toFixed(2)}
                   onChange={e => {
                     const raw = e.target.value;
                     const rate = raw === '' ? 0 : Number(raw) / 100;
                     const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
-                    setForm((p: any) => ({ ...p, tax_rate: rate, tax_rate_display: raw, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
+                    setForm((p: any) => ({ ...p, tax_rate: rate, tax_rate_display: raw, gst_rate: null, pst_rate: null, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
                   }}
                   onBlur={() => setForm((p: any) => ({ ...p, tax_rate_display: undefined }))}
                   disabled={isSentOrApproved || Number(form.tax_rate || 0) === 0} className="h-10" />
+                <p className="text-[10px] text-muted-foreground mt-1">Used when GST/PST below are blank.</p>
               </div>
               <div>
                 <Label className="text-xs">Follow-up Due</Label>
                 <Input type="datetime-local" value={form.follow_up_due_at ? form.follow_up_due_at.slice(0, 16) : ''} onChange={e => set('follow_up_due_at', e.target.value)} className="h-10" />
               </div>
+            </div>
+            <div className="rounded-md border bg-muted/20 p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium">Tax Breakdown (GST + PST)</Label>
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  disabled={isSentOrApproved}
+                  onClick={() => {
+                    const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
+                    const rate = 0.11;
+                    setForm((p: any) => ({ ...p, gst_rate: 0.05, pst_rate: 0.06, tax_rate: rate, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
+                  }}
+                >Apply SK preset (5% + 6%)</button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">GST (%)</Label>
+                  <Input type="number" inputMode="decimal" step="0.01"
+                    placeholder="e.g. 5"
+                    value={form.gst_rate == null || form.gst_rate === '' ? '' : (Number(form.gst_rate) * 100).toString()}
+                    onChange={e => {
+                      const raw = e.target.value;
+                      const gst = raw === '' ? null : Number(raw) / 100;
+                      const pst = form.pst_rate == null || form.pst_rate === '' ? null : Number(form.pst_rate);
+                      const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
+                      const eff = (gst || 0) + (pst || 0);
+                      setForm((p: any) => ({ ...p, gst_rate: gst, tax_rate: gst != null || pst != null ? eff : p.tax_rate, subtotal, tax: subtotal * eff, total: subtotal + subtotal * eff }));
+                    }}
+                    disabled={isSentOrApproved} className="h-10" />
+                </div>
+                <div>
+                  <Label className="text-xs">PST (%)</Label>
+                  <Input type="number" inputMode="decimal" step="0.01"
+                    placeholder="e.g. 6"
+                    value={form.pst_rate == null || form.pst_rate === '' ? '' : (Number(form.pst_rate) * 100).toString()}
+                    onChange={e => {
+                      const raw = e.target.value;
+                      const pst = raw === '' ? null : Number(raw) / 100;
+                      const gst = form.gst_rate == null || form.gst_rate === '' ? null : Number(form.gst_rate);
+                      const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
+                      const eff = (gst || 0) + (pst || 0);
+                      setForm((p: any) => ({ ...p, pst_rate: pst, tax_rate: gst != null || pst != null ? eff : p.tax_rate, subtotal, tax: subtotal * eff, total: subtotal + subtotal * eff }));
+                    }}
+                    disabled={isSentOrApproved} className="h-10" />
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">When set, the printed quote shows GST and PST as separate lines. Leave both blank to use the combined tax rate above. Use the exempt toggle to zero out all taxes.</p>
             </div>
           </CollapsibleSection>
         </div>

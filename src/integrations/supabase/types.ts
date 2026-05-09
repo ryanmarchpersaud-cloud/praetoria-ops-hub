@@ -5612,6 +5612,7 @@ export type Database = {
           email_sent_at: string | null
           follow_up_due_at: string | null
           follow_up_email_due_at: string | null
+          gst_rate: number | null
           id: string
           internal_notes: string | null
           lead_id: string | null
@@ -5619,6 +5620,7 @@ export type Database = {
           price_monthly: number | null
           price_per_cut: number | null
           price_weekly: number | null
+          pst_rate: number | null
           quote_number: string
           recurring_pricing_enabled: boolean
           recurring_pricing_notes: string | null
@@ -5651,6 +5653,7 @@ export type Database = {
           email_sent_at?: string | null
           follow_up_due_at?: string | null
           follow_up_email_due_at?: string | null
+          gst_rate?: number | null
           id?: string
           internal_notes?: string | null
           lead_id?: string | null
@@ -5658,6 +5661,7 @@ export type Database = {
           price_monthly?: number | null
           price_per_cut?: number | null
           price_weekly?: number | null
+          pst_rate?: number | null
           quote_number: string
           recurring_pricing_enabled?: boolean
           recurring_pricing_notes?: string | null
@@ -5690,6 +5694,7 @@ export type Database = {
           email_sent_at?: string | null
           follow_up_due_at?: string | null
           follow_up_email_due_at?: string | null
+          gst_rate?: number | null
           id?: string
           internal_notes?: string | null
           lead_id?: string | null
@@ -5697,6 +5702,7 @@ export type Database = {
           price_monthly?: number | null
           price_per_cut?: number | null
           price_weekly?: number | null
+          pst_rate?: number | null
           quote_number?: string
           recurring_pricing_enabled?: boolean
           recurring_pricing_notes?: string | null
