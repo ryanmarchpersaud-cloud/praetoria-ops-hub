@@ -1035,7 +1035,7 @@ export default function QuoteDetail() {
                 onCheckedChange={(checked) => {
                   const rate = checked ? 0 : 0.11;
                   const subtotal = items.reduce((sum, i) => sum + i.line_total, 0);
-                  setForm((p: any) => ({ ...p, tax_rate: rate, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
+                  setForm((p: any) => ({ ...p, tax_rate: rate, gst_rate: checked ? null : p.gst_rate, pst_rate: checked ? null : p.pst_rate, subtotal, tax: subtotal * rate, total: subtotal + subtotal * rate }));
                 }}
               />
             </div>
