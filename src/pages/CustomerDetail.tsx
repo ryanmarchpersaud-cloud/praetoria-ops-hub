@@ -44,8 +44,8 @@ export default function CustomerDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
-  const { isAdmin, isOwner } = useAuthorization();
-  const canHardDelete = isAdmin || isOwner;
+  const { isAdmin, roles } = useAuthorization();
+  const canHardDelete = isAdmin || roles.includes('owner' as any);
   const handleImpersonate = async () => {
     if (!id) return;
     setImpersonating(true);
