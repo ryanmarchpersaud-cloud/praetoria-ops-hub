@@ -757,6 +757,69 @@ export default function CustomerDetail() {
           customerName={`${customer.first_name} ${customer.last_name}`}
         />
       )}
+
+      {/* ─── Delete Customer Confirmation ─────────────────── */}
+      <Dialog open={deleteOpen} onOpenChange={(o) => { if (!deleting) setDeleteOpen(o); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" /> Delete Customer Permanently
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p>
+              You are about to <strong>permanently delete {customerDisplayName}</strong> and
+              every record linked to them. This cannot be undone.
+            </p>
+            {(jobs.length > 0 || invoices.length > 0 || quotes.length > 0 || properties.length > 0 || requests.length > 0 || agreements.length > 0) ? (
+              <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 space-y-1.5">
+                <p className="text-xs font-semibold text-destructive uppercase tracking-wide">
+                  Linked records that will also be deleted:
+                </p>
+                <ul className="text-xs space-y-0.5 ml-1">
+                  {properties.length > 0 && <li>• {properties.length} {properties.length === 1 ? 'property' : 'properties'}</li>}
+                  {requests.length > 0 && <li>• {requests.length}+ service request{requests.length === 1 ? '' : 's'}</li>}
+                  {quotes.length > 0 && <li>• {quotes.length}+ quote{quotes.length === 1 ? '' : 's'} (and line items)</li>}
+                  {jobs.length > 0 && <li>• {jobs.length}+ job{jobs.length === 1 ? '' : 's'} (and visits, photos, snow logs)</li>}
+                  {invoices.length > 0 && <li>• {invoices.length}+ invoice{invoices.length === 1 ? '' : 's'} (and line items, payments, refunds)</li>}
+                  {agreements.length > 0 && <li>• {agreements.length} agreement{agreements.length === 1 ? '' : 's'}</li>}
+                </ul>
+                <p className="text-[11px] text-muted-foreground pt-1">
+                  Note: lists above show recent items only — the backend will remove <strong>all</strong> matching records.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No linked records found — this customer is safe to remove.</p>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="delete-confirm" className="text-xs">
+                Type <span className="font-mono font-semibold text-foreground">{customerDisplayName}</span> to confirm:
+              </Label>
+              <Input
+                id="delete-confirm"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={customerDisplayName}
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" className="flex-1" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1 gap-2"
+              onClick={handleDeleteCustomer}
+              disabled={deleting || deleteConfirmText.trim().toLowerCase() !== customerDisplayName.trim().toLowerCase()}
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Delete Forever
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
