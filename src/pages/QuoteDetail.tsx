@@ -511,14 +511,31 @@ export default function QuoteDetail() {
   const handleDeleteQuote = async () => {
     if (!id) return;
     try {
-      await supabase.from('quote_line_items').delete().eq('quote_id', id);
-      await supabase.from('quotes').delete().eq('id', id);
+      // Unlink any jobs / visits / invoices that reference this quote so the
+      // delete isn't silently blocked by a foreign key constraint.
+      await Promise.all([
+        supabase.from('jobs').update({ quote_id: null }).eq('quote_id', id),
+        supabase.from('visits').update({ quote_id: null }).eq('quote_id', id),
+        supabase.from('invoices').update({ quote_id: null }).eq('quote_id', id),
+      ]);
+
+      const { error: liErr } = await supabase.from('quote_line_items').delete().eq('quote_id', id);
+      if (liErr) throw liErr;
+
+      const { error: qErr } = await supabase.from('quotes').delete().eq('id', id);
+      if (qErr) throw qErr;
+
       toast({ title: 'Quote deleted' });
+      setDeleteDialog(false);
       navigate('/quotes');
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      toast({
+        title: "Couldn't delete quote",
+        description: err?.message || 'Unknown error — the quote may be linked to records you don\'t have permission to modify.',
+        variant: 'destructive',
+      });
+      setDeleteDialog(false);
     }
-    setDeleteDialog(false);
   };
 
   const handleArchiveQuote = async () => {
