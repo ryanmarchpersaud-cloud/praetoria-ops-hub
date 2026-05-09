@@ -273,6 +273,44 @@ export default function CustomerDetail() {
 
   const hasPortalAccess = !!customer.user_id;
 
+  const customerDisplayName = (
+    [customer.first_name, customer.last_name].filter(Boolean).join(' ').trim() ||
+    customer.company_name ||
+    'this customer'
+  );
+
+  const handleDeleteCustomer = async () => {
+    if (!id) return;
+    if (deleteConfirmText.trim().toLowerCase() !== customerDisplayName.trim().toLowerCase()) {
+      toast({ title: 'Name does not match', description: `Type "${customerDisplayName}" exactly to confirm.`, variant: 'destructive' });
+      return;
+    }
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_delete_customer', { _customer_id: id });
+      if (error) throw error;
+      const counts = (data as any)?.deleted ?? {};
+      toast({
+        title: 'Customer deleted',
+        description: `${customerDisplayName} and all linked records were removed (` +
+          `${counts.jobs || 0} jobs, ${counts.invoices || 0} invoices, ${counts.quotes || 0} quotes, ` +
+          `${counts.visits || 0} visits, ${counts.properties || 0} properties).`,
+      });
+      setDeleteOpen(false);
+      navigate('/customers');
+    } catch (err: any) {
+      const msg = err?.message || 'Unknown error';
+      toast({
+        title: msg.includes('PROTECTED_CUSTOMER') ? 'Cannot delete protected customer' :
+               msg.includes('Only admins') ? 'Permission denied' : "Couldn't delete customer",
+        description: msg,
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   return (
     <div className="space-y-4 animate-fade-in">
