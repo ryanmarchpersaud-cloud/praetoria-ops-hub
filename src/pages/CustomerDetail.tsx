@@ -383,6 +383,17 @@ export default function CustomerDetail() {
             </Button>
           </>
         )}
+        {canHardDelete && (
+          <Button
+            variant="outline"
+            className="h-11 gap-2 ml-auto text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => { setDeleteConfirmText(''); setDeleteOpen(true); }}
+            disabled={!!form?.is_protected}
+            title={form?.is_protected ? 'Protected customers cannot be deleted. Remove protection first.' : 'Permanently delete this customer and all related records'}
+          >
+            <Trash2 className="h-4 w-4" /> Delete Customer
+          </Button>
+        )}
       </div>
       {impersonateLink && (
         <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary flex items-center justify-between gap-2">
