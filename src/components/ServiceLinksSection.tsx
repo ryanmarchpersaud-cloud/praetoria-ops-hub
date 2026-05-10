@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan, HardHat, Handshake, Fence } from 'lucide-react';
+import { ExternalLink, Snowflake, TreePine, Trash2, Wrench, Building, Droplets, SprayCan, HardHat, Handshake, Fence, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CleaningPartnerDialog } from '@/components/CleaningPartnerDialog';
 import { ConstructionPartnerDialog } from '@/components/ConstructionPartnerDialog';
@@ -39,6 +39,13 @@ const activeServices = [
     label: 'Custom fences, decks & outdoor builds',
     icon: Fence,
     color: 'text-green-600',
+  },
+  {
+    name: 'Roofing & Exterior',
+    url: 'https://roofingandexterior.praetoriagroup.ca',
+    label: 'Roofing, siding, soffit & fascia',
+    icon: Home,
+    color: 'text-slate-600',
   },
 ];
 
