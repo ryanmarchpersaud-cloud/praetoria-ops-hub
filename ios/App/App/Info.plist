@@ -2,10 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CAPACITOR_DEBUG</key>
+	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Praetoria Ops Hub</string>
+        <string>Praetoria Ops Hub</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -44,15 +46,6 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
-	<!-- Privacy permission descriptions required by app features -->
-	<key>NSCameraUsageDescription</key>
-	<string>Praetoria Ops Hub uses your camera to capture visit photos, incident evidence, and profile pictures.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Praetoria Ops Hub accesses your photo library to attach images to visits, incidents, and documents.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Praetoria Ops Hub uses your location to show your position on the route map and provide directions to job sites.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Praetoria Ops Hub uses your microphone for voice commands with the AI assistant.</string>
+	<true/>
 </dict>
 </plist>

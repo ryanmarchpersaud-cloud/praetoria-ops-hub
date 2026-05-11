@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'ca.praetoriagroup.app',
-  appName: 'Praetoria Group',
+  appId: 'ca.praetoriagroup.opshub',
+  appName: 'Praetoria Ops Hub',
   webDir: 'dist',
   ios: {
     contentInset: 'always',
