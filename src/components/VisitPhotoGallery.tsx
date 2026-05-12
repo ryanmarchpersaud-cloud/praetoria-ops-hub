@@ -29,45 +29,11 @@ interface VisitPhotoGalleryProps {
   customerId?: string | null;
 }
 
-// Compress image client-side for performance while keeping proof quality
-async function compressImage(file: File, maxWidth = 1920, quality = 0.82): Promise<File> {
-  // Skip non-image or already small files
-  if (!file.type.startsWith('image/') || file.size < 200_000) return file;
-
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      // Don't upscale
-      if (img.width <= maxWidth && file.size < 1_500_000) {
-        resolve(file);
-        return;
-      }
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob || blob.size >= file.size) {
-            resolve(file); // compression didn't help
-          } else {
-            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
-          }
-        },
-        'image/jpeg',
-        quality
-      );
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(file);
-    };
-    img.src = url;
-  });
+// Use the iOS-safe downscaler (createImageBitmap, off-main-thread,
+// deterministic memory release) to avoid WKWebView OOM crashes when
+// handling full-resolution iPhone camera photos.
+async function compressImage(file: File): Promise<File> {
+  return downscaleImageIfLarge(file);
 }
 
 export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhotoGalleryProps) {
