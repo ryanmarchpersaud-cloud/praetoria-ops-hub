@@ -124,7 +124,7 @@ export async function downscaleImageIfLarge(
   if (file.size < 200_000) return file;
 
   // Tighter budget on iOS WKWebView to avoid renderer OOM termination.
-  const effectiveMaxWidth = maxWidth ?? (isIOSWebView() ? 1280 : 1920);
+  const effectiveMaxWidth = maxWidth ?? recommendedMaxImageEdge();
 
   // HEIC/HEIF: try createImageBitmap first (iOS 17+ WKWebView decodes HEIC
   // natively). If it fails, return original — the network upload will
