@@ -956,6 +956,59 @@ export type Database = {
           },
         ]
       }
+      customer_documents: {
+        Row: {
+          category: string
+          created_at: string
+          customer_id: string
+          file_name: string | null
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          notes: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          customer_id: string
+          file_name?: string | null
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          customer_id?: string
+          file_name?: string | null
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_documents_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_notification_preferences: {
         Row: {
           created_at: string
@@ -3734,6 +3787,8 @@ export type Database = {
           billing_notes: string | null
           billing_status: string | null
           billing_type: string | null
+          complimentary_reason: string | null
+          complimentary_value: number | null
           contract_end_date: string | null
           contract_start_date: string | null
           created_at: string
@@ -3743,6 +3798,7 @@ export type Database = {
           id: string
           internal_notes: string | null
           invoice_reminder: boolean | null
+          is_complimentary: boolean
           job_number: string
           job_title: string
           minimum_included_visits: number | null
@@ -3767,6 +3823,8 @@ export type Database = {
           billing_notes?: string | null
           billing_status?: string | null
           billing_type?: string | null
+          complimentary_reason?: string | null
+          complimentary_value?: number | null
           contract_end_date?: string | null
           contract_start_date?: string | null
           created_at?: string
@@ -3776,6 +3834,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           invoice_reminder?: boolean | null
+          is_complimentary?: boolean
           job_number: string
           job_title: string
           minimum_included_visits?: number | null
@@ -3800,6 +3859,8 @@ export type Database = {
           billing_notes?: string | null
           billing_status?: string | null
           billing_type?: string | null
+          complimentary_reason?: string | null
+          complimentary_value?: number | null
           contract_end_date?: string | null
           contract_start_date?: string | null
           created_at?: string
@@ -3809,6 +3870,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           invoice_reminder?: boolean | null
+          is_complimentary?: boolean
           job_number?: string
           job_title?: string
           minimum_included_visits?: number | null
