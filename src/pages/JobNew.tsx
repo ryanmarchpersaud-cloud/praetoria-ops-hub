@@ -337,7 +337,7 @@ export default function JobNew() {
         is_complimentary: isComplimentary,
         complimentary_value: isComplimentary && complimentaryValue ? parseFloat(complimentaryValue) : null,
         complimentary_reason: isComplimentary ? (complimentaryReason || null) : null,
-        billing_status: isComplimentary ? 'not_billable' : undefined,
+        ...(isComplimentary ? { billing_status: 'not_billable' } : {}),
         scheduled_date: scheduledDate || null,
         contract_start_date: contractStartDate || null,
         contract_end_date: ongoingNoEnd ? null : (contractEndDate || null),
