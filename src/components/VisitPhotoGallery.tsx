@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, ImagePlus, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Upload, Loader2 } from 'lucide-react';
+import { downscaleImageIfLarge, yieldToBrowser } from '@/lib/iosDebug';
 
 const TAG_COLORS: Record<string, string> = {
   Before: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
