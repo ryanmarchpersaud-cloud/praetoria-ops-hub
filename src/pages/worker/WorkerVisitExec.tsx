@@ -200,13 +200,14 @@ export default function WorkerVisitExec() {
   // keeps memory bounded and prevents the crash.
   const addFiles = async (files: File[]) => {
     const slice = files.slice(0, 10 - photoCount);
+    const skipPreview = shouldSkipImagePreview();
     const newStaged: StagedFile[] = [];
     for (const raw of slice) {
       try {
         const compressed = await downscaleImageIfLarge(raw);
         newStaged.push({
           file: compressed,
-          preview: URL.createObjectURL(compressed),
+          preview: skipPreview ? '' : URL.createObjectURL(compressed),
           tag: 'After' as PhotoTag,
           caption: '',
         });
@@ -215,7 +216,7 @@ export default function WorkerVisitExec() {
         // Fall back to raw on any decode error
         newStaged.push({
           file: raw,
-          preview: URL.createObjectURL(raw),
+          preview: skipPreview ? '' : URL.createObjectURL(raw),
           tag: 'After' as PhotoTag,
           caption: '',
         });
