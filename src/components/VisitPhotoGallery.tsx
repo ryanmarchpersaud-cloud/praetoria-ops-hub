@@ -73,13 +73,14 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
     if (files.length > available) {
       toast({ title: `Only ${available} slot${available > 1 ? 's' : ''} remaining`, description: `Added ${toAdd.length} of ${files.length} selected photos.` });
     }
+    const skipPreview = shouldSkipImagePreview();
     const newStaged: StagedFile[] = [];
     for (const raw of toAdd) {
       try {
         const compressed = await downscaleImageIfLarge(raw);
         newStaged.push({
           file: compressed,
-          preview: URL.createObjectURL(compressed),
+          preview: skipPreview ? '' : URL.createObjectURL(compressed),
           tag: 'After' as PhotoTag,
           caption: '',
         });
@@ -87,7 +88,7 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
       } catch {
         newStaged.push({
           file: raw,
-          preview: URL.createObjectURL(raw),
+          preview: skipPreview ? '' : URL.createObjectURL(raw),
           tag: 'After' as PhotoTag,
           caption: '',
         });
