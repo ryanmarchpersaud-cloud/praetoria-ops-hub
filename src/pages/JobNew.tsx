@@ -777,6 +777,44 @@ export default function JobNew() {
             <Label className="text-xs font-medium">Internal Notes (admin only)</Label>
             <Textarea value={internalNotes} onChange={e => setInternalNotes(e.target.value)} rows={2} placeholder="Notes visible only to admin/office staff..." className="min-h-[60px]" />
           </div>
+
+          {/* Complimentary Job */}
+          <div className="rounded-md border border-emerald-200 bg-emerald-50/40 p-3 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <Label className="text-xs flex items-center gap-1.5 font-semibold text-emerald-900">
+                  <Gift className="h-3.5 w-3.5" /> Complimentary Job (Free / Goodwill)
+                </Label>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Mark this job as a free service. No invoice will be generated, but costs and value are still tracked for reporting.
+                </p>
+              </div>
+              <Switch checked={isComplimentary} onCheckedChange={setIsComplimentary} />
+            </div>
+            {isComplimentary && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <div>
+                  <Label className="text-xs">Value Waived ($)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="95.00"
+                    value={complimentaryValue}
+                    onChange={e => setComplimentaryValue(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Reason (optional)</Label>
+                  <Input
+                    placeholder="Goodwill, referral thank-you..."
+                    value={complimentaryReason}
+                    onChange={e => setComplimentaryReason(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
