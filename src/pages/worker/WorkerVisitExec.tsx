@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { sendNotification } from '@/hooks/useNotifications';
 import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
 import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
-import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog } from '@/lib/iosDebug';
+import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog, shouldSkipImagePreview } from '@/lib/iosDebug';
 
 // ── Image compression ──
 // Delegates to the iOS-safe downscaler that uses createImageBitmap (off-main-thread,
