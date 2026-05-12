@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { sendNotification } from '@/hooks/useNotifications';
 import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
 import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
-import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog } from '@/lib/iosDebug';
+import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog, shouldSkipImagePreview } from '@/lib/iosDebug';
 
 // ── Image compression ──
 // Delegates to the iOS-safe downscaler that uses createImageBitmap (off-main-thread,
@@ -200,13 +200,14 @@ export default function WorkerVisitExec() {
   // keeps memory bounded and prevents the crash.
   const addFiles = async (files: File[]) => {
     const slice = files.slice(0, 10 - photoCount);
+    const skipPreview = shouldSkipImagePreview();
     const newStaged: StagedFile[] = [];
     for (const raw of slice) {
       try {
         const compressed = await downscaleImageIfLarge(raw);
         newStaged.push({
           file: compressed,
-          preview: URL.createObjectURL(compressed),
+          preview: skipPreview ? '' : URL.createObjectURL(compressed),
           tag: 'After' as PhotoTag,
           caption: '',
         });
@@ -215,7 +216,7 @@ export default function WorkerVisitExec() {
         // Fall back to raw on any decode error
         newStaged.push({
           file: raw,
-          preview: URL.createObjectURL(raw),
+          preview: skipPreview ? '' : URL.createObjectURL(raw),
           tag: 'After' as PhotoTag,
           caption: '',
         });
@@ -671,7 +672,14 @@ export default function WorkerVisitExec() {
                   <div className="grid grid-cols-4 gap-1.5">
                     {stagedFiles.map((sf, i) => (
                       <div key={i} className="relative aspect-square rounded-md overflow-hidden border-2 border-dashed border-primary/30">
-                        <img src={sf.preview} alt="" className="w-full h-full object-cover" />
+                        {sf.preview ? (
+                          <img src={sf.preview} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-[8px] text-muted-foreground p-1 text-center">
+                            <Camera className="h-4 w-4 mb-0.5" />
+                            <span className="truncate max-w-full">{sf.file.name.slice(-12)}</span>
+                          </div>
+                        )}
                         <button
                           onClick={() => removeStagedFile(i)}
                           className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5"

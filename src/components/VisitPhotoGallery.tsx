@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, ImagePlus, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Upload, Loader2 } from 'lucide-react';
-import { downscaleImageIfLarge, yieldToBrowser } from '@/lib/iosDebug';
+import { downscaleImageIfLarge, yieldToBrowser, shouldSkipImagePreview } from '@/lib/iosDebug';
 
 const TAG_COLORS: Record<string, string> = {
   Before: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -73,13 +73,14 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
     if (files.length > available) {
       toast({ title: `Only ${available} slot${available > 1 ? 's' : ''} remaining`, description: `Added ${toAdd.length} of ${files.length} selected photos.` });
     }
+    const skipPreview = shouldSkipImagePreview();
     const newStaged: StagedFile[] = [];
     for (const raw of toAdd) {
       try {
         const compressed = await downscaleImageIfLarge(raw);
         newStaged.push({
           file: compressed,
-          preview: URL.createObjectURL(compressed),
+          preview: skipPreview ? '' : URL.createObjectURL(compressed),
           tag: 'After' as PhotoTag,
           caption: '',
         });
@@ -87,7 +88,7 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
       } catch {
         newStaged.push({
           file: raw,
-          preview: URL.createObjectURL(raw),
+          preview: skipPreview ? '' : URL.createObjectURL(raw),
           tag: 'After' as PhotoTag,
           caption: '',
         });
@@ -309,7 +310,14 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
               <div key={i} className="flex gap-3 p-2 rounded-lg border bg-muted/30">
                 {/* Preview */}
                 <div className="relative shrink-0 w-20 h-20 rounded-md overflow-hidden border">
-                  <img src={staged.preview} alt="" className="w-full h-full object-cover" />
+                  {staged.preview ? (
+                    <img src={staged.preview} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-[9px] text-muted-foreground p-1 text-center">
+                      <ImageIcon className="h-5 w-5 mb-0.5" />
+                      <span className="truncate max-w-full">Photo {i + 1}</span>
+                    </div>
+                  )}
                   <button
                     onClick={() => removeStagedFile(i)}
                     className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow-sm"

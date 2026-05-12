@@ -49,6 +49,55 @@ export function isIOSWebView(): boolean {
   return isIOS;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Low-memory mode (iOS-specific OOM mitigation)
+// ────────────────────────────────────────────────────────────────────────────
+// iPhones can run out of memory in the WKWebView when the user takes a fresh
+// full-resolution camera photo. The renderer is killed by iOS and the app
+// appears to "crash". We detect a constrained device up front and apply two
+// mitigations: (1) auto-reduce processing resolution to a much smaller max
+// edge, and (2) skip the in-app image preview entirely (the <img> blob URL
+// preview is what usually pushes graphics memory over the limit on iOS).
+
+const LOW_MEM_FLAG = 'praetoria:lowMem';
+
+function getDeviceMemoryGB(): number | null {
+  try {
+    const dm = (navigator as unknown as { deviceMemory?: number }).deviceMemory;
+    return typeof dm === 'number' ? dm : null;
+  } catch { return null; }
+}
+
+/** True when we should aggressively reduce image work. */
+export function isLowMemoryDevice(): boolean {
+  try { if (sessionStorage.getItem(LOW_MEM_FLAG) === '1') return true; } catch { /* ignore */ }
+  if (isIOSWebView()) return true;
+  const dm = getDeviceMemoryGB();
+  if (dm !== null && dm <= 2) return true;
+  return false;
+}
+
+/** Mark this session as low-memory (e.g. after an OOM-style reload). */
+export function markLowMemorySession(): void {
+  try { sessionStorage.setItem(LOW_MEM_FLAG, '1'); } catch { /* ignore */ }
+}
+
+/**
+ * When low memory is detected, callers should skip building the in-app blob
+ * URL preview thumbnail — biggest contributor to iOS WKWebView graphics
+ * memory pressure when staging multiple camera shots.
+ */
+export function shouldSkipImagePreview(): boolean {
+  return isLowMemoryDevice();
+}
+
+/** Recommended max edge for image processing on this device. */
+export function recommendedMaxImageEdge(): number {
+  if (isLowMemoryDevice()) return 800;
+  if (isIOSWebView()) return 1280;
+  return 1920;
+}
+
 /**
  * Best-effort client-side image downscaler. iPhone HEIC/JPEGs are often
  * 4–8 MB each which causes long uploads, main-thread stalls, and WKWebView
@@ -75,7 +124,7 @@ export async function downscaleImageIfLarge(
   if (file.size < 200_000) return file;
 
   // Tighter budget on iOS WKWebView to avoid renderer OOM termination.
-  const effectiveMaxWidth = maxWidth ?? (isIOSWebView() ? 1280 : 1920);
+  const effectiveMaxWidth = maxWidth ?? recommendedMaxImageEdge();
 
   // HEIC/HEIF: try createImageBitmap first (iOS 17+ WKWebView decodes HEIC
   // natively). If it fails, return original — the network upload will
