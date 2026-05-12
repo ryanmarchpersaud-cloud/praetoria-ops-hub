@@ -60,7 +60,10 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
     ? photos
     : (photos as any[]).filter((p: any) => p.photo_tag === filterTag);
 
-  const addFiles = useCallback((files: File[]) => {
+  // Downscale BEFORE staging/preview. Full-resolution iPhone camera photos
+  // (HEIC, 12MP+, 4-8MB) decoded into a blob URL <img> preview routinely
+  // OOM-kills the iOS WKWebView right after capture.
+  const addFiles = useCallback(async (files: File[]) => {
     const available = remainingSlots - stagedFiles.length;
     if (available <= 0) {
       toast({ title: 'Limit reached', description: 'Maximum 10 photos per visit', variant: 'destructive' });
@@ -70,20 +73,34 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
     if (files.length > available) {
       toast({ title: `Only ${available} slot${available > 1 ? 's' : ''} remaining`, description: `Added ${toAdd.length} of ${files.length} selected photos.` });
     }
-    const newStaged: StagedFile[] = toAdd.map(f => ({
-      file: f,
-      preview: URL.createObjectURL(f),
-      tag: 'After' as PhotoTag,
-      caption: '',
-    }));
+    const newStaged: StagedFile[] = [];
+    for (const raw of toAdd) {
+      try {
+        const compressed = await downscaleImageIfLarge(raw);
+        newStaged.push({
+          file: compressed,
+          preview: URL.createObjectURL(compressed),
+          tag: 'After' as PhotoTag,
+          caption: '',
+        });
+        await yieldToBrowser(0);
+      } catch {
+        newStaged.push({
+          file: raw,
+          preview: URL.createObjectURL(raw),
+          tag: 'After' as PhotoTag,
+          caption: '',
+        });
+      }
+    }
     setStagedFiles(prev => [...prev, ...newStaged]);
     if (!uploadOpen) setUploadOpen(true);
   }, [remainingSlots, stagedFiles.length, uploadOpen, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) addFiles(files);
     e.target.value = ''; // reset so same file can be re-selected
+    if (files.length > 0) void addFiles(files);
   };
 
   const removeStagedFile = (index: number) => {
