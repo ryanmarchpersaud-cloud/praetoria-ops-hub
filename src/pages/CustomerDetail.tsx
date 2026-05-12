@@ -18,6 +18,7 @@ import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
 import { CustomerCommunicationsCard } from '@/components/customer/CustomerCommunicationsCard';
+import { CustomerDocumentsCard } from '@/components/customer/CustomerDocumentsCard';
 import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedger';
 import { useBillingProfile } from '@/hooks/useInvoices';
 import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInvoiceDialog';
