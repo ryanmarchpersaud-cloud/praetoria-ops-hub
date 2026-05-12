@@ -220,7 +220,8 @@ export default function JobDetail() {
   const isClosed = form.status === 'Closed';
   const isOneTime = !form.service_frequency || form.service_frequency === 'one-time';
   const billingStatus = (form as any).billing_status || 'not_billable';
-  const canCreateInvoice = canManageJobs && (!(isCompleted || isClosed) || billingStatus !== 'invoiced');
+  const isComplimentary = !!(form as any).is_complimentary;
+  const canCreateInvoice = canManageJobs && !isComplimentary && (!(isCompleted || isClosed) || billingStatus !== 'invoiced');
 
   return (
     <div className="space-y-4 animate-fade-in">
