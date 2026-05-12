@@ -310,7 +310,14 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
               <div key={i} className="flex gap-3 p-2 rounded-lg border bg-muted/30">
                 {/* Preview */}
                 <div className="relative shrink-0 w-20 h-20 rounded-md overflow-hidden border">
-                  <img src={staged.preview} alt="" className="w-full h-full object-cover" />
+                  {staged.preview ? (
+                    <img src={staged.preview} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-[9px] text-muted-foreground p-1 text-center">
+                      <ImageIcon className="h-5 w-5 mb-0.5" />
+                      <span className="truncate max-w-full">Photo {i + 1}</span>
+                    </div>
+                  )}
                   <button
                     onClick={() => removeStagedFile(i)}
                     className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 shadow-sm"
