@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, ImagePlus, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Upload, Loader2 } from 'lucide-react';
+import { downscaleImageIfLarge, yieldToBrowser } from '@/lib/iosDebug';
 
 const TAG_COLORS: Record<string, string> = {
   Before: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -28,45 +29,11 @@ interface VisitPhotoGalleryProps {
   customerId?: string | null;
 }
 
-// Compress image client-side for performance while keeping proof quality
-async function compressImage(file: File, maxWidth = 1920, quality = 0.82): Promise<File> {
-  // Skip non-image or already small files
-  if (!file.type.startsWith('image/') || file.size < 200_000) return file;
-
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      // Don't upscale
-      if (img.width <= maxWidth && file.size < 1_500_000) {
-        resolve(file);
-        return;
-      }
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => {
-          if (!blob || blob.size >= file.size) {
-            resolve(file); // compression didn't help
-          } else {
-            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
-          }
-        },
-        'image/jpeg',
-        quality
-      );
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(file);
-    };
-    img.src = url;
-  });
+// Use the iOS-safe downscaler (createImageBitmap, off-main-thread,
+// deterministic memory release) to avoid WKWebView OOM crashes when
+// handling full-resolution iPhone camera photos.
+async function compressImage(file: File): Promise<File> {
+  return downscaleImageIfLarge(file);
 }
 
 export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhotoGalleryProps) {
@@ -93,7 +60,10 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
     ? photos
     : (photos as any[]).filter((p: any) => p.photo_tag === filterTag);
 
-  const addFiles = useCallback((files: File[]) => {
+  // Downscale BEFORE staging/preview. Full-resolution iPhone camera photos
+  // (HEIC, 12MP+, 4-8MB) decoded into a blob URL <img> preview routinely
+  // OOM-kills the iOS WKWebView right after capture.
+  const addFiles = useCallback(async (files: File[]) => {
     const available = remainingSlots - stagedFiles.length;
     if (available <= 0) {
       toast({ title: 'Limit reached', description: 'Maximum 10 photos per visit', variant: 'destructive' });
@@ -103,20 +73,34 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
     if (files.length > available) {
       toast({ title: `Only ${available} slot${available > 1 ? 's' : ''} remaining`, description: `Added ${toAdd.length} of ${files.length} selected photos.` });
     }
-    const newStaged: StagedFile[] = toAdd.map(f => ({
-      file: f,
-      preview: URL.createObjectURL(f),
-      tag: 'After' as PhotoTag,
-      caption: '',
-    }));
+    const newStaged: StagedFile[] = [];
+    for (const raw of toAdd) {
+      try {
+        const compressed = await downscaleImageIfLarge(raw);
+        newStaged.push({
+          file: compressed,
+          preview: URL.createObjectURL(compressed),
+          tag: 'After' as PhotoTag,
+          caption: '',
+        });
+        await yieldToBrowser(0);
+      } catch {
+        newStaged.push({
+          file: raw,
+          preview: URL.createObjectURL(raw),
+          tag: 'After' as PhotoTag,
+          caption: '',
+        });
+      }
+    }
     setStagedFiles(prev => [...prev, ...newStaged]);
     if (!uploadOpen) setUploadOpen(true);
   }, [remainingSlots, stagedFiles.length, uploadOpen, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) addFiles(files);
     e.target.value = ''; // reset so same file can be re-selected
+    if (files.length > 0) void addFiles(files);
   };
 
   const removeStagedFile = (index: number) => {

@@ -194,20 +194,40 @@ export default function WorkerVisitExec() {
     }
   };
 
-  const addFiles = (files: File[]) => {
-    const newStaged = files.slice(0, 10 - photoCount).map(f => ({
-      file: f,
-      preview: URL.createObjectURL(f),
-      tag: 'After' as PhotoTag,
-      caption: '',
-    }));
+  // Downscale BEFORE staging/preview. Full-resolution iPhone camera photos
+  // (HEIC, 12MP+, 4-8MB) decoded into a blob URL <img> preview routinely
+  // OOM-kills the iOS WKWebView right after capture. Compressing first
+  // keeps memory bounded and prevents the crash.
+  const addFiles = async (files: File[]) => {
+    const slice = files.slice(0, 10 - photoCount);
+    const newStaged: StagedFile[] = [];
+    for (const raw of slice) {
+      try {
+        const compressed = await downscaleImageIfLarge(raw);
+        newStaged.push({
+          file: compressed,
+          preview: URL.createObjectURL(compressed),
+          tag: 'After' as PhotoTag,
+          caption: '',
+        });
+        await yieldToBrowser(0);
+      } catch {
+        // Fall back to raw on any decode error
+        newStaged.push({
+          file: raw,
+          preview: URL.createObjectURL(raw),
+          tag: 'After' as PhotoTag,
+          caption: '',
+        });
+      }
+    }
     setStagedFiles(prev => [...prev, ...newStaged]);
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) addFiles(files);
     e.target.value = '';
+    if (files.length > 0) void addFiles(files);
   };
 
   const removeStagedFile = (i: number) => {
