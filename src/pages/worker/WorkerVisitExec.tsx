@@ -672,7 +672,14 @@ export default function WorkerVisitExec() {
                   <div className="grid grid-cols-4 gap-1.5">
                     {stagedFiles.map((sf, i) => (
                       <div key={i} className="relative aspect-square rounded-md overflow-hidden border-2 border-dashed border-primary/30">
-                        <img src={sf.preview} alt="" className="w-full h-full object-cover" />
+                        {sf.preview ? (
+                          <img src={sf.preview} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-[8px] text-muted-foreground p-1 text-center">
+                            <Camera className="h-4 w-4 mb-0.5" />
+                            <span className="truncate max-w-full">{sf.file.name.slice(-12)}</span>
+                          </div>
+                        )}
                         <button
                           onClick={() => removeStagedFile(i)}
                           className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5"
