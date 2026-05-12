@@ -5,18 +5,18 @@ import flyerSnow from '@/assets/flyer-snow.png';
 import flyerMaintenance from '@/assets/flyer-maintenance.png';
 import flyerJunk from '@/assets/flyer-junk.png';
 import flyerLawn from '@/assets/flyer-lawn.png';
+import flyerFencingDecking from '@/assets/flyer-fencing-decking.png';
+import flyerRoofingExterior from '@/assets/flyer-roofing-exterior.png';
 import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// Map promo IDs to flyer background images (cycle through available flyers)
+// Pool of flyer background images that crossfade behind the promo card
 const FLYER_IMAGES = [
-  flyerSnow,        // snow-ice
-  flyerLawn,         // landscaping
-  flyerJunk,         // junk-removal
-  flyerMaintenance,  // maintenance
-  flyerSnow,         // property-management (reuse snow/general)
-  flyerMaintenance,  // power-washing (reuse maintenance)
-  flyerJunk,         // cleaning (reuse junk)
-  flyerLawn,         // other (reuse lawn)
+  flyerSnow,
+  flyerLawn,
+  flyerJunk,
+  flyerMaintenance,
+  flyerFencingDecking,
+  flyerRoofingExterior,
 ];
 
 export function LoginPromoPanel() {
