@@ -116,6 +116,11 @@ export default function JobNew() {
   const [serviceInstructions, setServiceInstructions] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
 
+  // Complimentary
+  const [isComplimentary, setIsComplimentary] = useState(false);
+  const [complimentaryValue, setComplimentaryValue] = useState('');
+  const [complimentaryReason, setComplimentaryReason] = useState('');
+
   // Billing
   const [billingType, setBillingType] = useState('on_completion');
   const [invoiceReminder, setInvoiceReminder] = useState(true);
