@@ -12,8 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck, Trash2, XCircle } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck, Trash2, XCircle, Gift } from 'lucide-react';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -219,7 +220,8 @@ export default function JobDetail() {
   const isClosed = form.status === 'Closed';
   const isOneTime = !form.service_frequency || form.service_frequency === 'one-time';
   const billingStatus = (form as any).billing_status || 'not_billable';
-  const canCreateInvoice = canManageJobs && (!(isCompleted || isClosed) || billingStatus !== 'invoiced');
+  const isComplimentary = !!(form as any).is_complimentary;
+  const canCreateInvoice = canManageJobs && !isComplimentary && (!(isCompleted || isClosed) || billingStatus !== 'invoiced');
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -231,7 +233,12 @@ export default function JobDetail() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg md:text-xl font-bold truncate">{form.job_title}</h1>
             <StatusBadge status={form.status || 'Draft'} />
-            {billingStatus !== 'not_billable' && (
+            {isComplimentary ? (
+              <Badge className="text-[10px] bg-emerald-600 hover:bg-emerald-600 text-white gap-1">
+                <Gift className="h-3 w-3" /> COMPLIMENTARY
+                {form.complimentary_value ? ` · $${Number(form.complimentary_value).toLocaleString()}` : ''}
+              </Badge>
+            ) : billingStatus !== 'not_billable' && (
               <Badge variant="outline" className="text-[10px]">{billingStatus}</Badge>
             )}
           </div>
@@ -365,6 +372,50 @@ export default function JobDetail() {
               <div><Label className="text-xs">Service Instructions</Label><Textarea value={form.service_instructions || ''} onChange={e => set('service_instructions', e.target.value)} rows={2} placeholder="Instructions visible to worker..." /></div>
               <div><Label className="text-xs">Scope of Work</Label><Textarea value={form.scope_of_work || ''} onChange={e => set('scope_of_work', e.target.value)} rows={4} /></div>
               <div><Label className="text-xs">Internal Notes</Label><Textarea value={form.internal_notes || ''} onChange={e => set('internal_notes', e.target.value)} rows={2} /></div>
+
+              {/* Complimentary Job */}
+              <div className="rounded-md border border-emerald-200 bg-emerald-50/40 p-3 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <Label className="text-xs flex items-center gap-1.5 font-semibold text-emerald-900">
+                      <Gift className="h-3.5 w-3.5" /> Complimentary Job (Free / Goodwill)
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Mark this job as a free service. No invoice will be generated, but costs and value are still tracked for reporting.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isComplimentary}
+                    onCheckedChange={(v) => {
+                      set('is_complimentary', v);
+                      if (v) set('billing_status', 'not_billable');
+                    }}
+                  />
+                </div>
+                {isComplimentary && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <Label className="text-xs">Value Waived ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="95.00"
+                        value={form.complimentary_value ?? ''}
+                        onChange={(e) => set('complimentary_value', e.target.value === '' ? null : parseFloat(e.target.value))}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Reason (optional)</Label>
+                      <Input
+                        placeholder="Goodwill, referral thank-you..."
+                        value={form.complimentary_reason || ''}
+                        onChange={(e) => set('complimentary_reason', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
