@@ -718,6 +718,7 @@ export default function CustomerDetail() {
               badge: <StatusBadge status={a.status} showIcon={false} />,
             }))}
           />
+          {id && <CustomerDocumentsCard customerId={id} />}
           {id && <CustomerCommunicationsCard customerId={id} />}
         </div>
       </div>
