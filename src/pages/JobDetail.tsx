@@ -233,7 +233,12 @@ export default function JobDetail() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg md:text-xl font-bold truncate">{form.job_title}</h1>
             <StatusBadge status={form.status || 'Draft'} />
-            {billingStatus !== 'not_billable' && (
+            {isComplimentary ? (
+              <Badge className="text-[10px] bg-emerald-600 hover:bg-emerald-600 text-white gap-1">
+                <Gift className="h-3 w-3" /> COMPLIMENTARY
+                {form.complimentary_value ? ` · $${Number(form.complimentary_value).toLocaleString()}` : ''}
+              </Badge>
+            ) : billingStatus !== 'not_billable' && (
               <Badge variant="outline" className="text-[10px]">{billingStatus}</Badge>
             )}
           </div>
