@@ -25,7 +25,7 @@ import {
   Briefcase, User, MapPin, Calendar, Clock, Users, FileText,
   Settings2, DollarSign, Plus, Trash2, ChevronDown, Copy,
   ArrowLeft, Save, X, Search, AlertTriangle, Package,
-  Repeat, Mail, MessageSquare, UserPlus, Phone, Building2,
+  Repeat, Mail, MessageSquare, UserPlus, Phone, Building2, Gift,
 } from 'lucide-react';
 
 // ─── Types ───
