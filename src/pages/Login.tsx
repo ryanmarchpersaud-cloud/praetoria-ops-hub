@@ -18,6 +18,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [loading, setLoading] = useState(false);
+  const hideSocialLogin = isNativeApp();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
