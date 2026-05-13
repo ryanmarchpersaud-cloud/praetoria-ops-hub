@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LoginPromoPanel } from '@/components/LoginPromoPanel';
+import { isNativeApp } from '@/lib/platform';
 
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
@@ -17,6 +18,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [loading, setLoading] = useState(false);
+  const hideSocialLogin = isNativeApp();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,7 +130,7 @@ export default function Login() {
           </form>
 
           {/* Social login */}
-          {mode !== 'forgot' && (
+          {mode !== 'forgot' && !hideSocialLogin && (
             <>
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
