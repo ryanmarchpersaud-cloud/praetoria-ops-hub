@@ -130,7 +130,7 @@ export default function Login() {
           </form>
 
           {/* Social login */}
-          {mode !== 'forgot' && (
+          {mode !== 'forgot' && !hideSocialLogin && (
             <>
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
