@@ -270,6 +270,12 @@ export default function InvoicePrint() {
               <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
               <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tax)}</span>
             </div>
+            {tip > 0 && (
+              <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
+                <span>Tip</span>
+                <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tip)}</span>
+              </div>
+            )}
             <div className="h-[2px] bg-[#1a1a2e]" />
             <div className="flex justify-between text-lg font-extrabold pt-1 text-[#1a1a2e] print:text-xl">
               <span>Total (CAD)</span>
