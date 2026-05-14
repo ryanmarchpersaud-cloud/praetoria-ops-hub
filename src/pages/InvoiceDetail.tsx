@@ -30,6 +30,64 @@ import { useBillingProfile } from '@/hooks/useInvoices';
 import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 
+function getStatusAfterTotalChange(invoice: any, nextTotal: number) {
+  if (['Draft', 'Voided', 'Refunded'].includes(invoice.status)) return invoice.status;
+  const amountPaid = Number(invoice.amount_paid || 0);
+  if (amountPaid <= 0) return invoice.status;
+  return amountPaid + 0.005 >= nextTotal ? 'Paid' : 'Partially Paid';
+}
+
+function TaxRow({ invoice, canEdit }: { invoice: any; canEdit: boolean }) {
+  const taxRate = Number(invoice.tax_rate || 0);
+  const tax = Number(invoice.tax || 0);
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState((taxRate * 100).toFixed(2));
+  const updateInvoice = useUpdateInvoice();
+
+  const save = async () => {
+    const nextRate = Math.max(0, Number(value) || 0) / 100;
+    const subtotal = Number(invoice.subtotal || 0);
+    const tip = Number(invoice.tip || 0);
+    const nextTax = Math.round(subtotal * nextRate * 100) / 100;
+    const nextTotal = Math.round((subtotal + nextTax + tip) * 100) / 100;
+    await updateInvoice.mutateAsync({
+      id: invoice.id,
+      tax_rate: nextRate,
+      status: getStatusAfterTotalChange(invoice, nextTotal),
+    } as any);
+    toast.success('GST updated');
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex justify-between items-center text-sm gap-2">
+        <span className="text-muted-foreground">GST</span>
+        <div className="flex items-center gap-1">
+          <Input type="number" step="0.01" min="0" value={value} onChange={e => setValue(e.target.value)} className="h-7 w-20 text-right tabular-nums" autoFocus />
+          <span className="text-xs">%</span>
+          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={save} disabled={updateInvoice.isPending}>Save</Button>
+          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setValue((taxRate * 100).toFixed(2)); setEditing(false); }}>Cancel</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-between text-sm items-center">
+      <span className="text-muted-foreground">GST ({(taxRate * 100).toFixed(taxRate * 100 % 1 ? 2 : 0)}%)</span>
+      <span className="flex items-center gap-2">
+        <span className="tabular-nums">${tax.toFixed(2)}</span>
+        {canEdit && (
+          <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs" onClick={() => { setValue((taxRate * 100).toFixed(2)); setEditing(true); }}>
+            <Pencil className="h-3 w-3" />
+          </Button>
+        )}
+      </span>
+    </div>
+  );
+}
+
 function TipRow({ invoice, canEdit }: { invoice: any; canEdit: boolean }) {
   const tip = Number(invoice.tip || 0);
   const [editing, setEditing] = useState(false);
@@ -37,7 +95,10 @@ function TipRow({ invoice, canEdit }: { invoice: any; canEdit: boolean }) {
   const updateInvoice = useUpdateInvoice();
   const save = async () => {
     const v = Math.max(0, Number(value) || 0);
-    await updateInvoice.mutateAsync({ id: invoice.id, tip: v } as any);
+    const subtotal = Number(invoice.subtotal || 0);
+    const tax = Number(invoice.tax || 0);
+    const nextTotal = Math.round((subtotal + tax + v) * 100) / 100;
+    await updateInvoice.mutateAsync({ id: invoice.id, tip: v, status: getStatusAfterTotalChange(invoice, nextTotal) } as any);
     toast.success('Tip updated');
     setEditing(false);
   };
