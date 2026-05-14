@@ -42,6 +42,7 @@ import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import AuthEmailHealthPage from "./pages/AuthEmailHealthPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AuthActivityReportPage from "./pages/AuthActivityReportPage";
+import SettingsDeleteAccountPage from "./pages/SettingsDeleteAccountPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
 const ScheduleNewVisits = lazy(() => import("./pages/ScheduleNewVisits"));
