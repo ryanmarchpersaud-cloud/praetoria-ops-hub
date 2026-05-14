@@ -124,18 +124,21 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
                   {group.group}
                 </p>
                 <nav className="space-y-0.5">
-                  {group.items.map((item) => (
-                    <NavLink
-                      key={item.url}
-                      to={item.url}
-                      end={item.url === '/settings'}
-                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.title}
-                    </NavLink>
-                  ))}
+                  {group.items.map((item) => {
+                    const isDanger = item.url === '/settings/delete-account';
+                    return (
+                      <NavLink
+                        key={item.url}
+                        to={item.url}
+                        end={item.url === '/settings'}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${isDanger ? 'text-destructive hover:bg-destructive/10' : 'text-muted-foreground hover:bg-muted/50'}`}
+                        activeClassName={isDanger ? 'bg-destructive/10 text-destructive font-medium' : 'bg-primary/10 text-primary font-medium'}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.title}
+                      </NavLink>
+                    );
+                  })}
                 </nav>
               </div>
             ))}
