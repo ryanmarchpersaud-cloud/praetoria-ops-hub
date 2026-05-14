@@ -4,7 +4,7 @@ import {
   Settings, Webhook, Plug, Users, ShieldCheck, ScrollText, Gauge,
   Building2, Package, CreditCard, Receipt, Zap, Briefcase, CalendarCog,
   MapPinned, ClipboardList, MessageSquare, Mail, BookOpen, Globe, Megaphone,
-  KeyRound, HeartPulse, Activity,
+  KeyRound, HeartPulse, Activity, Trash2,
 } from 'lucide-react';
 
 type SettingsAccessKey =
@@ -74,6 +74,7 @@ const settingsNav: { group: string; items: SettingsItem[] }[] = [
       { title: 'Users', url: '/settings/users', icon: KeyRound, alwaysShow: true },
       { title: 'Auth Email Health', url: '/settings/auth-email-health', icon: HeartPulse, alwaysShow: true },
       { title: 'Auth Activity', url: '/settings/auth-activity', icon: Activity, alwaysShow: true },
+      { title: 'Delete Account', url: '/settings/delete-account', icon: Trash2, alwaysShow: true },
     ],
   },
 ];

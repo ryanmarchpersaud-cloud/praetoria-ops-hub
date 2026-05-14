@@ -42,6 +42,7 @@ import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import AuthEmailHealthPage from "./pages/AuthEmailHealthPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AuthActivityReportPage from "./pages/AuthActivityReportPage";
+import SettingsDeleteAccountPage from "./pages/SettingsDeleteAccountPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
 const ScheduleNewVisits = lazy(() => import("./pages/ScheduleNewVisits"));
@@ -434,6 +435,7 @@ function AppRoutes() {
       <Route path="/settings/auth-email-health" element={<AdminRoute><AuthEmailHealthPage /></AdminRoute>} />
       <Route path="/settings/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
       <Route path="/settings/auth-activity" element={<AdminRoute><AuthActivityReportPage /></AdminRoute>} />
+      <Route path="/settings/delete-account" element={<AdminRoute><SettingsDeleteAccountPage /></AdminRoute>} />
       <Route path="/settings/products" element={<AdminRoute><ModuleGuard settingsKey="productsServices"><ProductsServicesPage /></ModuleGuard></AdminRoute>} />
       <Route path="/settings/team" element={<AdminRoute><ModuleGuard settingsKey="manageTeam"><ManageTeamPage /></ModuleGuard></AdminRoute>} />
       <Route path="/settings/roles" element={<AdminRoute><ModuleGuard settingsKey="rolesPermissions"><RolesPermissionsPage /></ModuleGuard></AdminRoute>} />
