@@ -153,6 +153,14 @@ export function AICopilot() {
     }
   }, [autoSpeak]);
   const { listening, toggle: toggleMic } = useSpeechRecognition(handleVoiceResult);
+  // Hide the mic button on native iOS / Capacitor where the browser
+  // SpeechRecognition API is not available (Apple flagged the button as
+  // non-responsive in App Review). Also hide where the API is missing.
+  const speechSupported = typeof window !== 'undefined'
+    && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  const isNative = typeof window !== 'undefined'
+    && !!(window as any).Capacitor?.isNativePlatform?.();
+  const showMic = speechSupported && !isNative;
 
   useEffect(() => {
     if (scrollRef.current) {
