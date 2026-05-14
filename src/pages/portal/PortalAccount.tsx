@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { User, Mail, Phone, Building2, MapPin, LogOut, Home, ShieldCheck } from 'lucide-react';
 import { NotificationPreferencesCard } from '@/components/NotificationPreferencesCard';
 import { StatusBadge } from '@/components/StatusBadge';
+import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 
 export default function PortalAccount() {
   const { user, signOut } = useAuth();
