@@ -210,11 +210,6 @@ export function AppSidebar() {
           {!collapsed && (
             <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
           )}
-          {!collapsed && (
-            <div className="pt-1">
-              <DeleteAccountSection variant="inline" />
-            </div>
-          )}
           <SidebarMenuButton onClick={signOut} className="w-full hover:bg-sidebar-accent/50">
             <LogOut className="mr-2 h-4 w-4" />
             {!collapsed && <span>Sign Out</span>}
