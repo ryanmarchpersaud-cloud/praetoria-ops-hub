@@ -544,7 +544,7 @@ export default function InvoiceDetail() {
                 <div className="px-4 py-3 space-y-1 border-t">
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="tabular-nums">${Number(invoice.subtotal).toFixed(2)}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax ({(Number(invoice.tax_rate) * 100).toFixed(0)}%)</span><span className="tabular-nums">${Number(invoice.tax).toFixed(2)}</span></div>
-                  <TipRow invoice={invoice} canEdit={canEditInvoiceDrafts} onSaved={refetch} />
+                  <TipRow invoice={invoice} canEdit={canEditInvoiceDrafts} />
                   <Separator />
                   <div className="flex justify-between text-sm font-semibold"><span>Total</span><span className="tabular-nums">${total.toFixed(2)}</span></div>
                   {amountPaid > 0 && (
