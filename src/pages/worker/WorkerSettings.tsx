@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AvatarUpload } from '@/components/AvatarUpload';
 import { LogOut, Mail, HelpCircle, Phone } from 'lucide-react';
+import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 import { useNavigate } from 'react-router-dom';
 
 export default function WorkerSettings() {
@@ -89,6 +90,8 @@ export default function WorkerSettings() {
           <p>Worker Portal</p>
         </CardContent>
       </Card>
+
+      <DeleteAccountSection />
 
       <Button variant="destructive" className="w-full" onClick={handleLogout}>
         <LogOut className="h-4 w-4 mr-2" /> Sign Out

@@ -153,6 +153,14 @@ export function AICopilot() {
     }
   }, [autoSpeak]);
   const { listening, toggle: toggleMic } = useSpeechRecognition(handleVoiceResult);
+  // Hide the mic button on native iOS / Capacitor where the browser
+  // SpeechRecognition API is not available (Apple flagged the button as
+  // non-responsive in App Review). Also hide where the API is missing.
+  const speechSupported = typeof window !== 'undefined'
+    && !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  const isNative = typeof window !== 'undefined'
+    && !!(window as any).Capacitor?.isNativePlatform?.();
+  const showMic = speechSupported && !isNative;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -454,16 +462,18 @@ export function AICopilot() {
               </div>
             )}
             <div className="flex items-end gap-2">
-              <Button
-                variant={listening ? 'default' : 'ghost'}
-                size="icon"
-                className={cn('h-9 w-9 rounded-xl shrink-0', listening && 'bg-red-500 hover:bg-red-600 text-white')}
-                onClick={toggleMic}
-                disabled={isLoading}
-                title={listening ? 'Stop listening' : 'Voice input'}
-              >
-                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
+              {showMic && (
+                <Button
+                  variant={listening ? 'default' : 'ghost'}
+                  size="icon"
+                  className={cn('h-9 w-9 rounded-xl shrink-0', listening && 'bg-red-500 hover:bg-red-600 text-white')}
+                  onClick={toggleMic}
+                  disabled={isLoading}
+                  title={listening ? 'Stop listening' : 'Voice input'}
+                >
+                  {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+              )}
               <textarea
                 ref={inputRef}
                 value={input}

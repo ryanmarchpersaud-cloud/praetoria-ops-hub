@@ -15,6 +15,7 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 import { ServiceLinksSection } from '@/components/ServiceLinksSection';
+import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 
 type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages' | 'incidents';
 type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
@@ -205,9 +206,14 @@ export function AppSidebar() {
       )}
 
       <SidebarFooter>
-        <div className="px-3 py-2">
+        <div className="px-3 py-2 space-y-2">
           {!collapsed && (
-            <p className="text-xs text-sidebar-foreground truncate mb-2">{user?.email}</p>
+            <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
+          )}
+          {!collapsed && (
+            <div className="pt-1">
+              <DeleteAccountSection variant="inline" />
+            </div>
           )}
           <SidebarMenuButton onClick={signOut} className="w-full hover:bg-sidebar-accent/50">
             <LogOut className="mr-2 h-4 w-4" />

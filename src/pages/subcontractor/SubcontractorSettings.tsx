@@ -11,6 +11,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
@@ -202,6 +203,8 @@ export default function SubcontractorSettings() {
           <p>Subcontractor Portal</p>
         </CardContent>
       </Card>
+
+      <DeleteAccountSection />
 
       <Button variant="destructive" className="w-full" onClick={handleLogout}>
         <LogOut className="h-4 w-4 mr-2" /> Sign Out
