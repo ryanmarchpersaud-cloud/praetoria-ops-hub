@@ -36,7 +36,7 @@ export default function InvoiceDetail() {
   const { data: lineItems = [] } = useInvoiceLineItems(id);
   const updateInvoice = useUpdateInvoice();
   const { data: billingProfile } = useBillingProfile(invoice?.customer_id);
-  const { canManageInvoices, canEditInvoiceDrafts, canRecordPayments, canVoidInvoices } = useActionPermissions();
+  const { canManageInvoices, canEditInvoiceDrafts, canRecordPayments, canVoidInvoices, isLoading: permissionsLoading } = useActionPermissions();
 
   // Fetch invoice view tracking
   const { data: invoiceViews = [] } = useQuery({
@@ -287,7 +287,10 @@ export default function InvoiceDetail() {
   const canRefund = amountPaid > 0 && !['Voided', 'Refunded'].includes(invoice.status) && canManageInvoices;
   const canSendReceipt = ['Paid', 'Partially Paid'].includes(invoice.status) && canManageInvoices;
   const canCollectFromCard = canRecordPayment && billingProfile?.payment_method_present && (billingProfile as any)?.default_payment_method_id;
-  const canEditSent = ['Sent', 'Viewed', 'Overdue'].includes(invoice.status) && canEditInvoiceDrafts && !forceLineItemEditor;
+  const canEditInvoice = !permissionsLoading
+    && canEditInvoiceDrafts
+    && !forceLineItemEditor
+    && !['Draft', 'Voided', 'Refunded'].includes(invoice.status);
   const billingMode = (invoice as any).billing_mode;
 
   const openReceiptCompose = () => {
@@ -394,12 +397,12 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
-        {canEditSent && (
+        {canEditInvoice && (
           <Button
             size="sm"
             variant="outline"
             onClick={() => setConfirmEdit(true)}
-            title="Revert to Draft to edit line items, then resend"
+            title="Edit line items and invoice details"
           >
             <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit Invoice
           </Button>
@@ -521,7 +524,7 @@ export default function InvoiceDetail() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" /> Details</CardTitle>
-                {isDraft && !editingMeta && (
+                {canEditInvoiceDrafts && !editingMeta && (
                   <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={startEditing}>Edit</Button>
                 )}
               </div>
@@ -704,7 +707,7 @@ export default function InvoiceDetail() {
           <DialogHeader>
             <DialogTitle>Edit Invoice?</DialogTitle>
             <DialogDescription>
-              This will move {invoice.invoice_number} back to Draft so you can change line items. You will need to resend it to the customer when done.
+              This will open {invoice.invoice_number} for editing. Paid invoices will stay paid; you can adjust line items, dates, property, and notes.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -712,6 +715,10 @@ export default function InvoiceDetail() {
             <Button
               onClick={() => {
                 setConfirmEdit(false);
+                if (invoice.status === 'Paid') {
+                  setForceLineItemEditor(true);
+                  return;
+                }
                 handleStatusChange('Draft');
               }}
               disabled={updateInvoice.isPending}
