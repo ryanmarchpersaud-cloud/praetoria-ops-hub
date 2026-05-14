@@ -1,0 +1,1 @@
+UPDATE public.invoices SET status='Paid' WHERE id='e87b47d3-e26e-4bde-b789-be95801bcbcd';
