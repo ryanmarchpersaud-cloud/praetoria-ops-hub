@@ -3625,6 +3625,7 @@ export type Database = {
           subtotal: number
           tax: number
           tax_rate: number
+          tip: number
           total: number
           updated_at: string
           viewed_at: string | null
@@ -3654,6 +3655,7 @@ export type Database = {
           subtotal?: number
           tax?: number
           tax_rate?: number
+          tip?: number
           total?: number
           updated_at?: string
           viewed_at?: string | null
@@ -3683,6 +3685,7 @@ export type Database = {
           subtotal?: number
           tax?: number
           tax_rate?: number
+          tip?: number
           total?: number
           updated_at?: string
           viewed_at?: string | null

@@ -30,6 +30,46 @@ import { useBillingProfile } from '@/hooks/useInvoices';
 import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 
+function TipRow({ invoice, canEdit }: { invoice: any; canEdit: boolean }) {
+  const tip = Number(invoice.tip || 0);
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(tip.toFixed(2));
+  const updateInvoice = useUpdateInvoice();
+  const save = async () => {
+    const v = Math.max(0, Number(value) || 0);
+    await updateInvoice.mutateAsync({ id: invoice.id, tip: v } as any);
+    toast.success('Tip updated');
+    setEditing(false);
+  };
+  if (editing) {
+    return (
+      <div className="flex justify-between items-center text-sm gap-2">
+        <span className="text-muted-foreground">Tip</span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs">$</span>
+          <Input type="number" step="0.01" min="0" value={value} onChange={e => setValue(e.target.value)} className="h-7 w-20 text-right tabular-nums" autoFocus />
+          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={save} disabled={updateInvoice.isPending}>Save</Button>
+          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setValue(tip.toFixed(2)); setEditing(false); }}>Cancel</Button>
+        </div>
+      </div>
+    );
+  }
+  if (tip === 0 && !canEdit) return null;
+  return (
+    <div className="flex justify-between text-sm items-center">
+      <span className="text-muted-foreground">Tip{tip === 0 && canEdit ? ' (add)' : ''}</span>
+      <span className="flex items-center gap-2">
+        <span className="tabular-nums">${tip.toFixed(2)}</span>
+        {canEdit && (
+          <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs" onClick={() => { setValue(tip.toFixed(2)); setEditing(true); }}>
+            <Pencil className="h-3 w-3" />
+          </Button>
+        )}
+      </span>
+    </div>
+  );
+}
+
 export default function InvoiceDetail() {
   const { id } = useParams();
   const { data: invoice, isLoading } = useInvoice(id);
@@ -504,6 +544,7 @@ export default function InvoiceDetail() {
                 <div className="px-4 py-3 space-y-1 border-t">
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="tabular-nums">${Number(invoice.subtotal).toFixed(2)}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Tax ({(Number(invoice.tax_rate) * 100).toFixed(0)}%)</span><span className="tabular-nums">${Number(invoice.tax).toFixed(2)}</span></div>
+                  <TipRow invoice={invoice} canEdit={canEditInvoiceDrafts} />
                   <Separator />
                   <div className="flex justify-between text-sm font-semibold"><span>Total</span><span className="tabular-nums">${total.toFixed(2)}</span></div>
                   {amountPaid > 0 && (

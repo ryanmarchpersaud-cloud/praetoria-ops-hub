@@ -84,6 +84,7 @@ export default function InvoicePrint() {
   const job = invoice.jobs;
   const subtotal = Number(invoice.subtotal || 0);
   const tax = Number(invoice.tax || 0);
+  const tip = Number(invoice.tip || 0);
   const total = Number(invoice.total || 0);
   const taxRate = Number(invoice.tax_rate || 0.11);
   const amountPaid = Number(invoice.amount_paid || 0);
@@ -269,6 +270,12 @@ export default function InvoicePrint() {
               <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
               <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tax)}</span>
             </div>
+            {tip > 0 && (
+              <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
+                <span>Tip</span>
+                <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tip)}</span>
+              </div>
+            )}
             <div className="h-[2px] bg-[#1a1a2e]" />
             <div className="flex justify-between text-lg font-extrabold pt-1 text-[#1a1a2e] print:text-xl">
               <span>Total (CAD)</span>
