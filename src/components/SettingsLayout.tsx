@@ -4,7 +4,7 @@ import {
   Settings, Webhook, Plug, Users, ShieldCheck, ScrollText, Gauge,
   Building2, Package, CreditCard, Receipt, Zap, Briefcase, CalendarCog,
   MapPinned, ClipboardList, MessageSquare, Mail, BookOpen, Globe, Megaphone,
-  KeyRound, HeartPulse, Activity,
+  KeyRound, HeartPulse, Activity, Trash2,
 } from 'lucide-react';
 
 type SettingsAccessKey =
