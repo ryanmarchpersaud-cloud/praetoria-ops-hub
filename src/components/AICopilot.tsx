@@ -462,16 +462,18 @@ export function AICopilot() {
               </div>
             )}
             <div className="flex items-end gap-2">
-              <Button
-                variant={listening ? 'default' : 'ghost'}
-                size="icon"
-                className={cn('h-9 w-9 rounded-xl shrink-0', listening && 'bg-red-500 hover:bg-red-600 text-white')}
-                onClick={toggleMic}
-                disabled={isLoading}
-                title={listening ? 'Stop listening' : 'Voice input'}
-              >
-                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
+              {showMic && (
+                <Button
+                  variant={listening ? 'default' : 'ghost'}
+                  size="icon"
+                  className={cn('h-9 w-9 rounded-xl shrink-0', listening && 'bg-red-500 hover:bg-red-600 text-white')}
+                  onClick={toggleMic}
+                  disabled={isLoading}
+                  title={listening ? 'Stop listening' : 'Voice input'}
+                >
+                  {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+              )}
               <textarea
                 ref={inputRef}
                 value={input}
