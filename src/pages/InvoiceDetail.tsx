@@ -567,7 +567,22 @@ export default function InvoiceDetail() {
           </CardHeader>
           <CardContent className={isDraft ? 'p-4' : 'p-0'}>
             {isDraft && canEditInvoiceDrafts ? (
-              <InvoiceLineItemEditor invoiceId={invoice.id} existingItems={lineItems} />
+              <>
+                <InvoiceLineItemEditor invoiceId={invoice.id} existingItems={lineItems} />
+                <div className="mt-4 border-t pt-3 space-y-1 max-w-sm ml-auto">
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span className="tabular-nums">${Number(invoice.subtotal).toFixed(2)}</span></div>
+                  <TaxRow invoice={invoice} canEdit={canEditInvoiceDrafts} />
+                  <TipRow invoice={invoice} canEdit={canEditInvoiceDrafts} />
+                  <Separator />
+                  <div className="flex justify-between text-sm font-semibold"><span>Total</span><span className="tabular-nums">${total.toFixed(2)}</span></div>
+                  {amountPaid > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm text-success"><span>Paid</span><span className="tabular-nums">-${amountPaid.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-sm font-semibold text-destructive"><span>Balance Due</span><span className="tabular-nums">${balanceDue.toFixed(2)}</span></div>
+                    </>
+                  )}
+                </div>
+              </>
             ) : (
               <>
                 <Table>
