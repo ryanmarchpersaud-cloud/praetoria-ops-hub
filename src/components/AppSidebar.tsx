@@ -15,7 +15,6 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 import { ServiceLinksSection } from '@/components/ServiceLinksSection';
-import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 
 type CountKey = 'leads' | 'quotes' | 'jobs' | 'visits' | 'invoices' | 'requests' | 'messages' | 'incidents';
 type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
