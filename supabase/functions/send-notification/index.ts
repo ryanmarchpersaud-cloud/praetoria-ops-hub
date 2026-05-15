@@ -125,7 +125,20 @@ async function buildAssignmentEmail(
   const dateLabel = visit?.service_date ? fmtDate(visit.service_date) : (job?.scheduled_date ? fmtDate(job.scheduled_date) : "");
   const timeLabel = visit?.arrival_time ? fmtTime(visit.arrival_time) : "";
 
-  const scope = job?.scope_of_work || "";
+  const rawScope = job?.scope_of_work || "";
+  // Strip any pricing/financial lines — workers & subcontractors must never see $$ in assignment emails
+  const stripPricing = (text: string) => text
+    .split("\n")
+    .filter((line) => {
+      const l = line.toLowerCase();
+      if (/\$\s*\d/.test(line)) return false;
+      if (/\b(gst|pst|hst|tax|subtotal|total|deposit|balance|amount\s*due|price|charge|fee|invoice\s*total|service\s*charge)\b\s*[:\-]/i.test(line)) return false;
+      return true;
+    })
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  const scope = (audience === "worker" || audience === "subcontractor") ? stripPricing(rawScope) : rawScope;
   const instructions = job?.service_instructions || "";
   const visitNotes = visit?.service_summary || visit?.crew_notes || "";
 
