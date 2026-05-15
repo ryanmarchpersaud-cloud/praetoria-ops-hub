@@ -58,6 +58,20 @@ export function DeleteAccountSection({ variant = 'card' }: Props) {
       toast({ title: 'Could not submit request', description: error.message, variant: 'destructive' });
       return;
     }
+    // Fire-and-forget email to ops inbox so the team is alerted in their inbox too.
+    supabase.functions.invoke('send-email', {
+      body: {
+        action: 'ops_notification',
+        subject: `Account deletion requested — ${user.email}`,
+        body_html: `
+          <p><strong>${user.email}</strong> has requested deletion of their Praetoria Group account from inside the app.</p>
+          <p><strong>User ID:</strong> ${user.id}</p>
+          ${reason.trim() ? `<p><strong>Reason:</strong> ${reason.trim()}</p>` : ''}
+          <p><a href="https://praetoria-ops-hub.lovable.app/admin/account-deletion-requests">Review in Admin →</a></p>
+        `,
+        to_addresses: ['ops@praetoriagroup.ca', 'support@praetoriagroup.ca'],
+      },
+    }).catch((e) => console.error('ops email failed', e));
     setOpen(false);
     setReason('');
     queryClient.invalidateQueries({ queryKey: ['account_deletion_request', user.id] });
