@@ -1,0 +1,1 @@
+DELETE FROM public.account_deletion_requests WHERE id = 'e080d3b0-f2a0-4e1f-b9c6-8acfedd633f5';
