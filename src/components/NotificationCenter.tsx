@@ -42,6 +42,7 @@ const RECORD_ROUTES: Record<string, string> = {
   materials_used: '/activity',
   agreement: '/agreements',
   incident: '/incidents',
+  account_deletion_request: '/admin/account-deletion-requests',
 };
 
 let audioCtx: AudioContext | null = null;
@@ -125,7 +126,7 @@ export function NotificationCenter() {
 
     if (base) {
       // Routes that have no /:id detail page — navigate to list only
-      const listOnlyRoutes = new Set(['/activity', '/messaging', '/finance/expenses']);
+      const listOnlyRoutes = new Set(['/activity', '/messaging', '/finance/expenses', '/admin/account-deletion-requests']);
       target = n.record_id && !listOnlyRoutes.has(base)
         ? `${base}/${n.record_id}`
         : base;

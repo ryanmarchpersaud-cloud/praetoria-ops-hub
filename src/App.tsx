@@ -43,6 +43,7 @@ import AuthEmailHealthPage from "./pages/AuthEmailHealthPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AuthActivityReportPage from "./pages/AuthActivityReportPage";
 import SettingsDeleteAccountPage from "./pages/SettingsDeleteAccountPage";
+import AdminAccountDeletionRequestsPage from "./pages/AdminAccountDeletionRequestsPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
 const ScheduleNewVisits = lazy(() => import("./pages/ScheduleNewVisits"));
@@ -342,6 +343,7 @@ function AppRoutes() {
       {/* Admin-only routes */}
       {/* Dashboard — any admin-portal user */}
       <Route path="/" element={<AdminRoute><ModuleGuard module="dashboard"><Dashboard /></ModuleGuard></AdminRoute>} />
+      <Route path="/admin/account-deletion-requests" element={<AdminRoute><AdminAccountDeletionRequestsPage /></AdminRoute>} />
 
       {/* Operations module — ops_manager, owner */}
       <Route path="/leads" element={<AdminRoute><ModuleGuard module="ops"><Leads /></ModuleGuard></AdminRoute>} />
