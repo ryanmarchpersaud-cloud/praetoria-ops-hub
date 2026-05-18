@@ -8,6 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { Camera, ImagePlus, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { downscaleImageIfLarge, yieldToBrowser, shouldSkipImagePreview } from '@/lib/iosDebug';
+import { isIOSNative } from '@/lib/platform';
+
+// On native iOS we currently rely on the gallery/files picker only.
+// The direct `capture="environment"` camera path has been linked to
+// WKWebView crashes during Apple review on iPadOS 26.5, so we hide
+// the dedicated Camera button on native iOS and let users pick from
+// the photo library (which still allows "Take Photo" from inside the
+// system picker on iPhone / iPad). Web + Android keep the shortcut.
+const HIDE_DIRECT_CAMERA = isIOSNative();
 
 const TAG_COLORS: Record<string, string> = {
   Before: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
