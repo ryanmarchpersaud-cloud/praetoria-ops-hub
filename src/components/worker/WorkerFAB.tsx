@@ -282,6 +282,7 @@ export function WorkerFAB() {
             ? 'bg-foreground rotate-180 rounded-full'
             : 'bg-primary'
         )}
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}
       >
         {open ? (
           <X className="h-6 w-6 text-background" />
