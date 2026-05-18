@@ -7695,6 +7695,41 @@ export type Database = {
           },
         ]
       }
+      visit_crew_members: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role: string
+          visit_id: string
+          worker_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: string
+          visit_id: string
+          worker_user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: string
+          visit_id?: string
+          worker_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_crew_members_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visit_photos: {
         Row: {
           caption: string | null
@@ -8531,6 +8566,10 @@ export type Database = {
         Returns: boolean
       }
       is_worker_assigned_to_visit: {
+        Args: { _user_id: string; _visit_id: string }
+        Returns: boolean
+      }
+      is_worker_in_visit_crew: {
         Args: { _user_id: string; _visit_id: string }
         Returns: boolean
       }

@@ -7,10 +7,20 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUpdateVisit } from '@/hooks/useVisits';
 import { useEmployees } from '@/hooks/useEmployees';
+import {
+  useVisitCrew,
+  useVisitSubAssignments,
+  useAddVisitCrewMember,
+  useRemoveVisitCrewMember,
+  useAddVisitSubAssignment,
+  useRemoveVisitSubAssignment,
+  useActiveSubcontractors,
+} from '@/hooks/useVisitCrew';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 import {
   CalendarDays, Phone, MapPin, CheckSquare, MoreHorizontal,
-  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check
+  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check, X, Users, HardHat
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
@@ -23,6 +33,13 @@ interface ScheduleVisitPopoverProps {
 export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisitPopoverProps) {
   const updateVisit = useUpdateVisit();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useActiveSubcontractors();
+  const { data: crew = [] } = useVisitCrew(visit?.id);
+  const { data: subAssignments = [] } = useVisitSubAssignments(visit?.id);
+  const addCrew = useAddVisitCrewMember();
+  const removeCrew = useRemoveVisitCrewMember();
+  const addSub = useAddVisitSubAssignment();
+  const removeSub = useRemoveVisitSubAssignment();
   const { toast } = useToast();
   const [tab, setTab] = useState('info');
 
@@ -30,16 +47,48 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
 
   const assignedWorker = (employees as any[]).find(e => e.user_id === visit.assigned_worker_id);
   const assignedName = assignedWorker?.full_name || visit.worker_profiles?.full_name || null;
+  const crewIds = new Set((crew as any[]).map((c: any) => c.worker_user_id));
+  const subIds = new Set((subAssignments as any[]).map((s: any) => s.subcontractor_id));
 
-  const handleAssign = async (workerId: string | null) => {
+  const handleSetLead = async (workerId: string | null) => {
     try {
+      if (workerId && crewIds.has(workerId)) {
+        await removeCrew.mutateAsync({ visitId: visit.id, workerUserId: workerId });
+      }
       await updateVisit.mutateAsync({ id: visit.id, assigned_worker_id: workerId });
       toast({
-        title: workerId ? 'Worker assigned' : 'Worker unassigned',
+        title: workerId ? 'Lead worker set' : 'Lead worker cleared',
         description: workerId
-          ? `${(employees as any[]).find(e => e.user_id === workerId)?.full_name || 'Worker'} is now on this visit.`
+          ? `${(employees as any[]).find(e => e.user_id === workerId)?.full_name || 'Worker'} is now the lead on this visit.`
           : undefined,
       });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleToggleCrew = async (workerId: string) => {
+    try {
+      if (crewIds.has(workerId)) {
+        await removeCrew.mutateAsync({ visitId: visit.id, workerUserId: workerId });
+      } else {
+        await addCrew.mutateAsync({ visitId: visit.id, workerUserId: workerId });
+        toast({ title: 'Added to crew', description: (employees as any[]).find(e => e.user_id === workerId)?.full_name });
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleToggleSub = async (subId: string) => {
+    try {
+      if (subIds.has(subId)) {
+        await removeSub.mutateAsync({ visitId: visit.id, subcontractorId: subId });
+      } else {
+        await addSub.mutateAsync({ visitId: visit.id, subcontractorId: subId, jobId: visit.job_id ?? null });
+        const sub = (subcontractors as any[]).find(s => s.id === subId);
+        toast({ title: 'Subcontractor added', description: sub?.company_name || sub?.contact_name });
+      }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
@@ -173,26 +222,27 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
           </DropdownMenu>
         </div>
 
-        {/* Quick assign worker */}
-        <div className="px-5 pb-3">
+        {/* Crew assignment: lead + helpers + subcontractors */}
+        <div className="px-5 pb-3 space-y-2">
+          {/* Lead worker */}
           <div className="flex items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2">
             <div className="flex items-center gap-2 min-w-0">
               <UserPlus className="h-4 w-4 text-muted-foreground shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Assigned Worker</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Lead Worker</p>
                 <p className="text-xs font-medium truncate">{assignedName || 'Unassigned'}</p>
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 text-xs" disabled={updateVisit.isPending}>
-                  {assignedName ? 'Reassign' : 'Assign'}
+                  {assignedName ? 'Change Lead' : 'Set Lead'}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 max-h-72 overflow-y-auto">
-                <DropdownMenuItem onClick={() => handleAssign(null)} className="flex items-center gap-2 text-xs">
-                  {!visit.assigned_worker_id && <Check className="h-3.5 w-3.5" />}
-                  <span className={visit.assigned_worker_id ? 'ml-5' : ''}>Unassigned</span>
+              <DropdownMenuContent align="end" className="w-56 max-h-72 overflow-y-auto bg-popover z-50">
+                <DropdownMenuItem onClick={() => handleSetLead(null)} className="flex items-center gap-2 text-xs">
+                  {!visit.assigned_worker_id ? <Check className="h-3.5 w-3.5" /> : <span className="w-3.5" />}
+                  <span>No lead</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {(employees as any[]).length === 0 ? (
@@ -203,11 +253,107 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
                     return (
                       <DropdownMenuItem
                         key={emp.user_id}
-                        onClick={() => handleAssign(emp.user_id)}
+                        onClick={() => handleSetLead(emp.user_id)}
                         className="flex items-center gap-2 text-xs"
                       >
                         {isCurrent ? <Check className="h-3.5 w-3.5" /> : <span className="w-3.5" />}
                         <span className="truncate">{emp.full_name}</span>
+                      </DropdownMenuItem>
+                    );
+                  })
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Crew + Subs row */}
+          <div className="flex items-start justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2">
+            <div className="flex items-start gap-2 min-w-0 flex-1">
+              <Users className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Crew & Subcontractors</p>
+                {crew.length === 0 && subAssignments.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No additional crew</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {(crew as any[]).map((c: any) => {
+                      const emp = (employees as any[]).find(e => e.user_id === c.worker_user_id);
+                      return (
+                        <Badge key={c.id} variant="secondary" className="text-[10px] gap-1 pr-1">
+                          {emp?.full_name || 'Worker'}
+                          <button
+                            onClick={() => handleToggleCrew(c.worker_user_id)}
+                            className="hover:bg-destructive/20 rounded-full p-0.5"
+                            aria-label="Remove from crew"
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </Badge>
+                      );
+                    })}
+                    {(subAssignments as any[]).map((sa: any) => {
+                      const sub = (subcontractors as any[]).find(s => s.id === sa.subcontractor_id);
+                      return (
+                        <Badge key={sa.id} variant="outline" className="text-[10px] gap-1 pr-1 border-amber-400/60 text-amber-700 dark:text-amber-300">
+                          <HardHat className="h-2.5 w-2.5" />
+                          {sub?.company_name || sub?.contact_name || 'Sub'}
+                          <button
+                            onClick={() => handleToggleSub(sa.subcontractor_id)}
+                            className="hover:bg-destructive/20 rounded-full p-0.5"
+                            aria-label="Remove subcontractor"
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs shrink-0">
+                  <UserPlus className="h-3.5 w-3.5 mr-1" /> Add
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 max-h-80 overflow-y-auto bg-popover z-50">
+                <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Workers</div>
+                {(employees as any[]).filter(e => e.user_id !== visit.assigned_worker_id).length === 0 ? (
+                  <DropdownMenuItem disabled className="text-xs">No other workers</DropdownMenuItem>
+                ) : (
+                  (employees as any[])
+                    .filter(e => e.user_id !== visit.assigned_worker_id)
+                    .map((emp) => {
+                      const inCrew = crewIds.has(emp.user_id);
+                      return (
+                        <DropdownMenuItem
+                          key={emp.user_id}
+                          onClick={(e) => { e.preventDefault(); handleToggleCrew(emp.user_id); }}
+                          className="flex items-center gap-2 text-xs"
+                        >
+                          {inCrew ? <Check className="h-3.5 w-3.5 text-primary" /> : <span className="w-3.5" />}
+                          <span className="truncate">{emp.full_name}</span>
+                        </DropdownMenuItem>
+                      );
+                    })
+                )}
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subcontractors</div>
+                {(subcontractors as any[]).length === 0 ? (
+                  <DropdownMenuItem disabled className="text-xs">No subcontractors</DropdownMenuItem>
+                ) : (
+                  (subcontractors as any[]).map((sub: any) => {
+                    const inAssign = subIds.has(sub.id);
+                    return (
+                      <DropdownMenuItem
+                        key={sub.id}
+                        onClick={(e) => { e.preventDefault(); handleToggleSub(sub.id); }}
+                        className="flex items-center gap-2 text-xs"
+                      >
+                        {inAssign ? <Check className="h-3.5 w-3.5 text-primary" /> : <span className="w-3.5" />}
+                        <HardHat className="h-3 w-3 text-amber-600 shrink-0" />
+                        <span className="truncate">{sub.company_name || sub.contact_name}</span>
                       </DropdownMenuItem>
                     );
                   })
