@@ -13,6 +13,9 @@ import { Receipt, Plus, FileUp, Loader2, Paperclip, ArrowLeft } from 'lucide-rea
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { isIOSNative } from '@/lib/platform';
+
+const HIDE_DIRECT_CAMERA = isIOSNative();
 
 const CATEGORIES = [
   'Fuel / Gas / Diesel',
