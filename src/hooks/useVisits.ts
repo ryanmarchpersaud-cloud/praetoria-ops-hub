@@ -45,7 +45,7 @@ export function useVisits(filters?: { visit_status?: string; visit_type?: string
         }
       }
 
-      const subIds = [...new Set(subAssignRows.map((s: any) => s.subcontractor_id).filter(Boolean))];
+      const subIds: string[] = [...new Set(subAssignRows.map((s: any) => s.subcontractor_id).filter(Boolean) as string[])];
       let subMap: Record<string, string> = {};
       if (subIds.length > 0) {
         const { data: subs } = await supabase
