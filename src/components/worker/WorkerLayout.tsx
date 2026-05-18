@@ -3,10 +3,10 @@ import { WorkerBottomNav } from './WorkerBottomNav';
 import { WorkerFAB } from './WorkerFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { ServiceLinksSection } from '@/components/ServiceLinksSection';
-import { isAndroidNative } from '@/lib/platform';
+import { isAndroidMobile } from '@/lib/platform';
 
 export function WorkerLayout({ children }: { children: ReactNode }) {
-  const androidNativeScroll = isAndroidNative();
+  const androidNativeScroll = isAndroidMobile();
 
   return (
     <div

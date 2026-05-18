@@ -3,10 +3,10 @@ import { SubcontractorBottomNav } from './SubcontractorBottomNav';
 import { SubcontractorFAB } from './SubcontractorFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { ServiceLinksSection } from '@/components/ServiceLinksSection';
-import { isAndroidNative } from '@/lib/platform';
+import { isAndroidMobile } from '@/lib/platform';
 
 export function SubcontractorLayout({ children }: { children: ReactNode }) {
-  const androidNativeScroll = isAndroidNative();
+  const androidNativeScroll = isAndroidMobile();
 
   return (
     <div

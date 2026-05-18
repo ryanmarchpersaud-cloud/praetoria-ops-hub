@@ -36,3 +36,9 @@ export function isAndroidNative(): boolean {
     return false;
   }
 }
+
+export function isAndroidMobile(): boolean {
+  if (isAndroidNative()) return true;
+  if (typeof navigator === 'undefined') return false;
+  return /Android/i.test(navigator.userAgent || '');
+}
