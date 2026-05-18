@@ -173,6 +173,51 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
           </DropdownMenu>
         </div>
 
+        {/* Quick assign worker */}
+        <div className="px-5 pb-3">
+          <div className="flex items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <UserPlus className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Assigned Worker</p>
+                <p className="text-xs font-medium truncate">{assignedName || 'Unassigned'}</p>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs" disabled={updateVisit.isPending}>
+                  {assignedName ? 'Reassign' : 'Assign'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 max-h-72 overflow-y-auto">
+                <DropdownMenuItem onClick={() => handleAssign(null)} className="flex items-center gap-2 text-xs">
+                  {!visit.assigned_worker_id && <Check className="h-3.5 w-3.5" />}
+                  <span className={visit.assigned_worker_id ? 'ml-5' : ''}>Unassigned</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {(employees as any[]).length === 0 ? (
+                  <DropdownMenuItem disabled className="text-xs">No workers available</DropdownMenuItem>
+                ) : (
+                  (employees as any[]).map((emp) => {
+                    const isCurrent = emp.user_id === visit.assigned_worker_id;
+                    return (
+                      <DropdownMenuItem
+                        key={emp.user_id}
+                        onClick={() => handleAssign(emp.user_id)}
+                        className="flex items-center gap-2 text-xs"
+                      >
+                        {isCurrent ? <Check className="h-3.5 w-3.5" /> : <span className="w-3.5" />}
+                        <span className="truncate">{emp.full_name}</span>
+                      </DropdownMenuItem>
+                    );
+                  })
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab} className="border-t">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-auto p-0">
