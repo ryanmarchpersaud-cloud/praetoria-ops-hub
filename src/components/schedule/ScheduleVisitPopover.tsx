@@ -22,10 +22,28 @@ interface ScheduleVisitPopoverProps {
 
 export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisitPopoverProps) {
   const updateVisit = useUpdateVisit();
+  const { data: employees = [] } = useEmployees();
   const { toast } = useToast();
   const [tab, setTab] = useState('info');
 
   if (!visit) return null;
+
+  const assignedWorker = (employees as any[]).find(e => e.user_id === visit.assigned_worker_id);
+  const assignedName = assignedWorker?.full_name || visit.worker_profiles?.full_name || null;
+
+  const handleAssign = async (workerId: string | null) => {
+    try {
+      await updateVisit.mutateAsync({ id: visit.id, assigned_worker_id: workerId });
+      toast({
+        title: workerId ? 'Worker assigned' : 'Worker unassigned',
+        description: workerId
+          ? `${(employees as any[]).find(e => e.user_id === workerId)?.full_name || 'Worker'} is now on this visit.`
+          : undefined,
+      });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
 
   const customer = visit.customers;
   const property = visit.properties;
