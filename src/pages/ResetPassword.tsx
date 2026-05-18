@@ -42,6 +42,8 @@ export default function ResetPassword() {
       const search = window.location.search || '';
       const searchParams = new URLSearchParams(search);
       const code = searchParams.get('code');
+      const tokenHash = searchParams.get('token_hash');
+      const otpType = searchParams.get('type');
       const hasRecoveryHash = hash.includes('type=recovery') || hash.includes('access_token');
       const hasErrorInUrl =
         hash.includes('error=') || hash.includes('error_code=') ||
@@ -53,7 +55,27 @@ export default function ResetPassword() {
         return;
       }
 
-      // PKCE flow: Supabase redirects with ?code=... — exchange it for a session.
+      // Preferred flow: token_hash + type=recovery. This does NOT require the
+      // PKCE code_verifier, so it works across browsers/devices and survives
+      // Gmail-style link prefetching (the token is only consumed by verifyOtp
+      // when called from the page, not by visiting the URL).
+      if (tokenHash && otpType === 'recovery') {
+        const { data, error } = await supabase.auth.verifyOtp({
+          type: 'recovery',
+          token_hash: tokenHash,
+        });
+        if (!mounted) return;
+        if (error || !data?.session) {
+          setStatus('invalid_link');
+          return;
+        }
+        setRecoveryEmail(data.session.user?.email ?? '');
+        setStatus('ready');
+        window.history.replaceState({}, '', window.location.pathname);
+        return;
+      }
+
+      // Legacy PKCE flow: Supabase redirects with ?code=... — exchange it.
       if (code) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (!mounted) return;
