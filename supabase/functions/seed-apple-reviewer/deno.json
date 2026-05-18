@@ -1,0 +1,2 @@
+[functions.seed-apple-reviewer]
+verify_jwt = false
