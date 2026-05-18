@@ -222,6 +222,16 @@
        naturally fixes Android while iOS continues to work. */
   }
 
+  .worker-portal-shell.native-android-scroll {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
   @supports (-webkit-touch-callout: none) {
     @media (max-width: 767px) {
       .signed-in-portal-route-shell {
