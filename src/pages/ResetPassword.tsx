@@ -236,7 +236,7 @@ export default function ResetPassword() {
                   <Input
                     id="resend" type="email" value={resendEmail || recoveryEmail}
                     onChange={(e) => setResendEmail(e.target.value)}
-                    placeholder="you@example.com" required className="pl-10 h-11"
+                    placeholder="your personal email address" required className="pl-10 h-11"
                   />
                 </div>
               </div>
