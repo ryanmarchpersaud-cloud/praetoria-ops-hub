@@ -217,12 +217,31 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Build template props from payload.data (HookData structure)
+  // Build template props from payload.data (HookData structure).
+  //
+  // For password recovery we deliberately bypass Supabase's default PKCE
+  // confirmation URL (payload.data.url). That URL relies on a code_verifier
+  // stored in the same browser storage that requested the reset, which fails
+  // whenever the user opens the email in a different browser or app (e.g.
+  // requests in the iOS/Android app, opens the link in Safari/Chrome) and
+  // also gets consumed by Gmail's link prefetch — producing the
+  // "invalid or already used" error. Instead we send the user to our own
+  // /reset-password page with the token_hash, and call verifyOtp there at
+  // submit time. token_hash does NOT require the code_verifier.
+  let confirmationUrl = payload.data.url
+  if (emailType === 'recovery' && payload.data.token_hash) {
+    const params = new URLSearchParams({
+      token_hash: payload.data.token_hash,
+      type: 'recovery',
+    })
+    confirmationUrl = `https://${ROOT_DOMAIN}/reset-password?${params.toString()}`
+  }
+
   const templateProps = {
     siteName: SITE_NAME,
     siteUrl: `https://${ROOT_DOMAIN}`,
     recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
+    confirmationUrl,
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
