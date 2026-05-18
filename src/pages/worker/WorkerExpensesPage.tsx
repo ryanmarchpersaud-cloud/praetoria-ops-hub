@@ -241,7 +241,7 @@ export default function WorkerExpensesPage() {
                   ref={fileInputRef}
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
-                  capture="environment"
+                  {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })}
                   onChange={e => setSelectedFile(e.target.files?.[0] || null)}
                 />
                 {selectedFile && (
