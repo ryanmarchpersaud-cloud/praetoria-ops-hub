@@ -8,6 +8,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { Camera, ImagePlus, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { downscaleImageIfLarge, yieldToBrowser, shouldSkipImagePreview } from '@/lib/iosDebug';
+import { isIOSNative } from '@/lib/platform';
+
+// On native iOS we currently rely on the gallery/files picker only.
+// The direct `capture="environment"` camera path has been linked to
+// WKWebView crashes during Apple review on iPadOS 26.5, so we hide
+// the dedicated Camera button on native iOS and let users pick from
+// the photo library (which still allows "Take Photo" from inside the
+// system picker on iPhone / iPad). Web + Android keep the shortcut.
+const HIDE_DIRECT_CAMERA = isIOSNative();
 
 const TAG_COLORS: Record<string, string> = {
   Before: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -191,15 +200,17 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
             </CardTitle>
             {remainingSlots > 0 && (
               <div className="flex gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 px-3 text-xs gap-1.5"
-                  onClick={() => cameraInputRef.current?.click()}
-                >
-                  <Camera className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Camera</span>
-                </Button>
+                {!HIDE_DIRECT_CAMERA && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 text-xs gap-1.5"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Camera</span>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -207,7 +218,7 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
                   onClick={() => galleryInputRef.current?.click()}
                 >
                   <ImagePlus className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Gallery</span>
+                  <span className="hidden sm:inline">{HIDE_DIRECT_CAMERA ? 'Add Photos' : 'Gallery'}</span>
                 </Button>
               </div>
             )}
@@ -246,11 +257,13 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
               </p>
               {existingCount === 0 && (
                 <div className="flex justify-center gap-2 mt-3">
-                  <Button variant="ghost" size="sm" className="text-xs h-9 gap-1.5" onClick={() => cameraInputRef.current?.click()}>
-                    <Camera className="h-3.5 w-3.5" /> Take photo
-                  </Button>
+                  {!HIDE_DIRECT_CAMERA && (
+                    <Button variant="ghost" size="sm" className="text-xs h-9 gap-1.5" onClick={() => cameraInputRef.current?.click()}>
+                      <Camera className="h-3.5 w-3.5" /> Take photo
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" className="text-xs h-9 gap-1.5" onClick={() => galleryInputRef.current?.click()}>
-                    <ImagePlus className="h-3.5 w-3.5" /> From gallery
+                    <ImagePlus className="h-3.5 w-3.5" /> {HIDE_DIRECT_CAMERA ? 'Add photos' : 'From gallery'}
                   </Button>
                 </div>
               )}
@@ -279,12 +292,15 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
         </CardContent>
       </Card>
 
-      {/* Hidden file inputs — camera vs gallery */}
+      {/* Hidden file inputs — camera vs gallery. On native iOS we omit
+          the `capture` attribute so iOS shows its standard action sheet
+          (Photo Library / Take Photo / Choose Files), which avoids the
+          direct UIImagePickerController crash observed in WKWebView. */}
       <input
         ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
+        {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })}
         className="hidden"
         onChange={handleInputChange}
       />
@@ -356,14 +372,16 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
             {/* Add more button */}
             {stagedFiles.length > 0 && stagedFiles.length < remainingSlots && (
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 h-9 text-xs gap-1.5"
-                  onClick={() => cameraInputRef.current?.click()}
-                >
-                  <Camera className="h-3.5 w-3.5" /> Take more
-                </Button>
+                {!HIDE_DIRECT_CAMERA && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-9 text-xs gap-1.5"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    <Camera className="h-3.5 w-3.5" /> Take more
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"

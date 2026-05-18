@@ -19,6 +19,12 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { downscaleImageIfLarge, iosLog, isIOSWebView, yieldToBrowser } from '@/lib/iosDebug';
+import { isIOSNative } from '@/lib/platform';
+
+// See VisitPhotoGallery: hide the dedicated "Take Photo" shortcut on
+// native iOS to avoid the WKWebView crash observed during Apple review
+// on iPadOS 26.5. Users can still take a photo via the gallery picker.
+const HIDE_DIRECT_CAMERA = isIOSNative();
 
 export type IncidentAttachment = {
   url: string;
@@ -507,7 +513,7 @@ export default function IncidentPhotoUpload({
           name="incident-camera-upload"
           type="file"
           accept={GALLERY_ACCEPT}
-          capture="environment"
+          {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })}
           aria-label="Take photo"
           className={NATIVE_PICKER_INPUT_CLASS}
           onChange={handleFileSelect}
@@ -561,16 +567,18 @@ export default function IncidentPhotoUpload({
 
           {showAddMoreOptions && (
             <div className="grid gap-2 rounded-md border border-border bg-muted/20 p-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start"
-                disabled={uploadDisabled || anyUploadBusy}
-                onClick={() => triggerNativePicker(cameraRef)}
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                Take Photo
-              </Button>
+              {!HIDE_DIRECT_CAMERA && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  disabled={uploadDisabled || anyUploadBusy}
+                  onClick={() => triggerNativePicker(cameraRef)}
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Take Photo
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"

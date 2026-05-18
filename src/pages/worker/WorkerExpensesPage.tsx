@@ -13,6 +13,9 @@ import { Receipt, Plus, FileUp, Loader2, Paperclip, ArrowLeft } from 'lucide-rea
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { isIOSNative } from '@/lib/platform';
+
+const HIDE_DIRECT_CAMERA = isIOSNative();
 
 const CATEGORIES = [
   'Fuel / Gas / Diesel',
@@ -238,7 +241,7 @@ export default function WorkerExpensesPage() {
                   ref={fileInputRef}
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
-                  capture="environment"
+                  {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })}
                   onChange={e => setSelectedFile(e.target.files?.[0] || null)}
                 />
                 {selectedFile && (

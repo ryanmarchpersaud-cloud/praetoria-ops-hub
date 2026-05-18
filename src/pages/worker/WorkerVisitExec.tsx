@@ -22,6 +22,10 @@ import { sendNotification } from '@/hooks/useNotifications';
 import { PropertyVerificationCard } from '@/components/PropertyVerificationCard';
 import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
 import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog, shouldSkipImagePreview } from '@/lib/iosDebug';
+import { isIOSNative } from '@/lib/platform';
+
+// Hide direct camera capture on native iOS — see VisitPhotoGallery.
+const HIDE_DIRECT_CAMERA = isIOSNative();
 
 // ── Image compression ──
 // Delegates to the iOS-safe downscaler that uses createImageBitmap (off-main-thread,
@@ -713,11 +717,13 @@ export default function WorkerVisitExec() {
               {/* Capture buttons — available before completion */}
               {execState !== 'completed' && photoCount < 10 && (
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => cameraRef.current?.click()}>
-                    <Camera className="h-4 w-4" /> Take Photo
-                  </Button>
+                  {!HIDE_DIRECT_CAMERA && (
+                    <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => cameraRef.current?.click()}>
+                      <Camera className="h-4 w-4" /> Take Photo
+                    </Button>
+                  )}
                   <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => galleryRef.current?.click()}>
-                    <ImagePlus className="h-4 w-4" /> Gallery
+                    <ImagePlus className="h-4 w-4" /> {HIDE_DIRECT_CAMERA ? 'Add Photo' : 'Gallery'}
                   </Button>
                 </div>
               )}
@@ -950,7 +956,7 @@ export default function WorkerVisitExec() {
       </Tabs>
 
       {/* Hidden file inputs */}
-      <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleInput} />
+      <input ref={cameraRef} type="file" accept="image/*" {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })} className="hidden" onChange={handleInput} />
       <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={handleInput} />
     </div>
   );
