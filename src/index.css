@@ -212,9 +212,14 @@
   .worker-portal-shell {
     min-height: 100dvh;
     padding-top: 12px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+    /* Do NOT set overflow-y/overscroll on the shell itself.
+       The shell uses min-height (not a fixed height), so it cannot
+       act as a real scroll container — content overflows it and the
+       document body scrolls instead. On Android WebView, having
+       overflow-y:auto + overscroll-behavior:contain on this
+       pseudo-container intercepts touch events and freezes vertical
+       scrolling on pages like /worker/more. Letting the body scroll
+       naturally fixes Android while iOS continues to work. */
   }
 
   @supports (-webkit-touch-callout: none) {
