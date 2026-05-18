@@ -6,10 +6,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { StatusBadge } from '@/components/StatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUpdateVisit } from '@/hooks/useVisits';
+import { useEmployees } from '@/hooks/useEmployees';
 import { useToast } from '@/hooks/use-toast';
 import {
   CalendarDays, Phone, MapPin, CheckSquare, MoreHorizontal,
-  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User
+  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
