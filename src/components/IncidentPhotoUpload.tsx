@@ -19,6 +19,12 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { downscaleImageIfLarge, iosLog, isIOSWebView, yieldToBrowser } from '@/lib/iosDebug';
+import { isIOSNative } from '@/lib/platform';
+
+// See VisitPhotoGallery: hide the dedicated "Take Photo" shortcut on
+// native iOS to avoid the WKWebView crash observed during Apple review
+// on iPadOS 26.5. Users can still take a photo via the gallery picker.
+const HIDE_DIRECT_CAMERA = isIOSNative();
 
 export type IncidentAttachment = {
   url: string;
