@@ -236,6 +236,17 @@ export default function WorkerVisitExec() {
     if (files.length > 0) void addFiles(files);
   };
 
+  // Native iOS picker — avoids the iPad WKWebView camera crash by going
+  // through the Capacitor Camera plugin (handles popover anchoring).
+  const pickNative = async (source: CameraSource) => {
+    try {
+      const file = await pickNativePhoto(source);
+      if (file) await addFiles([file]);
+    } catch (err: any) {
+      toast({ title: 'Camera error', description: err?.message || 'Could not open camera', variant: 'destructive' });
+    }
+  };
+
   const removeStagedFile = (i: number) => {
     setStagedFiles(prev => {
       URL.revokeObjectURL(prev[i].preview);
