@@ -730,11 +730,11 @@ export default function WorkerVisitExec() {
               {execState !== 'completed' && photoCount < 10 && (
                 <div className="flex gap-2">
                   {!HIDE_DIRECT_CAMERA && (
-                    <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => cameraRef.current?.click()}>
+                    <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => shouldUseNativeCamera() ? pickNative('camera') : cameraRef.current?.click()}>
                       <Camera className="h-4 w-4" /> Take Photo
                     </Button>
                   )}
-                  <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => galleryRef.current?.click()}>
+                  <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => shouldUseNativeCamera() ? pickNative('prompt') : galleryRef.current?.click()}>
                     <ImagePlus className="h-4 w-4" /> {HIDE_DIRECT_CAMERA ? 'Add Photo' : 'Gallery'}
                   </Button>
                 </div>
