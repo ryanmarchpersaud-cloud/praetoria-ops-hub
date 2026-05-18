@@ -1,6 +1,6 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useNavigate } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -332,6 +332,55 @@ function LoginRoute() {
   return <Login />;
 }
 
+function NativeDeepLinkHandler() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const capacitor = (window as unknown as {
+      Capacitor?: { isNativePlatform?: () => boolean; getPlatform?: () => string };
+    }).Capacitor;
+
+    if (!capacitor?.isNativePlatform?.()) return;
+
+    let cancelled = false;
+    let removeListener: (() => void) | undefined;
+
+    const openDeepLink = (incomingUrl: string) => {
+      try {
+        const url = new URL(incomingUrl);
+        const path = `${url.pathname}${url.search}${url.hash}`;
+
+        if (url.pathname === "/reset-password") {
+          navigate(path, { replace: true });
+        }
+      } catch {
+        // Ignore malformed links from the native bridge.
+      }
+    };
+
+    import("@capacitor/app").then(({ App }) => {
+      if (cancelled) return;
+
+      App.getLaunchUrl().then((launch) => {
+        if (!cancelled && launch?.url) openDeepLink(launch.url);
+      });
+
+      App.addListener("appUrlOpen", ({ url }) => openDeepLink(url)).then((listener) => {
+        removeListener = () => listener.remove();
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      removeListener?.();
+    };
+  }, [navigate]);
+
+  return null;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -559,6 +608,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <NativeDeepLinkHandler />
           <ScrollToTop />
           <AppUpdateBanner />
           <AppRoutes />
