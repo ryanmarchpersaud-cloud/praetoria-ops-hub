@@ -7,10 +7,20 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUpdateVisit } from '@/hooks/useVisits';
 import { useEmployees } from '@/hooks/useEmployees';
+import {
+  useVisitCrew,
+  useVisitSubAssignments,
+  useAddVisitCrewMember,
+  useRemoveVisitCrewMember,
+  useAddVisitSubAssignment,
+  useRemoveVisitSubAssignment,
+  useActiveSubcontractors,
+} from '@/hooks/useVisitCrew';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 import {
   CalendarDays, Phone, MapPin, CheckSquare, MoreHorizontal,
-  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check
+  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check, X, Users, HardHat
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
