@@ -47,5 +47,17 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Praetoria Ops Hub uses the camera so field workers, subcontractors, and customers can take before/after job photos, document incidents, damage, and site conditions, and attach evidence to visits and reports.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Praetoria Ops Hub accesses your photo library so you can attach existing photos to visits, incident reports, expenses, and customer requests.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Praetoria Ops Hub may save signed agreements, pay stubs, and invoice receipts to your photo library when you choose to download them.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Praetoria Ops Hub uses the microphone only when recording video for incident or damage reports.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Praetoria Ops Hub uses your location to dispatch nearby jobs, show real-time crew tracking on the route map, and verify visit check-ins at customer properties.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
