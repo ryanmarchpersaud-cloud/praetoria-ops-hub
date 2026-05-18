@@ -513,7 +513,7 @@ export default function IncidentPhotoUpload({
           name="incident-camera-upload"
           type="file"
           accept={GALLERY_ACCEPT}
-          capture="environment"
+          {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })}
           aria-label="Take photo"
           className={NATIVE_PICKER_INPUT_CLASS}
           onChange={handleFileSelect}
