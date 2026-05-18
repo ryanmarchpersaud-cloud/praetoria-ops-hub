@@ -257,11 +257,13 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
               </p>
               {existingCount === 0 && (
                 <div className="flex justify-center gap-2 mt-3">
-                  <Button variant="ghost" size="sm" className="text-xs h-9 gap-1.5" onClick={() => cameraInputRef.current?.click()}>
-                    <Camera className="h-3.5 w-3.5" /> Take photo
-                  </Button>
+                  {!HIDE_DIRECT_CAMERA && (
+                    <Button variant="ghost" size="sm" className="text-xs h-9 gap-1.5" onClick={() => cameraInputRef.current?.click()}>
+                      <Camera className="h-3.5 w-3.5" /> Take photo
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" className="text-xs h-9 gap-1.5" onClick={() => galleryInputRef.current?.click()}>
-                    <ImagePlus className="h-3.5 w-3.5" /> From gallery
+                    <ImagePlus className="h-3.5 w-3.5" /> {HIDE_DIRECT_CAMERA ? 'Add photos' : 'From gallery'}
                   </Button>
                 </div>
               )}
