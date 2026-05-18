@@ -567,16 +567,18 @@ export default function IncidentPhotoUpload({
 
           {showAddMoreOptions && (
             <div className="grid gap-2 rounded-md border border-border bg-muted/20 p-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start"
-                disabled={uploadDisabled || anyUploadBusy}
-                onClick={() => triggerNativePicker(cameraRef)}
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                Take Photo
-              </Button>
+              {!HIDE_DIRECT_CAMERA && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  disabled={uploadDisabled || anyUploadBusy}
+                  onClick={() => triggerNativePicker(cameraRef)}
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Take Photo
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
