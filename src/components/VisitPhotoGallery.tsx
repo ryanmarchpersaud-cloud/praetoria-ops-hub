@@ -372,14 +372,16 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
             {/* Add more button */}
             {stagedFiles.length > 0 && stagedFiles.length < remainingSlots && (
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 h-9 text-xs gap-1.5"
-                  onClick={() => cameraInputRef.current?.click()}
-                >
-                  <Camera className="h-3.5 w-3.5" /> Take more
-                </Button>
+                {!HIDE_DIRECT_CAMERA && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-9 text-xs gap-1.5"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    <Camera className="h-3.5 w-3.5" /> Take more
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
