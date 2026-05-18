@@ -15,8 +15,25 @@ export function useVisits(filters?: { visit_status?: string; visit_type?: string
       const { data, error } = await query;
       if (error) throw error;
 
-      // Enrich with worker names for assigned visits
-      const workerIds = [...new Set((data || []).map((v: any) => v.assigned_worker_id).filter(Boolean))];
+      const visitIds = (data || []).map((v: any) => v.id);
+
+      // Fetch crew members + subcontractor assignments in parallel
+      const [crewRes, subAssignRes] = await Promise.all([
+        visitIds.length
+          ? supabase.from('visit_crew_members').select('visit_id, worker_user_id').in('visit_id', visitIds)
+          : Promise.resolve({ data: [] as any[] }),
+        visitIds.length
+          ? supabase.from('subcontractor_assignments').select('visit_id, subcontractor_id').in('visit_id', visitIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const crewRows = (crewRes as any).data || [];
+      const subAssignRows = (subAssignRes as any).data || [];
+
+      // All worker IDs we need names for (lead + crew)
+      const workerIds = [...new Set([
+        ...(data || []).map((v: any) => v.assigned_worker_id).filter(Boolean),
+        ...crewRows.map((c: any) => c.worker_user_id).filter(Boolean),
+      ])];
       let workerMap: Record<string, string> = {};
       if (workerIds.length > 0) {
         const { data: workers } = await supabase
@@ -27,11 +44,41 @@ export function useVisits(filters?: { visit_status?: string; visit_type?: string
           workerMap = Object.fromEntries(workers.map((w: any) => [w.user_id, w.full_name]));
         }
       }
+
+      const subIds = [...new Set(subAssignRows.map((s: any) => s.subcontractor_id).filter(Boolean))];
+      let subMap: Record<string, string> = {};
+      if (subIds.length > 0) {
+        const { data: subs } = await supabase
+          .from('subcontractors')
+          .select('id, company_name, contact_name')
+          .in('id', subIds);
+        if (subs) {
+          subMap = Object.fromEntries(subs.map((s: any) => [s.id, s.company_name || s.contact_name || 'Subcontractor']));
+        }
+      }
+
+      const crewByVisit: Record<string, string[]> = {};
+      crewRows.forEach((c: any) => {
+        const name = workerMap[c.worker_user_id];
+        if (!name) return;
+        if (!crewByVisit[c.visit_id]) crewByVisit[c.visit_id] = [];
+        crewByVisit[c.visit_id].push(name);
+      });
+      const subsByVisit: Record<string, string[]> = {};
+      subAssignRows.forEach((s: any) => {
+        const name = subMap[s.subcontractor_id];
+        if (!name) return;
+        if (!subsByVisit[s.visit_id]) subsByVisit[s.visit_id] = [];
+        subsByVisit[s.visit_id].push(name);
+      });
+
       return (data || []).map((v: any) => ({
         ...v,
         worker_profiles: v.assigned_worker_id && workerMap[v.assigned_worker_id]
           ? { full_name: workerMap[v.assigned_worker_id] }
           : null,
+        crew_names: crewByVisit[v.id] || [],
+        subcontractor_names: subsByVisit[v.id] || [],
       }));
     },
   });
