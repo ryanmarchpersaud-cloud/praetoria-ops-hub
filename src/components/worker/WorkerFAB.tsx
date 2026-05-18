@@ -277,7 +277,7 @@ export function WorkerFAB() {
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          'fixed bottom-[68px] right-4 z-50 w-14 h-14 rounded-2xl shadow-xl flex items-center justify-center transition-all active:scale-90',
+          'fixed right-4 z-50 w-14 h-14 rounded-2xl shadow-xl flex items-center justify-center transition-all active:scale-90',
           open
             ? 'bg-foreground rotate-180 rounded-full'
             : 'bg-primary'
