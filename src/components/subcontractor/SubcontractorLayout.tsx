@@ -8,16 +8,15 @@ export function SubcontractorLayout({ children }: { children: ReactNode }) {
   return (
     <div
       data-portal-scroll-shell
-      className="worker-portal-shell bg-background pb-20 safe-area-x"
+      className="worker-portal-shell bg-background safe-area-x"
       style={{
         minHeight: '100dvh',
         boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 180px)',
       }}
     >
       <AnnouncementBanner />
-      <div className="w-full max-w-lg mx-auto flex-1 min-h-0">
+      <div className="w-full max-w-lg mx-auto">
         {children}
         <ServiceLinksSection variant="compact" />
       </div>
