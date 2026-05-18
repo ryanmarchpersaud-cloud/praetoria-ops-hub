@@ -77,12 +77,22 @@ export function DraggableItem({ id, type, data, isDragDisabled, onVisitClick }: 
         <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate">{displayTitle}</p>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[10px] text-muted-foreground truncate">
             {data.visit_type}
             {data.arrival_time && ` · ${format(parseISO(data.arrival_time), 'h:mm a')}`}
             {data.properties?.property_name && ` · ${data.properties.property_name}`}
-            {data.worker_profiles?.full_name && ` · 👷 ${data.worker_profiles.full_name}`}
           </p>
+          {(data.worker_profiles?.full_name || (data.crew_names?.length ?? 0) > 0 || (data.subcontractor_names?.length ?? 0) > 0) && (
+            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+              {data.worker_profiles?.full_name && <span>👷 {data.worker_profiles.full_name}</span>}
+              {(data.crew_names?.length ?? 0) > 0 && (
+                <span>{data.worker_profiles?.full_name ? ', ' : '👷 '}{data.crew_names.join(', ')}</span>
+              )}
+              {(data.subcontractor_names?.length ?? 0) > 0 && (
+                <span className="ml-1">🤝 {data.subcontractor_names.join(', ')}</span>
+              )}
+            </p>
+          )}
         </div>
         <StatusBadge status={data.visit_status} showIcon={false} />
       </button>
