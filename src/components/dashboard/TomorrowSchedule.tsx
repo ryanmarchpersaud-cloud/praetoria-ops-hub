@@ -17,7 +17,53 @@ function useTomorrowVisits() {
         .eq('service_date', tomorrow)
         .order('scheduled_start_time', { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      const visits = data ?? [];
+      const visitIds = visits.map((v: any) => v.id);
+      if (visitIds.length === 0) return visits;
+
+      const [crewRes, subRes] = await Promise.all([
+        supabase.from('visit_crew_members').select('visit_id, worker_user_id').in('visit_id', visitIds),
+        supabase.from('subcontractor_assignments').select('visit_id, subcontractor_id').in('visit_id', visitIds),
+      ]);
+      const crewRows = crewRes.data || [];
+      const subRows = subRes.data || [];
+
+      const workerIds = [...new Set([
+        ...visits.map((v: any) => v.assigned_worker_id).filter(Boolean),
+        ...crewRows.map((c: any) => c.worker_user_id).filter(Boolean),
+      ])] as string[];
+      const subIds = [...new Set(subRows.map((s: any) => s.subcontractor_id).filter(Boolean))] as string[];
+
+      const [workersRes, subsRes] = await Promise.all([
+        workerIds.length
+          ? supabase.from('worker_profiles').select('user_id, full_name').in('user_id', workerIds)
+          : Promise.resolve({ data: [] as any[] }),
+        subIds.length
+          ? supabase.from('subcontractors').select('id, company_name, contact_name').in('id', subIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const workerMap: Record<string, string> = Object.fromEntries(((workersRes as any).data || []).map((w: any) => [w.user_id, w.full_name]));
+      const subMap: Record<string, string> = Object.fromEntries(((subsRes as any).data || []).map((s: any) => [s.id, s.company_name || s.contact_name || 'Subcontractor']));
+
+      const crewByVisit: Record<string, string[]> = {};
+      crewRows.forEach((c: any) => {
+        const n = workerMap[c.worker_user_id];
+        if (!n) return;
+        (crewByVisit[c.visit_id] = crewByVisit[c.visit_id] || []).push(n);
+      });
+      const subsByVisit: Record<string, string[]> = {};
+      subRows.forEach((s: any) => {
+        const n = subMap[s.subcontractor_id];
+        if (!n) return;
+        (subsByVisit[s.visit_id] = subsByVisit[s.visit_id] || []).push(n);
+      });
+
+      return visits.map((v: any) => ({
+        ...v,
+        lead_name: v.assigned_worker_id ? workerMap[v.assigned_worker_id] : null,
+        crew_names: crewByVisit[v.id] || [],
+        subcontractor_names: subsByVisit[v.id] || [],
+      }));
     },
   });
 }
