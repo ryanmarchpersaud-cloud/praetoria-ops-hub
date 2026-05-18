@@ -23,6 +23,7 @@ import { PropertyVerificationCard } from '@/components/PropertyVerificationCard'
 import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
 import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog, shouldSkipImagePreview } from '@/lib/iosDebug';
 import { isIOSNative } from '@/lib/platform';
+import { shouldUseNativeCamera, pickNativePhoto, type CameraSource } from '@/lib/nativeCamera';
 
 // Hide direct camera capture on native iOS — see VisitPhotoGallery.
 const HIDE_DIRECT_CAMERA = isIOSNative();
