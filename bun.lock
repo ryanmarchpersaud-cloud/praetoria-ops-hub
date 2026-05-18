@@ -42,7 +42,6 @@
         "@radix-ui/react-tooltip": "^1.2.7",
         "@supabase/supabase-js": "^2.99.2",
         "@tanstack/react-query": "^5.83.0",
-        "@types/leaflet": "^1.9.21",
         "@types/leaflet.markercluster": "^1.5.6",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -50,11 +49,13 @@
         "date-fns": "^3.6.0",
         "embla-carousel-react": "^8.6.0",
         "framer-motion": "^12.37.0",
+        "fs-extra": "^11.2.0",
         "input-otp": "^1.4.2",
         "leaflet": "^1.9.4",
         "leaflet.markercluster": "^1.5.3",
         "lucide-react": "^0.462.0",
         "next-themes": "^0.3.0",
+        "prompts": "^2.4.2",
         "react": "^18.3.1",
         "react-day-picker": "^8.10.1",
         "react-dom": "^18.3.1",
@@ -67,8 +68,9 @@
         "sonner": "^1.7.4",
         "tailwind-merge": "^2.6.0",
         "tailwindcss-animate": "^1.0.7",
-        "twilio-video": "^2.28.1",
+        "twilio-video": "^2.35.0",
         "vaul": "^0.9.9",
+        "xmlbuilder": "^15.1.1",
         "zod": "^3.25.76",
       },
       "devDependencies": {
@@ -78,6 +80,7 @@
         "@tailwindcss/typography": "^0.5.16",
         "@testing-library/jest-dom": "^6.6.0",
         "@testing-library/react": "^16.0.0",
+        "@types/leaflet": "^1.9.21",
         "@types/node": "^22.16.5",
         "@types/react": "^18.3.23",
         "@types/react-dom": "^18.3.7",
@@ -93,6 +96,7 @@
         "postcss": "^8.5.6",
         "tailwindcss": "^3.4.17",
         "tinyglobby": "^0.2.16",
+        "ts-interface-checker": "^1.0.2",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.38.0",
         "vite": "^5.4.19",
@@ -1453,11 +1457,11 @@
 
     "ts-api-utils": ["ts-api-utils@2.4.0", "", { "peerDependencies": { "typescript": ">=4.8.4" } }, "sha512-3TaVTaAv2gTiMB35i3FiGJaRfwb3Pyn/j3m/bfAvGe8FB7CF6u+LMYqYlDh7reQf7UNvoTvdfAqHGmPGOSsPmA=="],
 
-    "ts-interface-checker": ["ts-interface-checker@0.1.13", "", {}, "sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA=="],
+    "ts-interface-checker": ["ts-interface-checker@1.0.2", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/ts-interface-checker/-/ts-interface-checker-1.0.2.tgz", {}, "sha512-4IKKvhZRXhvtYF/mtu+OCfBqJKV6LczUq4kQYcpT+iSB7++R9+giWnp2ecwWMIcnG16btVOkXFnoxLSYMN1Q1g=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
-    "twilio-video": ["twilio-video@2.34.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/twilio-video/-/twilio-video-2.34.0.tgz", { "dependencies": { "events": "^3.3.0", "util": "^0.12.4", "ws": "^8.18.3" } }, "sha512-tm9UlN2OhCKVyKvyP0VF5cMJ4ONj1t3ppJII9AHHCnp2bJTKJZSMA0vwWy+CxldittZjMu3HcYJ7awFH62XdoA=="],
+    "twilio-video": ["twilio-video@2.35.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/twilio-video/-/twilio-video-2.35.0.tgz", { "dependencies": { "events": "^3.3.0", "tslib": "^2.8.1", "util": "^0.12.4", "ws": "^8.18.3" } }, "sha512-aOPmfHyNF9cc46s2EcJ4j7DVB0GEizCLQtmXPxJxdAEsJ1TpkuDUiwwhUCsIWrIH30LVBk3gN2jwevEV63Z6Yg=="],
 
     "type-check": ["type-check@0.4.0", "", { "dependencies": { "prelude-ls": "^1.2.1" } }, "sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew=="],
 
@@ -1636,6 +1640,8 @@
     "sucrase/commander": ["commander@4.1.1", "", {}, "sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA=="],
 
     "sucrase/tinyglobby": ["tinyglobby@0.2.15", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.3" } }, "sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ=="],
+
+    "sucrase/ts-interface-checker": ["ts-interface-checker@0.1.13", "", {}, "sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA=="],
 
     "tailwindcss/postcss-selector-parser": ["postcss-selector-parser@6.1.2", "", { "dependencies": { "cssesc": "^3.0.0", "util-deprecate": "^1.0.2" } }, "sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg=="],
 
