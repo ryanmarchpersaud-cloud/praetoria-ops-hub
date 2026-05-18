@@ -111,8 +111,19 @@ export function TomorrowSchedule() {
                         {v.service_category ?? 'Service'}
                         {v.properties?.city ? ` · ${v.properties.city}` : ''}
                       </p>
+                      {(v.lead_name || v.crew_names?.length > 0 || v.subcontractor_names?.length > 0) && (
+                        <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                          {v.lead_name && <span>👷 {v.lead_name}</span>}
+                          {v.crew_names?.length > 0 && (
+                            <span>{v.lead_name ? ', ' : '👷 '}{v.crew_names.join(', ')}</span>
+                          )}
+                          {v.subcontractor_names?.length > 0 && (
+                            <span className="ml-1">🤝 {v.subcontractor_names.join(', ')}</span>
+                          )}
+                        </p>
+                      )}
                     </div>
-                    {!v.assigned_worker_id && (
+                    {!v.assigned_worker_id && v.crew_names?.length === 0 && v.subcontractor_names?.length === 0 && (
                       <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 shrink-0">
                         Unassigned
                       </span>
