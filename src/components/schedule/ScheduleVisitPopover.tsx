@@ -33,6 +33,13 @@ interface ScheduleVisitPopoverProps {
 export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisitPopoverProps) {
   const updateVisit = useUpdateVisit();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useActiveSubcontractors();
+  const { data: crew = [] } = useVisitCrew(visit?.id);
+  const { data: subAssignments = [] } = useVisitSubAssignments(visit?.id);
+  const addCrew = useAddVisitCrewMember();
+  const removeCrew = useRemoveVisitCrewMember();
+  const addSub = useAddVisitSubAssignment();
+  const removeSub = useRemoveVisitSubAssignment();
   const { toast } = useToast();
   const [tab, setTab] = useState('info');
 
@@ -40,16 +47,48 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
 
   const assignedWorker = (employees as any[]).find(e => e.user_id === visit.assigned_worker_id);
   const assignedName = assignedWorker?.full_name || visit.worker_profiles?.full_name || null;
+  const crewIds = new Set((crew as any[]).map((c: any) => c.worker_user_id));
+  const subIds = new Set((subAssignments as any[]).map((s: any) => s.subcontractor_id));
 
-  const handleAssign = async (workerId: string | null) => {
+  const handleSetLead = async (workerId: string | null) => {
     try {
+      if (workerId && crewIds.has(workerId)) {
+        await removeCrew.mutateAsync({ visitId: visit.id, workerUserId: workerId });
+      }
       await updateVisit.mutateAsync({ id: visit.id, assigned_worker_id: workerId });
       toast({
-        title: workerId ? 'Worker assigned' : 'Worker unassigned',
+        title: workerId ? 'Lead worker set' : 'Lead worker cleared',
         description: workerId
-          ? `${(employees as any[]).find(e => e.user_id === workerId)?.full_name || 'Worker'} is now on this visit.`
+          ? `${(employees as any[]).find(e => e.user_id === workerId)?.full_name || 'Worker'} is now the lead on this visit.`
           : undefined,
       });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleToggleCrew = async (workerId: string) => {
+    try {
+      if (crewIds.has(workerId)) {
+        await removeCrew.mutateAsync({ visitId: visit.id, workerUserId: workerId });
+      } else {
+        await addCrew.mutateAsync({ visitId: visit.id, workerUserId: workerId });
+        toast({ title: 'Added to crew', description: (employees as any[]).find(e => e.user_id === workerId)?.full_name });
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleToggleSub = async (subId: string) => {
+    try {
+      if (subIds.has(subId)) {
+        await removeSub.mutateAsync({ visitId: visit.id, subcontractorId: subId });
+      } else {
+        await addSub.mutateAsync({ visitId: visit.id, subcontractorId: subId, jobId: visit.job_id ?? null });
+        const sub = (subcontractors as any[]).find(s => s.id === subId);
+        toast({ title: 'Subcontractor added', description: sub?.company_name || sub?.contact_name });
+      }
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
