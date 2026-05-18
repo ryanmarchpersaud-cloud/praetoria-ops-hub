@@ -6,12 +6,12 @@ import { ServiceLinksSection } from '@/components/ServiceLinksSection';
 import { isAndroidMobile } from '@/lib/platform';
 
 export function SubcontractorLayout({ children }: { children: ReactNode }) {
-  const androidNativeScroll = isAndroidMobile();
+  const androidMobileScroll = isAndroidMobile();
 
   return (
     <div
       data-portal-scroll-shell
-      className={`worker-portal-shell bg-background safe-area-x${androidNativeScroll ? ' native-android-scroll' : ''}`}
+      className={`worker-portal-shell bg-background safe-area-x${androidMobileScroll ? ' android-mobile-scroll' : ''}`}
       style={{
         minHeight: '100dvh',
         boxSizing: 'border-box',
