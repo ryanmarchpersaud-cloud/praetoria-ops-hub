@@ -23,6 +23,7 @@ import { PropertyVerificationCard } from '@/components/PropertyVerificationCard'
 import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
 import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog, shouldSkipImagePreview } from '@/lib/iosDebug';
 import { isIOSNative } from '@/lib/platform';
+import { shouldUseNativeCamera, pickNativePhoto, type CameraSource } from '@/lib/nativeCamera';
 
 // Hide direct camera capture on native iOS — see VisitPhotoGallery.
 const HIDE_DIRECT_CAMERA = isIOSNative();
@@ -233,6 +234,17 @@ export default function WorkerVisitExec() {
     const files = Array.from(e.target.files || []);
     e.target.value = '';
     if (files.length > 0) void addFiles(files);
+  };
+
+  // Native iOS picker — avoids the iPad WKWebView camera crash by going
+  // through the Capacitor Camera plugin (handles popover anchoring).
+  const pickNative = async (source: CameraSource) => {
+    try {
+      const file = await pickNativePhoto(source);
+      if (file) await addFiles([file]);
+    } catch (err: any) {
+      toast({ title: 'Camera error', description: err?.message || 'Could not open camera', variant: 'destructive' });
+    }
   };
 
   const removeStagedFile = (i: number) => {
@@ -718,11 +730,11 @@ export default function WorkerVisitExec() {
               {execState !== 'completed' && photoCount < 10 && (
                 <div className="flex gap-2">
                   {!HIDE_DIRECT_CAMERA && (
-                    <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => cameraRef.current?.click()}>
+                    <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => shouldUseNativeCamera() ? pickNative('camera') : cameraRef.current?.click()}>
                       <Camera className="h-4 w-4" /> Take Photo
                     </Button>
                   )}
-                  <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => galleryRef.current?.click()}>
+                  <Button variant="outline" className="flex-1 h-12 text-xs gap-1.5" onClick={() => shouldUseNativeCamera() ? pickNative('prompt') : galleryRef.current?.click()}>
                     <ImagePlus className="h-4 w-4" /> {HIDE_DIRECT_CAMERA ? 'Add Photo' : 'Gallery'}
                   </Button>
                 </div>
