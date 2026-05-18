@@ -200,15 +200,17 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
             </CardTitle>
             {remainingSlots > 0 && (
               <div className="flex gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 px-3 text-xs gap-1.5"
-                  onClick={() => cameraInputRef.current?.click()}
-                >
-                  <Camera className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Camera</span>
-                </Button>
+                {!HIDE_DIRECT_CAMERA && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 text-xs gap-1.5"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Camera</span>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -216,7 +218,7 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
                   onClick={() => galleryInputRef.current?.click()}
                 >
                   <ImagePlus className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Gallery</span>
+                  <span className="hidden sm:inline">{HIDE_DIRECT_CAMERA ? 'Add Photos' : 'Gallery'}</span>
                 </Button>
               </div>
             )}
