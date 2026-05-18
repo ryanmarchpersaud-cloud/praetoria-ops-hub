@@ -26,3 +26,19 @@ export function isIOSNative(): boolean {
     return false;
   }
 }
+
+export function isAndroidNative(): boolean {
+  if (!isNativeApp()) return false;
+  try {
+    const w = window as unknown as { Capacitor?: { getPlatform?: () => string } };
+    return w.Capacitor?.getPlatform?.() === 'android';
+  } catch {
+    return false;
+  }
+}
+
+export function isAndroidMobile(): boolean {
+  if (isAndroidNative()) return true;
+  if (typeof navigator === 'undefined') return false;
+  return /Android/i.test(navigator.userAgent || '');
+}

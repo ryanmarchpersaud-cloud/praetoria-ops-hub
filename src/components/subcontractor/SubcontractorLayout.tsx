@@ -3,12 +3,15 @@ import { SubcontractorBottomNav } from './SubcontractorBottomNav';
 import { SubcontractorFAB } from './SubcontractorFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { ServiceLinksSection } from '@/components/ServiceLinksSection';
+import { isAndroidMobile } from '@/lib/platform';
 
 export function SubcontractorLayout({ children }: { children: ReactNode }) {
+  const androidMobileScroll = isAndroidMobile();
+
   return (
     <div
       data-portal-scroll-shell
-      className="worker-portal-shell bg-background safe-area-x"
+      className={`worker-portal-shell bg-background safe-area-x${androidMobileScroll ? ' android-mobile-scroll' : ''}`}
       style={{
         minHeight: '100dvh',
         boxSizing: 'border-box',
