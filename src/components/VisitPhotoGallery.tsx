@@ -292,12 +292,15 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
         </CardContent>
       </Card>
 
-      {/* Hidden file inputs — camera vs gallery */}
+      {/* Hidden file inputs — camera vs gallery. On native iOS we omit
+          the `capture` attribute so iOS shows its standard action sheet
+          (Photo Library / Take Photo / Choose Files), which avoids the
+          direct UIImagePickerController crash observed in WKWebView. */}
       <input
         ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
+        {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })}
         className="hidden"
         onChange={handleInputChange}
       />
