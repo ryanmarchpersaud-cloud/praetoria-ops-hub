@@ -40,6 +40,8 @@ export default function ResetPassword() {
     (async () => {
       const hash = window.location.hash || '';
       const search = window.location.search || '';
+      const searchParams = new URLSearchParams(search);
+      const code = searchParams.get('code');
       const hasRecoveryHash = hash.includes('type=recovery') || hash.includes('access_token');
       const hasErrorInUrl =
         hash.includes('error=') || hash.includes('error_code=') ||
@@ -48,6 +50,21 @@ export default function ResetPassword() {
       if (hasErrorInUrl) {
         // Supabase returned an error in the URL fragment (expired/used token).
         if (mounted) setStatus('invalid_link');
+        return;
+      }
+
+      // PKCE flow: Supabase redirects with ?code=... — exchange it for a session.
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!mounted) return;
+        if (error || !data?.session) {
+          setStatus('invalid_link');
+          return;
+        }
+        setRecoveryEmail(data.session.user?.email ?? '');
+        setStatus('ready');
+        // Clean the code out of the URL so a refresh doesn't retry it.
+        window.history.replaceState({}, '', window.location.pathname);
         return;
       }
 
