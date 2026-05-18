@@ -956,7 +956,7 @@ export default function WorkerVisitExec() {
       </Tabs>
 
       {/* Hidden file inputs */}
-      <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleInput} />
+      <input ref={cameraRef} type="file" accept="image/*" {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })} className="hidden" onChange={handleInput} />
       <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={handleInput} />
     </div>
   );
