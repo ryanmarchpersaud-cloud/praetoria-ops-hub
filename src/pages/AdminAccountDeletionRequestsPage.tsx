@@ -25,17 +25,21 @@ export default function AdminAccountDeletionRequestsPage() {
 
   const markProcessed = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('account_deletion_requests')
-        .update({ status: 'processed', processed_at: new Date().toISOString() })
-        .eq('id', id);
+      const { data, error } = await supabase.functions.invoke('process-account-deletion', {
+        body: { request_id: id },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
     },
-    onSuccess: () => {
-      toast({ title: 'Marked processed' });
+    onSuccess: (data: any) => {
+      toast({
+        title: 'Account deleted',
+        description: data?.email ? `Removed ${data.email} from authentication.` : 'User removed.',
+      });
       qc.invalidateQueries({ queryKey: ['account_deletion_requests_admin'] });
     },
-    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: any) => toast({ title: 'Delete failed', description: e.message, variant: 'destructive' }),
   });
 
   return (
@@ -92,10 +96,16 @@ export default function AdminAccountDeletionRequestsPage() {
                 {r.status === 'pending' && (
                   <Button
                     size="sm"
-                    onClick={() => markProcessed.mutate(r.id)}
+                    variant="destructive"
+                    onClick={() => {
+                      if (confirm(`Permanently delete ${r.email || r.user_id}? This removes their login and cannot be undone.`)) {
+                        markProcessed.mutate(r.id);
+                      }
+                    }}
                     disabled={markProcessed.isPending}
                   >
-                    <CheckCircle2 className="h-4 w-4 mr-2" /> Mark Processed
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    {markProcessed.isPending ? 'Deleting…' : 'Delete Account & Mark Processed'}
                   </Button>
                 )}
               </CardContent>
