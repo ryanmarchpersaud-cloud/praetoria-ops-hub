@@ -18,6 +18,10 @@ import {
   Home, StickyNote, Info, Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isIOSNative } from '@/lib/platform';
+
+// Hide direct camera capture on native iOS — see VisitPhotoGallery.
+const HIDE_DIRECT_CAMERA = isIOSNative();
 
 // ── Image compression ──
 async function compressImage(file: File, maxWidth = 1920, quality = 0.82): Promise<File> {
