@@ -1,20 +1,24 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarClock, ChevronRight } from 'lucide-react';
+import { CalendarClock, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { format, addDays } from 'date-fns';
+import { format, addDays, isToday, isTomorrow } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-function useTomorrowVisits() {
-  const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
+function useVisitsForDate(dateKey: string) {
   return useQuery({
-    queryKey: ['dashboard_tomorrow_visits', tomorrow],
+    queryKey: ['dashboard_visits_for_date', dateKey],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('visits')
         .select('id, visit_number, scheduled_start_time, service_category, visit_status, assigned_worker_id, jobs(job_title), customers(first_name, last_name, company_name), properties(property_name, city)')
-        .eq('service_date', tomorrow)
+        .eq('service_date', dateKey)
         .order('scheduled_start_time', { ascending: true });
       if (error) throw error;
       const visits = data ?? [];
@@ -69,29 +73,70 @@ function useTomorrowVisits() {
 }
 
 export function TomorrowSchedule() {
-  const { data: visits = [], isLoading } = useTomorrowVisits();
-  const tomorrow = addDays(new Date(), 1);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => addDays(new Date(), 1));
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const { data: visits = [], isLoading } = useVisitsForDate(dateKey);
+
+  const label = isToday(selectedDate)
+    ? `Today · ${format(selectedDate, 'EEE MMM d')}`
+    : isTomorrow(selectedDate)
+      ? `Tomorrow · ${format(selectedDate, 'EEE MMM d')}`
+      : format(selectedDate, 'EEE MMM d');
+
+  const emptyLabel = isToday(selectedDate)
+    ? 'Nothing scheduled for today'
+    : isTomorrow(selectedDate)
+      ? 'Nothing scheduled for tomorrow'
+      : `Nothing scheduled for ${format(selectedDate, 'MMM d')}`;
 
   return (
     <Card>
       <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base md:text-lg font-extrabold tracking-tight flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-50 dark:bg-cyan-950/30">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base md:text-lg font-extrabold tracking-tight flex items-center gap-2 min-w-0">
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-50 dark:bg-cyan-950/30 shrink-0">
               <CalendarClock className="h-4 w-4 text-cyan-600" />
             </span>
-            Tomorrow · {format(tomorrow, 'EEE MMM d')}
+            <span className="truncate">{label}</span>
           </CardTitle>
-          <Link to="/visits" className="text-[11px] md:text-xs font-semibold text-primary flex items-center gap-0.5 hover:underline">
-            View <ChevronRight className="w-3 h-3" />
-          </Link>
+          <div className="flex items-center gap-1 shrink-0">
+            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-7 px-2 text-[11px] gap-1">
+                  <CalendarIcon className="w-3 h-3" /> Change
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(d) => {
+                    if (d) {
+                      setSelectedDate(d);
+                      setPickerOpen(false);
+                    }
+                  }}
+                  initialFocus
+                  className={cn('p-3 pointer-events-auto')}
+                />
+                <div className="flex items-center justify-between gap-1 p-2 border-t">
+                  <Button variant="ghost" size="sm" className="h-7 text-[11px] flex-1" onClick={() => { setSelectedDate(new Date()); setPickerOpen(false); }}>Today</Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-[11px] flex-1" onClick={() => { setSelectedDate(addDays(new Date(), 1)); setPickerOpen(false); }}>Tomorrow</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <Link to="/visits" className="text-[11px] md:text-xs font-semibold text-primary flex items-center gap-0.5 hover:underline">
+              View <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-3 md:px-6 pb-3 md:pb-6 space-y-2.5">
         {isLoading ? (
           <Skeleton className="h-24 w-full" />
         ) : visits.length === 0 ? (
-          <p className="text-[11px] text-muted-foreground py-2 text-center">Nothing scheduled for tomorrow</p>
+          <p className="text-[11px] text-muted-foreground py-2 text-center">{emptyLabel}</p>
         ) : (
           <div className="space-y-1">
             <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">
