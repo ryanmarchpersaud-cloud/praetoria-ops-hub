@@ -518,13 +518,15 @@ export default function SubcontractorVisitExec() {
               <CardContent className="p-3 space-y-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Photos ({photoCount})</p>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => cameraRef.current?.click()}>
-                    <Camera className="h-4 w-4" /> Camera
-                  </Button>
+                  {!HIDE_DIRECT_CAMERA && (
+                    <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => cameraRef.current?.click()}>
+                      <Camera className="h-4 w-4" /> Camera
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={() => galleryRef.current?.click()}>
-                    <ImagePlus className="h-4 w-4" /> Gallery
+                    <ImagePlus className="h-4 w-4" /> {HIDE_DIRECT_CAMERA ? 'Add Photo' : 'Gallery'}
                   </Button>
-                  <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleInput} />
+                  <input ref={cameraRef} type="file" accept="image/*" {...(HIDE_DIRECT_CAMERA ? {} : { capture: 'environment' as any })} className="hidden" onChange={handleInput} />
                   <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden" onChange={handleInput} />
                 </div>
 
