@@ -154,19 +154,6 @@ export default function WorkerVisitExec() {
   const customer = (visit as any).customers;
   const job = (visit as any).jobs;
 
-  // Guard: worker can only access visits assigned to them
-  const assignedTo = job?.assigned_to;
-  if (assignedTo && user?.id && assignedTo !== user.id) {
-    return (
-      <div className="p-6 text-center space-y-2">
-        <AlertTriangle className="h-8 w-8 text-destructive mx-auto" />
-        <p className="text-sm font-medium text-foreground">Access Denied</p>
-        <p className="text-xs text-muted-foreground">This visit is not assigned to you.</p>
-        <Button variant="outline" size="sm" onClick={() => navigate('/worker/schedule')}>Back to Schedule</Button>
-      </div>
-    );
-  }
-
   const execState = mapStatusToExec(visit.visit_status);
   const photoCount = (photos as any[]).length + stagedFiles.length;
   const canComplete = photoCount >= MIN_PHOTOS_FOR_COMPLETION;
@@ -315,7 +302,20 @@ export default function WorkerVisitExec() {
         updates.snow_depth = snowDepth || null;
       }
 
-      await updateVisit.mutateAsync(updates);
+      if (nextExec === 'completed') {
+        const { data, error } = await (supabase as any).rpc('complete_assigned_visit', {
+          _visit_id: id!,
+          _crew_notes: crewNotes || null,
+          _service_summary: serviceSummary || null,
+          _customer_visible_notes: customerNotes || null,
+          _weather_notes: weatherNotes || null,
+          _snow_depth: snowDepth || null,
+        });
+        if (error) throw error;
+        await updateVisit.mutateAsync({ id: data.id, visit_status: data.visit_status } as any);
+      } else {
+        await updateVisit.mutateAsync(updates);
+      }
 
       if (nextExec === 'completed') {
         await supabase.from('activities').insert({
@@ -368,10 +368,6 @@ export default function WorkerVisitExec() {
             },
           });
         } catch { /* non-critical */ }
-
-        if (isOneTime && job) {
-          await supabase.from('jobs').update({ status: 'Completed' }).eq('id', job.id);
-        }
 
         // Check if all today's visits are now complete
         let allDoneMessage = '';
