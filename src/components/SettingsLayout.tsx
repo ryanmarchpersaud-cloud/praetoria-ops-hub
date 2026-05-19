@@ -98,7 +98,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile/tablet horizontal tab bar */}
       <div className="md:hidden flex gap-1 overflow-x-auto border-b border-border pb-2">
         {allItems.map((item) => {
-          const isDanger = item.url === '/settings/delete-account';
+          const isDanger = item.url === '/settings/delete-account' || item.url === '/admin/account-deletion-requests';
           return (
             <NavLink
               key={item.url}
@@ -126,7 +126,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
                 </p>
                 <nav className="space-y-0.5">
                   {group.items.map((item) => {
-                    const isDanger = item.url === '/settings/delete-account';
+                    const isDanger = item.url === '/settings/delete-account' || item.url === '/admin/account-deletion-requests';
                     return (
                       <NavLink
                         key={item.url}
