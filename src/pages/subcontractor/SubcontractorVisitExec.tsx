@@ -237,8 +237,20 @@ export default function SubcontractorVisitExec() {
         updates.service_summary = serviceSummary || null;
       }
 
-      const { error } = await supabase.from('visits').update(updates).eq('id', id!);
-      if (error) throw error;
+      if (nextExec === 'completed') {
+        const { error } = await (supabase as any).rpc('complete_assigned_visit', {
+          _visit_id: id!,
+          _crew_notes: crewNotes || null,
+          _service_summary: serviceSummary || null,
+          _customer_visible_notes: null,
+          _weather_notes: null,
+          _snow_depth: null,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('visits').update(updates).eq('id', id!);
+        if (error) throw error;
+      }
 
       if (nextExec === 'completed') {
         await supabase.from('activities').insert({
@@ -268,10 +280,6 @@ export default function SubcontractorVisitExec() {
             .update({ assignment_status: 'completed' })
             .eq('visit_id', id!)
             .eq('subcontractor_id', subProfile.data.id);
-        }
-
-        if (isOneTime && job) {
-          await supabase.from('jobs').update({ status: 'Completed' }).eq('id', job.id);
         }
 
         toast({

@@ -8502,6 +8502,59 @@ export type Database = {
         }[]
       }
       can_submit_field_lead: { Args: { _user_id: string }; Returns: boolean }
+      complete_assigned_visit: {
+        Args: {
+          _crew_notes?: string
+          _customer_visible_notes?: string
+          _service_summary?: string
+          _snow_depth?: string
+          _visit_id: string
+          _weather_notes?: string
+        }
+        Returns: {
+          access_notes: string | null
+          arrival_time: string | null
+          assigned_worker_id: string | null
+          billing_status: string | null
+          completion_time: string | null
+          created_at: string
+          crew_notes: string | null
+          customer_id: string | null
+          customer_visible_notes: string | null
+          estimated_duration_minutes: number | null
+          id: string
+          is_recurring: boolean | null
+          job_id: string | null
+          priority: string | null
+          property_id: string | null
+          quote_id: string | null
+          recurrence_end_date: string | null
+          recurrence_frequency: string | null
+          recurrence_parent_id: string | null
+          request_id: string | null
+          requires_completion_notes: boolean | null
+          requires_photo_proof: boolean | null
+          safety_notes: string | null
+          scheduled_end_time: string | null
+          scheduled_start_time: string | null
+          service_category: string | null
+          service_date: string
+          service_summary: string | null
+          site_instructions: string | null
+          snow_depth: string | null
+          updated_at: string
+          visit_number: string
+          visit_status: Database["public"]["Enums"]["visit_status"]
+          visit_type: Database["public"]["Enums"]["visit_type"]
+          weather_notes: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "visits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       customer_has_active_warnings: {
         Args: { _customer_id: string }
         Returns: boolean
