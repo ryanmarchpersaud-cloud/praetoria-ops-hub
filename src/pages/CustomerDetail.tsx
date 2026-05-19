@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { CustomerWarningsEditor } from '@/components/CustomerWarningsEditor';
 import { CustomerWorkOverview } from '@/components/customer/CustomerWorkOverview';
+import { CustomerServiceHistory } from '@/components/customer/CustomerServiceHistory';
 import { CustomerCommunicationsCard } from '@/components/customer/CustomerCommunicationsCard';
 import { CustomerDocumentsCard } from '@/components/customer/CustomerDocumentsCard';
 import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedger';
@@ -600,6 +601,9 @@ export default function CustomerDetail() {
 
           {/* Work Overview */}
           {id && <CustomerWorkOverview customerId={id} />}
+
+          {/* Service History — every past & future visit, photos, notes */}
+          {id && <CustomerServiceHistory customerId={id} />}
 
           {/* Billing Ledger */}
           {id && <CustomerBillingLedger customerId={id} />}
