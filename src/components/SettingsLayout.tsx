@@ -126,7 +126,7 @@ export function SettingsLayout({ children }: { children: React.ReactNode }) {
                 </p>
                 <nav className="space-y-0.5">
                   {group.items.map((item) => {
-                    const isDanger = item.url === '/settings/delete-account';
+                    const isDanger = item.url === '/settings/delete-account' || item.url === '/admin/account-deletion-requests';
                     return (
                       <NavLink
                         key={item.url}
