@@ -25,9 +25,8 @@ export default function WorkerEmergencySafetyPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from('visits')
-        .select('id, property_id, properties(id, property_name, address_line_1, city, high_risk_flag, caution_notes, muster_point_name, muster_point_description, muster_point_photo_url, muster_point_map_notes, emergency_exit_notes, first_aid_kit_location, fire_extinguisher_location, site_emergency_notes), customers(phone), jobs!inner(assigned_to)')
+        .select('id, property_id, properties(id, property_name, address_line_1, city, high_risk_flag, caution_notes, muster_point_name, muster_point_description, muster_point_photo_url, muster_point_map_notes, emergency_exit_notes, first_aid_kit_location, fire_extinguisher_location, site_emergency_notes), customers(phone), jobs(assigned_to)')
         .eq('service_date', todayStr)
-        .eq('jobs.assigned_to', user!.id)
         .in('visit_status', ['In Progress', 'En Route', 'Scheduled'])
         .order('arrival_time', { ascending: true })
         .limit(1)
