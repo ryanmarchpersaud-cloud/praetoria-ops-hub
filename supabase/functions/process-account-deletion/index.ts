@@ -58,6 +58,37 @@ Deno.serve(async (req) => {
     await admin.from('worker_profiles').update({ user_id: null }).eq('user_id', targetUserId);
     await admin.from('subcontractors').update({ user_id: null }).eq('user_id', targetUserId);
 
+    // Send confirmation email BEFORE deleting the auth user (so we still have the email).
+    // Fire-and-forget — never block deletion if email fails.
+    if (reqRow.email) {
+      try {
+        await admin.functions.invoke('send-email', {
+          body: {
+            action: 'ops_notification',
+            subject: 'Your Praetoria Group account has been deleted',
+            body_html: `
+              <div style="font-family: Arial, sans-serif; color: #0F172A; max-width: 560px;">
+                <h2 style="color:#0F172A;">Your account has been deleted</h2>
+                <p>Hi,</p>
+                <p>This is a confirmation that your Praetoria Group account
+                (<strong>${reqRow.email}</strong>) has been permanently deleted at your request.
+                You will no longer be able to sign in with this email.</p>
+                <p>As required by Canadian record-keeping law, business records such as invoices,
+                tax records, signed agreements, and job/service history may be retained in
+                anonymized form. Your personal profile and login have been removed.</p>
+                <p>If this was a mistake, or you'd like to re-open an account, please contact us
+                at <a href="mailto:support@praetoriagroup.ca">support@praetoriagroup.ca</a>.</p>
+                <p style="margin-top:24px;">Thank you,<br/>The Praetoria Group Team</p>
+              </div>
+            `,
+            to_addresses: [reqRow.email],
+          },
+        });
+      } catch (e) {
+        console.error('deletion confirmation email failed', e);
+      }
+    }
+
     // Delete the auth user
     const { error: delErr } = await admin.auth.admin.deleteUser(targetUserId);
     if (delErr) {
