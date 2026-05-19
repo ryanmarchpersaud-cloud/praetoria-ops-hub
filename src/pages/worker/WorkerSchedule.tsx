@@ -295,7 +295,7 @@ export default function WorkerSchedule() {
         .eq('service_date', todayStr)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return (data || []).filter((v: any) => v.assigned_worker_id === user!.id || v.jobs?.assigned_to === user!.id) as unknown as Visit[];
+      return (data || []) as unknown as Visit[];
     },
     enabled: !!user,
   });
@@ -314,7 +314,7 @@ export default function WorkerSchedule() {
         .order('service_date', { ascending: true })
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return (data || []).filter((v: any) => v.assigned_worker_id === user!.id || v.jobs?.assigned_to === user!.id) as unknown as Visit[];
+      return (data || []) as unknown as Visit[];
     },
     enabled: !!user,
   });
@@ -331,7 +331,7 @@ export default function WorkerSchedule() {
         .order('service_date', { ascending: true })
         .order('arrival_time', { ascending: true });
       if (error) throw error;
-      return (data || []).filter((v: any) => v.assigned_worker_id === user!.id || v.jobs?.assigned_to === user!.id) as unknown as Visit[];
+      return (data || []) as unknown as Visit[];
     },
     enabled: !!user,
   });
