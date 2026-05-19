@@ -38,8 +38,8 @@ export default function WorkerPropertyDetail() {
         .order('service_date', { ascending: false })
         .limit(20);
       if (error) throw error;
-      // Only show visits assigned to this worker
-      return (data || []).filter((v: any) => v.jobs?.assigned_to === user?.id);
+      // RLS already limits this to visits assigned directly, via job, or as crew.
+      return data || [];
     },
     enabled: !!id && !!user,
   });

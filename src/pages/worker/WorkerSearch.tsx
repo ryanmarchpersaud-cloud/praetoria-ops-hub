@@ -31,14 +31,13 @@ export default function WorkerSearch() {
       const q = `%${trimmed}%`;
       const out: SearchResult[] = [];
 
-      // Search visits — only those assigned to this worker via job
+      // Search visits — RLS limits this to visits assigned directly, via job, or as crew.
       const { data: visits } = await supabase
         .from('visits')
         .select('id, visit_number, visit_status, service_date, properties(property_name), customers(first_name, last_name), jobs(assigned_to)')
         .or(`visit_number.ilike.${q}`)
         .limit(20);
       visits?.forEach((v: any) => {
-        if (v.jobs?.assigned_to !== user.id) return;
         out.push({
           type: 'visit',
           id: v.id,
@@ -56,14 +55,13 @@ export default function WorkerSearch() {
         .or(`property_name.ilike.${q},address_line_1.ilike.${q},city.ilike.${q}`)
         .limit(20);
       if (props && props.length > 0) {
-        // Check which properties have jobs assigned to this worker
+        // Check which properties have visits visible to this worker (lead, job assignee, or crew).
         const propIds = props.map(p => p.id);
-        const { data: assignedJobs } = await supabase
-          .from('jobs')
+        const { data: assignedVisits } = await supabase
+          .from('visits')
           .select('property_id')
-          .eq('assigned_to', user.id)
           .in('property_id', propIds);
-        const assignedPropertyIds = new Set((assignedJobs || []).map((j: any) => j.property_id));
+        const assignedPropertyIds = new Set((assignedVisits || []).map((v: any) => v.property_id));
         props.forEach((p: any) => {
           if (!assignedPropertyIds.has(p.id)) return;
           out.push({
@@ -76,11 +74,10 @@ export default function WorkerSearch() {
         });
       }
 
-      // Search jobs — only assigned to this worker
+      // Search jobs — includes jobs where this worker is the lead or on any job visit crew.
       const { data: jobs } = await supabase
         .from('jobs')
         .select('id, job_number, job_title, status, customers(first_name, last_name), assigned_to')
-        .eq('assigned_to', user.id)
         .or(`job_number.ilike.${q},job_title.ilike.${q}`)
         .limit(10);
       jobs?.forEach((j: any) => out.push({
