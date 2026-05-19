@@ -11,9 +11,9 @@ Deno.serve(async (req) => {
   let body: any = {};
   try { body = await req.json(); } catch { /* no body */ }
 
-  const email = body.email || "appreview2.worker@praetoriagroup.ca";
-  const password = body.password || "AppleReview2026!";
-  const fullName = body.full_name || "Test Worker";
+  const email = body.email || "appreview@praetoriagroup.ca";
+  const password = body.password || "Praetoria2026!";
+  const fullName = body.full_name || "Apple Reviewer";
   const role = body.role || "lead_worker";
 
   let userId: string | undefined;
