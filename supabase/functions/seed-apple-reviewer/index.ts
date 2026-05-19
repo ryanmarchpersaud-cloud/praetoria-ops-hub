@@ -1,47 +1,45 @@
-// One-shot: create a second worker account for Apple's reviewer to delete.
+// One-shot seed: creates test accounts for Apple reviewer / Ryan's delete testing.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const email = "appreview2.worker@praetoriagroup.ca";
-  const password = "AppleReview2026!";
+  let body: any = {};
+  try { body = await req.json(); } catch { /* no body */ }
 
-  // Create (or fetch) the auth user
+  const email = body.email || "appreview2.worker@praetoriagroup.ca";
+  const password = body.password || "AppleReview2026!";
+  const fullName = body.full_name || "Test Worker";
+  const role = body.role || "lead_worker";
+
+  let userId: string | undefined;
   const { data: created, error: createErr } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: "Apple Reviewer 2" },
+    email, password, email_confirm: true,
+    user_metadata: { full_name: fullName },
   });
+  userId = created?.user?.id;
 
-  let userId = created?.user?.id;
   if (createErr && !userId) {
-    // Already exists — look it up and reset password
     const { data: list } = await admin.auth.admin.listUsers();
     const existing = list?.users?.find((u) => u.email === email);
     if (!existing) {
       return new Response(JSON.stringify({ error: createErr.message }), { status: 500 });
     }
     userId = existing.id;
-    await admin.auth.admin.updateUserById(userId, {
-      password,
-      email_confirm: true,
-    });
+    await admin.auth.admin.updateUserById(userId, { password, email_confirm: true });
   }
 
-  // Assign lead_worker role (idempotent)
   await admin.from("user_roles").upsert(
-    { user_id: userId!, role: "lead_worker" },
+    { user_id: userId!, role },
     { onConflict: "user_id,role" }
   );
 
   return new Response(
-    JSON.stringify({ success: true, email, password, user_id: userId }),
+    JSON.stringify({ success: true, email, password, user_id: userId, role }),
     { headers: { "content-type": "application/json" } }
   );
 });
