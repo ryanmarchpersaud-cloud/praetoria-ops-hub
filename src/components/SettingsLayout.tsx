@@ -66,6 +66,7 @@ const settingsNav: { group: string; items: SettingsItem[] }[] = [
       { title: 'System Announcements', url: '/settings/announcements', icon: Megaphone, accessKey: 'systemAnnouncements' },
       { title: 'Audit Log', url: '/settings/audit-log', icon: ScrollText, accessKey: 'auditLog' },
       { title: 'Seat Usage', url: '/settings/usage', icon: Gauge, accessKey: 'seatUsage' },
+      { title: 'Account Deletion Requests', url: '/admin/account-deletion-requests', icon: Trash2, alwaysShow: true },
     ],
   },
   {
