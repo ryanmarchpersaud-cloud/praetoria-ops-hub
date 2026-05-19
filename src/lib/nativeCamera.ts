@@ -45,13 +45,29 @@ export async function pickNativePhoto(source: CameraSource = 'prompt'): Promise<
 
     if (!photo?.webPath) return null;
 
-    const res = await fetch(photo.webPath);
-    const blob = await res.blob();
+    // Fetch the webPath blob. On iOS WKWebView this occasionally returns
+    // an empty blob (cache race) — retry once before giving up so we
+    // don't bubble a misleading "upload failed" to the worker.
+    let blob: Blob | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch(photo.webPath);
+        if (!res.ok) throw new Error(`fetch ${res.status}`);
+        const b = await res.blob();
+        if (b.size > 0) { blob = b; break; }
+      } catch {
+        /* retry */
+      }
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    if (!blob || blob.size === 0) {
+      throw new Error('Camera returned an empty photo — please retake it.');
+    }
+
     const ext = photo.format || 'jpg';
-    const file = new File([blob], `photo-${Date.now()}.${ext}`, {
+    return new File([blob], `photo-${Date.now()}.${ext}`, {
       type: blob.type || `image/${ext}`,
     });
-    return file;
   } catch (err: any) {
     // User cancelled — Capacitor throws { message: 'User cancelled photos app' }
     if (err?.message?.toLowerCase?.().includes('cancel')) return null;
