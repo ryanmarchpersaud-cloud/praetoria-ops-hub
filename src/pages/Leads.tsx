@@ -155,10 +155,15 @@ export default function Leads() {
           <p className="text-center text-muted-foreground py-8 text-sm">No leads found</p>
         ) : (
           leads.map(lead => (
-            <Link
+            <div
               key={lead.id}
-              to={`/leads/${lead.id}`}
-              className="block bg-card border rounded-lg p-3 active:bg-muted/50 transition-colors"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/leads/${lead.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') navigate(`/leads/${lead.id}`);
+              }}
+              className="block bg-card border rounded-lg p-3 active:bg-muted/50 transition-colors cursor-pointer"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
@@ -201,7 +206,7 @@ export default function Leads() {
                   </span>
                 )}
               </div>
-            </Link>
+            </div>
           ))
         )}
       </div>

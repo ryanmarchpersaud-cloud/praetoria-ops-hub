@@ -291,6 +291,22 @@
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
   }
+
+  /* Admin routes should not visually fade/shift every time the owner moves
+     between Dashboard, Leads, Quotes, Jobs, etc.  Keeping the shell stable
+     avoids the "screen cutting out and back on" effect without touching the
+     worker/customer/subcontractor mobile portals used for app review. */
+  .admin-main-shell > .animate-fade-in {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .admin-main-shell {
+    scrollbar-gutter: stable;
+    min-width: 0;
+    overflow-anchor: none;
+  }
 }
 
 /* ── Mobile readability enhancements ──────────────────── */
