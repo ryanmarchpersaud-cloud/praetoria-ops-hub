@@ -303,7 +303,7 @@ export default function WorkerVisitExec() {
       }
 
       if (nextExec === 'completed') {
-        const { data, error } = await (supabase as any).rpc('complete_assigned_visit', {
+        const { error } = await (supabase as any).rpc('complete_assigned_visit', {
           _visit_id: id!,
           _crew_notes: crewNotes || null,
           _service_summary: serviceSummary || null,
@@ -312,7 +312,6 @@ export default function WorkerVisitExec() {
           _snow_depth: snowDepth || null,
         });
         if (error) throw error;
-        await updateVisit.mutateAsync({ id: data.id, visit_status: data.visit_status } as any);
       } else {
         await updateVisit.mutateAsync(updates);
       }
