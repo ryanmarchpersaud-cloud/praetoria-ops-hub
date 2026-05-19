@@ -55,14 +55,13 @@ export default function WorkerSearch() {
         .or(`property_name.ilike.${q},address_line_1.ilike.${q},city.ilike.${q}`)
         .limit(20);
       if (props && props.length > 0) {
-        // Check which properties have jobs assigned to this worker
+        // Check which properties have visits visible to this worker (lead, job assignee, or crew).
         const propIds = props.map(p => p.id);
-        const { data: assignedJobs } = await supabase
-          .from('jobs')
+        const { data: assignedVisits } = await supabase
+          .from('visits')
           .select('property_id')
-          .eq('assigned_to', user.id)
           .in('property_id', propIds);
-        const assignedPropertyIds = new Set((assignedJobs || []).map((j: any) => j.property_id));
+        const assignedPropertyIds = new Set((assignedVisits || []).map((v: any) => v.property_id));
         props.forEach((p: any) => {
           if (!assignedPropertyIds.has(p.id)) return;
           out.push({
