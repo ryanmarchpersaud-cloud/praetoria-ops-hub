@@ -33,7 +33,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
           <AnnouncementBanner />
-          <main className="flex-1 p-3 md:p-6 overflow-auto">
+          <main className="admin-main-shell flex-1 p-3 md:p-6 overflow-auto">
             {children}
           </main>
         </div>
