@@ -304,7 +304,8 @@
 
   .admin-main-shell {
     scrollbar-gutter: stable;
-    contain: layout paint;
+    min-width: 0;
+    overflow-anchor: none;
   }
 }
 
