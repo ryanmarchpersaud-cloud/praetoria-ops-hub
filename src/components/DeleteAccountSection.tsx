@@ -84,7 +84,7 @@ export function DeleteAccountSection({ variant = 'card' }: Props) {
   const trigger = (
     <Button variant="destructive" size={variant === 'inline' ? 'sm' : 'default'} disabled={!!pending}>
       <Trash2 className="h-4 w-4 mr-2" />
-      {pending ? 'Deletion Request Pending' : 'Delete Account'}
+      {pending ? 'Account Scheduled For Deletion' : 'Start Account Deletion'}
     </Button>
   );
 
