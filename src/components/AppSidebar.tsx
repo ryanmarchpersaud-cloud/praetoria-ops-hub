@@ -210,9 +210,9 @@ export function AppSidebar() {
             <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
           )}
           <NavLink to="/account-privacy" className="block">
-            <SidebarMenuButton className="w-full hover:bg-sidebar-accent/50">
-              <Trash2 className="mr-2 h-4 w-4" />
-              {!collapsed && <span>Account &amp; Privacy</span>}
+            <SidebarMenuButton className="w-full text-destructive border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 hover:text-destructive font-semibold">
+              <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+              {!collapsed && <span>Delete Account</span>}
             </SidebarMenuButton>
           </NavLink>
           <SidebarMenuButton onClick={signOut} className="w-full hover:bg-sidebar-accent/50">
