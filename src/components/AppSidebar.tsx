@@ -1,6 +1,6 @@
 import {
   FileSignature,
-  LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut,
+  LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Trash2,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
   MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign,
 } from 'lucide-react';
