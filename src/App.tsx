@@ -271,6 +271,19 @@ function SignedInPortalRouteShell({ children }: { children: React.ReactNode }) {
   return <div className="signed-in-portal-route-shell">{children}</div>;
 }
 
+/**
+ * Bare authenticated wrapper — any signed-in user (Admin, Worker,
+ * Subcontractor, Customer) can pass. Used for the universal
+ * /account-privacy page that Apple App Review must be able to reach
+ * regardless of role.
+ */
+function AuthedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 function WorkerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, canAccessWorkerPortal, isActiveUser, isLoading } = useAuthorization();
