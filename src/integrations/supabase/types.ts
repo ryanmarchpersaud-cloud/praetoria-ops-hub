@@ -6116,7 +6116,7 @@ export type Database = {
           subject: string
           updated_at: string
           urgency: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           access_notes?: string | null
@@ -6136,7 +6136,7 @@ export type Database = {
           subject: string
           updated_at?: string
           urgency?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           access_notes?: string | null
@@ -6156,7 +6156,7 @@ export type Database = {
           subject?: string
           updated_at?: string
           urgency?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
