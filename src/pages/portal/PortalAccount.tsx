@@ -4,7 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Mail, Phone, Building2, MapPin, LogOut, Home, ShieldCheck } from 'lucide-react';
+import { User, Mail, Phone, Building2, MapPin, LogOut, Home, ShieldCheck, Trash2, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { NotificationPreferencesCard } from '@/components/NotificationPreferencesCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DeleteAccountSection } from '@/components/DeleteAccountSection';
@@ -36,6 +37,23 @@ export default function PortalAccount() {
       <h1 className="text-xl font-bold flex items-center gap-2">
         <User className="h-5 w-5 text-primary" /> My Account
       </h1>
+
+      {/* Account & Privacy entry — prominent. Required by Apple App
+          Review Guideline 5.1.1(v). */}
+      <Link to="/account-privacy">
+        <Card className="border-destructive/30 bg-destructive/5 active:shadow-sm transition-shadow">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+              <Trash2 className="h-5 w-5 text-destructive" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">Account &amp; Privacy</p>
+              <p className="text-[11px] text-muted-foreground">Delete account &amp; manage your data</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Profile card */}
       <Card>

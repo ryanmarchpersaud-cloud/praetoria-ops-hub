@@ -43,6 +43,7 @@ import AuthEmailHealthPage from "./pages/AuthEmailHealthPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AuthActivityReportPage from "./pages/AuthActivityReportPage";
 import SettingsDeleteAccountPage from "./pages/SettingsDeleteAccountPage";
+import AccountPrivacyPage from "./pages/AccountPrivacyPage";
 import AdminAccountDeletionRequestsPage from "./pages/AdminAccountDeletionRequestsPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
@@ -270,6 +271,19 @@ function SignedInPortalRouteShell({ children }: { children: React.ReactNode }) {
   return <div className="signed-in-portal-route-shell">{children}</div>;
 }
 
+/**
+ * Bare authenticated wrapper — any signed-in user (Admin, Worker,
+ * Subcontractor, Customer) can pass. Used for the universal
+ * /account-privacy page that Apple App Review must be able to reach
+ * regardless of role.
+ */
+function AuthedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 function WorkerRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, canAccessWorkerPortal, isActiveUser, isLoading } = useAuthorization();
@@ -388,6 +402,19 @@ function AppRoutes() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/access-denied" element={<AccessDenied />} />
+
+      {/* Universal Account & Privacy / Delete Account — reachable by ANY
+          authenticated user (Admin, Worker, Subcontractor, Customer).
+          Required by Apple App Review Guideline 5.1.1(v). */}
+      <Route
+        path="/account-privacy"
+        element={
+          <AuthedRoute>
+            <AccountPrivacyPage />
+          </AuthedRoute>
+        }
+      />
+
 
       {/* Admin-only routes */}
       {/* Dashboard — any admin-portal user */}

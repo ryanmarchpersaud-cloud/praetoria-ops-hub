@@ -77,14 +77,15 @@ export function DeleteAccountSection({ variant = 'card' }: Props) {
     queryClient.invalidateQueries({ queryKey: ['account_deletion_request', user.id] });
     toast({
       title: 'Account deletion request submitted',
-      description: "We've received your request. Our team will process it and contact you by email when complete.",
+      description:
+        'Your account deletion request has been submitted and your account will be scheduled for deletion. Business records that Praetoria is legally required to keep may be retained.',
     });
   };
 
   const trigger = (
     <Button variant="destructive" size={variant === 'inline' ? 'sm' : 'default'} disabled={!!pending}>
       <Trash2 className="h-4 w-4 mr-2" />
-      {pending ? 'Deletion Request Pending' : 'Delete Account'}
+      {pending ? 'Account Scheduled For Deletion' : 'Start Account Deletion'}
     </Button>
   );
 
@@ -138,10 +139,13 @@ export function DeleteAccountSection({ variant = 'card' }: Props) {
       <div className="flex items-start gap-2 text-sm">
         <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
         <div>
-          <p className="font-medium">Account deletion request submitted</p>
+          <p className="font-medium">Account scheduled for deletion</p>
           <p className="text-xs text-muted-foreground">
-            Submitted {new Date(existing!.requested_at).toLocaleDateString()}. Our team will
-            process this and email you when your account has been removed.
+            Submitted {new Date(existing!.requested_at).toLocaleDateString()}. Your
+            account deletion request has been submitted and your account will be
+            scheduled for deletion. You will receive an email confirmation once
+            the removal is complete. Business records Praetoria is legally
+            required to keep may be retained in anonymized form.
           </p>
         </div>
       </div>
