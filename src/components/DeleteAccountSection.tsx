@@ -77,7 +77,8 @@ export function DeleteAccountSection({ variant = 'card' }: Props) {
     queryClient.invalidateQueries({ queryKey: ['account_deletion_request', user.id] });
     toast({
       title: 'Account deletion request submitted',
-      description: "We've received your request. Our team will process it and contact you by email when complete.",
+      description:
+        'Your account deletion request has been submitted and your account will be scheduled for deletion. Business records that Praetoria is legally required to keep may be retained.',
     });
   };
 
