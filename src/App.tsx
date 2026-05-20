@@ -390,6 +390,19 @@ function AppRoutes() {
       <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/access-denied" element={<AccessDenied />} />
 
+      {/* Universal Account & Privacy / Delete Account — reachable by ANY
+          authenticated user (Admin, Worker, Subcontractor, Customer).
+          Required by Apple App Review Guideline 5.1.1(v). */}
+      <Route
+        path="/account-privacy"
+        element={
+          <AuthedRoute>
+            <AccountPrivacyPage />
+          </AuthedRoute>
+        }
+      />
+
+
       {/* Admin-only routes */}
       {/* Dashboard — any admin-portal user */}
       <Route path="/" element={<AdminRoute><ModuleGuard module="dashboard"><Dashboard /></ModuleGuard></AdminRoute>} />
