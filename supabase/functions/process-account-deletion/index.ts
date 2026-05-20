@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       // Unlink (don't delete) so business history is preserved
       ['customers.user_id', admin.from('customers').update({ user_id: null }).eq('user_id', targetUserId)],
       ['customers.created_by', admin.from('customers').update({ created_by: null }).eq('created_by', targetUserId)],
-      ['worker_profiles.user_id', admin.from('worker_profiles').update({ user_id: null }).eq('user_id', targetUserId)],
+      ['worker_profiles.delete', admin.from('worker_profiles').delete().eq('user_id', targetUserId)],
       ['subcontractors.user_id', admin.from('subcontractors').update({ user_id: null }).eq('user_id', targetUserId)],
       // Null out NO ACTION foreign keys that would otherwise block auth.users delete
       ['leads.assigned_to', admin.from('leads').update({ assigned_to: null }).eq('assigned_to', targetUserId)],
