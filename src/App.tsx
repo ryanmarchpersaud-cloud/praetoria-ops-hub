@@ -43,6 +43,7 @@ import AuthEmailHealthPage from "./pages/AuthEmailHealthPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AuthActivityReportPage from "./pages/AuthActivityReportPage";
 import SettingsDeleteAccountPage from "./pages/SettingsDeleteAccountPage";
+import AccountPrivacyPage from "./pages/AccountPrivacyPage";
 import AdminAccountDeletionRequestsPage from "./pages/AdminAccountDeletionRequestsPage";
 import ManageTeamPage from "./pages/ManageTeamPage";
 import Schedule from "./pages/Schedule";
