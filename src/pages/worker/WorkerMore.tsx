@@ -73,6 +73,24 @@ export default function WorkerMore() {
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Worker Portal</span>
       </div>
 
+      {/* Account & Privacy — prominent, top-level. Required by Apple
+          App Review Guideline 5.1.1(v) so account deletion is easy to
+          find without hunting through long settings pages. */}
+      <Link to="/account-privacy">
+        <Card className="border-destructive/30 bg-destructive/5 active:shadow-sm transition-shadow">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+              <Trash2 className="h-5 w-5 text-destructive" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">Account &amp; Privacy</p>
+              <p className="text-[11px] text-muted-foreground">Delete account &amp; manage your data</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          </CardContent>
+        </Card>
+      </Link>
+
       {/* Profile & Employment */}
       <div className="space-y-1.5">
         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">My Info</p>
