@@ -209,16 +209,11 @@ export function AppSidebar() {
           {!collapsed && (
             <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
           )}
-          <NavLink to="/account-privacy">
-            {({ isActive }) => (
-              <SidebarMenuButton
-                isActive={isActive}
-                className="w-full hover:bg-sidebar-accent/50"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                {!collapsed && <span>Account &amp; Privacy</span>}
-              </SidebarMenuButton>
-            )}
+          <NavLink to="/account-privacy" className="block">
+            <SidebarMenuButton className="w-full hover:bg-sidebar-accent/50">
+              <Trash2 className="mr-2 h-4 w-4" />
+              {!collapsed && <span>Account &amp; Privacy</span>}
+            </SidebarMenuButton>
           </NavLink>
           <SidebarMenuButton onClick={signOut} className="w-full hover:bg-sidebar-accent/50">
             <LogOut className="mr-2 h-4 w-4" />
