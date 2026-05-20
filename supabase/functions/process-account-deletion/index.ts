@@ -51,12 +51,32 @@ Deno.serve(async (req) => {
     const targetUserId = reqRow.user_id;
 
     // Best-effort cleanup of profile/role rows (other business data is retained per policy)
-    await admin.from('profiles').delete().eq('user_id', targetUserId);
-    await admin.from('user_roles').delete().eq('user_id', targetUserId);
-    // Unlink (don't delete) any customer/worker/subcontractor records so business history is preserved
-    await admin.from('customers').update({ user_id: null }).eq('user_id', targetUserId);
-    await admin.from('worker_profiles').update({ user_id: null }).eq('user_id', targetUserId);
-    await admin.from('subcontractors').update({ user_id: null }).eq('user_id', targetUserId);
+    const cleanupSteps: Array<[string, Promise<any>]> = [
+      ['profiles.delete', admin.from('profiles').delete().eq('user_id', targetUserId)],
+      ['user_roles.delete', admin.from('user_roles').delete().eq('user_id', targetUserId)],
+      // Unlink (don't delete) so business history is preserved
+      ['customers.user_id', admin.from('customers').update({ user_id: null }).eq('user_id', targetUserId)],
+      ['customers.created_by', admin.from('customers').update({ created_by: null }).eq('created_by', targetUserId)],
+      ['worker_profiles.user_id', admin.from('worker_profiles').update({ user_id: null }).eq('user_id', targetUserId)],
+      ['subcontractors.user_id', admin.from('subcontractors').update({ user_id: null }).eq('user_id', targetUserId)],
+      // Null out NO ACTION foreign keys that would otherwise block auth.users delete
+      ['leads.assigned_to', admin.from('leads').update({ assigned_to: null }).eq('assigned_to', targetUserId)],
+      ['leads.created_by', admin.from('leads').update({ created_by: null }).eq('created_by', targetUserId)],
+      ['quotes.created_by', admin.from('quotes').update({ created_by: null }).eq('created_by', targetUserId)],
+      ['quotes.approved_by', admin.from('quotes').update({ approved_by: null }).eq('approved_by', targetUserId)],
+      ['activities.user_id', admin.from('activities').update({ user_id: null }).eq('user_id', targetUserId)],
+      ['activities.approved_by', admin.from('activities').update({ approved_by: null }).eq('approved_by', targetUserId)],
+      ['files.uploaded_by', admin.from('files').update({ uploaded_by: null }).eq('uploaded_by', targetUserId)],
+      ['service_requests.user_id', admin.from('service_requests').update({ user_id: null }).eq('user_id', targetUserId)],
+      ['training_courses.created_by', admin.from('training_courses').update({ created_by: null }).eq('created_by', targetUserId)],
+      ['training_assignments.assigned_by', admin.from('training_assignments').update({ assigned_by: null }).eq('assigned_by', targetUserId)],
+      ['operational_tasks.assigned_to', admin.from('operational_tasks').update({ assigned_to: null }).eq('assigned_to', targetUserId)],
+      ['operational_tasks.created_by', admin.from('operational_tasks').update({ created_by: null }).eq('created_by', targetUserId)],
+    ];
+    for (const [label, p] of cleanupSteps) {
+      const { error } = await p;
+      if (error) console.error(`[process-account-deletion] cleanup ${label} failed:`, error.message);
+    }
 
     // Send confirmation email BEFORE deleting the auth user (so we still have the email).
     // Fire-and-forget — never block deletion if email fails.
