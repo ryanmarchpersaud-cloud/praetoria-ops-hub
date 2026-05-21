@@ -689,8 +689,8 @@ export default function QuotePrint() {
                 <p className="text-[8px] font-mono text-[#3b5bdb] mt-1 print:text-[9px] break-all">
                   praetoriagroup.ca/portal
                 </p>
-                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
-                  Coming Soon
+                <p className="text-[8px] font-bold text-[#16A34A] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Live Now
                 </p>
               </div>
 
