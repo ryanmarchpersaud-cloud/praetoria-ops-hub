@@ -186,9 +186,13 @@ export default function CustomerDetail() {
         email: form.email || null, phone: form.phone || null,
         secondary_email: form.secondary_email || null,
         billing_contact_name: form.billing_contact_name || null,
+        billing_contact_title: form.billing_contact_title || null,
         billing_contact_email: form.billing_contact_email || null,
         billing_contact_phone: form.billing_contact_phone || null,
+        billing_contact_fax: form.billing_contact_fax || null,
         accounts_payable_email: form.accounts_payable_email || null,
+        website: form.website || null,
+        fax: form.fax || null,
         preferred_billing_method: form.preferred_billing_method || null,
         requires_po_number: form.requires_po_number || false,
         site_contact_name: form.site_contact_name || null,
@@ -484,6 +488,10 @@ export default function CustomerDetail() {
                   <div><Label className="text-xs">Legal Name</Label><Input value={form?.company_legal_name || ''} onChange={e => set('company_legal_name', e.target.value)} /></div>
                   <div><Label className="text-xs">Operating / DBA Name</Label><Input value={form?.operating_name || ''} onChange={e => set('operating_name', e.target.value)} /></div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label className="text-xs">Website</Label><Input type="url" placeholder="https://" value={form?.website || ''} onChange={e => set('website', e.target.value)} /></div>
+                  <div><Label className="text-xs">Fax</Label><Input value={form?.fax || ''} onChange={e => set('fax', e.target.value)} /></div>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -527,7 +535,11 @@ export default function CustomerDetail() {
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs">Billing Contact Name</Label><Input value={form?.billing_contact_name || ''} onChange={e => set('billing_contact_name', e.target.value)} /></div>
+                  <div><Label className="text-xs">Billing Contact Title / Role</Label><Input value={form?.billing_contact_title || ''} onChange={e => set('billing_contact_title', e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs">Billing Contact Phone</Label><Input value={form?.billing_contact_phone || ''} onChange={e => set('billing_contact_phone', e.target.value)} /></div>
+                  <div><Label className="text-xs">Billing Contact Fax</Label><Input value={form?.billing_contact_fax || ''} onChange={e => set('billing_contact_fax', e.target.value)} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs">Billing Contact Email</Label><Input type="email" value={form?.billing_contact_email || ''} onChange={e => set('billing_contact_email', e.target.value)} /></div>
