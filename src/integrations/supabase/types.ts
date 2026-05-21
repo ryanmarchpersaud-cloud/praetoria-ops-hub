@@ -1341,8 +1341,10 @@ export type Database = {
           billing_address_same_as_service: boolean
           billing_city: string | null
           billing_contact_email: string | null
+          billing_contact_fax: string | null
           billing_contact_name: string | null
           billing_contact_phone: string | null
+          billing_contact_title: string | null
           billing_postal_code: string | null
           billing_province: string | null
           city: string | null
@@ -1354,6 +1356,7 @@ export type Database = {
           customer_tags: string[] | null
           customer_type: string
           email: string | null
+          fax: string | null
           first_name: string
           id: string
           is_protected: boolean
@@ -1377,6 +1380,7 @@ export type Database = {
           site_contact_phone: string | null
           updated_at: string
           user_id: string | null
+          website: string | null
         }
         Insert: {
           account_type?: string
@@ -1386,8 +1390,10 @@ export type Database = {
           billing_address_same_as_service?: boolean
           billing_city?: string | null
           billing_contact_email?: string | null
+          billing_contact_fax?: string | null
           billing_contact_name?: string | null
           billing_contact_phone?: string | null
+          billing_contact_title?: string | null
           billing_postal_code?: string | null
           billing_province?: string | null
           city?: string | null
@@ -1399,6 +1405,7 @@ export type Database = {
           customer_tags?: string[] | null
           customer_type?: string
           email?: string | null
+          fax?: string | null
           first_name: string
           id?: string
           is_protected?: boolean
@@ -1422,6 +1429,7 @@ export type Database = {
           site_contact_phone?: string | null
           updated_at?: string
           user_id?: string | null
+          website?: string | null
         }
         Update: {
           account_type?: string
@@ -1431,8 +1439,10 @@ export type Database = {
           billing_address_same_as_service?: boolean
           billing_city?: string | null
           billing_contact_email?: string | null
+          billing_contact_fax?: string | null
           billing_contact_name?: string | null
           billing_contact_phone?: string | null
+          billing_contact_title?: string | null
           billing_postal_code?: string | null
           billing_province?: string | null
           city?: string | null
@@ -1444,6 +1454,7 @@ export type Database = {
           customer_tags?: string[] | null
           customer_type?: string
           email?: string | null
+          fax?: string | null
           first_name?: string
           id?: string
           is_protected?: boolean
@@ -1467,6 +1478,7 @@ export type Database = {
           site_contact_phone?: string | null
           updated_at?: string
           user_id?: string | null
+          website?: string | null
         }
         Relationships: []
       }
