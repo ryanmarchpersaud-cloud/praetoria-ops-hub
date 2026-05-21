@@ -440,8 +440,8 @@ export default function InvoicePrint() {
                   Get it on Google Play
                 </p>
                 <p className="text-[8px] font-mono text-[#16A34A] mt-1 print:text-[9px]">Android</p>
-                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
-                  Coming Soon
+                <p className="text-[8px] font-bold text-[#16A34A] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Live Now
                 </p>
               </div>
               <div className="rounded-lg border-2 border-[#111827]/25 bg-[#111827]/[0.04] p-3 text-center">
@@ -456,8 +456,8 @@ export default function InvoicePrint() {
                   Download on the App Store
                 </p>
                 <p className="text-[8px] font-mono text-[#111827] mt-1 print:text-[9px]">iOS</p>
-                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
-                  Coming Soon
+                <p className="text-[8px] font-bold text-[#16A34A] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Live Now
                 </p>
               </div>
             </div>

@@ -709,8 +709,8 @@ export default function QuotePrint() {
                 <p className="text-[8px] font-mono text-[#16A34A] mt-1 print:text-[9px]">
                   Android
                 </p>
-                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
-                  Coming Soon
+                <p className="text-[8px] font-bold text-[#16A34A] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Live Now
                 </p>
               </div>
 
@@ -729,8 +729,8 @@ export default function QuotePrint() {
                 <p className="text-[8px] font-mono text-[#111827] mt-1 print:text-[9px]">
                   iOS
                 </p>
-                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
-                  Coming Soon
+                <p className="text-[8px] font-bold text-[#16A34A] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Live Now
                 </p>
               </div>
             </div>
