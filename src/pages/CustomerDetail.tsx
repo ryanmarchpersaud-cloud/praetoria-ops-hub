@@ -531,7 +531,11 @@ export default function CustomerDetail() {
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs">Billing Contact Name</Label><Input value={form?.billing_contact_name || ''} onChange={e => set('billing_contact_name', e.target.value)} /></div>
+                  <div><Label className="text-xs">Billing Contact Title / Role</Label><Input value={form?.billing_contact_title || ''} onChange={e => set('billing_contact_title', e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs">Billing Contact Phone</Label><Input value={form?.billing_contact_phone || ''} onChange={e => set('billing_contact_phone', e.target.value)} /></div>
+                  <div><Label className="text-xs">Billing Contact Fax</Label><Input value={form?.billing_contact_fax || ''} onChange={e => set('billing_contact_fax', e.target.value)} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label className="text-xs">Billing Contact Email</Label><Input type="email" value={form?.billing_contact_email || ''} onChange={e => set('billing_contact_email', e.target.value)} /></div>
