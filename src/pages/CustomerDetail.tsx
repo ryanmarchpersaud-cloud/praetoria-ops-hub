@@ -484,6 +484,10 @@ export default function CustomerDetail() {
                   <div><Label className="text-xs">Legal Name</Label><Input value={form?.company_legal_name || ''} onChange={e => set('company_legal_name', e.target.value)} /></div>
                   <div><Label className="text-xs">Operating / DBA Name</Label><Input value={form?.operating_name || ''} onChange={e => set('operating_name', e.target.value)} /></div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label className="text-xs">Website</Label><Input type="url" placeholder="https://" value={form?.website || ''} onChange={e => set('website', e.target.value)} /></div>
+                  <div><Label className="text-xs">Fax</Label><Input value={form?.fax || ''} onChange={e => set('fax', e.target.value)} /></div>
+                </div>
               </CardContent>
             </Card>
           )}
