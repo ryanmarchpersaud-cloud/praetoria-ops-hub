@@ -424,8 +424,8 @@ export default function InvoicePrint() {
                 <p className="text-[8px] font-mono text-[#3b5bdb] mt-1 print:text-[9px] break-all">
                   praetoriagroup.ca/portal
                 </p>
-                <p className="text-[8px] font-bold text-[#dc2626] mt-1 print:text-[9px] uppercase tracking-wide">
-                  Coming Soon
+                <p className="text-[8px] font-bold text-[#16A34A] mt-1 print:text-[9px] uppercase tracking-wide">
+                  Live Now
                 </p>
               </div>
               <div className="rounded-lg border-2 border-[#16A34A]/25 bg-[#16A34A]/[0.04] p-3 text-center">
