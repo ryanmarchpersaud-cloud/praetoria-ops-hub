@@ -175,8 +175,19 @@ export default function QuotePrint() {
   const { data: quote, isLoading } = useQuote(id);
   const { data: lineItems = [] } = useQuoteLineItems(id);
 
+  const { data: company } = useQuery({
+    queryKey: ['company_settings_print'],
+    queryFn: async () => {
+      const { data } = await supabase.from('company_settings').select('*').limit(1).maybeSingle();
+      return data;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
   if (isLoading) return <div className="p-8 text-muted-foreground">Loading...</div>;
   if (!quote) return <div className="p-8 text-muted-foreground">Quote not found</div>;
+
+  const companyEmail = company?.support_email || company?.email || company?.billing_email || 'info@praetoriagroup.ca';
 
   const exportData = getQuoteDataForExport(quote, lineItems);
   const { subtotal, tax, total, taxRate } = exportData;
