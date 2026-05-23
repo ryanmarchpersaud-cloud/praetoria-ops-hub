@@ -295,9 +295,17 @@ export function useFinanceDashboard(dateRange?: { from?: string; to?: string }) 
       const workerClaims = workerClaimsRes.error ? [] : (workerClaimsRes.data || []);
 
       const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount_total || 0), 0);
-      const totalRevenue = invoices.reduce((s, i) => s + Number(i.total || 0), 0);
-      const outstandingInvoices = invoices.filter(i => ['sent', 'overdue'].includes(i.status)).reduce((s, i) => s + Number(i.balance_due || 0), 0);
-      const openBills = bills.filter(b => ['open', 'partial', 'overdue'].includes(b.status)).reduce((s, b) => s + Number(b.balance_due || 0), 0);
+      // Revenue = only Paid invoices (Draft/Sent/Voided shouldn't count as earned revenue)
+      const totalRevenue = invoices
+        .filter(i => String(i.status || '').toLowerCase() === 'paid')
+        .reduce((s, i) => s + Number(i.total || 0), 0);
+      // Outstanding = any invoice with a remaining balance that isn't paid/void/draft
+      const outstandingInvoices = invoices
+        .filter(i => !['paid', 'voided', 'draft'].includes(String(i.status || '').toLowerCase()) && Number(i.balance_due || 0) > 0)
+        .reduce((s, i) => s + Number(i.balance_due || 0), 0);
+      const openBills = bills
+        .filter(b => ['open', 'partial', 'overdue'].includes(String(b.status || '').toLowerCase()) && Number(b.balance_due || 0) > 0)
+        .reduce((s, b) => s + Number(b.balance_due || 0), 0);
       const receiptsAwaitingReview = receipts.filter(r => r.review_status === 'unreviewed').length;
       const overdueBills = bills.filter(b => b.status === 'overdue' || (b.due_date && new Date(b.due_date) < new Date() && ['open', 'partial'].includes(b.status)));
       const workerClaimsAwaitingReview = workerClaims.filter((claim: any) => claim.status === 'submitted').length;
