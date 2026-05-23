@@ -332,10 +332,21 @@ export default function InvoicePrint() {
                 https://buy.stripe.com/bJe7sN87JdXN7PIbtb28800
               </a>
             </li>
+            <li>
+              <span className="font-bold">Bank Transfer / EFT / Wire</span> <span className="text-[#374151]">(preferred for commercial, government & municipal accounts):</span>
+              <div className="ml-4 mt-0.5 text-[#374151]">
+                Send directly from your bank to <span className="font-semibold">Praetoria Snow &amp; Ice</span>. Email {companyEmail} to request banking details (transit, institution &amp; account number).
+              </div>
+            </li>
+            <li>
+              <span className="font-bold">Cheque:</span> <span className="text-[#374151]">make payable to </span><span className="font-semibold text-[#1e3a8a]">Praetoria Snow &amp; Ice</span>
+              <span className="text-[#374151]"> and reference the invoice number on the memo line.</span>
+            </li>
             <li className="text-[#374151] italic">
               You'll also be able to pay by credit card through your secure online portal once it's set up (we'll email your login).
             </li>
           </ul>
+
         </div>
 
         {/* Payment Terms */}
