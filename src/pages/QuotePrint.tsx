@@ -579,6 +579,38 @@ export default function QuotePrint() {
           </div>
         )}
 
+        {/* ── Payment Options ── */}
+        <div
+          className="mb-6 print:mb-8 rounded-lg p-4 border"
+          style={{ backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }}
+        >
+          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#1d4ed8' }}>
+            Payment Options
+          </p>
+          <ul className="text-xs text-[#1e3a8a] space-y-1 print:text-sm">
+            <li><span className="font-bold">Interac e-Transfer:</span> payments@praetoriasnowandice.ca</li>
+            <li>
+              <span className="font-bold">Credit Card via Stripe:</span>{' '}
+              <a href="https://buy.stripe.com/bJe7sN87JdXN7PIbtb28800" className="underline break-all" style={{ color: '#1d4ed8' }}>
+                https://buy.stripe.com/bJe7sN87JdXN7PIbtb28800
+              </a>
+            </li>
+            <li>
+              <span className="font-bold">Bank Transfer / EFT / Wire</span> <span className="text-[#374151]">(preferred for commercial, government & municipal accounts):</span>
+              <div className="ml-4 mt-0.5 text-[#374151]">
+                Send directly from your bank to <span className="font-semibold">Praetoria Snow &amp; Ice</span>. Email {companyEmail} to request banking details (transit, institution &amp; account number).
+              </div>
+            </li>
+            <li>
+              <span className="font-bold">Cheque:</span> <span className="text-[#374151]">make payable to </span><span className="font-semibold text-[#1e3a8a]">Praetoria Snow &amp; Ice</span>
+              <span className="text-[#374151]"> and reference the quote number on the memo line.</span>
+            </li>
+            <li className="text-[#374151] italic">
+              You'll also be able to pay by credit card through your secure online portal once it's set up (we'll email your login).
+            </li>
+          </ul>
+        </div>
+
         {/* ── Terms & Conditions ── */}
         <div className="border-t border-[#e5e7eb] pt-6 print:pt-8 space-y-5">
           <div>
