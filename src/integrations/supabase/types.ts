@@ -7960,6 +7960,45 @@ export type Database = {
           },
         ]
       }
+      work_catalogue_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          default_hourly_rate: number | null
+          id: string
+          is_active: boolean
+          label: string
+          notes: string | null
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_hourly_rate?: number | null
+          id?: string
+          is_active?: boolean
+          label: string
+          notes?: string | null
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_hourly_rate?: number | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          notes?: string | null
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
       work_settings: {
         Row: {
           after_hours_work_allowed: boolean | null
