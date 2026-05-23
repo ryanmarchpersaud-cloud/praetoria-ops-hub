@@ -781,12 +781,19 @@ export default function QuotePrint() {
             </div>
           </div>
 
+          {/* ── Platform Transition Note ── */}
+          <div className="mt-6 mx-auto max-w-2xl text-center text-[10px] leading-snug px-3 py-2 rounded border print:text-[10px]"
+               style={{ backgroundColor: '#f1f5f9', borderColor: '#cbd5e1', color: '#475569' }}>
+            Praetoria Group has transitioned to our own in-house platform as of 2026. Invoice and quote numbers have restarted on this new system. Thank you for your continued trust.
+          </div>
+
           {/* ── Footer ── */}
           <div className="text-center pt-6 text-xs text-[#9ca3af] print:text-sm print:pt-8 pb-4">
             <p className="font-medium text-[#6b7280]">Praetoria Group</p>
             <p>support@praetoriagroup.ca · (306) 737-6269</p>
             <p className="mt-1">Thank you for choosing Praetoria Group.</p>
           </div>
+
         </div>
         </div>
       </div>
