@@ -1057,7 +1057,7 @@ Deno.serve(async (req) => {
 
       if (stub_pdf_base64 && typeof stub_pdf_base64 === "string") {
         attachment = { filename, content: stub_pdf_base64, content_type: "application/pdf" };
-      } else if (stub_pdf_url && typeof stub_pdf_url === "string") {
+      } else if (isAllowedHttpsUrl(stub_pdf_url)) {
         try {
           const pdfRes = await fetch(stub_pdf_url);
           if (pdfRes.ok) {
