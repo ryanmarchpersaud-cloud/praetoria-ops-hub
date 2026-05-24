@@ -55,9 +55,9 @@ export function useAgreementByToken(token: string | undefined) {
     queryKey: ['agreement_token', token],
     enabled: !!token,
     queryFn: async () => {
-      const { data, error } = await supabase.from('agreements').select('*').eq('signing_token', token!).maybeSingle();
+      const { data, error } = await supabase.rpc('get_agreement_by_token', { _token: token! });
       if (error) throw error;
-      return data;
+      return (data as any) || null;
     },
   });
 }

@@ -8614,6 +8614,10 @@ export type Database = {
         Args: { _property_id: string }
         Returns: string
       }
+      decline_agreement_with_token: {
+        Args: { _token: string; _user_agent: string }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -8621,6 +8625,49 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_agreement_by_token: {
+        Args: { _token: string }
+        Returns: {
+          attachment_url: string | null
+          body_html: string
+          category: string
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          declined_at: string | null
+          employee_user_id: string | null
+          expires_at: string | null
+          id: string
+          internal_reference: string | null
+          job_id: string | null
+          merge_data: Json | null
+          notes: string | null
+          property_id: string | null
+          quote_id: string | null
+          recipient_email: string | null
+          recipient_name: string
+          recipient_type: string
+          recipient_user_id: string | null
+          sent_at: string | null
+          sent_by: string | null
+          signed_at: string | null
+          signing_token: string | null
+          status: string
+          subcontractor_user_id: string | null
+          superseded_by: string | null
+          template_id: string | null
+          title: string
+          updated_at: string
+          version: number
+          viewed_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "agreements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_conversation_unread_counts: {
         Args: { _user_id: string }
@@ -8678,6 +8725,7 @@ export type Database = {
         Returns: boolean
       }
       is_worker_role: { Args: { _user_id: string }; Returns: boolean }
+      mark_agreement_viewed: { Args: { _token: string }; Returns: undefined }
       match_flagged_customers: {
         Args: { _email: string; _phone: string }
         Returns: {
@@ -8701,6 +8749,57 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      sign_agreement_with_token: {
+        Args: {
+          _consent_text: string
+          _signature_data: string
+          _signature_type: string
+          _signer_email: string
+          _signer_name: string
+          _token: string
+          _user_agent: string
+        }
+        Returns: {
+          attachment_url: string | null
+          body_html: string
+          category: string
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          declined_at: string | null
+          employee_user_id: string | null
+          expires_at: string | null
+          id: string
+          internal_reference: string | null
+          job_id: string | null
+          merge_data: Json | null
+          notes: string | null
+          property_id: string | null
+          quote_id: string | null
+          recipient_email: string | null
+          recipient_name: string
+          recipient_type: string
+          recipient_user_id: string | null
+          sent_at: string | null
+          sent_by: string | null
+          signed_at: string | null
+          signing_token: string | null
+          status: string
+          subcontractor_user_id: string | null
+          superseded_by: string | null
+          template_id: string | null
+          title: string
+          updated_at: string
+          version: number
+          viewed_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "agreements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       write_audit_log: {
         Args: {

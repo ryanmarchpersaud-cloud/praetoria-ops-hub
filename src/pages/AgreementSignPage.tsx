@@ -32,14 +32,12 @@ export default function AgreementSignPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
 
-  // Mark as viewed on load
+  // Mark as viewed on load (server validates token)
   useEffect(() => {
-    if (agreement && agreement.status === 'sent') {
-      supabase.from('agreements').update({ status: 'viewed', viewed_at: new Date().toISOString() }).eq('id', agreement.id).then(() => {
-        supabase.from('agreement_audit_log').insert({ agreement_id: agreement.id, action: 'viewed', user_agent: navigator.userAgent });
-      });
+    if (agreement && agreement.status === 'sent' && token) {
+      supabase.rpc('mark_agreement_viewed', { _token: token });
     }
-  }, [agreement?.id, agreement?.status]);
+  }, [agreement?.id, agreement?.status, token]);
 
   useEffect(() => {
     if (agreement) {
@@ -196,32 +194,17 @@ export default function AgreementSignPage() {
         if (canvas) sigData = canvas.toDataURL('image/png');
       }
 
-      // Insert signature
-      const { error: sigError } = await supabase.from('agreement_signatures').insert({
-        agreement_id: agreement.id,
-        signer_name: signerName,
-        signer_email: signerEmail,
-        signature_data: sigData,
-        signature_type: signatureType,
-        consent_text: 'I have read and agree to the terms of this agreement.',
-        user_agent: navigator.userAgent,
+      // Sign via secure RPC (validates token + status server-side, inserts signature + audit log)
+      const { error: rpcError } = await supabase.rpc('sign_agreement_with_token', {
+        _token: token!,
+        _signer_name: signerName,
+        _signer_email: signerEmail,
+        _signature_data: sigData,
+        _signature_type: signatureType,
+        _consent_text: 'I have read and agree to the terms of this agreement.',
+        _user_agent: navigator.userAgent,
       });
-      if (sigError) throw sigError;
-
-      // Update agreement status
-      const { error: updError } = await supabase.from('agreements').update({
-        status: 'signed',
-        signed_at: new Date().toISOString(),
-      }).eq('id', agreement.id);
-      if (updError) throw updError;
-
-      // Audit log
-      await supabase.from('agreement_audit_log').insert({
-        agreement_id: agreement.id,
-        action: 'signed',
-        user_agent: navigator.userAgent,
-        metadata: { signer_name: signerName, signer_email: signerEmail },
-      });
+      if (rpcError) throw rpcError;
 
       setSigned(true);
       toast.success('Agreement signed successfully!');
@@ -235,8 +218,11 @@ export default function AgreementSignPage() {
   const handleDecline = async () => {
     setSubmitting(true);
     try {
-      await supabase.from('agreements').update({ status: 'declined', declined_at: new Date().toISOString() }).eq('id', agreement.id);
-      await supabase.from('agreement_audit_log').insert({ agreement_id: agreement.id, action: 'declined', user_agent: navigator.userAgent });
+      const { error } = await supabase.rpc('decline_agreement_with_token', {
+        _token: token!,
+        _user_agent: navigator.userAgent,
+      });
+      if (error) throw error;
       setDeclined(true);
       toast.success('Agreement declined');
     } catch (err: any) {
