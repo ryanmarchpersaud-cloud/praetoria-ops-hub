@@ -657,19 +657,23 @@ Deno.serve(async (req) => {
 
       const replyTo = resolveReplyTo(service_category, "operational");
 
-      // Build attachment links HTML
+      // Build attachment links HTML — only allow trusted https URLs
       let attachmentHtml = "";
-      if (invoice_pdf_url) {
-        attachmentHtml += `<p style="margin:16px 0 8px;"><a href="${invoice_pdf_url}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:600;font-size:14px;">📄 View / Download Invoice PDF</a></p>`;
+      if (isAllowedHttpsUrl(invoice_pdf_url)) {
+        attachmentHtml += `<p style="margin:16px 0 8px;"><a href="${encodeAttr(invoice_pdf_url)}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:600;font-size:14px;">📄 View / Download Invoice PDF</a></p>`;
       }
       if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-        const links = attachments.map((url: string) => {
-          const name = decodeURIComponent(url.split("/").pop() || "Attachment");
-          return `<a href="${url}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
-        }).join("<br/>");
-        attachmentHtml += `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"/>
-          <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+        const safe = attachments.filter((url: unknown) => isAllowedHttpsUrl(url)) as string[];
+        if (safe.length > 0) {
+          const links = safe.map((url: string) => {
+            const name = encodeAttr(decodeURIComponent(url.split("/").pop() || "Attachment"));
+            return `<a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
+          }).join("<br/>");
+          attachmentHtml += `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"/>
+            <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+        }
       }
+
 
       const result = await sendViaResend({
         to: customer_email,
