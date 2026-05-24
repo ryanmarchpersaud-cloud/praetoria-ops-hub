@@ -173,6 +173,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const { requireAuthOrServiceRole } = await import("../_shared/auth.ts");
+  const auth = await requireAuthOrServiceRole(req);
+  if (!auth.ok) return auth.response;
+
   try {
     const { action, ...params } = await req.json();
 

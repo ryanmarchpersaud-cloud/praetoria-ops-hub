@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { requireAuth, requireRole, corsHeaders } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
 
 const SYSTEM_PROMPT = `You are the Praetoria Ops Hub AI Co-pilot — a helpful, concise operations assistant for a field-services company (snow removal, landscaping, cleaning, security, etc.).
 
@@ -110,6 +106,12 @@ serve(async (req) => {
   }
 
   try {
+    // Require authenticated ops/admin user
+    const auth = await requireAuth(req);
+    if (!auth.ok) return auth.response;
+    const gate = await requireRole(auth, ["owner", "admin", "manager", "ops_manager", "accountant", "hr_admin"]);
+    if (!gate.ok) return gate.response;
+
     const { messages } = await req.json();
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages array required" }), {
