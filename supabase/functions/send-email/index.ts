@@ -826,14 +826,15 @@ Deno.serve(async (req) => {
         subject: `[Incident ${report_number || ""}] ${severity?.toUpperCase() || "ALERT"} — ${incident_type || "Incident"}`,
         html: wrapHtml("Incident Report Filed", `
           <p>An incident report has been filed:</p>
-          <p><strong>Report:</strong> ${report_number || "N/A"}</p>
-          <p><strong>Type:</strong> ${incident_type || "N/A"}</p>
-          <p><strong>Severity:</strong> <span class="badge" style="${severity === "critical" ? "background:#fef2f2;color:#dc2626;" : ""}">${severity || "Unknown"}</span></p>
-          <p><strong>Reported by:</strong> ${reporter_name || "N/A"}</p>
-          ${description ? `<p><strong>Description:</strong> ${description}</p>` : ""}
-          <p><a href="https://praetoria-ops-hub.lovable.app/admin/incidents/${incident_id || ""}">View Incident →</a></p>
+          <p><strong>Report:</strong> ${escapeHtml(report_number || "N/A")}</p>
+          <p><strong>Type:</strong> ${escapeHtml(incident_type || "N/A")}</p>
+          <p><strong>Severity:</strong> <span class="badge" style="${severity === "critical" ? "background:#fef2f2;color:#dc2626;" : ""}">${escapeHtml(severity || "Unknown")}</span></p>
+          <p><strong>Reported by:</strong> ${escapeHtml(reporter_name || "N/A")}</p>
+          ${description ? `<p><strong>Description:</strong> ${escapeHtml(description)}</p>` : ""}
+          <p><a href="https://praetoria-ops-hub.lovable.app/admin/incidents/${encodeURIComponent(incident_id || "")}">View Incident →</a></p>
         `),
       });
+
 
       const logEntry: IntegrationEntry = {
         provider: "resend",
