@@ -161,22 +161,36 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Authenticate via webhook secret OR supabase JWT
+  // Authenticate via webhook secret OR admin/owner JWT — FAIL CLOSED if neither
   const webhookSecret = req.headers.get("x-webhook-secret");
   const expectedSecret = Deno.env.get("N8N_WEBHOOK_SECRET");
+  const secretMatches = !!expectedSecret && webhookSecret === expectedSecret;
 
-  if (expectedSecret && webhookSecret !== expectedSecret) {
+  if (!secretMatches) {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return json({ error: "Unauthorized – provide x-webhook-secret header or Bearer token" }, 401);
+      return json({ error: "Unauthorized – provide x-webhook-secret header or admin Bearer token" }, 401);
     }
     const supabaseAuth = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const { error } = await supabaseAuth.auth.getClaims(authHeader.replace("Bearer ", ""));
-    if (error) return json({ error: "Invalid token" }, 401);
+    const token = authHeader.replace("Bearer ", "");
+    const { data, error } = await supabaseAuth.auth.getClaims(token);
+    if (error || !data?.claims?.sub) return json({ error: "Invalid token" }, 401);
+
+    // Require admin/owner/manager role for JWT-authenticated calls
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: roles } = await adminClient
+      .from("user_roles").select("role").eq("user_id", data.claims.sub as string);
+    const allowed = (roles ?? []).some((r: { role: string }) =>
+      ["owner", "admin", "manager", "ops_manager"].includes(r.role)
+    );
+    if (!allowed) return json({ error: "Forbidden" }, 403);
   }
 
   // Service-role client for DB operations
