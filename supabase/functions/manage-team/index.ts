@@ -85,6 +85,10 @@ Deno.serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      if (role === "owner" && !callerIsOwner) {
+        return new Response(JSON.stringify({ error: "Only an owner can create an owner account" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
 
       const { data: authData, error: authErr } = await adminClient.auth.admin.createUser({
         email, password, email_confirm: true,
