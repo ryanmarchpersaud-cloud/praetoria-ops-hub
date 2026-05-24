@@ -261,6 +261,11 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "You cannot remove your own admin role" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+      const ownerErr = await ownerOnlyGuard(user_id, new_role);
+      if (ownerErr) return new Response(JSON.stringify({ error: ownerErr }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (old_role === "owner" && !callerIsOwner) {
+        return new Response(JSON.stringify({ error: "Only an owner can revoke the owner role" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       if (old_role) await adminClient.from("user_roles").delete().eq("user_id", user_id).eq("role", old_role);
       const { data: existing } = await adminClient.from("user_roles").select("id").eq("user_id", user_id).eq("role", new_role).maybeSingle();
       if (!existing) await adminClient.from("user_roles").insert({ user_id, role: new_role });
@@ -275,6 +280,8 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "user_id and updates are required" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+      const ownerErr = await ownerOnlyGuard(user_id, null);
+      if (ownerErr) return new Response(JSON.stringify({ error: ownerErr }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const { data: existing } = await adminClient.from("team_members").select("id").eq("user_id", user_id).maybeSingle();
       if (existing) {
         const { error } = await adminClient.from("team_members").update(updates).eq("user_id", user_id);
@@ -295,6 +302,8 @@ Deno.serve(async (req) => {
       const { user_id } = body;
       if (!user_id) return new Response(JSON.stringify({ error: "user_id is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       if (user_id === callingUser.id) return new Response(JSON.stringify({ error: "You cannot deactivate yourself" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const ownerErr = await ownerOnlyGuard(user_id, null);
+      if (ownerErr) return new Response(JSON.stringify({ error: ownerErr }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const { error: banErr } = await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "876000h" });
       if (banErr) return new Response(JSON.stringify({ error: banErr.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await adminClient.from("team_members").update({ status: "Inactive", is_active: false }).eq("user_id", user_id);
@@ -306,6 +315,8 @@ Deno.serve(async (req) => {
     if (action === "reactivate_user") {
       const { user_id } = body;
       if (!user_id) return new Response(JSON.stringify({ error: "user_id is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const ownerErr = await ownerOnlyGuard(user_id, null);
+      if (ownerErr) return new Response(JSON.stringify({ error: ownerErr }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const { error: unbanErr } = await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "none" });
       if (unbanErr) return new Response(JSON.stringify({ error: unbanErr.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await adminClient.from("team_members").update({ status: "Active", is_active: true }).eq("user_id", user_id);
@@ -317,6 +328,8 @@ Deno.serve(async (req) => {
     if (action === "archive_user") {
       const { user_id } = body;
       if (!user_id) return new Response(JSON.stringify({ error: "user_id is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const ownerErr = await ownerOnlyGuard(user_id, null);
+      if (ownerErr) return new Response(JSON.stringify({ error: ownerErr }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "876000h" });
       await adminClient.from("team_members").update({ status: "Archived", is_active: false }).eq("user_id", user_id);
       return new Response(JSON.stringify({ success: true, message: "User archived" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
