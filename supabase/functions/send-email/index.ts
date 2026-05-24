@@ -466,8 +466,44 @@ Deno.serve(async (req) => {
   const auth = await requireAuthOrServiceRole(req);
   if (!auth.ok) return auth.response;
 
+  // ── Role-based action gating ──────────────────────────────────
+  // Only ops staff may invoke arbitrary outbound email actions.
+  // Field roles (worker/subcontractor) are limited to a small
+  // allow-list of legitimately field-triggered actions.
+  const OPS_ONLY_BYPASS_ACTIONS = new Set([
+    "test",
+    "health",
+    "request_confirmation",
+  ]);
+  const FIELD_ALLOWED_ACTIONS = new Set([
+    "emergency_sos",
+    "incident_report",
+    "incident_share",
+  ]);
+  const OPS_ROLES = new Set([
+    "owner", "admin", "ops_manager", "manager", "accountant", "hr_admin", "dispatcher", "supervisor",
+  ]);
+  const FIELD_ROLES = new Set([
+    "staff", "lead_worker", "supervisor", "dispatcher", "subcontractor",
+  ]);
+
   try {
     const { action, ...params } = await req.json();
+
+    if (!auth.isServiceRole && !OPS_ONLY_BYPASS_ACTIONS.has(action)) {
+      const { data: roleRows } = await auth.adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", auth.userId);
+      const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+      const isOps = roles.some((r) => OPS_ROLES.has(r));
+      const isField = roles.some((r) => FIELD_ROLES.has(r));
+      const allowed = isOps || (isField && FIELD_ALLOWED_ACTIONS.has(action));
+      if (!allowed) {
+        return json({ error: "Forbidden" }, 403);
+      }
+    }
+
 
     // ─── Test email ───
     if (action === "test") {
@@ -790,14 +826,15 @@ Deno.serve(async (req) => {
         subject: `[Incident ${report_number || ""}] ${severity?.toUpperCase() || "ALERT"} — ${incident_type || "Incident"}`,
         html: wrapHtml("Incident Report Filed", `
           <p>An incident report has been filed:</p>
-          <p><strong>Report:</strong> ${report_number || "N/A"}</p>
-          <p><strong>Type:</strong> ${incident_type || "N/A"}</p>
-          <p><strong>Severity:</strong> <span class="badge" style="${severity === "critical" ? "background:#fef2f2;color:#dc2626;" : ""}">${severity || "Unknown"}</span></p>
-          <p><strong>Reported by:</strong> ${reporter_name || "N/A"}</p>
-          ${description ? `<p><strong>Description:</strong> ${description}</p>` : ""}
-          <p><a href="https://praetoria-ops-hub.lovable.app/admin/incidents/${incident_id || ""}">View Incident →</a></p>
+          <p><strong>Report:</strong> ${escapeHtml(report_number || "N/A")}</p>
+          <p><strong>Type:</strong> ${escapeHtml(incident_type || "N/A")}</p>
+          <p><strong>Severity:</strong> <span class="badge" style="${severity === "critical" ? "background:#fef2f2;color:#dc2626;" : ""}">${escapeHtml(severity || "Unknown")}</span></p>
+          <p><strong>Reported by:</strong> ${escapeHtml(reporter_name || "N/A")}</p>
+          ${description ? `<p><strong>Description:</strong> ${escapeHtml(description)}</p>` : ""}
+          <p><a href="https://praetoria-ops-hub.lovable.app/admin/incidents/${encodeURIComponent(incident_id || "")}">View Incident →</a></p>
         `),
       });
+
 
       const logEntry: IntegrationEntry = {
         provider: "resend",
@@ -831,19 +868,20 @@ Deno.serve(async (req) => {
 
       const result = await sendViaResend({
         to: [...new Set(recipients)],
-        subject: `🚨 [EMERGENCY SOS] ${reporter_name || "Unknown"} — Immediate Attention Required`,
+        subject: `🚨 [EMERGENCY SOS] ${String(reporter_name || "Unknown").slice(0, 80)} — Immediate Attention Required`,
         html: wrapHtml("🚨 Emergency SOS Triggered", `
           <div style="background:#fef2f2;border:2px solid #dc2626;border-radius:8px;padding:16px;margin-bottom:16px;">
             <p style="color:#dc2626;font-weight:700;font-size:16px;margin:0 0 8px;">EMERGENCY — Immediate Response Required</p>
-            <p><strong>Person:</strong> ${reporter_name || "Unknown"}</p>
-            <p><strong>Role:</strong> ${reporter_role || "N/A"}</p>
-            ${location ? `<p><strong>Location:</strong> ${location}</p>` : ""}
-            ${message ? `<p><strong>Message:</strong> ${message}</p>` : ""}
+            <p><strong>Person:</strong> ${escapeHtml(reporter_name || "Unknown")}</p>
+            <p><strong>Role:</strong> ${escapeHtml(reporter_role || "N/A")}</p>
+            ${location ? `<p><strong>Location:</strong> ${escapeHtml(location)}</p>` : ""}
+            ${message ? `<p><strong>Message:</strong> ${escapeHtml(message)}</p>` : ""}
             <p><strong>Time:</strong> ${new Date().toISOString()}</p>
           </div>
           <p>This SOS was triggered from the Praetoria Group platform. Please respond immediately.</p>
         `),
       });
+
 
       const logEntry: IntegrationEntry = {
         provider: "resend",
@@ -906,22 +944,31 @@ Deno.serve(async (req) => {
 
       if (!to) return json({ error: "Missing 'to' email address" }, 400);
       if (!signing_url) return json({ error: "Missing signing_url" }, 400);
+      if (!isAllowedHttpsUrl(signing_url)) {
+        return json({ error: "signing_url must be an allowed https URL on a Praetoria domain" }, 400);
+      }
+      if (portal_url && !isAllowedHttpsUrl(portal_url)) {
+        return json({ error: "portal_url must be an allowed https URL on a Praetoria domain" }, 400);
+      }
+      const safeSigningUrl = encodeAttr(signing_url);
+      const safePortalUrl = portal_url ? encodeAttr(portal_url) : "";
 
       const result = await sendViaResend({
         to,
-        subject: `${is_reminder ? "Reminder: " : ""}${agreement_title || "Agreement"} — Signature Requested`,
+        subject: `${is_reminder ? "Reminder: " : ""}${String(agreement_title || "Agreement").slice(0, 160)} — Signature Requested`,
         html: wrapHtml(is_reminder ? "Agreement Reminder" : "Agreement Ready for Signature", `
-          <p>Dear ${recipient_name || "Valued Recipient"},</p>
-          <p>Please review and sign <strong>${agreement_title || "your agreement"}</strong>.</p>
-          ${internal_reference ? `<p><strong>Reference:</strong> ${internal_reference}</p>` : ""}
-          ${agreement_category ? `<p><strong>Category:</strong> <span class="badge">${agreement_category}</span></p>` : ""}
+          <p>Dear ${escapeHtml(recipient_name || "Valued Recipient")},</p>
+          <p>Please review and sign <strong>${escapeHtml(agreement_title || "your agreement")}</strong>.</p>
+          ${internal_reference ? `<p><strong>Reference:</strong> ${escapeHtml(internal_reference)}</p>` : ""}
+          ${agreement_category ? `<p><strong>Category:</strong> <span class="badge">${escapeHtml(agreement_category)}</span></p>` : ""}
           ${attachment_present ? `<p>A PDF version of the agreement is available inside the secure signing page below.</p>` : ""}
           <p style="margin:24px 0;">
-            <a href="${signing_url}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600;">Review &amp; Sign Agreement</a>
+            <a href="${safeSigningUrl}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600;">Review &amp; Sign Agreement</a>
           </p>
           <p>If the button does not open, copy and paste this secure link into your browser:</p>
-          <p style="word-break:break-all;"><a href="${signing_url}">${signing_url}</a></p>
-          ${portal_url ? `<p>If you already have portal access, you can also find this agreement in your portal:<br/><a href="${portal_url}">${portal_url}</a></p>` : ""}
+          <p style="word-break:break-all;"><a href="${safeSigningUrl}">${escapeHtml(signing_url)}</a></p>
+          ${safePortalUrl ? `<p>If you already have portal access, you can also find this agreement in your portal:<br/><a href="${safePortalUrl}">${escapeHtml(portal_url)}</a></p>` : ""}
+
           <p>If you have any questions, simply reply to this email and our team will help.</p>
           <p>Best regards,<br/>Praetoria Group</p>
         `),
@@ -958,20 +1005,27 @@ Deno.serve(async (req) => {
 
       let attachmentHtml = "";
       if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-        const links = attachments.map((url: string) => {
-          const name = url.split("/").pop() || "Attachment";
-          return `<a href="${url}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
-        }).join("<br/>");
-        attachmentHtml = `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;"/>
-          <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+        const links = attachments
+          .filter((url: unknown) => isAllowedHttpsUrl(url))
+          .map((url: string) => {
+            const name = url.split("/").pop() || "Attachment";
+            return `<a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;">${escapeHtml(name)}</a>`;
+          }).join("<br/>");
+        if (links) {
+          attachmentHtml = `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;"/>
+            <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+        }
       }
 
-      const html = wrapHtml(`Re: ${subject || "Your Request"}`, `
+      // messageBody is plain text from admin; render as escaped text preserving newlines
+      const safeBody = escapeHtml(messageBody).replace(/\r?\n/g, "<br/>");
+      const html = wrapHtml(`Re: ${escapeHtml(subject || "Your Request")}`, `
         <h2 style="margin:0 0 16px;font-size:18px;">Message from Praetoria Group</h2>
-        <div style="white-space:pre-wrap;line-height:1.6;">${messageBody}</div>
+        <div style="line-height:1.6;">${safeBody}</div>
         ${attachmentHtml}
         <p style="margin-top:24px;font-size:13px;color:#6b7280;">If you have questions, simply reply to this email.</p>
       `);
+
 
       const replyTo = resolveReplyTo(undefined, "operational");
       const result = await sendViaResend({ to, subject: subject || "Update on your request", html, reply_to: replyTo });
@@ -1121,22 +1175,24 @@ Deno.serve(async (req) => {
       const verb = is_resubmission ? "resubmitted" : "submitted";
       const subjectPrefix = is_resubmission ? "Resubmitted" : "New";
 
+      const safeAttachmentUrl = isAllowedHttpsUrl(attachment_url) ? encodeAttr(attachment_url) : "";
       const result = await sendViaResend({
         to: recipients,
-        subject: `${subjectPrefix} Subcontractor Invoice ${invoice_number || ""} — ${company_name || "Subcontractor"} ($${amountStr})`,
+        subject: `${subjectPrefix} Subcontractor Invoice ${String(invoice_number || "").slice(0, 60)} — ${String(company_name || "Subcontractor").slice(0, 80)} ($${amountStr})`,
         html: wrapHtml(`Subcontractor Invoice ${verb}`, `
-          <p>A subcontractor invoice has been ${verb} for review.</p>
+          <p>A subcontractor invoice has been ${escapeHtml(verb)} for review.</p>
           <table style="border-collapse:collapse;margin:12px 0;">
-            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice #</td><td style="padding:4px 0;"><strong>${invoice_number || "—"}</strong></td></tr>
-            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Subcontractor</td><td style="padding:4px 0;">${company_name || "—"}${contact_name ? ` (${contact_name})` : ""}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice #</td><td style="padding:4px 0;"><strong>${escapeHtml(invoice_number || "—")}</strong></td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Subcontractor</td><td style="padding:4px 0;">${escapeHtml(company_name || "—")}${contact_name ? ` (${escapeHtml(contact_name)})` : ""}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Amount</td><td style="padding:4px 0;"><strong>$${amountStr} CAD</strong></td></tr>
-            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice Date</td><td style="padding:4px 0;">${invoice_date || "—"}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice Date</td><td style="padding:4px 0;">${escapeHtml(invoice_date || "—")}</td></tr>
           </table>
-          ${attachment_url ? `<p><a href="${attachment_url}" style="color:#2563eb;">View attached invoice PDF</a></p>` : ""}
+          ${safeAttachmentUrl ? `<p><a href="${safeAttachmentUrl}" style="color:#2563eb;">View attached invoice PDF</a></p>` : ""}
           <p><a href="https://praetoria-ops-hub.lovable.app/subcontractors/invoices" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;">Review in Admin Portal</a></p>
         `),
         reply_to: EMAIL_CONFIG.opsInbox,
       });
+
 
       await logIntegration({
         provider: "resend",
@@ -1158,14 +1214,15 @@ Deno.serve(async (req) => {
       if (!to) return json({ error: "Missing 'to' email address" }, 400);
 
       const amountStr = amount != null ? Number(amount).toFixed(2) : "0.00";
+      const safeReason = escapeHtml(reason || "").replace(/\r?\n/g, "<br/>");
       const result = await sendViaResend({
         to,
-        subject: `Action Required: Invoice ${invoice_number || ""} needs revision`,
+        subject: `Action Required: Invoice ${String(invoice_number || "").slice(0, 60)} needs revision`,
         html: wrapHtml("Invoice Requires Revision", `
-          <p>Hi ${contact_name || company_name || "there"},</p>
-          <p>Your submitted invoice <strong>${invoice_number || ""}</strong> ($${amountStr} CAD) has been reviewed and requires changes before we can process payment.</p>
+          <p>Hi ${escapeHtml(contact_name || company_name || "there")},</p>
+          <p>Your submitted invoice <strong>${escapeHtml(invoice_number || "")}</strong> ($${amountStr} CAD) has been reviewed and requires changes before we can process payment.</p>
           <p style="background:#fef2f2;border-left:3px solid #dc2626;padding:12px;border-radius:4px;">
-            <strong>Reason:</strong><br/>${(reason || "").replace(/\n/g, "<br/>")}
+            <strong>Reason:</strong><br/>${safeReason}
           </p>
           <p>Please log in to your <a href="https://praetoria-ops-hub.lovable.app/subcontractor/invoices">subcontractor portal</a> to edit and resubmit this invoice.</p>
           <p>If you have questions, reply to this email or contact <a href="mailto:${EMAIL_CONFIG.adminInbox}">${EMAIL_CONFIG.adminInbox}</a>.</p>
@@ -1173,6 +1230,7 @@ Deno.serve(async (req) => {
         `),
         reply_to: EMAIL_CONFIG.adminInbox,
       });
+
 
       await logIntegration({
         provider: "resend",
