@@ -5,6 +5,7 @@ import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 
 const TAG_COLORS: Record<string, string> = {
   Before: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
