@@ -316,6 +316,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const { requireAuthOrServiceRole } = await import("../_shared/auth.ts");
+  const auth = await requireAuthOrServiceRole(req);
+  if (!auth.ok) return auth.response;
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!

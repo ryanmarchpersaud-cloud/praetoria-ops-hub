@@ -111,6 +111,11 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // All checkout actions require an authenticated user
+  const { requireAuth } = await import("../_shared/auth.ts");
+  const auth = await requireAuth(req);
+  if (!auth.ok) return auth.response;
+
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   if (!stripeKey) return json({ error: "STRIPE_SECRET_KEY not configured" }, 500);
   const env = stripeKey.startsWith("sk_test_") ? "test" : "live";

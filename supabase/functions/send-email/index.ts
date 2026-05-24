@@ -414,6 +414,11 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Require either a valid user JWT or an internal service-role token
+  const { requireAuthOrServiceRole } = await import("../_shared/auth.ts");
+  const auth = await requireAuthOrServiceRole(req);
+  if (!auth.ok) return auth.response;
+
   try {
     const { action, ...params } = await req.json();
 
