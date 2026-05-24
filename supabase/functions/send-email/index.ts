@@ -944,22 +944,31 @@ Deno.serve(async (req) => {
 
       if (!to) return json({ error: "Missing 'to' email address" }, 400);
       if (!signing_url) return json({ error: "Missing signing_url" }, 400);
+      if (!isAllowedHttpsUrl(signing_url)) {
+        return json({ error: "signing_url must be an allowed https URL on a Praetoria domain" }, 400);
+      }
+      if (portal_url && !isAllowedHttpsUrl(portal_url)) {
+        return json({ error: "portal_url must be an allowed https URL on a Praetoria domain" }, 400);
+      }
+      const safeSigningUrl = encodeAttr(signing_url);
+      const safePortalUrl = portal_url ? encodeAttr(portal_url) : "";
 
       const result = await sendViaResend({
         to,
-        subject: `${is_reminder ? "Reminder: " : ""}${agreement_title || "Agreement"} — Signature Requested`,
+        subject: `${is_reminder ? "Reminder: " : ""}${String(agreement_title || "Agreement").slice(0, 160)} — Signature Requested`,
         html: wrapHtml(is_reminder ? "Agreement Reminder" : "Agreement Ready for Signature", `
-          <p>Dear ${recipient_name || "Valued Recipient"},</p>
-          <p>Please review and sign <strong>${agreement_title || "your agreement"}</strong>.</p>
-          ${internal_reference ? `<p><strong>Reference:</strong> ${internal_reference}</p>` : ""}
-          ${agreement_category ? `<p><strong>Category:</strong> <span class="badge">${agreement_category}</span></p>` : ""}
+          <p>Dear ${escapeHtml(recipient_name || "Valued Recipient")},</p>
+          <p>Please review and sign <strong>${escapeHtml(agreement_title || "your agreement")}</strong>.</p>
+          ${internal_reference ? `<p><strong>Reference:</strong> ${escapeHtml(internal_reference)}</p>` : ""}
+          ${agreement_category ? `<p><strong>Category:</strong> <span class="badge">${escapeHtml(agreement_category)}</span></p>` : ""}
           ${attachment_present ? `<p>A PDF version of the agreement is available inside the secure signing page below.</p>` : ""}
           <p style="margin:24px 0;">
-            <a href="${signing_url}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600;">Review &amp; Sign Agreement</a>
+            <a href="${safeSigningUrl}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:8px;font-weight:600;">Review &amp; Sign Agreement</a>
           </p>
           <p>If the button does not open, copy and paste this secure link into your browser:</p>
-          <p style="word-break:break-all;"><a href="${signing_url}">${signing_url}</a></p>
-          ${portal_url ? `<p>If you already have portal access, you can also find this agreement in your portal:<br/><a href="${portal_url}">${portal_url}</a></p>` : ""}
+          <p style="word-break:break-all;"><a href="${safeSigningUrl}">${escapeHtml(signing_url)}</a></p>
+          ${safePortalUrl ? `<p>If you already have portal access, you can also find this agreement in your portal:<br/><a href="${safePortalUrl}">${escapeHtml(portal_url)}</a></p>` : ""}
+
           <p>If you have any questions, simply reply to this email and our team will help.</p>
           <p>Best regards,<br/>Praetoria Group</p>
         `),
