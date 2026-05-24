@@ -13,6 +13,53 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
+// ── Security helpers ──────────────────────────────────────────────
+// Allowed origins for any URL fetched server-side (SSRF guard) or rendered as href
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const ALLOWED_FETCH_PREFIXES = [
+  SUPABASE_URL ? `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/` : "",
+  "https://praetoria-ops-hub.lovable.app/",
+  "https://praetoriagroup.ca/",
+  "https://www.praetoriagroup.ca/",
+].filter(Boolean);
+
+function isAllowedHttpsUrl(u: unknown): u is string {
+  if (typeof u !== "string" || !u) return false;
+  try {
+    const parsed = new URL(u);
+    if (parsed.protocol !== "https:") return false;
+    return ALLOWED_FETCH_PREFIXES.some((p) => u.startsWith(p));
+  } catch {
+    return false;
+  }
+}
+
+function encodeAttr(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Strip <script>/<style>/<iframe>/<object>/<embed> blocks and on*= handlers
+// and javascript:/data: URLs. Not a full sanitizer, but blocks the common
+// HTML-injection vectors for emails composed via this endpoint.
+function sanitizeEmailHtml(input: unknown): string {
+  if (typeof input !== "string" || !input) return "";
+  let s = input;
+  s = s.replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[\s\S]*?<\s*\/\s*\1\s*>/gi, "");
+  s = s.replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[^>]*\/?>/gi, "");
+  s = s.replace(/\son[a-z]+\s*=\s*"(?:[^"\\]|\\.)*"/gi, "");
+  s = s.replace(/\son[a-z]+\s*=\s*'(?:[^'\\]|\\.)*'/gi, "");
+  s = s.replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, "");
+  s = s.replace(/(href|src)\s*=\s*"\s*(javascript|data|vbscript):[^"]*"/gi, '$1="#"');
+  s = s.replace(/(href|src)\s*=\s*'\s*(javascript|data|vbscript):[^']*'/gi, "$1='#'");
+  return s;
+}
+
+
 const SENDER = "Praetoria Group <noreply@praetoriagroup.ca>";
 
 // ── Email routing config (mirrors src/lib/emailConfig.ts) ─────────
