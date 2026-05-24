@@ -868,19 +868,20 @@ Deno.serve(async (req) => {
 
       const result = await sendViaResend({
         to: [...new Set(recipients)],
-        subject: `🚨 [EMERGENCY SOS] ${reporter_name || "Unknown"} — Immediate Attention Required`,
+        subject: `🚨 [EMERGENCY SOS] ${String(reporter_name || "Unknown").slice(0, 80)} — Immediate Attention Required`,
         html: wrapHtml("🚨 Emergency SOS Triggered", `
           <div style="background:#fef2f2;border:2px solid #dc2626;border-radius:8px;padding:16px;margin-bottom:16px;">
             <p style="color:#dc2626;font-weight:700;font-size:16px;margin:0 0 8px;">EMERGENCY — Immediate Response Required</p>
-            <p><strong>Person:</strong> ${reporter_name || "Unknown"}</p>
-            <p><strong>Role:</strong> ${reporter_role || "N/A"}</p>
-            ${location ? `<p><strong>Location:</strong> ${location}</p>` : ""}
-            ${message ? `<p><strong>Message:</strong> ${message}</p>` : ""}
+            <p><strong>Person:</strong> ${escapeHtml(reporter_name || "Unknown")}</p>
+            <p><strong>Role:</strong> ${escapeHtml(reporter_role || "N/A")}</p>
+            ${location ? `<p><strong>Location:</strong> ${escapeHtml(location)}</p>` : ""}
+            ${message ? `<p><strong>Message:</strong> ${escapeHtml(message)}</p>` : ""}
             <p><strong>Time:</strong> ${new Date().toISOString()}</p>
           </div>
           <p>This SOS was triggered from the Praetoria Group platform. Please respond immediately.</p>
         `),
       });
+
 
       const logEntry: IntegrationEntry = {
         provider: "resend",
