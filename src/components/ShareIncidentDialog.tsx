@@ -84,8 +84,13 @@ export function ShareIncidentDialog({ open, onOpenChange, report }: ShareInciden
       const path = `incident-shares/${report.id}/${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from('attachments').upload(path, attachedFile);
       if (error) throw error;
-      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
-      return urlData.publicUrl;
+      // Use a 30-day signed URL so external recipients can view the file
+      // without exposing the bucket publicly.
+      const { data: signed, error: signErr } = await supabase
+        .storage.from('attachments')
+        .createSignedUrl(path, 60 * 60 * 24 * 30);
+      if (signErr) throw signErr;
+      return signed?.signedUrl ?? null;
     } finally {
       setUploading(false);
     }
