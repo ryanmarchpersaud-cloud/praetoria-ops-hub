@@ -32,14 +32,12 @@ export default function AgreementSignPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
 
-  // Mark as viewed on load
+  // Mark as viewed on load (server validates token)
   useEffect(() => {
-    if (agreement && agreement.status === 'sent') {
-      supabase.from('agreements').update({ status: 'viewed', viewed_at: new Date().toISOString() }).eq('id', agreement.id).then(() => {
-        supabase.from('agreement_audit_log').insert({ agreement_id: agreement.id, action: 'viewed', user_agent: navigator.userAgent });
-      });
+    if (agreement && agreement.status === 'sent' && token) {
+      supabase.rpc('mark_agreement_viewed', { _token: token });
     }
-  }, [agreement?.id, agreement?.status]);
+  }, [agreement?.id, agreement?.status, token]);
 
   useEffect(() => {
     if (agreement) {
