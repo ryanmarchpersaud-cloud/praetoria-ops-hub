@@ -48,11 +48,10 @@ serve(async (req) => {
       .select("role")
       .eq("user_id", callingUser.id);
 
-    const isCustomerRole = callerRoles?.some((r: any) => r.role === "customer");
-    const isStaffOrNoRole =
-      !callerRoles || callerRoles.length === 0 || !isCustomerRole;
+    const ALLOWED_ROLES = ["owner", "admin", "ops_manager", "manager", "accountant", "hr_admin"];
+    const isAllowed = callerRoles?.some((r: any) => ALLOWED_ROLES.includes(r.role));
 
-    if (!isStaffOrNoRole) {
+    if (!isAllowed) {
       return new Response(
         JSON.stringify({ error: "Only staff can invite customers" }),
         {
