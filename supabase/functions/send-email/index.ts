@@ -719,7 +719,7 @@ Deno.serve(async (req) => {
       const result = await sendViaResend({
         to: recipients,
         subject: `[Praetoria Group] ${subject}`,
-        html: wrapHtml("Internal Notification", body_html || `<p>${subject}</p>`),
+        html: wrapHtml("Internal Notification", sanitizeEmailHtml(body_html) || `<p>${encodeAttr(String(subject))}</p>`),
       });
       const logEntry: IntegrationEntry = {
         provider: "resend",
