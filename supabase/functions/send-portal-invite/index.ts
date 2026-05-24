@@ -145,8 +145,13 @@ Deno.serve(async (req) => {
     }
 
     const { portal_type, user_id, customer_id } = await req.json();
-    // Strong default temp password (must pass HIBP/leaked-password checks)
-    const DEFAULT_TEMP_PASSWORD = `Praetoria!${Math.floor(1000 + Math.random() * 9000)}${Math.random().toString(36).slice(2, 6)}`;
+    // Cryptographically secure temp password
+    const _pwBytes = new Uint8Array(12);
+    crypto.getRandomValues(_pwBytes);
+    const _pwChars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let _pw = '';
+    for (let i = 0; i < _pwBytes.length; i++) _pw += _pwChars[_pwBytes[i] % _pwChars.length];
+    const DEFAULT_TEMP_PASSWORD = `Praetoria!${_pw}`;
     const temporary_password = DEFAULT_TEMP_PASSWORD;
 
     if (!portal_type || !["worker", "subcontractor", "customer"].includes(portal_type)) {
