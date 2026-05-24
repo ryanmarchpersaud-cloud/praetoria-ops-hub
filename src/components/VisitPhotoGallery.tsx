@@ -433,8 +433,8 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
           {currentPhoto && (
             <div className="relative">
               <div className="flex items-center justify-center min-h-[300px] max-h-[70vh]">
-                <img
-                  src={currentPhoto.file_url}
+                <SignedVisitPhotoImg
+                  fileUrl={currentPhoto.file_url}
                   alt={currentPhoto.caption || currentPhoto.file_name}
                   className="max-w-full max-h-[70vh] object-contain"
                 />
