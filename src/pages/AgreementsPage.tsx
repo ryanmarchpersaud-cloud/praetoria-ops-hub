@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, FileSignature, Send, Eye, Search, Filter, Upload, FileText } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -417,7 +418,7 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
               <>
                 <Separator />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Preview</h4>
-                <div className="border rounded-lg p-4 bg-background prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: renderBody() }} />
+                <div className="border rounded-lg p-4 bg-background prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderBody()) }} />
               </>
             )}
           </div>
