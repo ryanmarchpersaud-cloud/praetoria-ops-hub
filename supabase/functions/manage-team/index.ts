@@ -39,12 +39,26 @@ Deno.serve(async (req) => {
       .from("user_roles").select("role").eq("user_id", callingUser.id);
 
     const isAdmin = callerRoles?.some((r: any) => ["admin", "owner"].includes(r.role));
+    const callerIsOwner = callerRoles?.some((r: any) => r.role === "owner");
     if (!isAdmin) {
       return new Response(
         JSON.stringify({ error: "Only admins can manage team members" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Helper: only owners may target an owner account or grant the owner role.
+    const ownerOnlyGuard = async (targetUserId?: string | null, newRole?: string | null) => {
+      if (newRole === "owner" && !callerIsOwner) {
+        return "Only an owner can grant the owner role";
+      }
+      if (targetUserId) {
+        const { data: ownerRow } = await adminClient
+          .from("user_roles").select("role").eq("user_id", targetUserId).eq("role", "owner").maybeSingle();
+        if (ownerRow && !callerIsOwner) return "Only an owner can modify an owner account";
+      }
+      return null;
+    };
 
     const body = await req.json();
     const { action } = body;
