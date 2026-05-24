@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
 
     if (action === "test_checkout") {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
+      const origin = safeOrigin(req);
 
       const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
       const authHeader = req.headers.get("Authorization");
@@ -239,7 +239,7 @@ Deno.serve(async (req) => {
       if (!price_id) return json({ error: "Missing price_id" }, 400);
 
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
+      const origin = safeOrigin(req);
 
       let stripeCustomerId: string | undefined;
       if (customer_email) {
@@ -303,7 +303,7 @@ Deno.serve(async (req) => {
       if (!invoice_id || !amount) return json({ error: "Missing invoice_id or amount" }, 400);
 
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
+      const origin = safeOrigin(req);
 
       const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
       const authHeader = req.headers.get("Authorization");
