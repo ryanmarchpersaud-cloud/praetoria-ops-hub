@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera, ImagePlus, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { downscaleImageIfLarge, yieldToBrowser, shouldSkipImagePreview } from '@/lib/iosDebug';
 import { isIOSNative } from '@/lib/platform';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 
 // On native iOS we currently rely on the gallery/files picker only.
 // The direct `capture="environment"` camera path has been linked to
