@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useVisit, useUpdateVisit } from '@/hooks/useVisits';
 import { useVisitPhotos, useUploadVisitPhoto, PHOTO_TAGS, PhotoTag } from '@/hooks/useVisitPhotos';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
