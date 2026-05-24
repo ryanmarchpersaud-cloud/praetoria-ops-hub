@@ -277,12 +277,13 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
                   onClick={() => openViewer(i)}
                   className="relative aspect-square rounded-md overflow-hidden border hover:ring-2 hover:ring-primary/50 transition-all group"
                 >
-                  <img
-                    src={photo.file_url}
+                  <SignedVisitPhotoImg
+                    fileUrl={photo.file_url}
                     alt={photo.caption || photo.file_name}
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
+
                   <span className={`absolute top-1 left-1 text-[8px] font-medium px-1 py-0.5 rounded ${TAG_COLORS[photo.photo_tag] || 'bg-muted text-muted-foreground'}`}>
                     {photo.photo_tag}
                   </span>
