@@ -466,8 +466,44 @@ Deno.serve(async (req) => {
   const auth = await requireAuthOrServiceRole(req);
   if (!auth.ok) return auth.response;
 
+  // ── Role-based action gating ──────────────────────────────────
+  // Only ops staff may invoke arbitrary outbound email actions.
+  // Field roles (worker/subcontractor) are limited to a small
+  // allow-list of legitimately field-triggered actions.
+  const OPS_ONLY_BYPASS_ACTIONS = new Set([
+    "test",
+    "health",
+    "request_confirmation",
+  ]);
+  const FIELD_ALLOWED_ACTIONS = new Set([
+    "emergency_sos",
+    "incident_report",
+    "incident_share",
+  ]);
+  const OPS_ROLES = new Set([
+    "owner", "admin", "ops_manager", "manager", "accountant", "hr_admin", "dispatcher", "supervisor",
+  ]);
+  const FIELD_ROLES = new Set([
+    "staff", "lead_worker", "supervisor", "dispatcher", "subcontractor",
+  ]);
+
   try {
     const { action, ...params } = await req.json();
+
+    if (!auth.isServiceRole && !OPS_ONLY_BYPASS_ACTIONS.has(action)) {
+      const { data: roleRows } = await auth.adminClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", auth.userId);
+      const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+      const isOps = roles.some((r) => OPS_ROLES.has(r));
+      const isField = roles.some((r) => FIELD_ROLES.has(r));
+      const allowed = isOps || (isField && FIELD_ALLOWED_ACTIONS.has(action));
+      if (!allowed) {
+        return json({ error: "Forbidden" }, 403);
+      }
+    }
+
 
     // ─── Test email ───
     if (action === "test") {
