@@ -9,6 +9,7 @@ import {
   Snowflake, Sun, Leaf, ChevronLeft, ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 
 const STATUS_STYLES: Record<string, string> = {
   Completed: 'bg-green-100 text-green-700',
@@ -227,7 +228,7 @@ export function CustomerServiceHistory({ customerId }: { customerId: string }) {
                                           onClick={() => openLightbox(photos, idx)}
                                           className="relative shrink-0 w-20 h-20 rounded-md overflow-hidden border hover:ring-2 hover:ring-primary/50"
                                         >
-                                          <img src={photo.file_url} alt={photo.caption || ''} className="w-full h-full object-cover" loading="lazy" />
+                                          <SignedVisitPhotoImg fileUrl={photo.file_url} alt={photo.caption || ''} className="w-full h-full object-cover" loading="lazy" />
                                           <span className={cn('absolute bottom-0 inset-x-0 text-[8px] font-medium text-center py-0.5', TAG_COLORS[photo.photo_tag] || 'bg-muted text-muted-foreground')}>
                                             {photo.photo_tag}
                                           </span>
@@ -263,8 +264,8 @@ export function CustomerServiceHistory({ customerId }: { customerId: string }) {
           {lightboxPhotos.length > 0 && lightboxPhotos[lightboxIdx] && (
             <div className="relative">
               <div className="flex items-center justify-center min-h-[250px] max-h-[70vh]">
-                <img
-                  src={lightboxPhotos[lightboxIdx].file_url}
+                <SignedVisitPhotoImg
+                  fileUrl={lightboxPhotos[lightboxIdx].file_url}
                   alt={lightboxPhotos[lightboxIdx].caption || ''}
                   className="max-w-full max-h-[70vh] object-contain"
                 />

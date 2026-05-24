@@ -5,6 +5,7 @@ import { useCustomerProfile } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 
 const TAG_COLORS: Record<string, string> = {
   Before: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -72,7 +73,7 @@ export default function PortalPhotos() {
               onClick={() => { setViewerIndex(i); setViewerOpen(true); }}
               className="relative aspect-square rounded-lg overflow-hidden border hover:ring-2 hover:ring-primary/50 transition-all group"
             >
-              <img src={photo.file_url} alt={photo.caption || ''} className="w-full h-full object-cover" loading="lazy" />
+              <SignedVisitPhotoImg fileUrl={photo.file_url} alt={photo.caption || ''} className="w-full h-full object-cover" loading="lazy" />
               <span className={`absolute top-1.5 left-1.5 text-[9px] font-medium px-1.5 py-0.5 rounded ${TAG_COLORS[photo.photo_tag] || ''}`}>
                 {photo.photo_tag}
               </span>
@@ -92,7 +93,7 @@ export default function PortalPhotos() {
           {current && (
             <div className="relative">
               <div className="flex items-center justify-center min-h-[300px] max-h-[70vh]">
-                <img src={current.file_url} alt={current.caption || ''} className="max-w-full max-h-[70vh] object-contain" />
+                <SignedVisitPhotoImg fileUrl={current.file_url} alt={current.caption || ''} className="max-w-full max-h-[70vh] object-contain" />
               </div>
               {filtered.length > 1 && (
                 <>

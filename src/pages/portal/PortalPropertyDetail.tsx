@@ -9,6 +9,7 @@ import {
   ArrowLeft, MapPin, Key, StickyNote, Camera, AlertTriangle,
   History, ShieldCheck, Snowflake, FileText, ClipboardCheck, MessageSquarePlus,
 } from 'lucide-react';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 
 export default function PortalPropertyDetail() {
   const { id } = useParams<{ id: string }>();
@@ -266,7 +267,7 @@ export default function PortalPropertyDetail() {
             <div className="grid grid-cols-4 gap-2">
               {photos.map((photo: any) => (
                 <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden bg-muted">
-                  <img src={photo.file_url} alt={photo.caption || 'Property photo'} className="w-full h-full object-cover" loading="lazy" />
+                  <SignedVisitPhotoImg fileUrl={photo.file_url} alt={photo.caption || 'Property photo'} className="w-full h-full object-cover" loading="lazy" />
                   <span className="absolute top-1 left-1 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">{photo.photo_tag}</span>
                 </div>
               ))}

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Camera, ImagePlus, X, Trash2, ChevronLeft, ChevronRight, ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { downscaleImageIfLarge, yieldToBrowser, shouldSkipImagePreview } from '@/lib/iosDebug';
 import { isIOSNative } from '@/lib/platform';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 
 // On native iOS we currently rely on the gallery/files picker only.
 // The direct `capture="environment"` camera path has been linked to
@@ -276,12 +277,13 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
                   onClick={() => openViewer(i)}
                   className="relative aspect-square rounded-md overflow-hidden border hover:ring-2 hover:ring-primary/50 transition-all group"
                 >
-                  <img
-                    src={photo.file_url}
+                  <SignedVisitPhotoImg
+                    fileUrl={photo.file_url}
                     alt={photo.caption || photo.file_name}
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
+
                   <span className={`absolute top-1 left-1 text-[8px] font-medium px-1 py-0.5 rounded ${TAG_COLORS[photo.photo_tag] || 'bg-muted text-muted-foreground'}`}>
                     {photo.photo_tag}
                   </span>
@@ -431,8 +433,8 @@ export function VisitPhotoGallery({ visitId, propertyId, customerId }: VisitPhot
           {currentPhoto && (
             <div className="relative">
               <div className="flex items-center justify-center min-h-[300px] max-h-[70vh]">
-                <img
-                  src={currentPhoto.file_url}
+                <SignedVisitPhotoImg
+                  fileUrl={currentPhoto.file_url}
                   alt={currentPhoto.caption || currentPhoto.file_name}
                   className="max-w-full max-h-[70vh] object-contain"
                 />
