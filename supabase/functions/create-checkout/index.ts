@@ -106,6 +106,22 @@ async function notifyN8n(entry: IntegrationEntry) {
 
 const TEST_PRICE_ID = "price_1TCO8lR6HWfxbuQUMooGNBfM";
 
+// Whitelist of origins allowed in Stripe success/cancel URLs. Anything not
+// on this list falls back to the canonical production URL — this prevents an
+// authenticated caller from setting an `Origin` header to phish customers
+// via the post-checkout redirect.
+const ALLOWED_ORIGINS = new Set([
+  "https://praetoria-ops-hub.lovable.app",
+  "https://praetoriagroup.ca",
+  "https://www.praetoriagroup.ca",
+  "https://id-preview--a05370e8-ed19-4688-b1ac-4d4a239ef9ea.lovable.app",
+]);
+const DEFAULT_ORIGIN = "https://praetoria-ops-hub.lovable.app";
+function safeOrigin(req: Request): string {
+  const o = req.headers.get("origin") || "";
+  return ALLOWED_ORIGINS.has(o) ? o : DEFAULT_ORIGIN;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -156,7 +172,7 @@ Deno.serve(async (req) => {
 
     if (action === "test_checkout") {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
+      const origin = safeOrigin(req);
 
       const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
       const authHeader = req.headers.get("Authorization");
@@ -223,7 +239,7 @@ Deno.serve(async (req) => {
       if (!price_id) return json({ error: "Missing price_id" }, 400);
 
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
+      const origin = safeOrigin(req);
 
       let stripeCustomerId: string | undefined;
       if (customer_email) {
@@ -287,7 +303,7 @@ Deno.serve(async (req) => {
       if (!invoice_id || !amount) return json({ error: "Missing invoice_id or amount" }, 400);
 
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      const origin = req.headers.get("origin") || "https://praetoria-ops-hub.lovable.app";
+      const origin = safeOrigin(req);
 
       const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "");
       const authHeader = req.headers.get("Authorization");

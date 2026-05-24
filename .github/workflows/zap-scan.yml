@@ -1,0 +1,47 @@
+name: OWASP ZAP Baseline Scan
+
+# Runs the OWASP ZAP baseline scanner against the published Praetoria app.
+# - On every push to main (after Lovable redeploys)
+# - Weekly on Monday 09:00 UTC
+# - Manually on demand from the Actions tab
+#
+# The baseline scan is non-destructive (no active attacks) and safe to run
+# against production. Findings are uploaded as an HTML/MD/JSON report
+# and as a GitHub Actions artifact.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'URL to scan (defaults to the published Praetoria app)'
+        required: false
+        default: 'https://praetoria-ops-hub.lovable.app'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  zap_baseline:
+    name: ZAP Baseline
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ github.event.inputs.target_url || 'https://praetoria-ops-hub.lovable.app' }}
+          # -I: don't fail the build on warnings (we still upload the report)
+          # -j: use AJAX spider for SPA routes
+          # -m 10: 10 minutes of spider/passive scan
+          cmd_options: '-I -j -m 10'
+          rules_file_name: '.zap/rules.tsv'
+          allow_issue_writing: true
+          fail_action: false
+          artifact_name: zap-baseline-report

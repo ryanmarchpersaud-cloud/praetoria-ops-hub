@@ -8695,6 +8695,7 @@ export type Database = {
       }
       is_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
       is_ops_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_owner: { Args: { _user_id: string }; Returns: boolean }
       is_personal_account_owner: {
         Args: { _user_id: string }
         Returns: boolean
