@@ -667,7 +667,7 @@ export default function WorkerVisitExec() {
                 <div className="grid grid-cols-4 gap-1.5">
                   {(photos as any[]).map((p: any) => (
                     <div key={p.id} className="relative aspect-square rounded-md overflow-hidden border">
-                      <img src={p.file_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <SignedVisitPhotoImg fileUrl={p.file_url} alt="" className="w-full h-full object-cover" loading="lazy" />
                       <span className={`absolute top-0.5 left-0.5 text-[7px] font-medium px-1 rounded ${TAG_COLORS[p.photo_tag] || ''}`}>
                         {p.photo_tag}
                       </span>
