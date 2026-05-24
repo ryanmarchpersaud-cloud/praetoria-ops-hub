@@ -1175,22 +1175,24 @@ Deno.serve(async (req) => {
       const verb = is_resubmission ? "resubmitted" : "submitted";
       const subjectPrefix = is_resubmission ? "Resubmitted" : "New";
 
+      const safeAttachmentUrl = isAllowedHttpsUrl(attachment_url) ? encodeAttr(attachment_url) : "";
       const result = await sendViaResend({
         to: recipients,
-        subject: `${subjectPrefix} Subcontractor Invoice ${invoice_number || ""} — ${company_name || "Subcontractor"} ($${amountStr})`,
+        subject: `${subjectPrefix} Subcontractor Invoice ${String(invoice_number || "").slice(0, 60)} — ${String(company_name || "Subcontractor").slice(0, 80)} ($${amountStr})`,
         html: wrapHtml(`Subcontractor Invoice ${verb}`, `
-          <p>A subcontractor invoice has been ${verb} for review.</p>
+          <p>A subcontractor invoice has been ${escapeHtml(verb)} for review.</p>
           <table style="border-collapse:collapse;margin:12px 0;">
-            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice #</td><td style="padding:4px 0;"><strong>${invoice_number || "—"}</strong></td></tr>
-            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Subcontractor</td><td style="padding:4px 0;">${company_name || "—"}${contact_name ? ` (${contact_name})` : ""}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice #</td><td style="padding:4px 0;"><strong>${escapeHtml(invoice_number || "—")}</strong></td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Subcontractor</td><td style="padding:4px 0;">${escapeHtml(company_name || "—")}${contact_name ? ` (${escapeHtml(contact_name)})` : ""}</td></tr>
             <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Amount</td><td style="padding:4px 0;"><strong>$${amountStr} CAD</strong></td></tr>
-            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice Date</td><td style="padding:4px 0;">${invoice_date || "—"}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0;color:#64748b;">Invoice Date</td><td style="padding:4px 0;">${escapeHtml(invoice_date || "—")}</td></tr>
           </table>
-          ${attachment_url ? `<p><a href="${attachment_url}" style="color:#2563eb;">View attached invoice PDF</a></p>` : ""}
+          ${safeAttachmentUrl ? `<p><a href="${safeAttachmentUrl}" style="color:#2563eb;">View attached invoice PDF</a></p>` : ""}
           <p><a href="https://praetoria-ops-hub.lovable.app/subcontractors/invoices" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;">Review in Admin Portal</a></p>
         `),
         reply_to: EMAIL_CONFIG.opsInbox,
       });
+
 
       await logIntegration({
         provider: "resend",
