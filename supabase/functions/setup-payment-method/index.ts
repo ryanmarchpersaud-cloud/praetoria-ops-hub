@@ -59,8 +59,8 @@ serve(async (req) => {
       customer: customerId,
       mode: "setup",
       payment_method_types: ["card"],
-      success_url: `${req.headers.get("origin")}/${role_type === "subcontractor" ? "subcontractor/payments" : "portal/billing"}?card_saved=true`,
-      cancel_url: `${req.headers.get("origin")}/${role_type === "subcontractor" ? "subcontractor/payments" : "portal/billing"}`,
+      success_url: `https://praetoria-ops-hub.lovable.app/${role_type === "subcontractor" ? "subcontractor/payments" : "portal/billing"}?card_saved=true`,
+      cancel_url: `https://praetoria-ops-hub.lovable.app/${role_type === "subcontractor" ? "subcontractor/payments" : "portal/billing"}`,
       metadata: { user_id: userId, role_type: role_type || "customer" },
     });
 
