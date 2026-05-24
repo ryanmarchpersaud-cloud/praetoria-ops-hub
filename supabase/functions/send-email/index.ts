@@ -869,7 +869,7 @@ Deno.serve(async (req) => {
       const result = await sendViaResend({
         to,
         subject: subject || "Incident Report — Praetoria Group",
-        html: html || "<p>Incident report attached.</p>",
+        html: sanitizeEmailHtml(html) || "<p>Incident report attached.</p>",
         reply_to: reply_to || EMAIL_CONFIG.opsInbox,
       });
 
