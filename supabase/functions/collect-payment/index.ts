@@ -31,6 +31,21 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     }
 
+    // Restrict to ops/admin/accountant — only staff may charge cards on file
+    const userId = claimsData.claims.sub as string;
+    const serviceClientForRoleCheck = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    const { data: roles } = await serviceClientForRoleCheck
+      .from("user_roles").select("role").eq("user_id", userId);
+    const allowed = (roles ?? []).some((r: { role: string }) =>
+      ["owner", "admin", "accountant", "ops_manager", "manager"].includes(r.role)
+    );
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
+    }
+
     const { invoice_id, amount } = await req.json();
     if (!invoice_id || !amount || amount <= 0) {
       return new Response(JSON.stringify({ error: "invoice_id and positive amount are required" }), {
