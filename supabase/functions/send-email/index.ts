@@ -1005,20 +1005,27 @@ Deno.serve(async (req) => {
 
       let attachmentHtml = "";
       if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-        const links = attachments.map((url: string) => {
-          const name = url.split("/").pop() || "Attachment";
-          return `<a href="${url}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
-        }).join("<br/>");
-        attachmentHtml = `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;"/>
-          <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+        const links = attachments
+          .filter((url: unknown) => isAllowedHttpsUrl(url))
+          .map((url: string) => {
+            const name = url.split("/").pop() || "Attachment";
+            return `<a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;">${escapeHtml(name)}</a>`;
+          }).join("<br/>");
+        if (links) {
+          attachmentHtml = `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;"/>
+            <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+        }
       }
 
-      const html = wrapHtml(`Re: ${subject || "Your Request"}`, `
+      // messageBody is plain text from admin; render as escaped text preserving newlines
+      const safeBody = escapeHtml(messageBody).replace(/\r?\n/g, "<br/>");
+      const html = wrapHtml(`Re: ${escapeHtml(subject || "Your Request")}`, `
         <h2 style="margin:0 0 16px;font-size:18px;">Message from Praetoria Group</h2>
-        <div style="white-space:pre-wrap;line-height:1.6;">${messageBody}</div>
+        <div style="line-height:1.6;">${safeBody}</div>
         ${attachmentHtml}
         <p style="margin-top:24px;font-size:13px;color:#6b7280;">If you have questions, simply reply to this email.</p>
       `);
+
 
       const replyTo = resolveReplyTo(undefined, "operational");
       const result = await sendViaResend({ to, subject: subject || "Update on your request", html, reply_to: replyTo });
