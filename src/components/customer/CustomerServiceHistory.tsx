@@ -264,8 +264,8 @@ export function CustomerServiceHistory({ customerId }: { customerId: string }) {
           {lightboxPhotos.length > 0 && lightboxPhotos[lightboxIdx] && (
             <div className="relative">
               <div className="flex items-center justify-center min-h-[250px] max-h-[70vh]">
-                <img
-                  src={lightboxPhotos[lightboxIdx].file_url}
+                <SignedVisitPhotoImg
+                  fileUrl={lightboxPhotos[lightboxIdx].file_url}
                   alt={lightboxPhotos[lightboxIdx].caption || ''}
                   className="max-w-full max-h-[70vh] object-contain"
                 />
