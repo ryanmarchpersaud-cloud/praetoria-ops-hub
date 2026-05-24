@@ -50,6 +50,18 @@ Deno.serve(async (req) => {
 
     const targetUserId = reqRow.user_id;
 
+    // Privilege isolation: admins cannot delete owners.
+    const { data: targetIsOwner } = await admin.rpc('is_owner', { _user_id: targetUserId });
+    if (targetIsOwner) {
+      const { data: callerIsOwner } = await admin.rpc('is_owner', { _user_id: actor.id });
+      if (!callerIsOwner) {
+        return new Response(JSON.stringify({ error: 'Only an owner can delete an owner account' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+
     // Best-effort cleanup of profile/role rows (other business data is retained per policy)
     const cleanupSteps: Array<[string, Promise<any>]> = [
       ['profiles.delete', admin.from('profiles').delete().eq('user_id', targetUserId)],

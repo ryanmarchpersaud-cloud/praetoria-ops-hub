@@ -6,13 +6,13 @@ const corsHeaders = {
 };
 
 function generateTempPassword(): string {
-  // 12 chars: easy to type, contains letter, number, and symbol
-  const adjectives = ['Snow', 'Bold', 'Swift', 'Sharp', 'Bright', 'Clear', 'Frost', 'Steel'];
-  const nouns = ['Lion', 'Bear', 'Wolf', 'Hawk', 'Eagle', 'Fox', 'Owl', 'Tiger'];
-  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const noun = nouns[Math.floor(Math.random() * nouns.length)];
-  const num = Math.floor(100 + Math.random() * 900);
-  return `${adj}${noun}${num}!`;
+  // Cryptographically secure 16-char password: letters, digits, and a symbol.
+  const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const bytes = new Uint8Array(15);
+  crypto.getRandomValues(bytes);
+  let pwd = '';
+  for (let i = 0; i < bytes.length; i++) pwd += charset[bytes[i] % charset.length];
+  return pwd + '!';
 }
 
 Deno.serve(async (req) => {
@@ -55,6 +55,19 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    // Privilege isolation: only owners may reset another owner's password.
+    const { data: targetIsOwner } = await admin.rpc('is_owner', { _user_id: target_user_id });
+    if (targetIsOwner) {
+      const { data: callerIsOwner } = await admin.rpc('is_owner', { _user_id: userData.user.id });
+      if (!callerIsOwner) {
+        return new Response(JSON.stringify({ error: 'Only an owner can reset an owner password' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
 
     const tempPassword = (typeof body.password === 'string' && body.password.length >= 8)
       ? body.password
