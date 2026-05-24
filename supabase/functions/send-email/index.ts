@@ -1214,14 +1214,15 @@ Deno.serve(async (req) => {
       if (!to) return json({ error: "Missing 'to' email address" }, 400);
 
       const amountStr = amount != null ? Number(amount).toFixed(2) : "0.00";
+      const safeReason = escapeHtml(reason || "").replace(/\r?\n/g, "<br/>");
       const result = await sendViaResend({
         to,
-        subject: `Action Required: Invoice ${invoice_number || ""} needs revision`,
+        subject: `Action Required: Invoice ${String(invoice_number || "").slice(0, 60)} needs revision`,
         html: wrapHtml("Invoice Requires Revision", `
-          <p>Hi ${contact_name || company_name || "there"},</p>
-          <p>Your submitted invoice <strong>${invoice_number || ""}</strong> ($${amountStr} CAD) has been reviewed and requires changes before we can process payment.</p>
+          <p>Hi ${escapeHtml(contact_name || company_name || "there")},</p>
+          <p>Your submitted invoice <strong>${escapeHtml(invoice_number || "")}</strong> ($${amountStr} CAD) has been reviewed and requires changes before we can process payment.</p>
           <p style="background:#fef2f2;border-left:3px solid #dc2626;padding:12px;border-radius:4px;">
-            <strong>Reason:</strong><br/>${(reason || "").replace(/\n/g, "<br/>")}
+            <strong>Reason:</strong><br/>${safeReason}
           </p>
           <p>Please log in to your <a href="https://praetoria-ops-hub.lovable.app/subcontractor/invoices">subcontractor portal</a> to edit and resubmit this invoice.</p>
           <p>If you have questions, reply to this email or contact <a href="mailto:${EMAIL_CONFIG.adminInbox}">${EMAIL_CONFIG.adminInbox}</a>.</p>
@@ -1229,6 +1230,7 @@ Deno.serve(async (req) => {
         `),
         reply_to: EMAIL_CONFIG.adminInbox,
       });
+
 
       await logIntegration({
         provider: "resend",
