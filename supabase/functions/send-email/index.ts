@@ -13,6 +13,53 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
+// ── Security helpers ──────────────────────────────────────────────
+// Allowed origins for any URL fetched server-side (SSRF guard) or rendered as href
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const ALLOWED_FETCH_PREFIXES = [
+  SUPABASE_URL ? `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/` : "",
+  "https://praetoria-ops-hub.lovable.app/",
+  "https://praetoriagroup.ca/",
+  "https://www.praetoriagroup.ca/",
+].filter(Boolean);
+
+function isAllowedHttpsUrl(u: unknown): u is string {
+  if (typeof u !== "string" || !u) return false;
+  try {
+    const parsed = new URL(u);
+    if (parsed.protocol !== "https:") return false;
+    return ALLOWED_FETCH_PREFIXES.some((p) => u.startsWith(p));
+  } catch {
+    return false;
+  }
+}
+
+function encodeAttr(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Strip <script>/<style>/<iframe>/<object>/<embed> blocks and on*= handlers
+// and javascript:/data: URLs. Not a full sanitizer, but blocks the common
+// HTML-injection vectors for emails composed via this endpoint.
+function sanitizeEmailHtml(input: unknown): string {
+  if (typeof input !== "string" || !input) return "";
+  let s = input;
+  s = s.replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[\s\S]*?<\s*\/\s*\1\s*>/gi, "");
+  s = s.replace(/<\s*(script|style|iframe|object|embed|link|meta)\b[^>]*\/?>/gi, "");
+  s = s.replace(/\son[a-z]+\s*=\s*"(?:[^"\\]|\\.)*"/gi, "");
+  s = s.replace(/\son[a-z]+\s*=\s*'(?:[^'\\]|\\.)*'/gi, "");
+  s = s.replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, "");
+  s = s.replace(/(href|src)\s*=\s*"\s*(javascript|data|vbscript):[^"]*"/gi, '$1="#"');
+  s = s.replace(/(href|src)\s*=\s*'\s*(javascript|data|vbscript):[^']*'/gi, "$1='#'");
+  return s;
+}
+
+
 const SENDER = "Praetoria Group <noreply@praetoriagroup.ca>";
 
 // ── Email routing config (mirrors src/lib/emailConfig.ts) ─────────
@@ -610,19 +657,23 @@ Deno.serve(async (req) => {
 
       const replyTo = resolveReplyTo(service_category, "operational");
 
-      // Build attachment links HTML
+      // Build attachment links HTML — only allow trusted https URLs
       let attachmentHtml = "";
-      if (invoice_pdf_url) {
-        attachmentHtml += `<p style="margin:16px 0 8px;"><a href="${invoice_pdf_url}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:600;font-size:14px;">📄 View / Download Invoice PDF</a></p>`;
+      if (isAllowedHttpsUrl(invoice_pdf_url)) {
+        attachmentHtml += `<p style="margin:16px 0 8px;"><a href="${encodeAttr(invoice_pdf_url)}" style="display:inline-block;background:#1a1a2e;color:#ffffff;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:600;font-size:14px;">📄 View / Download Invoice PDF</a></p>`;
       }
       if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-        const links = attachments.map((url: string) => {
-          const name = decodeURIComponent(url.split("/").pop() || "Attachment");
-          return `<a href="${url}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
-        }).join("<br/>");
-        attachmentHtml += `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"/>
-          <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+        const safe = attachments.filter((url: unknown) => isAllowedHttpsUrl(url)) as string[];
+        if (safe.length > 0) {
+          const links = safe.map((url: string) => {
+            const name = encodeAttr(decodeURIComponent(url.split("/").pop() || "Attachment"));
+            return `<a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
+          }).join("<br/>");
+          attachmentHtml += `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"/>
+            <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
+        }
       }
+
 
       const result = await sendViaResend({
         to: customer_email,
@@ -668,7 +719,7 @@ Deno.serve(async (req) => {
       const result = await sendViaResend({
         to: recipients,
         subject: `[Praetoria Group] ${subject}`,
-        html: wrapHtml("Internal Notification", body_html || `<p>${subject}</p>`),
+        html: wrapHtml("Internal Notification", sanitizeEmailHtml(body_html) || `<p>${encodeAttr(String(subject))}</p>`),
       });
       const logEntry: IntegrationEntry = {
         provider: "resend",
@@ -818,7 +869,7 @@ Deno.serve(async (req) => {
       const result = await sendViaResend({
         to,
         subject: subject || "Incident Report — Praetoria Group",
-        html: html || "<p>Incident report attached.</p>",
+        html: sanitizeEmailHtml(html) || "<p>Incident report attached.</p>",
         reply_to: reply_to || EMAIL_CONFIG.opsInbox,
       });
 
@@ -1006,7 +1057,7 @@ Deno.serve(async (req) => {
 
       if (stub_pdf_base64 && typeof stub_pdf_base64 === "string") {
         attachment = { filename, content: stub_pdf_base64, content_type: "application/pdf" };
-      } else if (stub_pdf_url && typeof stub_pdf_url === "string") {
+      } else if (isAllowedHttpsUrl(stub_pdf_url)) {
         try {
           const pdfRes = await fetch(stub_pdf_url);
           if (pdfRes.ok) {

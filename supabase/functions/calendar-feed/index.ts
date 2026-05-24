@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { requireAuth, corsHeaders } from "../_shared/auth.ts";
 
 function escapeIcal(text: string): string {
   return (text || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
@@ -24,23 +20,45 @@ serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
-    // Health check
+    // Health check (public, no data exposed)
     if (action === 'health') {
       return new Response(JSON.stringify({ ok: true, message: 'Calendar feed ready' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    // Require authentication for all data access
+    const auth = await requireAuth(req);
+    if (!auth.ok) return auth.response;
+
+    const supabase = auth.adminClient;
+
+    // Determine caller's role context
+    const { data: roleRows } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', auth.userId);
+    const roles = (roleRows ?? []).map((r: any) => r.role as string);
+    const opsRoles = ['owner', 'admin', 'ops_manager', 'accountant', 'hr_admin', 'manager', 'dispatcher', 'supervisor'];
+    const isOps = roles.some((r) => opsRoles.includes(r));
+    const isWorker = roles.some((r) => ['staff', 'lead_worker', 'supervisor', 'dispatcher'].includes(r));
+
+    if (!isOps && !isWorker) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const scope = url.searchParams.get('scope') || 'visits';
     const days = parseInt(url.searchParams.get('days') || '90');
-    const workerId = url.searchParams.get('worker_id');
+    const requestedWorkerId = url.searchParams.get('worker_id');
+
+    // Non-ops users can only see their own assignments; ignore worker_id override
+    const effectiveWorkerId = isOps ? requestedWorkerId : auth.userId;
 
     const fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - 7); // Include 1 week back
+    fromDate.setDate(fromDate.getDate() - 7);
     const toDate = new Date();
     toDate.setDate(toDate.getDate() + days);
 
@@ -49,18 +67,34 @@ serve(async (req) => {
     if (scope === 'visits' || scope === 'all') {
       let q = supabase.from('visits').select(`
         id, visit_number, service_date, start_time, end_time, status, notes,
-        jobs(job_title, job_number),
+        assigned_worker_id, job_id,
+        jobs(job_title, job_number, assigned_to),
         properties(address_line_1, city)
       `)
         .gte('service_date', fromDate.toISOString().split('T')[0])
         .lte('service_date', toDate.toISOString().split('T')[0])
         .order('service_date', { ascending: true });
 
-      if (workerId) q = q.eq('assigned_worker_id', workerId);
+      if (effectiveWorkerId) q = q.eq('assigned_worker_id', effectiveWorkerId);
 
       const { data: visits } = await q;
 
-      for (const v of (visits || []) as any[]) {
+      let filtered = (visits || []) as any[];
+      if (!isOps) {
+        // Restrict to visits actually assigned to this worker (direct, via job, or crew)
+        const ids = filtered.map((v) => v.id);
+        const { data: crew } = ids.length
+          ? await supabase.from('visit_crew_members').select('visit_id').eq('worker_user_id', auth.userId).in('visit_id', ids)
+          : { data: [] as any[] };
+        const crewSet = new Set((crew || []).map((c: any) => c.visit_id));
+        filtered = filtered.filter((v) =>
+          v.assigned_worker_id === auth.userId ||
+          v.jobs?.assigned_to === auth.userId ||
+          crewSet.has(v.id)
+        );
+      }
+
+      for (const v of filtered) {
         const start = v.start_time
           ? `${v.service_date}T${v.start_time}`
           : `${v.service_date}T08:00:00`;
@@ -85,7 +119,7 @@ serve(async (req) => {
       }
     }
 
-    if (scope === 'jobs' || scope === 'all') {
+    if ((scope === 'jobs' || scope === 'all') && isOps) {
       const { data: jobs } = await supabase.from('jobs').select(`
         id, job_number, job_title, status, start_date, end_date, notes,
         properties(address_line_1, city)
