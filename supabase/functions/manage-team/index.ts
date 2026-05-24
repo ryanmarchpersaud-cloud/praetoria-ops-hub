@@ -359,6 +359,8 @@ Deno.serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      const ownerErr2 = await ownerOnlyGuard(targetUserId, null);
+      if (ownerErr2) return new Response(JSON.stringify({ error: ownerErr2 }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const updatePayload: Record<string, unknown> = {};
       if (newEmail) updatePayload.email = newEmail;
       if (newPassword) updatePayload.password = newPassword;
