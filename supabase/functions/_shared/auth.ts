@@ -83,3 +83,48 @@ export async function requireRole(
   }
   return { ok: true };
 }
+
+/**
+ * Accept either a valid user JWT OR an internal service-role Bearer token.
+ * Use for endpoints that are called both by the browser (user JWT) AND by
+ * other edge functions (service-role). Returns { ok, isServiceRole, userId? }.
+ */
+export type AuthOrServiceResult =
+  | { ok: true; isServiceRole: true; userId: null; email: null; adminClient: SupabaseClient }
+  | { ok: true; isServiceRole: false; userId: string; email: string | null; adminClient: SupabaseClient }
+  | { ok: false; response: Response };
+
+export async function requireAuthOrServiceRole(req: Request): Promise<AuthOrServiceResult> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { ok: false, response: jsonResp({ error: "Unauthorized" }, 401) };
+  }
+  const token = authHeader.replace("Bearer ", "");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !anonKey || !serviceKey) {
+    return { ok: false, response: jsonResp({ error: "Server misconfigured" }, 500) };
+  }
+  const adminClient = createClient(supabaseUrl, serviceKey);
+
+  // Internal service-role token (used by other edge functions)
+  if (token === serviceKey) {
+    return { ok: true, isServiceRole: true, userId: null, email: null, adminClient };
+  }
+
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data, error } = await userClient.auth.getClaims(token);
+  if (error || !data?.claims?.sub) {
+    return { ok: false, response: jsonResp({ error: "Unauthorized" }, 401) };
+  }
+  return {
+    ok: true,
+    isServiceRole: false,
+    userId: data.claims.sub as string,
+    email: (data.claims.email as string) ?? null,
+    adminClient,
+  };
+}
