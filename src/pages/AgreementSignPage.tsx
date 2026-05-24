@@ -218,8 +218,11 @@ export default function AgreementSignPage() {
   const handleDecline = async () => {
     setSubmitting(true);
     try {
-      await supabase.from('agreements').update({ status: 'declined', declined_at: new Date().toISOString() }).eq('id', agreement.id);
-      await supabase.from('agreement_audit_log').insert({ agreement_id: agreement.id, action: 'declined', user_agent: navigator.userAgent });
+      const { error } = await supabase.rpc('decline_agreement_with_token', {
+        _token: token!,
+        _user_agent: navigator.userAgent,
+      });
+      if (error) throw error;
       setDeclined(true);
       toast.success('Agreement declined');
     } catch (err: any) {
