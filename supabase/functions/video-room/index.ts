@@ -187,6 +187,34 @@ serve(async (req) => {
         });
       }
 
+      // Verify the caller is a member of the conversation linked to this room
+      const { data: callRec } = await supabase
+        .from("video_calls")
+        .select("conversation_id")
+        .eq("room_name", room_name)
+        .maybeSingle();
+
+      if (!callRec?.conversation_id) {
+        return new Response(JSON.stringify({ error: "Room not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: membership } = await supabase
+        .from("conversation_members")
+        .select("id")
+        .eq("conversation_id", callRec.conversation_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!membership) {
+        return new Response(JSON.stringify({ error: "Forbidden: not a member of this conversation" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const { data: teamMember } = await supabase
         .from("team_members")
         .select("full_name, display_name")
