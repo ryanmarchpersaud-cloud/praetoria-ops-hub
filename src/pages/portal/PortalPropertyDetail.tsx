@@ -9,6 +9,7 @@ import {
   ArrowLeft, MapPin, Key, StickyNote, Camera, AlertTriangle,
   History, ShieldCheck, Snowflake, FileText, ClipboardCheck, MessageSquarePlus,
 } from 'lucide-react';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 
 export default function PortalPropertyDetail() {
   const { id } = useParams<{ id: string }>();
