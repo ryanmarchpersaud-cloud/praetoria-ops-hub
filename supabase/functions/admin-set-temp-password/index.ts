@@ -79,6 +79,12 @@ Deno.serve(async (req) => {
     });
     if (updErr) throw updErr;
 
+    const { error: profileErr } = await admin
+      .from('profiles')
+      .update({ must_change_password: true })
+      .eq('user_id', target_user_id);
+    if (profileErr) throw profileErr;
+
     return new Response(
       JSON.stringify({
         success: true,
