@@ -93,7 +93,7 @@ export default function PortalPhotos() {
           {current && (
             <div className="relative">
               <div className="flex items-center justify-center min-h-[300px] max-h-[70vh]">
-                <img src={current.file_url} alt={current.caption || ''} className="max-w-full max-h-[70vh] object-contain" />
+                <SignedVisitPhotoImg fileUrl={current.file_url} alt={current.caption || ''} className="max-w-full max-h-[70vh] object-contain" />
               </div>
               {filtered.length > 1 && (
                 <>
