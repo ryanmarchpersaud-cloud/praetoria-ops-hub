@@ -1,0 +1,12 @@
+# ZAP baseline rule overrides.
+# Format: <rule_id>\t<action>\t<comment>
+# Actions: IGNORE, WARN, FAIL
+#
+# Lovable preview uses inline styles for the app shell and serves a SPA,
+# so we suppress noisy rules that aren't actionable in our hosting model.
+
+10020	WARN	X-Frame-Options header (CSP frame-ancestors is preferred but Lovable hosts the shell)
+10021	WARN	X-Content-Type-Options header (Lovable host responsibility)
+10038	WARN	CSP header missing (Lovable host responsibility, not user-app fixable)
+10063	WARN	Permissions Policy header (Lovable host responsibility)
+10096	WARN	Timestamp disclosure (false positive on Vite asset hashes)
