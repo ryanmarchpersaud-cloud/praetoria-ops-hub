@@ -9,6 +9,7 @@ import {
   Snowflake, Sun, Leaf, ChevronLeft, ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SignedVisitPhotoImg } from '@/components/SignedVisitPhotoImg';
 
 const STATUS_STYLES: Record<string, string> = {
   Completed: 'bg-green-100 text-green-700',
