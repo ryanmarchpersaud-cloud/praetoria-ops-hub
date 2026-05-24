@@ -300,7 +300,7 @@ export default function PortalVisits() {
                                           onClick={() => openLightbox(photos, idx)}
                                           className="relative shrink-0 w-16 h-16 rounded-md overflow-hidden border hover:ring-2 hover:ring-primary/50 transition-all"
                                         >
-                                          <img src={photo.file_url} alt={photo.caption || ''} className="w-full h-full object-cover" loading="lazy" />
+                                          <SignedVisitPhotoImg fileUrl={photo.file_url} alt={photo.caption || ''} className="w-full h-full object-cover" loading="lazy" />
                                           <span className={cn('absolute bottom-0 inset-x-0 text-[7px] font-medium text-center py-0.5', TAG_COLORS[photo.photo_tag] || 'bg-muted text-muted-foreground')}>
                                             {photo.photo_tag}
                                           </span>
