@@ -111,6 +111,14 @@ export default function CreateVisitDialog({ open, onOpenChange, defaultJobId }: 
       return;
     }
 
+    // Safeguard: warn if no worker assigned — unassigned visits won't appear on any worker's schedule
+    if (!assignedWorkerId || assignedWorkerId === 'none') {
+      const proceed = window.confirm(
+        "⚠️ No worker is assigned to this visit.\n\nUnassigned visits will NOT appear on any worker's phone schedule, and no one will have permission to start, take photos, or complete the visit.\n\nClick OK to save anyway, or Cancel to go back and assign a worker."
+      );
+      if (!proceed) return;
+    }
+
     try {
       await createVisit.mutateAsync({
         visit_number: '',
@@ -279,6 +287,12 @@ export default function CreateVisitDialog({ open, onOpenChange, defaultJobId }: 
                     ))}
                   </SelectContent>
                 </Select>
+                {(!assignedWorkerId || assignedWorkerId === 'none') && (
+                  <p className="text-[11px] text-destructive mt-1 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    No worker assigned — visit won't appear on any phone schedule
+                  </p>
+                )}
               </div>
             </div>
           </div>
