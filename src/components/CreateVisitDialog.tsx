@@ -287,6 +287,12 @@ export default function CreateVisitDialog({ open, onOpenChange, defaultJobId }: 
                     ))}
                   </SelectContent>
                 </Select>
+                {(!assignedWorkerId || assignedWorkerId === 'none') && (
+                  <p className="text-[11px] text-destructive mt-1 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    No worker assigned — visit won't appear on any phone schedule
+                  </p>
+                )}
               </div>
             </div>
           </div>
