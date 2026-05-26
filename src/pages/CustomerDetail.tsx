@@ -609,6 +609,9 @@ export default function CustomerDetail() {
             </CardContent>
           </Card>
 
+          {/* Additional Contacts (spouse, partner, etc.) */}
+          {id && <CustomerContactsCard customerId={id} />}
+
           {/* Customer Warnings */}
           {id && <CustomerWarningsEditor customerId={id} />}
 
