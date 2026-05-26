@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { HelpCircle, Mail, Phone, FileText, ShieldCheck, DollarSign, Clock, AlertTriangle, CalendarCheck, Camera, ClipboardCheck, Truck, BookOpen } from 'lucide-react';
+import { AppDownloadBadges } from '@/components/AppDownloadBadges';
 
 const QUICK_START_STEPS = [
   { label: 'Check your schedule', desc: 'View assigned visits from the Schedule tab.' },
@@ -157,6 +158,12 @@ export default function SubcontractorSupport() {
           </Accordion>
         </CardContent>
       </Card>
+
+      {/* Mobile app download */}
+      <AppDownloadBadges
+        title="Get the Praetoria Ops Hub app"
+        description="Check your schedule, update visits, upload photos and submit invoices from your phone."
+      />
 
       {/* Credibility note */}
       <Card className="bg-muted/30">

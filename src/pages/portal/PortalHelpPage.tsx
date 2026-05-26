@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { HelpCircle, Mail, Phone, Clock, MessageSquarePlus, FileText, Receipt, Camera, ClipboardCheck, ShieldCheck } from 'lucide-react';
+import { AppDownloadBadges } from '@/components/AppDownloadBadges';
 
 const FAQ_ITEMS = [
   {
@@ -107,6 +108,9 @@ export default function PortalHelpPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mobile app download */}
+      <AppDownloadBadges />
 
       {/* Credibility note */}
       <Card className="bg-muted/30">
