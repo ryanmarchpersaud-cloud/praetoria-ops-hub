@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
+import { AppDownloadBadges } from '@/components/AppDownloadBadges';
 
 export default function PortalBilling() {
   const { user } = useAuth();
@@ -382,6 +383,12 @@ export default function PortalBilling() {
           ) : paidInvoices.map((inv: any) => <InvoiceCard key={inv.id} inv={inv} />)}
         </TabsContent>
       </Tabs>
+
+      {/* Mobile app callout */}
+      <AppDownloadBadges
+        title="Pay & track invoices on the go"
+        description="Get the Praetoria Ops Hub app to view invoices, pay securely and see service updates anytime."
+      />
 
       {/* Pay Invoice Dialog */}
       <Dialog open={payDialog.open} onOpenChange={(o) => !o && setPayDialog({ open: false, invoice: null })}>
