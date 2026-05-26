@@ -11,6 +11,7 @@ import { isNativeApp } from '@/lib/platform';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { ServiceLinksSection } from '@/components/ServiceLinksSection';
+import { AppDownloadBadges } from '@/components/AppDownloadBadges';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -176,6 +177,11 @@ export default function Login() {
 
           {/* Service Links */}
           <ServiceLinksSection variant="login" />
+
+          {/* Mobile app download */}
+          <div className="mt-6">
+            <AppDownloadBadges variant="inline" title="Get the Praetoria Ops Hub app" />
+          </div>
 
           <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
             <img src={praetoriaLogo} alt="" className="w-4 h-4 object-contain opacity-40 invert dark:invert-0" />
