@@ -21,6 +21,7 @@ import { CustomerServiceHistory } from '@/components/customer/CustomerServiceHis
 import { CustomerCommunicationsCard } from '@/components/customer/CustomerCommunicationsCard';
 import { CustomerDocumentsCard } from '@/components/customer/CustomerDocumentsCard';
 import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedger';
+import { CustomerContactsCard } from '@/components/customer/CustomerContactsCard';
 import { useBillingProfile } from '@/hooks/useInvoices';
 import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInvoiceDialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -607,6 +608,9 @@ export default function CustomerDetail() {
               <Textarea value={form?.notes || ''} onChange={e => set('notes', e.target.value)} rows={3} />
             </CardContent>
           </Card>
+
+          {/* Additional Contacts (spouse, partner, etc.) */}
+          {id && <CustomerContactsCard customerId={id} />}
 
           {/* Customer Warnings */}
           {id && <CustomerWarningsEditor customerId={id} />}
