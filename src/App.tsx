@@ -239,7 +239,7 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function AdminRoute({ children }: { children: React.ReactNode }) {
+function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isActiveUser, isLoading } = useAuthorization();
   const forceChange = useForcePasswordChangeRedirect();
@@ -251,10 +251,10 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   if (isCustomer && !canAccessAdminPortal) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
   if (!canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
-  return <AppLayout>{children}</AppLayout>;
+  return <AppLayout>{children ?? <Outlet />}</AppLayout>;
 }
 
-function StaffRoute({ children }: { children: React.ReactNode }) {
+function StaffRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, isStaff, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
   const forceChange = useForcePasswordChangeRedirect();
@@ -264,7 +264,7 @@ function StaffRoute({ children }: { children: React.ReactNode }) {
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (!isStaff && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
-  return <AppLayout>{children}</AppLayout>;
+  return <AppLayout>{children ?? <Outlet />}</AppLayout>;
 }
 
 function SignedInPortalRouteShell({ children }: { children: React.ReactNode }) {
@@ -284,7 +284,7 @@ function AuthedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function WorkerRoute({ children }: { children: React.ReactNode }) {
+function WorkerRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, canAccessWorkerPortal, isActiveUser, isLoading } = useAuthorization();
   const forceChange = useForcePasswordChangeRedirect();
@@ -294,10 +294,14 @@ function WorkerRoute({ children }: { children: React.ReactNode }) {
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
   if (!canAccessWorkerPortal) return <Navigate to="/access-denied" replace />;
-  return <SignedInPortalRouteShell>{children}</SignedInPortalRouteShell>;
+  return (
+    <SignedInPortalRouteShell>
+      <WorkerLayout>{children ?? <Outlet />}</WorkerLayout>
+    </SignedInPortalRouteShell>
+  );
 }
 
-function PortalRoute({ children }: { children: React.ReactNode }) {
+function PortalRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isCustomer, canAccessCustomerPortal, isStaff, isActiveUser, isLoading } = useAuthorization();
   const forceChange = useForcePasswordChangeRedirect();
@@ -310,12 +314,12 @@ function PortalRoute({ children }: { children: React.ReactNode }) {
   return (
     <>
       {isPreview && <PreviewModeBanner />}
-      <PortalLayout>{children}</PortalLayout>
+      <PortalLayout>{children ?? <Outlet />}</PortalLayout>
     </>
   );
 }
 
-function SubcontractorRoute({ children }: { children: React.ReactNode }) {
+function SubcontractorRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { canAccessSubcontractorPortal, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
   const forceChange = useForcePasswordChangeRedirect();
@@ -324,7 +328,11 @@ function SubcontractorRoute({ children }: { children: React.ReactNode }) {
   if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (!canAccessSubcontractorPortal && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
-  return <SignedInPortalRouteShell>{children}</SignedInPortalRouteShell>;
+  return (
+    <SignedInPortalRouteShell>
+      <SubcontractorLayout>{children ?? <Outlet />}</SubcontractorLayout>
+    </SignedInPortalRouteShell>
+  );
 }
 
 function LoginRoute() {
