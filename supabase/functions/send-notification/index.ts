@@ -411,12 +411,21 @@ Deno.serve(async (req) => {
       if (channel === "sms" && !enrichedVars.to_phone) {
         results.push({ channel, status: "skipped", reason: "no_recipient_phone" });
         console.warn(`[send-notification] Skipping SMS for event=${event}: no recipient phone found`);
-        continue;
-      }
-
-      // Fetch template
-      const { data: template } = await supabase
-        .from("notification_templates")
+      const subject = template?.is_active
+        ? renderTemplate(template.subject_template, enrichedVars)
+        : enrichedVars.subject || event.replace(/_/g, " ");
+      // For email/HTML body, escape interpolated variables in the template render
+      // and HTML-escape the fallback body. Trusted admin-managed template markup is preserved.
+      const notifBodyPlain = template?.is_active
+        ? renderTemplate(template.body_template, enrichedVars)
+        : enrichedVars.body || "";
+      const notifBodyHtml = template?.is_active
+        ? renderTemplate(template.body_template, enrichedVars, { escape: true })
+        : escapeHtml(enrichedVars.body || "").replace(/\n/g, "<br/>");
+      const subjectHtml = template?.is_active
+        ? renderTemplate(template.subject_template, enrichedVars, { escape: true })
+        : escapeHtml(enrichedVars.subject || event.replace(/_/g, " "));
+      const notifBody = notifBodyPlain;
         .select("subject_template, body_template, is_active")
         .eq("event", event)
         .eq("audience", audience)
