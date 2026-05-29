@@ -167,9 +167,30 @@ async function sendViaTwilio(payload: SmsPayload): Promise<{ ok: boolean; sid?: 
   }
   return { ok: true, sid: data.sid };
 }
+  const { requireAuthOrServiceRole } = await import("../_shared/auth.ts");
+  const auth = await requireAuthOrServiceRole(req);
+  if (!auth.ok) return auth.response;
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
+  // Role gate: SMS via the company Twilio account is restricted to ops staff
+  // and field roles. Customer accounts must not be able to send arbitrary SMS.
+  const OPS_ROLES = new Set([
+    "owner", "admin", "ops_manager", "manager", "accountant", "hr_admin", "dispatcher", "supervisor",
+  ]);
+  const FIELD_ROLES = new Set([
+    "staff", "lead_worker", "supervisor", "dispatcher", "subcontractor",
+  ]);
+  if (!auth.isServiceRole) {
+    const sb = getServiceClient();
+    const { data: roleRows } = await sb
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.userId);
+    const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+    const allowed = roles.some((r) => OPS_ROLES.has(r) || FIELD_ROLES.has(r));
+    if (!allowed) {
+      return json({ error: "Forbidden" }, 403);
+    }
+  }
     return new Response(null, { headers: corsHeaders });
   }
 
