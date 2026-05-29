@@ -412,6 +412,12 @@ function AppRoutes() {
       <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/access-denied" element={<AccessDenied />} />
 
+      {/* Public Privacy Policy — must remain accessible without login.
+          Both /privacy-policy and /privacy resolve to the same page. */}
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+
+
       {/* Universal Account & Privacy / Delete Account — reachable by ANY
           authenticated user (Admin, Worker, Subcontractor, Customer).
           Required by Apple App Review Guideline 5.1.1(v). */}
