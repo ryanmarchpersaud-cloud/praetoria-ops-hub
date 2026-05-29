@@ -183,10 +183,16 @@ export default function Login() {
             <AppDownloadBadges variant="inline" title="Get the Praetoria Ops Hub app" />
           </div>
 
-          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
-            <img src={praetoriaLogo} alt="" className="w-4 h-4 object-contain opacity-40 invert dark:invert-0" />
-            <span>Protected by Praetoria Group &middot; Secure login</span>
+          <div className="mt-4 flex flex-col items-center justify-center gap-1 text-xs text-muted-foreground/60">
+            <div className="flex items-center gap-2">
+              <img src={praetoriaLogo} alt="" className="w-4 h-4 object-contain opacity-40 invert dark:invert-0" />
+              <span>Protected by Praetoria Group &middot; Secure login</span>
+            </div>
+            <a href="/privacy-policy" className="hover:text-foreground underline-offset-2 hover:underline">
+              Privacy Policy
+            </a>
           </div>
+
         </div>
       </div>
 
