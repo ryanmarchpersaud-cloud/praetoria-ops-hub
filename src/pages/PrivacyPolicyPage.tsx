@@ -13,23 +13,17 @@ export default function PrivacyPolicyPage() {
   const lastUpdated = "May 29, 2026";
   const supportEmail = "support@praetoriagroup.ca";
 
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = "Privacy Policy — Praetoria Group & Praetoria Ops Hub";
+    return () => {
+      document.title = prevTitle;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Helmet>
-        <title>Privacy Policy — Praetoria Group &amp; Praetoria Ops Hub</title>
-        <meta
-          name="description"
-          content="Privacy Policy for Praetoria Group websites and the Praetoria Ops Hub mobile app — what we collect, how we use it, and how to request deletion."
-        />
-        <link rel="canonical" href="https://praetoriagroup.ca/privacy-policy" />
-        <meta property="og:title" content="Privacy Policy — Praetoria Group" />
-        <meta
-          property="og:description"
-          content="Privacy Policy for Praetoria Group and the Praetoria Ops Hub mobile app."
-        />
-        <meta property="og:url" content="https://praetoriagroup.ca/privacy-policy" />
-        <meta property="og:type" content="website" />
-      </Helmet>
+
 
       <header className="border-b border-border bg-card/50">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
