@@ -13,9 +13,14 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
-function renderTemplate(template: string, vars: Record<string, string>): string {
-  // Replace merge variables; missing ones render as empty string (never raw {{placeholder}})
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || "");
+function renderTemplate(template: string, vars: Record<string, string>, opts: { escape?: boolean } = {}): string {
+  // Replace merge variables; missing ones render as empty string (never raw {{placeholder}}).
+  // When `escape` is true, HTML-escape variable values before substitution so caller-supplied
+  // strings cannot inject markup or scripts into HTML emails.
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const v = vars[key] || "";
+    return opts.escape ? escapeHtml(v) : v;
+  });
 }
 
 const APP_BASE_URL = "https://praetoriagroup.ca";
