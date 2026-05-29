@@ -39,14 +39,27 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const customer_id: string | undefined = body.customer_id;
-    const redirect_to: string = body.redirect_to || 'https://praetoriagroup.ca/portal';
+    const body = await req.json().catch(() => ({}));
+    const customer_id: string | undefined = body.customer_id;
+    const requestedRedirect: string = body.redirect_to || 'https://praetoriagroup.ca/portal';
+    // Allowlist of valid post-magic-link redirect origins. Because
+    // generateLink runs under the service role it bypasses Supabase's
+    // built-in redirect allowlist, so we must enforce one here to
+    // prevent open-redirect / phishing via legitimate magic links.
+    const ALLOWED_REDIRECT_ORIGINS = [
+      'https://praetoriagroup.ca',
+      'https://www.praetoriagroup.ca',
+      'https://praetoria-ops-hub.lovable.app',
+    ];
+    const redirect_to = ALLOWED_REDIRECT_ORIGINS.some((o) => requestedRedirect.startsWith(o + '/') || requestedRedirect === o)
+      ? requestedRedirect
+      : 'https://praetoriagroup.ca/portal';
     if (!customer_id) {
       return new Response(JSON.stringify({ error: 'customer_id is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
     // Look up the customer's auth account
     const { data: customer, error: cErr } = await admin
       .from('customers')
