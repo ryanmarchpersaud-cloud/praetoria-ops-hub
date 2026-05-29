@@ -13,9 +13,14 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
-function renderTemplate(template: string, vars: Record<string, string>): string {
-  // Replace merge variables; missing ones render as empty string (never raw {{placeholder}})
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || "");
+function renderTemplate(template: string, vars: Record<string, string>, opts: { escape?: boolean } = {}): string {
+  // Replace merge variables; missing ones render as empty string (never raw {{placeholder}}).
+  // When `escape` is true, HTML-escape variable values before substitution so caller-supplied
+  // strings cannot inject markup or scripts into HTML emails.
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const v = vars[key] || "";
+    return opts.escape ? escapeHtml(v) : v;
+  });
 }
 
 const APP_BASE_URL = "https://praetoriagroup.ca";
@@ -325,6 +330,23 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  // Role gate: only ops staff (or internal service-role) may dispatch
+  // notifications. Without this, any authenticated user could relay
+  // arbitrary branded emails/SMS through the company sender.
+  const OPS_ROLES = new Set([
+    "owner", "admin", "ops_manager", "manager", "accountant", "hr_admin", "dispatcher", "supervisor",
+  ]);
+  if (!auth.isServiceRole) {
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.userId);
+    const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+    if (!roles.some((r) => OPS_ROLES.has(r))) {
+      return json({ error: "Forbidden" }, 403);
+    }
+  }
+
   try {
     const body = await req.json();
     const {
@@ -389,12 +411,21 @@ Deno.serve(async (req) => {
       if (channel === "sms" && !enrichedVars.to_phone) {
         results.push({ channel, status: "skipped", reason: "no_recipient_phone" });
         console.warn(`[send-notification] Skipping SMS for event=${event}: no recipient phone found`);
-        continue;
-      }
-
-      // Fetch template
-      const { data: template } = await supabase
-        .from("notification_templates")
+      const subject = template?.is_active
+        ? renderTemplate(template.subject_template, enrichedVars)
+        : enrichedVars.subject || event.replace(/_/g, " ");
+      // For email/HTML body, escape interpolated variables in the template render
+      // and HTML-escape the fallback body. Trusted admin-managed template markup is preserved.
+      const notifBodyPlain = template?.is_active
+        ? renderTemplate(template.body_template, enrichedVars)
+        : enrichedVars.body || "";
+      const notifBodyHtml = template?.is_active
+        ? renderTemplate(template.body_template, enrichedVars, { escape: true })
+        : escapeHtml(enrichedVars.body || "").replace(/\n/g, "<br/>");
+      const subjectHtml = template?.is_active
+        ? renderTemplate(template.subject_template, enrichedVars, { escape: true })
+        : escapeHtml(enrichedVars.subject || event.replace(/_/g, " "));
+      const notifBody = notifBodyPlain;
         .select("subject_template, body_template, is_active")
         .eq("event", event)
         .eq("audience", audience)
@@ -425,12 +456,12 @@ Deno.serve(async (req) => {
           customer_id: customer_id || null,
           record_type: record_type || null,
           record_id: record_id || null,
-          subject,
+            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subjectHtml}</h2><div>${notifBodyHtml}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
           body: notifBody,
           metadata: enrichedVars,
           status: channel === "in_app" ? "sent" : "pending",
           sent_at: channel === "in_app" ? new Date().toISOString() : null,
-        })
+            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${escapeHtml(subject)}</h2><div>${escapeHtml(notifBody).replace(/\n/g, "<br/>")}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
         .select()
         .single();
 

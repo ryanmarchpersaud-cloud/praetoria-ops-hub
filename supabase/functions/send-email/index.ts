@@ -467,14 +467,10 @@ Deno.serve(async (req) => {
   if (!auth.ok) return auth.response;
 
   // ── Role-based action gating ──────────────────────────────────
-  // Only ops staff may invoke arbitrary outbound email actions.
-  // Field roles (worker/subcontractor) are limited to a small
-  // allow-list of legitimately field-triggered actions.
-  const OPS_ONLY_BYPASS_ACTIONS = new Set([
-    "test",
-    "health",
-    "request_confirmation",
-  ]);
+  // Only `health` is unauthenticated/free-for-any-authenticated-user.
+  // All other outbound email actions require ops staff (or a small
+  // field-allowed allow-list for legitimately field-triggered ones).
+  const PUBLIC_ACTIONS = new Set(["health"]);
   const FIELD_ALLOWED_ACTIONS = new Set([
     "emergency_sos",
     "incident_report",
@@ -490,7 +486,7 @@ Deno.serve(async (req) => {
   try {
     const { action, ...params } = await req.json();
 
-    if (!auth.isServiceRole && !OPS_ONLY_BYPASS_ACTIONS.has(action)) {
+    if (!auth.isServiceRole && !PUBLIC_ACTIONS.has(action)) {
       const { data: roleRows } = await auth.adminClient
         .from("user_roles")
         .select("role")
@@ -541,10 +537,10 @@ Deno.serve(async (req) => {
         to: customer_email,
         subject: `Request Received: ${request_subject || "Service Request"}`,
         html: wrapHtml("We Received Your Request", `
-          <p>Hi ${customer_name || "there"},</p>
+          <p>Hi ${escapeHtml(customer_name) || "there"},</p>
           <p>Thank you for submitting a service request. Here's a summary:</p>
-          <p><strong>Subject:</strong> ${request_subject || "N/A"}</p>
-          <p><strong>Service:</strong> <span class="badge">${service_type || "General"}</span></p>
+          <p><strong>Subject:</strong> ${escapeHtml(request_subject) || "N/A"}</p>
+          <p><strong>Service:</strong> <span class="badge">${escapeHtml(service_type) || "General"}</span></p>
           <p>Our team will review your request and follow up shortly. You can track the status of your request in your <a href="https://praetoria-ops-hub.lovable.app/portal/requests">customer portal</a>.</p>
           <p>Thank you,<br/>The Praetoria Team</p>
         `),
@@ -572,10 +568,10 @@ Deno.serve(async (req) => {
         subject: `[New Request] ${request_subject || "Service Request"} — ${service_type || "General"}`,
         html: wrapHtml("New Service Request", `
           <p>A new service request has been submitted:</p>
-          <p><strong>Customer:</strong> ${customer_name || "Unknown"} (${customer_email})</p>
-          <p><strong>Subject:</strong> ${request_subject || "N/A"}</p>
-          <p><strong>Service:</strong> <span class="badge">${service_type || "General"}</span></p>
-          <p><a href="https://praetoria-ops-hub.lovable.app/requests/${request_id || ""}">View Request →</a></p>
+          <p><strong>Customer:</strong> ${escapeHtml(customer_name) || "Unknown"} (${escapeHtml(customer_email)})</p>
+          <p><strong>Subject:</strong> ${escapeHtml(request_subject) || "N/A"}</p>
+          <p><strong>Service:</strong> <span class="badge">${escapeHtml(service_type) || "General"}</span></p>
+          <p><a href="https://praetoria-ops-hub.lovable.app/requests/${encodeURIComponent(String(request_id || ""))}">View Request →</a></p>
         `),
       });
       await logIntegration({
