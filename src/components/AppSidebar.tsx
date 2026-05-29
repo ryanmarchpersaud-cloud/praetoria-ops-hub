@@ -209,6 +209,16 @@ export function AppSidebar() {
           {!collapsed && (
             <p className="text-xs text-sidebar-foreground truncate">{user?.email}</p>
           )}
+          {!collapsed && (
+            <a
+              href="/privacy-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] text-sidebar-foreground/60 hover:text-sidebar-foreground underline-offset-2 hover:underline block"
+            >
+              Privacy Policy
+            </a>
+          )}
           <NavLink to="/account-privacy" className="block">
             <SidebarMenuButton className="w-full text-destructive border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 hover:text-destructive font-semibold">
               <Trash2 className="mr-2 h-4 w-4 text-destructive" />
