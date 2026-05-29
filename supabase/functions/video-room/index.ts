@@ -96,6 +96,26 @@ serve(async (req) => {
     }
 
     if (action === "create") {
+      // Verify caller is a member of the conversation before creating a call
+      if (!conversation_id) {
+        return new Response(JSON.stringify({ error: "conversation_id required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: membership } = await supabase
+        .from("conversation_members")
+        .select("id")
+        .eq("conversation_id", conversation_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!membership) {
+        return new Response(JSON.stringify({ error: "Forbidden: not a member of this conversation" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // Create a new video room
       const generatedRoomName = `praetoria-${conversation_id}-${Date.now()}`;
 
