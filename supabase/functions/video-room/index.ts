@@ -265,11 +265,44 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
       const serviceClient = createClient(
         supabaseUrl,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       );
+
+      // Verify caller is allowed to end this call: must be the starter,
+      // an ops/admin user, or a member of the call's conversation.
+      const { data: existing } = await serviceClient
+        .from("video_calls")
+        .select("conversation_id, started_by")
+        .eq("room_name", room_name)
+        .maybeSingle();
+      if (!existing) {
+        return new Response(JSON.stringify({ error: "Room not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      let authorized = existing.started_by === user.id;
+      if (!authorized) {
+        const { data: m } = await supabase
+          .from("conversation_members")
+          .select("id")
+          .eq("conversation_id", existing.conversation_id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        authorized = !!m;
+      }
+      if (!authorized) {
+        const { data: isOps } = await serviceClient.rpc("is_ops_staff", { _user_id: user.id });
+        authorized = !!isOps;
+      }
+      if (!authorized) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       const { error: updateError } = await serviceClient
         .from("video_calls")
