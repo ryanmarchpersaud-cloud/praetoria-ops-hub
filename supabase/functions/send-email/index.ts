@@ -537,10 +537,10 @@ Deno.serve(async (req) => {
         to: customer_email,
         subject: `Request Received: ${request_subject || "Service Request"}`,
         html: wrapHtml("We Received Your Request", `
-          <p>Hi ${customer_name || "there"},</p>
+          <p>Hi ${escapeHtml(customer_name) || "there"},</p>
           <p>Thank you for submitting a service request. Here's a summary:</p>
-          <p><strong>Subject:</strong> ${request_subject || "N/A"}</p>
-          <p><strong>Service:</strong> <span class="badge">${service_type || "General"}</span></p>
+          <p><strong>Subject:</strong> ${escapeHtml(request_subject) || "N/A"}</p>
+          <p><strong>Service:</strong> <span class="badge">${escapeHtml(service_type) || "General"}</span></p>
           <p>Our team will review your request and follow up shortly. You can track the status of your request in your <a href="https://praetoria-ops-hub.lovable.app/portal/requests">customer portal</a>.</p>
           <p>Thank you,<br/>The Praetoria Team</p>
         `),
