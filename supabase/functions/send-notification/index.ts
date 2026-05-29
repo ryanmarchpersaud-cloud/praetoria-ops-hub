@@ -325,6 +325,23 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  // Role gate: only ops staff (or internal service-role) may dispatch
+  // notifications. Without this, any authenticated user could relay
+  // arbitrary branded emails/SMS through the company sender.
+  const OPS_ROLES = new Set([
+    "owner", "admin", "ops_manager", "manager", "accountant", "hr_admin", "dispatcher", "supervisor",
+  ]);
+  if (!auth.isServiceRole) {
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.userId);
+    const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+    if (!roles.some((r) => OPS_ROLES.has(r))) {
+      return json({ error: "Forbidden" }, 403);
+    }
+  }
+
   try {
     const body = await req.json();
     const {
