@@ -568,10 +568,10 @@ Deno.serve(async (req) => {
         subject: `[New Request] ${request_subject || "Service Request"} — ${service_type || "General"}`,
         html: wrapHtml("New Service Request", `
           <p>A new service request has been submitted:</p>
-          <p><strong>Customer:</strong> ${customer_name || "Unknown"} (${customer_email})</p>
-          <p><strong>Subject:</strong> ${request_subject || "N/A"}</p>
-          <p><strong>Service:</strong> <span class="badge">${service_type || "General"}</span></p>
-          <p><a href="https://praetoria-ops-hub.lovable.app/requests/${request_id || ""}">View Request →</a></p>
+          <p><strong>Customer:</strong> ${escapeHtml(customer_name) || "Unknown"} (${escapeHtml(customer_email)})</p>
+          <p><strong>Subject:</strong> ${escapeHtml(request_subject) || "N/A"}</p>
+          <p><strong>Service:</strong> <span class="badge">${escapeHtml(service_type) || "General"}</span></p>
+          <p><a href="https://praetoria-ops-hub.lovable.app/requests/${encodeURIComponent(String(request_id || ""))}">View Request →</a></p>
         `),
       });
       await logIntegration({
