@@ -467,14 +467,10 @@ Deno.serve(async (req) => {
   if (!auth.ok) return auth.response;
 
   // ── Role-based action gating ──────────────────────────────────
-  // Only ops staff may invoke arbitrary outbound email actions.
-  // Field roles (worker/subcontractor) are limited to a small
-  // allow-list of legitimately field-triggered actions.
-  const OPS_ONLY_BYPASS_ACTIONS = new Set([
-    "test",
-    "health",
-    "request_confirmation",
-  ]);
+  // Only `health` is unauthenticated/free-for-any-authenticated-user.
+  // All other outbound email actions require ops staff (or a small
+  // field-allowed allow-list for legitimately field-triggered ones).
+  const PUBLIC_ACTIONS = new Set(["health"]);
   const FIELD_ALLOWED_ACTIONS = new Set([
     "emergency_sos",
     "incident_report",
@@ -490,7 +486,7 @@ Deno.serve(async (req) => {
   try {
     const { action, ...params } = await req.json();
 
-    if (!auth.isServiceRole && !OPS_ONLY_BYPASS_ACTIONS.has(action)) {
+    if (!auth.isServiceRole && !PUBLIC_ACTIONS.has(action)) {
       const { data: roleRows } = await auth.adminClient
         .from("user_roles")
         .select("role")
