@@ -639,3 +639,60 @@ function LineItemDialog({
     </Dialog>
   );
 }
+
+type CatalogItem = { id: string; name: string; service_category: string | null; unit_price: number | null; unit_label: string | null };
+
+function CatalogPicker({ onPick }: { onPick: (item: CatalogItem) => void }) {
+  const [open, setOpen] = useState(false);
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['catalog-items-picker'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products_services')
+        .select('id, name, service_category, unit_price, unit_label')
+        .eq('status', 'Active')
+        .order('name');
+      if (error) throw error;
+      return (data || []) as CatalogItem[];
+    },
+  });
+
+  return (
+    <div>
+      <Label className="flex items-center gap-1.5"><Package className="h-3.5 w-3.5" /> Pick from Catalog (optional)</Label>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" role="combobox" className="w-full justify-between font-normal mt-1">
+            <span className="text-muted-foreground">{isLoading ? 'Loading catalog…' : 'Search service items…'}</span>
+            <ChevronsUpDown className="h-4 w-4 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Search catalog (garbage, landfill, lawn…)" />
+            <CommandList>
+              <CommandEmpty>No catalog items found.</CommandEmpty>
+              <CommandGroup>
+                {items.map((it) => (
+                  <CommandItem
+                    key={it.id}
+                    value={`${it.name} ${it.service_category || ''}`}
+                    onSelect={() => { onPick(it); setOpen(false); toast.success(`Filled from: ${it.name}`); }}
+                  >
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="font-medium truncate">{it.name}</span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {it.service_category || '—'}{it.unit_price ? ` · $${Number(it.unit_price).toFixed(2)} ${it.unit_label || ''}` : ''}
+                      </span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      <p className="text-xs text-muted-foreground mt-1">Auto-fills service type, rate, and notes. You can still edit fields below.</p>
+    </div>
+  );
+}
