@@ -541,6 +541,13 @@ function LineItemDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{isEdit ? 'Edit Line Item' : 'Add Line Item'}</DialogTitle></DialogHeader>
         <div className="space-y-3 pt-2">
+          <CatalogPicker
+            onPick={(it) => {
+              if (it.service_category) setServiceType(it.service_category);
+              if (it.unit_price != null) setHourlyRate(String(it.unit_price));
+              setNotes((prev) => prev ? prev : it.name);
+            }}
+          />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Work Date</Label>
