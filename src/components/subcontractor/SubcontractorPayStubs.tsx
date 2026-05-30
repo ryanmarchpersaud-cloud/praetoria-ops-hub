@@ -543,8 +543,10 @@ function LineItemDialog({
         <div className="space-y-3 pt-2">
           <CatalogPicker
             onPick={(it) => {
-              if (it.service_category) setServiceType(it.service_category);
-              if (it.unit_price != null) setHourlyRate(String(it.unit_price));
+              if (it.service_category && SERVICE_TYPES.includes(it.service_category)) {
+                setServiceType(it.service_category);
+              }
+              if (it.unit_price != null && Number(it.unit_price) > 0) setHourlyRate(String(it.unit_price));
               setNotes((prev) => prev ? prev : it.name);
             }}
           />
