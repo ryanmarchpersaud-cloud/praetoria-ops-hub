@@ -434,8 +434,17 @@ export default function InvoiceDetail() {
             {billingMode && <Badge variant="outline" className="text-[10px]">{billingMode}</Badge>}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {invoice.customers?.first_name} {invoice.customers?.last_name}
-            {invoice.customers?.company_name && ` · ${invoice.customers.company_name}`}
+            {invoice.customer_id ? (
+              <Link to={`/customers/${invoice.customer_id}`} className="hover:text-primary hover:underline transition-colors">
+                {invoice.customers?.first_name} {invoice.customers?.last_name}
+                {invoice.customers?.company_name && ` · ${invoice.customers.company_name}`}
+              </Link>
+            ) : (
+              <>
+                {invoice.customers?.first_name} {invoice.customers?.last_name}
+                {invoice.customers?.company_name && ` · ${invoice.customers.company_name}`}
+              </>
+            )}
           </p>
         </div>
       </div>
