@@ -31,7 +31,38 @@ export function useSubcontractorAssignments(subcontractorId: string | undefined)
         .eq('subcontractor_id', subcontractorId)
         .order('assigned_at', { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      const rows = (data ?? []) as any[];
+
+      // Expand job-level assignments (visit_id NULL) into one synthetic row per visit on
+      // that job, so the sub's schedule surfaces every visit they are responsible for.
+      const jobIds = Array.from(
+        new Set(rows.filter(r => !r.visit_id && r.job_id).map(r => r.job_id))
+      );
+      let extraVisits: any[] = [];
+      if (jobIds.length) {
+        const { data: vRows } = await supabase
+          .from('visits')
+          .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, job_id, properties(property_name, address_line_1, city), customers:customer_id(first_name, last_name)')
+          .in('job_id', jobIds as string[]);
+        extraVisits = vRows ?? [];
+      }
+      const seenVisitIds = new Set(rows.filter(r => r.visits?.id).map(r => r.visits.id));
+      const synthesized = extraVisits
+        .filter(v => !seenVisitIds.has(v.id))
+        .map(v => {
+          const parent = rows.find(r => r.job_id === v.job_id && !r.visit_id);
+          return {
+            ...(parent || {}),
+            id: `${parent?.id || 'job'}::${v.id}`,
+            visit_id: v.id,
+            visits: v,
+            jobs: parent?.jobs,
+            assignment_status: parent?.assignment_status || 'assigned',
+            assigned_at: parent?.assigned_at,
+          };
+        });
+
+      return [...rows, ...synthesized];
     },
     enabled: !!subcontractorId,
   });
