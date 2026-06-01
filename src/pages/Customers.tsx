@@ -374,6 +374,19 @@ export default function Customers() {
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.company_name || '—'}</TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.customer_type || '—'}</TableCell>
+                  <TableCell className="hidden md:table-cell text-sm">
+                    {(() => {
+                      const card = cardMap?.get(c.id);
+                      if (!card) return <span className="text-muted-foreground/60">—</span>;
+                      return (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-medium">
+                          <CreditCard className="h-3 w-3" />
+                          <span className="capitalize">{card.brand || 'card'}</span>
+                          <span>•••• {card.last4}</span>
+                        </span>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell className="hidden md:table-cell text-sm">{c.email || '—'}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm">{c.phone || '—'}</TableCell>
                   <TableCell className="hidden lg:table-cell text-sm">{c.city || '—'}</TableCell>
