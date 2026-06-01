@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useCustomers, useCreateCustomer } from '@/hooks/useCustomers';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload, ShieldAlert } from 'lucide-react';
+import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload, ShieldAlert, CreditCard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
