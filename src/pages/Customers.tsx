@@ -56,6 +56,25 @@ export default function Customers() {
   const createCustomer = useCreateCustomer();
   const { toast } = useToast();
 
+  // Card-on-file lookup: brand + last 4 keyed by customer_id
+  const { data: cardMap } = useQuery({
+    queryKey: ['customer_card_on_file_map'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customer_billing_profiles')
+        .select('customer_id, card_brand, card_last4, payment_method_present');
+      if (error) throw error;
+      const m = new Map<string, { brand: string | null; last4: string | null }>();
+      for (const r of data ?? []) {
+        if (r.customer_id && r.payment_method_present && r.card_last4) {
+          m.set(r.customer_id, { brand: r.card_brand, last4: r.card_last4 });
+        }
+      }
+      return m;
+    },
+    staleTime: 60_000,
+  });
+
   const isCompany = accountType === 'Company';
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
