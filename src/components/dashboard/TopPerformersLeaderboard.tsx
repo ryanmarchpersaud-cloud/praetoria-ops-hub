@@ -43,22 +43,50 @@ function useTopPerformers() {
       if (visitsRes.error) throw visitsRes.error;
       if (profilesRes.error) throw profilesRes.error;
 
-      // Pull invoice totals for jobs visited
+      // Pull invoice totals for jobs visited, and count ALL visits per job so we
+      // can apportion revenue per visit. Monthly/recurring jobs bill once but
+      // generate many visits — attributing the full invoice to every visit
+      // massively inflates the per-worker revenue number.
       const jobIds = Array.from(new Set((visitsRes.data ?? []).map(v => v.job_id).filter(Boolean))) as string[];
-      let jobRevenue = new Map<string, number>();
+      const jobRevenue = new Map<string, number>();
+      const jobVisitCount = new Map<string, number>();
       if (jobIds.length > 0) {
-        const { data: invs } = await supabase
-          .from('invoices')
-          .select('job_id, total')
-          .in('job_id', jobIds);
+        const [{ data: invs }, { data: allVisits }] = await Promise.all([
+          supabase.from('invoices').select('job_id, total').in('job_id', jobIds),
+          supabase.from('visits').select('job_id').in('job_id', jobIds),
+        ]);
         for (const inv of invs ?? []) {
           if (!inv.job_id) continue;
           jobRevenue.set(inv.job_id, (jobRevenue.get(inv.job_id) ?? 0) + Number(inv.total ?? 0));
         }
+        for (const v of allVisits ?? []) {
+          if (!v.job_id) continue;
+          jobVisitCount.set(v.job_id, (jobVisitCount.get(v.job_id) ?? 0) + 1);
+        }
+      }
+
+      // Name lookup: worker_profiles first, team_members as fallback so people
+      // who aren't fully onboarded as worker_profiles don't show as "Unknown".
+      const userIds = new Set<string>();
+      for (const t of tsRes.data ?? []) if (t.user_id) userIds.add(t.user_id);
+      for (const v of visitsRes.data ?? []) if (v.assigned_worker_id) userIds.add(v.assigned_worker_id);
+      const nameOf = new Map<string, string>(
+        ((profilesRes.data ?? [])
+          .map((p: any) => [p.user_id, p.full_name])
+          .filter(([, n]: any) => !!n)) as [string, string][]
+      );
+      const missing = Array.from(userIds).filter(id => !nameOf.has(id));
+      if (missing.length > 0) {
+        const { data: tm } = await supabase
+          .from('team_members')
+          .select('user_id, full_name')
+          .in('user_id', missing);
+        for (const r of tm ?? []) {
+          if (r.user_id && r.full_name && !nameOf.has(r.user_id)) nameOf.set(r.user_id, r.full_name);
+        }
       }
 
       const map = new Map<string, PerformerRow>();
-      const nameOf = new Map((profilesRes.data ?? []).map((p: any) => [p.user_id, p.full_name ?? 'Unknown']));
 
       for (const t of tsRes.data ?? []) {
         if (!t.user_id || !t.clock_out) continue;
@@ -72,7 +100,13 @@ function useTopPerformers() {
         if (!v.assigned_worker_id) continue;
         const row = map.get(v.assigned_worker_id) ?? { user_id: v.assigned_worker_id, full_name: nameOf.get(v.assigned_worker_id) ?? 'Unknown', hours: 0, visits: 0, revenue: 0 };
         row.visits += 1;
-        if (v.job_id) row.revenue += jobRevenue.get(v.job_id) ?? 0;
+        if (v.job_id) {
+          const total = jobRevenue.get(v.job_id) ?? 0;
+          const count = jobVisitCount.get(v.job_id) ?? 1;
+          // Apportion job's invoiced revenue across all of its visits so a
+          // monthly contract isn't counted as $X per visit.
+          row.revenue += total / count;
+        }
         map.set(v.assigned_worker_id, row);
       }
 
