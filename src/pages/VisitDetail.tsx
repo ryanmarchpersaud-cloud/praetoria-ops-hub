@@ -175,6 +175,17 @@ export default function VisitDetail() {
                 <div><Label className="text-xs">Arrival</Label><Input type="time" value={form.arrival_time ? form.arrival_time.slice(11, 16) : ''} onChange={e => set('arrival_time', form.service_date + 'T' + e.target.value + ':00Z')} /></div>
                 <div><Label className="text-xs">Completion</Label><Input type="time" value={form.completion_time ? form.completion_time.slice(11, 16) : ''} onChange={e => set('completion_time', form.service_date + 'T' + e.target.value + ':00Z')} /></div>
               </div>
+              {form.arrival_time && form.completion_time && (() => {
+                const mins = Math.max(0, Math.round((new Date(form.completion_time).getTime() - new Date(form.arrival_time).getTime()) / 60000));
+                const h = Math.floor(mins / 60); const m = mins % 60;
+                const label = h > 0 ? `${h}h ${m}m` : `${m} min`;
+                return (
+                  <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm flex items-center justify-between">
+                    <span className="text-muted-foreground">Time on property (billable)</span>
+                    <span className="font-semibold">{label}</span>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
 
