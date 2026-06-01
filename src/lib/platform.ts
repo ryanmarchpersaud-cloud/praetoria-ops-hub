@@ -42,3 +42,19 @@ export function isAndroidMobile(): boolean {
   if (typeof navigator === 'undefined') return false;
   return /Android/i.test(navigator.userAgent || '');
 }
+
+const PUBLIC_APP_ORIGIN = 'https://praetoria-ops-hub.lovable.app';
+
+export function getPasswordResetRedirectUrl(): string {
+  if (typeof window === 'undefined') return `${PUBLIC_APP_ORIGIN}/reset-password`;
+
+  const origin = window.location.origin;
+  const isLocalNativeOrigin = origin === 'http://localhost' || origin === 'https://localhost';
+  const isCapacitorOrigin = origin.startsWith('capacitor://') || origin.startsWith('ionic://');
+
+  if (isNativeApp() || isLocalNativeOrigin || isCapacitorOrigin) {
+    return `${PUBLIC_APP_ORIGIN}/reset-password`;
+  }
+
+  return `${origin}/reset-password`;
+}
