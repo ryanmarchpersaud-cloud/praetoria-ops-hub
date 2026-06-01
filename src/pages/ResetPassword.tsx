@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, ArrowRight, AlertTriangle, Mail } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
+import { getPasswordResetRedirectUrl } from '@/lib/platform';
 
 type Status = 'verifying' | 'ready' | 'invalid_link' | 'no_link';
 
@@ -161,7 +162,7 @@ export default function ResetPassword() {
     setResending(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: getPasswordResetRedirectUrl(),
       });
       if (error) throw error;
       toast({
