@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LoginPromoPanel } from '@/components/LoginPromoPanel';
-import { isNativeApp } from '@/lib/platform';
+import { getPasswordResetRedirectUrl, isNativeApp } from '@/lib/platform';
 
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
@@ -28,7 +28,7 @@ export default function Login() {
     try {
       if (mode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: getPasswordResetRedirectUrl(),
         });
         if (error) throw error;
         toast({ title: 'Check your email', description: 'We sent you a password reset link.' });
