@@ -37,6 +37,7 @@ const METHODS = [
   { value: 'cash', label: 'Cash' },
   { value: 'e_transfer', label: 'E-Transfer' },
   { value: 'credit_card', label: 'Credit Card' },
+  { value: 'stripe', label: 'Stripe' },
   { value: 'ach', label: 'ACH / Bank Transfer' },
   { value: 'wire', label: 'Wire Transfer' },
   { value: 'other', label: 'Other' },
