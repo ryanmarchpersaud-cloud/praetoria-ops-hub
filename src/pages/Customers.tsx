@@ -339,11 +339,12 @@ export default function Customers() {
       <div className="rounded-lg border bg-card overflow-auto">
         <Table>
           <TableHeader>
-            <TableRow>
+              <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="hidden md:table-cell">Company</TableHead>
               <TableHead className="hidden md:table-cell">Type</TableHead>
+              <TableHead className="hidden md:table-cell">Card on File</TableHead>
               <TableHead className="hidden md:table-cell">Email</TableHead>
               <TableHead className="hidden lg:table-cell">Phone</TableHead>
               <TableHead className="hidden lg:table-cell">City</TableHead>
