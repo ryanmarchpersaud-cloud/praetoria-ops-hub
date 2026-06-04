@@ -574,9 +574,18 @@ export default function QuoteDetail() {
             <StatusBadge status={form.approval_status || 'Draft'} />
           </div>
           {clientInfo && (
-            <p className="text-xs text-muted-foreground truncate">
-              {clientInfo.first_name} {clientInfo.last_name}{clientInfo.company_name ? ` — ${clientInfo.company_name}` : ''}
-            </p>
+            quote.customer_id && !lead ? (
+              <Link
+                to={`/customers/${quote.customer_id}`}
+                className="text-xs text-primary hover:underline truncate block"
+              >
+                {clientInfo.first_name} {clientInfo.last_name}{clientInfo.company_name ? ` — ${clientInfo.company_name}` : ''}
+              </Link>
+            ) : (
+              <p className="text-xs text-muted-foreground truncate">
+                {clientInfo.first_name} {clientInfo.last_name}{clientInfo.company_name ? ` — ${clientInfo.company_name}` : ''}
+              </p>
+            )
           )}
         </div>
         <div className="text-right shrink-0">
