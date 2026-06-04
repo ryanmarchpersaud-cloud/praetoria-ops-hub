@@ -77,12 +77,16 @@ export default function Quotes() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [customerFilter, setCustomerFilter] = useState<string>('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerOpen, setCustomerOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
   const defaultCustomerId = searchParams.get('customer_id') || undefined;
   const { data: quotes = [], isLoading } = useQuotes({
     approval_status: statusFilter || undefined,
   });
   const { canManageQuotes } = useActionPermissions();
+  const { data: customerResults = [] } = useCustomers(customerSearch || undefined);
 
   const allQuotes = useQuotes({}).data || [];
   const counts = QUOTE_APPROVAL_STATUSES.reduce((acc, s) => {
