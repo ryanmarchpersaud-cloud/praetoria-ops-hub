@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useQuotes } from '@/hooks/useQuotes';
+import { useCustomers } from '@/hooks/useCustomers';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight, Plus, CalendarClock } from 'lucide-react';
+import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight, Plus, CalendarClock, User, X, ExternalLink } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
