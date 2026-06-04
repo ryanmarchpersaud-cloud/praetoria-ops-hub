@@ -220,6 +220,8 @@ export default function Invoices() {
     setStatusFilter('');
     setDateFilter('last_30');
     setSearchQuery('');
+    setCustomerFilter('');
+    setCustomerSearch('');
     setActiveCard(null);
     setPage(1);
   };
@@ -227,7 +229,7 @@ export default function Invoices() {
   const selectedStatusLabel = STATUS_OPTIONS.find(o => o.value === statusFilter)?.label || 'All';
   const selectedDateLabel = DATE_OPTIONS.find(o => o.value === dateFilter)?.label || 'All time';
 
-  const hasActiveFilters = statusFilter || dateFilter !== 'last_30' || searchQuery;
+  const hasActiveFilters = statusFilter || dateFilter !== 'last_30' || searchQuery || customerFilter;
 
   // ── Batch actions ──
   const handleBatchStatus = async (status: string) => {
