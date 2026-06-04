@@ -538,6 +538,56 @@ export default function Invoices() {
             </PopoverContent>
           </Popover>
 
+          {/* Customer quick-search filter */}
+          <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                <User className="h-3 w-3" />
+                {customerFilter ? 'Customer filtered' : 'Customer'}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-0" align="start">
+              <div className="p-2 border-b">
+                <Input
+                  placeholder="Search customers…"
+                  value={customerSearch}
+                  onChange={e => setCustomerSearch(e.target.value)}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="max-h-56 overflow-y-auto p-1">
+                {customerResults.length === 0 ? (
+                  <p className="text-xs text-muted-foreground px-3 py-2">No customers found</p>
+                ) : (
+                  customerResults.map((c: any) => {
+                    const name = [c.first_name, c.last_name].filter(Boolean).join(' ').trim();
+                    const display = c.company_name ? `${c.company_name}${name ? ` — ${name}` : ''}` : name || 'Unknown';
+                    const isSelected = customerFilter === c.id;
+                    return (
+                      <div key={c.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-muted rounded-sm transition-colors">
+                        <button
+                          onClick={() => { setCustomerFilter(isSelected ? '' : c.id); setCustomerOpen(false); setCustomerSearch(''); setPage(1); setActiveCard(null); }}
+                          className="flex-1 text-left text-xs truncate"
+                        >
+                          <span className={isSelected ? 'font-medium text-primary' : ''}>{display}</span>
+                        </button>
+                        <Link
+                          to={`/customers/${c.id}`}
+                          onClick={() => setCustomerOpen(false)}
+                          className="shrink-0 p-1 rounded hover:bg-accent text-muted-foreground hover:text-primary"
+                          title="View customer profile"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" className="h-8 text-xs gap-1 text-muted-foreground" onClick={clearFilters}>
               <X className="h-3 w-3" /> Clear filters
