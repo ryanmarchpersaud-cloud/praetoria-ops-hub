@@ -229,6 +229,7 @@ export default function Quotes() {
         ) : (
           quotes
             .filter((q: any) => {
+              if (customerFilter && q.customer_id !== customerFilter) return false;
               if (statusFilter === '__overdue') return q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
               return true;
             })
