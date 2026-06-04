@@ -154,6 +154,10 @@ export default function Invoices() {
       list = list.filter((i: any) => statuses.includes(i.status));
     }
 
+    if (customerFilter) {
+      list = list.filter((i: any) => i.customer_id === customerFilter);
+    }
+
     const range = getDateRange(dateFilter, customFrom, customTo);
     if (range.from) list = list.filter((i: any) => isAfter(parseISO(i.created_at), range.from!));
     if (range.to) list = list.filter((i: any) => isBefore(parseISO(i.created_at), range.to!));
