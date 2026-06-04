@@ -87,6 +87,12 @@ export default function Invoices() {
   const [customTo, setCustomTo] = useState<Date | undefined>();
   const [customCalOpen, setCustomCalOpen] = useState(false);
 
+  const [customerFilter, setCustomerFilter] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerOpen, setCustomerOpen] = useState(false);
+
+  const { data: customerResults = [] } = useCustomers(customerSearch || undefined);
+
   // ── Sort ──
   const [sortKey, setSortKey] = useState<SortKey>('due_date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
