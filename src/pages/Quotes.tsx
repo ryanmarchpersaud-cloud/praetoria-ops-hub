@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useQuotes } from '@/hooks/useQuotes';
+import { useCustomers } from '@/hooks/useCustomers';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight, Plus, CalendarClock } from 'lucide-react';
+import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight, Plus, CalendarClock, User, X, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
@@ -74,12 +78,16 @@ export default function Quotes() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [customerFilter, setCustomerFilter] = useState<string>('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerOpen, setCustomerOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
   const defaultCustomerId = searchParams.get('customer_id') || undefined;
   const { data: quotes = [], isLoading } = useQuotes({
     approval_status: statusFilter || undefined,
   });
   const { canManageQuotes } = useActionPermissions();
+  const { data: customerResults = [] } = useCustomers(customerSearch || undefined);
 
   const allQuotes = useQuotes({}).data || [];
   const counts = QUOTE_APPROVAL_STATUSES.reduce((acc, s) => {
@@ -154,11 +162,63 @@ export default function Quotes() {
         </button>
       </div>
 
-      {statusFilter && (
-        <button onClick={() => setStatusFilter('')} className="text-xs text-muted-foreground hover:text-foreground">
-          Clear filter ×
-        </button>
-      )}
+      {/* Customer quick-search filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+              <User className="h-3 w-3" />
+              {customerFilter ? 'Customer filtered' : 'Filter by customer'}
+              <ChevronRight className={cn("h-3 w-3 transition-transform", customerOpen ? "rotate-90" : "")} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0" align="start">
+            <div className="p-2 border-b">
+              <Input
+                placeholder="Search customers…"
+                value={customerSearch}
+                onChange={e => setCustomerSearch(e.target.value)}
+                className="h-8 text-xs"
+              />
+            </div>
+            <div className="max-h-56 overflow-y-auto p-1">
+              {customerResults.length === 0 ? (
+                <p className="text-xs text-muted-foreground px-3 py-2">No customers found</p>
+              ) : (
+                customerResults.map((c: any) => {
+                  const name = [c.first_name, c.last_name].filter(Boolean).join(' ').trim();
+                  const display = c.company_name ? `${c.company_name}${name ? ` — ${name}` : ''}` : name || 'Unknown';
+                  const isSelected = customerFilter === c.id;
+                  return (
+                    <div key={c.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-muted rounded-sm transition-colors">
+                      <button
+                        onClick={() => { setCustomerFilter(isSelected ? '' : c.id); setCustomerOpen(false); setCustomerSearch(''); }}
+                        className="flex-1 text-left text-xs truncate"
+                      >
+                        <span className={isSelected ? 'font-medium text-primary' : ''}>{display}</span>
+                      </button>
+                      <Link
+                        to={`/customers/${c.id}`}
+                        onClick={() => setCustomerOpen(false)}
+                        className="shrink-0 p-1 rounded hover:bg-accent text-muted-foreground hover:text-primary"
+                        title="View customer profile"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {(statusFilter || customerFilter) && (
+          <Button variant="ghost" size="sm" className="h-8 text-xs gap-1 text-muted-foreground" onClick={() => { setStatusFilter(''); setCustomerFilter(''); setCustomerSearch(''); }}>
+            <X className="h-3 w-3" /> Clear filters
+          </Button>
+        )}
+      </div>
 
       {/* Mobile: Card list */}
       <div className="md:hidden space-y-2">
@@ -169,6 +229,7 @@ export default function Quotes() {
         ) : (
           quotes
             .filter((q: any) => {
+              if (customerFilter && q.customer_id !== customerFilter) return false;
               if (statusFilter === '__overdue') return q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
               return true;
             })
@@ -249,6 +310,7 @@ export default function Quotes() {
             ) : (
               quotes
                 .filter((q: any) => {
+                  if (customerFilter && q.customer_id !== customerFilter) return false;
                   if (statusFilter === '__overdue') return q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
                   return true;
                 })

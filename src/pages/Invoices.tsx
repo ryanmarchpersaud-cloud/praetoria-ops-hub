@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useInvoices, useUpdateInvoice } from '@/hooks/useInvoices';
+import { useCustomers } from '@/hooks/useCustomers';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import {
   ChevronRight, ChevronDown, ChevronUp, Search, Plus, MoreHorizontal,
   FileStack, Send, FileDown, Check, Printer, Download, CheckCircle,
   XCircle, Clock, CalendarIcon, ArrowUpDown, Receipt, TrendingUp,
-  DollarSign, BarChart3, AlertCircle, X
+  DollarSign, BarChart3, AlertCircle, X, User, ExternalLink
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, subDays, subMonths, startOfMonth, startOfYear, subWeeks, isAfter, isBefore, parseISO, differenceInDays } from 'date-fns';
@@ -86,6 +87,12 @@ export default function Invoices() {
   const [customTo, setCustomTo] = useState<Date | undefined>();
   const [customCalOpen, setCustomCalOpen] = useState(false);
 
+  const [customerFilter, setCustomerFilter] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerOpen, setCustomerOpen] = useState(false);
+
+  const { data: customerResults = [] } = useCustomers(customerSearch || undefined);
+
   // ── Sort ──
   const [sortKey, setSortKey] = useState<SortKey>('due_date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -147,6 +154,10 @@ export default function Invoices() {
       list = list.filter((i: any) => statuses.includes(i.status));
     }
 
+    if (customerFilter) {
+      list = list.filter((i: any) => i.customer_id === customerFilter);
+    }
+
     const range = getDateRange(dateFilter, customFrom, customTo);
     if (range.from) list = list.filter((i: any) => isAfter(parseISO(i.created_at), range.from!));
     if (range.to) list = list.filter((i: any) => isBefore(parseISO(i.created_at), range.to!));
@@ -186,7 +197,7 @@ export default function Invoices() {
     });
 
     return list;
-  }, [allInvoices, statusFilter, dateFilter, searchQuery, sortKey, sortDir, customFrom, customTo]);
+  }, [allInvoices, statusFilter, dateFilter, searchQuery, sortKey, sortDir, customFrom, customTo, customerFilter]);
 
   // ── Pagination ──
   const totalPages = Math.max(1, Math.ceil(invoices.length / ITEMS_PER_PAGE));
@@ -213,6 +224,8 @@ export default function Invoices() {
     setStatusFilter('');
     setDateFilter('last_30');
     setSearchQuery('');
+    setCustomerFilter('');
+    setCustomerSearch('');
     setActiveCard(null);
     setPage(1);
   };
@@ -220,7 +233,7 @@ export default function Invoices() {
   const selectedStatusLabel = STATUS_OPTIONS.find(o => o.value === statusFilter)?.label || 'All';
   const selectedDateLabel = DATE_OPTIONS.find(o => o.value === dateFilter)?.label || 'All time';
 
-  const hasActiveFilters = statusFilter || dateFilter !== 'last_30' || searchQuery;
+  const hasActiveFilters = statusFilter || dateFilter !== 'last_30' || searchQuery || customerFilter;
 
   // ── Batch actions ──
   const handleBatchStatus = async (status: string) => {
@@ -522,6 +535,56 @@ export default function Invoices() {
                   }}>Apply Range</Button>
                 </div>
               )}
+            </PopoverContent>
+          </Popover>
+
+          {/* Customer quick-search filter */}
+          <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                <User className="h-3 w-3" />
+                {customerFilter ? 'Customer filtered' : 'Customer'}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-0" align="start">
+              <div className="p-2 border-b">
+                <Input
+                  placeholder="Search customers…"
+                  value={customerSearch}
+                  onChange={e => setCustomerSearch(e.target.value)}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="max-h-56 overflow-y-auto p-1">
+                {customerResults.length === 0 ? (
+                  <p className="text-xs text-muted-foreground px-3 py-2">No customers found</p>
+                ) : (
+                  customerResults.map((c: any) => {
+                    const name = [c.first_name, c.last_name].filter(Boolean).join(' ').trim();
+                    const display = c.company_name ? `${c.company_name}${name ? ` — ${name}` : ''}` : name || 'Unknown';
+                    const isSelected = customerFilter === c.id;
+                    return (
+                      <div key={c.id} className="flex items-center gap-1 px-2 py-1.5 hover:bg-muted rounded-sm transition-colors">
+                        <button
+                          onClick={() => { setCustomerFilter(isSelected ? '' : c.id); setCustomerOpen(false); setCustomerSearch(''); setPage(1); setActiveCard(null); }}
+                          className="flex-1 text-left text-xs truncate"
+                        >
+                          <span className={isSelected ? 'font-medium text-primary' : ''}>{display}</span>
+                        </button>
+                        <Link
+                          to={`/customers/${c.id}`}
+                          onClick={() => setCustomerOpen(false)}
+                          className="shrink-0 p-1 rounded hover:bg-accent text-muted-foreground hover:text-primary"
+                          title="View customer profile"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </PopoverContent>
           </Popover>
 
