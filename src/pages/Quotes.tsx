@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FileEdit, Eye, CheckCircle, Send, XCircle, Clock, ChevronRight, Plus, CalendarClock, User, X, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { QUOTE_APPROVAL_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
