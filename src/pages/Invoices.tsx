@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useInvoices, useUpdateInvoice } from '@/hooks/useInvoices';
+import { useCustomers } from '@/hooks/useCustomers';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import {
   ChevronRight, ChevronDown, ChevronUp, Search, Plus, MoreHorizontal,
   FileStack, Send, FileDown, Check, Printer, Download, CheckCircle,
   XCircle, Clock, CalendarIcon, ArrowUpDown, Receipt, TrendingUp,
-  DollarSign, BarChart3, AlertCircle, X
+  DollarSign, BarChart3, AlertCircle, X, User, ExternalLink
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, subDays, subMonths, startOfMonth, startOfYear, subWeeks, isAfter, isBefore, parseISO, differenceInDays } from 'date-fns';
