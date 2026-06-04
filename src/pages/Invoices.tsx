@@ -197,7 +197,7 @@ export default function Invoices() {
     });
 
     return list;
-  }, [allInvoices, statusFilter, dateFilter, searchQuery, sortKey, sortDir, customFrom, customTo]);
+  }, [allInvoices, statusFilter, dateFilter, searchQuery, sortKey, sortDir, customFrom, customTo, customerFilter]);
 
   // ── Pagination ──
   const totalPages = Math.max(1, Math.ceil(invoices.length / ITEMS_PER_PAGE));
