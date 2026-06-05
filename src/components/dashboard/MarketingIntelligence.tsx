@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrendingUp, Globe, Target, DollarSign, Clock, Award, ExternalLink } from 'lucide-react';
@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { differenceInDays } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Lead { id: string; lead_source?: string | null; service_type?: string | null; created_at?: string | null; status?: string | null }
 interface Quote { id: string; approval_status?: string | null; total?: number | null; created_at?: string | null }
