@@ -361,6 +361,12 @@ export default function PortalBilling() {
                       Expires {String((billingProfile as any).card_exp_month).padStart(2, '0')}/{(billingProfile as any).card_exp_year}
                     </p>
                   )}
+                  {(billingProfile as any).default_payment_method_id && (
+                    <p className="text-xs text-emerald-600 flex items-center gap-1 mt-0.5"><CheckCircle className="h-3 w-3" /> Default payment method</p>
+                  )}
+                  {(billingProfile as any).updated_at && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Added {format(new Date((billingProfile as any).updated_at), 'MMM d, yyyy')}</p>
+                  )}
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {billingProfile.autopay_enabled ? (
                       <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Auto-pay enabled</span>
