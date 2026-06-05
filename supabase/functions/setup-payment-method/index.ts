@@ -66,9 +66,10 @@ serve(async (req) => {
     // Use the request's origin so the user returns to the SAME domain they
     // started on (custom domain, lovable.app, or preview), keeping their
     // session alive so the auto-sync on /portal/billing actually fires.
+    const referer = req.headers.get("referer");
     const origin =
       req.headers.get("origin") ||
-      req.headers.get("referer")?.replace(/\/$/, "") ||
+      (referer ? new URL(referer).origin : null) ||
       "https://praetoriagroup.ca";
     const returnPath = role_type === "subcontractor" ? "/subcontractor/payments" : "/portal/billing";
 
