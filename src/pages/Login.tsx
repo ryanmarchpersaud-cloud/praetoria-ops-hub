@@ -31,7 +31,10 @@ export default function Login() {
           redirectTo: getPasswordResetRedirectUrl(),
         });
         if (error) throw error;
-        toast({ title: 'Check your email', description: 'We sent you a password reset link.' });
+        toast({
+          title: 'Password reset email sent',
+          description: `Check ${email} (and your spam folder) for a reset link. Open it on the same device, in your normal browser.`,
+        });
         setMode('login');
       } else if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({ email, password });
