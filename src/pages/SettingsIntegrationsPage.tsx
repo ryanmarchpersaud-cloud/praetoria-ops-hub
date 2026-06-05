@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Mail, MessageSquare, CreditCard, Webhook, Globe, CloudSun, Database, FileText,
   MapPin, Calendar, BarChart3, CheckCircle2, AlertCircle, Clock, Loader2, Settings, Copy, Check,
-  RefreshCw, ExternalLink,
+  RefreshCw, ExternalLink, Save,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -93,6 +93,7 @@ const INTEGRATIONS: IntegrationDef[] = [
   { id: 'calendar', name: 'Calendar Sync', category: 'Operations', icon: Calendar, description: 'iCal feed export for Google Calendar, Outlook, Apple Calendar.', status: 'connected', enabled: true, environment: 'production', configNotes: 'iCal endpoint active. Visits & jobs. Worker-specific feeds.', lastActivity: null, canTest: false },
   { id: 'accounting', name: 'Accounting / Export', category: 'Financial', icon: FileText, description: 'CSV export — invoices, payments, expenses, customers, vendors.', status: 'connected', enabled: true, environment: 'production', configNotes: 'CSV export ready. QuickBooks/Xero import compatible.', lastActivity: null, canTest: false },
   { id: 'analytics', name: 'Analytics & Reporting', category: 'Internal', icon: BarChart3, description: 'Database-driven KPIs — 13 report types with date filtering and CSV export.', status: 'connected', enabled: true, environment: 'production', configNotes: 'Internal analytics engine. Finance Reports module.', lastActivity: null, canTest: false },
+  { id: 'google_analytics', name: 'Google Analytics & Ads', category: 'Marketing', icon: Globe, description: 'GA4 website tracking and Google Ads conversion measurement.', status: 'not_configured', enabled: true, environment: 'production', configNotes: 'Paste your GA4 Measurement ID and Google Ads Conversion ID below.', lastActivity: null, canTest: false },
 ];
 
 const CATEGORIES = [...new Set(INTEGRATIONS.map(i => i.category))];
