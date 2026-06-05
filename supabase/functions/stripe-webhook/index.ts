@@ -256,7 +256,7 @@ serve(async (req) => {
                   card_exp_year: pm.card?.exp_year,
                   default_payment_method_id: pm.id,
                   payment_method_present: true,
-                  payment_preference: "credit_card",
+                  payment_preference: "card-on-file",
                   updated_at: new Date().toISOString(),
                 }).eq("id", custProfile.id);
               }
@@ -372,7 +372,7 @@ serve(async (req) => {
             card_exp_year: pm.card.exp_year,
             payment_method_present: true,
             default_payment_method_id: pm.id,
-            payment_preference: "credit_card",
+            payment_preference: "card-on-file",
             updated_at: new Date().toISOString(),
           };
 
