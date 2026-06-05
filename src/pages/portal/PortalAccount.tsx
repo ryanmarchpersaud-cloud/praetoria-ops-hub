@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { NotificationPreferencesCard } from '@/components/NotificationPreferencesCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DeleteAccountSection } from '@/components/DeleteAccountSection';
+import { ProfileSecuritySettings } from '@/components/portal/ProfileSecuritySettings';
 
 export default function PortalAccount() {
   const { user, signOut } = useAuth();
@@ -124,6 +125,8 @@ export default function PortalAccount() {
 
       {/* Notification preferences */}
       {customer && <NotificationPreferencesCard customerId={customer.id} />}
+
+      <ProfileSecuritySettings portal="customer" profile={customer} loginEmail={user?.email} />
 
       {/* Support card */}
       <Card>
