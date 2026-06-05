@@ -264,6 +264,53 @@ export default function SettingsIntegrationsPage() {
             </div>
           </TabsContent>
 
+          <TabsContent value="google_analytics" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2"><Globe className="w-4 h-4" />Google Analytics & Ads Configuration</CardTitle>
+                <CardDescription className="text-xs">
+                  Paste your GA4 Measurement ID and Google Ads Conversion ID here. They will be injected dynamically on every page load.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">GA4 Measurement ID</label>
+                  <Input
+                    className="mt-1 font-mono text-sm"
+                    placeholder="G-XXXXXXXXXX"
+                    value={ga4Id}
+                    onChange={e => setGa4Id(e.target.value)}
+                    disabled={!gaLoaded}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">Example: G-R0SMGNJP4E. Enables page_view tracking across the app.</p>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Google Ads Conversion ID</label>
+                  <Input
+                    className="mt-1 font-mono text-sm"
+                    placeholder="AW-XXXXXXXXX"
+                    value={adsId}
+                    onChange={e => setAdsId(e.target.value)}
+                    disabled={!gaLoaded}
+                  />
+                  <p className="text-[11px] text-muted-foreground mt-1">Example: AW-123456789. Optional — only if you run Google Ads campaigns.</p>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button onClick={saveGaConfig} disabled={savingGa || !gaLoaded}>
+                    {savingGa ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+                    Save
+                  </Button>
+                  {ga4Id && (
+                    <Badge variant="outline" className="text-xs">
+                      <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-500" />
+                      GA4 active
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="webhook" className="space-y-4 mt-4">
             <Card>
               <CardHeader>
