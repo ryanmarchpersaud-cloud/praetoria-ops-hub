@@ -41,6 +41,15 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: linkedCustomer } = role_type === "subcontractor"
+      ? await serviceClient.from("subcontractors").select("id").eq("user_id", userId).maybeSingle()
+      : await serviceClient.from("customers").select("id").eq("user_id", userId).maybeSingle();
+
     // Find or create Stripe customer
     const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     let customerId: string;
@@ -49,7 +58,7 @@ serve(async (req) => {
     } else {
       const newCustomer = await stripe.customers.create({
         email: userEmail,
-        metadata: { user_id: userId, role_type: role_type || "customer" },
+        metadata: { user_id: userId, role_type: role_type || "customer", app_customer_id: linkedCustomer?.id || "" },
       });
       customerId = newCustomer.id;
     }
@@ -57,9 +66,10 @@ serve(async (req) => {
     // Use the request's origin so the user returns to the SAME domain they
     // started on (custom domain, lovable.app, or preview), keeping their
     // session alive so the auto-sync on /portal/billing actually fires.
+    const referer = req.headers.get("referer");
     const origin =
       req.headers.get("origin") ||
-      req.headers.get("referer")?.replace(/\/$/, "") ||
+      (referer ? new URL(referer).origin : null) ||
       "https://praetoriagroup.ca";
     const returnPath = role_type === "subcontractor" ? "/subcontractor/payments" : "/portal/billing";
 
@@ -70,15 +80,11 @@ serve(async (req) => {
       payment_method_types: ["card"],
       success_url: `${origin}${returnPath}?card_saved=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}${returnPath}`,
-      metadata: { user_id: userId, role_type: role_type || "customer" },
+      client_reference_id: linkedCustomer?.id || userId,
+      metadata: { user_id: userId, role_type: role_type || "customer", app_customer_id: linkedCustomer?.id || "" },
     });
 
     // Store Stripe customer ID in the appropriate billing profile
-    const serviceClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
     if (role_type === "subcontractor") {
       const { data: sub } = await serviceClient
         .from("subcontractors").select("id").eq("user_id", userId).maybeSingle();

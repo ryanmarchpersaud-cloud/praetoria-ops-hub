@@ -72,7 +72,7 @@ serve(async (req) => {
 
     const { data: bp } = await serviceClient
       .from("customer_billing_profiles")
-      .select("processor_customer_id, default_payment_method_id, payment_method_present")
+      .select("processor_customer_id, default_payment_method_id, payment_method_present, card_brand, card_last4, autopay_consent_at, payment_preference")
       .eq("customer_id", inv.customer_id)
       .maybeSingle();
 
@@ -86,6 +86,26 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
+    const paymentMethod = await stripe.paymentMethods.retrieve(bp.default_payment_method_id);
+    const paymentMethodCustomerId = typeof paymentMethod.customer === "string"
+      ? paymentMethod.customer
+      : paymentMethod.customer?.id;
+    if (paymentMethodCustomerId !== bp.processor_customer_id || !paymentMethod.card) {
+      return new Response(JSON.stringify({ error: "Saved card could not be verified with Stripe" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    await stripe.customers.update(bp.processor_customer_id, {
+      invoice_settings: { default_payment_method: bp.default_payment_method_id },
+    });
+
+    if (amount > Number(inv.balance_due || inv.total) + 0.005) {
+      return new Response(JSON.stringify({ error: "Amount exceeds invoice balance" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const amountCents = Math.round(amount * 100);
 
     // Create and confirm payment intent using saved card
@@ -97,7 +117,7 @@ serve(async (req) => {
       off_session: true,
       confirm: true,
       description: `Invoice ${inv.invoice_number}`,
-      metadata: { internal_invoice_id: invoice_id },
+      metadata: { internal_invoice_id: invoice_id, charged_by: userId, charge_source: "admin_card_on_file" },
     });
 
     if (paymentIntent.status === "succeeded") {
@@ -113,21 +133,36 @@ serve(async (req) => {
         ...(newStatus === "Paid" ? { paid_at: new Date().toISOString() } : {}),
       }).eq("id", invoice_id);
 
-      await serviceClient.from("finance_payments").insert({
+      const { error: paymentRecordError } = await serviceClient.from("finance_payments").insert({
         payment_type: "invoice_payment",
         payment_date: new Date().toISOString().split("T")[0],
         amount,
         payment_method: "credit_card",
         invoice_id,
         reference_number: paymentIntent.id,
-        internal_note: "Collected from card on file",
+        entered_by: userId,
+        internal_note: `Collected from authorized saved card (${paymentMethod.card.brand} •••• ${paymentMethod.card.last4})`,
       });
+
+      if (paymentRecordError) throw paymentRecordError;
+
+      await serviceClient.from("customer_billing_profiles").update({
+        card_brand: paymentMethod.card.brand,
+        card_last4: paymentMethod.card.last4,
+        card_exp_month: paymentMethod.card.exp_month,
+        card_exp_year: paymentMethod.card.exp_year,
+        default_payment_method_id: paymentMethod.id,
+        payment_method_present: true,
+        updated_at: new Date().toISOString(),
+      }).eq("customer_id", inv.customer_id);
 
       return new Response(JSON.stringify({
         success: true,
         payment_intent_id: paymentIntent.id,
         new_status: newStatus,
         amount_charged: amount,
+        card_brand: paymentMethod.card.brand,
+        card_last4: paymentMethod.card.last4,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
       });
