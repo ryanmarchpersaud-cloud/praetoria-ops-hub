@@ -340,6 +340,18 @@ export default function SettingsIntegrationsPage() {
                     disabled={!gaLoaded}
                   />
                   <p className="text-[11px] text-muted-foreground mt-1">Example: AW-123456789. Optional — only if you run Google Ads campaigns.</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button variant="outline" size="sm" onClick={testAdsConversionId} disabled={testingAds || !gaLoaded}>
+                      {testingAds ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5 mr-1" />}
+                      Test Conversion ID
+                    </Button>
+                    {adsTestResult && (
+                      <div className={`text-xs px-2 py-1 rounded ${adsTestResult.ok ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                        {adsTestResult.ok ? <CheckCircle2 className="h-3 w-3 inline mr-1" /> : null}
+                        {adsTestResult.message}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 pt-1">
                   <Button onClick={saveGaConfig} disabled={savingGa || !gaLoaded}>
