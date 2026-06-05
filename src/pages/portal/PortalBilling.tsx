@@ -28,6 +28,11 @@ export default function PortalBilling() {
   const [savingCard, setSavingCard] = useState(false);
   const [removingCard, setRemovingCard] = useState(false);
   const [syncingCard, setSyncingCard] = useState(false);
+  const [consentDialog, setConsentDialog] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+
+  const AUTHORIZATION_TEXT = "I authorize Praetoria Operations Group Inc. / Praetoria Group to securely save my payment method with Stripe and charge my saved card for approved invoices, recurring monthly services, or other services I authorize.";
+  const AUTHORIZATION_VERSION = "v1";
 
   // Auto-sync card on return from Stripe setup
   const searchParams = new URLSearchParams(window.location.search);
