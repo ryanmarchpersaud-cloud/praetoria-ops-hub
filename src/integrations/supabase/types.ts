@@ -8870,6 +8870,30 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      update_customer_portal_profile: {
+        Args: {
+          p_address_line_1?: string
+          p_city?: string
+          p_company_name?: string
+          p_first_name: string
+          p_last_name: string
+          p_phone?: string
+          p_postal_code?: string
+          p_province?: string
+        }
+        Returns: undefined
+      }
+      update_subcontractor_portal_profile: {
+        Args: {
+          p_company_name: string
+          p_contact_name: string
+          p_emergency_contact_name?: string
+          p_emergency_contact_phone?: string
+          p_mailing_address?: string
+          p_phone?: string
+        }
+        Returns: undefined
+      }
       write_audit_log: {
         Args: {
           _action: string

@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DeleteAccountSection } from '@/components/DeleteAccountSection';
+import { ProfileSecuritySettings } from '@/components/portal/ProfileSecuritySettings';
 
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
@@ -173,6 +174,8 @@ export default function SubcontractorSettings() {
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </CardContent>
       </Card>
+
+      <ProfileSecuritySettings portal="subcontractor" profile={profile} loginEmail={user?.email} />
 
       {/* Support quick link */}
       <Card>
