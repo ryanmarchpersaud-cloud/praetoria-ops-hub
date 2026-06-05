@@ -4585,6 +4585,96 @@ export type Database = {
           },
         ]
       }
+      payment_method_authorizations: {
+        Row: {
+          authorization_text: string
+          authorization_version: string
+          authorized_at: string
+          card_brand: string | null
+          card_exp_month: number | null
+          card_exp_year: number | null
+          card_last4: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          ip_address: string | null
+          is_default: boolean
+          processor: string
+          processor_customer_id: string | null
+          processor_payment_method_id: string | null
+          revoked_at: string | null
+          revoked_reason: string | null
+          role_type: string
+          setup_session_id: string | null
+          subcontractor_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          authorization_text: string
+          authorization_version?: string
+          authorized_at?: string
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          ip_address?: string | null
+          is_default?: boolean
+          processor?: string
+          processor_customer_id?: string | null
+          processor_payment_method_id?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          role_type?: string
+          setup_session_id?: string | null
+          subcontractor_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          authorization_text?: string
+          authorization_version?: string
+          authorized_at?: string
+          card_brand?: string | null
+          card_exp_month?: number | null
+          card_exp_year?: number | null
+          card_last4?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          ip_address?: string | null
+          is_default?: boolean
+          processor?: string
+          processor_customer_id?: string | null
+          processor_payment_method_id?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          role_type?: string
+          setup_session_id?: string | null
+          subcontractor_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_method_authorizations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_method_authorizations_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_settings: {
         Row: {
           auto_mark_sent: boolean | null
