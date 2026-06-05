@@ -8881,61 +8881,7 @@ export type Database = {
           p_postal_code?: string
           p_province?: string
         }
-        Returns: {
-          account_type: string
-          accounts_payable_email: string | null
-          address_line_1: string | null
-          billing_address_line_1: string | null
-          billing_address_same_as_service: boolean
-          billing_city: string | null
-          billing_contact_email: string | null
-          billing_contact_fax: string | null
-          billing_contact_name: string | null
-          billing_contact_phone: string | null
-          billing_contact_title: string | null
-          billing_postal_code: string | null
-          billing_province: string | null
-          city: string | null
-          company_legal_name: string | null
-          company_name: string | null
-          created_at: string
-          created_by: string | null
-          customer_status: string
-          customer_tags: string[] | null
-          customer_type: string
-          email: string | null
-          fax: string | null
-          first_name: string
-          id: string
-          is_protected: boolean
-          last_name: string
-          notes: string | null
-          operating_name: string | null
-          pause_reason: string | null
-          phone: string | null
-          portal_access_enabled: boolean
-          postal_code: string | null
-          preferred_billing_method: string | null
-          preferred_communication_method: string | null
-          primary_contact_title: string | null
-          project_notes: string | null
-          province: string | null
-          referral_source: string | null
-          requires_po_number: boolean
-          secondary_email: string | null
-          site_contact_email: string | null
-          site_contact_name: string | null
-          site_contact_phone: string | null
-          updated_at: string
-          user_id: string | null
-          website: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "customers"
-          isOneToOne: true
-          isSetofReturn: false
-        }
+        Returns: undefined
       }
       update_subcontractor_portal_profile: {
         Args: {
@@ -8946,75 +8892,7 @@ export type Database = {
           p_mailing_address?: string
           p_phone?: string
         }
-        Returns: {
-          active_flag: boolean
-          agreement_signed_status: string
-          allergies: string | null
-          bank_account_number: string | null
-          bank_institution_number: string | null
-          bank_name: string | null
-          bank_transit_number: string | null
-          blocked_at: string | null
-          blocked_reason: string | null
-          blood_pressure_alert: boolean | null
-          business_license_expiry: string | null
-          business_license_status: string
-          business_number: string | null
-          carries_epipen: boolean | null
-          carries_inhaler: boolean | null
-          company_name: string
-          contact_name: string
-          created_at: string
-          date_of_birth: string | null
-          diabetes_alert: boolean | null
-          driver_license_class: string | null
-          driver_license_expiry: string | null
-          driver_license_number: string | null
-          e_transfer_email: string | null
-          email: string | null
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
-          emergency_contact_relationship: string | null
-          emergency_medical_notes: string | null
-          ethnicity: string | null
-          gender: string | null
-          hourly_rate: number | null
-          id: string
-          insurance_expiry: string | null
-          insurance_status: string
-          is_blocked: boolean | null
-          mailing_address: string | null
-          medical_info_consent: boolean | null
-          medical_info_last_updated_at: string | null
-          notes_admin_only: string | null
-          onboarding_status: string
-          operating_name: string | null
-          pay_schedule: string | null
-          pay_type: string | null
-          phone: string | null
-          preferred_payment_method: string | null
-          profile_photo_url: string | null
-          referral_source: string | null
-          religion: string | null
-          safety_doc_status: string
-          secondary_emergency_contact_name: string | null
-          secondary_emergency_contact_phone: string | null
-          secondary_emergency_contact_relationship: string | null
-          seizure_or_fainting_alert: boolean | null
-          service_area_summary: string | null
-          sin_encrypted: string | null
-          status: string
-          updated_at: string
-          user_id: string
-          wcb_expiry: string | null
-          wcb_status: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "subcontractors"
-          isOneToOne: true
-          isSetofReturn: false
-        }
+        Returns: undefined
       }
       write_audit_log: {
         Args: {
