@@ -87,7 +87,10 @@ serve(async (req) => {
     });
 
     const paymentMethod = await stripe.paymentMethods.retrieve(bp.default_payment_method_id);
-    if (paymentMethod.customer !== bp.processor_customer_id || !paymentMethod.card) {
+    const paymentMethodCustomerId = typeof paymentMethod.customer === "string"
+      ? paymentMethod.customer
+      : paymentMethod.customer?.id;
+    if (paymentMethodCustomerId !== bp.processor_customer_id || !paymentMethod.card) {
       return new Response(JSON.stringify({ error: "Saved card could not be verified with Stripe" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
