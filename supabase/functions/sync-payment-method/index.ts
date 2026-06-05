@@ -85,17 +85,24 @@ serve(async (req) => {
       customer: stripeCustomerId, type: "card", limit: 10,
     });
 
-    const serviceClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // serviceClient already created above
 
     if (paymentMethods.data.length > 0) {
+      // Use the most recently attached card
       const pm = paymentMethods.data[0];
       const cardBrand = pm.card?.brand || "card";
       const cardLast4 = pm.card?.last4 || "****";
       const cardExpMonth = pm.card?.exp_month || null;
       const cardExpYear = pm.card?.exp_year || null;
+
+      // Set as the Stripe customer's default for future invoicing
+      try {
+        await stripe.customers.update(stripeCustomerId!, {
+          invoice_settings: { default_payment_method: pm.id },
+        });
+      } catch (e) {
+        console.warn("Could not set default PM on Stripe customer", e);
+      }
 
       if (role_type === "subcontractor") {
         const { data: sub } = await serviceClient
@@ -103,7 +110,7 @@ serve(async (req) => {
         if (sub) {
           await serviceClient.from("subcontractor_billing_profiles").upsert(
             {
-              subcontractor_id: sub.id, processor_customer_id: stripeCustomer.id,
+              subcontractor_id: sub.id, processor_customer_id: stripeCustomerId,
               card_brand: cardBrand, card_last4: cardLast4,
               card_exp_month: cardExpMonth, card_exp_year: cardExpYear,
               default_payment_method_id: pm.id,
@@ -119,7 +126,7 @@ serve(async (req) => {
         if (cust) {
           await serviceClient.from("customer_billing_profiles").upsert(
             {
-              customer_id: cust.id, processor_customer_id: stripeCustomer.id,
+              customer_id: cust.id, processor_customer_id: stripeCustomerId,
               card_brand: cardBrand, card_last4: cardLast4,
               card_exp_month: cardExpMonth, card_exp_year: cardExpYear,
               default_payment_method_id: pm.id,
