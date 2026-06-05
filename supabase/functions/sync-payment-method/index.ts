@@ -110,7 +110,8 @@ serve(async (req) => {
     let pm: Stripe.PaymentMethod | null = null;
     if (verifiedPaymentMethodId) {
       const retrieved = await stripe.paymentMethods.retrieve(verifiedPaymentMethodId);
-      pm = retrieved.customer === stripeCustomerId ? retrieved : null;
+      const retrievedCustomerId = typeof retrieved.customer === "string" ? retrieved.customer : retrieved.customer?.id;
+      pm = retrievedCustomerId === stripeCustomerId ? retrieved : null;
     }
     if (!pm) {
       const paymentMethods = await stripe.paymentMethods.list({
