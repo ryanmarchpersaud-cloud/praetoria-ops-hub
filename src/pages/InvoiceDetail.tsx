@@ -189,6 +189,7 @@ export default function InvoiceDetail() {
   const [refundOpen, setRefundOpen] = useState(false);
   const [sendingReceipt, setSendingReceipt] = useState(false);
   const [collectingPayment, setCollectingPayment] = useState(false);
+  const [collectConfirmOpen, setCollectConfirmOpen] = useState(false);
 
   // Email compose dialog state
   const [emailTo, setEmailTo] = useState('');
@@ -495,11 +496,11 @@ export default function InvoiceDetail() {
           <Button
             size="sm" variant="outline"
             className="text-primary border-primary/30 hover:bg-primary/10"
-            onClick={handleCollectPayment}
+            onClick={() => setCollectConfirmOpen(true)}
             disabled={collectingPayment}
           >
             {collectingPayment ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
-            Collect ${balanceDue.toFixed(2)} from Card
+             Pay invoice with saved card
           </Button>
         )}
         <Link to={`/invoices/${invoice.id}/print`}>
@@ -1045,6 +1046,34 @@ export default function InvoiceDetail() {
             <Button variant="outline" onClick={() => setConfirmVoid(false)}>Cancel</Button>
             <Button variant="destructive" onClick={() => { handleStatusChange('Voided'); setConfirmVoid(false); }}>
               <Ban className="h-3.5 w-3.5 mr-1.5" /> Void Invoice
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Record Payment Dialog */}
+      <Dialog open={collectConfirmOpen} onOpenChange={setCollectConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" /> Charge saved card?
+            </DialogTitle>
+            <DialogDescription>
+              Charge ${balanceDue.toFixed(2)} to {billingProfile?.card_brand} •••• {billingProfile?.card_last4} for invoice {invoice.invoice_number}. Only safe card metadata is stored.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+            <p>Default method: {billingProfile?.card_brand} •••• {billingProfile?.card_last4}</p>
+            {(billingProfile as any)?.card_exp_month && (billingProfile as any)?.card_exp_year && (
+              <p>Expires {String((billingProfile as any).card_exp_month).padStart(2, '0')}/{(billingProfile as any).card_exp_year}</p>
+            )}
+            <p>Consent recorded: {(billingProfile as any)?.autopay_consent_at ? format(new Date((billingProfile as any).autopay_consent_at), 'MMM d, yyyy') : 'Card-on-file authorization on setup'}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCollectConfirmOpen(false)} disabled={collectingPayment}>Cancel</Button>
+            <Button onClick={async () => { await handleCollectPayment(); setCollectConfirmOpen(false); }} disabled={collectingPayment}>
+              {collectingPayment ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
+              Charge ${balanceDue.toFixed(2)}
             </Button>
           </DialogFooter>
         </DialogContent>
