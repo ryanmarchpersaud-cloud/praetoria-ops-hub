@@ -223,7 +223,13 @@ export default function SettingsIntegrationsPage() {
               {filtered.map(int => {
                 const isTesting = testing === int.id;
                 const result = testResults[int.id];
-                const effectiveStatus = isTesting ? 'pending' : (result ? (result.ok ? 'connected' : 'error') : int.status);
+                // Google Analytics: derive live status from saved IDs
+                const dynamicStatus: IntStatus | null =
+                  int.id === 'google_analytics'
+                    ? (ga4Id ? 'connected' : 'not_configured')
+                    : null;
+                const baseStatus = dynamicStatus ?? int.status;
+                const effectiveStatus = isTesting ? 'pending' : (result ? (result.ok ? 'connected' : 'error') : baseStatus);
                 const sc = statusConfig[effectiveStatus];
                 const lastAct = lastActivityMap[int.id] || int.lastActivity;
 
