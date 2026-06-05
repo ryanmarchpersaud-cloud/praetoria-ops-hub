@@ -161,12 +161,20 @@ export default function PortalBilling() {
     }
   };
 
-  // Save card on file via Stripe setup
-  const handleSaveCard = async () => {
+  // Save card on file via Stripe setup — now goes through a consent dialog
+  const handleSaveCard = () => {
+    setConsentChecked(false);
+    setConsentDialog(true);
+  };
+
+  const handleConfirmConsentAndContinue = async () => {
+    if (!consentChecked) return;
     setSavingCard(true);
     try {
       const res = await callEdgeFunction('setup-payment-method', {
         role_type: 'customer',
+        authorization_text: AUTHORIZATION_TEXT,
+        authorization_version: AUTHORIZATION_VERSION,
       });
       if (res?.url) {
         window.location.href = res.url;
