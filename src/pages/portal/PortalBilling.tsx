@@ -531,6 +531,48 @@ export default function PortalBilling() {
             </div>
           )}
         </DialogContent>
+      {/* Card-on-File Authorization Dialog */}
+      <Dialog open={consentDialog} onOpenChange={(o) => { if (!savingCard) setConsentDialog(o); }}>
+        <DialogContent className="max-w-md mx-3">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" /> Save Card on File
+            </DialogTitle>
+            <DialogDescription>
+              Please review and authorize before continuing to Stripe to enter your card details.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 text-sm">
+            <div className="rounded-md border border-border bg-muted/40 p-3 text-xs leading-relaxed">
+              {AUTHORIZATION_TEXT}
+            </div>
+            <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+              <li>Card details are stored securely by Stripe — Praetoria never sees or stores your full card number or CVV.</li>
+              <li>Only your card brand, last 4 digits, and expiry date are saved in our system.</li>
+              <li>You can remove your saved card at any time from this page.</li>
+              <li>Your authorization, timestamp, and account details will be recorded for audit purposes.</li>
+            </ul>
+            <label className="flex items-start gap-2 cursor-pointer pt-1">
+              <Checkbox
+                checked={consentChecked}
+                onCheckedChange={(v) => setConsentChecked(v === true)}
+                className="mt-0.5"
+              />
+              <span className="text-xs">I have read and agree to the authorization above.</span>
+            </label>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setConsentDialog(false)} disabled={savingCard}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmConsentAndContinue} disabled={!consentChecked || savingCard}>
+              {savingCard ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CreditCard className="h-3.5 w-3.5 mr-1" />}
+              Agree & Continue to Stripe
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </div>
   );
