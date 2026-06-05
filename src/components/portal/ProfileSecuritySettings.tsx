@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, CheckCircle2, Loader2, Lock, Save, ShieldCheck, UserCog } from 'lucide-react';
 import { toast } from 'sonner';
@@ -83,7 +83,7 @@ function CustomerProfileForm({ profile, loginEmail }: { profile: CustomerProfile
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const saveProfile = async (event: React.FormEvent) => {
+  const saveProfile = async (event: FormEvent) => {
     event.preventDefault();
     setMessage(null);
 
@@ -180,7 +180,7 @@ function SubcontractorProfileForm({ profile, loginEmail }: { profile: Subcontrac
     setForm((current) => ({ ...current, [field]: value }));
   };
 
-  const saveProfile = async (event: React.FormEvent) => {
+  const saveProfile = async (event: FormEvent) => {
     event.preventDefault();
     setMessage(null);
 
@@ -243,13 +243,12 @@ function SubcontractorProfileForm({ profile, loginEmail }: { profile: Subcontrac
 }
 
 function PasswordUpdateForm() {
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<Message>(null);
 
-  const updatePassword = async (event: React.FormEvent) => {
+  const updatePassword = async (event: FormEvent) => {
     event.preventDefault();
     setMessage(null);
 
@@ -260,11 +259,6 @@ function PasswordUpdateForm() {
 
     if (newPassword !== confirmPassword) {
       setMessage({ type: 'error', text: 'New password and confirmation do not match.' });
-      return;
-    }
-
-    if (currentPassword && currentPassword === newPassword) {
-      setMessage({ type: 'error', text: 'Choose a new password that is different from your current password.' });
       return;
     }
 
@@ -279,7 +273,6 @@ function PasswordUpdateForm() {
       return;
     }
 
-    setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
     setMessage({ type: 'success', text: 'Password updated successfully.' });
@@ -296,7 +289,6 @@ function PasswordUpdateForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={updatePassword} className="space-y-4">
-          <Field label="Current password" type="password" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
           <Field label="New password" type="password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" required />
           <Field label="Confirm new password" type="password" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" required />
           <Alert>
