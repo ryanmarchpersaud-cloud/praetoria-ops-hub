@@ -194,17 +194,23 @@ export function MarketingIntelligence({
         </div>
 
         {/* GA4 setup notice */}
-        <div className="rounded-lg border border-dashed border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/20 p-3">
+        <div className={cn(
+          "rounded-lg border border-dashed p-3",
+          ga4Configured
+            ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20"
+            : "border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/20"
+        )}>
           <div className="flex items-start gap-2">
-            <Globe className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+            <Globe className={cn("h-4 w-4 mt-0.5 shrink-0", ga4Configured ? "text-emerald-600" : "text-blue-600")} />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-blue-900 dark:text-blue-200">
-                Website traffic tracking — pending Google setup
+              <p className={cn("text-xs font-bold", ga4Configured ? "text-emerald-900 dark:text-emerald-200" : "text-blue-900 dark:text-blue-200")}>
+                {ga4Configured ? 'Website traffic tracking — GA4 active' : 'Website traffic tracking — pending Google setup'}
               </p>
-              <p className="text-[11px] text-blue-800/80 dark:text-blue-300/80 mt-0.5 leading-relaxed">
-                When Google's IT specialist provisions your <strong>GA4 Measurement ID</strong> and <strong>Google Ads Conversion ID</strong>,
-                paste them in <Link to="/settings/integrations" className="underline font-semibold">Settings → Integrations</Link> and
-                website visitors, ad clicks, and cost-per-lead will populate here automatically.
+              <p className={cn("text-[11px] mt-0.5 leading-relaxed", ga4Configured ? "text-emerald-800/80 dark:text-emerald-300/80" : "text-blue-800/80 dark:text-blue-300/80")}>
+                {ga4Configured
+                  ? <>GA4 is configured and tracking page views. Manage IDs in <Link to="/settings/integrations" className="underline font-semibold">Settings → Integrations</Link>.</>
+                  : <>When your <strong>GA4 Measurement ID</strong> and <strong>Google Ads Conversion ID</strong> are ready, paste them in <Link to="/settings/integrations" className="underline font-semibold">Settings → Integrations</Link> to enable tracking.</>
+                }
               </p>
             </div>
           </div>
