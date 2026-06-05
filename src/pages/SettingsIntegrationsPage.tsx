@@ -196,6 +196,7 @@ export default function SettingsIntegrationsPage() {
         <Tabs defaultValue="catalog">
           <TabsList>
             <TabsTrigger value="catalog">Integration Catalog</TabsTrigger>
+            <TabsTrigger value="google_analytics">Google Analytics</TabsTrigger>
             <TabsTrigger value="webhook">Webhook API</TabsTrigger>
           </TabsList>
 
