@@ -32,18 +32,26 @@ export default function PortalBilling() {
   const cardSaved = searchParams.get('card_saved');
 
   useEffect(() => {
-    if (cardSaved === 'true' && customer?.id) {
-      callEdgeFunction('sync-payment-method', { role_type: 'customer' })
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
+    if (!customer?.id) return;
+    // Always attempt a silent reconcile on mount — recovers cards that
+    // were saved in Stripe but never synced back (e.g. user finished
+    // Stripe checkout on a different domain).
+    callEdgeFunction('sync-payment-method', { role_type: 'customer' })
+      .then((res: any) => {
+        queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
+        if (cardSaved === 'true') {
           const url = new URL(window.location.href);
           url.searchParams.delete('card_saved');
+          url.searchParams.delete('session_id');
           window.history.replaceState({}, '', url.toString());
-          toast({ title: 'Card saved successfully!' });
-        })
-        .catch(() => {});
-    }
-  }, [cardSaved, customer?.id]);
+          if (res?.synced) {
+            toast({ title: 'Card saved successfully!' });
+          }
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customer?.id]);
 
   // All invoices for this customer
   const { data: allInvoices = [], isLoading } = useQuery({
