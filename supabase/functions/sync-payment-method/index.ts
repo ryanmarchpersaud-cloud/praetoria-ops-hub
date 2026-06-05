@@ -176,6 +176,39 @@ serve(async (req) => {
         }
       }
 
+      // Backfill the authorization audit record with the final card details.
+      // Prefer the record tied to this exact setup session; otherwise update
+      // the latest non-finalized authorization for this user.
+      try {
+        const updatePayload = {
+          processor_payment_method_id: pm.id,
+          card_brand: cardBrand,
+          card_last4: cardLast4,
+          card_exp_month: cardExpMonth,
+          card_exp_year: cardExpYear,
+          is_default: true,
+        };
+        let updated = false;
+        if (session_id) {
+          const { data: bySession } = await serviceClient
+            .from("payment_method_authorizations")
+            .update(updatePayload)
+            .eq("setup_session_id", session_id)
+            .is("processor_payment_method_id", null)
+            .select("id");
+          updated = !!(bySession && bySession.length > 0);
+        }
+        if (!updated) {
+          await serviceClient
+            .from("payment_method_authorizations")
+            .update(updatePayload)
+            .eq("user_id", userId)
+            .is("processor_payment_method_id", null);
+        }
+      } catch (e) {
+        console.warn("Could not backfill payment_method_authorizations:", e);
+      }
+
       return json({
         synced: true,
         verified: !!session_id,
