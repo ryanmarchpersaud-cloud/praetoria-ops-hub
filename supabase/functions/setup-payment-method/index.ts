@@ -118,6 +118,26 @@ serve(async (req) => {
       }
     }
 
+    // Record card-on-file authorization (pending — completed by sync-payment-method)
+    try {
+      await serviceClient.from("payment_method_authorizations").insert({
+        customer_id: role_type === "subcontractor" ? null : (linkedCustomer?.id || null),
+        subcontractor_id: role_type === "subcontractor" ? (linkedCustomer?.id || null) : null,
+        user_id: userId,
+        role_type: role_type || "customer",
+        processor: "stripe",
+        processor_customer_id: customerId,
+        authorization_text: consentText,
+        authorization_version: consentVersion,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        setup_session_id: session.id,
+        is_default: true,
+      });
+    } catch (e) {
+      console.warn("Could not insert payment_method_authorizations:", e);
+    }
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
