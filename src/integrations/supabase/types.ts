@@ -684,6 +684,8 @@ export type Database = {
           email: string | null
           email_signature: string | null
           emergency_service_enabled: boolean | null
+          ga4_measurement_id: string | null
+          google_ads_conversion_id: string | null
           gst_number: string | null
           id: string
           internal_notes_visible_default: boolean | null
@@ -734,6 +736,8 @@ export type Database = {
           email?: string | null
           email_signature?: string | null
           emergency_service_enabled?: boolean | null
+          ga4_measurement_id?: string | null
+          google_ads_conversion_id?: string | null
           gst_number?: string | null
           id?: string
           internal_notes_visible_default?: boolean | null
@@ -784,6 +788,8 @@ export type Database = {
           email?: string | null
           email_signature?: string | null
           emergency_service_enabled?: boolean | null
+          ga4_measurement_id?: string | null
+          google_ads_conversion_id?: string | null
           gst_number?: string | null
           id?: string
           internal_notes_visible_default?: boolean | null
