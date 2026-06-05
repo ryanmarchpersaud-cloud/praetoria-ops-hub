@@ -116,6 +116,34 @@ export default function SettingsIntegrationsPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [lastActivityMap, setLastActivityMap] = useState<Record<string, string>>({});
 
+  // Google Analytics config
+  const [ga4Id, setGa4Id] = useState('');
+  const [adsId, setAdsId] = useState('');
+  const [savingGa, setSavingGa] = useState(false);
+  const [gaLoaded, setGaLoaded] = useState(false);
+
+  useEffect(() => {
+    supabase.from('company_settings').select('ga4_measurement_id, google_ads_conversion_id').limit(1).single()
+      .then(({ data }) => {
+        if (data) {
+          setGa4Id(data.ga4_measurement_id || '');
+          setAdsId(data.google_ads_conversion_id || '');
+        }
+        setGaLoaded(true);
+      });
+  }, []);
+
+  const saveGaConfig = async () => {
+    setSavingGa(true);
+    const { error } = await supabase.from('company_settings').update({
+      ga4_measurement_id: ga4Id.trim() || null,
+      google_ads_conversion_id: adsId.trim() || null,
+    }).eq('id', (await supabase.from('company_settings').select('id').limit(1).single()).data?.id);
+    if (error) toast.error('Failed to save: ' + error.message);
+    else toast.success('Google Analytics settings saved');
+    setSavingGa(false);
+  };
+
   useEffect(() => {
     supabase.from('integration_logs').select('provider, created_at').order('created_at', { ascending: false }).limit(100)
       .then(({ data }) => {
