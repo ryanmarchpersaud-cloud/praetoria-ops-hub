@@ -531,6 +531,8 @@ export default function PortalBilling() {
             </div>
           )}
         </DialogContent>
+      </Dialog>
+
       {/* Card-on-File Authorization Dialog */}
       <Dialog open={consentDialog} onOpenChange={(o) => { if (!savingCard) setConsentDialog(o); }}>
         <DialogContent className="max-w-md mx-3">
