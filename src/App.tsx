@@ -641,6 +641,8 @@ function AppRoutes() {
   );
 }
 
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -648,6 +650,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <GoogleAnalytics />
           <NativeDeepLinkHandler />
           <ScrollToTop />
           <AppUpdateBanner />
