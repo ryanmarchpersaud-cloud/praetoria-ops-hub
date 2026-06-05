@@ -26,6 +26,7 @@ export default function PortalBilling() {
   const queryClient = useQueryClient();
   const [savingCard, setSavingCard] = useState(false);
   const [removingCard, setRemovingCard] = useState(false);
+  const [syncingCard, setSyncingCard] = useState(false);
 
   // Auto-sync card on return from Stripe setup
   const searchParams = new URLSearchParams(window.location.search);
@@ -33,23 +34,55 @@ export default function PortalBilling() {
 
   useEffect(() => {
     if (!customer?.id) return;
-    // Always attempt a silent reconcile on mount — recovers cards that
-    // were saved in Stripe but never synced back (e.g. user finished
-    // Stripe checkout on a different domain).
-    callEdgeFunction('sync-payment-method', { role_type: 'customer' })
-      .then((res: any) => {
-        queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
-        if (cardSaved === 'true') {
-          const url = new URL(window.location.href);
-          url.searchParams.delete('card_saved');
-          url.searchParams.delete('session_id');
-          window.history.replaceState({}, '', url.toString());
-          if (res?.synced) {
-            toast({ title: 'Card saved successfully!' });
-          }
+    const sessionId = searchParams.get('session_id');
+    const returningFromStripe = cardSaved === 'true';
+    let cancelled = false;
+
+    const reconcileCard = async () => {
+      if (returningFromStripe) setSyncingCard(true);
+      try {
+        const res = await callEdgeFunction('sync-payment-method', {
+          role_type: 'customer',
+          ...(sessionId ? { session_id: sessionId } : {}),
+        });
+        await queryClient.invalidateQueries({ queryKey: ['billing_profile', customer.id] });
+        await queryClient.refetchQueries({ queryKey: ['billing_profile', customer.id] });
+
+        if (cancelled || !returningFromStripe) return;
+        const url = new URL(window.location.href);
+        url.searchParams.delete('card_saved');
+        url.searchParams.delete('session_id');
+        window.history.replaceState({}, '', url.toString());
+
+        if (res?.synced) {
+          queryClient.setQueryData(['billing_profile', customer.id], (old: any) => ({
+            ...(old || {}),
+            customer_id: customer.id,
+            payment_method_present: true,
+            payment_preference: 'card-on-file',
+            card_brand: res.card_brand,
+            card_last4: res.card_last4,
+            card_exp_month: res.card_exp_month,
+            card_exp_year: res.card_exp_year,
+            default_payment_method_id: res.default_payment_method_id,
+            processor_customer_id: res.processor_customer_id,
+            updated_at: new Date().toISOString(),
+          }));
+          toast({ title: 'Card saved and verified' });
+        } else {
+          toast({ title: 'Card sync incomplete', description: res?.message || 'Stripe saved the card, but the app could not verify it yet.', variant: 'destructive' });
         }
-      })
-      .catch(() => {});
+      } catch (err: any) {
+        if (returningFromStripe) {
+          toast({ title: 'Card sync failed', description: err?.message || 'Please try adding the card again.', variant: 'destructive' });
+        }
+      } finally {
+        if (!cancelled) setSyncingCard(false);
+      }
+    };
+
+    reconcileCard();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customer?.id]);
 
@@ -313,7 +346,12 @@ export default function PortalBilling() {
           <CardTitle className="text-sm flex items-center gap-1.5"><CreditCard className="h-4 w-4" /> Payment Method</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          {billingProfile?.payment_method_present ? (
+          {syncingCard ? (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Verifying saved card...</span>
+            </div>
+          ) : billingProfile?.payment_method_present ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
