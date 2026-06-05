@@ -43,6 +43,13 @@ export function MarketingIntelligence({
 }: {
   leads: Lead[]; quotes: Quote[]; jobs: Job[]; invoices: Invoice[]; isLoading?: boolean;
 }) {
+  const [ga4Configured, setGa4Configured] = useState(false);
+
+  useEffect(() => {
+    supabase.from('company_settings').select('ga4_measurement_id').limit(1).single()
+      .then(({ data }) => setGa4Configured(!!data?.ga4_measurement_id));
+  }, []);
+
   const data = useMemo(() => {
     // Lead sources breakdown
     const sourceMap = new Map<string, number>();
