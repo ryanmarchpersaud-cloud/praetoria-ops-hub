@@ -36,6 +36,34 @@ type ProfileSecuritySettingsProps =
   | { portal: 'subcontractor'; profile: SubcontractorProfile | null | undefined; loginEmail?: string | null };
 
 type Message = { type: 'success' | 'error'; text: string } | null;
+type PortalProfileRpcClient = typeof supabase & {
+  rpc(
+    fn: 'update_customer_portal_profile',
+    args: {
+      p_first_name: string;
+      p_last_name: string;
+      p_company_name: string;
+      p_phone: string;
+      p_address_line_1: string;
+      p_city: string;
+      p_province: string;
+      p_postal_code: string;
+    },
+  ): ReturnType<typeof supabase.rpc>;
+  rpc(
+    fn: 'update_subcontractor_portal_profile',
+    args: {
+      p_company_name: string;
+      p_contact_name: string;
+      p_phone: string;
+      p_mailing_address: string;
+      p_emergency_contact_name: string;
+      p_emergency_contact_phone: string;
+    },
+  ): ReturnType<typeof supabase.rpc>;
+};
+
+const portalProfileClient = supabase as PortalProfileRpcClient;
 
 export function ProfileSecuritySettings(props: ProfileSecuritySettingsProps) {
   return (
@@ -93,7 +121,7 @@ function CustomerProfileForm({ profile, loginEmail }: { profile: CustomerProfile
     }
 
     setSaving(true);
-    const { error } = await (supabase as any).rpc('update_customer_portal_profile', {
+    const { error } = await portalProfileClient.rpc('update_customer_portal_profile', {
       p_first_name: form.first_name,
       p_last_name: form.last_name,
       p_company_name: form.company_name,
@@ -190,7 +218,7 @@ function SubcontractorProfileForm({ profile, loginEmail }: { profile: Subcontrac
     }
 
     setSaving(true);
-    const { error } = await (supabase as any).rpc('update_subcontractor_portal_profile', {
+    const { error } = await portalProfileClient.rpc('update_subcontractor_portal_profile', {
       p_company_name: form.company_name,
       p_contact_name: form.contact_name,
       p_phone: form.phone,
