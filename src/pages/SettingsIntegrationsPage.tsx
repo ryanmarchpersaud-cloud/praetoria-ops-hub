@@ -121,6 +121,46 @@ export default function SettingsIntegrationsPage() {
   const [adsId, setAdsId] = useState('');
   const [savingGa, setSavingGa] = useState(false);
   const [gaLoaded, setGaLoaded] = useState(false);
+  const [testingAds, setTestingAds] = useState(false);
+  const [adsTestResult, setAdsTestResult] = useState<{ ok: boolean; message: string; storedValue?: string | null } | null>(null);
+
+  const testAdsConversionId = async () => {
+    setTestingAds(true);
+    setAdsTestResult(null);
+    try {
+      const { data, error } = await supabase
+        .from('company_settings')
+        .select('google_ads_conversion_id')
+        .limit(1)
+        .single();
+      if (error) {
+        setAdsTestResult({ ok: false, message: `DB error: ${error.message}` });
+        toast.error('Test failed: ' + error.message);
+        return;
+      }
+      const stored = (data?.google_ads_conversion_id || '').trim();
+      if (!stored) {
+        setAdsTestResult({ ok: false, message: 'No Google Ads Conversion ID stored in the database. Enter one and click Save.', storedValue: null });
+        toast.error('No Ads Conversion ID stored');
+        return;
+      }
+      const formatOk = /^AW-[0-9]{6,}$/.test(stored);
+      if (!formatOk) {
+        setAdsTestResult({ ok: false, message: `Stored value "${stored}" does not match expected format AW-XXXXXXXXX.`, storedValue: stored });
+        toast.error('Invalid Ads Conversion ID format');
+        return;
+      }
+      const matchesUi = stored === adsId.trim();
+      setAdsTestResult({
+        ok: true,
+        message: `Verified in database: ${stored}${matchesUi ? '' : ' (note: differs from unsaved input — Save to sync)'}`,
+        storedValue: stored,
+      });
+      toast.success('Google Ads Conversion ID verified');
+    } finally {
+      setTestingAds(false);
+    }
+  };
 
   useEffect(() => {
     supabase.from('company_settings').select('ga4_measurement_id, google_ads_conversion_id').limit(1).single()
