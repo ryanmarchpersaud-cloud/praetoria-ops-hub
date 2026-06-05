@@ -54,13 +54,22 @@ serve(async (req) => {
       customerId = newCustomer.id;
     }
 
+    // Use the request's origin so the user returns to the SAME domain they
+    // started on (custom domain, lovable.app, or preview), keeping their
+    // session alive so the auto-sync on /portal/billing actually fires.
+    const origin =
+      req.headers.get("origin") ||
+      req.headers.get("referer")?.replace(/\/$/, "") ||
+      "https://praetoriagroup.ca";
+    const returnPath = role_type === "subcontractor" ? "/subcontractor/payments" : "/portal/billing";
+
     // Create Checkout Session in setup mode (saves card, no charge)
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "setup",
       payment_method_types: ["card"],
-      success_url: `https://praetoria-ops-hub.lovable.app/${role_type === "subcontractor" ? "subcontractor/payments" : "portal/billing"}?card_saved=true`,
-      cancel_url: `https://praetoria-ops-hub.lovable.app/${role_type === "subcontractor" ? "subcontractor/payments" : "portal/billing"}`,
+      success_url: `${origin}${returnPath}?card_saved=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}${returnPath}`,
       metadata: { user_id: userId, role_type: role_type || "customer" },
     });
 
