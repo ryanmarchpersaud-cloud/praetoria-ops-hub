@@ -41,17 +41,48 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Find stripe customer
-    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
-    if (customers.data.length === 0) {
-      return new Response(JSON.stringify({ synced: false, message: "No Stripe customer found" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
-      });
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    // Prefer the Stripe customer ID we already stored when starting setup —
+    // this avoids picking the wrong customer when an email has multiple
+    // Stripe records.
+    let stripeCustomerId: string | null = null;
+    if (role_type === "subcontractor") {
+      const { data: sub } = await serviceClient
+        .from("subcontractors").select("id").eq("user_id", userId).maybeSingle();
+      if (sub) {
+        const { data: bp } = await serviceClient
+          .from("subcontractor_billing_profiles")
+          .select("processor_customer_id").eq("subcontractor_id", sub.id).maybeSingle();
+        stripeCustomerId = (bp as any)?.processor_customer_id || null;
+      }
+    } else {
+      const { data: cust } = await serviceClient
+        .from("customers").select("id").eq("user_id", userId).maybeSingle();
+      if (cust) {
+        const { data: bp } = await serviceClient
+          .from("customer_billing_profiles")
+          .select("processor_customer_id").eq("customer_id", cust.id).maybeSingle();
+        stripeCustomerId = (bp as any)?.processor_customer_id || null;
+      }
     }
 
-    const stripeCustomer = customers.data[0];
+    // Fallback: look up by email
+    if (!stripeCustomerId) {
+      const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+      if (customers.data.length === 0) {
+        return new Response(JSON.stringify({ synced: false, message: "No Stripe customer found" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
+        });
+      }
+      stripeCustomerId = customers.data[0].id;
+    }
+
     const paymentMethods = await stripe.paymentMethods.list({
-      customer: stripeCustomer.id, type: "card", limit: 1,
+      customer: stripeCustomerId, type: "card", limit: 10,
     });
 
     const serviceClient = createClient(
