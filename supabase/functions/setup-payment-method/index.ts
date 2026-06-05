@@ -35,7 +35,20 @@ serve(async (req) => {
     const userEmail = claimsData.claims.email as string;
     if (!userEmail) throw new Error("No email in token");
 
-    const { role_type } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { role_type, authorization_text, authorization_version } = body || {};
+
+    const AUTH_TEXT_DEFAULT = "I authorize Praetoria Operations Group Inc. / Praetoria Group to securely save my payment method with Stripe and charge my saved card for approved invoices, recurring monthly services, or other services I authorize.";
+    const consentText: string = (typeof authorization_text === "string" && authorization_text.trim().length > 20)
+      ? authorization_text.trim()
+      : AUTH_TEXT_DEFAULT;
+    const consentVersion: string = (typeof authorization_version === "string" && authorization_version.trim()) || "v1";
+
+    // Capture request context for the audit trail
+    const ipAddress = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || req.headers.get("cf-connecting-ip")
+      || null;
+    const userAgent = req.headers.get("user-agent") || null;
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
