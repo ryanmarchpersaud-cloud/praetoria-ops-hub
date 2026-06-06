@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   CreditCard, FileText, CheckCircle, Receipt, ChevronDown, ChevronUp,
-  Phone, Mail, AlertCircle, ExternalLink, DollarSign, Loader2,
+  Phone, Mail, AlertCircle, ExternalLink, DollarSign, Loader2, Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
