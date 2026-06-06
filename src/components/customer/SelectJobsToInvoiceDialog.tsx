@@ -13,6 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import { format, addDays } from 'date-fns';
 
 const GST_RATE = 0.05;
+const PST_RATE = 0.06;
+const COMBINED_TAX_RATE = GST_RATE + PST_RATE; // SK GST + PST
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 interface Props {
