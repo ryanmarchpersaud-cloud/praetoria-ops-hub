@@ -1030,8 +1030,9 @@ Deno.serve(async (req) => {
         const links = attachments
           .filter((url: unknown) => isAllowedHttpsUrl(url))
           .map((url: string) => {
-            const name = url.split("/").pop() || "Attachment";
-            return `<a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;">${escapeHtml(name)}</a>`;
+            let name = decodeURIComponent((url.split("?")[0].split("/").pop()) || "Attachment");
+            name = name.replace(/^\d{10,}-/, "");
+            return `📄 <a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;font-weight:600;">${escapeHtml(name)}</a>`;
           }).join("<br/>");
         if (links) {
           attachmentHtml = `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;"/>
