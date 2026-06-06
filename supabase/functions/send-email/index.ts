@@ -699,8 +699,11 @@ Deno.serve(async (req) => {
         if (safe.length > 0) {
           const links = safe.map((url: string) => {
             const cleanUrl = url.split("?")[0];
-            const name = encodeAttr(decodeURIComponent(cleanUrl.split("/").pop() || "Attachment"));
-            return `<a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
+            let rawName = decodeURIComponent(cleanUrl.split("/").pop() || "Attachment");
+            // Strip leading timestamp prefix added at upload time (e.g. "1733456789-FILENAME.pdf")
+            rawName = rawName.replace(/^\d{10,}-/, "");
+            const name = encodeAttr(rawName);
+            return `📄 <a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;font-weight:600;">${name}</a>`;
           }).join("<br/>");
           attachmentHtml += `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"/>
             <p style="font-weight:600;margin-bottom:8px;">Attachments:</p>${links}`;
