@@ -20,7 +20,7 @@ function downloadCsv(filename: string, headers: string[], rows: string[][]) {
 
 export async function exportInvoices(dateFrom?: string, dateTo?: string) {
   let q = supabase.from('invoices').select(`
-    invoice_number, status, issue_date, due_date, subtotal, tax, total, amount_paid, balance_due,
+    invoice_number, status, issue_date, due_date, subtotal, tax, gst_rate, pst_rate, gst_amount, pst_amount, total, amount_paid, balance_due,
     customers(first_name, last_name, company_name, email)
   `).order('issue_date', { ascending: false });
   if (dateFrom) q = q.gte('issue_date', dateFrom);
@@ -28,11 +28,13 @@ export async function exportInvoices(dateFrom?: string, dateTo?: string) {
   const { data } = await q;
   if (!data?.length) return 0;
 
-  const headers = ['Invoice #', 'Status', 'Issue Date', 'Due Date', 'Customer', 'Email', 'Subtotal', 'Tax', 'Total', 'Paid', 'Balance'];
+  const headers = ['Invoice #', 'Status', 'Issue Date', 'Due Date', 'Customer', 'Email', 'Subtotal', 'GST Rate', 'GST', 'PST Rate', 'PST', 'Total Tax', 'Total', 'Paid', 'Balance'];
   const rows = data.map((i: any) => {
     const c = i.customers;
     const name = c ? [c.first_name, c.last_name].filter(Boolean).join(' ') : '';
-    return [i.invoice_number, i.status, i.issue_date, i.due_date, c?.company_name || name, c?.email, i.subtotal, i.tax, i.total, i.amount_paid, i.balance_due];
+    const gstPct = i.gst_rate != null ? (Number(i.gst_rate) * 100).toFixed(2) + '%' : '';
+    const pstPct = i.pst_rate != null ? (Number(i.pst_rate) * 100).toFixed(2) + '%' : '';
+    return [i.invoice_number, i.status, i.issue_date, i.due_date, c?.company_name || name, c?.email, i.subtotal, gstPct, i.gst_amount ?? '', pstPct, i.pst_amount ?? '', i.tax, i.total, i.amount_paid, i.balance_due];
   });
   downloadCsv(`invoices-export-${format(new Date(), 'yyyy-MM-dd')}.csv`, headers, rows);
   return rows.length;
