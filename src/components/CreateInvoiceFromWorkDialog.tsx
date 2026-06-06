@@ -182,6 +182,8 @@ export function CreateInvoiceFromWorkDialog({
         issue_date: validatedIssueDate,
         due_date: validatedDueDate,
         tax_rate: validatedTaxRate,
+        gst_rate: Math.abs(validatedTaxRate - 0.11) < 0.0001 ? 0.05 : (Math.abs(validatedTaxRate - 0.05) < 0.0001 ? 0.05 : null),
+        pst_rate: Math.abs(validatedTaxRate - 0.11) < 0.0001 ? 0.06 : (Math.abs(validatedTaxRate - 0.06) < 0.0001 ? 0.06 : null),
         status: 'Draft' as any,
         customer_memo: validatedCustomerMemo || null,
         internal_notes: validatedInternalNotes || null,

@@ -37,53 +37,129 @@ function getStatusAfterTotalChange(invoice: any, nextTotal: number) {
   return amountPaid + 0.005 >= nextTotal ? 'Paid' : 'Partially Paid';
 }
 
+function formatRate(rate: number) {
+  const pct = rate * 100;
+  return pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(2);
+}
+
 function TaxRow({ invoice, canEdit }: { invoice: any; canEdit: boolean }) {
-  const taxRate = Number(invoice.tax_rate || 0);
-  const tax = Number(invoice.tax || 0);
+  const subtotal = Number(invoice.subtotal || 0);
+  const gstRate = invoice.gst_rate == null ? null : Number(invoice.gst_rate);
+  const pstRate = invoice.pst_rate == null ? null : Number(invoice.pst_rate);
+  const combinedRate = Number(invoice.tax_rate || 0);
+  const hasSplit = gstRate != null || pstRate != null;
+  // When no split is recorded, fall back to combined rate as GST so we never show "GST 11%"
+  const effGst = gstRate != null ? gstRate : (pstRate == null ? combinedRate : 0);
+  const effPst = pstRate != null ? pstRate : 0;
+
+  const gstAmount = invoice.gst_amount != null
+    ? Number(invoice.gst_amount)
+    : Math.round(subtotal * effGst * 100) / 100;
+  const pstAmount = invoice.pst_amount != null
+    ? Number(invoice.pst_amount)
+    : Math.round(subtotal * effPst * 100) / 100;
+  const totalTax = Number(invoice.tax || 0);
+
   const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState((taxRate * 100).toFixed(2));
+  const [gstStr, setGstStr] = useState(((gstRate ?? 0.05) * 100).toFixed(2));
+  const [pstStr, setPstStr] = useState(((pstRate ?? 0.06) * 100).toFixed(2));
+  const [exempt, setExempt] = useState(combinedRate === 0 && !hasSplit);
   const updateInvoice = useUpdateInvoice();
 
   const save = async () => {
-    const nextRate = Math.max(0, Number(value) || 0) / 100;
-    const subtotal = Number(invoice.subtotal || 0);
+    let nextGst: number | null = Math.max(0, Number(gstStr) || 0) / 100;
+    let nextPst: number | null = Math.max(0, Number(pstStr) || 0) / 100;
+    if (exempt) { nextGst = 0; nextPst = 0; }
+    if (nextGst === 0) nextGst = null;
+    if (nextPst === 0) nextPst = null;
+    const effective = (nextGst || 0) + (nextPst || 0);
     const tip = Number(invoice.tip || 0);
-    const nextTax = Math.round(subtotal * nextRate * 100) / 100;
+    const nextTax = Math.round(subtotal * effective * 100) / 100;
     const nextTotal = Math.round((subtotal + nextTax + tip) * 100) / 100;
     await updateInvoice.mutateAsync({
       id: invoice.id,
-      tax_rate: nextRate,
+      gst_rate: nextGst,
+      pst_rate: nextPst,
+      tax_rate: effective,
       status: getStatusAfterTotalChange(invoice, nextTotal),
     } as any);
-    toast.success('GST updated');
+    toast.success('Tax updated');
     setEditing(false);
   };
 
   if (editing) {
     return (
-      <div className="flex justify-between items-center text-sm gap-2">
-        <span className="text-muted-foreground">GST</span>
-        <div className="flex items-center gap-1">
-          <Input type="number" step="0.01" min="0" value={value} onChange={e => setValue(e.target.value)} className="h-7 w-20 text-right tabular-nums" autoFocus />
-          <span className="text-xs">%</span>
-          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={save} disabled={updateInvoice.isPending}>Save</Button>
-          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setValue((taxRate * 100).toFixed(2)); setEditing(false); }}>Cancel</Button>
+      <div className="space-y-2 border rounded-md p-2 bg-muted/20">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-medium">Edit tax</span>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <Checkbox checked={exempt} onCheckedChange={(v) => setExempt(!!v)} />
+            <span>Tax exempt</span>
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label className="text-[10px]">GST %</Label>
+            <Input type="number" step="0.01" min="0" value={gstStr} disabled={exempt}
+              onChange={e => setGstStr(e.target.value)} className="h-8 text-right tabular-nums" />
+          </div>
+          <div>
+            <Label className="text-[10px]">SK PST %</Label>
+            <Input type="number" step="0.01" min="0" value={pstStr} disabled={exempt}
+              onChange={e => setPstStr(e.target.value)} className="h-8 text-right tabular-nums" />
+          </div>
+        </div>
+        <div className="flex justify-end gap-1">
+          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditing(false)}>Cancel</Button>
+          <Button size="sm" className="h-7 px-2" onClick={save} disabled={updateInvoice.isPending}>Save</Button>
         </div>
       </div>
     );
   }
 
+  const showGst = effGst > 0;
+  const showPst = effPst > 0;
+
   return (
-    <div className="flex justify-between text-sm items-center">
-      <span className="text-muted-foreground">GST ({(taxRate * 100).toFixed(taxRate * 100 % 1 ? 2 : 0)}%)</span>
-      <span className="flex items-center gap-2">
-        <span className="tabular-nums">${tax.toFixed(2)}</span>
-        {canEdit && (
-          <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs" onClick={() => { setValue((taxRate * 100).toFixed(2)); setEditing(true); }}>
-            <Pencil className="h-3 w-3" />
+    <div className="space-y-1">
+      {showGst && (
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">GST ({formatRate(effGst)}%)</span>
+          <span className="tabular-nums">${gstAmount.toFixed(2)}</span>
+        </div>
+      )}
+      {showPst && (
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">SK PST ({formatRate(effPst)}%)</span>
+          <span className="tabular-nums">${pstAmount.toFixed(2)}</span>
+        </div>
+      )}
+      {(showGst && showPst) && (
+        <div className="flex justify-between text-xs items-center pt-0.5 border-t border-dashed">
+          <span className="text-muted-foreground">Total Tax</span>
+          <span className="flex items-center gap-2">
+            <span className="tabular-nums font-medium">${totalTax.toFixed(2)}</span>
+            {canEdit && (
+              <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs" onClick={() => setEditing(true)}>
+                <Pencil className="h-3 w-3" />
+              </Button>
+            )}
+          </span>
+        </div>
+      )}
+      {!(showGst && showPst) && canEdit && (
+        <div className="flex justify-end">
+          <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs" onClick={() => setEditing(true)}>
+            <Pencil className="h-3 w-3" /> <span className="ml-1">Edit tax</span>
           </Button>
-        )}
-      </span>
+        </div>
+      )}
+      {!showGst && !showPst && !canEdit && (
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Tax</span>
+          <span className="tabular-nums">$0.00</span>
+        </div>
+      )}
     </div>
   );
 }

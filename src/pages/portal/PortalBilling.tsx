@@ -286,17 +286,32 @@ export default function PortalBilling() {
                       </tbody>
                     </table>
                   </div>
-                  <div className="flex flex-col items-end gap-0.5 mt-2 text-xs">
-                    <span className="text-muted-foreground">Subtotal: ${Number(inv.subtotal || 0).toFixed(2)}</span>
-                    <span className="text-muted-foreground">Tax (HST): ${Number(inv.tax || 0).toFixed(2)}</span>
-                    <span className="font-semibold text-sm">Total: ${Number(inv.total || 0).toFixed(2)}</span>
-                    {Number(inv.amount_paid) > 0 && (
-                      <>
-                        <span className="text-emerald-600">Paid: -${Number(inv.amount_paid).toFixed(2)}</span>
-                        <span className="font-semibold text-sm text-destructive">Balance: ${Number(inv.balance_due).toFixed(2)}</span>
-                      </>
-                    )}
-                  </div>
+                  {(() => {
+                    const sub = Number(inv.subtotal || 0);
+                    const gstRate = inv.gst_rate == null ? null : Number(inv.gst_rate);
+                    const pstRate = inv.pst_rate == null ? null : Number(inv.pst_rate);
+                    const combined = Number(inv.tax_rate || 0);
+                    const effGst = gstRate != null ? gstRate : (pstRate == null ? combined : 0);
+                    const effPst = pstRate != null ? pstRate : 0;
+                    const gstAmt = inv.gst_amount != null ? Number(inv.gst_amount) : Math.round(sub * effGst * 100) / 100;
+                    const pstAmt = inv.pst_amount != null ? Number(inv.pst_amount) : Math.round(sub * effPst * 100) / 100;
+                    const fmt = (r: number) => { const p = r * 100; return p % 1 === 0 ? p.toFixed(0) : p.toFixed(2); };
+                    return (
+                      <div className="flex flex-col items-end gap-0.5 mt-2 text-xs">
+                        <span className="text-muted-foreground">Subtotal: ${sub.toFixed(2)}</span>
+                        {effGst > 0 && <span className="text-muted-foreground">GST ({fmt(effGst)}%): ${gstAmt.toFixed(2)}</span>}
+                        {effPst > 0 && <span className="text-muted-foreground">SK PST ({fmt(effPst)}%): ${pstAmt.toFixed(2)}</span>}
+                        {effGst > 0 && effPst > 0 && <span className="text-muted-foreground">Total Tax: ${Number(inv.tax || 0).toFixed(2)}</span>}
+                        <span className="font-semibold text-sm">Total: ${Number(inv.total || 0).toFixed(2)}</span>
+                        {Number(inv.amount_paid) > 0 && (
+                          <>
+                            <span className="text-emerald-600">Paid: -${Number(inv.amount_paid).toFixed(2)}</span>
+                            <span className="font-semibold text-sm text-destructive">Balance: ${Number(inv.balance_due).toFixed(2)}</span>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 

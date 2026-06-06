@@ -13,6 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import { format, addDays } from 'date-fns';
 
 const GST_RATE = 0.05;
+const PST_RATE = 0.06;
+const COMBINED_TAX_RATE = GST_RATE + PST_RATE; // SK GST + PST
 const money = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 interface Props {
@@ -72,7 +74,9 @@ export function SelectJobsToInvoiceDialog({ open, onOpenChange, customerId, cust
         property_id: selectedJobs[0]?.properties?.id || null,
         issue_date: today,
         due_date: dueDate,
-        tax_rate: GST_RATE, // SK GST
+        tax_rate: COMBINED_TAX_RATE,
+        gst_rate: GST_RATE,
+        pst_rate: PST_RATE,
         status: 'Draft' as any,
         billing_mode: 'quoted_fixed' as any,
         internal_notes: `Combined invoice from ${selectedJobs.length} job(s)`,
@@ -85,7 +89,7 @@ export function SelectJobsToInvoiceDialog({ open, onOpenChange, customerId, cust
         item_name: `${j.job_number} ${j.job_title}`,
         description: j.address,
         quantity: 1,
-        unit_price: money(j.subtotal / (1 + GST_RATE)),
+        unit_price: money(j.subtotal / (1 + COMBINED_TAX_RATE)),
         sort_order: idx,
       }));
       if (lineItems.length > 0) {
