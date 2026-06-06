@@ -274,10 +274,24 @@ export default function InvoicePrint() {
               <span>Subtotal</span>
               <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(subtotal)}</span>
             </div>
-            <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
-              <span>GST ({(taxRate * 100).toFixed(taxRate * 100 % 1 ? 2 : 0)}%)</span>
-              <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tax)}</span>
-            </div>
+            {effGst > 0 && (
+              <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
+                <span>GST ({fmtRate(effGst)}%)</span>
+                <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(gstAmount)}</span>
+              </div>
+            )}
+            {effPst > 0 && (
+              <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
+                <span>SK PST ({fmtRate(effPst)}%)</span>
+                <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(pstAmount)}</span>
+              </div>
+            )}
+            {effGst > 0 && effPst > 0 && (
+              <div className="flex justify-between text-sm text-[#6b7280] print:text-base border-t border-dashed border-[#d1d5db] pt-1">
+                <span>Total Tax</span>
+                <span className="tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>${formatCurrency(tax)}</span>
+              </div>
+            )}
             {tip > 0 && (
               <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
                 <span>Tip</span>
