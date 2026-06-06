@@ -684,7 +684,7 @@ Deno.serve(async (req) => {
 
     // ─── Invoice Sent (customer-facing) ───
     if (action === "invoice_sent") {
-      const { customer_email, customer_name, invoice_number, service_category, total, balance_due, due_date, invoice_id, invoice_pdf_url, attachments } = params;
+      const { customer_email, customer_name, invoice_number, service_category, total, balance_due, due_date, invoice_id, invoice_pdf_url, attachments, custom_subject, custom_message } = params;
       if (!customer_email) return json({ error: "Missing customer_email" }, 400);
 
       const replyTo = resolveReplyTo(service_category, "operational");
@@ -698,7 +698,8 @@ Deno.serve(async (req) => {
         const safe = attachments.filter((url: unknown) => isAllowedHttpsUrl(url)) as string[];
         if (safe.length > 0) {
           const links = safe.map((url: string) => {
-            const name = encodeAttr(decodeURIComponent(url.split("/").pop() || "Attachment"));
+            const cleanUrl = url.split("?")[0];
+            const name = encodeAttr(decodeURIComponent(cleanUrl.split("/").pop() || "Attachment"));
             return `<a href="${encodeAttr(url)}" style="color:#1a56db;text-decoration:underline;">${name}</a>`;
           }).join("<br/>");
           attachmentHtml += `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;"/>
@@ -706,20 +707,42 @@ Deno.serve(async (req) => {
         }
       }
 
+      const balanceNum = Number(balance_due ?? 0);
+      const totalNum = Number(total ?? 0);
+      const isPaid = isFinite(balanceNum) && balanceNum <= 0.005;
+
+      const defaultSubject = isPaid
+        ? `Payment Receipt — Invoice ${invoice_number || ""} ($${totalNum.toFixed(2)} CAD Paid)`
+        : `Invoice ${invoice_number || ""} — $${balance_due || total || "0.00"} CAD Due ${due_date || ""}`;
+      const subject = (typeof custom_subject === "string" && custom_subject.trim().length > 0) ? custom_subject : defaultSubject;
+
+      const headerTitle = isPaid ? "Payment Receipt from Praetoria Group" : "Invoice from Praetoria Group";
+      const intro = (typeof custom_message === "string" && custom_message.trim().length > 0)
+        ? `<p style="white-space:pre-line;">${encodeAttr(custom_message)}</p>`
+        : (isPaid
+            ? `<p>Dear ${customer_name || "Valued Customer"},</p><p>Thank you — we've received your payment for invoice <strong>${invoice_number || ""}</strong>. A copy of your paid invoice is attached for your records.</p>`
+            : `<p>Dear ${customer_name || "Valued Customer"},</p><p>Please find your invoice <strong>${invoice_number || ""}</strong>.</p>`);
+
+      const balanceRow = isPaid
+        ? `<tr><td style="padding:6px 0;color:#71717a;">Balance Due</td><td style="padding:6px 0;text-align:right;font-weight:600;color:#16a34a;">$0.00 CAD (Paid)</td></tr>`
+        : `<tr><td style="padding:6px 0;color:#71717a;">Balance Due</td><td style="padding:6px 0;text-align:right;font-weight:600;color:#dc2626;">$${balance_due || total || "0.00"} CAD</td></tr>
+           <tr><td style="padding:6px 0;color:#71717a;">Due Date</td><td style="padding:6px 0;text-align:right;font-weight:600;">${due_date || "Upon receipt"}</td></tr>`;
+
+      const portalCta = isPaid
+        ? `<p>You can view your billing history any time in your <a href="https://praetoria-ops-hub.lovable.app/portal/billing">customer portal</a>.</p>`
+        : `<p>You can view and pay this invoice in your <a href="https://praetoria-ops-hub.lovable.app/portal/billing">customer portal</a>.</p>`;
 
       const result = await sendViaResend({
         to: customer_email,
-        subject: `Invoice ${invoice_number || ""} — $${balance_due || total || "0.00"} CAD Due ${due_date || ""}`,
-        html: wrapHtml("Invoice from Praetoria Group", `
-          <p>Dear ${customer_name || "Valued Customer"},</p>
-          <p>Please find your invoice <strong>${invoice_number || ""}</strong>.</p>
+        subject,
+        html: wrapHtml(headerTitle, `
+          ${intro}
           <table style="width:100%;border-collapse:collapse;margin:16px 0;">
             <tr><td style="padding:6px 0;color:#71717a;">Total</td><td style="padding:6px 0;text-align:right;font-weight:600;">$${total || "0.00"} CAD</td></tr>
-            <tr><td style="padding:6px 0;color:#71717a;">Balance Due</td><td style="padding:6px 0;text-align:right;font-weight:600;color:#dc2626;">$${balance_due || total || "0.00"} CAD</td></tr>
-            <tr><td style="padding:6px 0;color:#71717a;">Due Date</td><td style="padding:6px 0;text-align:right;font-weight:600;">${due_date || "Upon receipt"}</td></tr>
+            ${balanceRow}
           </table>
           ${attachmentHtml}
-          <p>You can view and pay this invoice in your <a href="https://praetoria-ops-hub.lovable.app/portal/billing">customer portal</a>.</p>
+          ${portalCta}
           <p>Thank you for your business,<br/>Praetoria Group</p>
         `),
         reply_to: replyTo,

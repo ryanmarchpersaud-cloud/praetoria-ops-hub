@@ -966,8 +966,13 @@ export default function InvoiceDetail() {
                   const filePath = `${tenantPrefix}/${invoice.id}/${Date.now()}-${file.name}`;
                   const { error: upErr } = await supabase.storage.from('invoice-attachments').upload(filePath, file);
                   if (!upErr) {
-                    const { data: urlData } = supabase.storage.from('invoice-attachments').getPublicUrl(filePath);
-                    if (urlData?.publicUrl) attachmentUrls.push(urlData.publicUrl);
+                    // Bucket is private — use a long-lived signed URL (1 year) so the
+                    // customer can open the file directly from the email. The portal
+                    // link in the email body is the permanent fallback.
+                    const { data: signed } = await supabase.storage
+                      .from('invoice-attachments')
+                      .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+                    if (signed?.signedUrl) attachmentUrls.push(signed.signedUrl);
                   }
                 }
                 // Include the printable invoice PDF link
