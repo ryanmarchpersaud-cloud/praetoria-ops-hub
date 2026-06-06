@@ -89,7 +89,7 @@ export function SelectJobsToInvoiceDialog({ open, onOpenChange, customerId, cust
         item_name: `${j.job_number} ${j.job_title}`,
         description: j.address,
         quantity: 1,
-        unit_price: money(j.subtotal / (1 + GST_RATE)),
+        unit_price: money(j.subtotal / (1 + COMBINED_TAX_RATE)),
         sort_order: idx,
       }));
       if (lineItems.length > 0) {
