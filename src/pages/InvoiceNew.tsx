@@ -67,12 +67,23 @@ export default function InvoiceNew() {
     }
 
     try {
+      const combined = parseFloat(form.tax_rate);
+      const rate = isNaN(combined) ? 0.11 : combined;
+      // Map the selected option into a GST/PST breakdown so invoices never show "GST 11%"
+      let gst_rate: number | null = null;
+      let pst_rate: number | null = null;
+      if (Math.abs(rate - 0.11) < 0.0001) { gst_rate = 0.05; pst_rate = 0.06; }
+      else if (Math.abs(rate - 0.05) < 0.0001) { gst_rate = 0.05; pst_rate = null; }
+      else if (Math.abs(rate - 0.06) < 0.0001) { gst_rate = null; pst_rate = 0.06; }
+      // HST (0.13/0.15) and 0 stay as combined tax_rate; gst/pst remain null
       const payload: any = {
         customer_id: form.customer_id,
         invoice_number: '',
         issue_date: form.issue_date,
         due_date: form.due_date,
-        tax_rate: parseFloat(form.tax_rate) || 0.11,
+        tax_rate: rate,
+        gst_rate,
+        pst_rate,
         customer_memo: form.customer_memo || null,
         internal_notes: form.internal_notes || null,
         status: 'Draft',
