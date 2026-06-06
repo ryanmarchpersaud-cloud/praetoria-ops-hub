@@ -87,8 +87,16 @@ export default function InvoicePrint() {
   const tip = Number(invoice.tip || 0);
   const total = Number(invoice.total || 0);
   const taxRate = Number(invoice.tax_rate || 0);
+  const gstRate = invoice.gst_rate == null ? null : Number(invoice.gst_rate);
+  const pstRate = invoice.pst_rate == null ? null : Number(invoice.pst_rate);
+  const hasSplit = gstRate != null || pstRate != null;
+  const effGst = gstRate != null ? gstRate : (pstRate == null ? taxRate : 0);
+  const effPst = pstRate != null ? pstRate : 0;
+  const gstAmount = invoice.gst_amount != null ? Number(invoice.gst_amount) : Math.round(subtotal * effGst * 100) / 100;
+  const pstAmount = invoice.pst_amount != null ? Number(invoice.pst_amount) : Math.round(subtotal * effPst * 100) / 100;
   const amountPaid = Number(invoice.amount_paid || 0);
   const balanceDue = Number(invoice.balance_due || 0);
+  const fmtRate = (r: number) => { const p = r * 100; return p % 1 === 0 ? p.toFixed(0) : p.toFixed(2); };
 
   const companyName = company?.invoice_header_name || company?.operating_name || company?.display_name || 'Praetoria Group';
   const companyTagline = 'Residential & Commercial Property Services';
