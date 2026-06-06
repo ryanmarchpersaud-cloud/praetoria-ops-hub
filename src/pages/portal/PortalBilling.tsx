@@ -327,15 +327,26 @@ export default function PortalBilling() {
                 {inv.sent_at && <> · Sent {format(new Date(inv.sent_at), 'MMM d')}</>}
               </p>
 
-              {canPay && (
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
-                  className="w-full"
+                  variant="outline"
                   size="sm"
-                  onClick={() => setPayDialog({ open: true, invoice: inv })}
+                  className="flex-1"
+                  onClick={() => window.open(`/portal/invoices/${inv.id}/print`, '_blank', 'noopener')}
                 >
-                  <DollarSign className="h-4 w-4 mr-1" /> Pay ${Number(inv.balance_due).toFixed(2)}
+                  <Download className="h-4 w-4 mr-1" />
+                  {isPaid ? 'View / Download Receipt PDF' : 'View / Download Invoice PDF'}
                 </Button>
-              )}
+                {canPay && (
+                  <Button
+                    className="flex-1"
+                    size="sm"
+                    onClick={() => setPayDialog({ open: true, invoice: inv })}
+                  >
+                    <DollarSign className="h-4 w-4 mr-1" /> Pay ${Number(inv.balance_due).toFixed(2)}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </CardContent>
