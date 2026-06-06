@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Download, Printer } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { exportInvoices } from '@/lib/accountingExport';
 
 const fmt = (n: number) => new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 const COLORS = ['hsl(215,65%,48%)', 'hsl(158,50%,42%)', 'hsl(38,90%,50%)', 'hsl(0,68%,52%)', 'hsl(270,50%,50%)', 'hsl(180,50%,40%)', 'hsl(30,70%,50%)', 'hsl(340,60%,50%)'];
@@ -95,23 +97,31 @@ export default function FinanceReports() {
     return Object.entries(map).map(([name, v]) => ({ name, cashIn: v.in, cashOut: v.out }));
   }, [payments]);
 
-  const exportCurrentTab = () => {
+  const exportCurrentTab = async () => {
+    // Invoice-centric tabs export the full invoice list (with GST/PST, payments, etc.)
+    if (tab === 'inv-summary' || tab === 'inv-aging' || tab === 'collections') {
+      try {
+        const count = await exportInvoices(dateFrom || undefined, dateTo || undefined);
+        if (count > 0) toast.success(`Exported ${count} invoice${count === 1 ? '' : 's'}`);
+        else toast.info('No invoices found for this report period.');
+      } catch (e: any) {
+        toast.error(`Export failed: ${e?.message || 'Unknown error'}`);
+      }
+      return;
+    }
     let csv = '';
     if (tab === 'category') {
       csv = ['Category,Amount', ...catData.map(r => `${r.name},${r.value}`)].join('\n');
     } else if (tab === 'vendor') {
       csv = ['Vendor,Amount', ...vendorData.map(r => `${r.name},${r.value}`)].join('\n');
-    } else if (tab === 'inv-aging') {
-      csv = ['Period,Amount', ...agingData.map(r => `${r.name},${r.value}`)].join('\n');
-    } else if (tab === 'bill-aging') {
-      csv = ['Period,Amount', ...billAgingData.map(r => `${r.name},${r.value}`)].join('\n');
     } else if (tab === 'payments') {
       csv = ['Method,Cash In,Cash Out', ...paymentData.map(r => `${r.name},${r.cashIn},${r.cashOut}`)].join('\n');
     } else {
-      csv = `Revenue,${stats?.totalRevenue}\nExpenses,${stats?.totalExpenses}\nNet,${stats?.grossMargin}`;
+      csv = `Revenue,${stats?.totalRevenue ?? 0}\nExpenses,${stats?.totalExpenses ?? 0}\nNet,${stats?.grossMargin ?? 0}`;
     }
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `finance-report-${tab}.csv`; a.click();
+    toast.success('CSV exported');
   };
 
   if (isLoading) return <div className="p-6"><Skeleton className="h-96" /></div>;
