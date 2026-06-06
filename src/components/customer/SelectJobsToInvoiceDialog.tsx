@@ -74,7 +74,9 @@ export function SelectJobsToInvoiceDialog({ open, onOpenChange, customerId, cust
         property_id: selectedJobs[0]?.properties?.id || null,
         issue_date: today,
         due_date: dueDate,
-        tax_rate: GST_RATE, // SK GST
+        tax_rate: COMBINED_TAX_RATE,
+        gst_rate: GST_RATE,
+        pst_rate: PST_RATE,
         status: 'Draft' as any,
         billing_mode: 'quoted_fixed' as any,
         internal_notes: `Combined invoice from ${selectedJobs.length} job(s)`,
