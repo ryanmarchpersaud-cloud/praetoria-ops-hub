@@ -574,6 +574,9 @@ function AppRoutes() {
         <Route path="/portal/snow-history" element={<PortalSnowHistory />} />
       </Route>
 
+      {/* Customer-facing invoice PDF view — RLS restricts to own invoices only */}
+      <Route path="/portal/invoices/:id/print" element={<AuthedRoute><InvoicePrint /></AuthedRoute>} />
+
       {/* ───────────────────────── Worker layout group ─────────────────────── */}
       <Route element={<WorkerRoute />}>
         <Route path="/worker" element={<WorkerHome />} />
