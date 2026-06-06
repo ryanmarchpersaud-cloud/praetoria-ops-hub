@@ -3732,6 +3732,8 @@ export type Database = {
           customer_id: string
           customer_memo: string | null
           due_date: string
+          gst_amount: number
+          gst_rate: number | null
           id: string
           internal_notes: string | null
           invoice_number: string
@@ -3741,6 +3743,8 @@ export type Database = {
           payment_method: string | null
           processor_payment_id: string | null
           property_id: string | null
+          pst_amount: number
+          pst_rate: number | null
           quote_id: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["invoice_status"]
@@ -3762,6 +3766,8 @@ export type Database = {
           customer_id: string
           customer_memo?: string | null
           due_date?: string
+          gst_amount?: number
+          gst_rate?: number | null
           id?: string
           internal_notes?: string | null
           invoice_number: string
@@ -3771,6 +3777,8 @@ export type Database = {
           payment_method?: string | null
           processor_payment_id?: string | null
           property_id?: string | null
+          pst_amount?: number
+          pst_rate?: number | null
           quote_id?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
@@ -3792,6 +3800,8 @@ export type Database = {
           customer_id?: string
           customer_memo?: string | null
           due_date?: string
+          gst_amount?: number
+          gst_rate?: number | null
           id?: string
           internal_notes?: string | null
           invoice_number?: string
@@ -3801,6 +3811,8 @@ export type Database = {
           payment_method?: string | null
           processor_payment_id?: string | null
           property_id?: string | null
+          pst_amount?: number
+          pst_rate?: number | null
           quote_id?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
