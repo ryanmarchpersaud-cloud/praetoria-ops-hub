@@ -1,13 +1,18 @@
+import { useState, type FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkerProfile } from '@/hooks/useWorkerProfile';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AvatarUpload } from '@/components/AvatarUpload';
-import { LogOut, Mail, HelpCircle, Phone } from 'lucide-react';
+import { LogOut, Mail, HelpCircle, Phone, Lock, Loader2, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function WorkerSettings() {
   const { user, signOut } = useAuth();
