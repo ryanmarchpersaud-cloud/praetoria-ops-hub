@@ -66,6 +66,9 @@ export default function WorkerSettings() {
         </CardContent>
       </Card>
 
+      {/* Password */}
+      <WorkerPasswordCard />
+
       {/* Support */}
       <Card>
         <CardHeader className="pb-2">
