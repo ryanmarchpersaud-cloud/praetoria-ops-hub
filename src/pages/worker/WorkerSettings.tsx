@@ -1,13 +1,18 @@
+import { useState, type FormEvent } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkerProfile } from '@/hooks/useWorkerProfile';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AvatarUpload } from '@/components/AvatarUpload';
-import { LogOut, Mail, HelpCircle, Phone } from 'lucide-react';
+import { LogOut, Mail, HelpCircle, Phone, Lock, Loader2, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function WorkerSettings() {
   const { user, signOut } = useAuth();
@@ -61,6 +66,9 @@ export default function WorkerSettings() {
         </CardContent>
       </Card>
 
+      {/* Password */}
+      <WorkerPasswordCard />
+
       {/* Support */}
       <Card>
         <CardHeader className="pb-2">
@@ -97,5 +105,92 @@ export default function WorkerSettings() {
         <LogOut className="h-4 w-4 mr-2" /> Sign Out
       </Button>
     </div>
+  );
+}
+
+function WorkerPasswordCard() {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const updatePassword = async (event: FormEvent) => {
+    event.preventDefault();
+    setMessage(null);
+    if (newPassword.length < 8) {
+      setMessage({ type: 'error', text: 'New password must be at least 8 characters.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setMessage({ type: 'error', text: 'New password and confirmation do not match.' });
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setSaving(false);
+    if (error) {
+      const lower = error.message.toLowerCase();
+      const text = lower.includes('same_password')
+        ? 'Choose a new password that is different from your current password.'
+        : error.message || 'Could not update your password. Please sign out, sign back in, and try again.';
+      setMessage({ type: 'error', text });
+      toast.error(text);
+      return;
+    }
+    setNewPassword('');
+    setConfirmPassword('');
+    setMessage({ type: 'success', text: 'Password updated successfully.' });
+    toast.success('Password updated successfully');
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Lock className="h-4 w-4 text-primary" /> Password
+        </CardTitle>
+        <CardDescription>Set a new password for your worker login.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={updatePassword} className="space-y-3">
+          <div className="space-y-2">
+            <Label htmlFor="worker-new-password">New password</Label>
+            <Input
+              id="worker-new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="worker-confirm-password">Confirm new password</Label>
+            <Input
+              id="worker-confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          <Alert>
+            <ShieldCheck className="h-4 w-4" />
+            <AlertDescription>Use at least 8 characters. Your login email stays the same.</AlertDescription>
+          </Alert>
+          {message && (
+            <Alert variant={message.type === 'error' ? 'destructive' : 'default'}>
+              {message.type === 'error' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+              <AlertDescription>{message.text}</AlertDescription>
+            </Alert>
+          )}
+          <Button type="submit" className="w-full" disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Lock className="h-4 w-4 mr-2" />}
+            Update password
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
