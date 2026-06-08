@@ -506,13 +506,41 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  // Events that any authenticated user (including Customer Portal users)
+  // is allowed to dispatch, because they notify ops/admin about an action
+  // the user themselves just performed. Without this exception, customer-
+  // initiated requests get 403'd at the ops-role gate and the "New Request"
+  // email never sends.
+  const SELF_SERVICE_EVENTS = new Set(["new_service_request"]);
+
+  // Parse body early so we can role-gate based on event.
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return json({ error: "Invalid JSON body" }, 400);
+  }
+  const {
+    event,
+    customer_id,
+    recipient_id,
+    record_type,
+    record_id,
+    variables = {},
+    channels = ["in_app"],
+    audience = "customer",
+  } = body || {};
+
+  if (!event) return json({ error: "Missing 'event' field" }, 400);
+
   // Role gate: only ops staff (or internal service-role) may dispatch
-  // notifications. Without this, any authenticated user could relay
-  // arbitrary branded emails/SMS through the company sender.
+  // notifications, except for whitelisted self-service events. Without
+  // this, any authenticated user could relay arbitrary branded emails/SMS
+  // through the company sender.
   const OPS_ROLES = new Set([
     "owner", "admin", "ops_manager", "manager", "accountant", "hr_admin", "dispatcher", "supervisor",
   ]);
-  if (!auth.isServiceRole) {
+  if (!auth.isServiceRole && !SELF_SERVICE_EVENTS.has(event)) {
     const { data: roleRows } = await supabase
       .from("user_roles")
       .select("role")
@@ -524,19 +552,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const {
-      event,
-      customer_id,
-      recipient_id,
-      record_type,
-      record_id,
-      variables = {},
-      channels = ["in_app"],
-      audience = "customer",
-    } = body;
-
-    if (!event) return json({ error: "Missing 'event' field" }, 400);
 
     const results: Record<string, unknown>[] = [];
 
