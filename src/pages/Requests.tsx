@@ -102,6 +102,11 @@ export default function Requests() {
       </div>
 
       <CreateRequestDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
+      <RecurringEnrollmentDetailDialog
+        enrollmentId={openEnrollmentId}
+        open={openEnrollmentId !== null}
+        onOpenChange={(o) => !o && setOpenEnrollmentId(null)}
+      />
 
       {recurringRequests.length > 0 && (
         <Card>
