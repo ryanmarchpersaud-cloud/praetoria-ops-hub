@@ -286,7 +286,7 @@ async function buildServiceRequestEmail(
   if (record_id) {
     const { data: r } = await supabase
       .from("service_requests")
-      .select("id, request_number, subject, description, service_type, urgency, requested_timing, preferred_contact_method, area_of_property, access_notes, attachments, status, source, created_at, customer_id, property_id, user_id")
+      .select("id, subject, description, service_type, urgency, requested_timing, preferred_contact_method, area_of_property, access_notes, attachments, status, created_at, customer_id, property_id, user_id")
       .eq("id", record_id).maybeSingle();
     request = r;
   }
