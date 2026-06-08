@@ -470,10 +470,10 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 <div class="meta-grid">
   <div class="meta-box">
     <div class="lbl">Employee</div>
-    <div class="val">${displayName}</div>
-    ${displayRole ? `<div class="sub">${displayRole}</div>` : ''}
-    ${employeeId ? `<div class="sub">Employee ID: ${employeeId}</div>` : ''}
-    ${employeeAddress ? `<div class="sub" style="margin-top:4px;">${employeeAddress}</div>` : ''}
+    <div class="val">${esc(displayName)}</div>
+    ${displayRole ? `<div class="sub">${esc(displayRole)}</div>` : ''}
+    ${employeeId ? `<div class="sub">Employee ID: ${esc(employeeId)}</div>` : ''}
+    ${employeeAddress ? `<div class="sub" style="margin-top:4px;">${esc(employeeAddress)}</div>` : ''}
   </div>
   <div class="meta-box">
     <div class="lbl">Pay Period</div>
