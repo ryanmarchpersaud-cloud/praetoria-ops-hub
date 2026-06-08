@@ -26,6 +26,7 @@ These fixes were merged after Build 10 was archived. They must be present in the
 |---|-----|---------|------------|
 | 1.1 | **Agreement print XSS sanitization** | `src/pages/AgreementDetailPage.tsx` | `DOMPurify.sanitize()` applied to `agreement.body_html` before print-window write. HTML entity encoding (`esc`) on all dynamic fields in the print template. |
 | 1.2 | **Incident print XSS sanitization** | `src/components/incident/IncidentPrintButton.tsx` | HTML entity encoding (`esc`) on all dynamic fields (`report.description`, `report.location`, `report.people_involved`, etc.) in the print template. |
+| 1.3 | **Pay Stub print XSS sanitization** | `src/components/PayStubDetailDialog.tsx` | HTML entity encoding (`esc`) inside `buildPrintHtml()` applied to `displayName`, `displayRole`, `employeeAddress`, `companyName`, `runNumber`, `employeeId`, `stub.notes`, `company.physical_address`, `company.phone`, `company.support_email`/`email`, and earnings/deduction/employer-contribution labels. Same defensive pattern as 1.1 and 1.2. Merged after Build 10. |
 
 ### 2. Apple Review Feedback (conditional)
 
