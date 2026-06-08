@@ -36,7 +36,7 @@ These fixes were merged after Build 10 was archived. They must be present in the
 | 2.3 | Verify fixes compile and pass local smoke tests | Pending |
 | 2.4 | Update `Info.plist` or entitlements if required by Apple | Pending |
 
-### 3. Customer Invoice / Receipt / PDF Visibility
+### 3. Customer Invoice / Receipt / PDF / Billing / Quote Visibility
 
 | # | Item | Verification |
 |---|------|--------------|
@@ -45,6 +45,11 @@ These fixes were merged after Build 10 was archived. They must be present in the
 | 3.3 | Customer can view/download/print invoice PDF | `InvoicePrint.tsx` or embedded PDF viewer |
 | 3.4 | Paid invoice receipt PDF is accessible | Receipt generation / `FinanceReceipts` route |
 | 3.5 | Billing history loads without error | Billing history API call + rendering |
+| 3.6 | Saved card display is visible on billing/payment settings | `/pages/PaymentsSettingsPage.tsx` or `/portal/PortalAccount.tsx` — card-on-file list renders |
+| 3.7 | Customer can view quote list in portal | `/pages/portal/PortalQuotes.tsx` |
+| 3.8 | Customer can open individual quote detail | Quote detail route in customer portal |
+| 3.9 | Customer can view/download/print quote PDF | `QuotePrint.tsx` or embedded PDF viewer |
+| 3.10 | Portal routing (deep links, back navigation, refresh) works without 404 or blank screens | All portal routes: `/portal/*` |
 
 ### 4. Profile & Security / Password Visibility
 
