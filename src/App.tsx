@@ -55,6 +55,7 @@ import InvoiceNew from "./pages/InvoiceNew";
 import InvoicePrint from "./pages/InvoicePrint";
 import Requests from "./pages/Requests";
 import RequestDetail from "./pages/RequestDetail";
+import RecurringEnrollmentRequests from "./pages/RecurringEnrollmentRequests";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
 import Subcontractors from "./pages/Subcontractors";
