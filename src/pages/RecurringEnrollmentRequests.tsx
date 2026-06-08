@@ -45,6 +45,7 @@ function computeNextBillingDate(startDateStr: string | null | undefined, frequen
 export default function RecurringEnrollmentRequests() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['admin_recurring_requests_full'],
