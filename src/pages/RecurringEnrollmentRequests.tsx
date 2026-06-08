@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RefreshCw, Search, Inbox } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { RecurringEnrollmentDetailDialog } from '@/components/RecurringEnrollmentDetailDialog';
 import { addDays, addMonths, addWeeks, addYears, format, parseISO, isValid } from 'date-fns';
 
 const STATUS_OPTIONS = ['Pending', 'Approved', 'Active', 'Declined', 'Cancelled'];
