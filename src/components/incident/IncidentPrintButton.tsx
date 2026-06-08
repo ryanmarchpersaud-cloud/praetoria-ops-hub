@@ -11,6 +11,13 @@ export function IncidentPrintButton({ report }: IncidentPrintButtonProps) {
   const r = report;
 
   const handlePrint = () => {
+    const esc = (v: unknown) =>
+      String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     const reportNum = r.report_number || r.id.slice(0, 8).toUpperCase();
     const dateStr = format(new Date(r.date_time), 'EEEE, MMMM d, yyyy · h:mm a');
 
