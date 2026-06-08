@@ -159,7 +159,7 @@ export default function PortalRequestWizard() {
         form.recurring_interest ? `Recurring interest: ${form.recurring_interest}` : '',
       ].filter(Boolean).join('\n\n');
 
-      const { error } = await supabase.from('service_requests').insert({
+      const { data: inserted, error } = await supabase.from('service_requests').insert({
         customer_id: customer.id,
         user_id: user.id,
         subject,
@@ -173,7 +173,7 @@ export default function PortalRequestWizard() {
         access_notes: form.access_notes || null,
         preferred_contact_method: form.preferred_contact_method,
         attachments: attachmentUrls.length > 0 ? attachmentUrls : [],
-      } as any);
+      } as any).select('id').single();
       if (error) throw error;
 
       // Log customer activity
@@ -194,10 +194,13 @@ export default function PortalRequestWizard() {
             event: 'new_service_request',
             customer_id: customer.id,
             record_type: 'service_request',
+            record_id: inserted?.id,
             variables: {
               subject: `New Request: ${subject}`,
-              body: `${customer.first_name} ${customer.last_name} submitted a service request: ${subject}`,
-              customer_name: `${customer.first_name} ${customer.last_name}`,
+              body: descParts || subject,
+              customer_name: `${customer.first_name} ${customer.last_name}`.trim(),
+              service_type: form.service_category || 'Service request',
+              source: 'Customer portal',
               to_email: 'ops@praetoriagroup.ca',
               reply_to: 'ops@praetoriagroup.ca',
             },
