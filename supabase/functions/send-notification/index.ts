@@ -327,7 +327,7 @@ async function buildServiceRequestEmail(
   const description = request?.description || vars.body || "";
   const urgency = request?.urgency || "";
   const requestedTiming = request?.requested_timing || "";
-  const requestNumber = request?.request_number || (request?.id ? request.id.slice(0, 8).toUpperCase() : "");
+  const requestNumber = request?.id ? `REQ-${request.id.slice(0, 8).toUpperCase()}` : "";
   const createdAt = request?.created_at ? new Date(request.created_at) : new Date();
   const createdAtLabel = createdAt.toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" });
   const status = request?.status || "New";
