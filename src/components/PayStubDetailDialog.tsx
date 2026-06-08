@@ -366,10 +366,28 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 
   // ── Print HTML builder ──
   const buildPrintHtml = () => {
+    // SECURITY: HTML-escape every user/profile/admin-supplied string before
+    // interpolating it into the print document. Worker-controlled fields
+    // (full_name, address, role_title) and admin-controlled fields
+    // (company name, phone, address, support email, stub.notes, run number,
+    // employee id, earning/deduction labels) are all routed through esc().
+    // Mirrors the defensive pattern used in the Agreement and Incident
+    // print fixes. Numeric/date values are produced by trusted formatters
+    // (toFixed, date-fns format) and don't require escaping.
+    const esc = (v: unknown): string => {
+      if (v === null || v === undefined) return '';
+      return String(v)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+
     const earningsHtml = earnings.length > 0
       ? earnings.map(e => `
         <tr>
-          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${e.label}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${esc(e.label)}</td>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:center;">${e.hours != null ? e.hours.toFixed(1) : '—'}</td>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:center;">${e.rate != null ? '$' + e.rate.toFixed(2) : '—'}</td>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;font-weight:600;">$${e.amount.toFixed(2)}</td>
@@ -379,7 +397,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     const deductionsHtml = deductionLines.length > 0
       ? deductionLines.map(d => `
         <tr>
-          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;" colspan="3">${d.label}</td>
+          <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;" colspan="3">${esc(d.label)}</td>
           <td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;color:#dc2626;">${safeMinus}$${d.amount.toFixed(2)}</td>
         </tr>`).join('')
       : `<tr><td colspan="3" style="padding:8px 12px;font-size:13px;">Total Deductions</td><td style="text-align:right;color:#dc2626;padding:8px 12px;">${safeMinus}$${fmt(stub.deductions)}</td></tr>`;
@@ -387,7 +405,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     const employerHtml = employerLines.length > 0
       ? `<div class="section-title">Employer Contributions</div>
          <table><thead><tr><th colspan="3">Description</th><th>Amount</th></tr></thead><tbody>
-         ${employerLines.map(e => `<tr><td colspan="3" style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${e.label}</td><td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">$${e.amount.toFixed(2)}</td></tr>`).join('')}
+         ${employerLines.map(e => `<tr><td colspan="3" style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;">${esc(e.label)}</td><td style="padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;text-align:right;">$${e.amount.toFixed(2)}</td></tr>`).join('')}
          <tr class="total-row"><td colspan="3">Total Employer Contributions</td><td style="text-align:right;">$${totalEmployerContributions.toFixed(2)}</td></tr>
          </tbody></table>`
       : '';
@@ -396,7 +414,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Pay Stub - ${displayName} - ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
+<title>Pay Stub - ${esc(displayName)} - ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
 <style>
   @page { size: letter; margin: 0.5in 0.6in; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -434,28 +452,28 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 <div class="brand-bar">
   <img src="${WHITE_LOGO_URL}" alt="Praetoria Group" />
   <div>
-    <h1>${companyName}</h1>
+    <h1>${esc(companyName)}</h1>
     <div class="tagline">Residential & Commercial Property Services</div>
-    ${company?.physical_address ? `<div class="contact">${company.physical_address}</div>` : ''}
-    <div class="contact">Tel: ${company?.phone || '(306) 737-6269'} | ${company?.support_email || company?.email || 'support@praetoriagroup.ca'}</div>
+    ${company?.physical_address ? `<div class="contact">${esc(company.physical_address)}</div>` : ''}
+    <div class="contact">Tel: ${esc(company?.phone || '(306) 737-6269')} | ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')}</div>
   </div>
 </div>
 
 <div class="doc-header">
   <div class="doc-title">Employee Pay Stub${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
   <div>
-    ${runNumber ? `<span class="ref-badge">${runNumber}</span>` : ''}
-    ${employeeId ? `<span class="ref-badge" style="margin-left:6px;">EMP #${employeeId}</span>` : ''}
+    ${runNumber ? `<span class="ref-badge">${esc(runNumber)}</span>` : ''}
+    ${employeeId ? `<span class="ref-badge" style="margin-left:6px;">EMP #${esc(employeeId)}</span>` : ''}
   </div>
 </div>
 
 <div class="meta-grid">
   <div class="meta-box">
     <div class="lbl">Employee</div>
-    <div class="val">${displayName}</div>
-    ${displayRole ? `<div class="sub">${displayRole}</div>` : ''}
-    ${employeeId ? `<div class="sub">Employee ID: ${employeeId}</div>` : ''}
-    ${employeeAddress ? `<div class="sub" style="margin-top:4px;">${employeeAddress}</div>` : ''}
+    <div class="val">${esc(displayName)}</div>
+    ${displayRole ? `<div class="sub">${esc(displayRole)}</div>` : ''}
+    ${employeeId ? `<div class="sub">Employee ID: ${esc(employeeId)}</div>` : ''}
+    ${employeeAddress ? `<div class="sub" style="margin-top:4px;">${esc(employeeAddress)}</div>` : ''}
   </div>
   <div class="meta-box">
     <div class="lbl">Pay Period</div>
@@ -496,11 +514,11 @@ ${employerHtml}
   <div class="ytd-box"><div class="lbl">YTD Net</div><div class="val" style="color:#16a34a;">$${fmt(ytdNet)}</div></div>
 </div>
 
-${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong>Notes:</strong> ${stub.notes}</p>` : ''}
+${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong>Notes:</strong> ${esc(stub.notes)}</p>` : ''}
 
 <div class="footer">
-  This is an electronically generated pay stub from ${companyName}.<br/>
-  For payroll inquiries, contact ${company?.support_email || company?.email || 'support@praetoriagroup.ca'} or call ${company?.phone || '(306) 737-6269'}.
+  This is an electronically generated pay stub from ${esc(companyName)}.<br/>
+  For payroll inquiries, contact ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')} or call ${esc(company?.phone || '(306) 737-6269')}.
 </div>
 </body></html>`;
   };
