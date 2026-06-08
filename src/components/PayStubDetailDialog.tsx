@@ -452,10 +452,10 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 <div class="brand-bar">
   <img src="${WHITE_LOGO_URL}" alt="Praetoria Group" />
   <div>
-    <h1>${companyName}</h1>
+    <h1>${esc(companyName)}</h1>
     <div class="tagline">Residential & Commercial Property Services</div>
-    ${company?.physical_address ? `<div class="contact">${company.physical_address}</div>` : ''}
-    <div class="contact">Tel: ${company?.phone || '(306) 737-6269'} | ${company?.support_email || company?.email || 'support@praetoriagroup.ca'}</div>
+    ${company?.physical_address ? `<div class="contact">${esc(company.physical_address)}</div>` : ''}
+    <div class="contact">Tel: ${esc(company?.phone || '(306) 737-6269')} | ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')}</div>
   </div>
 </div>
 
