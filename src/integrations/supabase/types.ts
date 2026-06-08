@@ -1162,7 +1162,10 @@ export type Database = {
       }
       customer_recurring_requests: {
         Row: {
+          actioned_at: string | null
+          actioned_by: string | null
           admin_notes: string | null
+          billing_setup_status: string | null
           created_at: string
           customer_id: string
           frequency: string
@@ -1177,7 +1180,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          actioned_at?: string | null
+          actioned_by?: string | null
           admin_notes?: string | null
+          billing_setup_status?: string | null
           created_at?: string
           customer_id: string
           frequency?: string
@@ -1192,7 +1198,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          actioned_at?: string | null
+          actioned_by?: string | null
           admin_notes?: string | null
+          billing_setup_status?: string | null
           created_at?: string
           customer_id?: string
           frequency?: string

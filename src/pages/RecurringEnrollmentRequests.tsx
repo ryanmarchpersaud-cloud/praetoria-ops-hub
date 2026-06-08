@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { RefreshCw, Search, Inbox } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { RecurringEnrollmentDetailDialog } from '@/components/RecurringEnrollmentDetailDialog';
 import { addDays, addMonths, addWeeks, addYears, format, parseISO, isValid } from 'date-fns';
 
 const STATUS_OPTIONS = ['Pending', 'Approved', 'Active', 'Declined', 'Cancelled'];
@@ -43,6 +45,7 @@ function computeNextBillingDate(startDateStr: string | null | undefined, frequen
 export default function RecurringEnrollmentRequests() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['admin_recurring_requests_full'],
@@ -180,7 +183,7 @@ export default function RecurringEnrollmentRequests() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
             {filtered.map((r) => (
-              <Card key={r.id}>
+              <Card key={r.id} className="cursor-pointer hover:bg-muted/30 transition" onClick={() => setOpenId(r.id)}>
                 <CardContent className="p-3 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -197,6 +200,9 @@ export default function RecurringEnrollmentRequests() {
                       {r.next_billing_date ? format(r.next_billing_date, 'MMM d, yyyy') : <span className="italic">Not scheduled</span>}
                     </p>
                   </div>
+                  <Button size="sm" variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); setOpenId(r.id); }}>
+                    Open / Review
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -214,13 +220,14 @@ export default function RecurringEnrollmentRequests() {
                     <TableHead>Frequency</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Next Billing Date</TableHead>
+                    <TableHead className="w-[120px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>{renderCustomer(r)}</TableCell>
-                      <TableCell>{renderProperty(r)}</TableCell>
+                    <TableRow key={r.id} className="cursor-pointer" onClick={() => setOpenId(r.id)}>
+                      <TableCell onClick={(e) => e.stopPropagation()}>{renderCustomer(r)}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>{renderProperty(r)}</TableCell>
                       <TableCell className="font-medium">{r.service_category}</TableCell>
                       <TableCell className="capitalize text-muted-foreground">{r.frequency || '—'}</TableCell>
                       <TableCell>
@@ -233,6 +240,11 @@ export default function RecurringEnrollmentRequests() {
                           <span className="italic text-muted-foreground">Not scheduled</span>
                         )}
                       </TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setOpenId(r.id); }}>
+                          Open / Review
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -241,6 +253,12 @@ export default function RecurringEnrollmentRequests() {
           </Card>
         </>
       )}
+
+      <RecurringEnrollmentDetailDialog
+        enrollmentId={openId}
+        open={openId !== null}
+        onOpenChange={(o) => !o && setOpenId(null)}
+      />
     </div>
   );
 }
