@@ -46,8 +46,8 @@ export default function Requests() {
         .limit(25);
       if (error) throw error;
 
-      const customerIds = [...new Set((requestsData ?? []).map((r: any) => r.customer_id).filter(Boolean))];
-      const propertyIds = [...new Set((requestsData ?? []).map((r: any) => r.property_id).filter(Boolean))];
+      const customerIds = [...new Set<string>((requestsData ?? []).map((r: any) => r.customer_id).filter(Boolean))];
+      const propertyIds = [...new Set<string>((requestsData ?? []).map((r: any) => r.property_id).filter(Boolean))];
 
       const [{ data: customers = [] }, { data: properties = [] }] = await Promise.all([
         customerIds.length
