@@ -183,7 +183,7 @@ export default function RecurringEnrollmentRequests() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
             {filtered.map((r) => (
-              <Card key={r.id}>
+              <Card key={r.id} className="cursor-pointer hover:bg-muted/30 transition" onClick={() => setOpenId(r.id)}>
                 <CardContent className="p-3 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -200,6 +200,9 @@ export default function RecurringEnrollmentRequests() {
                       {r.next_billing_date ? format(r.next_billing_date, 'MMM d, yyyy') : <span className="italic">Not scheduled</span>}
                     </p>
                   </div>
+                  <Button size="sm" variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); setOpenId(r.id); }}>
+                    Open / Review
+                  </Button>
                 </CardContent>
               </Card>
             ))}
