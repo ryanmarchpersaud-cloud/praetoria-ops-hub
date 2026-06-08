@@ -414,7 +414,7 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Pay Stub - ${displayName} - ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
+<title>Pay Stub - ${esc(displayName)} - ${format(new Date(stub.pay_date), 'MMM d, yyyy')}</title>
 <style>
   @page { size: letter; margin: 0.5in 0.6in; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
