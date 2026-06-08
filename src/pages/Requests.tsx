@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { StatusBadge } from '@/components/StatusBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { MessageSquarePlus, ChevronRight, Search, Inbox, Plus } from 'lucide-react';
+import { MessageSquarePlus, ChevronRight, Search, Inbox, Plus, RefreshCw } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { CreateRequestDialog } from '@/components/CreateRequestDialog';
@@ -34,6 +34,37 @@ export default function Requests() {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: recurringRequests = [] } = useQuery({
+    queryKey: ['admin_recurring_requests'],
+    queryFn: async () => {
+      const { data: requestsData, error } = await (supabase.from('customer_recurring_requests' as any) as any)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(25);
+      if (error) throw error;
+
+      const customerIds = [...new Set((requestsData ?? []).map((r: any) => r.customer_id).filter(Boolean))];
+      const propertyIds = [...new Set((requestsData ?? []).map((r: any) => r.property_id).filter(Boolean))];
+
+      const [{ data: customers = [] }, { data: properties = [] }] = await Promise.all([
+        customerIds.length
+          ? supabase.from('customers').select('id, first_name, last_name, company_name').in('id', customerIds)
+          : Promise.resolve({ data: [] as any[] }),
+        propertyIds.length
+          ? supabase.from('properties').select('id, property_name').in('id', propertyIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const customerMap = new Map((customers as any[]).map((c: any) => [c.id, c]));
+      const propertyMap = new Map((properties as any[]).map((p: any) => [p.id, p]));
+      return (requestsData ?? []).map((r: any) => ({
+        ...r,
+        customer: customerMap.get(r.customer_id),
+        property: propertyMap.get(r.property_id),
+      }));
     },
   });
 
@@ -69,6 +100,45 @@ export default function Requests() {
       </div>
 
       <CreateRequestDialog open={createOpen} onOpenChange={setCreateOpen} defaultCustomerId={defaultCustomerId} />
+
+      {recurringRequests.length > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 text-primary" /> Recurring Enrollment Requests
+                </h2>
+                <p className="text-xs text-muted-foreground">{recurringRequests.length} pending or recent enrollment follow-up{recurringRequests.length === 1 ? '' : 's'}</p>
+              </div>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              {recurringRequests.map((r: any) => {
+                const customerName = r.customer
+                  ? (`${r.customer.first_name || ''} ${r.customer.last_name || ''}`.trim() || r.customer.company_name || 'Customer')
+                  : 'Customer';
+                return (
+                  <div key={r.id} className="rounded-lg border bg-muted/20 p-3 space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{r.service_category}</p>
+                        <p className="text-xs text-muted-foreground">{customerName}{r.property?.property_name ? ` · ${r.property.property_name}` : ''}</p>
+                      </div>
+                      <StatusBadge status={r.status} showIcon={false} />
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>{r.frequency}</span>
+                      <span>{r.preferred_service_window}</span>
+                      {r.preferred_start_date && <span>Start {r.preferred_start_date}</span>}
+                    </div>
+                    {r.special_instructions && <p className="text-xs text-muted-foreground line-clamp-2">{r.special_instructions}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Status chips */}
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
