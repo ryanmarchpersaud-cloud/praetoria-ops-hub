@@ -514,11 +514,11 @@ ${employerHtml}
   <div class="ytd-box"><div class="lbl">YTD Net</div><div class="val" style="color:#16a34a;">$${fmt(ytdNet)}</div></div>
 </div>
 
-${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong>Notes:</strong> ${stub.notes}</p>` : ''}
+${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong>Notes:</strong> ${esc(stub.notes)}</p>` : ''}
 
 <div class="footer">
-  This is an electronically generated pay stub from ${companyName}.<br/>
-  For payroll inquiries, contact ${company?.support_email || company?.email || 'support@praetoriagroup.ca'} or call ${company?.phone || '(306) 737-6269'}.
+  This is an electronically generated pay stub from ${esc(companyName)}.<br/>
+  For payroll inquiries, contact ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')} or call ${esc(company?.phone || '(306) 737-6269')}.
 </div>
 </body></html>`;
   };
