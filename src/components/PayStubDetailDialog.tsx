@@ -462,8 +462,8 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 <div class="doc-header">
   <div class="doc-title">Employee Pay Stub${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
   <div>
-    ${runNumber ? `<span class="ref-badge">${runNumber}</span>` : ''}
-    ${employeeId ? `<span class="ref-badge" style="margin-left:6px;">EMP #${employeeId}</span>` : ''}
+    ${runNumber ? `<span class="ref-badge">${esc(runNumber)}</span>` : ''}
+    ${employeeId ? `<span class="ref-badge" style="margin-left:6px;">EMP #${esc(employeeId)}</span>` : ''}
   </div>
 </div>
 
