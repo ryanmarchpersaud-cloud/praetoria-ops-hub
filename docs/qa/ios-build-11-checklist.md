@@ -77,6 +77,8 @@ These fixes were merged after Build 10 was archived. They must be present in the
 | 5.10 | Payment flows (Stripe) open correctly in SFSafariViewController or external browser | Test card save, checkout — confirm `window.open` or redirect behavior |
 | 5.11 | Auth session persists across app backgrounding | Login → background app → foreground → confirm still authenticated |
 | 5.12 | Build number and version string match in Xcode and App Store Connect | `ios/App/App/Info.plist` CFBundleShortVersionString and CFBundleVersion |
+| 5.13 | New service request email renders full details (Request #, customer, contact, address, message, Open-in-Hub button) | Submit a test request from the customer portal, admin portal, and FAB — confirm `ops@praetoriagroup.ca` receives the rich layout with correct Reply-To |
+
 
 ---
 
