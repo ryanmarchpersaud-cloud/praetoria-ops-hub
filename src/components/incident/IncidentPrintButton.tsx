@@ -25,7 +25,7 @@ export function IncidentPrintButton({ report }: IncidentPrintButtonProps) {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Incident Report ${reportNum}</title>
+  <title>Incident Report ${esc(reportNum)}</title>
   <style>
     @media print { @page { margin: 0.75in; } }
     body { font-family: Arial, sans-serif; color: #1a1a2e; margin: 0; padding: 24px; }
@@ -48,7 +48,7 @@ export function IncidentPrintButton({ report }: IncidentPrintButtonProps) {
 </head>
 <body>
   <div class="header">
-    <h1>Incident Report — ${reportNum}</h1>
+    <h1>Incident Report — ${esc(reportNum)}</h1>
     <p>Praetoria Group Inc. &bull; Confidential</p>
   </div>
 
