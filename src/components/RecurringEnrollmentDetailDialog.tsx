@@ -120,41 +120,22 @@ export function RecurringEnrollmentDetailDialog({ enrollmentId, open, onOpenChan
         .eq('id', enrollment.id);
       if (error) throw error;
 
-      // Best-effort: log activity (RLS-safe; ignore failures)
+      // Best-effort: log activity (ignore failures so the action still succeeds)
       try {
         await (supabase.from('activities' as any) as any).insert({
-          activity_type: 'recurring_enrollment_' + action.toLowerCase().replace(/[^a-z]/g, '_'),
-          customer_id: enrollment.customer_id,
-          title: `Recurring enrollment ${action.toLowerCase()}`,
-          description: `${enrollment.service_category} (${enrollment.frequency}) — billing: ${
-            billingStatus === 'Not set' ? 'not set' : billingStatus
-          }`,
-          actor_user_id: user?.id ?? null,
-        });
-      } catch {
-        /* non-blocking */
-      }
-
-      // Best-effort: in-app notification for customer (RLS may scope, ignore failures)
-      try {
-        const subjectMap: Record<ActionKind, string> = {
-          Approved: 'Recurring service enrollment approved',
-          Active: 'Recurring service plan is active',
-          Declined: 'Recurring service enrollment declined',
-          Cancelled: 'Recurring service enrollment cancelled',
-          'Follow-up': 'Your recurring service enrollment needs follow-up',
-        };
-        await (supabase.from('notifications' as any) as any).insert({
-          event: 'recurring_enrollment_status_changed',
-          channel: 'in_app',
-          audience: 'customer',
-          customer_id: enrollment.customer_id,
+          action_name: `recurring_enrollment.${action.toLowerCase().replace(/[^a-z]/g, '_')}`,
           record_type: 'recurring_enrollment',
           record_id: enrollment.id,
-          subject: subjectMap[action],
-          body: `Your ${enrollment.service_category} (${enrollment.frequency}) enrollment is now: ${action}.`,
-          status: 'sent',
-          sent_at: new Date().toISOString(),
+          user_id: user?.id ?? null,
+          status: 'completed',
+          payload_summary: {
+            service_category: enrollment.service_category,
+            frequency: enrollment.frequency,
+            customer_id: enrollment.customer_id,
+            property_id: enrollment.property_id,
+            billing_setup_status: billingStatus === 'Not set' ? null : billingStatus,
+            new_status: action,
+          },
         });
       } catch {
         /* non-blocking */
