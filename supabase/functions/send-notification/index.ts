@@ -411,28 +411,18 @@ Deno.serve(async (req) => {
       if (channel === "sms" && !enrichedVars.to_phone) {
         results.push({ channel, status: "skipped", reason: "no_recipient_phone" });
         console.warn(`[send-notification] Skipping SMS for event=${event}: no recipient phone found`);
-      const subject = template?.is_active
-        ? renderTemplate(template.subject_template, enrichedVars)
-        : enrichedVars.subject || event.replace(/_/g, " ");
-      // For email/HTML body, escape interpolated variables in the template render
-      // and HTML-escape the fallback body. Trusted admin-managed template markup is preserved.
-      const notifBodyPlain = template?.is_active
-        ? renderTemplate(template.body_template, enrichedVars)
-        : enrichedVars.body || "";
-      const notifBodyHtml = template?.is_active
-        ? renderTemplate(template.body_template, enrichedVars, { escape: true })
-        : escapeHtml(enrichedVars.body || "").replace(/\n/g, "<br/>");
-      const subjectHtml = template?.is_active
-        ? renderTemplate(template.subject_template, enrichedVars, { escape: true })
-        : escapeHtml(enrichedVars.subject || event.replace(/_/g, " "));
-      const notifBody = notifBodyPlain;
+        continue;
+      }
+
+      // Look up admin-managed template (per event/audience/channel)
+      const { data: template } = await supabase
+        .from("notification_templates")
         .select("subject_template, body_template, is_active")
         .eq("event", event)
         .eq("audience", audience)
         .eq("channel", channel)
         .maybeSingle();
 
-      // If template is explicitly inactive, skip
       if (template && !template.is_active) {
         results.push({ channel, status: "skipped", reason: "template_inactive" });
         continue;
@@ -444,8 +434,14 @@ Deno.serve(async (req) => {
       const notifBody = template?.is_active
         ? renderTemplate(template.body_template, enrichedVars)
         : enrichedVars.body || "";
+      const subjectHtml = template?.is_active
+        ? renderTemplate(template.subject_template, enrichedVars, { escape: true })
+        : escapeHtml(subject);
+      const notifBodyHtml = template?.is_active
+        ? renderTemplate(template.body_template, enrichedVars, { escape: true })
+        : escapeHtml(notifBody).replace(/\n/g, "<br/>");
 
-      // Create notification record
+      // Create notification record (stored body is plain text)
       const { data: notif, error: notifErr } = await supabase
         .from("notifications")
         .insert({
@@ -456,12 +452,12 @@ Deno.serve(async (req) => {
           customer_id: customer_id || null,
           record_type: record_type || null,
           record_id: record_id || null,
-            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subjectHtml}</h2><div>${notifBodyHtml}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
+          subject,
           body: notifBody,
           metadata: enrichedVars,
           status: channel === "in_app" ? "sent" : "pending",
           sent_at: channel === "in_app" ? new Date().toISOString() : null,
-            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${escapeHtml(subject)}</h2><div>${escapeHtml(notifBody).replace(/\n/g, "<br/>")}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
+        })
         .select()
         .single();
 
@@ -475,16 +471,22 @@ Deno.serve(async (req) => {
         const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
         if (RESEND_API_KEY && enrichedVars.to_email) {
           try {
-            // For worker_assigned events, build a rich, branded email server-side
-            // using authoritative job/visit data instead of caller-supplied placeholders.
             let finalSubject = subject;
-            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subject}</h2><div>${notifBody}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
+            let finalReplyTo = enrichedVars.reply_to || "ops@praetoriagroup.ca";
+            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subjectHtml}</h2><div>${notifBodyHtml}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
 
             if (event === "worker_assigned" && (audience === "worker" || audience === "subcontractor")) {
               const rich = await buildAssignmentEmail(supabase, record_type, record_id, audience, subject);
               if (rich) {
                 finalSubject = rich.subject;
                 finalHtml = rich.html;
+              }
+            } else if (event === "new_service_request") {
+              const rich = await buildServiceRequestEmail(supabase, record_id, customer_id, enrichedVars, subject);
+              if (rich) {
+                finalSubject = rich.subject;
+                finalHtml = rich.html;
+                if (rich.reply_to) finalReplyTo = rich.reply_to;
               }
             }
 
@@ -499,7 +501,7 @@ Deno.serve(async (req) => {
                 to: [enrichedVars.to_email],
                 subject: finalSubject,
                 html: finalHtml,
-                reply_to: enrichedVars.reply_to || "ops@praetoriagroup.ca",
+                reply_to: finalReplyTo,
               }),
             });
             const emailData = await emailRes.json();
