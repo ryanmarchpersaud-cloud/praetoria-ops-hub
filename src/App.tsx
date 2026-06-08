@@ -464,6 +464,7 @@ function AppRoutes() {
         <Route path="/schedule" element={<ModuleGuard module="ops"><Schedule /></ModuleGuard>} />
         <Route path="/schedule/new-visits" element={<ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><ScheduleNewVisits /></Suspense></ModuleGuard>} />
         <Route path="/requests" element={<ModuleGuard module="ops"><Requests /></ModuleGuard>} />
+        <Route path="/requests/recurring" element={<ModuleGuard module="ops"><RecurringEnrollmentRequests /></ModuleGuard>} />
         <Route path="/requests/:id" element={<ModuleGuard module="ops"><RequestDetail /></ModuleGuard>} />
 
         <Route path="/invoices" element={<ModuleGuard module="opsOrFinance"><Invoices /></ModuleGuard>} />
