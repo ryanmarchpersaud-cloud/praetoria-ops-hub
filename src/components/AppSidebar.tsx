@@ -2,7 +2,7 @@ import {
   FileSignature,
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Trash2,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
-  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign,
+  MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign, RefreshCw,
 } from 'lucide-react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
