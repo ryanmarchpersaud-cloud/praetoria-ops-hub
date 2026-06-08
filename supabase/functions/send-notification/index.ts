@@ -268,6 +268,186 @@ async function buildAssignmentEmail(
   return { subject: subject || fallbackSubject, html };
 }
 
+// Build a rich, branded "new service request" notification email for ops/admin.
+// Pulls authoritative data from service_requests + customers + properties so the
+// email always includes contact info, location, and a direct admin link — even
+// when the trigger call site only passes minimal variables.
+async function buildServiceRequestEmail(
+  supabase: any,
+  record_id: string | undefined,
+  customer_id: string | undefined,
+  vars: Record<string, string>,
+  fallbackSubject: string,
+): Promise<{ subject: string; html: string; reply_to?: string } | null> {
+  let request: any = null;
+  let customer: any = null;
+  let property: any = null;
+
+  if (record_id) {
+    const { data: r } = await supabase
+      .from("service_requests")
+      .select("id, request_number, subject, description, service_type, urgency, requested_timing, preferred_contact_method, area_of_property, access_notes, attachments, status, source, created_at, customer_id, property_id, user_id")
+      .eq("id", record_id).maybeSingle();
+    request = r;
+  }
+
+  const custId = customer_id || request?.customer_id;
+  if (custId) {
+    const { data: c } = await supabase
+      .from("customers")
+      .select("id, first_name, last_name, company_name, email, phone")
+      .eq("id", custId).maybeSingle();
+    customer = c;
+  }
+
+  const propId = request?.property_id;
+  if (propId) {
+    const { data: p } = await supabase
+      .from("properties")
+      .select("property_name, address_line_1, address_line_2, city, province, postal_code")
+      .eq("id", propId).maybeSingle();
+    property = p;
+  }
+
+  const FALLBACK = "Not provided";
+  const NO_PHONE = "No phone provided";
+  const NO_ADDRESS = "No address provided";
+  const NO_MESSAGE = "No message provided";
+  const NO_EMAIL = "No email provided";
+
+  const customerName = customer
+    ? (`${customer.first_name || ""} ${customer.last_name || ""}`.trim() || customer.company_name || vars.customer_name || "A customer")
+    : (vars.customer_name || "A customer");
+  const customerEmail = customer?.email || "";
+  const customerPhone = customer?.phone || "";
+  const companyName = customer?.company_name || "";
+
+  const serviceType = request?.service_type || vars.service_type || "Service request";
+  const subjectLine = request?.subject || vars.subject?.replace(/^New Request:\s*/i, "") || serviceType;
+  const description = request?.description || vars.body || "";
+  const urgency = request?.urgency || "";
+  const requestedTiming = request?.requested_timing || "";
+  const requestNumber = request?.request_number || (request?.id ? request.id.slice(0, 8).toUpperCase() : "");
+  const createdAt = request?.created_at ? new Date(request.created_at) : new Date();
+  const createdAtLabel = createdAt.toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" });
+  const status = request?.status || "New";
+
+  // Source inference: explicit column wins; otherwise derive from caller context.
+  let source = request?.source || vars.source || "";
+  if (!source) {
+    if (vars.audience_source) source = vars.audience_source;
+    else source = "Customer portal";
+  }
+
+  const addressParts = property
+    ? [property.address_line_1, property.address_line_2, property.city, property.province, property.postal_code].filter(Boolean).join(", ")
+    : "";
+  const propertyLabel = property?.property_name || "";
+  const fullAddress = addressParts || propertyLabel || "";
+
+  const attachmentCount = Array.isArray(request?.attachments) ? request.attachments.length : 0;
+
+  const adminPath = request?.id ? `/requests/${request.id}` : `/requests`;
+  const openUrl = `${APP_BASE_URL}${adminPath}`;
+
+  const replyTo = customerEmail || "ops@praetoriagroup.ca";
+
+  // City fragment for subject
+  const citySegment = property?.city || (addressParts ? addressParts.split(",").slice(-3, -2)[0]?.trim() : "");
+  const subject = `New Request: ${serviceType}${customerName ? ` — ${customerName}` : ""}${citySegment ? ` — ${citySegment}` : ""}`;
+
+  const color = categoryColor(serviceType);
+
+  const row = (label: string, value: string, isFallback = false) =>
+    `<tr><td style="padding:6px 0;color:#64748b;font-size:13px;width:160px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:6px 0;color:${isFallback ? "#94a3b8" : "#0f172a"};font-size:14px;vertical-align:top;font-style:${isFallback ? "italic" : "normal"};">${value}</td></tr>`;
+
+  const emailCell = customerEmail
+    ? `<a href="mailto:${escapeHtml(customerEmail)}" style="color:#0f172a;text-decoration:none;font-weight:600;">${escapeHtml(customerEmail)}</a>`
+    : `<span>${NO_EMAIL}</span>`;
+  const phoneCell = customerPhone
+    ? `<a href="tel:${escapeHtml(customerPhone)}" style="color:#0f172a;text-decoration:none;font-weight:600;">📞 ${escapeHtml(customerPhone)}</a>`
+    : `<span>${NO_PHONE}</span>`;
+  const addressCell = fullAddress
+    ? escapeHtml(fullAddress)
+    : `<span>${NO_ADDRESS}</span>`;
+  const descriptionBlock = description
+    ? `<div style="font-size:14px;color:#0f172a;line-height:1.6;white-space:pre-wrap;">${escapeHtml(description)}</div>`
+    : `<div style="font-size:14px;color:#94a3b8;font-style:italic;">${NO_MESSAGE}</div>`;
+
+  const urgencyBadge = urgency
+    ? `<span style="display:inline-block;background:${/urgent|high/i.test(urgency) ? "#fee2e2" : "#e0f2fe"};color:${/urgent|high/i.test(urgency) ? "#b91c1c" : "#075985"};font-size:11px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-left:8px;letter-spacing:0.5px;">${escapeHtml(urgency)}</span>`
+    : "";
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f1f5f9;padding:32px 12px;">
+    <tr><td align="center">
+      <table cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,0.08);">
+
+        <tr><td style="background:#0F172A;padding:20px 28px;">
+          <table width="100%"><tr>
+            <td style="color:#fff;font-size:18px;font-weight:700;letter-spacing:0.3px;">Praetoria Group</td>
+            <td align="right" style="color:#94a3b8;font-size:12px;">Request ${escapeHtml(requestNumber || "—")}</td>
+          </tr></table>
+        </td></tr>
+
+        <tr><td style="padding:28px 28px 8px 28px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${color};">${escapeHtml(serviceType)}</div>
+          <h1 style="margin:6px 0 0;font-size:22px;font-weight:700;color:#0f172a;line-height:1.3;">New service request${urgencyBadge}</h1>
+          <p style="margin:8px 0 0;font-size:15px;color:#475569;">${escapeHtml(subjectLine)}</p>
+        </td></tr>
+
+        <tr><td style="padding:18px 28px 4px 28px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e2e8f0;">
+            ${row("Request #", escapeHtml(requestNumber || FALLBACK), !requestNumber)}
+            ${row("Submitted", escapeHtml(createdAtLabel))}
+            ${row("Customer", escapeHtml(customerName))}
+            ${companyName ? row("Company", escapeHtml(companyName)) : ""}
+            ${row("Email", emailCell, !customerEmail)}
+            ${row("Phone", phoneCell, !customerPhone)}
+            ${row("Service type", escapeHtml(serviceType))}
+            ${row("Property", escapeHtml(propertyLabel || FALLBACK), !propertyLabel)}
+            ${row("Address", addressCell, !fullAddress)}
+            ${row("Priority", escapeHtml(urgency || FALLBACK), !urgency)}
+            ${row("Preferred timing", escapeHtml(requestedTiming || FALLBACK), !requestedTiming)}
+            ${row("Source", escapeHtml(source))}
+            ${row("Status", escapeHtml(status))}
+            ${row("Attachments", attachmentCount > 0 ? `${attachmentCount} file${attachmentCount === 1 ? "" : "s"} attached` : "None")}
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:18px 28px 4px;">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:6px;">Customer message</div>
+          ${descriptionBlock}
+        </td></tr>
+
+        <tr><td style="padding:24px 28px 8px;text-align:center;">
+          <a href="${openUrl}" style="display:inline-block;background:#0F172A;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 28px;border-radius:8px;">Open Request in Praetoria Ops Hub →</a>
+        </td></tr>
+
+        <tr><td style="padding:4px 28px 24px;text-align:center;">
+          <div style="font-size:13px;color:#475569;line-height:1.6;">
+            Next step: open the request in the Admin Portal, reply to the customer, or assign a visit.
+          </div>
+        </td></tr>
+
+        <tr><td style="background:#f8fafc;padding:16px 28px;text-align:center;border-top:1px solid #e2e8f0;">
+          <div style="font-size:12px;color:#64748b;line-height:1.6;">
+            Praetoria Group &bull; <a href="${APP_BASE_URL}" style="color:#64748b;text-decoration:none;">praetoriagroup.ca</a><br/>
+            Reply to this email to respond directly to ${customerEmail ? "the customer" : "ops@praetoriagroup.ca"}.
+          </div>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+  return { subject, html, reply_to: replyTo };
+}
+
+
+
 // Resolve recipient email/phone from customer_id or recipient_id when not provided in variables
 async function resolveRecipient(
   supabase: any,
