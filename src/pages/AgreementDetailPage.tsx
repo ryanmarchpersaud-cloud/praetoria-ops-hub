@@ -84,19 +84,43 @@ export default function AgreementDetailPage() {
     }
     const w = window.open('', '_blank');
     if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>${agreement.title}</title>
+    const esc = (v: unknown) =>
+      String(v ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    const safeBody = DOMPurify.sanitize(agreement.body_html || '');
+    const safeTitle = esc(agreement.title);
+    const safeSignatures = signatures.length > 0
+      ? signatures.map((s: any) => {
+          const safeName = esc(s.signer_name);
+          const safeConsent = esc(s.consent_text);
+          const safeDate = esc(format(new Date(s.signed_at), 'MMMM d, yyyy h:mm a'));
+          let sigBlock = '';
+          if (s.signature_type === 'typed') {
+            sigBlock = `<p style="font-family:cursive;font-size:28px;margin-top:8px;">${esc(s.signature_data || s.signer_name)}</p>`;
+          } else if (s.signature_data) {
+            // Only allow safe data: image URLs; otherwise drop.
+            const isSafeImg = /^data:image\/(png|jpe?g|gif|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(s.signature_data);
+            sigBlock = isSafeImg ? `<img src="${s.signature_data}" style="max-height:80px;margin-top:8px;" />` : '';
+          }
+          return `<div class="sig-box">
+            <p><strong>Signed by:</strong> ${safeName}</p>
+            <p><strong>Date:</strong> ${safeDate}</p>
+            ${sigBlock}
+            <p style="font-size:11px;color:#64748b;margin-top:8px;">${safeConsent}</p>
+          </div>`;
+        }).join('')
+      : '';
+    w.document.write(`<!DOCTYPE html><html><head><title>${safeTitle}</title>
       <style>body{font-family:-apple-system,sans-serif;max-width:750px;margin:0 auto;padding:32px;color:#1a1a2e;}h1,h2{color:#0f172a;}
       .sig-box{margin-top:32px;border:2px solid #e2e8f0;border-radius:8px;padding:16px;}
       .sig-box p{margin:4px 0;font-size:13px;}
       @media print{body{padding:0;}}</style></head><body>
-      ${agreement.body_html}
-      ${signatures.length > 0 ? signatures.map(s => `
-        <div class="sig-box">
-          <p><strong>Signed by:</strong> ${s.signer_name}</p>
-          <p><strong>Date:</strong> ${format(new Date(s.signed_at), 'MMMM d, yyyy h:mm a')}</p>
-          ${s.signature_type === 'typed' ? `<p style="font-family:cursive;font-size:28px;margin-top:8px;">${s.signature_data || s.signer_name}</p>` : (s.signature_data ? `<img src="${s.signature_data}" style="max-height:80px;margin-top:8px;" />` : '')}
-          <p style="font-size:11px;color:#64748b;margin-top:8px;">${s.consent_text}</p>
-        </div>`).join('') : ''}
+      ${safeBody}
+      ${safeSignatures}
       </body></html>`);
     w.document.close();
     w.focus();

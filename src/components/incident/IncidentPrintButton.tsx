@@ -54,48 +54,48 @@ export function IncidentPrintButton({ report }: IncidentPrintButtonProps) {
   <div class="section">
     <h2>Incident Details</h2>
     <table>
-      <tr><td>Type</td><td><strong>${r.incident_type}</strong></td></tr>
-      <tr><td>Date & Time</td><td>${dateStr}</td></tr>
-      ${r.location ? `<tr><td>Location</td><td>${r.location}</td></tr>` : ''}
+      <tr><td>Type</td><td><strong>${esc(r.incident_type)}</strong></td></tr>
+      <tr><td>Date & Time</td><td>${esc(dateStr)}</td></tr>
+      ${r.location ? `<tr><td>Location</td><td>${esc(r.location)}</td></tr>` : ''}
       <tr><td>Medical Attention</td><td class="${r.medical_attention ? 'medical-yes' : 'medical-no'}">${r.medical_attention ? 'Yes — Required' : 'No'}</td></tr>
-      ${r.reported_to ? `<tr><td>Reported To</td><td>${r.reported_to}</td></tr>` : ''}
-      ${r.root_cause_category ? `<tr><td>Root Cause</td><td>${r.root_cause_category}</td></tr>` : ''}
+      ${r.reported_to ? `<tr><td>Reported To</td><td>${esc(r.reported_to)}</td></tr>` : ''}
+      ${r.root_cause_category ? `<tr><td>Root Cause</td><td>${esc(r.root_cause_category)}</td></tr>` : ''}
     </table>
   </div>
 
   <div class="section">
     <h2>Description</h2>
-    <p class="description">${(r.description || 'No description provided.').replace(/</g, '&lt;')}</p>
+    <p class="description">${esc(r.description || 'No description provided.')}</p>
   </div>
 
   ${r.people_involved ? `
   <div class="section">
     <h2>People Involved</h2>
-    <p>${r.people_involved}</p>
+    <p>${esc(r.people_involved)}</p>
   </div>` : ''}
 
   ${r.witnesses ? `
   <div class="section">
     <h2>Witnesses</h2>
-    <p>${r.witnesses}</p>
+    <p>${esc(r.witnesses)}</p>
   </div>` : ''}
 
   ${r.root_cause_description ? `
   <div class="section">
     <h2>Root Cause Analysis</h2>
-    <p class="description">${r.root_cause_description.replace(/</g, '&lt;')}</p>
+    <p class="description">${esc(r.root_cause_description)}</p>
   </div>` : ''}
 
   ${r.corrective_action_notes ? `
   <div class="section">
     <h2>Corrective Actions</h2>
-    <p class="description">${r.corrective_action_notes.replace(/</g, '&lt;')}</p>
+    <p class="description">${esc(r.corrective_action_notes)}</p>
   </div>` : ''}
 
   ${r.admin_notes ? `
   <div class="section">
     <h2>Investigation Notes</h2>
-    <p class="description">${r.admin_notes.replace(/</g, '&lt;')}</p>
+    <p class="description">${esc(r.admin_notes)}</p>
   </div>` : ''}
 
   <div class="footer">
