@@ -23,6 +23,7 @@ export default function Requests() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [createOpen, setCreateOpen] = useState(searchParams.get('new') === '1');
+  const [openEnrollmentId, setOpenEnrollmentId] = useState<string | null>(null);
   const defaultCustomerId = searchParams.get('customer_id') || undefined;
   const { canManageRequests } = useActionPermissions();
 
