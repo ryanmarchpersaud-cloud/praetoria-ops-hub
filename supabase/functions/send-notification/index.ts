@@ -332,12 +332,8 @@ async function buildServiceRequestEmail(
   const createdAtLabel = createdAt.toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" });
   const status = request?.status || "New";
 
-  // Source inference: explicit column wins; otherwise derive from caller context.
-  let source = request?.source || vars.source || "";
-  if (!source) {
-    if (vars.audience_source) source = vars.audience_source;
-    else source = "Customer portal";
-  }
+  // Source: caller may pass `source` in variables (portal / website / admin / worker / subcontractor).
+  const source = vars.source || vars.audience_source || (request ? "Customer portal" : "Admin / staff");
 
   const addressParts = property
     ? [property.address_line_1, property.address_line_2, property.city, property.province, property.postal_code].filter(Boolean).join(", ")
