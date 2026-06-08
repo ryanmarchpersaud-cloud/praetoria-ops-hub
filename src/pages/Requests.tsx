@@ -111,6 +111,7 @@ export default function Requests() {
                 </h2>
                 <p className="text-xs text-muted-foreground">{recurringRequests.length} pending or recent enrollment follow-up{recurringRequests.length === 1 ? '' : 's'}</p>
               </div>
+              <Link to="/requests/recurring" className="text-xs text-primary hover:underline shrink-0">View all →</Link>
             </div>
             <div className="grid gap-2 md:grid-cols-2">
               {recurringRequests.map((r: any) => {
