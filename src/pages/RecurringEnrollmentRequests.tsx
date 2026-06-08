@@ -253,6 +253,12 @@ export default function RecurringEnrollmentRequests() {
           </Card>
         </>
       )}
+
+      <RecurringEnrollmentDetailDialog
+        enrollmentId={openId}
+        open={openId !== null}
+        onOpenChange={(o) => !o && setOpenId(null)}
+      />
     </div>
   );
 }
