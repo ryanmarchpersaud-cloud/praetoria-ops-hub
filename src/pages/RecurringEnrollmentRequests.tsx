@@ -220,13 +220,14 @@ export default function RecurringEnrollmentRequests() {
                     <TableHead>Frequency</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Next Billing Date</TableHead>
+                    <TableHead className="w-[120px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>{renderCustomer(r)}</TableCell>
-                      <TableCell>{renderProperty(r)}</TableCell>
+                    <TableRow key={r.id} className="cursor-pointer" onClick={() => setOpenId(r.id)}>
+                      <TableCell onClick={(e) => e.stopPropagation()}>{renderCustomer(r)}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>{renderProperty(r)}</TableCell>
                       <TableCell className="font-medium">{r.service_category}</TableCell>
                       <TableCell className="capitalize text-muted-foreground">{r.frequency || '—'}</TableCell>
                       <TableCell>
@@ -238,6 +239,11 @@ export default function RecurringEnrollmentRequests() {
                         ) : (
                           <span className="italic text-muted-foreground">Not scheduled</span>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setOpenId(r.id); }}>
+                          Open / Review
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
