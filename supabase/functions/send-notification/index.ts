@@ -268,6 +268,182 @@ async function buildAssignmentEmail(
   return { subject: subject || fallbackSubject, html };
 }
 
+// Build a rich, branded "new service request" notification email for ops/admin.
+// Pulls authoritative data from service_requests + customers + properties so the
+// email always includes contact info, location, and a direct admin link — even
+// when the trigger call site only passes minimal variables.
+async function buildServiceRequestEmail(
+  supabase: any,
+  record_id: string | undefined,
+  customer_id: string | undefined,
+  vars: Record<string, string>,
+  fallbackSubject: string,
+): Promise<{ subject: string; html: string; reply_to?: string } | null> {
+  let request: any = null;
+  let customer: any = null;
+  let property: any = null;
+
+  if (record_id) {
+    const { data: r } = await supabase
+      .from("service_requests")
+      .select("id, subject, description, service_type, urgency, requested_timing, preferred_contact_method, area_of_property, access_notes, attachments, status, created_at, customer_id, property_id, user_id")
+      .eq("id", record_id).maybeSingle();
+    request = r;
+  }
+
+  const custId = customer_id || request?.customer_id;
+  if (custId) {
+    const { data: c } = await supabase
+      .from("customers")
+      .select("id, first_name, last_name, company_name, email, phone")
+      .eq("id", custId).maybeSingle();
+    customer = c;
+  }
+
+  const propId = request?.property_id;
+  if (propId) {
+    const { data: p } = await supabase
+      .from("properties")
+      .select("property_name, address_line_1, address_line_2, city, province, postal_code")
+      .eq("id", propId).maybeSingle();
+    property = p;
+  }
+
+  const FALLBACK = "Not provided";
+  const NO_PHONE = "No phone provided";
+  const NO_ADDRESS = "No address provided";
+  const NO_MESSAGE = "No message provided";
+  const NO_EMAIL = "No email provided";
+
+  const customerName = customer
+    ? (`${customer.first_name || ""} ${customer.last_name || ""}`.trim() || customer.company_name || vars.customer_name || "A customer")
+    : (vars.customer_name || "A customer");
+  const customerEmail = customer?.email || "";
+  const customerPhone = customer?.phone || "";
+  const companyName = customer?.company_name || "";
+
+  const serviceType = request?.service_type || vars.service_type || "Service request";
+  const subjectLine = request?.subject || vars.subject?.replace(/^New Request:\s*/i, "") || serviceType;
+  const description = request?.description || vars.body || "";
+  const urgency = request?.urgency || "";
+  const requestedTiming = request?.requested_timing || "";
+  const requestNumber = request?.id ? `REQ-${request.id.slice(0, 8).toUpperCase()}` : "";
+  const createdAt = request?.created_at ? new Date(request.created_at) : new Date();
+  const createdAtLabel = createdAt.toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" });
+  const status = request?.status || "New";
+
+  // Source: caller may pass `source` in variables (portal / website / admin / worker / subcontractor).
+  const source = vars.source || vars.audience_source || (request ? "Customer portal" : "Admin / staff");
+
+  const addressParts = property
+    ? [property.address_line_1, property.address_line_2, property.city, property.province, property.postal_code].filter(Boolean).join(", ")
+    : "";
+  const propertyLabel = property?.property_name || "";
+  const fullAddress = addressParts || propertyLabel || "";
+
+  const attachmentCount = Array.isArray(request?.attachments) ? request.attachments.length : 0;
+
+  const adminPath = request?.id ? `/requests/${request.id}` : `/requests`;
+  const openUrl = `${APP_BASE_URL}${adminPath}`;
+
+  const replyTo = customerEmail || "ops@praetoriagroup.ca";
+
+  // City fragment for subject
+  const citySegment = property?.city || (addressParts ? addressParts.split(",").slice(-3, -2)[0]?.trim() : "");
+  const subject = `New Request: ${serviceType}${customerName ? ` — ${customerName}` : ""}${citySegment ? ` — ${citySegment}` : ""}`;
+
+  const color = categoryColor(serviceType);
+
+  const row = (label: string, value: string, isFallback = false) =>
+    `<tr><td style="padding:6px 0;color:#64748b;font-size:13px;width:160px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:6px 0;color:${isFallback ? "#94a3b8" : "#0f172a"};font-size:14px;vertical-align:top;font-style:${isFallback ? "italic" : "normal"};">${value}</td></tr>`;
+
+  const emailCell = customerEmail
+    ? `<a href="mailto:${escapeHtml(customerEmail)}" style="color:#0f172a;text-decoration:none;font-weight:600;">${escapeHtml(customerEmail)}</a>`
+    : `<span>${NO_EMAIL}</span>`;
+  const phoneCell = customerPhone
+    ? `<a href="tel:${escapeHtml(customerPhone)}" style="color:#0f172a;text-decoration:none;font-weight:600;">📞 ${escapeHtml(customerPhone)}</a>`
+    : `<span>${NO_PHONE}</span>`;
+  const addressCell = fullAddress
+    ? escapeHtml(fullAddress)
+    : `<span>${NO_ADDRESS}</span>`;
+  const descriptionBlock = description
+    ? `<div style="font-size:14px;color:#0f172a;line-height:1.6;white-space:pre-wrap;">${escapeHtml(description)}</div>`
+    : `<div style="font-size:14px;color:#94a3b8;font-style:italic;">${NO_MESSAGE}</div>`;
+
+  const urgencyBadge = urgency
+    ? `<span style="display:inline-block;background:${/urgent|high/i.test(urgency) ? "#fee2e2" : "#e0f2fe"};color:${/urgent|high/i.test(urgency) ? "#b91c1c" : "#075985"};font-size:11px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-left:8px;letter-spacing:0.5px;">${escapeHtml(urgency)}</span>`
+    : "";
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f1f5f9;padding:32px 12px;">
+    <tr><td align="center">
+      <table cellpadding="0" cellspacing="0" border="0" width="640" style="max-width:640px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,0.08);">
+
+        <tr><td style="background:#0F172A;padding:20px 28px;">
+          <table width="100%"><tr>
+            <td style="color:#fff;font-size:18px;font-weight:700;letter-spacing:0.3px;">Praetoria Group</td>
+            <td align="right" style="color:#94a3b8;font-size:12px;">Request ${escapeHtml(requestNumber || "—")}</td>
+          </tr></table>
+        </td></tr>
+
+        <tr><td style="padding:28px 28px 8px 28px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${color};">${escapeHtml(serviceType)}</div>
+          <h1 style="margin:6px 0 0;font-size:22px;font-weight:700;color:#0f172a;line-height:1.3;">New service request${urgencyBadge}</h1>
+          <p style="margin:8px 0 0;font-size:15px;color:#475569;">${escapeHtml(subjectLine)}</p>
+        </td></tr>
+
+        <tr><td style="padding:18px 28px 4px 28px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e2e8f0;">
+            ${row("Request #", escapeHtml(requestNumber || FALLBACK), !requestNumber)}
+            ${row("Submitted", escapeHtml(createdAtLabel))}
+            ${row("Customer", escapeHtml(customerName))}
+            ${companyName ? row("Company", escapeHtml(companyName)) : ""}
+            ${row("Email", emailCell, !customerEmail)}
+            ${row("Phone", phoneCell, !customerPhone)}
+            ${row("Service type", escapeHtml(serviceType))}
+            ${row("Property", escapeHtml(propertyLabel || FALLBACK), !propertyLabel)}
+            ${row("Address", addressCell, !fullAddress)}
+            ${row("Priority", escapeHtml(urgency || FALLBACK), !urgency)}
+            ${row("Preferred timing", escapeHtml(requestedTiming || FALLBACK), !requestedTiming)}
+            ${row("Source", escapeHtml(source))}
+            ${row("Status", escapeHtml(status))}
+            ${row("Attachments", attachmentCount > 0 ? `${attachmentCount} file${attachmentCount === 1 ? "" : "s"} attached` : "None")}
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:18px 28px 4px;">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#475569;margin-bottom:6px;">Customer message</div>
+          ${descriptionBlock}
+        </td></tr>
+
+        <tr><td style="padding:24px 28px 8px;text-align:center;">
+          <a href="${openUrl}" style="display:inline-block;background:#0F172A;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 28px;border-radius:8px;">Open Request in Praetoria Ops Hub →</a>
+        </td></tr>
+
+        <tr><td style="padding:4px 28px 24px;text-align:center;">
+          <div style="font-size:13px;color:#475569;line-height:1.6;">
+            Next step: open the request in the Admin Portal, reply to the customer, or assign a visit.
+          </div>
+        </td></tr>
+
+        <tr><td style="background:#f8fafc;padding:16px 28px;text-align:center;border-top:1px solid #e2e8f0;">
+          <div style="font-size:12px;color:#64748b;line-height:1.6;">
+            Praetoria Group &bull; <a href="${APP_BASE_URL}" style="color:#64748b;text-decoration:none;">praetoriagroup.ca</a><br/>
+            Reply to this email to respond directly to ${customerEmail ? "the customer" : "ops@praetoriagroup.ca"}.
+          </div>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+  return { subject, html, reply_to: replyTo };
+}
+
+
+
 // Resolve recipient email/phone from customer_id or recipient_id when not provided in variables
 async function resolveRecipient(
   supabase: any,
@@ -411,28 +587,18 @@ Deno.serve(async (req) => {
       if (channel === "sms" && !enrichedVars.to_phone) {
         results.push({ channel, status: "skipped", reason: "no_recipient_phone" });
         console.warn(`[send-notification] Skipping SMS for event=${event}: no recipient phone found`);
-      const subject = template?.is_active
-        ? renderTemplate(template.subject_template, enrichedVars)
-        : enrichedVars.subject || event.replace(/_/g, " ");
-      // For email/HTML body, escape interpolated variables in the template render
-      // and HTML-escape the fallback body. Trusted admin-managed template markup is preserved.
-      const notifBodyPlain = template?.is_active
-        ? renderTemplate(template.body_template, enrichedVars)
-        : enrichedVars.body || "";
-      const notifBodyHtml = template?.is_active
-        ? renderTemplate(template.body_template, enrichedVars, { escape: true })
-        : escapeHtml(enrichedVars.body || "").replace(/\n/g, "<br/>");
-      const subjectHtml = template?.is_active
-        ? renderTemplate(template.subject_template, enrichedVars, { escape: true })
-        : escapeHtml(enrichedVars.subject || event.replace(/_/g, " "));
-      const notifBody = notifBodyPlain;
+        continue;
+      }
+
+      // Look up admin-managed template (per event/audience/channel)
+      const { data: template } = await supabase
+        .from("notification_templates")
         .select("subject_template, body_template, is_active")
         .eq("event", event)
         .eq("audience", audience)
         .eq("channel", channel)
         .maybeSingle();
 
-      // If template is explicitly inactive, skip
       if (template && !template.is_active) {
         results.push({ channel, status: "skipped", reason: "template_inactive" });
         continue;
@@ -444,8 +610,14 @@ Deno.serve(async (req) => {
       const notifBody = template?.is_active
         ? renderTemplate(template.body_template, enrichedVars)
         : enrichedVars.body || "";
+      const subjectHtml = template?.is_active
+        ? renderTemplate(template.subject_template, enrichedVars, { escape: true })
+        : escapeHtml(subject);
+      const notifBodyHtml = template?.is_active
+        ? renderTemplate(template.body_template, enrichedVars, { escape: true })
+        : escapeHtml(notifBody).replace(/\n/g, "<br/>");
 
-      // Create notification record
+      // Create notification record (stored body is plain text)
       const { data: notif, error: notifErr } = await supabase
         .from("notifications")
         .insert({
@@ -456,12 +628,12 @@ Deno.serve(async (req) => {
           customer_id: customer_id || null,
           record_type: record_type || null,
           record_id: record_id || null,
-            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subjectHtml}</h2><div>${notifBodyHtml}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
+          subject,
           body: notifBody,
           metadata: enrichedVars,
           status: channel === "in_app" ? "sent" : "pending",
           sent_at: channel === "in_app" ? new Date().toISOString() : null,
-            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${escapeHtml(subject)}</h2><div>${escapeHtml(notifBody).replace(/\n/g, "<br/>")}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
+        })
         .select()
         .single();
 
@@ -475,16 +647,22 @@ Deno.serve(async (req) => {
         const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
         if (RESEND_API_KEY && enrichedVars.to_email) {
           try {
-            // For worker_assigned events, build a rich, branded email server-side
-            // using authoritative job/visit data instead of caller-supplied placeholders.
             let finalSubject = subject;
-            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subject}</h2><div>${notifBody}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
+            let finalReplyTo = enrichedVars.reply_to || "ops@praetoriagroup.ca";
+            let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subjectHtml}</h2><div>${notifBodyHtml}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
 
             if (event === "worker_assigned" && (audience === "worker" || audience === "subcontractor")) {
               const rich = await buildAssignmentEmail(supabase, record_type, record_id, audience, subject);
               if (rich) {
                 finalSubject = rich.subject;
                 finalHtml = rich.html;
+              }
+            } else if (event === "new_service_request") {
+              const rich = await buildServiceRequestEmail(supabase, record_id, customer_id, enrichedVars, subject);
+              if (rich) {
+                finalSubject = rich.subject;
+                finalHtml = rich.html;
+                if (rich.reply_to) finalReplyTo = rich.reply_to;
               }
             }
 
@@ -499,7 +677,7 @@ Deno.serve(async (req) => {
                 to: [enrichedVars.to_email],
                 subject: finalSubject,
                 html: finalHtml,
-                reply_to: enrichedVars.reply_to || "ops@praetoriagroup.ca",
+                reply_to: finalReplyTo,
               }),
             });
             const emailData = await emailRes.json();

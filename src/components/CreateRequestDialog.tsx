@@ -56,7 +56,7 @@ export function CreateRequestDialog({ open, onOpenChange, defaultCustomerId }: P
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from('service_requests').insert({
+      const { data: inserted, error } = await supabase.from('service_requests').insert({
         customer_id: form.customer_id,
         property_id: form.property_id || null,
         subject: form.subject,
@@ -66,7 +66,7 @@ export function CreateRequestDialog({ open, onOpenChange, defaultCustomerId }: P
         requested_timing: form.requested_timing || null,
         user_id: user?.id || '',
         status: 'Open',
-      } as any);
+      } as any).select('id').single();
       if (error) throw error;
 
       // Notify admin/ops about the new request
@@ -78,12 +78,15 @@ export function CreateRequestDialog({ open, onOpenChange, defaultCustomerId }: P
             event: 'new_service_request',
             customer_id: form.customer_id,
             record_type: 'service_request',
+            record_id: inserted?.id,
             channels: ['in_app', 'email'],
             audience: 'admin',
             variables: {
               subject: `New Request: ${form.subject}`,
-              body: `${custName} — ${form.subject}`,
+              body: form.description || `${custName} — ${form.subject}`,
               customer_name: custName,
+              service_type: form.service_type || 'Service request',
+              source: 'Admin-created',
               to_email: 'ops@praetoriagroup.ca',
               reply_to: 'ops@praetoriagroup.ca',
             },
