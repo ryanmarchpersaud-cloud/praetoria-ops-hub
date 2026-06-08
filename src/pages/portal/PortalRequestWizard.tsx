@@ -176,16 +176,19 @@ export default function PortalRequestWizard() {
       } as any).select('id').single();
       if (error) throw error;
 
-      // Log customer activity
-      await supabase.from('activities').insert({
-        action_name: `Customer submitted service request: ${subject}`,
-        user_id: user.id,
-        record_type: 'customer',
-        record_id: customer.id,
-        workflow_name: 'customer_portal',
-        payload_summary: { customer_name: `${customer.first_name} ${customer.last_name}`, service: form.service_category },
-        status: 'completed',
-      } as any);
+      // Log customer activity without blocking request submission or ops notification.
+      // Customer accounts may not have activity-write permissions; request creation and notification must still proceed.
+      try {
+        await supabase.from('activities').insert({
+          action_name: `Customer submitted service request: ${subject}`,
+          user_id: user.id,
+          record_type: 'customer',
+          record_id: customer.id,
+          workflow_name: 'customer_portal',
+          payload_summary: { customer_name: `${customer.first_name} ${customer.last_name}`, service: form.service_category },
+          status: 'completed',
+        } as any);
+      } catch (_) { /* non-blocking */ }
 
       // Notify admin/ops staff about the new request (in-app + email)
       try {

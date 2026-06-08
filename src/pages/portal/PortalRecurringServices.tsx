@@ -113,7 +113,7 @@ export default function PortalRecurringServices() {
   const submitRequest = useMutation({
     mutationFn: async () => {
       if (!customer) throw new Error('Not authenticated');
-      const { error } = await (supabase.from('customer_recurring_requests' as any) as any).insert({
+      const { data: inserted, error } = await (supabase.from('customer_recurring_requests' as any) as any).insert({
         customer_id: customer.id,
         service_category: selectedCategory,
         frequency: form.frequency,
@@ -122,8 +122,40 @@ export default function PortalRecurringServices() {
         special_instructions: form.special_instructions || null,
         payment_preference: form.payment_preference,
         property_id: form.property_id || null,
-      });
+      }).select('id').single();
       if (error) throw error;
+
+      try {
+        const selectedProperty = properties.find((p: any) => p.id === form.property_id);
+        const customerName = `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.company_name || 'Customer';
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            event: 'new_service_request',
+            customer_id: customer.id,
+            record_type: 'customer_recurring_request',
+            record_id: inserted?.id,
+            channels: ['in_app', 'email'],
+            audience: 'admin',
+            variables: {
+              subject: `Recurring Service Enrollment: ${selectedCategory}`,
+              body: [
+                `${customerName} requested a recurring ${selectedCategory} plan.`,
+                `Frequency: ${form.frequency}`,
+                `Service window: ${form.preferred_service_window}`,
+                `Payment preference: ${form.payment_preference}`,
+                form.preferred_start_date ? `Preferred start date: ${form.preferred_start_date}` : '',
+                selectedProperty?.property_name ? `Property: ${selectedProperty.property_name}` : '',
+                form.special_instructions ? `Special instructions: ${form.special_instructions}` : '',
+              ].filter(Boolean).join('\n'),
+              customer_name: customerName,
+              service_type: selectedCategory || 'Recurring service enrollment',
+              source: 'Customer portal — recurring enrollment',
+              to_email: 'ops@praetoriagroup.ca',
+              reply_to: 'ops@praetoriagroup.ca',
+            },
+          },
+        });
+      } catch (_) { /* non-blocking */ }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['customer_recurring_requests'] });

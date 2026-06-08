@@ -72,7 +72,7 @@ export default function PortalDashboard() {
         .from('service_requests')
         .select('id, subject, status, created_at')
         .eq('customer_id', customer.id)
-        .in('status', ['Open', 'In Progress'] as any)
+        .in('status', ['Open', 'open', 'In Progress', 'in_progress'] as any)
         .order('created_at', { ascending: false })
         .limit(3);
       if (error) throw error;
