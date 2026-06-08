@@ -121,7 +121,12 @@ export default function Requests() {
                   ? (`${r.customer.first_name || ''} ${r.customer.last_name || ''}`.trim() || r.customer.company_name || 'Customer')
                   : 'Customer';
                 return (
-                  <div key={r.id} className="rounded-lg border bg-muted/20 p-3 space-y-1.5">
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setOpenEnrollmentId(r.id)}
+                    className="text-left rounded-lg border bg-muted/20 p-3 space-y-1.5 hover:bg-muted/40 transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{r.service_category}</p>
@@ -135,7 +140,8 @@ export default function Requests() {
                       {r.preferred_start_date && <span>Start {r.preferred_start_date}</span>}
                     </div>
                     {r.special_instructions && <p className="text-xs text-muted-foreground line-clamp-2">{r.special_instructions}</p>}
-                  </div>
+                    <p className="text-xs text-primary font-medium pt-0.5">Open / Review →</p>
+                  </button>
                 );
               })}
             </div>
