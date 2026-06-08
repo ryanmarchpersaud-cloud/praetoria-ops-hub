@@ -34,6 +34,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
   { title: 'Invoices', url: '/invoices', icon: Receipt, countKey: 'invoices', accessKey: 'invoices' },
   { title: 'Schedule', url: '/schedule', icon: CalendarDays, accessKey: 'schedule' },
   { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests' },
+  { title: 'Recurring Enrollments', url: '/requests/recurring', icon: RefreshCw, accessKey: 'requests' as SidebarKey },
   { title: 'Activity', url: '/activity', icon: Activity, accessKey: 'activity' },
   { title: 'Incidents', url: '/incidents', icon: ShieldAlert, countKey: 'incidents' as CountKey, accessKey: 'incidents' as SidebarKey },
   { title: 'Tasks', url: '/tasks', icon: ClipboardCheck, accessKey: 'jobs' as SidebarKey },
