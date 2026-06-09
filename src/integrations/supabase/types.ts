@@ -9142,6 +9142,7 @@ export type Database = {
         | "Garage Doors"
         | "Locksmith Services"
         | "Drywall Mudding & Taping"
+        | "Drywall Installation & Metal Stud Completion"
       service_frequency:
         | "one-time"
         | "weekly"
@@ -9438,6 +9439,7 @@ export const Constants = {
         "Garage Doors",
         "Locksmith Services",
         "Drywall Mudding & Taping",
+        "Drywall Installation & Metal Stud Completion",
       ],
       service_frequency: [
         "one-time",
