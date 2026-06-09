@@ -9092,6 +9092,7 @@ export type Database = {
         | "equipment_issue"
         | "materials_used"
         | "account_deletion_requested"
+        | "worker_crew_assigned"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
@@ -9384,6 +9385,7 @@ export const Constants = {
         "equipment_issue",
         "materials_used",
         "account_deletion_requested",
+        "worker_crew_assigned",
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
