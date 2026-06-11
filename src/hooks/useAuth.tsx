@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [checkMustChangePassword]);
+  }, [applySession]);
 
   const refreshMustChangePassword = useCallback(async () => {
     await checkMustChangePassword(user?.id);
