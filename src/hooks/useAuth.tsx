@@ -49,17 +49,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const lastLoggedAuthRef = useRef<string | null>(null);
 
+  const lastUserIdRef = useRef<string | null>(null);
+
+  const applySession = useCallback((nextSession: Session | null) => {
+    const nextUser = nextSession?.user ?? null;
+    const nextUid = nextUser?.id ?? null;
+    const prevUid = lastUserIdRef.current;
+    const identityChanged = prevUid !== nextUid;
+
+    // Always keep session token fresh (refresh tokens rotate), but only swap
+    // the user object when the underlying identity actually changes. This
+    // prevents every TOKEN_REFRESHED event from re-rendering every consumer
+    // of useAuth() and flashing route guards between loading/loaded.
+    setSession(nextSession);
+    if (identityChanged) {
+      lastUserIdRef.current = nextUid;
+      setUser(nextUser);
+      setMustChangePasswordChecked(false);
+      setTimeout(() => { checkMustChangePassword(nextUid ?? undefined); }, 0);
+    }
+    setLoading(false);
+    return { identityChanged, uid: nextUid };
+  }, [checkMustChangePassword]);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      // Defer to avoid potential deadlocks inside the auth callback
-      setMustChangePasswordChecked(false);
-      setTimeout(() => { checkMustChangePassword(session?.user?.id); }, 0);
+      const { uid } = applySession(session);
 
       // Audit auth events (deferred so we don't block the auth callback)
-      const uid = session?.user?.id ?? null;
       const dedupeKey = `${event}:${uid ?? 'anon'}`;
       if (lastLoggedAuthRef.current !== dedupeKey) {
         lastLoggedAuthRef.current = dedupeKey;
@@ -78,10 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      checkMustChangePassword(session?.user?.id);
+      applySession(session);
     });
 
     return () => subscription.unsubscribe();
