@@ -63,6 +63,9 @@ export function useAuthorization(): AuthorizationState {
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Fetch team_members record (if exists — customers won't have one)
@@ -80,6 +83,9 @@ export function useAuthorization(): AuthorizationState {
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const isOwner = roles.includes('owner' as AppRole);

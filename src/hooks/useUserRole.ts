@@ -82,6 +82,14 @@ export function usePermissions() {
       return [...new Set(perms.map((p: any) => p.permission_key as PermissionKey))];
     },
     enabled: !!user,
+    // Cache permissions so navigating between admin pages doesn't
+    // re-trigger a loading state in ModuleGuard, which would briefly
+    // blank the main content area (the "flicker on every nav" the user
+    // reports). Matches the staleTime of useAuthorization's queries.
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const hasPermission = (key: PermissionKey) => permissions.includes(key);
