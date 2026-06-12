@@ -45,7 +45,19 @@ export function ModuleGuard({ children, module, settingsKey }: ModuleGuardProps)
   const access = useModuleAccess();
   const settingsAccess = useSettingsAccess();
 
-  if (access.isLoading) return null; // AdminRoute already shows loading
+  // While permissions are still resolving on first load, render a stable
+  // placeholder INSIDE the admin shell so the main content area doesn't
+  // collapse to height-0 (which caused the page to "flicker" between
+  // navigations). After the first successful load, permissions are cached
+  // (see usePermissions/useAuthorization staleTime) so isLoading stays
+  // false on subsequent navigations — no flash.
+  if (access.isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-muted-foreground text-sm">
+        Loading…
+      </div>
+    );
+  }
 
   let allowed = true;
 
