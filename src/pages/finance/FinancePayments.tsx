@@ -253,10 +253,10 @@ export default function FinancePayments() {
               <div className="h-8 w-8 rounded-lg bg-success/10 flex items-center justify-center">
                 <CheckCircle className="h-4 w-4 text-success" />
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Succeeded</p>
+              <p className="text-sm font-medium text-muted-foreground">Paid Out</p>
             </div>
-            <p className="text-2xl font-bold tabular-nums">{fmt(stats.succeededTotal)}</p>
-            <p className="text-xs text-muted-foreground">{stats.succeededCount} payments</p>
+            <p className="text-2xl font-bold tabular-nums">{fmt(stats.totalPaidOut)}</p>
+            <p className="text-xs text-muted-foreground">contractor/vendor payouts</p>
           </CardContent>
         </Card>
         <Card>
@@ -361,7 +361,8 @@ export default function FinancePayments() {
             ) : pageItems.map((p: any) => {
               const inv = p.invoices;
               const cust = inv?.customers;
-              const clientName = cust ? `${cust.first_name} ${cust.last_name}` : '—';
+              const isPayout = p.payment_type !== 'invoice_payment';
+              const clientName = isPayout ? 'Subcontractor Payout' : cust ? `${cust.first_name} ${cust.last_name}` : '—';
               const statusStr = paymentStatusLabel(p);
               const statusVariant = statusStr === 'Succeeded' ? 'Paid' : statusStr === 'Refunded' ? 'Voided' : statusStr;
 
@@ -369,6 +370,7 @@ export default function FinancePayments() {
                 <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/finance/payments/${p.id}`)}>
                   <TableCell>
                     <p className="text-sm font-medium">{clientName}</p>
+                    {isPayout && <p className="text-xs text-muted-foreground">{p.internal_note?.split(';')[0] || p.payment_type?.replace(/_/g, ' ')}</p>}
                     {inv?.invoice_number && (
                       <Link
                         to={`/invoices/${inv.id}`}
@@ -393,8 +395,8 @@ export default function FinancePayments() {
                     {p.reference_number || '—'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <span className={cn("text-sm font-semibold tabular-nums", p.is_reversed && "text-destructive line-through")}>
-                      {fmt(Number(p.amount))}
+                    <span className={cn("text-sm font-semibold tabular-nums", isPayout && "text-destructive", p.is_reversed && "text-destructive line-through")}>
+                      {isPayout ? '-' : ''}{fmt(Number(p.amount))}
                     </span>
                   </TableCell>
                   <TableCell>
