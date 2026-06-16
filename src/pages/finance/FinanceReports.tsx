@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills } from '@/hooks/useFinance';
 import { useAllFinancePayments } from '@/hooks/useFinancePayments';
-import { usePayrollRuns, usePayrollRunItems, usePayoutRuns, usePayoutItems, useRemittances } from '@/hooks/usePayroll';
+import { usePayrollRuns, usePaidSubcontractorPayStubPayouts, useRemittances } from '@/hooks/usePayroll';
 import { useStep6Metrics } from '@/hooks/useStep6Metrics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,6 +96,7 @@ export default function FinanceReports() {
     });
     return Object.entries(map).map(([name, v]) => ({ name, cashIn: v.in, cashOut: v.out }));
   }, [payments]);
+  const paymentTotals = paymentData.reduce((acc, r) => ({ cashIn: acc.cashIn + r.cashIn, cashOut: acc.cashOut + r.cashOut }), { cashIn: 0, cashOut: 0 });
 
   const exportCurrentTab = async () => {
     // Invoice-centric tabs export the full invoice list (with GST/PST, payments, etc.)
@@ -389,8 +390,8 @@ export default function FinanceReports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="payroll"><PayrollReportTab /></TabsContent>
-        <TabsContent value="payouts"><PayoutReportTab /></TabsContent>
+        <TabsContent value="payroll"><PayrollReportTab dateFrom={dateFrom} dateTo={dateTo} /></TabsContent>
+        <TabsContent value="payouts"><PayoutReportTab dateFrom={dateFrom} dateTo={dateTo} /></TabsContent>
         <TabsContent value="remittances"><RemittanceReportTab /></TabsContent>
         <TabsContent value="conversion"><ConversionFunnelTab /></TabsContent>
         <TabsContent value="unbilled"><UnbilledWorkTab /></TabsContent>
