@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { usePayoutRuns, useCreatePayoutRun, useUpdatePayoutRun, usePayoutItems, useCreatePayoutItem, useDeletePayoutItem } from '@/hooks/usePayroll';
+import { usePayoutRuns, useCreatePayoutRun, useUpdatePayoutRun, usePayoutItems, useCreatePayoutItem, useDeletePayoutItem, usePaidSubcontractorPayStubPayouts } from '@/hooks/usePayroll';
 import { Plus, ChevronRight, Users, DollarSign, Clock, CheckCircle, Lock, ArrowLeft, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -24,7 +24,9 @@ export default function FinanceSubcontractorPayouts() {
   const [form, setForm] = useState({ period_start: '', period_end: '', payout_date: '', notes: '' });
 
   const { data: runs, isLoading } = usePayoutRuns({ status: statusFilter });
+  const { data: paidPayStubPayouts = [] } = usePaidSubcontractorPayStubPayouts();
   const createRun = useCreatePayoutRun();
+  const paidPayoutSubtotal = paidPayStubPayouts.reduce((sum: number, p: any) => sum + Number(p.total || 0), 0);
 
   const handleCreate = () => {
     if (!form.period_start || !form.period_end || !form.payout_date) { toast.error('Fill required fields'); return; }
@@ -48,7 +50,7 @@ export default function FinanceSubcontractorPayouts() {
           { label: 'Draft', value: runs?.filter(r => r.status === 'draft').length ?? 0, icon: Clock },
           { label: 'Approved', value: runs?.filter(r => r.status === 'approved').length ?? 0, icon: CheckCircle },
           { label: 'Processed', value: runs?.filter(r => r.status === 'processed').length ?? 0, icon: Lock },
-          { label: 'Total Runs', value: runs?.length ?? 0, icon: Users },
+          { label: 'Pay Stub Payouts', value: fmt(paidPayoutSubtotal), icon: DollarSign },
         ].map(k => (
           <Card key={k.label}><CardContent className="p-4 flex items-center gap-3"><div className="p-2 rounded-lg bg-muted"><k.icon className="h-4 w-4 text-primary" /></div><div><p className="text-xs text-muted-foreground">{k.label}</p><p className="text-lg font-bold">{k.value}</p></div></CardContent></Card>
         ))}
@@ -61,6 +63,31 @@ export default function FinanceSubcontractorPayouts() {
           </Button>
         ))}
       </div>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Paid Pay Stub Payout History</CardTitle></CardHeader>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>Pay Stub #</TableHead><TableHead>Subcontractor</TableHead><TableHead>Period</TableHead><TableHead>Payment Date</TableHead><TableHead>Method</TableHead><TableHead className="text-right">Amount</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {paidPayStubPayouts.map((p: any) => (
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium">{p.pay_stub_number || '—'}</TableCell>
+                  <TableCell>{p.subcontractors?.contact_name || p.subcontractors?.company_name || '—'}</TableCell>
+                  <TableCell className="text-sm">{p.period_start} → {p.period_end}</TableCell>
+                  <TableCell>{p.payment_date || p.period_end}</TableCell>
+                  <TableCell>{p.payment_method || '—'}</TableCell>
+                  <TableCell className="text-right font-medium">{fmt(Number(p.total || 0))}</TableCell>
+                </TableRow>
+              ))}
+              {paidPayStubPayouts.length > 0 && <TableRow className="font-bold border-t-2 bg-muted/30"><TableCell colSpan={5}>Subtotal Paid Out</TableCell><TableCell className="text-right">{fmt(paidPayoutSubtotal)}</TableCell></TableRow>}
+              {paidPayStubPayouts.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No paid pay stub payouts yet</TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {isLoading ? <Skeleton className="h-64" /> : (
         <Card><Table>
