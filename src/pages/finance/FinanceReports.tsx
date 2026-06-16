@@ -335,6 +335,11 @@ export default function FinanceReports() {
                           <TableCell className="text-right text-destructive">{fmt(r.cashOut)}</TableCell>
                         </TableRow>
                       ))}
+                      <TableRow className="font-bold border-t-2 bg-muted/30">
+                        <TableCell>Subtotal</TableCell>
+                        <TableCell className="text-right text-accent">{fmt(paymentTotals.cashIn)}</TableCell>
+                        <TableCell className="text-right text-destructive">{fmt(paymentTotals.cashOut)}</TableCell>
+                      </TableRow>
                     </TableBody>
                   </Table>
                 </div>
@@ -401,9 +406,15 @@ export default function FinanceReports() {
 }
 
 /* ── Payroll Report Tab ── */
-function PayrollReportTab() {
+function PayrollReportTab({ dateFrom, dateTo }: { dateFrom?: string; dateTo?: string }) {
   const { data: runs } = usePayrollRuns();
-  const processedRuns = (runs ?? []).filter(r => r.status === 'processed');
+  const processedRuns = (runs ?? [])
+    .filter(r => r.status === 'processed')
+    .filter(r => (!dateFrom || r.pay_date >= dateFrom) && (!dateTo || r.pay_date <= dateTo));
+  const totals = processedRuns.reduce((acc: any, r: any) => ({
+    gross: acc.gross + Number(r.gross_total || 0),
+    net: acc.net + Number(r.net_total || 0),
+  }), { gross: 0, net: 0 });
 
   return (
     <Card>
@@ -411,7 +422,7 @@ function PayrollReportTab() {
       <CardContent className="p-0 overflow-x-auto">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Run #</TableHead><TableHead>Period</TableHead><TableHead>Pay Date</TableHead><TableHead>Status</TableHead>
+            <TableHead>Run #</TableHead><TableHead>Period</TableHead><TableHead>Pay Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Gross</TableHead><TableHead className="text-right">Net Pay</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {processedRuns.map(r => (
@@ -420,9 +431,12 @@ function PayrollReportTab() {
                 <TableCell>{r.pay_period_start} → {r.pay_period_end}</TableCell>
                 <TableCell>{r.pay_date}</TableCell>
                 <TableCell>{r.status}</TableCell>
+                <TableCell className="text-right">{fmt(Number((r as any).gross_total || 0))}</TableCell>
+                <TableCell className="text-right font-medium">{fmt(Number((r as any).net_total || 0))}</TableCell>
               </TableRow>
             ))}
-            {processedRuns.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No processed payroll runs</TableCell></TableRow>}
+            {processedRuns.length > 0 && <TableRow className="font-bold border-t-2 bg-muted/30"><TableCell colSpan={4}>Subtotal</TableCell><TableCell className="text-right">{fmt(totals.gross)}</TableCell><TableCell className="text-right">{fmt(totals.net)}</TableCell></TableRow>}
+            {processedRuns.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No processed payroll runs</TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent>
