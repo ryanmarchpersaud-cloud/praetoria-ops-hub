@@ -201,6 +201,25 @@ export function usePayoutItems(runId?: string) {
   });
 }
 
+export function usePaidSubcontractorPayStubPayouts(filters?: { dateFrom?: string; dateTo?: string }) {
+  return useQuery({
+    queryKey: ['paid_subcontractor_pay_stub_payouts', filters],
+    queryFn: async () => {
+      let q = supabase
+        .from('subcontractor_pay_stubs')
+        .select('id, pay_stub_number, subcontractor_id, period_start, period_end, status, total, payment_date, payment_method, subcontractors(contact_name, company_name)')
+        .eq('status', 'paid')
+        .order('payment_date', { ascending: false, nullsFirst: false })
+        .order('period_end', { ascending: false });
+      if (filters?.dateFrom) q = q.gte('payment_date', filters.dateFrom);
+      if (filters?.dateTo) q = q.lte('payment_date', filters.dateTo);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
 export function useCreatePayoutItem() {
   const qc = useQueryClient();
   return useMutation({
