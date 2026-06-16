@@ -267,21 +267,27 @@ export function useFinanceDashboard(dateRange?: { from?: string; to?: string }) 
       const recQ = supabase.from('finance_receipts').select('review_status');
       let invQ = supabase.from('invoices').select('total, balance_due, status, issue_date');
       let workerClaimQ = supabase.from('worker_expense_claims').select('status, created_at');
+      let contractorPayoutQ = supabase.from('finance_payments').select('amount, payment_date, payment_type, is_reversed').eq('is_reversed', false).neq('payment_type', 'invoice_payment');
+      let payrollRunQ = supabase.from('payroll_runs').select('id, status, pay_date').eq('status', 'processed');
 
       if (dateRange?.from) {
         expQ = expQ.gte('expense_date', dateRange.from);
         billQ = billQ.gte('bill_date', dateRange.from);
         invQ = invQ.gte('issue_date', dateRange.from);
         workerClaimQ = workerClaimQ.gte('created_at', `${dateRange.from}T00:00:00`);
+        contractorPayoutQ = contractorPayoutQ.gte('payment_date', dateRange.from);
+        payrollRunQ = payrollRunQ.gte('pay_date', dateRange.from);
       }
       if (dateRange?.to) {
         expQ = expQ.lte('expense_date', dateRange.to);
         billQ = billQ.lte('bill_date', dateRange.to);
         invQ = invQ.lte('issue_date', dateRange.to);
         workerClaimQ = workerClaimQ.lte('created_at', `${dateRange.to}T23:59:59.999`);
+        contractorPayoutQ = contractorPayoutQ.lte('payment_date', dateRange.to);
+        payrollRunQ = payrollRunQ.lte('pay_date', dateRange.to);
       }
 
-      const [expRes, billRes, recRes, invRes, workerClaimsRes] = await Promise.all([expQ, billQ, recQ, invQ, workerClaimQ]);
+      const [expRes, billRes, recRes, invRes, workerClaimsRes, contractorPayoutRes, payrollRunRes] = await Promise.all([expQ, billQ, recQ, invQ, workerClaimQ, contractorPayoutQ, payrollRunQ]);
 
       if (expRes.error) throw expRes.error;
       if (billRes.error) throw billRes.error;
@@ -293,8 +299,18 @@ export function useFinanceDashboard(dateRange?: { from?: string; to?: string }) 
       const receipts = recRes.data || [];
       const invoices = invRes.data || [];
       const workerClaims = workerClaimsRes.error ? [] : (workerClaimsRes.data || []);
+      const contractorPayouts = contractorPayoutRes.error ? [] : (contractorPayoutRes.data || []);
+      const payrollRuns = payrollRunRes.error ? [] : (payrollRunRes.data || []);
+      const payrollRunIds = payrollRuns.map((r: any) => r.id);
+      const payrollItemsRes = payrollRunIds.length
+        ? await supabase.from('payroll_run_items').select('net_pay, payroll_run_id').in('payroll_run_id', payrollRunIds)
+        : { data: [], error: null };
+      const payrollItems = payrollItemsRes.error ? [] : (payrollItemsRes.data || []);
 
-      const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount_total || 0), 0);
+      const baseExpenses = expenses.reduce((s, e) => s + Number(e.amount_total || 0), 0);
+      const totalContractorPayouts = contractorPayouts.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+      const totalPayrollPaid = payrollItems.reduce((s: number, p: any) => s + Number(p.net_pay || 0), 0);
+      const totalExpenses = baseExpenses + totalContractorPayouts + totalPayrollPaid;
       // Revenue = only Paid invoices (Draft/Sent/Voided shouldn't count as earned revenue)
       const totalRevenue = invoices
         .filter(i => String(i.status || '').toLowerCase() === 'paid')
@@ -316,6 +332,8 @@ export function useFinanceDashboard(dateRange?: { from?: string; to?: string }) 
         const cat = e.category || 'Uncategorized';
         categoryBreakdown[cat] = (categoryBreakdown[cat] || 0) + Number(e.amount_total || 0);
       });
+      if (totalContractorPayouts > 0) categoryBreakdown['Subcontractor Payouts'] = totalContractorPayouts;
+      if (totalPayrollPaid > 0) categoryBreakdown['Payroll'] = totalPayrollPaid;
 
       return {
         totalRevenue,

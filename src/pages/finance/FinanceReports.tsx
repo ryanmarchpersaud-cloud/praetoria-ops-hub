@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFinanceDashboard, useFinanceExpenses, useFinanceBills } from '@/hooks/useFinance';
 import { useAllFinancePayments } from '@/hooks/useFinancePayments';
-import { usePayrollRuns, usePayrollRunItems, usePayoutRuns, usePayoutItems, useRemittances } from '@/hooks/usePayroll';
+import { usePayrollRuns, usePaidSubcontractorPayStubPayouts, useRemittances } from '@/hooks/usePayroll';
 import { useStep6Metrics } from '@/hooks/useStep6Metrics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,6 +96,7 @@ export default function FinanceReports() {
     });
     return Object.entries(map).map(([name, v]) => ({ name, cashIn: v.in, cashOut: v.out }));
   }, [payments]);
+  const paymentTotals = paymentData.reduce((acc, r) => ({ cashIn: acc.cashIn + r.cashIn, cashOut: acc.cashOut + r.cashOut }), { cashIn: 0, cashOut: 0 });
 
   const exportCurrentTab = async () => {
     // Invoice-centric tabs export the full invoice list (with GST/PST, payments, etc.)
@@ -334,6 +335,11 @@ export default function FinanceReports() {
                           <TableCell className="text-right text-destructive">{fmt(r.cashOut)}</TableCell>
                         </TableRow>
                       ))}
+                      <TableRow className="font-bold border-t-2 bg-muted/30">
+                        <TableCell>Subtotal</TableCell>
+                        <TableCell className="text-right text-accent">{fmt(paymentTotals.cashIn)}</TableCell>
+                        <TableCell className="text-right text-destructive">{fmt(paymentTotals.cashOut)}</TableCell>
+                      </TableRow>
                     </TableBody>
                   </Table>
                 </div>
@@ -389,8 +395,8 @@ export default function FinanceReports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="payroll"><PayrollReportTab /></TabsContent>
-        <TabsContent value="payouts"><PayoutReportTab /></TabsContent>
+        <TabsContent value="payroll"><PayrollReportTab dateFrom={dateFrom} dateTo={dateTo} /></TabsContent>
+        <TabsContent value="payouts"><PayoutReportTab dateFrom={dateFrom} dateTo={dateTo} /></TabsContent>
         <TabsContent value="remittances"><RemittanceReportTab /></TabsContent>
         <TabsContent value="conversion"><ConversionFunnelTab /></TabsContent>
         <TabsContent value="unbilled"><UnbilledWorkTab /></TabsContent>
@@ -400,9 +406,35 @@ export default function FinanceReports() {
 }
 
 /* ── Payroll Report Tab ── */
-function PayrollReportTab() {
+function PayrollReportTab({ dateFrom, dateTo }: { dateFrom?: string; dateTo?: string }) {
   const { data: runs } = usePayrollRuns();
-  const processedRuns = (runs ?? []).filter(r => r.status === 'processed');
+  const processedRuns = (runs ?? [])
+    .filter(r => r.status === 'processed')
+    .filter(r => (!dateFrom || r.pay_date >= dateFrom) && (!dateTo || r.pay_date <= dateTo));
+  const processedRunIds = processedRuns.map(r => r.id);
+  const { data: payrollItems = [] } = useQuery({
+    queryKey: ['finance_reports_payroll_items', processedRunIds],
+    enabled: processedRunIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('payroll_run_items')
+        .select('payroll_run_id, gross_pay, net_pay')
+        .in('payroll_run_id', processedRunIds);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const payrollByRun = (payrollItems as any[]).reduce((acc: Record<string, { gross: number; net: number }>, i: any) => {
+    const key = i.payroll_run_id;
+    acc[key] = acc[key] || { gross: 0, net: 0 };
+    acc[key].gross += Number(i.gross_pay || 0);
+    acc[key].net += Number(i.net_pay || 0);
+    return acc;
+  }, {});
+  const totals = processedRuns.reduce((acc: any, r: any) => ({
+    gross: acc.gross + Number(payrollByRun[r.id]?.gross || 0),
+    net: acc.net + Number(payrollByRun[r.id]?.net || 0),
+  }), { gross: 0, net: 0 });
 
   return (
     <Card>
@@ -410,7 +442,7 @@ function PayrollReportTab() {
       <CardContent className="p-0 overflow-x-auto">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Run #</TableHead><TableHead>Period</TableHead><TableHead>Pay Date</TableHead><TableHead>Status</TableHead>
+            <TableHead>Run #</TableHead><TableHead>Period</TableHead><TableHead>Pay Date</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Gross</TableHead><TableHead className="text-right">Net Pay</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {processedRuns.map(r => (
@@ -419,9 +451,12 @@ function PayrollReportTab() {
                 <TableCell>{r.pay_period_start} → {r.pay_period_end}</TableCell>
                 <TableCell>{r.pay_date}</TableCell>
                 <TableCell>{r.status}</TableCell>
+                <TableCell className="text-right">{fmt(Number(payrollByRun[r.id]?.gross || 0))}</TableCell>
+                <TableCell className="text-right font-medium">{fmt(Number(payrollByRun[r.id]?.net || 0))}</TableCell>
               </TableRow>
             ))}
-            {processedRuns.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No processed payroll runs</TableCell></TableRow>}
+            {processedRuns.length > 0 && <TableRow className="font-bold border-t-2 bg-muted/30"><TableCell colSpan={4}>Subtotal</TableCell><TableCell className="text-right">{fmt(totals.gross)}</TableCell><TableCell className="text-right">{fmt(totals.net)}</TableCell></TableRow>}
+            {processedRuns.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No processed payroll runs</TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent>
@@ -430,28 +465,31 @@ function PayrollReportTab() {
 }
 
 /* ── Payout Report Tab ── */
-function PayoutReportTab() {
-  const { data: runs } = usePayoutRuns();
-  const processedRuns = (runs ?? []).filter(r => r.status === 'processed');
+function PayoutReportTab({ dateFrom, dateTo }: { dateFrom?: string; dateTo?: string }) {
+  const { data: payouts } = usePaidSubcontractorPayStubPayouts({ dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
+  const subtotal = (payouts ?? []).reduce((s: number, p: any) => s + Number(p.total || 0), 0);
 
   return (
     <Card>
-      <CardHeader className="pb-2"><CardTitle className="text-sm">Subcontractor Payout Runs</CardTitle></CardHeader>
+      <CardHeader className="pb-2"><CardTitle className="text-sm">Subcontractor Payouts from Paid Pay Stubs</CardTitle></CardHeader>
       <CardContent className="p-0 overflow-x-auto">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Run #</TableHead><TableHead>Period</TableHead><TableHead>Payout Date</TableHead><TableHead>Status</TableHead>
+            <TableHead>Pay Stub #</TableHead><TableHead>Subcontractor</TableHead><TableHead>Period</TableHead><TableHead>Payment Date</TableHead><TableHead>Method</TableHead><TableHead className="text-right">Amount</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {processedRuns.map(r => (
-              <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.payout_run_number || '—'}</TableCell>
-                <TableCell>{r.period_start} → {r.period_end}</TableCell>
-                <TableCell>{r.payout_date}</TableCell>
-                <TableCell>{r.status}</TableCell>
+            {(payouts ?? []).map((p: any) => (
+              <TableRow key={p.id}>
+                <TableCell className="font-medium">{p.pay_stub_number || '—'}</TableCell>
+                <TableCell>{p.subcontractors?.contact_name || p.subcontractors?.company_name || '—'}</TableCell>
+                <TableCell>{p.period_start} → {p.period_end}</TableCell>
+                <TableCell>{p.payment_date || p.period_end}</TableCell>
+                <TableCell>{p.payment_method || '—'}</TableCell>
+                <TableCell className="text-right font-medium">{fmt(Number(p.total || 0))}</TableCell>
               </TableRow>
             ))}
-            {processedRuns.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No processed payout runs</TableCell></TableRow>}
+            {(payouts ?? []).length > 0 && <TableRow className="font-bold border-t-2 bg-muted/30"><TableCell colSpan={5}>Subtotal Paid Out</TableCell><TableCell className="text-right">{fmt(subtotal)}</TableCell></TableRow>}
+            {(!payouts || payouts.length === 0) && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No paid subcontractor pay stubs</TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent>

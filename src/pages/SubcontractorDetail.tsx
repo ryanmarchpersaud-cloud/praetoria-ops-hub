@@ -157,6 +157,7 @@ export default function SubcontractorDetail() {
   // Assessment list stored as documents with type "assessment"
   const assessments = docs.filter((d: any) => d.document_type === 'assessment');
   const regularDocs = docs.filter((d: any) => d.document_type !== 'assessment');
+  const paymentsSubtotal = payments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   if (!sub) return <div className="p-8 text-center text-muted-foreground">Subcontractor not found.</div>;
@@ -686,6 +687,11 @@ export default function SubcontractorDetail() {
                         <TableCell className="text-sm text-muted-foreground font-mono">{p.reference_number || '—'}</TableCell>
                       </TableRow>
                     ))}
+                    <TableRow className="font-bold border-t-2 bg-muted/30">
+                      <TableCell>Subtotal Paid Out</TableCell>
+                      <TableCell className="text-right">${paymentsSubtotal.toFixed(2)}</TableCell>
+                      <TableCell colSpan={2}></TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               )}
