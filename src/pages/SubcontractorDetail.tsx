@@ -688,8 +688,9 @@ export default function SubcontractorDetail() {
                       </TableRow>
                     ))}
                     <TableRow className="font-bold border-t-2 bg-muted/30">
-                      <TableCell colSpan={3}>Subtotal Paid Out</TableCell>
+                      <TableCell>Subtotal Paid Out</TableCell>
                       <TableCell className="text-right">${paymentsSubtotal.toFixed(2)}</TableCell>
+                      <TableCell colSpan={2}></TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
