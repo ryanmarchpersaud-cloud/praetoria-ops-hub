@@ -255,7 +255,14 @@ function PayStubDetailDialog({
   const updateStub = async (patch: any) => {
     const { error } = await supabase.from('subcontractor_pay_stubs').update(patch).eq('id', stubId);
     if (error) toast.error(error.message);
-    else { toast.success('Updated'); refresh(); }
+    else {
+      toast.success('Updated');
+      qc.invalidateQueries({ queryKey: ['subcontractor_payments', stub?.subcontractor_id] });
+      qc.invalidateQueries({ queryKey: ['finance_payments_all'] });
+      qc.invalidateQueries({ queryKey: ['finance_payments_full'] });
+      qc.invalidateQueries({ queryKey: ['paid_subcontractor_pay_stub_payouts'] });
+      refresh();
+    }
   };
 
   const toggleConfirm = async (it: LineItem) => {
