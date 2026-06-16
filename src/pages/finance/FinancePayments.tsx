@@ -84,7 +84,7 @@ function paymentStatusLabel(p: any): string {
 function methodLabel(m: string | null): string {
   if (!m) return '—';
   const map: Record<string, string> = {
-    card: 'Card', e_transfer: 'E-Transfer', ach: 'ACH', cash: 'Cash',
+    card: 'Card', e_transfer: 'E-Transfer', 'E-Transfer': 'E-Transfer', 'E-transfer': 'E-Transfer', ach: 'ACH', cash: 'Cash', Cash: 'Cash',
     cheque: 'Cheque', online: 'Online', stripe: 'Online (Stripe)',
   };
   return map[m] || m.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -135,7 +135,10 @@ export default function FinancePayments() {
   // Stats
   const stats = useMemo(() => {
     const active = allPayments.filter((p: any) => !p.is_reversed);
-    const totalCollected = active.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+    const incoming = active.filter((p: any) => p.payment_type === 'invoice_payment');
+    const outgoing = active.filter((p: any) => p.payment_type !== 'invoice_payment');
+    const totalCollected = incoming.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+    const totalPaidOut = outgoing.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
     const succeeded = active.filter((p: any) => paymentStatusLabel(p) === 'Succeeded');
     const succeededTotal = succeeded.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
     const refunded = allPayments.filter((p: any) => p.is_reversed);
@@ -143,7 +146,7 @@ export default function FinancePayments() {
     const pending = active.filter((p: any) => !p.reconciled);
     const pendingTotal = pending.reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
     return {
-      totalCollected, succeededCount: succeeded.length, succeededTotal,
+      totalCollected, totalPaidOut, succeededCount: succeeded.length, succeededTotal,
       refundedCount: refunded.length, refundedTotal,
       pendingCount: pending.length, pendingTotal,
       total: allPayments.length,
@@ -174,6 +177,8 @@ export default function FinancePayments() {
         const inv = p.invoices;
         const cust = inv?.customers;
         return (
+          p.payment_type?.toLowerCase().includes(q) ||
+          p.internal_note?.toLowerCase().includes(q) ||
           inv?.invoice_number?.toLowerCase().includes(q) ||
           cust?.first_name?.toLowerCase().includes(q) ||
           cust?.last_name?.toLowerCase().includes(q) ||
@@ -239,7 +244,7 @@ export default function FinancePayments() {
               <p className="text-sm font-medium text-muted-foreground">Total Collected</p>
             </div>
             <p className="text-2xl font-bold tabular-nums">{fmt(stats.totalCollected)}</p>
-            <p className="text-xs text-muted-foreground">{stats.total} transactions</p>
+            <p className="text-xs text-muted-foreground">invoice payments</p>
           </CardContent>
         </Card>
         <Card>
