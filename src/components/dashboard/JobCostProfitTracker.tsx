@@ -62,7 +62,7 @@ export function JobCostProfitTracker() {
         supabase
           .from('jobs')
           .select('id, job_number, job_title, customer_id, property_id, quote_id, status, estimated_total, created_at')
-          .in('status', ['In Progress', 'Completed', 'Scheduled', 'Active'])
+          .in('status', ['In Progress', 'Completed', 'Scheduled'])
           .order('created_at', { ascending: false })
           .limit(60),
         supabase.from('customers').select('id, company_name, first_name, last_name'),
