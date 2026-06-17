@@ -129,6 +129,7 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
         meal_cost: Number(metaData.meal_cost) || 0,
         fuel_per_trip: Number(metaData.fuel_per_trip) || 0,
         notes: metaData.notes ?? '',
+        tracker_override: ((metaData as any).tracker_override ?? null) as 'include' | 'exclude' | null,
       });
     } else {
       setMeta(EMPTY_META);
