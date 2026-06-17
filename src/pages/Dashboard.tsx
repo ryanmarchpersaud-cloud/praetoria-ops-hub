@@ -169,6 +169,9 @@ export default function Dashboard() {
         isLoading={loadLeads || loadQuotes || loadJobs || loadInv}
       />
 
+      {/* Job Cost & Profit Tracker (Admin only) */}
+      {isAdmin && <JobCostProfitTracker />}
+
       {/* Performance Insights row */}
       <div className="grid lg:grid-cols-3 gap-4">
         <TopPerformersLeaderboard />
