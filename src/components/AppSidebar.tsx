@@ -3,7 +3,9 @@ import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Trash2,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
   MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign, RefreshCw,
+  ChevronDown,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/hooks/useAuth';
