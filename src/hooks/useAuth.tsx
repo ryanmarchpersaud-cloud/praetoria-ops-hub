@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logAuditEvent } from '@/lib/auditLog';
@@ -50,20 +50,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const lastLoggedAuthRef = useRef<string | null>(null);
 
   const lastUserIdRef = useRef<string | null>(null);
+  const liveSessionRef = useRef<Session | null>(null);
+  const initialSessionResolvedRef = useRef(false);
 
   const applySession = useCallback((nextSession: Session | null) => {
     const nextUser = nextSession?.user ?? null;
     const nextUid = nextUser?.id ?? null;
     const prevUid = lastUserIdRef.current;
+    const isInitialResolution = !initialSessionResolvedRef.current;
     const identityChanged = prevUid !== nextUid;
 
+    liveSessionRef.current = nextSession;
+
+    if (isInitialResolution) {
+      initialSessionResolvedRef.current = true;
+      lastUserIdRef.current = nextUid;
+      setSession(nextSession);
+      setUser(nextUser);
+      setMustChangePasswordChecked(false);
+      setTimeout(() => { checkMustChangePassword(nextUid ?? undefined); }, 0);
+      setLoading(false);
+      return { identityChanged: true, uid: nextUid };
+    }
+
     // Always keep session token fresh (refresh tokens rotate), but only swap
-    // the user object when the underlying identity actually changes. This
-    // prevents every TOKEN_REFRESHED event from re-rendering every consumer
-    // of useAuth() and flashing route guards between loading/loaded.
-    setSession(nextSession);
+    // React state/context when the underlying identity actually changes. This
+    // prevents every TOKEN_REFRESHED / duplicate INITIAL_SESSION event from
+    // re-rendering every useAuth() consumer and flashing route guards over an
+    // already-mounted dashboard. Fresh tokens remain available from
+    // supabase.auth.getSession(); the ref is intentionally kept in sync here.
     if (identityChanged) {
       lastUserIdRef.current = nextUid;
+      setSession(nextSession);
       setUser(nextUser);
       setMustChangePasswordChecked(false);
       setTimeout(() => { checkMustChangePassword(nextUid ?? undefined); }, 0);
@@ -73,10 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [checkMustChangePassword]);
 
   useEffect(() => {
+    let cancelled = false;
+    let initialFallbackTimer: ReturnType<typeof setTimeout> | undefined;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
       const { uid } = applySession(session);
 
       // Audit auth events (deferred so we don't block the auth callback)
+      if (!['SIGNED_IN', 'SIGNED_OUT', 'PASSWORD_RECOVERY', 'USER_UPDATED'].includes(event)) return;
       const dedupeKey = `${event}:${uid ?? 'anon'}`;
       if (lastLoggedAuthRef.current !== dedupeKey) {
         lastLoggedAuthRef.current = dedupeKey;
@@ -94,11 +117,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      applySession(session);
-    });
+    // Supabase emits INITIAL_SESSION on page boot. Only fall back to getSession
+    // if that event is delayed/missed, avoiding the old double-getSession +
+    // INITIAL_SESSION race that briefly remounted protected desktop routes.
+    initialFallbackTimer = setTimeout(() => {
+      if (initialSessionResolvedRef.current || cancelled) return;
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!cancelled && !initialSessionResolvedRef.current) applySession(session);
+      });
+    }, 500);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      if (initialFallbackTimer) clearTimeout(initialFallbackTimer);
+      subscription.unsubscribe();
+    };
   }, [applySession]);
 
   const refreshMustChangePassword = useCallback(async () => {
@@ -110,23 +143,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMustChangePasswordChecked(true);
   }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-  };
+  }, []);
+
+  const value = useMemo(() => ({
+    user,
+    session,
+    loading,
+    mustChangePassword,
+    mustChangePasswordChecked,
+    refreshMustChangePassword,
+    clearMustChangePassword,
+    signOut,
+  }), [
+    user,
+    session,
+    loading,
+    mustChangePassword,
+    mustChangePasswordChecked,
+    refreshMustChangePassword,
+    clearMustChangePassword,
+    signOut,
+  ]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        loading,
-        mustChangePassword,
-        mustChangePasswordChecked,
-        refreshMustChangePassword,
-        clearMustChangePassword,
-        signOut,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
