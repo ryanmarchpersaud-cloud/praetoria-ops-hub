@@ -198,14 +198,13 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      {!collapsed && (
-        <SidebarGroup>
-          <SidebarGroupLabel>Service Hub</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <ServiceLinksSection variant="sidebar" />
-          </SidebarGroupContent>
-        </SidebarGroup>
-      )}
+      {!collapsed && <ServiceHubGroup />}
+
+      </SidebarContent>
+
+      {/* end marker */}
+      <div style={{ display: 'none' }} />
+
 
       <SidebarFooter>
         <div className="px-3 py-2 space-y-1">
