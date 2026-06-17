@@ -57,6 +57,7 @@ interface MetaRow {
   meal_cost: number;
   fuel_per_trip: number;
   notes: string;
+  tracker_override: 'include' | 'exclude' | null;
 }
 
 const EMPTY_META: MetaRow = {
@@ -69,6 +70,7 @@ const EMPTY_META: MetaRow = {
   meal_cost: 0,
   fuel_per_trip: 0,
   notes: '',
+  tracker_override: null,
 };
 
 export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenChange }: Props) {
@@ -127,6 +129,7 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
         meal_cost: Number(metaData.meal_cost) || 0,
         fuel_per_trip: Number(metaData.fuel_per_trip) || 0,
         notes: metaData.notes ?? '',
+        tracker_override: ((metaData as any).tracker_override ?? null) as 'include' | 'exclude' | null,
       });
     } else {
       setMeta(EMPTY_META);
@@ -136,7 +139,7 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
   async function saveMeta() {
     if (!jobId) return;
     setSavingMeta(true);
-    const payload = {
+    const payload: any = {
       job_id: jobId,
       travel_included_in_quote: meta.travel_included_in_quote,
       distance_notes: meta.distance_notes || null,
@@ -147,6 +150,7 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
       meal_cost: meta.meal_cost,
       fuel_per_trip: meta.fuel_per_trip,
       notes: meta.notes || null,
+      tracker_override: meta.tracker_override,
     };
     const { error } = await supabase
       .from('job_cost_meta')
@@ -218,6 +222,28 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
             {jobTitle} — Add fuel, labour, materials, trips, and travel costs to track real profit.
           </SheetDescription>
         </SheetHeader>
+
+        {/* Include / exclude from tracker */}
+        <section className="mt-5 space-y-2 rounded-lg border p-3 bg-background">
+          <h3 className="text-sm font-bold">Include in Job Cost Tracker?</h3>
+          <p className="text-[11px] text-muted-foreground">
+            Routine landscaping, monthly maintenance and small junk jobs are auto-hidden.
+            Use this when you want to track real costs on a specific project (drywall, paint, reno, out-of-town).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(['include', null, 'exclude'] as const).map(v => (
+              <Button
+                key={String(v)}
+                size="sm"
+                variant={meta.tracker_override === v ? 'default' : 'outline'}
+                className="h-7 text-[11px] px-2"
+                onClick={() => setMeta({ ...meta, tracker_override: v })}
+              >
+                {v === 'include' ? 'Yes — include' : v === 'exclude' ? 'No — exclude' : 'Automatic'}
+              </Button>
+            ))}
+          </div>
+        </section>
 
         {/* Travel / Out-of-town meta */}
         <section className="mt-5 space-y-3 rounded-lg border p-3 bg-muted/30">
