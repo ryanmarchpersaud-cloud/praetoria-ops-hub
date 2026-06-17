@@ -223,6 +223,28 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
           </SheetDescription>
         </SheetHeader>
 
+        {/* Include / exclude from tracker */}
+        <section className="mt-5 space-y-2 rounded-lg border p-3 bg-background">
+          <h3 className="text-sm font-bold">Include in Job Cost Tracker?</h3>
+          <p className="text-[11px] text-muted-foreground">
+            Routine landscaping, monthly maintenance and small junk jobs are auto-hidden.
+            Use this when you want to track real costs on a specific project (drywall, paint, reno, out-of-town).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(['include', null, 'exclude'] as const).map(v => (
+              <Button
+                key={String(v)}
+                size="sm"
+                variant={meta.tracker_override === v ? 'default' : 'outline'}
+                className="h-7 text-[11px] px-2"
+                onClick={() => setMeta({ ...meta, tracker_override: v })}
+              >
+                {v === 'include' ? 'Yes — include' : v === 'exclude' ? 'No — exclude' : 'Automatic'}
+              </Button>
+            ))}
+          </div>
+        </section>
+
         {/* Travel / Out-of-town meta */}
         <section className="mt-5 space-y-3 rounded-lg border p-3 bg-muted/30">
           <div className="flex items-center justify-between">
