@@ -57,6 +57,7 @@ interface MetaRow {
   meal_cost: number;
   fuel_per_trip: number;
   notes: string;
+  tracker_override: 'include' | 'exclude' | null;
 }
 
 const EMPTY_META: MetaRow = {
@@ -69,6 +70,7 @@ const EMPTY_META: MetaRow = {
   meal_cost: 0,
   fuel_per_trip: 0,
   notes: '',
+  tracker_override: null,
 };
 
 export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenChange }: Props) {
