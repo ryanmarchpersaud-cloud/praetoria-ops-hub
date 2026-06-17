@@ -24,6 +24,8 @@ import { ServiceRevenueBreakdown } from '@/components/dashboard/ServiceRevenueBr
 import { CashFlowWaterfall } from '@/components/dashboard/CashFlowWaterfall';
 import { RecentWinsTicker } from '@/components/dashboard/RecentWinsTicker';
 import { MarketingIntelligence } from '@/components/dashboard/MarketingIntelligence';
+import { JobCostProfitTracker } from '@/components/dashboard/JobCostProfitTracker';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   useDashboardRequests,
   useDashboardQuotes,
