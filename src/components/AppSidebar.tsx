@@ -233,3 +233,43 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+const SERVICE_HUB_STORAGE_KEY = 'praetoria.sidebar.serviceHubOpen';
+
+function ServiceHubGroup() {
+  const [open, setOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = window.localStorage.getItem(SERVICE_HUB_STORAGE_KEY);
+    return stored === null ? true : stored === '1';
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SERVICE_HUB_STORAGE_KEY, open ? '1' : '0');
+    } catch {
+      // ignore storage errors
+    }
+  }, [open]);
+
+  return (
+    <SidebarGroup>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between rounded-md px-2 py-1 text-xs font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+      >
+        <span className="uppercase tracking-wider">Service Hub</span>
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform ${open ? '' : '-rotate-90'}`}
+        />
+      </button>
+      {open && (
+        <SidebarGroupContent>
+          <ServiceLinksSection variant="sidebar" />
+        </SidebarGroupContent>
+      )}
+    </SidebarGroup>
+  );
+}
+
