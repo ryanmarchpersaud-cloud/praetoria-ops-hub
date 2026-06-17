@@ -47,6 +47,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
+  const { isAdmin } = useUserRole();
   // All dashboard data from lightweight hooks
   const { data: requests = [], isLoading: loadReq } = useDashboardRequests();
   const { data: dashQuotes = [], isLoading: loadQuotes } = useDashboardQuotes();
