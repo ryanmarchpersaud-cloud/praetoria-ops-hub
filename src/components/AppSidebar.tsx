@@ -196,14 +196,11 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {!collapsed && <ServiceHubGroup />}
       </SidebarContent>
 
-      {!collapsed && <ServiceHubGroup />}
 
-      </SidebarContent>
-
-      {/* end marker */}
-      <div style={{ display: 'none' }} />
 
 
       <SidebarFooter>
