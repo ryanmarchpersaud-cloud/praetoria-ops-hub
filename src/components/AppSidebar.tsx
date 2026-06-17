@@ -257,15 +257,15 @@ function ServiceHubGroup() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-semibold uppercase tracking-wider
-          bg-sidebar-accent/60 text-sidebar-accent-foreground
-          hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
-          border border-sidebar-border/40 shadow-sm
-          transition-colors cursor-pointer"
+        className={`flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-semibold uppercase tracking-wider
+          text-white shadow-sm
+          border border-blue-400/40
+          transition-colors cursor-pointer
+          ${open ? 'bg-blue-600 hover:bg-blue-500' : 'bg-blue-700 hover:bg-blue-600'}`}
       >
         <span>Service Hub</span>
         <ChevronDown
-          className={`h-4 w-4 text-sidebar-accent-foreground/90 transition-transform ${open ? '' : '-rotate-90'}`}
+          className={`h-4 w-4 text-white transition-transform ${open ? '' : '-rotate-90'}`}
         />
       </button>
       {open && (
