@@ -24,6 +24,8 @@ import { ServiceRevenueBreakdown } from '@/components/dashboard/ServiceRevenueBr
 import { CashFlowWaterfall } from '@/components/dashboard/CashFlowWaterfall';
 import { RecentWinsTicker } from '@/components/dashboard/RecentWinsTicker';
 import { MarketingIntelligence } from '@/components/dashboard/MarketingIntelligence';
+import { JobCostProfitTracker } from '@/components/dashboard/JobCostProfitTracker';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   useDashboardRequests,
   useDashboardQuotes,
@@ -45,6 +47,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
+  const { isAdmin } = useUserRole();
   // All dashboard data from lightweight hooks
   const { data: requests = [], isLoading: loadReq } = useDashboardRequests();
   const { data: dashQuotes = [], isLoading: loadQuotes } = useDashboardQuotes();
@@ -165,6 +168,9 @@ export default function Dashboard() {
         invoices={invoices}
         isLoading={loadLeads || loadQuotes || loadJobs || loadInv}
       />
+
+      {/* Job Cost & Profit Tracker (Admin only) */}
+      {isAdmin && <JobCostProfitTracker />}
 
       {/* Performance Insights row */}
       <div className="grid lg:grid-cols-3 gap-4">
