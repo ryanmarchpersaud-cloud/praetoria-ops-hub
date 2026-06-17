@@ -139,7 +139,7 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
   async function saveMeta() {
     if (!jobId) return;
     setSavingMeta(true);
-    const payload = {
+    const payload: any = {
       job_id: jobId,
       travel_included_in_quote: meta.travel_included_in_quote,
       distance_notes: meta.distance_notes || null,
@@ -150,6 +150,7 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
       meal_cost: meta.meal_cost,
       fuel_per_trip: meta.fuel_per_trip,
       notes: meta.notes || null,
+      tracker_override: meta.tracker_override,
     };
     const { error } = await supabase
       .from('job_cost_meta')
