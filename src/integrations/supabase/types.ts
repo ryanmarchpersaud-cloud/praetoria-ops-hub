@@ -3872,6 +3872,65 @@ export type Database = {
           },
         ]
       }
+      job_cost_meta: {
+        Row: {
+          created_at: string
+          distance_notes: string | null
+          fuel_per_trip: number
+          hotel_cost: number
+          id: string
+          job_id: string
+          meal_cost: number
+          notes: string | null
+          travel_hours: number
+          travel_included_in_quote: boolean
+          travel_labour_cost: number
+          trip_count_override: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          distance_notes?: string | null
+          fuel_per_trip?: number
+          hotel_cost?: number
+          id?: string
+          job_id: string
+          meal_cost?: number
+          notes?: string | null
+          travel_hours?: number
+          travel_included_in_quote?: boolean
+          travel_labour_cost?: number
+          trip_count_override?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          distance_notes?: string | null
+          fuel_per_trip?: number
+          hotel_cost?: number
+          id?: string
+          job_id?: string
+          meal_cost?: number
+          notes?: string | null
+          travel_hours?: number
+          travel_included_in_quote?: boolean
+          travel_labour_cost?: number
+          trip_count_override?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_cost_meta_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_line_items: {
         Row: {
           catalog_item_id: string | null
