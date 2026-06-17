@@ -9,8 +9,8 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { PreviewModeBanner } from "@/components/PreviewModeBanner";
 import { AppUpdateBanner } from "@/components/AppUpdateBanner";
 import { ModuleGuard } from "@/components/ModuleGuard";
-import { useUserRole } from "@/hooks/useUserRole";
 import { useAuthorization } from "@/hooks/useAuthorization";
+import { useModuleAccess } from "@/hooks/useModuleAccess";
 import { AppLayout } from "@/components/AppLayout";
 import { PortalLayout } from "@/components/PortalLayout";
 import { SubcontractorLayout } from "@/components/subcontractor/SubcontractorLayout";
@@ -223,6 +223,9 @@ function RouteLoading() {
 /** Returns a redirect to /change-password if the user has a temp password to change */
 function useForcePasswordChangeRedirect() {
   const { user, mustChangePassword, mustChangePasswordChecked } = useAuth();
+  if (user && !mustChangePasswordChecked) {
+    return <RouteLoading />;
+  }
   if (user && mustChangePasswordChecked && mustChangePassword) {
     return <Navigate to="/change-password" replace />;
   }
@@ -244,8 +247,9 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isActiveUser, isLoading } = useAuthorization();
+  const { isLoading: moduleLoading } = useModuleAccess();
   const forceChange = useForcePasswordChangeRedirect();
-  if (loading || isLoading) return <RouteLoading />;
+  if (loading || isLoading || moduleLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
@@ -339,12 +343,14 @@ function SubcontractorRoute({ children }: { children?: React.ReactNode }) {
 
 function LoginRoute() {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { isCustomer, isStaff, isAdmin, isSubcontractor, canAccessAdminPortal, isLoading } = useAuthorization();
-  if (loading || isLoading) {
-    if (!user) return <Login />;
-    return <RouteLoading />;
-  }
+  const { isCustomer, isStaff, isSubcontractor, canAccessAdminPortal, isLoading } = useAuthorization();
+  if (loading) return <RouteLoading />;
+  if (!user) return <Login />;
+  if (isLoading) return <RouteLoading />;
   if (user) {
+    if (!mustChangePasswordChecked) {
+      return <RouteLoading />;
+    }
     if (mustChangePasswordChecked && mustChangePassword) {
       return <Navigate to="/change-password" replace />;
     }
