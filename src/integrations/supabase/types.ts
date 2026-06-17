@@ -3882,6 +3882,7 @@ export type Database = {
           job_id: string
           meal_cost: number
           notes: string | null
+          tracker_override: string | null
           travel_hours: number
           travel_included_in_quote: boolean
           travel_labour_cost: number
@@ -3898,6 +3899,7 @@ export type Database = {
           job_id: string
           meal_cost?: number
           notes?: string | null
+          tracker_override?: string | null
           travel_hours?: number
           travel_included_in_quote?: boolean
           travel_labour_cost?: number
@@ -3914,6 +3916,7 @@ export type Database = {
           job_id?: string
           meal_cost?: number
           notes?: string | null
+          tracker_override?: string | null
           travel_hours?: number
           travel_included_in_quote?: boolean
           travel_labour_cost?: number
