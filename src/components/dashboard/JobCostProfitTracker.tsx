@@ -14,13 +14,13 @@ import {
 import {
   TrendingUp, TrendingDown, AlertTriangle, Truck, MapPin, Fuel, Clock,
   DollarSign, Search, Filter, Pencil, HelpCircle, EyeOff, Eye, Plus,
+  FileText, Receipt,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ManageJobCostsDrawer } from './ManageJobCostsDrawer';
 import { JobLinkPreviewDialog, type PreviewTarget } from './JobLinkPreviewDialog';
-import { FileText, Receipt } from 'lucide-react';
 
 const HOME_CITIES = ['regina'];
 const DEFAULT_LABOUR_RATE = 45;
