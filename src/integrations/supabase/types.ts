@@ -3872,6 +3872,36 @@ export type Database = {
           },
         ]
       }
+      job_cost_links: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string | null
+          id: string
+          job_id: string
+          kind: string
+          target_id: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          job_id: string
+          kind: string
+          target_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          job_id?: string
+          kind?: string
+          target_id?: string
+        }
+        Relationships: []
+      }
       job_cost_meta: {
         Row: {
           created_at: string
@@ -3882,8 +3912,10 @@ export type Database = {
           id: string
           job_id: string
           manual_fuel_total: number
+          manual_revenue: number
           meal_cost: number
           notes: string | null
+          revenue_source: string
           tracker_override: string | null
           travel_hours: number
           travel_included_in_quote: boolean
@@ -3901,8 +3933,10 @@ export type Database = {
           id?: string
           job_id: string
           manual_fuel_total?: number
+          manual_revenue?: number
           meal_cost?: number
           notes?: string | null
+          revenue_source?: string
           tracker_override?: string | null
           travel_hours?: number
           travel_included_in_quote?: boolean
@@ -3920,8 +3954,10 @@ export type Database = {
           id?: string
           job_id?: string
           manual_fuel_total?: number
+          manual_revenue?: number
           meal_cost?: number
           notes?: string | null
+          revenue_source?: string
           tracker_override?: string | null
           travel_hours?: number
           travel_included_in_quote?: boolean
