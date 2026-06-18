@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { ManageJobCostsDrawer } from './ManageJobCostsDrawer';
 import { JobLinkPreviewDialog, type PreviewTarget } from './JobLinkPreviewDialog';
 import { LinkRecordsDialog } from './LinkRecordsDialog';
+import { AddJobToTrackerDialog } from './AddJobToTrackerDialog';
 import { Link2 } from 'lucide-react';
 
 const HOME_CITIES = ['regina'];
@@ -114,6 +115,7 @@ export function JobCostProfitTracker() {
   const [editing, setEditing] = useState<{ id: string; number: string; title: string } | null>(null);
   const [preview, setPreview] = useState<PreviewTarget>(null);
   const [linking, setLinking] = useState<{ id: string; number: string; title: string; customerId: string | null } | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['job-cost-profit-tracker'],
@@ -493,6 +495,9 @@ export function JobCostProfitTracker() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 mt-3">
+            <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => setAdding(true)}>
+              <Plus className="h-3.5 w-3.5" /> Add Job to Tracker
+            </Button>
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -740,6 +745,11 @@ export function JobCostProfitTracker() {
         customerId={linking?.customerId ?? null}
         open={!!linking}
         onOpenChange={(o) => { if (!o) setLinking(null); }}
+      />
+
+      <AddJobToTrackerDialog
+        open={adding}
+        onOpenChange={setAdding}
       />
     </>
   );

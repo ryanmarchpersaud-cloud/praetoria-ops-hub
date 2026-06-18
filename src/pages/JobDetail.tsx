@@ -24,6 +24,7 @@ import { format, parseISO, eachWeekOfInterval, eachMonthOfInterval } from 'date-
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
+import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -257,6 +258,13 @@ export default function JobDetail() {
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
+        )}
+        {id && (
+          <AddToJobCostTrackerButton
+            jobId={id}
+            initialSearch={form?.job_number ?? ''}
+            className="h-11 shrink-0 gap-1.5"
+          />
         )}
         {canManageJobs && !isClosed && (
           <Button

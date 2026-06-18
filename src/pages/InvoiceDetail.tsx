@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
 import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
+import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
 
 function getStatusAfterTotalChange(invoice: any, nextTotal: number) {
   if (['Draft', 'Voided', 'Refunded'].includes(invoice.status)) return invoice.status;
@@ -584,6 +585,12 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
+        <AddToJobCostTrackerButton
+          jobId={invoice.job_id ?? null}
+          initialSearch={invoice.invoice_number ?? ''}
+          label="Link to Job Cost Tracker"
+          size="sm"
+        />
         {canEditInvoice && (
           <Button
             size="sm"
