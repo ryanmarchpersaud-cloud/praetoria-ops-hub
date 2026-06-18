@@ -14,11 +14,13 @@ import {
 import {
   TrendingUp, TrendingDown, AlertTriangle, Truck, MapPin, Fuel, Clock,
   DollarSign, Search, Filter, Pencil, HelpCircle, EyeOff, Eye, Plus,
+  FileText, Receipt,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ManageJobCostsDrawer } from './ManageJobCostsDrawer';
+import { JobLinkPreviewDialog, type PreviewTarget } from './JobLinkPreviewDialog';
 
 const HOME_CITIES = ['regina'];
 const DEFAULT_LABOUR_RATE = 45;
@@ -75,6 +77,8 @@ type Row = {
   travelIncludedInQuote: boolean | null;
   override: Override;
   autoExcluded: boolean;
+  linkedQuotes: { id: string; number: string }[];
+  linkedInvoices: { id: string; number: string }[];
 };
 
 function classifyCategory(catRaw: string | null, descRaw: string | null) {
@@ -102,6 +106,7 @@ export function JobCostProfitTracker() {
   const [search, setSearch] = useState('');
   const [showExcluded, setShowExcluded] = useState(false);
   const [editing, setEditing] = useState<{ id: string; number: string; title: string } | null>(null);
+  const [preview, setPreview] = useState<PreviewTarget>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['job-cost-profit-tracker'],
@@ -115,8 +120,8 @@ export function JobCostProfitTracker() {
           .limit(120),
         supabase.from('customers').select('id, company_name, first_name, last_name'),
         supabase.from('properties').select('id, city, province, address_line_1'),
-        supabase.from('quotes').select('id, total'),
-        supabase.from('invoices').select('id, job_id, total, amount_paid'),
+        supabase.from('quotes').select('id, quote_number, total, converted_job_id'),
+        supabase.from('invoices').select('id, invoice_number, job_id, total, amount_paid'),
         supabase.from('expenses').select('id, job_id, category, description, amount'),
         supabase.from('visits').select('id, job_id, arrival_time, completion_time, estimated_duration_minutes'),
         supabase.from('job_cost_meta').select('*'),
@@ -125,15 +130,23 @@ export function JobCostProfitTracker() {
       const jobs = jobsRes.data ?? [];
       const customers = new Map((customersRes.data ?? []).map(c => [c.id, c]));
       const props = new Map((propsRes.data ?? []).map(p => [p.id, p]));
-      const quotes = new Map((quotesRes.data ?? []).map(q => [q.id, Number(q.total) || 0]));
+      const quotes = new Map((quotesRes.data ?? []).map((q: any) => [q.id, { total: Number(q.total) || 0, number: q.quote_number as string }]));
+      const quotesByJob = new Map<string, { id: string; number: string }[]>();
+      (quotesRes.data ?? []).forEach((q: any) => {
+        if (!q.converted_job_id) return;
+        const arr = quotesByJob.get(q.converted_job_id) ?? [];
+        arr.push({ id: q.id, number: q.quote_number });
+        quotesByJob.set(q.converted_job_id, arr);
+      });
       const meta = new Map((metaRes.data ?? []).map((m: any) => [m.job_id, m]));
 
-      const invByJob = new Map<string, { total: number; paid: number }>();
-      (invoicesRes.data ?? []).forEach(inv => {
+      const invByJob = new Map<string, { total: number; paid: number; list: { id: string; number: string }[] }>();
+      (invoicesRes.data ?? []).forEach((inv: any) => {
         if (!inv.job_id) return;
-        const b = invByJob.get(inv.job_id) ?? { total: 0, paid: 0 };
+        const b = invByJob.get(inv.job_id) ?? { total: 0, paid: 0, list: [] };
         b.total += Number(inv.total) || 0;
         b.paid += Number(inv.amount_paid) || 0;
+        b.list.push({ id: inv.id, number: inv.invoice_number });
         invByJob.set(inv.job_id, b);
       });
 
@@ -169,9 +182,21 @@ export function JobCostProfitTracker() {
         const city = prop?.city ?? null;
         const outOfTown = !!city && !HOME_CITIES.includes(city.trim().toLowerCase());
 
-        const quoteAmount = (j.quote_id && quotes.get(j.quote_id)) || 0;
+        const primaryQuote = j.quote_id ? quotes.get(j.quote_id) : undefined;
+        const quoteAmount = primaryQuote?.total || 0;
         const jobEstimate = Number(j.estimated_total) || 0;
-        const inv = invByJob.get(j.id) ?? { total: 0, paid: 0 };
+        const inv = invByJob.get(j.id) ?? { total: 0, paid: 0, list: [] as { id: string; number: string }[] };
+
+        // Combine primary quote + any quotes converted into this job, deduped
+        const linkedQuotes: { id: string; number: string }[] = [];
+        const seenQ = new Set<string>();
+        if (j.quote_id && primaryQuote) {
+          linkedQuotes.push({ id: j.quote_id, number: primaryQuote.number });
+          seenQ.add(j.quote_id);
+        }
+        (quotesByJob.get(j.id) ?? []).forEach((q) => {
+          if (!seenQ.has(q.id)) { linkedQuotes.push(q); seenQ.add(q.id); }
+        });
         const exp = expByJob.get(j.id) ?? { fuel: 0, travel: 0, labour: 0, material: 0, equipment: 0, hotel: 0, count: 0 };
         const vis = visByJob.get(j.id) ?? { trips: 0, hours: 0 };
 
@@ -265,6 +290,8 @@ export function JobCostProfitTracker() {
           travelIncludedInQuote: hasMeta ? !!m.travel_included_in_quote : null,
           override,
           autoExcluded,
+          linkedQuotes,
+          linkedInvoices: inv.list,
         };
       });
 
@@ -445,11 +472,45 @@ export function JobCostProfitTracker() {
                         !r.hasCostData && 'bg-amber-50/40 dark:bg-amber-950/10',
                         excluded && 'opacity-70',
                       )}>
-                        <TableCell className="text-xs">
+                        <TableCell className="text-xs align-top">
                           <Link to={`/jobs/${r.jobId}`} className="font-mono font-semibold text-primary hover:underline">
                             {r.jobNumber}
                           </Link>
-                          <p className="text-[10px] text-muted-foreground truncate max-w-[160px]">{r.jobTitle}</p>
+                          <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{r.jobTitle}</p>
+                          <div className="mt-1 space-y-0.5 max-w-[220px]">
+                            <div className="flex items-start gap-1 flex-wrap">
+                              <span className="text-[9px] uppercase font-semibold text-muted-foreground mt-0.5">Quote:</span>
+                              {r.linkedQuotes.length === 0 ? (
+                                <span className="text-[10px] italic text-muted-foreground">No linked quote</span>
+                              ) : r.linkedQuotes.map(q => (
+                                <button
+                                  key={q.id}
+                                  type="button"
+                                  onClick={() => setPreview({ kind: 'quote', id: q.id, number: q.number })}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/30 dark:border-blue-900 dark:text-blue-300"
+                                  title="Preview quote"
+                                >
+                                  <FileText className="h-2.5 w-2.5" />{q.number}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="flex items-start gap-1 flex-wrap">
+                              <span className="text-[9px] uppercase font-semibold text-muted-foreground mt-0.5">Invoice:</span>
+                              {r.linkedInvoices.length === 0 ? (
+                                <span className="text-[10px] italic text-muted-foreground">No linked invoice</span>
+                              ) : r.linkedInvoices.map(inv => (
+                                <button
+                                  key={inv.id}
+                                  type="button"
+                                  onClick={() => setPreview({ kind: 'invoice', id: inv.id, number: inv.number })}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-300"
+                                  title="Preview invoice"
+                                >
+                                  <Receipt className="h-2.5 w-2.5" />{inv.number}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {r.serviceCategory && (
                               <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
@@ -562,6 +623,8 @@ export function JobCostProfitTracker() {
         open={!!editing}
         onOpenChange={(o) => { if (!o) setEditing(null); }}
       />
+
+      <JobLinkPreviewDialog target={preview} onClose={() => setPreview(null)} />
     </>
   );
 }
