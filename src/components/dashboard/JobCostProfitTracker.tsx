@@ -602,7 +602,7 @@ export function JobCostProfitTracker() {
                                 r.suggestionQuoteCount > 0 ? (
                                   <button
                                     type="button"
-                                    onClick={() => setLinkRecords({ jobId: r.jobId, jobNumber: r.jobNumber, jobTitle: r.jobTitle, customerId: r.customerId })}
+                                    onClick={() => setLinking({ id: r.jobId, number: r.jobNumber, title: r.jobTitle, customerId: r.customerId })}
                                     className="text-[10px] px-1.5 py-0.5 rounded border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
                                     title="Possible quotes found for this customer"
                                   >
