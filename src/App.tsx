@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, memo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, useNavigate, Outlet } from "react-router-dom";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -214,11 +214,18 @@ import EmailsTextsPage from "./pages/EmailsTextsPage";
 import RequestsBookingsPage from "./pages/RequestsBookingsPage";
 import PortalSettingsPage from "./pages/PortalSettingsPage";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    },
+  },
+});
 
-function RouteLoading() {
+const RouteLoading = memo(function RouteLoading() {
   return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
-}
+});
 
 /** Returns a redirect to /change-password if the user has a temp password to change */
 function useForcePasswordChangeRedirect() {
@@ -247,9 +254,8 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isActiveUser, isLoading } = useAuthorization();
-  const { isLoading: moduleLoading } = useModuleAccess();
   const forceChange = useForcePasswordChangeRedirect();
-  if (loading || isLoading || moduleLoading) return <RouteLoading />;
+  if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
