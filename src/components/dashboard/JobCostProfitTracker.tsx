@@ -623,6 +623,8 @@ export function JobCostProfitTracker() {
         open={!!editing}
         onOpenChange={(o) => { if (!o) setEditing(null); }}
       />
+
+      <JobLinkPreviewDialog target={preview} onClose={() => setPreview(null)} />
     </>
   );
 }
