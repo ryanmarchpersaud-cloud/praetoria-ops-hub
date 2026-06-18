@@ -176,9 +176,25 @@ export function JobCostProfitTracker() {
         const vis = visByJob.get(j.id) ?? { trips: 0, hours: 0 };
 
         const tripCount = (m.trip_count_override ?? vis.trips) || 0;
-        const fuelCost = exp.fuel + (Number(m.fuel_per_trip) || 0) * tripCount;
-        const travelCost = exp.travel + (Number(m.travel_labour_cost) || 0);
-        const hotelMealsCost = exp.hotel + (Number(m.hotel_cost) || 0) + (Number(m.meal_cost) || 0);
+        const calcMethod: 'manual' | 'per_trip' | 'detailed' =
+          (m.fuel_calc_method as any) ?? 'per_trip';
+
+        let fuelCost = 0;
+        let travelCost = exp.travel;
+        let hotelMealsCost = exp.hotel;
+
+        if (calcMethod === 'manual') {
+          // Use the manual total as-is. Do NOT multiply by trip count.
+          fuelCost = exp.fuel + (Number(m.manual_fuel_total) || 0);
+        } else if (calcMethod === 'per_trip') {
+          fuelCost = exp.fuel + (Number(m.fuel_per_trip) || 0) * tripCount;
+        } else {
+          // detailed
+          fuelCost = exp.fuel + (Number(m.fuel_per_trip) || 0) * tripCount;
+          travelCost = exp.travel + (Number(m.travel_labour_cost) || 0);
+          hotelMealsCost = exp.hotel + (Number(m.hotel_cost) || 0) + (Number(m.meal_cost) || 0);
+        }
+
         const labourFromExp = exp.labour;
         const labourEst = labourFromExp > 0 ? labourFromExp : vis.hours * DEFAULT_LABOUR_RATE;
         const materialCost = exp.material + exp.equipment;
