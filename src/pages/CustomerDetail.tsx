@@ -22,6 +22,7 @@ import { CustomerCommunicationsCard } from '@/components/customer/CustomerCommun
 import { CustomerDocumentsCard } from '@/components/customer/CustomerDocumentsCard';
 import { CustomerBillingLedger } from '@/components/customer/CustomerBillingLedger';
 import { CustomerContactsCard } from '@/components/customer/CustomerContactsCard';
+import { CustomerJobCostTrackingSection } from '@/components/customer/CustomerJobCostTrackingSection';
 import { useBillingProfile } from '@/hooks/useInvoices';
 import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInvoiceDialog';
 import { supabase } from '@/integrations/supabase/client';
