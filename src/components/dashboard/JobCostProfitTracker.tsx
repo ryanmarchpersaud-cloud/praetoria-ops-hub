@@ -460,7 +460,7 @@ export function JobCostProfitTracker() {
                         </TableCell>
                         <TableCell className="text-xs">
                           <p className="font-medium truncate max-w-[180px]">{r.customer}</p>
-                          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                             <MapPin className="h-2.5 w-2.5" />
                             {r.city || '—'}{r.province ? `, ${r.province}` : ''}
                             {r.outOfTown && (
@@ -468,7 +468,7 @@ export function JobCostProfitTracker() {
                                 <Truck className="h-2.5 w-2.5 mr-0.5" />OOT
                               </Badge>
                             )}
-                          </p>
+                          </div>
                         </TableCell>
                         <TableCell className="text-xs text-right tabular-nums">
                           <div>{money(r.baseline)}</div>
