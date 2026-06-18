@@ -585,6 +585,12 @@ export default function InvoiceDetail() {
             <Printer className="h-3.5 w-3.5 mr-1.5" /> Print / PDF
           </Button>
         </Link>
+        <AddToJobCostTrackerButton
+          jobId={invoice.job_id ?? null}
+          initialSearch={invoice.invoice_number ?? ''}
+          label="Link to Job Cost Tracker"
+          size="sm"
+        />
         {canEditInvoice && (
           <Button
             size="sm"
