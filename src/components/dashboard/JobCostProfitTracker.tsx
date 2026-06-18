@@ -181,9 +181,21 @@ export function JobCostProfitTracker() {
         const city = prop?.city ?? null;
         const outOfTown = !!city && !HOME_CITIES.includes(city.trim().toLowerCase());
 
-        const quoteAmount = (j.quote_id && quotes.get(j.quote_id)) || 0;
+        const primaryQuote = j.quote_id ? quotes.get(j.quote_id) : undefined;
+        const quoteAmount = primaryQuote?.total || 0;
         const jobEstimate = Number(j.estimated_total) || 0;
-        const inv = invByJob.get(j.id) ?? { total: 0, paid: 0 };
+        const inv = invByJob.get(j.id) ?? { total: 0, paid: 0, list: [] as { id: string; number: string }[] };
+
+        // Combine primary quote + any quotes converted into this job, deduped
+        const linkedQuotes: { id: string; number: string }[] = [];
+        const seenQ = new Set<string>();
+        if (j.quote_id && primaryQuote) {
+          linkedQuotes.push({ id: j.quote_id, number: primaryQuote.number });
+          seenQ.add(j.quote_id);
+        }
+        (quotesByJob.get(j.id) ?? []).forEach((q) => {
+          if (!seenQ.has(q.id)) { linkedQuotes.push(q); seenQ.add(q.id); }
+        });
         const exp = expByJob.get(j.id) ?? { fuel: 0, travel: 0, labour: 0, material: 0, equipment: 0, hotel: 0, count: 0 };
         const vis = visByJob.get(j.id) ?? { trips: 0, hours: 0 };
 
