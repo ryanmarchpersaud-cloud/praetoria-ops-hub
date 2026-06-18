@@ -599,7 +599,18 @@ export function JobCostProfitTracker() {
                             <div className="flex items-start gap-1 flex-wrap">
                               <span className="text-[9px] uppercase font-semibold text-muted-foreground mt-0.5">Quote:</span>
                               {r.linkedQuotes.length === 0 ? (
-                                <span className="text-[10px] italic text-muted-foreground">No linked quote</span>
+                                r.suggestionQuoteCount > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setLinkRecords({ jobId: r.jobId, jobNumber: r.jobNumber, jobTitle: r.jobTitle, customerId: r.customerId })}
+                                    className="text-[10px] px-1.5 py-0.5 rounded border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                                    title="Possible quotes found for this customer"
+                                  >
+                                    Possible match ({r.suggestionQuoteCount}) — Link
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] italic text-muted-foreground">No linked quote</span>
+                                )
                               ) : r.linkedQuotes.map(q => (
                                 <button
                                   key={q.id}
