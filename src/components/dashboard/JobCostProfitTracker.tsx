@@ -336,6 +336,15 @@ export function JobCostProfitTracker() {
           !finalI.has(inv.id) && !explicitlyExcludedInv.has(inv.id),
         ).length;
 
+        // Same logic for quotes
+        const explicitlyExcludedQ = new Set<string>(
+          jobLinks.filter((l: any) => l.kind === 'quote' && l.action === 'exclude').map((l: any) => l.target_id),
+        );
+        const customerQuotes = quotesByCustomer.get(j.customer_id) ?? [];
+        const suggestionQuoteCount = customerQuotes.filter((q: any) =>
+          !finalQ.has(q.id) && !explicitlyExcludedQ.has(q.id),
+        ).length;
+
         const warnings: string[] = [];
         if (baselineSource === 'No source') warnings.push('Missing Source Data');
         if (!hasCostData) warnings.push('Cost Data Missing');
@@ -346,6 +355,7 @@ export function JobCostProfitTracker() {
         if (quoteAmount > 0 && labourEst > quoteAmount * 0.6) warnings.push('Labour Overrun');
         if (outOfTown && hasMeta && m.travel_included_in_quote === false) warnings.push('Travel Not In Quote');
         if (suggestionCount > 0) warnings.push('Possible invoices found');
+        if (suggestionQuoteCount > 0) warnings.push('Possible quotes found');
 
         let status: Status;
         if (baselineSource === 'No source') status = 'Missing Source Data';
