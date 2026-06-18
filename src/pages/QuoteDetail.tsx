@@ -623,6 +623,12 @@ export default function QuoteDetail() {
           <FileText className="h-4 w-4" />
           <span className="hidden sm:inline">Export PDF</span>
         </Button>
+        <AddToJobCostTrackerButton
+          jobId={((quote as any).converted_job_id) || (linkedJob as any)?.id || null}
+          initialSearch={quote.quote_number ?? ''}
+          label="Link to Job Cost Tracker"
+          className="h-11 shrink-0 gap-1.5"
+        />
         {canManageQuotes && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
