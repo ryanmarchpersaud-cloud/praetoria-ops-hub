@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useEffect, useState } from 'react';
+import { useAuth } from './useAuth';
 
 export interface SidebarCounts {
   leads: number;
@@ -39,17 +39,8 @@ async function countOpenIncidents(): Promise<number> {
 }
 
 export function useSidebarCounts() {
-  const [userId, setUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUserId(data.session?.user?.id ?? null);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUserId(session?.user?.id ?? null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
 
   return useQuery({
     queryKey: ['sidebar_counts', userId],

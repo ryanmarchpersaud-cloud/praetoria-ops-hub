@@ -52,7 +52,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const runMustChangePasswordCheck = useCallback((uid: string | undefined, finishLoading: boolean) => {
     const seq = ++passwordCheckSeqRef.current;
-    passwordCheckPendingRef.current = true;
+    passwordCheckPendingRef.current = !!uid;
+
+    if (!uid) {
+      setMustChangePassword(false);
+      setMustChangePasswordChecked(false);
+      if (finishLoading) setLoading(false);
+      return Promise.resolve();
+    }
+
     setMustChangePasswordChecked(false);
 
     return new Promise<void>((resolve) => {
@@ -107,7 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastUserIdRef.current = nextUid;
       setSession(nextSession);
       setUser(nextUser);
-      if (nextUid) setLoading(true);
+      const isRealUserSwitch = !!prevUid && !!nextUid;
+      if (isRealUserSwitch) setLoading(true);
       void runMustChangePasswordCheck(nextUid ?? undefined, true);
       return { identityChanged, uid: nextUid };
     }
