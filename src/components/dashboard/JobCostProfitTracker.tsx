@@ -746,6 +746,11 @@ export function JobCostProfitTracker() {
         open={!!linking}
         onOpenChange={(o) => { if (!o) setLinking(null); }}
       />
+
+      <AddJobToTrackerDialog
+        open={adding}
+        onOpenChange={setAdding}
+      />
     </>
   );
 }
