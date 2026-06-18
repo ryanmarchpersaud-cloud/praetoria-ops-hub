@@ -28,6 +28,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { Pencil, Trash } from 'lucide-react';
 import { ConvertQuoteToJobDialog } from '@/components/ConvertQuoteToJobDialog';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
+import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
 import { FlaggedPersonAlert } from '@/components/FlaggedPersonAlert';
 import { Badge } from '@/components/ui/badge';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
