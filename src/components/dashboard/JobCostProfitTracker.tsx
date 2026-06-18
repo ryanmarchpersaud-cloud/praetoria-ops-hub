@@ -21,6 +21,8 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ManageJobCostsDrawer } from './ManageJobCostsDrawer';
 import { JobLinkPreviewDialog, type PreviewTarget } from './JobLinkPreviewDialog';
+import { LinkRecordsDialog } from './LinkRecordsDialog';
+import { Link2 } from 'lucide-react';
 
 const HOME_CITIES = ['regina'];
 const DEFAULT_LABOUR_RATE = 45;
@@ -44,13 +46,15 @@ const ROUTINE_FREQUENCIES = new Set([
 
 type Status = 'Profitable' | 'Tight' | 'Losing' | 'Needs Cost Review' | 'Missing Source Data';
 type Override = 'include' | 'exclude' | null;
-type Source = 'Invoice' | 'Quote' | 'Job estimate' | 'No source';
+type Source = 'Invoice' | 'Quote' | 'Job estimate' | 'No source' | 'Linked Invoices' | 'Linked Quotes' | 'Manual';
+type RevenueSourceMode = 'auto' | 'invoices' | 'quotes' | 'manual';
 
 type Row = {
   jobId: string;
   jobNumber: string;
   jobTitle: string;
   customer: string;
+  customerId: string | null;
   city: string | null;
   province: string | null;
   outOfTown: boolean;
@@ -61,6 +65,7 @@ type Row = {
   amountCollected: number;
   baseline: number;
   baselineSource: Source;
+  revenueSourceMode: RevenueSourceMode;
   fuelCost: number;
   travelCost: number;
   labourHours: number;
@@ -79,6 +84,7 @@ type Row = {
   autoExcluded: boolean;
   linkedQuotes: { id: string; number: string }[];
   linkedInvoices: { id: string; number: string }[];
+  suggestionCount: number;
 };
 
 function classifyCategory(catRaw: string | null, descRaw: string | null) {
@@ -107,11 +113,12 @@ export function JobCostProfitTracker() {
   const [showExcluded, setShowExcluded] = useState(false);
   const [editing, setEditing] = useState<{ id: string; number: string; title: string } | null>(null);
   const [preview, setPreview] = useState<PreviewTarget>(null);
+  const [linking, setLinking] = useState<{ id: string; number: string; title: string; customerId: string | null } | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['job-cost-profit-tracker'],
     queryFn: async () => {
-      const [jobsRes, customersRes, propsRes, quotesRes, invoicesRes, expensesRes, visitsRes, metaRes] = await Promise.all([
+      const [jobsRes, customersRes, propsRes, quotesRes, invoicesRes, expensesRes, visitsRes, metaRes, linksRes] = await Promise.all([
         supabase
           .from('jobs')
           .select('id, job_number, job_title, customer_id, property_id, quote_id, status, estimated_total, service_category, service_frequency, created_at')
@@ -120,34 +127,56 @@ export function JobCostProfitTracker() {
           .limit(120),
         supabase.from('customers').select('id, company_name, first_name, last_name'),
         supabase.from('properties').select('id, city, province, address_line_1'),
-        supabase.from('quotes').select('id, quote_number, total, converted_job_id'),
-        supabase.from('invoices').select('id, invoice_number, job_id, total, amount_paid'),
+        supabase.from('quotes').select('id, quote_number, total, customer_id, converted_job_id').limit(500),
+        supabase.from('invoices').select('id, invoice_number, job_id, customer_id, total, amount_paid').limit(500),
         supabase.from('expenses').select('id, job_id, category, description, amount'),
         supabase.from('visits').select('id, job_id, arrival_time, completion_time, estimated_duration_minutes'),
         supabase.from('job_cost_meta').select('*'),
+        supabase.from('job_cost_links').select('*'),
       ]);
 
       const jobs = jobsRes.data ?? [];
       const customers = new Map((customersRes.data ?? []).map(c => [c.id, c]));
       const props = new Map((propsRes.data ?? []).map(p => [p.id, p]));
-      const quotes = new Map((quotesRes.data ?? []).map((q: any) => [q.id, { total: Number(q.total) || 0, number: q.quote_number as string }]));
-      const quotesByJob = new Map<string, { id: string; number: string }[]>();
-      (quotesRes.data ?? []).forEach((q: any) => {
-        if (!q.converted_job_id) return;
-        const arr = quotesByJob.get(q.converted_job_id) ?? [];
-        arr.push({ id: q.id, number: q.quote_number });
-        quotesByJob.set(q.converted_job_id, arr);
-      });
+      const allQuotes = quotesRes.data ?? [];
+      const allInvoices = invoicesRes.data ?? [];
+      const quoteById = new Map(allQuotes.map((q: any) => [q.id, q]));
+      const invoiceById = new Map(allInvoices.map((i: any) => [i.id, i]));
       const meta = new Map((metaRes.data ?? []).map((m: any) => [m.job_id, m]));
 
-      const invByJob = new Map<string, { total: number; paid: number; list: { id: string; number: string }[] }>();
-      (invoicesRes.data ?? []).forEach((inv: any) => {
+      // Manual links grouped by job
+      const linksByJob = new Map<string, any[]>();
+      (linksRes.data ?? []).forEach((l: any) => {
+        const arr = linksByJob.get(l.job_id) ?? [];
+        arr.push(l);
+        linksByJob.set(l.job_id, arr);
+      });
+
+      // Auto-linked quotes by job (FK + jobs.quote_id)
+      const autoQuotesByJob = new Map<string, Set<string>>();
+      allQuotes.forEach((q: any) => {
+        if (!q.converted_job_id) return;
+        const s = autoQuotesByJob.get(q.converted_job_id) ?? new Set<string>();
+        s.add(q.id);
+        autoQuotesByJob.set(q.converted_job_id, s);
+      });
+
+      // Auto-linked invoices by job (FK)
+      const autoInvByJob = new Map<string, Set<string>>();
+      allInvoices.forEach((inv: any) => {
         if (!inv.job_id) return;
-        const b = invByJob.get(inv.job_id) ?? { total: 0, paid: 0, list: [] };
-        b.total += Number(inv.total) || 0;
-        b.paid += Number(inv.amount_paid) || 0;
-        b.list.push({ id: inv.id, number: inv.invoice_number });
-        invByJob.set(inv.job_id, b);
+        const s = autoInvByJob.get(inv.job_id) ?? new Set<string>();
+        s.add(inv.id);
+        autoInvByJob.set(inv.job_id, s);
+      });
+
+      // Invoices/quotes by customer (for suggestions)
+      const invByCustomer = new Map<string, any[]>();
+      allInvoices.forEach((inv: any) => {
+        if (!inv.customer_id) return;
+        const arr = invByCustomer.get(inv.customer_id) ?? [];
+        arr.push(inv);
+        invByCustomer.set(inv.customer_id, arr);
       });
 
       const expByJob = new Map<string, { fuel: number; travel: number; labour: number; material: number; equipment: number; hotel: number; count: number }>();
@@ -182,21 +211,47 @@ export function JobCostProfitTracker() {
         const city = prop?.city ?? null;
         const outOfTown = !!city && !HOME_CITIES.includes(city.trim().toLowerCase());
 
-        const primaryQuote = j.quote_id ? quotes.get(j.quote_id) : undefined;
-        const quoteAmount = primaryQuote?.total || 0;
-        const jobEstimate = Number(j.estimated_total) || 0;
-        const inv = invByJob.get(j.id) ?? { total: 0, paid: 0, list: [] as { id: string; number: string }[] };
-
-        // Combine primary quote + any quotes converted into this job, deduped
-        const linkedQuotes: { id: string; number: string }[] = [];
-        const seenQ = new Set<string>();
-        if (j.quote_id && primaryQuote) {
-          linkedQuotes.push({ id: j.quote_id, number: primaryQuote.number });
-          seenQ.add(j.quote_id);
-        }
-        (quotesByJob.get(j.id) ?? []).forEach((q) => {
-          if (!seenQ.has(q.id)) { linkedQuotes.push(q); seenQ.add(q.id); }
+        // Resolve linked quotes/invoices: auto + manual includes - manual excludes
+        const autoQ = new Set<string>(autoQuotesByJob.get(j.id) ?? []);
+        if (j.quote_id) autoQ.add(j.quote_id);
+        const autoI = new Set<string>(autoInvByJob.get(j.id) ?? []);
+        const jobLinks = linksByJob.get(j.id) ?? [];
+        const finalQ = new Set<string>(autoQ);
+        const finalI = new Set<string>(autoI);
+        jobLinks.forEach((l: any) => {
+          if (l.kind === 'quote') {
+            if (l.action === 'include') finalQ.add(l.target_id);
+            else finalQ.delete(l.target_id);
+          } else {
+            if (l.action === 'include') finalI.add(l.target_id);
+            else finalI.delete(l.target_id);
+          }
         });
+
+        const linkedQuotes = Array.from(finalQ)
+          .map(id => quoteById.get(id))
+          .filter(Boolean)
+          .map((q: any) => ({ id: q.id, number: q.quote_number }));
+        const linkedInvoices = Array.from(finalI)
+          .map(id => invoiceById.get(id))
+          .filter(Boolean)
+          .map((i: any) => ({ id: i.id, number: i.invoice_number }));
+
+        const sumLinkedInvTotal = Array.from(finalI).reduce((a, id) => {
+          const inv: any = invoiceById.get(id); return a + (Number(inv?.total) || 0);
+        }, 0);
+        const sumLinkedInvPaid = Array.from(finalI).reduce((a, id) => {
+          const inv: any = invoiceById.get(id); return a + (Number(inv?.amount_paid) || 0);
+        }, 0);
+        const sumLinkedQuoteTotal = Array.from(finalQ).reduce((a, id) => {
+          const q: any = quoteById.get(id); return a + (Number(q?.total) || 0);
+        }, 0);
+
+        // Primary single-quote (legacy) for fallback
+        const primaryQuote = j.quote_id ? quoteById.get(j.quote_id) : undefined;
+        const quoteAmount = sumLinkedQuoteTotal || Number(primaryQuote?.total) || 0;
+        const jobEstimate = Number(j.estimated_total) || 0;
+
         const exp = expByJob.get(j.id) ?? { fuel: 0, travel: 0, labour: 0, material: 0, equipment: 0, hotel: 0, count: 0 };
         const vis = visByJob.get(j.id) ?? { trips: 0, hours: 0 };
 
@@ -209,12 +264,10 @@ export function JobCostProfitTracker() {
         let hotelMealsCost = exp.hotel;
 
         if (calcMethod === 'manual') {
-          // Use the manual total as-is. Do NOT multiply by trip count.
           fuelCost = exp.fuel + (Number(m.manual_fuel_total) || 0);
         } else if (calcMethod === 'per_trip') {
           fuelCost = exp.fuel + (Number(m.fuel_per_trip) || 0) * tripCount;
         } else {
-          // detailed
           fuelCost = exp.fuel + (Number(m.fuel_per_trip) || 0) * tripCount;
           travelCost = exp.travel + (Number(m.travel_labour_cost) || 0);
           hotelMealsCost = exp.hotel + (Number(m.hotel_cost) || 0) + (Number(m.meal_cost) || 0);
@@ -226,11 +279,38 @@ export function JobCostProfitTracker() {
 
         const totalCost = fuelCost + travelCost + hotelMealsCost + labourEst + materialCost;
 
+        // Revenue source mode
+        const revenueSourceMode: RevenueSourceMode = ((m.revenue_source as RevenueSourceMode) ?? 'auto');
         let baseline = 0;
         let baselineSource: Source = 'No source';
-        if (inv.total > 0) { baseline = inv.total; baselineSource = 'Invoice'; }
-        else if (quoteAmount > 0) { baseline = quoteAmount; baselineSource = 'Quote'; }
-        else if (jobEstimate > 0) { baseline = jobEstimate; baselineSource = 'Job estimate'; }
+        const manualRev = Number(m.manual_revenue) || 0;
+        if (revenueSourceMode === 'manual') {
+          if (manualRev > 0) { baseline = manualRev; baselineSource = 'Manual'; }
+        } else if (revenueSourceMode === 'invoices') {
+          if (sumLinkedInvTotal > 0) {
+            baseline = sumLinkedInvTotal;
+            baselineSource = finalI.size > 1 ? 'Linked Invoices' : 'Invoice';
+          }
+        } else if (revenueSourceMode === 'quotes') {
+          if (sumLinkedQuoteTotal > 0) {
+            baseline = sumLinkedQuoteTotal;
+            baselineSource = finalQ.size > 1 ? 'Linked Quotes' : 'Quote';
+          }
+        } else {
+          // auto
+          if (sumLinkedInvTotal > 0) {
+            baseline = sumLinkedInvTotal;
+            baselineSource = finalI.size > 1 ? 'Linked Invoices' : 'Invoice';
+          } else if (quoteAmount > 0) {
+            baseline = quoteAmount;
+            baselineSource = finalQ.size > 1 ? 'Linked Quotes' : 'Quote';
+          } else if (jobEstimate > 0) {
+            baseline = jobEstimate;
+            baselineSource = 'Job estimate';
+          }
+        }
+        const invoiceAmount = sumLinkedInvTotal;
+        const amountCollected = sumLinkedInvPaid;
 
         const profit = baseline - totalCost;
         const margin = baseline > 0 ? (profit / baseline) * 100 : 0;
@@ -238,15 +318,25 @@ export function JobCostProfitTracker() {
         const hasMeta = !!meta.get(j.id);
         const hasCostData = exp.count > 0 || vis.hours > 0 || hasMeta;
 
+        // Suggestion warning: same-customer invoices not yet linked AND not explicitly excluded
+        const explicitlyExcludedInv = new Set<string>(
+          jobLinks.filter((l: any) => l.kind === 'invoice' && l.action === 'exclude').map((l: any) => l.target_id),
+        );
+        const customerInvs = invByCustomer.get(j.customer_id) ?? [];
+        const suggestionCount = customerInvs.filter((inv: any) =>
+          !finalI.has(inv.id) && !explicitlyExcludedInv.has(inv.id),
+        ).length;
+
         const warnings: string[] = [];
         if (baselineSource === 'No source') warnings.push('Missing Source Data');
         if (!hasCostData) warnings.push('Cost Data Missing');
         if (baseline > 0 && totalCost > baseline) warnings.push('Losing Money');
         else if (baseline > 0 && totalCost >= baseline * 0.85 && hasCostData) warnings.push('Tight Margin');
-        if (exp.count > 0 && inv.total === 0) warnings.push('Unbilled Receipts');
+        if (exp.count > 0 && invoiceAmount === 0) warnings.push('Unbilled Receipts');
         if (tripCount > 3) warnings.push('Extra Trip Warning');
         if (quoteAmount > 0 && labourEst > quoteAmount * 0.6) warnings.push('Labour Overrun');
         if (outOfTown && hasMeta && m.travel_included_in_quote === false) warnings.push('Travel Not In Quote');
+        if (suggestionCount > 0) warnings.push('Possible invoices found');
 
         let status: Status;
         if (baselineSource === 'No source') status = 'Missing Source Data';
@@ -264,16 +354,18 @@ export function JobCostProfitTracker() {
           jobNumber: j.job_number ?? '—',
           jobTitle: j.job_title ?? '',
           customer: customerName,
+          customerId: j.customer_id ?? null,
           city,
           province: prop?.province ?? null,
           outOfTown,
           serviceCategory: j.service_category ?? null,
           serviceFrequency: j.service_frequency ?? null,
           quoteAmount,
-          invoiceAmount: inv.total,
-          amountCollected: inv.paid,
+          invoiceAmount,
+          amountCollected,
           baseline,
           baselineSource,
+          revenueSourceMode,
           fuelCost,
           travelCost,
           labourHours: vis.hours,
@@ -291,7 +383,8 @@ export function JobCostProfitTracker() {
           override,
           autoExcluded,
           linkedQuotes,
-          linkedInvoices: inv.list,
+          linkedInvoices,
+          suggestionCount,
         };
       });
 
@@ -299,6 +392,7 @@ export function JobCostProfitTracker() {
     },
     staleTime: 30_000,
   });
+
 
   async function setOverride(jobId: string, value: Override) {
     const payload: any = { job_id: jobId, tracker_override: value };
@@ -550,9 +644,17 @@ export function JobCostProfitTracker() {
                         <TableCell className="text-xs text-right tabular-nums">
                           <div>{money(r.baseline)}</div>
                           <div className="text-[9px] text-muted-foreground uppercase tracking-wide">
-                            from {r.baselineSource}
+                            {r.baselineSource === 'Manual' ? 'Manual Revenue'
+                              : r.baselineSource === 'Linked Invoices' ? 'From Linked Invoices'
+                              : r.baselineSource === 'Linked Quotes' ? 'From Linked Quotes'
+                              : r.baselineSource === 'Invoice' ? 'From Invoice'
+                              : r.baselineSource === 'Quote' ? 'From Quote'
+                              : r.baselineSource === 'Job estimate' ? 'From Job Estimate'
+                              : 'No source'}
+                            {r.revenueSourceMode !== 'auto' && <span className="ml-1 opacity-70">(locked)</span>}
                           </div>
                         </TableCell>
+
                         <TableCell className="text-xs text-right tabular-nums">{money(r.amountCollected)}</TableCell>
                         <TableCell className="text-xs text-right tabular-nums">
                           <span className="inline-flex items-center gap-0.5">
@@ -587,6 +689,11 @@ export function JobCostProfitTracker() {
                               onClick={() => setEditing({ id: r.jobId, number: r.jobNumber, title: r.jobTitle })}>
                               <Pencil className="h-3 w-3 mr-1" /> Manage Costs
                             </Button>
+                            <Button size="sm" variant="outline" className="h-7 text-[11px] px-2"
+                              onClick={() => setLinking({ id: r.jobId, number: r.jobNumber, title: r.jobTitle, customerId: r.customerId })}>
+                              <Link2 className="h-3 w-3 mr-1" /> Link Records
+                            </Button>
+
                             {excluded ? (
                               <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-emerald-700"
                                 onClick={() => setOverride(r.jobId, 'include')}>
@@ -625,9 +732,19 @@ export function JobCostProfitTracker() {
       />
 
       <JobLinkPreviewDialog target={preview} onClose={() => setPreview(null)} />
+
+      <LinkRecordsDialog
+        jobId={linking?.id ?? null}
+        jobNumber={linking?.number}
+        jobTitle={linking?.title}
+        customerId={linking?.customerId ?? null}
+        open={!!linking}
+        onOpenChange={(o) => { if (!o) setLinking(null); }}
+      />
     </>
   );
 }
+
 
 function StatusPill({ status }: { status: Status }) {
   const map: Record<Status, string> = {
