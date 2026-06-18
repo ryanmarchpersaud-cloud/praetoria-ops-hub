@@ -404,6 +404,7 @@ export function JobCostProfitTracker() {
           linkedQuotes,
           linkedInvoices,
           suggestionCount,
+          suggestionQuoteCount,
         };
       });
 
