@@ -164,8 +164,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [applySession]);
 
   const refreshMustChangePassword = useCallback(async () => {
-    await checkMustChangePassword(user?.id);
-  }, [user?.id, checkMustChangePassword]);
+    await runMustChangePasswordCheck(user?.id, false);
+  }, [user?.id, runMustChangePasswordCheck]);
 
   const clearMustChangePassword = useCallback(() => {
     setMustChangePassword(false);
