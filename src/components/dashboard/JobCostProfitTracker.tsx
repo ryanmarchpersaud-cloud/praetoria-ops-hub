@@ -46,13 +46,15 @@ const ROUTINE_FREQUENCIES = new Set([
 
 type Status = 'Profitable' | 'Tight' | 'Losing' | 'Needs Cost Review' | 'Missing Source Data';
 type Override = 'include' | 'exclude' | null;
-type Source = 'Invoice' | 'Quote' | 'Job estimate' | 'No source';
+type Source = 'Invoice' | 'Quote' | 'Job estimate' | 'No source' | 'Linked Invoices' | 'Linked Quotes' | 'Manual';
+type RevenueSourceMode = 'auto' | 'invoices' | 'quotes' | 'manual';
 
 type Row = {
   jobId: string;
   jobNumber: string;
   jobTitle: string;
   customer: string;
+  customerId: string | null;
   city: string | null;
   province: string | null;
   outOfTown: boolean;
@@ -63,6 +65,7 @@ type Row = {
   amountCollected: number;
   baseline: number;
   baselineSource: Source;
+  revenueSourceMode: RevenueSourceMode;
   fuelCost: number;
   travelCost: number;
   labourHours: number;
@@ -81,6 +84,7 @@ type Row = {
   autoExcluded: boolean;
   linkedQuotes: { id: string; number: string }[];
   linkedInvoices: { id: string; number: string }[];
+  suggestionCount: number;
 };
 
 function classifyCategory(catRaw: string | null, descRaw: string | null) {
