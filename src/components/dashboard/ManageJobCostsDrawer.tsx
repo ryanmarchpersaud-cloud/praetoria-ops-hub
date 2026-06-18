@@ -46,6 +46,8 @@ interface ExpenseRow {
   notes: string | null;
 }
 
+type FuelCalcMethod = 'manual' | 'per_trip' | 'detailed';
+
 interface MetaRow {
   id?: string;
   travel_included_in_quote: boolean;
@@ -58,6 +60,8 @@ interface MetaRow {
   fuel_per_trip: number;
   notes: string;
   tracker_override: 'include' | 'exclude' | null;
+  fuel_calc_method: FuelCalcMethod;
+  manual_fuel_total: number;
 }
 
 const EMPTY_META: MetaRow = {
@@ -71,6 +75,8 @@ const EMPTY_META: MetaRow = {
   fuel_per_trip: 0,
   notes: '',
   tracker_override: null,
+  fuel_calc_method: 'per_trip',
+  manual_fuel_total: 0,
 };
 
 export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenChange }: Props) {
@@ -130,6 +136,8 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
         fuel_per_trip: Number(metaData.fuel_per_trip) || 0,
         notes: metaData.notes ?? '',
         tracker_override: ((metaData as any).tracker_override ?? null) as 'include' | 'exclude' | null,
+        fuel_calc_method: (((metaData as any).fuel_calc_method as FuelCalcMethod) ?? 'per_trip'),
+        manual_fuel_total: Number((metaData as any).manual_fuel_total) || 0,
       });
     } else {
       setMeta(EMPTY_META);
@@ -151,6 +159,8 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
       fuel_per_trip: meta.fuel_per_trip,
       notes: meta.notes || null,
       tracker_override: meta.tracker_override,
+      fuel_calc_method: meta.fuel_calc_method,
+      manual_fuel_total: meta.manual_fuel_total,
     };
     const { error } = await supabase
       .from('job_cost_meta')
