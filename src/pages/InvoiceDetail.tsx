@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { useBillingProfile } from '@/hooks/useInvoices';
 import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
+import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
 
 function getStatusAfterTotalChange(invoice: any, nextTotal: number) {
   if (['Draft', 'Voided', 'Refunded'].includes(invoice.status)) return invoice.status;
