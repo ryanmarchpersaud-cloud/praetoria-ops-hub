@@ -24,6 +24,7 @@ import { format, parseISO, eachWeekOfInterval, eachMonthOfInterval } from 'date-
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
+import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
 
 export default function JobDetail() {
   const { id } = useParams();
