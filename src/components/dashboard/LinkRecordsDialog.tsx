@@ -98,8 +98,9 @@ export function LinkRecordsDialog({
 
       if (term) {
         invoiceQuery.or(`invoice_number.ilike.%${term}%,job_title.ilike.%${term}%`);
-        quoteQuery.or(`quote_number.ilike.%${term}%,project_title.ilike.%${term}%`);
+        quoteQuery.ilike('quote_number', `%${term}%`);
       } else if (customerId) {
+
         invoiceQuery.eq('customer_id', customerId);
         quoteQuery.eq('customer_id', customerId);
       }
