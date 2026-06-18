@@ -227,6 +227,10 @@ const RouteLoading = memo(function RouteLoading() {
   return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
 });
 
+const RouteContentLoading = memo(function RouteContentLoading() {
+  return <div className="min-h-[60vh] flex items-center justify-center text-sm text-muted-foreground">Loading…</div>;
+});
+
 /** Returns a redirect to /change-password if the user has a temp password to change */
 function useForcePasswordChangeRedirect() {
   const { user, mustChangePassword, mustChangePasswordChecked } = useAuth();
@@ -252,12 +256,17 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
 }
 
 function AdminRoute({ children }: { children?: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
   const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isActiveUser, isLoading } = useAuthorization();
-  const forceChange = useForcePasswordChangeRedirect();
-  if (loading || isLoading) return <RouteLoading />;
+  if (loading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
-  if (forceChange) return forceChange;
+  if (!mustChangePasswordChecked) {
+    return <AppLayout><RouteContentLoading /></AppLayout>;
+  }
+  if (mustChangePassword) return <Navigate to="/change-password" replace />;
+  if (isLoading) {
+    return <AppLayout><RouteContentLoading /></AppLayout>;
+  }
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
   if (isCustomer && !canAccessAdminPortal) return <Navigate to="/portal" replace />;
