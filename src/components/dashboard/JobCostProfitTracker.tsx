@@ -689,6 +689,11 @@ export function JobCostProfitTracker() {
                               onClick={() => setEditing({ id: r.jobId, number: r.jobNumber, title: r.jobTitle })}>
                               <Pencil className="h-3 w-3 mr-1" /> Manage Costs
                             </Button>
+                            <Button size="sm" variant="outline" className="h-7 text-[11px] px-2"
+                              onClick={() => setLinking({ id: r.jobId, number: r.jobNumber, title: r.jobTitle, customerId: r.customerId })}>
+                              <Link2 className="h-3 w-3 mr-1" /> Link Records
+                            </Button>
+
                             {excluded ? (
                               <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-emerald-700"
                                 onClick={() => setOverride(r.jobId, 'include')}>
