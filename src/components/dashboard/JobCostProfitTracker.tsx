@@ -129,15 +129,23 @@ export function JobCostProfitTracker() {
       const jobs = jobsRes.data ?? [];
       const customers = new Map((customersRes.data ?? []).map(c => [c.id, c]));
       const props = new Map((propsRes.data ?? []).map(p => [p.id, p]));
-      const quotes = new Map((quotesRes.data ?? []).map(q => [q.id, Number(q.total) || 0]));
+      const quotes = new Map((quotesRes.data ?? []).map((q: any) => [q.id, { total: Number(q.total) || 0, number: q.quote_number as string }]));
+      const quotesByJob = new Map<string, { id: string; number: string }[]>();
+      (quotesRes.data ?? []).forEach((q: any) => {
+        if (!q.converted_job_id) return;
+        const arr = quotesByJob.get(q.converted_job_id) ?? [];
+        arr.push({ id: q.id, number: q.quote_number });
+        quotesByJob.set(q.converted_job_id, arr);
+      });
       const meta = new Map((metaRes.data ?? []).map((m: any) => [m.job_id, m]));
 
-      const invByJob = new Map<string, { total: number; paid: number }>();
-      (invoicesRes.data ?? []).forEach(inv => {
+      const invByJob = new Map<string, { total: number; paid: number; list: { id: string; number: string }[] }>();
+      (invoicesRes.data ?? []).forEach((inv: any) => {
         if (!inv.job_id) return;
-        const b = invByJob.get(inv.job_id) ?? { total: 0, paid: 0 };
+        const b = invByJob.get(inv.job_id) ?? { total: 0, paid: 0, list: [] };
         b.total += Number(inv.total) || 0;
         b.paid += Number(inv.amount_paid) || 0;
+        b.list.push({ id: inv.id, number: inv.invoice_number });
         invByJob.set(inv.job_id, b);
       });
 
