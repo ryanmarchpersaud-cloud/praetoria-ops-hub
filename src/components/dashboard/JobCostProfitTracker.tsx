@@ -106,6 +106,7 @@ export function JobCostProfitTracker() {
   const [search, setSearch] = useState('');
   const [showExcluded, setShowExcluded] = useState(false);
   const [editing, setEditing] = useState<{ id: string; number: string; title: string } | null>(null);
+  const [preview, setPreview] = useState<PreviewTarget>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['job-cost-profit-tracker'],
