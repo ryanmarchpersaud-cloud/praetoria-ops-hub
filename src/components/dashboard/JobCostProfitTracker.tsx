@@ -86,6 +86,7 @@ type Row = {
   linkedQuotes: { id: string; number: string }[];
   linkedInvoices: { id: string; number: string }[];
   suggestionCount: number;
+  suggestionQuoteCount: number;
 };
 
 function classifyCategory(catRaw: string | null, descRaw: string | null) {
