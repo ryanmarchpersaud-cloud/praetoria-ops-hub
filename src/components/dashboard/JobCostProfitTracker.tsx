@@ -472,11 +472,45 @@ export function JobCostProfitTracker() {
                         !r.hasCostData && 'bg-amber-50/40 dark:bg-amber-950/10',
                         excluded && 'opacity-70',
                       )}>
-                        <TableCell className="text-xs">
+                        <TableCell className="text-xs align-top">
                           <Link to={`/jobs/${r.jobId}`} className="font-mono font-semibold text-primary hover:underline">
                             {r.jobNumber}
                           </Link>
-                          <p className="text-[10px] text-muted-foreground truncate max-w-[160px]">{r.jobTitle}</p>
+                          <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{r.jobTitle}</p>
+                          <div className="mt-1 space-y-0.5 max-w-[220px]">
+                            <div className="flex items-start gap-1 flex-wrap">
+                              <span className="text-[9px] uppercase font-semibold text-muted-foreground mt-0.5">Quote:</span>
+                              {r.linkedQuotes.length === 0 ? (
+                                <span className="text-[10px] italic text-muted-foreground">No linked quote</span>
+                              ) : r.linkedQuotes.map(q => (
+                                <button
+                                  key={q.id}
+                                  type="button"
+                                  onClick={() => setPreview({ kind: 'quote', id: q.id, number: q.number })}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/30 dark:border-blue-900 dark:text-blue-300"
+                                  title="Preview quote"
+                                >
+                                  <FileText className="h-2.5 w-2.5" />{q.number}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="flex items-start gap-1 flex-wrap">
+                              <span className="text-[9px] uppercase font-semibold text-muted-foreground mt-0.5">Invoice:</span>
+                              {r.linkedInvoices.length === 0 ? (
+                                <span className="text-[10px] italic text-muted-foreground">No linked invoice</span>
+                              ) : r.linkedInvoices.map(inv => (
+                                <button
+                                  key={inv.id}
+                                  type="button"
+                                  onClick={() => setPreview({ kind: 'invoice', id: inv.id, number: inv.number })}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-300"
+                                  title="Preview invoice"
+                                >
+                                  <Receipt className="h-2.5 w-2.5" />{inv.number}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {r.serviceCategory && (
                               <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 dark:bg-slate-900/50 dark:text-slate-300">
