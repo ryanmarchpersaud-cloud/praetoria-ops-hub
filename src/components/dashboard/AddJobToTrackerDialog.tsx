@@ -89,7 +89,7 @@ export function AddJobToTrackerDialog({
           city: p?.city ?? p?.address_line_1 ?? null,
           quoteNumbers: qNums,
           invoiceNumbers: invByJob.get(j.id) ?? [],
-          tracked: ov === 'include' || (ov !== undefined && ov !== 'exclude'),
+          tracked: ov === 'include',
           excluded: ov === 'exclude',
         };
       });
