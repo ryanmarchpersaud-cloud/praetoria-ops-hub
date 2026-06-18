@@ -587,7 +587,12 @@ export default function InvoiceDetail() {
         </Link>
         <AddToJobCostTrackerButton
           jobId={invoice.job_id ?? null}
-          initialSearch={invoice.invoice_number ?? ''}
+          sourceInvoice={{
+            id: invoice.id,
+            invoice_number: invoice.invoice_number ?? null,
+            customer_id: invoice.customer_id ?? null,
+            job_id: invoice.job_id ?? null,
+          }}
           label="Link to Job Cost Tracker"
           size="sm"
         />
