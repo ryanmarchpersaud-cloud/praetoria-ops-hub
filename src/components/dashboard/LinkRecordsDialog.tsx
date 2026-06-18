@@ -255,15 +255,27 @@ export function LinkRecordsDialog({
             className={cn('px-3 py-1.5 text-xs font-semibold border-b-2',
               tab === 'invoices' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground')}>
             <Receipt className="h-3 w-3 inline mr-1" />
-            Invoices ({linked.finalI.size} linked)
+            Invoices ({linked.finalI.size} linked{search.trim() ? ` · ${candidates?.invoices.length ?? 0} match` : ''})
           </button>
           <button onClick={() => setTab('quotes')}
             className={cn('px-3 py-1.5 text-xs font-semibold border-b-2',
               tab === 'quotes' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground')}>
             <FileText className="h-3 w-3 inline mr-1" />
-            Quotes ({linked.finalQ.size} linked)
+            Quotes ({linked.finalQ.size} linked{search.trim() ? ` · ${candidates?.quotes.length ?? 0} match` : ''})
           </button>
         </div>
+        {search.trim() && tab === 'invoices' && (candidates?.invoices.length ?? 0) === 0 && (candidates?.quotes.length ?? 0) > 0 && (
+          <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+            No invoices match "{search.trim()}", but {candidates?.quotes.length} quote(s) do.{' '}
+            <button className="underline font-semibold" onClick={() => setTab('quotes')}>Switch to Quotes →</button>
+          </p>
+        )}
+        {search.trim() && tab === 'quotes' && (candidates?.quotes.length ?? 0) === 0 && (candidates?.invoices.length ?? 0) > 0 && (
+          <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+            No quotes match "{search.trim()}", but {candidates?.invoices.length} invoice(s) do.{' '}
+            <button className="underline font-semibold" onClick={() => setTab('invoices')}>Switch to Invoices →</button>
+          </p>
+        )}
 
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
