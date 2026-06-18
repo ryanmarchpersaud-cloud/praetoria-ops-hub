@@ -32,19 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [mustChangePassword, setMustChangePassword] = useState(false);
   const [mustChangePasswordChecked, setMustChangePasswordChecked] = useState(false);
 
-  const checkMustChangePassword = useCallback(async (uid: string | undefined) => {
-    if (!uid) {
-      setMustChangePassword(false);
-      setMustChangePasswordChecked(true);
-      return;
-    }
+  const fetchMustChangePassword = useCallback(async (uid: string | undefined) => {
+    if (!uid) return false;
     const { data } = await supabase
       .from('profiles')
       .select('must_change_password')
       .eq('user_id', uid)
       .maybeSingle();
-    setMustChangePassword(!!data?.must_change_password);
-    setMustChangePasswordChecked(true);
+    return !!data?.must_change_password;
   }, []);
 
   const lastLoggedAuthRef = useRef<string | null>(null);
@@ -52,6 +47,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const lastUserIdRef = useRef<string | null>(null);
   const liveSessionRef = useRef<Session | null>(null);
   const initialSessionResolvedRef = useRef(false);
+  const passwordCheckSeqRef = useRef(0);
+  const passwordCheckPendingRef = useRef(false);
+
+  const runMustChangePasswordCheck = useCallback((uid: string | undefined, finishLoading: boolean) => {
+    const seq = ++passwordCheckSeqRef.current;
+    passwordCheckPendingRef.current = true;
+    setMustChangePasswordChecked(false);
+
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        fetchMustChangePassword(uid)
+          .then((mustChange) => {
+            if (seq !== passwordCheckSeqRef.current) return;
+            setMustChangePassword(mustChange);
+            setMustChangePasswordChecked(true);
+          })
+          .catch(() => {
+            if (seq !== passwordCheckSeqRef.current) return;
+            setMustChangePassword(false);
+            setMustChangePasswordChecked(true);
+          })
+          .finally(() => {
+            if (seq === passwordCheckSeqRef.current) {
+              passwordCheckPendingRef.current = false;
+              if (finishLoading) setLoading(false);
+            }
+            resolve();
+          });
+      }, 0);
+    });
+  }, [fetchMustChangePassword]);
 
   const applySession = useCallback((nextSession: Session | null) => {
     const nextUser = nextSession?.user ?? null;
@@ -67,9 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastUserIdRef.current = nextUid;
       setSession(nextSession);
       setUser(nextUser);
-      setMustChangePasswordChecked(false);
-      setTimeout(() => { checkMustChangePassword(nextUid ?? undefined); }, 0);
-      setLoading(false);
+      void runMustChangePasswordCheck(nextUid ?? undefined, true);
       return { identityChanged: true, uid: nextUid };
     }
 
@@ -83,12 +107,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastUserIdRef.current = nextUid;
       setSession(nextSession);
       setUser(nextUser);
-      setMustChangePasswordChecked(false);
-      setTimeout(() => { checkMustChangePassword(nextUid ?? undefined); }, 0);
+      if (nextUid) setLoading(true);
+      void runMustChangePasswordCheck(nextUid ?? undefined, true);
+      return { identityChanged, uid: nextUid };
+    }
+
+    if (passwordCheckPendingRef.current) {
+      return { identityChanged, uid: nextUid };
     }
     setLoading(false);
     return { identityChanged, uid: nextUid };
-  }, [checkMustChangePassword]);
+  }, [runMustChangePasswordCheck]);
 
   useEffect(() => {
     let cancelled = false;
