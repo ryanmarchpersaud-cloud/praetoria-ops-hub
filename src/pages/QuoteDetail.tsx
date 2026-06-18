@@ -625,7 +625,13 @@ export default function QuoteDetail() {
         </Button>
         <AddToJobCostTrackerButton
           jobId={((quote as any).converted_job_id) || (linkedJob as any)?.id || null}
-          initialSearch={quote.quote_number ?? ''}
+          sourceQuote={{
+            id: quote.id,
+            quote_number: quote.quote_number ?? null,
+            customer_id: quote.customer_id ?? null,
+            converted_job_id: (quote as any).converted_job_id ?? (linkedJob as any)?.id ?? null,
+          }}
+          onCreateJobFromSource={canManageQuotes ? handleConvertToJob : undefined}
           label="Link to Job Cost Tracker"
           className="h-11 shrink-0 gap-1.5"
         />
