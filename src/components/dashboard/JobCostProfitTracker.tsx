@@ -644,9 +644,17 @@ export function JobCostProfitTracker() {
                         <TableCell className="text-xs text-right tabular-nums">
                           <div>{money(r.baseline)}</div>
                           <div className="text-[9px] text-muted-foreground uppercase tracking-wide">
-                            from {r.baselineSource}
+                            {r.baselineSource === 'Manual' ? 'Manual Revenue'
+                              : r.baselineSource === 'Linked Invoices' ? 'From Linked Invoices'
+                              : r.baselineSource === 'Linked Quotes' ? 'From Linked Quotes'
+                              : r.baselineSource === 'Invoice' ? 'From Invoice'
+                              : r.baselineSource === 'Quote' ? 'From Quote'
+                              : r.baselineSource === 'Job estimate' ? 'From Job Estimate'
+                              : 'No source'}
+                            {r.revenueSourceMode !== 'auto' && <span className="ml-1 opacity-70">(locked)</span>}
                           </div>
                         </TableCell>
+
                         <TableCell className="text-xs text-right tabular-nums">{money(r.amountCollected)}</TableCell>
                         <TableCell className="text-xs text-right tabular-nums">
                           <span className="inline-flex items-center gap-0.5">
