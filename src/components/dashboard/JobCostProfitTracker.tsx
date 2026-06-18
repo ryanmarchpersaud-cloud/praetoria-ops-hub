@@ -289,6 +289,8 @@ export function JobCostProfitTracker() {
           travelIncludedInQuote: hasMeta ? !!m.travel_included_in_quote : null,
           override,
           autoExcluded,
+          linkedQuotes,
+          linkedInvoices: inv.list,
         };
       });
 
