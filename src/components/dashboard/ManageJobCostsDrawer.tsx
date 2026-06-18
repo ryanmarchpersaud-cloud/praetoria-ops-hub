@@ -46,6 +46,8 @@ interface ExpenseRow {
   notes: string | null;
 }
 
+type FuelCalcMethod = 'manual' | 'per_trip' | 'detailed';
+
 interface MetaRow {
   id?: string;
   travel_included_in_quote: boolean;
@@ -58,6 +60,8 @@ interface MetaRow {
   fuel_per_trip: number;
   notes: string;
   tracker_override: 'include' | 'exclude' | null;
+  fuel_calc_method: FuelCalcMethod;
+  manual_fuel_total: number;
 }
 
 const EMPTY_META: MetaRow = {
@@ -71,6 +75,8 @@ const EMPTY_META: MetaRow = {
   fuel_per_trip: 0,
   notes: '',
   tracker_override: null,
+  fuel_calc_method: 'per_trip',
+  manual_fuel_total: 0,
 };
 
 export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenChange }: Props) {
@@ -130,6 +136,8 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
         fuel_per_trip: Number(metaData.fuel_per_trip) || 0,
         notes: metaData.notes ?? '',
         tracker_override: ((metaData as any).tracker_override ?? null) as 'include' | 'exclude' | null,
+        fuel_calc_method: (((metaData as any).fuel_calc_method as FuelCalcMethod) ?? 'per_trip'),
+        manual_fuel_total: Number((metaData as any).manual_fuel_total) || 0,
       });
     } else {
       setMeta(EMPTY_META);
@@ -151,6 +159,8 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
       fuel_per_trip: meta.fuel_per_trip,
       notes: meta.notes || null,
       tracker_override: meta.tracker_override,
+      fuel_calc_method: meta.fuel_calc_method,
+      manual_fuel_total: meta.manual_fuel_total,
     };
     const { error } = await supabase
       .from('job_cost_meta')
@@ -249,39 +259,122 @@ export function ManageJobCostsDrawer({ jobId, jobNumber, jobTitle, open, onOpenC
         <section className="mt-5 space-y-3 rounded-lg border p-3 bg-muted/30">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold flex items-center gap-2">
-              <Truck className="h-4 w-4 text-blue-600" /> Travel & Out-of-Town
+              <Truck className="h-4 w-4 text-blue-600" /> Fuel / Travel Calculation
             </h3>
             <Badge variant={meta.travel_included_in_quote ? 'default' : 'outline'} className="text-[10px]">
               {meta.travel_included_in_quote ? 'Travel in quote' : 'Travel NOT in quote'}
             </Badge>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Fuel per trip ($)">
-              <Input type="number" step="0.01" value={meta.fuel_per_trip || ''}
-                onChange={e => setMeta({ ...meta, fuel_per_trip: parseFloat(e.target.value) || 0 })} />
-            </Field>
-            <Field label="Trip count override">
+
+          {/* Calc method selector */}
+          <div className="space-y-1">
+            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              Fuel / Travel calculation method
+            </Label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {([
+                { v: 'manual', label: 'Manual total', hint: 'Enter one final amount' },
+                { v: 'per_trip', label: 'Per trip × trips', hint: 'Fuel/trip × trip count' },
+                { v: 'detailed', label: 'Detailed breakdown', hint: 'Fuel + labour + hotel + meals' },
+              ] as const).map(opt => (
+                <Button
+                  key={opt.v}
+                  type="button"
+                  size="sm"
+                  variant={meta.fuel_calc_method === opt.v ? 'default' : 'outline'}
+                  className="h-auto py-1.5 px-2 flex flex-col items-start text-left"
+                  onClick={() => setMeta({ ...meta, fuel_calc_method: opt.v })}
+                >
+                  <span className="text-[11px] font-semibold">{opt.label}</span>
+                  <span className="text-[9px] opacity-70 font-normal">{opt.hint}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Manual total */}
+          {meta.fuel_calc_method === 'manual' && (
+            <div className="rounded border bg-background p-2 space-y-2">
+              <Field label="Manual total fuel / travel cost ($)">
+                <Input type="number" step="0.01" value={meta.manual_fuel_total || ''}
+                  placeholder="e.g. 1500"
+                  onChange={e => setMeta({ ...meta, manual_fuel_total: parseFloat(e.target.value) || 0 })} />
+              </Field>
+              <p className="text-[10px] text-muted-foreground">
+                Formula: <span className="font-mono">fuel/travel = ${meta.manual_fuel_total || 0}</span> (used as-is, never multiplied)
+              </p>
+            </div>
+          )}
+
+          {/* Per-trip */}
+          {meta.fuel_calc_method === 'per_trip' && (
+            <div className="rounded border bg-background p-2 space-y-2">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Fuel per trip ($)">
+                  <Input type="number" step="0.01" value={meta.fuel_per_trip || ''}
+                    onChange={e => setMeta({ ...meta, fuel_per_trip: parseFloat(e.target.value) || 0 })} />
+                </Field>
+                <Field label="Trip count override">
+                  <Input type="number" value={meta.trip_count_override ?? ''}
+                    placeholder="Auto from visits"
+                    onChange={e => setMeta({ ...meta, trip_count_override: e.target.value ? parseInt(e.target.value) : null })} />
+                </Field>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Formula: <span className="font-mono">
+                  fuel/travel = ${meta.fuel_per_trip || 0} × {meta.trip_count_override ?? 'auto trips'}
+                </span>
+              </p>
+            </div>
+          )}
+
+          {/* Detailed */}
+          {meta.fuel_calc_method === 'detailed' && (
+            <div className="rounded border bg-background p-2 space-y-2">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Fuel per trip ($)">
+                  <Input type="number" step="0.01" value={meta.fuel_per_trip || ''}
+                    onChange={e => setMeta({ ...meta, fuel_per_trip: parseFloat(e.target.value) || 0 })} />
+                </Field>
+                <Field label="Trip count override">
+                  <Input type="number" value={meta.trip_count_override ?? ''}
+                    placeholder="Auto from visits"
+                    onChange={e => setMeta({ ...meta, trip_count_override: e.target.value ? parseInt(e.target.value) : null })} />
+                </Field>
+                <Field label="Travel hours">
+                  <Input type="number" step="0.25" value={meta.travel_hours || ''}
+                    onChange={e => setMeta({ ...meta, travel_hours: parseFloat(e.target.value) || 0 })} />
+                </Field>
+                <Field label="Travel labour cost ($)">
+                  <Input type="number" step="0.01" value={meta.travel_labour_cost || ''}
+                    onChange={e => setMeta({ ...meta, travel_labour_cost: parseFloat(e.target.value) || 0 })} />
+                </Field>
+                <Field label="Hotel cost ($)">
+                  <Input type="number" step="0.01" value={meta.hotel_cost || ''}
+                    onChange={e => setMeta({ ...meta, hotel_cost: parseFloat(e.target.value) || 0 })} />
+                </Field>
+                <Field label="Meals / per-diem ($)">
+                  <Input type="number" step="0.01" value={meta.meal_cost || ''}
+                    onChange={e => setMeta({ ...meta, meal_cost: parseFloat(e.target.value) || 0 })} />
+                </Field>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Formula: <span className="font-mono">
+                  (fuel/trip × trips) + travel labour + hotel + meals
+                </span>
+              </p>
+            </div>
+          )}
+
+          {/* Trip count display (always visible for records) */}
+          {meta.fuel_calc_method === 'manual' && (
+            <Field label="Trip count (for records only — not used in formula)">
               <Input type="number" value={meta.trip_count_override ?? ''}
                 placeholder="Auto from visits"
                 onChange={e => setMeta({ ...meta, trip_count_override: e.target.value ? parseInt(e.target.value) : null })} />
             </Field>
-            <Field label="Travel hours">
-              <Input type="number" step="0.25" value={meta.travel_hours || ''}
-                onChange={e => setMeta({ ...meta, travel_hours: parseFloat(e.target.value) || 0 })} />
-            </Field>
-            <Field label="Travel labour cost ($)">
-              <Input type="number" step="0.01" value={meta.travel_labour_cost || ''}
-                onChange={e => setMeta({ ...meta, travel_labour_cost: parseFloat(e.target.value) || 0 })} />
-            </Field>
-            <Field label="Hotel cost ($)">
-              <Input type="number" step="0.01" value={meta.hotel_cost || ''}
-                onChange={e => setMeta({ ...meta, hotel_cost: parseFloat(e.target.value) || 0 })} />
-            </Field>
-            <Field label="Meals / per-diem ($)">
-              <Input type="number" step="0.01" value={meta.meal_cost || ''}
-                onChange={e => setMeta({ ...meta, meal_cost: parseFloat(e.target.value) || 0 })} />
-            </Field>
-          </div>
+          )}
+
           <Field label="Distance / location notes">
             <Input value={meta.distance_notes}
               placeholder="e.g. Estevan — 220 km one way"

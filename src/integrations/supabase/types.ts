@@ -3876,10 +3876,12 @@ export type Database = {
         Row: {
           created_at: string
           distance_notes: string | null
+          fuel_calc_method: string
           fuel_per_trip: number
           hotel_cost: number
           id: string
           job_id: string
+          manual_fuel_total: number
           meal_cost: number
           notes: string | null
           tracker_override: string | null
@@ -3893,10 +3895,12 @@ export type Database = {
         Insert: {
           created_at?: string
           distance_notes?: string | null
+          fuel_calc_method?: string
           fuel_per_trip?: number
           hotel_cost?: number
           id?: string
           job_id: string
+          manual_fuel_total?: number
           meal_cost?: number
           notes?: string | null
           tracker_override?: string | null
@@ -3910,10 +3914,12 @@ export type Database = {
         Update: {
           created_at?: string
           distance_notes?: string | null
+          fuel_calc_method?: string
           fuel_per_trip?: number
           hotel_cost?: number
           id?: string
           job_id?: string
+          manual_fuel_total?: number
           meal_cost?: number
           notes?: string | null
           tracker_override?: string | null
