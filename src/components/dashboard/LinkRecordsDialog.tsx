@@ -335,6 +335,7 @@ export function LinkRecordsDialog({
                 const cust = r.customers;
                 const custName = cust?.company_name || `${cust?.first_name ?? ''} ${cust?.last_name ?? ''}`.trim() || '—';
                 const belongsToOtherJob = tab === 'invoices' ? (r.job_id && r.job_id !== jobId) : (r.converted_job_id && r.converted_job_id !== jobId);
+                const isPossibleMatch = !isLinked && !isAuto && customerId && r.customer_id === customerId;
                 return (
                   <div key={id} className="flex items-center justify-between p-2.5 gap-2 text-xs">
                     <div className="min-w-0 flex-1">
@@ -346,6 +347,9 @@ export function LinkRecordsDialog({
                           <Badge variant="outline" className="text-[9px] border-amber-300 text-amber-700">
                             <AlertTriangle className="h-2.5 w-2.5 mr-0.5" /> Other job
                           </Badge>
+                        )}
+                        {isPossibleMatch && !belongsToOtherJob && (
+                          <Badge variant="outline" className="text-[9px] border-blue-300 text-blue-700">Possible match</Badge>
                         )}
                         {isLinked && <Badge className="text-[9px] bg-emerald-600"><Check className="h-2.5 w-2.5 mr-0.5" />Linked</Badge>}
                       </div>
