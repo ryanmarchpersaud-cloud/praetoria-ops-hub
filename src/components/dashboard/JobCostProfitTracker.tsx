@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { ManageJobCostsDrawer } from './ManageJobCostsDrawer';
 import { JobLinkPreviewDialog, type PreviewTarget } from './JobLinkPreviewDialog';
 import { LinkRecordsDialog } from './LinkRecordsDialog';
+import { AddJobToTrackerDialog } from './AddJobToTrackerDialog';
 import { Link2 } from 'lucide-react';
 
 const HOME_CITIES = ['regina'];
