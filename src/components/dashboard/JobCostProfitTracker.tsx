@@ -732,9 +732,19 @@ export function JobCostProfitTracker() {
       />
 
       <JobLinkPreviewDialog target={preview} onClose={() => setPreview(null)} />
+
+      <LinkRecordsDialog
+        jobId={linking?.id ?? null}
+        jobNumber={linking?.number}
+        jobTitle={linking?.title}
+        customerId={linking?.customerId ?? null}
+        open={!!linking}
+        onOpenChange={(o) => { if (!o) setLinking(null); }}
+      />
     </>
   );
 }
+
 
 function StatusPill({ status }: { status: Status }) {
   const map: Record<Status, string> = {
