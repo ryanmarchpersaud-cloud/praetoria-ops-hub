@@ -722,6 +722,10 @@ export default function CustomerDetail() {
             }))}
           />
 
+          {/* Job Cost & Profit Tracking */}
+          {id && <CustomerJobCostTrackingSection customerId={id} />}
+
+
           {/* Agreements */}
           <RelatedRecordCard
             title="Agreements"
