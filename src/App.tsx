@@ -276,12 +276,17 @@ function AdminRoute({ children }: { children?: React.ReactNode }) {
 }
 
 function StaffRoute({ children }: { children?: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
   const { isCustomer, isStaff, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
-  const forceChange = useForcePasswordChangeRedirect();
-  if (loading || isLoading) return <RouteLoading />;
+  if (loading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
-  if (forceChange) return forceChange;
+  if (!mustChangePasswordChecked) {
+    return <AppLayout><RouteContentLoading /></AppLayout>;
+  }
+  if (mustChangePassword) return <Navigate to="/change-password" replace />;
+  if (isLoading) {
+    return <AppLayout><RouteContentLoading /></AppLayout>;
+  }
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (!isStaff && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
