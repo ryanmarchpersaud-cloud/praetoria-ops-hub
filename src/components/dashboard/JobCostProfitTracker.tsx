@@ -180,6 +180,13 @@ export function JobCostProfitTracker() {
         arr.push(inv);
         invByCustomer.set(inv.customer_id, arr);
       });
+      const quotesByCustomer = new Map<string, any[]>();
+      allQuotes.forEach((q: any) => {
+        if (!q.customer_id) return;
+        const arr = quotesByCustomer.get(q.customer_id) ?? [];
+        arr.push(q);
+        quotesByCustomer.set(q.customer_id, arr);
+      });
 
       const expByJob = new Map<string, { fuel: number; travel: number; labour: number; material: number; equipment: number; hotel: number; count: number }>();
       (expensesRes.data ?? []).forEach(e => {
