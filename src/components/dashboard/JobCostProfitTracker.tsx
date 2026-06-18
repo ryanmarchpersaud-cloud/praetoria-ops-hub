@@ -77,6 +77,8 @@ type Row = {
   travelIncludedInQuote: boolean | null;
   override: Override;
   autoExcluded: boolean;
+  linkedQuotes: { id: string; number: string }[];
+  linkedInvoices: { id: string; number: string }[];
 };
 
 function classifyCategory(catRaw: string | null, descRaw: string | null) {
