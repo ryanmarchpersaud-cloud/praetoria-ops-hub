@@ -86,6 +86,7 @@ type Row = {
   linkedQuotes: { id: string; number: string }[];
   linkedInvoices: { id: string; number: string }[];
   suggestionCount: number;
+  suggestionQuoteCount: number;
 };
 
 function classifyCategory(catRaw: string | null, descRaw: string | null) {
@@ -179,6 +180,13 @@ export function JobCostProfitTracker() {
         const arr = invByCustomer.get(inv.customer_id) ?? [];
         arr.push(inv);
         invByCustomer.set(inv.customer_id, arr);
+      });
+      const quotesByCustomer = new Map<string, any[]>();
+      allQuotes.forEach((q: any) => {
+        if (!q.customer_id) return;
+        const arr = quotesByCustomer.get(q.customer_id) ?? [];
+        arr.push(q);
+        quotesByCustomer.set(q.customer_id, arr);
       });
 
       const expByJob = new Map<string, { fuel: number; travel: number; labour: number; material: number; equipment: number; hotel: number; count: number }>();
@@ -329,6 +337,15 @@ export function JobCostProfitTracker() {
           !finalI.has(inv.id) && !explicitlyExcludedInv.has(inv.id),
         ).length;
 
+        // Same logic for quotes
+        const explicitlyExcludedQ = new Set<string>(
+          jobLinks.filter((l: any) => l.kind === 'quote' && l.action === 'exclude').map((l: any) => l.target_id),
+        );
+        const customerQuotes = quotesByCustomer.get(j.customer_id) ?? [];
+        const suggestionQuoteCount = customerQuotes.filter((q: any) =>
+          !finalQ.has(q.id) && !explicitlyExcludedQ.has(q.id),
+        ).length;
+
         const warnings: string[] = [];
         if (baselineSource === 'No source') warnings.push('Missing Source Data');
         if (!hasCostData) warnings.push('Cost Data Missing');
@@ -339,6 +356,7 @@ export function JobCostProfitTracker() {
         if (quoteAmount > 0 && labourEst > quoteAmount * 0.6) warnings.push('Labour Overrun');
         if (outOfTown && hasMeta && m.travel_included_in_quote === false) warnings.push('Travel Not In Quote');
         if (suggestionCount > 0) warnings.push('Possible invoices found');
+        if (suggestionQuoteCount > 0) warnings.push('Possible quotes found');
 
         let status: Status;
         if (baselineSource === 'No source') status = 'Missing Source Data';
@@ -387,6 +405,7 @@ export function JobCostProfitTracker() {
           linkedQuotes,
           linkedInvoices,
           suggestionCount,
+          suggestionQuoteCount,
         };
       });
 
@@ -580,7 +599,18 @@ export function JobCostProfitTracker() {
                             <div className="flex items-start gap-1 flex-wrap">
                               <span className="text-[9px] uppercase font-semibold text-muted-foreground mt-0.5">Quote:</span>
                               {r.linkedQuotes.length === 0 ? (
-                                <span className="text-[10px] italic text-muted-foreground">No linked quote</span>
+                                r.suggestionQuoteCount > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setLinking({ id: r.jobId, number: r.jobNumber, title: r.jobTitle, customerId: r.customerId })}
+                                    className="text-[10px] px-1.5 py-0.5 rounded border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                                    title="Possible quotes found for this customer"
+                                  >
+                                    Possible match ({r.suggestionQuoteCount}) — Link
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] italic text-muted-foreground">No linked quote</span>
+                                )
                               ) : r.linkedQuotes.map(q => (
                                 <button
                                   key={q.id}

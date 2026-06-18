@@ -84,20 +84,53 @@ export function LinkRecordsDialog({
     queryKey: ['link-candidates', jobId, customerId, search],
     queryFn: async () => {
       const term = search.trim();
+
+      // Step 1: if searching, find matching customer IDs by name first
+      let matchedCustomerIds: string[] = [];
+      if (term) {
+        const { data: custMatches } = await supabase
+          .from('customers')
+          .select('id')
+          .or(`company_name.ilike.%${term}%,first_name.ilike.%${term}%,last_name.ilike.%${term}%`)
+          .limit(50);
+        matchedCustomerIds = (custMatches ?? []).map((c: any) => c.id);
+      }
+
+      // Step 2: also find jobs that match by job_number/title -> their customer_ids
+      let jobMatchedCustomerIds: string[] = [];
+      let jobMatchedIds: string[] = [];
+      if (term) {
+        const { data: jobMatches } = await supabase
+          .from('jobs')
+          .select('id, customer_id')
+          .or(`job_number.ilike.%${term}%,job_title.ilike.%${term}%`)
+          .limit(50);
+        jobMatchedCustomerIds = (jobMatches ?? []).map((j: any) => j.customer_id).filter(Boolean);
+        jobMatchedIds = (jobMatches ?? []).map((j: any) => j.id);
+      }
+
       const invoiceQuery = supabase
         .from('invoices')
-        .select('id, invoice_number, total, amount_paid, status, issue_date, customer_id, job_id, customers(company_name, first_name, last_name)')
+        .select('id, invoice_number, total, amount_paid, status, issue_date, customer_id, job_id, customer_memo, customers(company_name, first_name, last_name)')
         .order('issue_date', { ascending: false })
         .limit(50);
       const quoteQuery = supabase
         .from('quotes')
-        .select('id, quote_number, total, approval_status, sent_status, issue_date, customer_id, converted_job_id, customers(company_name, first_name, last_name)')
+        .select('id, quote_number, total, approval_status, sent_status, issue_date, customer_id, converted_job_id, scope_of_work, customers(company_name, first_name, last_name)')
         .order('issue_date', { ascending: false })
         .limit(50);
 
       if (term) {
-        invoiceQuery.ilike('invoice_number', `%${term}%`);
-        quoteQuery.ilike('quote_number', `%${term}%`);
+        const allCustIds = Array.from(new Set([...matchedCustomerIds, ...jobMatchedCustomerIds]));
+        const custFilter = allCustIds.length ? `customer_id.in.(${allCustIds.join(',')}),` : '';
+        const jobFilter = jobMatchedIds.length ? `job_id.in.(${jobMatchedIds.join(',')}),` : '';
+        const jobFilterQ = jobMatchedIds.length ? `converted_job_id.in.(${jobMatchedIds.join(',')}),` : '';
+        invoiceQuery.or(
+          `invoice_number.ilike.%${term}%,customer_memo.ilike.%${term}%,${custFilter}${jobFilter}`.replace(/,$/, ''),
+        );
+        quoteQuery.or(
+          `quote_number.ilike.%${term}%,scope_of_work.ilike.%${term}%,${custFilter}${jobFilterQ}`.replace(/,$/, ''),
+        );
       } else if (customerId) {
         invoiceQuery.eq('customer_id', customerId);
         quoteQuery.eq('customer_id', customerId);
@@ -302,6 +335,7 @@ export function LinkRecordsDialog({
                 const cust = r.customers;
                 const custName = cust?.company_name || `${cust?.first_name ?? ''} ${cust?.last_name ?? ''}`.trim() || '—';
                 const belongsToOtherJob = tab === 'invoices' ? (r.job_id && r.job_id !== jobId) : (r.converted_job_id && r.converted_job_id !== jobId);
+                const isPossibleMatch = !isLinked && !isAuto && customerId && r.customer_id === customerId;
                 return (
                   <div key={id} className="flex items-center justify-between p-2.5 gap-2 text-xs">
                     <div className="min-w-0 flex-1">
@@ -313,6 +347,9 @@ export function LinkRecordsDialog({
                           <Badge variant="outline" className="text-[9px] border-amber-300 text-amber-700">
                             <AlertTriangle className="h-2.5 w-2.5 mr-0.5" /> Other job
                           </Badge>
+                        )}
+                        {isPossibleMatch && !belongsToOtherJob && (
+                          <Badge variant="outline" className="text-[9px] border-blue-300 text-blue-700">Possible match</Badge>
                         )}
                         {isLinked && <Badge className="text-[9px] bg-emerald-600"><Check className="h-2.5 w-2.5 mr-0.5" />Linked</Badge>}
                       </div>
