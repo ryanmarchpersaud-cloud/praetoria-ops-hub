@@ -84,7 +84,6 @@ export function LinkRecordsDialog({
     queryKey: ['link-candidates', jobId, customerId, search],
     queryFn: async () => {
       const term = search.trim();
-      // base = same customer; if user searches, also search broadly by number/title/address
       const invoiceQuery = supabase
         .from('invoices')
         .select('id, invoice_number, total, amount_paid, status, issue_date, customer_id, job_id, customers(company_name, first_name, last_name)')
@@ -97,10 +96,9 @@ export function LinkRecordsDialog({
         .limit(50);
 
       if (term) {
-        invoiceQuery.or(`invoice_number.ilike.%${term}%,job_title.ilike.%${term}%`);
+        invoiceQuery.ilike('invoice_number', `%${term}%`);
         quoteQuery.ilike('quote_number', `%${term}%`);
       } else if (customerId) {
-
         invoiceQuery.eq('customer_id', customerId);
         quoteQuery.eq('customer_id', customerId);
       }
