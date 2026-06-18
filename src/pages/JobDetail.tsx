@@ -259,6 +259,13 @@ export default function JobDetail() {
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
         )}
+        {id && (
+          <AddToJobCostTrackerButton
+            jobId={id}
+            initialSearch={form?.job_number ?? ''}
+            className="h-11 shrink-0 gap-1.5"
+          />
+        )}
         {canManageJobs && !isClosed && (
           <Button
             variant="outline"
