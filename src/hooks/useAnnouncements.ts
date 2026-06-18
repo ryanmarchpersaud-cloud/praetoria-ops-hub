@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useEffect, useState } from 'react';
+import { useAuth } from './useAuth';
 
 export interface Announcement {
   id: string;
@@ -16,13 +16,8 @@ export interface Announcement {
 }
 
 function useCurrentUserId() {
-  const [userId, setUserId] = useState<string | null>(null);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUserId(s?.user?.id ?? null));
-    return () => subscription.unsubscribe();
-  }, []);
-  return userId;
+  const { user } = useAuth();
+  return user?.id ?? null;
 }
 
 /** All announcements for admin management */
