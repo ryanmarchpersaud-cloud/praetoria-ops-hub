@@ -115,6 +115,7 @@ export function JobCostProfitTracker() {
   const [editing, setEditing] = useState<{ id: string; number: string; title: string } | null>(null);
   const [preview, setPreview] = useState<PreviewTarget>(null);
   const [linking, setLinking] = useState<{ id: string; number: string; title: string; customerId: string | null } | null>(null);
+  const [adding, setAdding] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['job-cost-profit-tracker'],
