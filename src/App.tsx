@@ -224,11 +224,19 @@ const queryClient = new QueryClient({
 });
 
 const RouteLoading = memo(function RouteLoading() {
-  return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  return (
+    <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground animate-in fade-in duration-200">
+      Loading…
+    </div>
+  );
 });
 
 const RouteContentLoading = memo(function RouteContentLoading() {
-  return <div className="min-h-[60vh] flex items-center justify-center text-sm text-muted-foreground">Loading…</div>;
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center text-sm text-muted-foreground animate-in fade-in duration-200">
+      Loading…
+    </div>
+  );
 });
 
 /** Returns a redirect to /change-password if the user has a temp password to change */
