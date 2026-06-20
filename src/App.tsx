@@ -613,6 +613,10 @@ function AppRoutes() {
       {/* Customer-facing invoice PDF view — RLS restricts to own invoices only */}
       <Route path="/portal/invoices/:id/print" element={<AuthedRoute><InvoicePrint /></AuthedRoute>} />
 
+      {/* Subcontractor pay stub PDF view — standalone (no admin shell) so the
+          print preview is clean and shows only the pay stub. */}
+      <Route path="/admin/subcontractor-pay-stub/:id/print" element={<AuthedRoute><SubcontractorPayStubPrint /></AuthedRoute>} />
+
       {/* ───────────────────────── Worker layout group ─────────────────────── */}
       <Route element={<WorkerRoute />}>
         <Route path="/worker" element={<WorkerHome />} />
