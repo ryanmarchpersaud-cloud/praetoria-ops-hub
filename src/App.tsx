@@ -148,6 +148,7 @@ import SubcontractorIncidentDetailPage from "./pages/subcontractor/Subcontractor
 import SubcontractorEmergencySafetyPage from "./pages/subcontractor/SubcontractorEmergencySafetyPage";
 import SubcontractorMessagesPage from "./pages/subcontractor/SubcontractorMessagesPage";
 import SubcontractorAgreementsPage from "./pages/subcontractor/SubcontractorAgreementsPage";
+import SubcontractorPayStubsPage from "./pages/subcontractor/SubcontractorPayStubsPage";
 
 // Admin incident pages
 import AdminIncidentsPage from "./pages/AdminIncidentsPage";
@@ -225,7 +226,7 @@ const queryClient = new QueryClient({
 
 const RouteLoading = memo(function RouteLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground animate-in fade-in duration-200">
+    <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
       Loading…
     </div>
   );
@@ -233,7 +234,7 @@ const RouteLoading = memo(function RouteLoading() {
 
 const RouteContentLoading = memo(function RouteContentLoading() {
   return (
-    <div className="min-h-[60vh] flex items-center justify-center text-sm text-muted-foreground animate-in fade-in duration-200">
+    <div className="min-h-[60vh] flex items-center justify-center text-sm text-muted-foreground">
       Loading…
     </div>
   );
@@ -374,20 +375,15 @@ function LoginRoute() {
   const { isCustomer, isStaff, isSubcontractor, canAccessAdminPortal, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Login />;
-  if (isLoading) return <RouteLoading />;
-  if (user) {
-    if (!mustChangePasswordChecked) {
-      return <RouteLoading />;
-    }
-    if (mustChangePasswordChecked && mustChangePassword) {
-      return <Navigate to="/change-password" replace />;
-    }
-    if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
-    if (isCustomer) return <Navigate to="/portal" replace />;
-    if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
-    return <Navigate to="/" replace />;
-  }
-  return <Login />;
+  // User just signed in — don't flash a blank "Loading…" frame over the
+  // login page while authorization resolves; render nothing so the
+  // destination route's own AppLayout takes over without a remount flash.
+  if (isLoading || !mustChangePasswordChecked) return null;
+  if (mustChangePassword) return <Navigate to="/change-password" replace />;
+  if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
+  if (isCustomer) return <Navigate to="/portal" replace />;
+  if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
+  return <Navigate to="/" replace />;
 }
 
 function NativeDeepLinkHandler() {
@@ -662,6 +658,7 @@ function AppRoutes() {
         <Route path="/subcontractor/company" element={<SubcontractorCompany />} />
         <Route path="/subcontractor/compliance" element={<SubcontractorCompliance />} />
         <Route path="/subcontractor/payments" element={<SubcontractorPayments />} />
+        <Route path="/subcontractor/pay-stubs" element={<SubcontractorPayStubsPage />} />
         <Route path="/subcontractor/support" element={<SubcontractorSupport />} />
         <Route path="/subcontractor/settings" element={<SubcontractorSettings />} />
         <Route path="/subcontractor/visit/:id" element={<SubcontractorVisitExec />} />
