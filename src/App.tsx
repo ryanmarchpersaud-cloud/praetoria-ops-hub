@@ -148,6 +148,7 @@ import SubcontractorIncidentDetailPage from "./pages/subcontractor/Subcontractor
 import SubcontractorEmergencySafetyPage from "./pages/subcontractor/SubcontractorEmergencySafetyPage";
 import SubcontractorMessagesPage from "./pages/subcontractor/SubcontractorMessagesPage";
 import SubcontractorAgreementsPage from "./pages/subcontractor/SubcontractorAgreementsPage";
+import SubcontractorPayStubsPage from "./pages/subcontractor/SubcontractorPayStubsPage";
 
 // Admin incident pages
 import AdminIncidentsPage from "./pages/AdminIncidentsPage";
@@ -662,6 +663,7 @@ function AppRoutes() {
         <Route path="/subcontractor/company" element={<SubcontractorCompany />} />
         <Route path="/subcontractor/compliance" element={<SubcontractorCompliance />} />
         <Route path="/subcontractor/payments" element={<SubcontractorPayments />} />
+        <Route path="/subcontractor/pay-stubs" element={<SubcontractorPayStubsPage />} />
         <Route path="/subcontractor/support" element={<SubcontractorSupport />} />
         <Route path="/subcontractor/settings" element={<SubcontractorSettings />} />
         <Route path="/subcontractor/visit/:id" element={<SubcontractorVisitExec />} />
