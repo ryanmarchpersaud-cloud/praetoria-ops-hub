@@ -515,7 +515,7 @@ function AppRoutes() {
         <Route path="/subcontractors/invoices" element={<ModuleGuard module="ops"><AdminSubcontractorInvoicesPage /></ModuleGuard>} />
         <Route path="/subcontractors/invoices/:id" element={<ModuleGuard module="ops"><AdminSubcontractorInvoiceDetail /></ModuleGuard>} />
         <Route path="/subcontractors/:id" element={<ModuleGuard module="ops"><SubcontractorDetail /></ModuleGuard>} />
-        <Route path="/admin/subcontractor-pay-stub/:id/print" element={<ModuleGuard module="ops"><SubcontractorPayStubPrint /></ModuleGuard>} />
+        
 
         <Route path="/hr" element={<ModuleGuard module="hr"><HRDashboardPage /></ModuleGuard>} />
         <Route path="/hr/training" element={<ModuleGuard module="hr"><TrainingCatalogPage /></ModuleGuard>} />
@@ -612,6 +612,10 @@ function AppRoutes() {
 
       {/* Customer-facing invoice PDF view — RLS restricts to own invoices only */}
       <Route path="/portal/invoices/:id/print" element={<AuthedRoute><InvoicePrint /></AuthedRoute>} />
+
+      {/* Subcontractor pay stub PDF view — standalone (no admin shell) so the
+          print preview is clean and shows only the pay stub. */}
+      <Route path="/admin/subcontractor-pay-stub/:id/print" element={<AuthedRoute><SubcontractorPayStubPrint /></AuthedRoute>} />
 
       {/* ───────────────────────── Worker layout group ─────────────────────── */}
       <Route element={<WorkerRoute />}>
