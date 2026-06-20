@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   User, Building2, ShieldCheck, DollarSign, HelpCircle, Settings, LogOut, ChevronRight, Truck,
-  ShieldAlert, Receipt, Shield, BookOpen, ClipboardCheck, Trash2,
+  ShieldAlert, Receipt, Shield, BookOpen, ClipboardCheck, Trash2, FileText,
 } from 'lucide-react';
 
 export default function SubcontractorMore() {
@@ -23,6 +23,7 @@ export default function SubcontractorMore() {
     { icon: BookOpen, label: 'Training', to: '/subcontractor/training', description: 'Assigned training & safety courses' },
     { icon: ShieldAlert, label: 'Incidents & Damage', to: '/subcontractor/incidents', description: 'Report site incidents' },
     { icon: DollarSign, label: 'Payments', to: '/subcontractor/payments', description: 'Payment history & status' },
+    { icon: FileText, label: 'My Pay Stubs', to: '/subcontractor/pay-stubs', description: 'View & download your pay stubs' },
     { icon: Receipt, label: 'Tax & Payment Docs', to: '/subcontractor/tax-documents', description: 'T4A, T5018 & payout history' },
     { icon: HelpCircle, label: 'Support', to: '/subcontractor/support', description: 'Contact admin' },
     { icon: Settings, label: 'Settings', to: '/subcontractor/settings', description: 'Account settings' },
