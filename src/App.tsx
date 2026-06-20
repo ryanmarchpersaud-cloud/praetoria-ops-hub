@@ -515,7 +515,7 @@ function AppRoutes() {
         <Route path="/subcontractors/invoices" element={<ModuleGuard module="ops"><AdminSubcontractorInvoicesPage /></ModuleGuard>} />
         <Route path="/subcontractors/invoices/:id" element={<ModuleGuard module="ops"><AdminSubcontractorInvoiceDetail /></ModuleGuard>} />
         <Route path="/subcontractors/:id" element={<ModuleGuard module="ops"><SubcontractorDetail /></ModuleGuard>} />
-        <Route path="/admin/subcontractor-pay-stub/:id/print" element={<ModuleGuard module="ops"><SubcontractorPayStubPrint /></ModuleGuard>} />
+        
 
         <Route path="/hr" element={<ModuleGuard module="hr"><HRDashboardPage /></ModuleGuard>} />
         <Route path="/hr/training" element={<ModuleGuard module="hr"><TrainingCatalogPage /></ModuleGuard>} />
