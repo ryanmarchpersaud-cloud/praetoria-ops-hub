@@ -185,6 +185,7 @@ function generatePayStubPdf(stub: Record<string, unknown>, sub: Record<string, u
       { value: item.is_mixed ? "split" : item.hourly_rate ? money(item.hourly_rate) : "-", x: 438 },
       { value: money(total), x: 504, font: "F2" },
     ], 18);
+    if (service.length > 28) wrapped(`Service: ${service}`, 118, 8, 72);
     if (item.notes) wrapped(`Notes: ${item.notes}`, 118, 8, 72);
     if (item.is_mixed && Array.isArray(item.mixed_split)) {
       for (const split of item.mixed_split as Record<string, unknown>[]) {
@@ -226,10 +227,12 @@ function generatePayStubPdf(stub: Record<string, unknown>, sub: Record<string, u
     wrapped(stub.subcontractor_notes, left, 9, 94);
   }
 
-  y = Math.max(y - 20, 72);
-  ops += `0.94 0.96 0.98 rg 48 ${y - 26} 516 34 re f\n`;
-  text("This statement was generated securely for the subcontractor portal. Keep it for your records.", 62, 9);
-  text("Praetoria Group | support@praetoriagroup.ca", 62, 8);
+  if (y > 112) {
+    const footerY = Math.max(y - 28, 72);
+    ops += `0.94 0.96 0.98 rg 48 ${footerY - 12} 516 42 re f\n`;
+    ops += `BT /F1 9 Tf 62 ${footerY + 12} Td (${pdfText("This statement was generated securely for the subcontractor portal. Keep it for your records.")}) Tj ET\n`;
+    ops += `BT /F1 8 Tf 62 ${footerY - 6} Td (${pdfText("Praetoria Group | support@praetoriagroup.ca")}) Tj ET\n`;
+  }
   pages.push(ops);
   return buildPdf(pages);
 }
