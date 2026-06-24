@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useJobs } from '@/hooks/useJobs';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateVisit } from '@/hooks/useVisits';
+import { useActiveSubcontractors } from '@/hooks/useVisitCrew';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { handleProtectedCustomerError } from '@/lib/protectedCustomers';
@@ -171,12 +172,14 @@ export default function ScheduleNewVisits() {
   const { user } = useAuth();
   const { data: allJobs = [], isLoading: jobsLoading } = useJobs();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useActiveSubcontractors();
   const createVisit = useCreateVisit();
 
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [selectedTeam, setSelectedTeam] = useState<string[]>([]);
+  const [selectedSubcontractorIds, setSelectedSubcontractorIds] = useState<string[]>([]);
   const [instructions, setInstructions] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
@@ -429,6 +432,13 @@ export default function ScheduleNewVisits() {
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
     );
   };
+
+  const toggleSubcontractor = (subId: string) => {
+    setSelectedSubcontractorIds((prev) =>
+      prev.includes(subId) ? prev.filter((id) => id !== subId) : [...prev, subId]
+    );
+  };
+
 
   // Estimated revenue for selected jobs
   const estimatedRevenue = useMemo(() => {
@@ -803,19 +813,42 @@ export default function ScheduleNewVisits() {
 
     for (const job of selectedJobs) {
       try {
+        const leadWorkerId = selectedTeam[0] || null;
         const visitPayload: any = {
           job_id: job.id,
           customer_id: job.customer_id,
           property_id: job.property_id || null,
           service_date: dateStr,
-          visit_type: 'recurring',
-          visit_status: 'scheduled',
+          visit_type: 'Routine',
+          visit_status: 'Scheduled',
           service_summary: job.job_title,
           crew_notes: instructions || null,
-          assigned_worker_id: selectedTeam.length === 1 ? selectedTeam[0] : null,
+          assigned_worker_id: leadWorkerId,
           service_category: (job as any).service_category || 'Snow & Ice',
         };
-        await createVisit.mutateAsync(visitPayload);
+        const createdVisit: any = await createVisit.mutateAsync(visitPayload);
+
+        // Additional crew members (beyond the lead)
+        const extraCrew = selectedTeam.slice(1);
+        if (createdVisit?.id && extraCrew.length > 0) {
+          const crewRows = extraCrew.map((wid) => ({
+            visit_id: createdVisit.id,
+            worker_user_id: wid,
+            created_by: user?.id || null,
+          }));
+          await supabase.from('visit_crew_members').insert(crewRows as any);
+        }
+
+        // Subcontractor assignments
+        if (createdVisit?.id && selectedSubcontractorIds.length > 0) {
+          const subRows = selectedSubcontractorIds.map((sid) => ({
+            visit_id: createdVisit.id,
+            subcontractor_id: sid,
+            job_id: job.id,
+          }));
+          await supabase.from('subcontractor_assignments').insert(subRows as any);
+        }
+
         successCount++;
       } catch (err: any) {
         errorCount++;
@@ -906,8 +939,9 @@ export default function ScheduleNewVisits() {
       setSelectedJobIds(new Set());
       setInstructions('');
       setSelectedTeam([]);
+      setSelectedSubcontractorIds([]);
     } else {
-      toast({ title: 'Failed to create visits', description: 'Please try again.', variant: 'destructive' });
+      toast({ title: 'Failed to create visits', description: 'Please try again. Check the browser console for details.', variant: 'destructive' });
     }
   };
 
@@ -1435,7 +1469,7 @@ export default function ScheduleNewVisits() {
             {/* Team Selection with capacity */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Assign Team</label>
-              {selectedTeam.length === 0 ? (
+              {selectedTeam.length === 0 && selectedSubcontractorIds.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No users are currently assigned</p>
               ) : (
                 <div className="flex flex-wrap gap-1.5 mb-2">
@@ -1449,6 +1483,17 @@ export default function ScheduleNewVisits() {
                           <span className="text-[10px] text-amber-600 ml-0.5">({existingCount} visits)</span>
                         )}
                         <button onClick={() => toggleEmployee(uid)} className="ml-1 rounded-full hover:bg-muted p-0.5">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                  {selectedSubcontractorIds.map((sid) => {
+                    const sub = (subcontractors as any[]).find((s: any) => s.id === sid);
+                    return (
+                      <Badge key={sid} variant="outline" className="gap-1 pr-1 border-purple-300 bg-purple-50 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                        {sub?.company_name || sub?.contact_name || 'Subcontractor'} <span className="text-[9px] opacity-70">SUB</span>
+                        <button onClick={() => toggleSubcontractor(sid)} className="ml-1 rounded-full hover:bg-muted p-0.5">
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
@@ -1499,8 +1544,35 @@ export default function ScheduleNewVisits() {
                       );
                     })
                 )}
+                {(subcontractors as any[])
+                  .filter((s: any) => {
+                    if (!teamSearch) return true;
+                    const q = teamSearch.toLowerCase();
+                    return (s.company_name?.toLowerCase().includes(q)) || (s.contact_name?.toLowerCase().includes(q));
+                  })
+                  .map((s: any) => (
+                    <label
+                      key={`sub-${s.id}`}
+                      className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 cursor-pointer text-sm border-b last:border-b-0 bg-purple-50/40 dark:bg-purple-900/10"
+                    >
+                      <Checkbox
+                        checked={selectedSubcontractorIds.includes(s.id)}
+                        onCheckedChange={() => toggleSubcontractor(s.id)}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium">{s.company_name || s.contact_name || 'Subcontractor'}</span>
+                        {s.contact_name && s.company_name && (
+                          <span className="text-muted-foreground ml-1.5 text-xs">· {s.contact_name}</span>
+                        )}
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                        Subcontractor
+                      </span>
+                    </label>
+                  ))}
               </div>
             </div>
+
 
             {/* Instructions */}
             <div className="space-y-1.5">
