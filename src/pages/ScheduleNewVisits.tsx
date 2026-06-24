@@ -813,19 +813,42 @@ export default function ScheduleNewVisits() {
 
     for (const job of selectedJobs) {
       try {
+        const leadWorkerId = selectedTeam[0] || null;
         const visitPayload: any = {
           job_id: job.id,
           customer_id: job.customer_id,
           property_id: job.property_id || null,
           service_date: dateStr,
-          visit_type: 'recurring',
-          visit_status: 'scheduled',
+          visit_type: 'Routine',
+          visit_status: 'Scheduled',
           service_summary: job.job_title,
           crew_notes: instructions || null,
-          assigned_worker_id: selectedTeam.length === 1 ? selectedTeam[0] : null,
+          assigned_worker_id: leadWorkerId,
           service_category: (job as any).service_category || 'Snow & Ice',
         };
-        await createVisit.mutateAsync(visitPayload);
+        const createdVisit: any = await createVisit.mutateAsync(visitPayload);
+
+        // Additional crew members (beyond the lead)
+        const extraCrew = selectedTeam.slice(1);
+        if (createdVisit?.id && extraCrew.length > 0) {
+          const crewRows = extraCrew.map((wid) => ({
+            visit_id: createdVisit.id,
+            worker_user_id: wid,
+            created_by: user?.id || null,
+          }));
+          await supabase.from('visit_crew_members').insert(crewRows as any);
+        }
+
+        // Subcontractor assignments
+        if (createdVisit?.id && selectedSubcontractorIds.length > 0) {
+          const subRows = selectedSubcontractorIds.map((sid) => ({
+            visit_id: createdVisit.id,
+            subcontractor_id: sid,
+            job_id: job.id,
+          }));
+          await supabase.from('subcontractor_assignments').insert(subRows as any);
+        }
+
         successCount++;
       } catch (err: any) {
         errorCount++;
