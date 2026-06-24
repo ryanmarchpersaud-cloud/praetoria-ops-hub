@@ -25,6 +25,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
 import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
+import { JobPricingCard } from '@/components/JobPricingCard';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -426,6 +427,8 @@ export default function JobDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {id && <JobPricingCard jobId={id} />}
 
           <RecurringPlanCard
             form={form}
