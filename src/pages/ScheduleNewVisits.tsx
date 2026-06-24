@@ -1544,8 +1544,35 @@ export default function ScheduleNewVisits() {
                       );
                     })
                 )}
+                {(subcontractors as any[])
+                  .filter((s: any) => {
+                    if (!teamSearch) return true;
+                    const q = teamSearch.toLowerCase();
+                    return (s.company_name?.toLowerCase().includes(q)) || (s.contact_name?.toLowerCase().includes(q));
+                  })
+                  .map((s: any) => (
+                    <label
+                      key={`sub-${s.id}`}
+                      className="flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 cursor-pointer text-sm border-b last:border-b-0 bg-purple-50/40 dark:bg-purple-900/10"
+                    >
+                      <Checkbox
+                        checked={selectedSubcontractorIds.includes(s.id)}
+                        onCheckedChange={() => toggleSubcontractor(s.id)}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium">{s.company_name || s.contact_name || 'Subcontractor'}</span>
+                        {s.contact_name && s.company_name && (
+                          <span className="text-muted-foreground ml-1.5 text-xs">· {s.contact_name}</span>
+                        )}
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                        Subcontractor
+                      </span>
+                    </label>
+                  ))}
               </div>
             </div>
+
 
             {/* Instructions */}
             <div className="space-y-1.5">
