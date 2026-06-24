@@ -1469,7 +1469,7 @@ export default function ScheduleNewVisits() {
             {/* Team Selection with capacity */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Assign Team</label>
-              {selectedTeam.length === 0 ? (
+              {selectedTeam.length === 0 && selectedSubcontractorIds.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No users are currently assigned</p>
               ) : (
                 <div className="flex flex-wrap gap-1.5 mb-2">
@@ -1483,6 +1483,17 @@ export default function ScheduleNewVisits() {
                           <span className="text-[10px] text-amber-600 ml-0.5">({existingCount} visits)</span>
                         )}
                         <button onClick={() => toggleEmployee(uid)} className="ml-1 rounded-full hover:bg-muted p-0.5">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                  {selectedSubcontractorIds.map((sid) => {
+                    const sub = (subcontractors as any[]).find((s: any) => s.id === sid);
+                    return (
+                      <Badge key={sid} variant="outline" className="gap-1 pr-1 border-purple-300 bg-purple-50 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                        {sub?.company_name || sub?.contact_name || 'Subcontractor'} <span className="text-[9px] opacity-70">SUB</span>
+                        <button onClick={() => toggleSubcontractor(sid)} className="ml-1 rounded-full hover:bg-muted p-0.5">
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
