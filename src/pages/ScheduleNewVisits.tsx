@@ -172,12 +172,14 @@ export default function ScheduleNewVisits() {
   const { user } = useAuth();
   const { data: allJobs = [], isLoading: jobsLoading } = useJobs();
   const { data: employees = [] } = useEmployees();
+  const { data: subcontractors = [] } = useActiveSubcontractors();
   const createVisit = useCreateVisit();
 
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [selectedTeam, setSelectedTeam] = useState<string[]>([]);
+  const [selectedSubcontractorIds, setSelectedSubcontractorIds] = useState<string[]>([]);
   const [instructions, setInstructions] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
