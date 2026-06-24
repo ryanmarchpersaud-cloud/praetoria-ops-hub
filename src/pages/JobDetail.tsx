@@ -428,6 +428,8 @@ export default function JobDetail() {
             </CardContent>
           </Card>
 
+          {id && <JobPricingCard jobId={id} />}
+
           <RecurringPlanCard
             form={form}
             set={set}
