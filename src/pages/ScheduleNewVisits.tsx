@@ -939,8 +939,9 @@ export default function ScheduleNewVisits() {
       setSelectedJobIds(new Set());
       setInstructions('');
       setSelectedTeam([]);
+      setSelectedSubcontractorIds([]);
     } else {
-      toast({ title: 'Failed to create visits', description: 'Please try again.', variant: 'destructive' });
+      toast({ title: 'Failed to create visits', description: 'Please try again. Check the browser console for details.', variant: 'destructive' });
     }
   };
 
