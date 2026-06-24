@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useJobs } from '@/hooks/useJobs';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateVisit } from '@/hooks/useVisits';
+import { useActiveSubcontractors } from '@/hooks/useVisitCrew';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { handleProtectedCustomerError } from '@/lib/protectedCustomers';
