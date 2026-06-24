@@ -433,6 +433,13 @@ export default function ScheduleNewVisits() {
     );
   };
 
+  const toggleSubcontractor = (subId: string) => {
+    setSelectedSubcontractorIds((prev) =>
+      prev.includes(subId) ? prev.filter((id) => id !== subId) : [...prev, subId]
+    );
+  };
+
+
   // Estimated revenue for selected jobs
   const estimatedRevenue = useMemo(() => {
     return filteredJobs
