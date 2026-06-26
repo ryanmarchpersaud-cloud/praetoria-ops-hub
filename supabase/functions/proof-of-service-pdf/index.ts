@@ -112,6 +112,17 @@ function safeFilename(value: unknown) {
   return String(value || "proof-of-service").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-").slice(0, 80);
 }
 
+function cleanScope(value: unknown): string {
+  return normalizePdfText(value)
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/^\s*[-*•]\s+/gm, "• ")
+    .replace(/`{1,3}/g, "")
+    .replace(/_{2,}/g, "")
+    .trim();
+}
+
 interface BuildArgs {
   customer: Record<string, any>;
   job?: Record<string, any> | null;
@@ -124,163 +135,333 @@ interface BuildArgs {
   customerMessage: string;
   generatedBy: string;
   reportTitle: string;
+  jobRef: string;
   dateRange?: { start?: string; end?: string };
 }
 
+// Layout constants
+const PAGE_W = 612;
+const PAGE_H = 792;
+const MARGIN_L = 48;
+const MARGIN_R = 48;
+const CONTENT_R = PAGE_W - MARGIN_R; // 564
+const CONTENT_W = CONTENT_R - MARGIN_L; // 516
+const FOOTER_TOP = 72; // content must end above this
+const HEADER_H_FIRST = 96;
+const HEADER_H_CONT = 40;
+
+// Navy brand color
+const NAVY = "0.058 0.090 0.165"; // ~ #0F172A
+const NAVY_RGB = (op: "rg" | "RG") => `${NAVY} ${op}`;
+const DARK_TEXT = "0.10 0.12 0.18 rg";
+const MUTED_BORDER = "0.82 0.85 0.90 RG";
+const SOFT_BG = "0.96 0.97 0.99 rg";
+const ZEBRA_BG = "0.965 0.973 0.984 rg";
+const TABLE_HEAD_TEXT = "1 1 1 rg";
+const RESET_BLACK = "0 0 0 rg";
+
 function generateReportPdf(args: BuildArgs): Uint8Array {
-  const { customer, job, property, visits, visitWorkers, includeCrewNotes, customerMessage, generatedBy, reportTitle, dateRange } = args;
+  const { customer, job, property, visits, visitWorkers, includeCrewNotes, customerMessage, generatedBy, reportTitle, jobRef, dateRange } = args;
 
   const pages: string[] = [];
   let ops = "";
-  let y = 744;
-  const left = 48;
-  const right = 564;
+  let y = 0;
+  let pageIndex = 0;
 
-  const newPage = () => {
-    pages.push(ops);
+  const drawBrandHeader = (full: boolean) => {
+    const h = full ? HEADER_H_FIRST : HEADER_H_CONT;
+    // Navy header bar
+    ops += `${NAVY_RGB("rg")} 0 ${PAGE_H - h} ${PAGE_W} ${h} re f\n`;
+    // Logo block (white square w/ navy P)
+    if (full) {
+      ops += `1 1 1 rg ${MARGIN_L} ${PAGE_H - 70} 44 44 re f\n`;
+      ops += `${NAVY_RGB("rg")} BT /F2 30 Tf ${MARGIN_L + 12} ${PAGE_H - 60} Td (P) Tj ET\n`;
+      // Company text - white
+      ops += `1 1 1 rg BT /F2 17 Tf ${MARGIN_L + 56} ${PAGE_H - 34} Td (PRAETORIA GROUP) Tj ET\n`;
+      ops += `1 1 1 rg BT /F1 8.5 Tf ${MARGIN_L + 56} ${PAGE_H - 48} Td (Praetoria Operations Group Inc.) Tj ET\n`;
+      ops += `1 1 1 rg BT /F1 8.5 Tf ${MARGIN_L + 56} ${PAGE_H - 60} Td (support@praetoriagroup.ca   |   praetoriagroup.ca) Tj ET\n`;
+      // Right side title
+      ops += `1 1 1 rg BT /F2 14 Tf 380 ${PAGE_H - 34} Td (PROOF OF SERVICE REPORT) Tj ET\n`;
+      ops += `1 1 1 rg BT /F1 9 Tf 380 ${PAGE_H - 48} Td (${pdfText(jobRef || "")}) Tj ET\n`;
+      ops += `1 1 1 rg BT /F1 8.5 Tf 380 ${PAGE_H - 60} Td (Generated ${pdfText(fmtDateTime(new Date().toISOString()))}) Tj ET\n`;
+    } else {
+      ops += `1 1 1 rg BT /F2 11 Tf ${MARGIN_L} ${PAGE_H - 25} Td (PRAETORIA GROUP) Tj ET\n`;
+      ops += `1 1 1 rg BT /F1 9 Tf ${MARGIN_L} ${PAGE_H - 36} Td (Proof of Service Report${jobRef ? " — " + jobRef : ""}) Tj ET\n`;
+      ops += `1 1 1 rg BT /F1 8.5 Tf 460 ${PAGE_H - 30} Td (praetoriagroup.ca) Tj ET\n`;
+    }
+    ops += `${RESET_BLACK}\n`;
+    y = PAGE_H - h - 18;
+  };
+
+  const startPage = (full = false) => {
+    pageIndex += 1;
     ops = "";
-    y = 744;
+    drawBrandHeader(full);
   };
-  const ensure = (height = 24) => {
-    if (y - height < 64) newPage();
-  };
-  const text = (value: unknown, x = left, size = 10, font: "F1" | "F2" = "F1") => {
-    ensure(size + 6);
-    ops += `BT /${font} ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\n`;
-    y -= size + 5;
-  };
-  const line = () => {
-    ensure(10);
-    ops += `0.82 0.84 0.87 RG ${left} ${y} m ${right} ${y} l S\n`;
-    y -= 12;
-  };
-  const wrapped = (value: unknown, x = left, size = 9, maxChars = 96) => {
-    const lines = normalizePdfText(value).split(/\n/);
-    for (const ln of lines) {
-      const words = ln.split(/\s+/).filter(Boolean);
-      let current = "";
-      for (const word of words) {
-        const candidate = current ? `${current} ${word}` : word;
-        if (candidate.length > maxChars && current) {
-          text(current, x, size);
-          current = word;
-        } else {
-          current = candidate;
-        }
-      }
-      if (current) text(current, x, size);
+
+  const ensure = (height: number) => {
+    if (y - height < FOOTER_TOP + 16) {
+      pages.push(ops);
+      startPage(false);
     }
   };
 
-  // Header band
-  ops += "0.06 0.09 0.16 rg 48 760 516 5 re f\n";
-  text("PRAETORIA GROUP", left, 18, "F2");
-  text(reportTitle, left, 11, "F2");
-  text("support@praetoriagroup.ca | praetoriagroup.ca", left, 9);
-  y = 706;
-  text(`Generated: ${fmtDateTime(new Date().toISOString())}`, 398, 9);
-  text(`Prepared by: ${generatedBy || "Praetoria Admin"}`, 398, 9);
-  if (dateRange?.start || dateRange?.end) {
-    text(`Period: ${dateRange?.start ? fmtDate(dateRange.start) : "..."} - ${dateRange?.end ? fmtDate(dateRange.end) : "..."}`, 398, 9);
-  }
-  y = 666;
-  line();
+  const text = (value: unknown, x: number, size = 10, font: "F1" | "F2" = "F1", color = DARK_TEXT) => {
+    ensure(size + 4);
+    ops += `${color} BT /${font} ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET\n`;
+    y -= size + 4;
+  };
 
-  // Customer / property / job
-  text("Customer", left, 9, "F2");
+  const wrapText = (value: unknown, x: number, maxChars: number, size = 9.5, font: "F1" | "F2" = "F1") => {
+    const normalized = normalizePdfText(value).split(/\n/);
+    for (const ln of normalized) {
+      if (!ln.trim()) { y -= size; continue; }
+      const words = ln.split(/\s+/).filter(Boolean);
+      let cur = "";
+      for (const w of words) {
+        const candidate = cur ? `${cur} ${w}` : w;
+        if (candidate.length > maxChars && cur) {
+          text(cur, x, size, font);
+          cur = w;
+        } else {
+          cur = candidate;
+        }
+      }
+      if (cur) text(cur, x, size, font);
+    }
+  };
+
+  // --- Begin first page ---
+  startPage(true);
+
+  // Metadata strip
+  ops += `${SOFT_BG} ${MARGIN_L} ${y - 38} ${CONTENT_W} 42 re f\n`;
+  ops += `${MUTED_BORDER} ${MARGIN_L} ${y - 38} ${CONTENT_W} 42 re S\n`;
+  const metaY = y - 12;
+  const metaCol = (label: string, value: string, x: number) => {
+    ops += `0.40 0.45 0.55 rg BT /F2 7.5 Tf ${x} ${metaY} Td (${pdfText(label.toUpperCase())}) Tj ET\n`;
+    ops += `${DARK_TEXT} BT /F2 10 Tf ${x} ${metaY - 14} Td (${pdfText(value)}) Tj ET\n`;
+  };
+  metaCol("Report Reference", jobRef || "—", MARGIN_L + 10);
+  metaCol("Service Period", `${dateRange?.start ? fmtDate(dateRange.start) : "—"}  →  ${dateRange?.end ? fmtDate(dateRange.end) : "—"}`, MARGIN_L + 160);
+  metaCol("Prepared By", generatedBy || "Praetoria Admin", MARGIN_L + 360);
+  ops += `${RESET_BLACK}\n`;
+  y -= 54;
+
+  // Two-column customer / property cards
+  const cardTop = y;
+  const cardH = 92;
+  const cardW = (CONTENT_W - 12) / 2;
+  const leftX = MARGIN_L;
+  const rightX = MARGIN_L + cardW + 12;
+
+  const drawCard = (x: number, h: number) => {
+    ops += `${SOFT_BG} ${x} ${cardTop - h} ${cardW} ${h} re f\n`;
+    ops += `${MUTED_BORDER} ${x} ${cardTop - h} ${cardW} ${h} re S\n`;
+  };
+  drawCard(leftX, cardH);
+  drawCard(rightX, cardH);
+
+  // Customer card content
   const custName = customer.company_name || [customer.first_name, customer.last_name].filter(Boolean).join(" ") || "Customer";
-  text(custName, left, 12, "F2");
-  if (customer.operating_name && customer.operating_name !== customer.company_name) text(customer.operating_name, left, 10);
-  if (customer.site_contact_name) text(`Site contact: ${customer.site_contact_name}`, left, 9);
-
-  const savedY = y;
-  y = savedY;
-  if (property) {
-    text("Property", 320, 9, "F2");
-    text(property.property_name || "Service Address", 320, 11, "F2");
-    if (property.address_line_1) text(property.address_line_1, 320, 9);
-    const cityLine = [property.city, property.province, property.postal_code].filter(Boolean).join(", ");
-    if (cityLine) text(cityLine, 320, 9);
+  let cy = cardTop - 14;
+  ops += `${NAVY_RGB("rg")} BT /F2 8 Tf ${leftX + 10} ${cy} Td (CUSTOMER) Tj ET\n`;
+  cy -= 14;
+  ops += `${DARK_TEXT} BT /F2 12 Tf ${leftX + 10} ${cy} Td (${pdfText(custName)}) Tj ET\n`;
+  cy -= 14;
+  if (customer.site_contact_name) {
+    ops += `${DARK_TEXT} BT /F1 9 Tf ${leftX + 10} ${cy} Td (Site contact: ${pdfText(customer.site_contact_name)}) Tj ET\n`;
+    cy -= 12;
+  }
+  if (customer.phone || customer.site_contact_phone) {
+    ops += `${DARK_TEXT} BT /F1 9 Tf ${leftX + 10} ${cy} Td (Phone: ${pdfText(customer.site_contact_phone || customer.phone)}) Tj ET\n`;
+    cy -= 12;
+  }
+  if (customer.email) {
+    ops += `${DARK_TEXT} BT /F1 9 Tf ${leftX + 10} ${cy} Td (Email: ${pdfText(customer.email)}) Tj ET\n`;
+    cy -= 12;
   }
 
-  y = Math.min(y, savedY - 60);
-  line();
+  // Property card content
+  let py = cardTop - 14;
+  ops += `${NAVY_RGB("rg")} BT /F2 8 Tf ${rightX + 10} ${py} Td (PROPERTY) Tj ET\n`;
+  py -= 14;
+  const propName = property?.property_name || "Service Address";
+  ops += `${DARK_TEXT} BT /F2 12 Tf ${rightX + 10} ${py} Td (${pdfText(propName)}) Tj ET\n`;
+  py -= 14;
+  if (property?.address_line_1) {
+    ops += `${DARK_TEXT} BT /F1 9 Tf ${rightX + 10} ${py} Td (${pdfText(property.address_line_1)}) Tj ET\n`;
+    py -= 12;
+  }
+  const cityLine = [property?.city, property?.province, property?.postal_code].filter(Boolean).join(", ");
+  if (cityLine) {
+    ops += `${DARK_TEXT} BT /F1 9 Tf ${rightX + 10} ${py} Td (${pdfText(cityLine)}) Tj ET\n`;
+    py -= 12;
+  }
+  ops += `${RESET_BLACK}\n`;
 
+  y = cardTop - cardH - 16;
+
+  // Job card
   if (job) {
-    text("Job", left, 9, "F2");
-    text(`${job.job_title || "Job"} (${job.job_number || ""})`.trim(), left, 11, "F2");
-    if (job.service_category) text(`Service: ${job.service_category}`, left, 9);
-    if (job.scope_of_work) wrapped(`Scope: ${job.scope_of_work}`, left, 9, 96);
-    line();
+    const jobTitleText = `${job.job_title || "Job"}${job.job_number ? "  ·  " + job.job_number : ""}`;
+    const scopeText = job.scope_of_work ? cleanScope(job.scope_of_work) : "";
+    const scopeLines = scopeText ? Math.min(20, Math.ceil(scopeText.length / 90) + (scopeText.match(/\n/g)?.length || 0)) : 0;
+    const jobH = 38 + (job.service_category ? 14 : 0) + (scopeText ? 14 + scopeLines * 12 : 0);
+    ops += `${SOFT_BG} ${MARGIN_L} ${y - jobH} ${CONTENT_W} ${jobH} re f\n`;
+    ops += `${MUTED_BORDER} ${MARGIN_L} ${y - jobH} ${CONTENT_W} ${jobH} re S\n`;
+    let jy = y - 14;
+    ops += `${NAVY_RGB("rg")} BT /F2 8 Tf ${MARGIN_L + 10} ${jy} Td (JOB) Tj ET\n`;
+    jy -= 14;
+    ops += `${DARK_TEXT} BT /F2 12 Tf ${MARGIN_L + 10} ${jy} Td (${pdfText(jobTitleText)}) Tj ET\n`;
+    jy -= 14;
+    if (job.service_category) {
+      ops += `${DARK_TEXT} BT /F1 9.5 Tf ${MARGIN_L + 10} ${jy} Td (Service category: ${pdfText(job.service_category)}) Tj ET\n`;
+      jy -= 12;
+    }
+    if (scopeText) {
+      ops += `${DARK_TEXT} BT /F2 9 Tf ${MARGIN_L + 10} ${jy} Td (Scope of Work) Tj ET\n`;
+      jy -= 12;
+      y = jy;
+      ops += `${RESET_BLACK}\n`;
+      wrapText(scopeText, MARGIN_L + 10, 92, 9.5, "F1");
+      y -= 4;
+    } else {
+      y = jy - 6;
+      ops += `${RESET_BLACK}\n`;
+    }
   }
 
   if (customerMessage) {
-    text("Message from Praetoria", left, 9, "F2");
-    wrapped(customerMessage, left, 10, 92);
+    ensure(40);
     y -= 4;
-    line();
+    text("MESSAGE FROM PRAETORIA", MARGIN_L, 8, "F2");
+    wrapText(customerMessage, MARGIN_L, 96, 10, "F1");
+    y -= 6;
   }
 
-  // Visits table
-  text(`Service Visits (${visits.length})`, left, 11, "F2");
+  // Visits section title
+  ensure(40);
+  y -= 6;
+  text(`SERVICE VISITS  (${visits.length})`, MARGIN_L, 11, "F2");
   y -= 2;
-  ops += `0.95 0.96 0.98 rg ${left} ${y - 2} ${right - left} 16 re f\n`;
-  ops += `BT /F2 9 Tf ${left + 4} ${y + 4} Td (${pdfText("Date")}) Tj ET\n`;
-  ops += `BT /F2 9 Tf 168 ${y + 4} Td (${pdfText("Visit #")}) Tj ET\n`;
-  ops += `BT /F2 9 Tf 232 ${y + 4} Td (${pdfText("Arrived")}) Tj ET\n`;
-  ops += `BT /F2 9 Tf 304 ${y + 4} Td (${pdfText("Completed")}) Tj ET\n`;
-  ops += `BT /F2 9 Tf 380 ${y + 4} Td (${pdfText("Total")}) Tj ET\n`;
-  ops += `BT /F2 9 Tf 432 ${y + 4} Td (${pdfText("Status")}) Tj ET\n`;
-  ops += `BT /F2 9 Tf 496 ${y + 4} Td (${pdfText("Crew")}) Tj ET\n`;
-  y -= 18;
+
+  // Visits table header
+  const cols = [
+    { x: MARGIN_L + 6, w: 110, label: "Date" },
+    { x: MARGIN_L + 116, w: 50, label: "Visit #" },
+    { x: MARGIN_L + 166, w: 64, label: "Arrived" },
+    { x: MARGIN_L + 230, w: 68, label: "Completed" },
+    { x: MARGIN_L + 298, w: 56, label: "Total" },
+    { x: MARGIN_L + 354, w: 68, label: "Status" },
+    { x: MARGIN_L + 422, w: 88, label: "Crew" },
+  ];
+
+  const drawTableHeader = () => {
+    ensure(40);
+    ops += `${NAVY_RGB("rg")} ${MARGIN_L} ${y - 18} ${CONTENT_W} 20 re f\n`;
+    for (const c of cols) {
+      ops += `${TABLE_HEAD_TEXT} BT /F2 8.5 Tf ${c.x} ${y - 12} Td (${pdfText(c.label.toUpperCase())}) Tj ET\n`;
+    }
+    ops += `${RESET_BLACK}\n`;
+    y -= 22;
+  };
+  drawTableHeader();
 
   let totalMinutes = 0;
+  let rowIdx = 0;
   for (const v of visits) {
     const mins = durationMinutes(v.arrival_time, v.completion_time);
     totalMinutes += mins;
     const workers = visitWorkers.get(String(v.id)) || [];
-    ensure(22);
-    ops += `BT /F1 9 Tf ${left} ${y} Td (${pdfText(fmtDate(v.service_date))}) Tj ET\n`;
-    ops += `BT /F1 9 Tf 168 ${y} Td (${pdfText(v.visit_number || "-")}) Tj ET\n`;
-    ops += `BT /F1 9 Tf 232 ${y} Td (${pdfText(fmtTime(v.arrival_time))}) Tj ET\n`;
-    ops += `BT /F1 9 Tf 304 ${y} Td (${pdfText(fmtTime(v.completion_time))}) Tj ET\n`;
-    ops += `BT /F2 9 Tf 380 ${y} Td (${pdfText(fmtDuration(mins))}) Tj ET\n`;
-    ops += `BT /F1 9 Tf 432 ${y} Td (${pdfText(v.visit_status || "-")}) Tj ET\n`;
+    const summary = [v.service_summary, v.customer_visible_notes].filter(Boolean).join(" — ");
+    const internal = includeCrewNotes && v.crew_notes ? String(v.crew_notes) : "";
+    const summaryLines = summary ? Math.ceil(summary.length / 96) : 0;
+    const internalLines = internal ? Math.ceil(internal.length / 96) : 0;
+    const crewExtraLine = workers.length > 2 ? 1 : 0;
+    const rowH = 18 + summaryLines * 11 + internalLines * 11 + crewExtraLine * 11 + 6;
+
+    ensure(rowH + 4);
+    if (rowIdx % 2 === 1) {
+      ops += `${ZEBRA_BG} ${MARGIN_L} ${y - rowH + 6} ${CONTENT_W} ${rowH} re f\n`;
+    }
+    const baseY = y;
     const crewLabel = workers.slice(0, 2).join(", ") + (workers.length > 2 ? ` +${workers.length - 2}` : "");
-    ops += `BT /F1 9 Tf 496 ${y} Td (${pdfText(crewLabel || "-")}) Tj ET\n`;
+    const vals = [
+      fmtDate(v.service_date),
+      v.visit_number || "—",
+      fmtTime(v.arrival_time),
+      fmtTime(v.completion_time),
+      fmtDuration(mins),
+      v.visit_status || "—",
+      crewLabel || "—",
+    ];
+    for (let i = 0; i < cols.length; i++) {
+      const isTotal = i === 4;
+      ops += `${DARK_TEXT} BT /${isTotal ? "F2" : "F1"} 9 Tf ${cols[i].x} ${baseY} Td (${pdfText(vals[i])}) Tj ET\n`;
+    }
     y -= 14;
 
-    if (v.service_summary || v.customer_visible_notes) {
-      const summary = [v.service_summary, v.customer_visible_notes].filter(Boolean).join(" - ");
-      wrapped(`Service summary: ${summary}`, left + 8, 8, 102);
+    if (summary) {
+      ops += `${DARK_TEXT} BT /F2 8.5 Tf ${MARGIN_L + 6} ${y} Td (Summary:) Tj ET\n`;
+      ops += `${DARK_TEXT} BT /F1 9 Tf ${MARGIN_L + 50} ${y} Td (${pdfText(summary.slice(0, 92))}) Tj ET\n`;
+      y -= 11;
+      let rest = summary.slice(92);
+      while (rest.length) {
+        ops += `${DARK_TEXT} BT /F1 9 Tf ${MARGIN_L + 50} ${y} Td (${pdfText(rest.slice(0, 92))}) Tj ET\n`;
+        rest = rest.slice(92);
+        y -= 11;
+      }
     }
-    if (includeCrewNotes && v.crew_notes) {
-      wrapped(`Internal notes: ${v.crew_notes}`, left + 8, 8, 102);
+    if (internal) {
+      ops += `0.55 0.20 0.20 rg BT /F2 8.5 Tf ${MARGIN_L + 6} ${y} Td (Internal:) Tj ET\n`;
+      ops += `${DARK_TEXT} BT /F1 9 Tf ${MARGIN_L + 50} ${y} Td (${pdfText(internal.slice(0, 92))}) Tj ET\n`;
+      y -= 11;
     }
     if (workers.length > 2) {
-      wrapped(`Crew: ${workers.join(", ")}`, left + 8, 8, 102);
+      ops += `${DARK_TEXT} BT /F1 8.5 Tf ${MARGIN_L + 6} ${y} Td (Crew: ${pdfText(workers.join(", "))}) Tj ET\n`;
+      y -= 11;
     }
-    y -= 4;
+    // row divider
+    ops += `${MUTED_BORDER} ${MARGIN_L} ${y - 2} m ${CONTENT_R} ${y - 2} l S\n`;
+    y -= 8;
+    ops += `${RESET_BLACK}\n`;
+    rowIdx += 1;
   }
 
+  // Totals box
+  ensure(70);
   y -= 6;
-  line();
+  const tH = 56;
+  ops += `${NAVY_RGB("rg")} ${MARGIN_L} ${y - tH} ${CONTENT_W} ${tH} re f\n`;
+  let tY = y - 18;
+  ops += `1 1 1 rg BT /F2 9 Tf ${MARGIN_L + 14} ${tY} Td (VISITS INCLUDED) Tj ET\n`;
+  ops += `1 1 1 rg BT /F2 18 Tf ${MARGIN_L + 14} ${tY - 18} Td (${pdfText(String(visits.length))}) Tj ET\n`;
+  ops += `1 1 1 rg BT /F2 9 Tf ${MARGIN_L + 200} ${tY} Td (TOTAL TIME ON SITE) Tj ET\n`;
+  ops += `1 1 1 rg BT /F2 18 Tf ${MARGIN_L + 200} ${tY - 18} Td (${pdfText(fmtDuration(totalMinutes))}) Tj ET\n`;
+  ops += `1 1 1 rg BT /F1 8 Tf ${MARGIN_L + 400} ${tY} Td (TIME ZONE) Tj ET\n`;
+  ops += `1 1 1 rg BT /F2 10 Tf ${MARGIN_L + 400} ${tY - 14} Td (Saskatchewan / Regina) Tj ET\n`;
+  ops += `1 1 1 rg BT /F1 8 Tf ${MARGIN_L + 400} ${tY - 28} Td (CST, UTC-6, no DST) Tj ET\n`;
+  ops += `${RESET_BLACK}\n`;
+  y -= tH + 10;
 
-  // Totals
-  text("Totals", left, 10, "F2");
-  text(`Visits included: ${visits.length}`, left, 10);
-  text(`Total time on site: ${fmtDuration(totalMinutes)}`, left, 11, "F2");
-
-  // Footer
-  if (y > 96) {
-    const footerY = Math.max(y - 30, 72);
-    ops += `0.94 0.96 0.98 rg 48 ${footerY - 12} 516 42 re f\n`;
-    ops += `BT /F1 9 Tf 62 ${footerY + 12} Td (${pdfText("Times shown are in Saskatchewan / Regina local time (CST, UTC-6).")}) Tj ET\n`;
-    ops += `BT /F1 8 Tf 62 ${footerY - 6} Td (${pdfText("Praetoria Group | support@praetoriagroup.ca | praetoriagroup.ca")}) Tj ET\n`;
-  }
+  // Closing line
+  ensure(20);
+  ops += `0.35 0.40 0.50 rg BT /F1 8.5 Tf ${MARGIN_L} ${y} Td (This report is provided by Praetoria Group as proof of service for the selected job visits.) Tj ET\n`;
+  ops += `${RESET_BLACK}\n`;
 
   pages.push(ops);
-  return buildPdf(pages);
+
+  // Append footer to every page
+  const totalPages = pages.length;
+  return buildPdf(pages.map((content, idx) => {
+    const footer =
+      `${MUTED_BORDER} ${MARGIN_L} 60 m ${CONTENT_R} 60 l S\n` +
+      `0.40 0.45 0.55 rg BT /F1 8 Tf ${MARGIN_L} 46 Td (Praetoria Group  |  support@praetoriagroup.ca  |  praetoriagroup.ca) Tj ET\n` +
+      `0.40 0.45 0.55 rg BT /F1 8 Tf 490 46 Td (Page ${idx + 1} of ${totalPages}) Tj ET\n` +
+      `${RESET_BLACK}\n`;
+    return content + "\n" + footer;
+  }));
 }
 
 Deno.serve(async (req) => {
