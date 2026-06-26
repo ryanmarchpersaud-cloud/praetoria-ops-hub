@@ -103,7 +103,7 @@ function VisitCardItem({ visit, workerInitials, now, isDragging, dragMoved }: {
   }
 
   const timeDisplay = visit.arrival_time
-    ? new Date(visit.arrival_time).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })
+    ? new Date(visit.arrival_time).toLocaleTimeString('en-CA', { timeZone: 'America/Regina', hour: 'numeric', minute: '2-digit', hour12: true })
     : 'Anytime';
 
   return (
