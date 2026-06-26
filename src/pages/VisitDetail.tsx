@@ -425,6 +425,15 @@ export default function VisitDetail() {
         visitId={id}
         quoteId={(visit as any).quote_id}
       />
+
+      <ProofOfServiceDialog
+        open={proofOpen}
+        onOpenChange={setProofOpen}
+        mode="visit"
+        visitId={id || null}
+        jobId={(visit as any).job_id || null}
+        customerId={(visit as any).customer_id || null}
+      />
     </div>
   );
 }
