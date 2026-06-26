@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isIOSNative } from '@/lib/platform';
+import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
+import { formatTzTime } from '@/lib/timezone';
 
 // Hide direct camera capture on native iOS — see VisitPhotoGallery.
 const HIDE_DIRECT_CAMERA = isIOSNative();
