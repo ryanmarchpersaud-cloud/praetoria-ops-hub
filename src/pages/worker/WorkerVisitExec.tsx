@@ -904,13 +904,13 @@ export default function WorkerVisitExec() {
                 {visit.arrival_time && (
                   <>
                     <span className="text-muted-foreground">Arrived</span>
-                    <span className="font-medium">{new Date(visit.arrival_time).toLocaleTimeString()}</span>
+                    <span className="font-medium">{formatTzTime(visit.arrival_time)}</span>
                   </>
                 )}
                 {visit.completion_time && (
                   <>
                     <span className="text-muted-foreground">Completed</span>
-                    <span className="font-medium">{new Date(visit.completion_time).toLocaleTimeString()}</span>
+                    <span className="font-medium">{formatTzTime(visit.completion_time)}</span>
                   </>
                 )}
               </div>
