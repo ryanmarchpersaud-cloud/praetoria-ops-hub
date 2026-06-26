@@ -2,9 +2,8 @@ import { Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const APPLE_APP_STORE_URL = 'https://apps.apple.com/us/app/praetoria-ops-hub/id6762164364';
-// When the Google Play listing goes live, replace this with the real URL and
-// the badge will automatically become a working link.
-const GOOGLE_PLAY_URL: string | null = null;
+const GOOGLE_PLAY_URL: string | null =
+  'https://play.google.com/store/apps/details?id=ca.praetoriagroup.opshub';
 
 interface AppDownloadBadgesProps {
   /** Visual variant: full card with heading + copy, or just the badge row */
