@@ -47,7 +47,7 @@ export function useAppUpdate() {
 
   const currentVersion = versionInfo?.current_version || APP_VERSION;
   const minimumVersion = versionInfo?.minimum_version || APP_VERSION;
-  const storeUrl = versionInfo?.store_url || 'https://play.google.com/store/apps/details?id=ca.praetoriagroup.app';
+  const storeUrl = versionInfo?.store_url || 'https://play.google.com/store/apps/details?id=ca.praetoriagroup.opshub';
   const releaseNotes = versionInfo?.release_notes || null;
   const forceUpdate = versionInfo?.force_update || false;
 
