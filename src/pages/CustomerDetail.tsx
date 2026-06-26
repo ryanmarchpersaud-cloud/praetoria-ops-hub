@@ -43,6 +43,7 @@ export default function CustomerDetail() {
   // Password is always "praetoria" — handled server-side
   const [inviting, setInviting] = useState(false);
   const [invoiceSelectOpen, setInvoiceSelectOpen] = useState(false);
+  const [proofOpen, setProofOpen] = useState(false);
   const [resending, setResending] = useState(false);
   const [impersonating, setImpersonating] = useState(false);
   const [impersonateLink, setImpersonateLink] = useState<string | null>(null);
