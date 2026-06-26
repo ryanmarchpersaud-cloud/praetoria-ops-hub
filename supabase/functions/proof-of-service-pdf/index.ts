@@ -578,6 +578,7 @@ Deno.serve(async (req) => {
 
     const titleSuffix = job?.job_number ? ` (${job.job_number})` : "";
     const reportTitle = `Proof of Service Report${titleSuffix}`;
+    const jobRef = job?.job_number || customer.company_name || "Proof of Service";
 
     const pdfBytes = generateReportPdf({
       customer: customer as any,
@@ -591,6 +592,7 @@ Deno.serve(async (req) => {
       customerMessage,
       generatedBy,
       reportTitle,
+      jobRef,
       dateRange,
     });
 
