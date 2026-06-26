@@ -591,6 +591,15 @@ export default function JobDetail() {
         requestId={(job as any).request_id}
         billingMode={(form as any).billing_type || null}
       />
+
+      <ProofOfServiceDialog
+        open={proofOpen}
+        onOpenChange={setProofOpen}
+        mode="job"
+        jobId={id || null}
+        customerId={(job as any).customer_id || null}
+        defaultEmail={(customer as any)?.email || (customer as any)?.billing_contact_email || null}
+      />
     </div>
   );
 }
