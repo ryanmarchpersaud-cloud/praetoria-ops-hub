@@ -589,6 +589,11 @@ export default function WorkerVisitExec() {
         })}
       </div>
 
+      {/* ── Live On-Site Timer (workers need to see this is running) ── */}
+      {(execState === 'on_site' || execState === 'completed') && visit.arrival_time && (
+        <LiveVisitTimer arrivalTime={visit.arrival_time} completionTime={visit.completion_time} variant="hero" />
+      )}
+
       {/* ── Primary Action ── */}
       {execState !== 'completed' && (
         <div>{renderPrimaryAction()}</div>
