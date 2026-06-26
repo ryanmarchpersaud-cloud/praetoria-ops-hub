@@ -143,6 +143,10 @@ export default function VisitDetail() {
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
         )}
+        <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setProofOpen(true)}>
+          <FileCheck2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Proof of Service</span>
+        </Button>
         {canManageVisits && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
