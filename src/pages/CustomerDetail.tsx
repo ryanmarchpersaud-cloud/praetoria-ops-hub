@@ -790,6 +790,16 @@ export default function CustomerDetail() {
         />
       )}
 
+      {id && (
+        <ProofOfServiceDialog
+          open={proofOpen}
+          onOpenChange={setProofOpen}
+          mode="customer"
+          customerId={id}
+          defaultEmail={(customer as any)?.email || (customer as any)?.billing_contact_email || null}
+        />
+      )}
+
       {/* ─── Delete Customer Confirmation ─────────────────── */}
       <Dialog open={deleteOpen} onOpenChange={(o) => { if (!deleting) setDeleteOpen(o); }}>
         <DialogContent className="max-w-md">
