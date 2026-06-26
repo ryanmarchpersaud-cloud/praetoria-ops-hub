@@ -64,7 +64,8 @@ function getSeasonLabel(dateStr: string) {
 
 function fmtTime(iso: string | null) {
   if (!iso) return null;
-  try { return new Date(iso).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' }); }
+  // Always show in Regina (Saskatchewan) local time for commercial proof-of-service.
+  try { return new Date(iso).toLocaleTimeString('en-CA', { timeZone: 'America/Regina', hour: 'numeric', minute: '2-digit', hour12: true }); }
   catch { return null; }
 }
 

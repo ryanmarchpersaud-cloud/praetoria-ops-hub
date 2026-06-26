@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isIOSNative } from '@/lib/platform';
+import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
+import { formatTzTime } from '@/lib/timezone';
 
 // Hide direct camera capture on native iOS — see VisitPhotoGallery.
 const HIDE_DIRECT_CAMERA = isIOSNative();
@@ -480,6 +482,11 @@ export default function SubcontractorVisitExec() {
         })}
       </div>
 
+      {/* ── Live On-Site Timer ── */}
+      {(execState === 'on_site' || execState === 'completed') && visit.arrival_time && (
+        <LiveVisitTimer arrivalTime={visit.arrival_time} completionTime={visit.completion_time} variant="hero" />
+      )}
+
       {/* ── Primary Action ── */}
       {execState !== 'completed' && (
         <div>{renderPrimaryAction()}</div>
@@ -501,7 +508,7 @@ export default function SubcontractorVisitExec() {
           <p className="text-base font-bold text-foreground">Visit Complete</p>
           {visit.completion_time && (
             <p className="text-xs text-muted-foreground">
-              Finished at {new Date(visit.completion_time).toLocaleTimeString()}
+              Finished at {formatTzTime(visit.completion_time)}
             </p>
           )}
           <Button variant="outline" size="sm" className="mt-2" onClick={() => navigate('/subcontractor/schedule')}>
@@ -667,8 +674,8 @@ export default function SubcontractorVisitExec() {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div><span className="text-muted-foreground">Type:</span> <span className="text-foreground capitalize">{visit.visit_type}</span></div>
                 <div><span className="text-muted-foreground">Date:</span> <span className="text-foreground">{visit.service_date}</span></div>
-                {visit.arrival_time && <div><span className="text-muted-foreground">Arrived:</span> <span className="text-foreground">{new Date(visit.arrival_time).toLocaleTimeString()}</span></div>}
-                {visit.completion_time && <div><span className="text-muted-foreground">Completed:</span> <span className="text-foreground">{new Date(visit.completion_time).toLocaleTimeString()}</span></div>}
+                {visit.arrival_time && <div><span className="text-muted-foreground">Arrived:</span> <span className="text-foreground">{formatTzTime(visit.arrival_time)}</span></div>}
+                {visit.completion_time && <div><span className="text-muted-foreground">Completed:</span> <span className="text-foreground">{formatTzTime(visit.completion_time)}</span></div>}
               </div>
             </CardContent>
           </Card>

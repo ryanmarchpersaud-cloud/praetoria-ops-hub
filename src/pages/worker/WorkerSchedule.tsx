@@ -41,7 +41,7 @@ function getWeekDays(weekStart: Date) {
 function formatTime(iso: string | null) {
   if (!iso) return null;
   try {
-    return new Date(iso).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString('en-CA', { timeZone: 'America/Regina', hour: 'numeric', minute: '2-digit', hour12: true });
   } catch { return null; }
 }
 

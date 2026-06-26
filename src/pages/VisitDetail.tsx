@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
@@ -19,6 +19,8 @@ import { VisitPhotoGallery } from '@/components/VisitPhotoGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
 import { useQuery } from '@tanstack/react-query';
+import { tzTimeInputValue, reginaLocalToUtcIso, formatTzTime, formatTzDateTime, minutesBetween, formatDurationMinutes, tzDateKey } from '@/lib/timezone';
+import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
 
 export default function VisitDetail() {
   const { id } = useParams();
@@ -51,8 +53,27 @@ export default function VisitDetail() {
   const property = (visit as any).properties;
   const customer = (visit as any).customers;
 
+  // Cross-midnight warning: completion local time is earlier than arrival on the SAME local date.
+  const sameDayInversion =
+    form.arrival_time && form.completion_time &&
+    tzDateKey(form.arrival_time) === tzDateKey(form.completion_time) &&
+    new Date(form.completion_time).getTime() < new Date(form.arrival_time).getTime();
+
   const handleSave = async () => {
     if (!id) return;
+    if (sameDayInversion) {
+      const bump = window.confirm(
+        'Completion time is earlier than arrival on the same day.\n\nDid the job cross midnight (finish next day)?\n\nClick OK to record completion on the NEXT day. Click Cancel to fix the time manually.',
+      );
+      if (!bump) return;
+      // Push completion forward by 24h.
+      const bumped = new Date(new Date(form.completion_time).getTime() + 24 * 60 * 60 * 1000).toISOString();
+      form.completion_time = bumped;
+      setForm((p: any) => ({ ...p, completion_time: bumped }));
+    }
+    // Detect time changes for audit trail.
+    const arrivalChanged = (visit as any).arrival_time !== form.arrival_time;
+    const completionChanged = (visit as any).completion_time !== form.completion_time;
     try {
       await updateVisit.mutateAsync({
         id, service_date: form.service_date, visit_type: form.visit_type,
@@ -61,6 +82,29 @@ export default function VisitDetail() {
         snow_depth: form.snow_depth, service_summary: form.service_summary,
         arrival_time: form.arrival_time || null, completion_time: form.completion_time || null,
       });
+      if (arrivalChanged || completionChanged) {
+        try {
+          const { data: ures } = await supabase.auth.getUser();
+          await (supabase as any).from('audit_log').insert({
+            actor_user_id: ures?.user?.id ?? null,
+            actor_email: ures?.user?.email ?? null,
+            action: 'visit_time_corrected',
+            target_type: 'visit',
+            target_id: id,
+            customer_id: (visit as any).customer_id ?? null,
+            success: true,
+            before_data: {
+              arrival_time: (visit as any).arrival_time,
+              completion_time: (visit as any).completion_time,
+            },
+            after_data: {
+              arrival_time: form.arrival_time,
+              completion_time: form.completion_time,
+            },
+            metadata: { visit_number: (visit as any).visit_number, reason: 'admin manual correction' },
+          });
+        } catch { /* audit failure non-fatal */ }
+      }
       toast({ title: 'Visit saved' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -172,20 +216,55 @@ export default function VisitDetail() {
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div><Label className="text-xs">Service Date</Label><Input type="date" value={form.service_date || ''} onChange={e => set('service_date', e.target.value)} /></div>
-                <div><Label className="text-xs">Arrival</Label><Input type="time" value={form.arrival_time ? form.arrival_time.slice(11, 16) : ''} onChange={e => set('arrival_time', form.service_date + 'T' + e.target.value + ':00Z')} /></div>
-                <div><Label className="text-xs">Completion</Label><Input type="time" value={form.completion_time ? form.completion_time.slice(11, 16) : ''} onChange={e => set('completion_time', form.service_date + 'T' + e.target.value + ':00Z')} /></div>
+                <div>
+                  <Label className="text-xs">Arrival (Regina)</Label>
+                  <Input
+                    type="time"
+                    value={tzTimeInputValue(form.arrival_time)}
+                    onChange={e => set('arrival_time', reginaLocalToUtcIso(form.service_date, e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Completion (Regina)</Label>
+                  <Input
+                    type="time"
+                    value={tzTimeInputValue(form.completion_time)}
+                    onChange={e => {
+                      // Anchor completion to arrival's local date so same-day edits don't shift to service_date.
+                      const baseDate = form.arrival_time ? tzDateKey(form.arrival_time) : form.service_date;
+                      set('completion_time', reginaLocalToUtcIso(baseDate, e.target.value));
+                    }}
+                  />
+                </div>
               </div>
-              {form.arrival_time && form.completion_time && (() => {
-                const mins = Math.max(0, Math.round((new Date(form.completion_time).getTime() - new Date(form.arrival_time).getTime()) / 60000));
-                const h = Math.floor(mins / 60); const m = mins % 60;
-                const label = h > 0 ? `${h}h ${m}m` : `${m} min`;
-                return (
-                  <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm flex items-center justify-between">
-                    <span className="text-muted-foreground">Time on property (billable)</span>
-                    <span className="font-semibold">{label}</span>
+
+              {/* Live or final timer */}
+              {form.arrival_time && (
+                <LiveVisitTimer arrivalTime={form.arrival_time} completionTime={form.completion_time} variant="hero" />
+              )}
+
+              {/* Cross-midnight / inverted time warning */}
+              {sameDayInversion && (
+                <div className="rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-xs flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div className="text-amber-800 dark:text-amber-300">
+                    <p className="font-semibold">Completion is before arrival on the same day.</p>
+                    <p className="opacity-90">Saving will ask whether the job crossed midnight, or you can correct the time above.</p>
                   </div>
-                );
-              })()}
+                </div>
+              )}
+
+              {form.arrival_time && form.completion_time && !sameDayInversion && (
+                <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground text-xs">Time on property (billable)</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {formatTzDateTime(form.arrival_time)} → {formatTzDateTime(form.completion_time)}
+                    </span>
+                  </div>
+                  <span className="font-semibold">{formatDurationMinutes(minutesBetween(form.arrival_time, form.completion_time))}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 

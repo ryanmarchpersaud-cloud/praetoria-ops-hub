@@ -25,6 +25,10 @@ import { CustomerWarningsBanner } from '@/components/CustomerWarningsBanner';
 import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog, shouldSkipImagePreview } from '@/lib/iosDebug';
 import { isIOSNative } from '@/lib/platform';
 import { shouldUseNativeCamera, pickNativePhoto, type CameraSource } from '@/lib/nativeCamera';
+import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
+import { formatTzTime } from '@/lib/timezone';
+
+
 
 // Hide direct camera capture on native iOS — see VisitPhotoGallery.
 const HIDE_DIRECT_CAMERA = isIOSNative();
@@ -585,6 +589,11 @@ export default function WorkerVisitExec() {
         })}
       </div>
 
+      {/* ── Live On-Site Timer (workers need to see this is running) ── */}
+      {(execState === 'on_site' || execState === 'completed') && visit.arrival_time && (
+        <LiveVisitTimer arrivalTime={visit.arrival_time} completionTime={visit.completion_time} variant="hero" />
+      )}
+
       {/* ── Primary Action ── */}
       {execState !== 'completed' && (
         <div>{renderPrimaryAction()}</div>
@@ -606,7 +615,7 @@ export default function WorkerVisitExec() {
           <p className="text-base font-bold text-foreground">Visit Complete</p>
           {visit.completion_time && (
             <p className="text-xs text-muted-foreground">
-              Finished at {new Date(visit.completion_time).toLocaleTimeString()}
+              Finished at {formatTzTime(visit.completion_time)}
             </p>
           )}
           <Button variant="outline" size="sm" className="mt-2" onClick={() => navigate('/worker/schedule')}>
@@ -895,13 +904,13 @@ export default function WorkerVisitExec() {
                 {visit.arrival_time && (
                   <>
                     <span className="text-muted-foreground">Arrived</span>
-                    <span className="font-medium">{new Date(visit.arrival_time).toLocaleTimeString()}</span>
+                    <span className="font-medium">{formatTzTime(visit.arrival_time)}</span>
                   </>
                 )}
                 {visit.completion_time && (
                   <>
                     <span className="text-muted-foreground">Completed</span>
-                    <span className="font-medium">{new Date(visit.completion_time).toLocaleTimeString()}</span>
+                    <span className="font-medium">{formatTzTime(visit.completion_time)}</span>
                   </>
                 )}
               </div>
