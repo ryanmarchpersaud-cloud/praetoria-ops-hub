@@ -371,6 +371,9 @@ export default function CustomerDetail() {
         <Button variant="outline" className="h-11 gap-2" onClick={() => setInvoiceSelectOpen(true)}>
           <Receipt className="h-4 w-4" /> Invoice from Jobs
         </Button>
+        <Button variant="outline" className="h-11 gap-2" onClick={() => setProofOpen(true)}>
+          <FileCheck2 className="h-4 w-4" /> Proof of Service
+        </Button>
         {!hasPortalAccess ? (
           <Button variant="outline" className="h-11 gap-2" onClick={() => setInviteOpen(true)}>
             <UserPlus className="h-4 w-4" /> Invite to Portal
