@@ -482,6 +482,11 @@ export default function SubcontractorVisitExec() {
         })}
       </div>
 
+      {/* ── Live On-Site Timer ── */}
+      {(execState === 'on_site' || execState === 'completed') && visit.arrival_time && (
+        <LiveVisitTimer arrivalTime={visit.arrival_time} completionTime={visit.completion_time} variant="hero" />
+      )}
+
       {/* ── Primary Action ── */}
       {execState !== 'completed' && (
         <div>{renderPrimaryAction()}</div>
