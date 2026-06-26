@@ -249,21 +249,28 @@ function buildPdf(pageContents: string[], imageBytes: Uint8Array | null): Uint8A
   return concatBytes(parts);
 }
 
+function parseDateForReport(value: unknown): Date | null {
+  if (!value) return null;
+  const s = String(value).trim();
+  if (!s) return null;
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (dateOnly) {
+    const [, y, m, d] = dateOnly;
+    return new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 12, 0, 0));
+  }
+  const parsed = new Date(s);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function fmtDate(value: unknown): string {
-  if (!value) return "";
-  const s = String(value);
-  const iso = s.length === 10 ? `${s}T12:00:00Z` : s;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return s;
+  const d = parseDateForReport(value);
+  if (!d) return value ? String(value) : "";
   return d.toLocaleDateString("en-CA", { timeZone: COMPANY_TZ, weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
 function fmtDateShort(value: unknown): string {
-  if (!value) return "";
-  const s = String(value);
-  const iso = s.length === 10 ? `${s}T12:00:00Z` : s;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return s;
+  const d = parseDateForReport(value);
+  if (!d) return value ? String(value) : "";
   return d.toLocaleDateString("en-CA", { timeZone: COMPANY_TZ, month: "short", day: "numeric", year: "numeric" });
 }
 
@@ -348,20 +355,20 @@ const WHITE_FILL = "1 1 1 rg";
 const RESET_BLACK = "0 0 0 rg";
 
 function periodLabel(visits: any[], dateRange?: { start?: string; end?: string }): string {
-  // Prefer dateRange if provided; otherwise derive from visits' service_date
-  let start = dateRange?.start || "";
-  let end = dateRange?.end || "";
-  if (!start || !end) {
-    const dates = visits.map((v) => String(v.service_date || "")).filter(Boolean).sort();
-    if (dates.length) {
-      if (!start) start = dates[0];
-      if (!end) end = dates[dates.length - 1];
-    }
-  }
+  // The report period must match the visit rows in this PDF. Use the actual
+  // selected/filtered visit dates first; the explicit range is only a fallback.
+  const dates = Array.from(new Set(
+    visits.map((v) => String(v.service_date || "").slice(0, 10)).filter(Boolean),
+  )).sort();
+
+  if (dates.length === 1) return fmtDate(dates[0]);
+  if (dates.length > 1) return `${fmtDateShort(dates[0])} - ${fmtDateShort(dates[dates.length - 1])}`;
+
+  const start = String(dateRange?.start || "").slice(0, 10);
+  const end = String(dateRange?.end || "").slice(0, 10);
   if (!start && !end) return "All recorded visits";
-  if (start && end && start === end) return fmtDateShort(start);
-  if (start && end) return `${fmtDateShort(start)}  to  ${fmtDateShort(end)}`;
-  return fmtDateShort(start || end);
+  if (start && end && start !== end) return `${fmtDateShort(start)} - ${fmtDateShort(end)}`;
+  return fmtDate(start || end);
 }
 
 function generateReportPdf(args: BuildArgs, logoBytes: Uint8Array): Uint8Array {

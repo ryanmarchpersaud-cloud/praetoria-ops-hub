@@ -133,9 +133,10 @@ export function ProofOfServiceDialog({ open, onOpenChange, mode, customerId, job
   const selectNone = () => setSelected(new Set());
 
   const invoke = async (action: 'signed_url' | 'email' | 'save_to_customer_docs', overrides: Record<string, unknown> = {}) => {
+    const visibleSelectedVisitIds = selectedVisits.map(v => v.id);
     const body: Record<string, unknown> = {
       action,
-      visit_ids: Array.from(selected),
+      visit_ids: visibleSelectedVisitIds,
       customer_id: customerId || selectedVisits[0]?.customer_id,
       job_id: jobId || selectedVisits[0]?.job_id,
       include_crew_notes: includeCrewNotes,
@@ -151,7 +152,7 @@ export function ProofOfServiceDialog({ open, onOpenChange, mode, customerId, job
   };
 
   const handleDownload = async () => {
-    if (!selected.size) return toast({ title: 'Select at least one visit', variant: 'destructive' });
+    if (!selectedVisits.length) return toast({ title: 'Select at least one visit', variant: 'destructive' });
     setBusy('download');
     try {
       // If save-to-docs toggle is on, request the combined action
@@ -176,7 +177,7 @@ export function ProofOfServiceDialog({ open, onOpenChange, mode, customerId, job
   };
 
   const handleEmail = async () => {
-    if (!selected.size) return toast({ title: 'Select at least one visit', variant: 'destructive' });
+    if (!selectedVisits.length) return toast({ title: 'Select at least one visit', variant: 'destructive' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTo)) return toast({ title: 'Enter a valid email', variant: 'destructive' });
     setBusy('email');
     try {
@@ -221,7 +222,7 @@ export function ProofOfServiceDialog({ open, onOpenChange, mode, customerId, job
             <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/40">
               <div className="text-xs font-medium">
                 {isLoading ? 'Loading visits...' : `${filteredVisits.length} visit${filteredVisits.length === 1 ? '' : 's'}`}
-                {selected.size > 0 && <span className="ml-2 text-muted-foreground">({selected.size} selected · {formatDurationMinutes(totalMinutes)} total)</span>}
+                {selectedVisits.length > 0 && <span className="ml-2 text-muted-foreground">({selectedVisits.length} selected · {formatDurationMinutes(totalMinutes)} total)</span>}
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={selectAll}>Select all</Button>
@@ -309,11 +310,11 @@ export function ProofOfServiceDialog({ open, onOpenChange, mode, customerId, job
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-          <Button variant="outline" onClick={handleDownload} disabled={busy !== null || selected.size === 0}>
+          <Button variant="outline" onClick={handleDownload} disabled={busy !== null || selectedVisits.length === 0}>
             {busy === 'download' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             Download PDF
           </Button>
-          <Button onClick={handleEmail} disabled={busy !== null || selected.size === 0 || !emailTo}>
+          <Button onClick={handleEmail} disabled={busy !== null || selectedVisits.length === 0 || !emailTo}>
             {busy === 'email' ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
             Email to Customer
           </Button>
