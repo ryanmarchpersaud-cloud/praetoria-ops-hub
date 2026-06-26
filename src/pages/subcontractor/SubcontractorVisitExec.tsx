@@ -508,7 +508,7 @@ export default function SubcontractorVisitExec() {
           <p className="text-base font-bold text-foreground">Visit Complete</p>
           {visit.completion_time && (
             <p className="text-xs text-muted-foreground">
-              Finished at {new Date(visit.completion_time).toLocaleTimeString()}
+              Finished at {formatTzTime(visit.completion_time)}
             </p>
           )}
           <Button variant="outline" size="sm" className="mt-2" onClick={() => navigate('/subcontractor/schedule')}>
