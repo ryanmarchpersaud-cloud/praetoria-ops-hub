@@ -476,43 +476,113 @@ function generateReportPdf(args: BuildArgs, logoBytes: Uint8Array): Uint8Array {
   drawCardBg(leftX, cardH);
   drawCardBg(rightX, cardH);
 
-  // Customer card content
+  // Inner text width (card width minus left padding 12 + right padding 8)
+  const cardInnerW = cardW - 20;
+
+  // Approx glyph width per font (Helvetica metrics)
+  const charW = (font: "F1" | "F2", size: number) => size * (font === "F2" ? 0.56 : 0.52);
+  const fits = (s: string, font: "F1" | "F2", size: number, max: number) => s.length * charW(font, size) <= max;
+
+  // Shrink-to-fit a single line: reduce size until it fits or hits min, otherwise truncate with ellipsis
+  const fitOneLine = (text: string, font: "F1" | "F2", baseSize: number, max: number, minSize = 8) => {
+    const t = String(text || "");
+    let size = baseSize;
+    while (size > minSize && !fits(t, font, size, max)) size -= 0.5;
+    if (fits(t, font, size, max)) return { text: t, size };
+    // Truncate with ellipsis at min size
+    const cw = charW(font, size);
+    const maxChars = Math.max(1, Math.floor(max / cw) - 1);
+    return { text: t.slice(0, maxChars).trimEnd() + "…", size };
+  };
+
+  // Word-wrap a line into multiple lines that fit max width at a fixed size
+  const wrapToLines = (text: string, font: "F1" | "F2", size: number, max: number, maxLines = 2): string[] => {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    const lines: string[] = [];
+    let cur = "";
+    for (const w of words) {
+      const cand = cur ? `${cur} ${w}` : w;
+      if (fits(cand, font, size, max)) { cur = cand; continue; }
+      if (cur) lines.push(cur);
+      cur = w;
+      if (lines.length >= maxLines) break;
+    }
+    if (cur && lines.length < maxLines) lines.push(cur);
+    if (lines.length === maxLines) {
+      // Ensure last line fits, otherwise truncate with ellipsis
+      const last = lines[maxLines - 1];
+      if (!fits(last, font, size, max)) {
+        const cw = charW(font, size);
+        const maxChars = Math.max(1, Math.floor(max / cw) - 1);
+        lines[maxLines - 1] = last.slice(0, maxChars).trimEnd() + "…";
+      }
+    }
+    return lines;
+  };
+
+  const drawFitted = (text: string, x: number, yPos: number, font: "F1" | "F2", baseSize: number, max: number) => {
+    const fitted = fitOneLine(text, font, baseSize, max);
+    ops += `${DARK_TEXT} BT /${font} ${fitted.size} Tf ${x} ${yPos} Td (${pdfText(fitted.text)}) Tj ET\n`;
+    return fitted.size;
+  };
+
+  // ---- Customer card content ----
   const custName = customer.company_name || [customer.first_name, customer.last_name].filter(Boolean).join(" ") || "Customer";
   let cy = cardTop - 16;
   const cInnerX = leftX + 12;
   ops += `${NAVY_FILL} BT /F2 8 Tf ${cInnerX} ${cy} Td (CUSTOMER) Tj ET\n`;
   cy -= 16;
-  ops += `${DARK_TEXT} BT /F2 12 Tf ${cInnerX} ${cy} Td (${pdfText(custName)}) Tj ET\n`;
-  cy -= 14;
+  // Customer name: try single line at 12, shrink to 10, otherwise wrap to 2 lines at 11
+  if (fits(custName, "F2", 12, cardInnerW)) {
+    ops += `${DARK_TEXT} BT /F2 12 Tf ${cInnerX} ${cy} Td (${pdfText(custName)}) Tj ET\n`;
+    cy -= 14;
+  } else if (fits(custName, "F2", 10, cardInnerW)) {
+    ops += `${DARK_TEXT} BT /F2 10 Tf ${cInnerX} ${cy} Td (${pdfText(custName)}) Tj ET\n`;
+    cy -= 13;
+  } else {
+    const nameLines = wrapToLines(custName, "F2", 11, cardInnerW, 2);
+    for (const ln of nameLines) {
+      ops += `${DARK_TEXT} BT /F2 11 Tf ${cInnerX} ${cy} Td (${pdfText(ln)}) Tj ET\n`;
+      cy -= 13;
+    }
+  }
   if (customer.site_contact_name) {
-    ops += `${DARK_TEXT} BT /F1 9 Tf ${cInnerX} ${cy} Td (Site contact: ${pdfText(customer.site_contact_name)}) Tj ET\n`;
+    drawFitted(`Site contact: ${customer.site_contact_name}`, cInnerX, cy, "F1", 9, cardInnerW);
     cy -= 12;
   }
   const cPhone = customer.site_contact_phone || customer.phone;
   if (cPhone) {
-    ops += `${DARK_TEXT} BT /F1 9 Tf ${cInnerX} ${cy} Td (Phone: ${pdfText(cPhone)}) Tj ET\n`;
+    drawFitted(`Phone: ${cPhone}`, cInnerX, cy, "F1", 9, cardInnerW);
     cy -= 12;
   }
   if (customer.email) {
-    ops += `${DARK_TEXT} BT /F1 9 Tf ${cInnerX} ${cy} Td (Email: ${pdfText(customer.email)}) Tj ET\n`;
+    drawFitted(`Email: ${customer.email}`, cInnerX, cy, "F1", 9, cardInnerW);
     cy -= 12;
   }
 
-  // Property card content
+  // ---- Property card content ----
   let py = cardTop - 16;
   const pInnerX = rightX + 12;
   ops += `${NAVY_FILL} BT /F2 8 Tf ${pInnerX} ${py} Td (PROPERTY) Tj ET\n`;
   py -= 16;
   const propName = property?.property_name || "Service Address";
-  ops += `${DARK_TEXT} BT /F2 12 Tf ${pInnerX} ${py} Td (${pdfText(propName)}) Tj ET\n`;
-  py -= 14;
+  if (fits(propName, "F2", 12, cardInnerW)) {
+    ops += `${DARK_TEXT} BT /F2 12 Tf ${pInnerX} ${py} Td (${pdfText(propName)}) Tj ET\n`;
+    py -= 14;
+  } else {
+    const propLines = wrapToLines(propName, "F2", 11, cardInnerW, 2);
+    for (const ln of propLines) {
+      ops += `${DARK_TEXT} BT /F2 11 Tf ${pInnerX} ${py} Td (${pdfText(ln)}) Tj ET\n`;
+      py -= 13;
+    }
+  }
   if (property?.address_line_1) {
-    ops += `${DARK_TEXT} BT /F1 9 Tf ${pInnerX} ${py} Td (${pdfText(property.address_line_1)}) Tj ET\n`;
+    drawFitted(String(property.address_line_1), pInnerX, py, "F1", 9, cardInnerW);
     py -= 12;
   }
   const cityLine = [property?.city, property?.province, property?.postal_code].filter(Boolean).join(", ");
   if (cityLine) {
-    ops += `${DARK_TEXT} BT /F1 9 Tf ${pInnerX} ${py} Td (${pdfText(cityLine)}) Tj ET\n`;
+    drawFitted(cityLine, pInnerX, py, "F1", 9, cardInnerW);
     py -= 12;
   }
   ops += `${RESET_BLACK}\n`;
