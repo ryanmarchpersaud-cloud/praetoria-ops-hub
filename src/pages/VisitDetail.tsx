@@ -53,8 +53,27 @@ export default function VisitDetail() {
   const property = (visit as any).properties;
   const customer = (visit as any).customers;
 
+  // Cross-midnight warning: completion local time is earlier than arrival on the SAME local date.
+  const sameDayInversion =
+    form.arrival_time && form.completion_time &&
+    tzDateKey(form.arrival_time) === tzDateKey(form.completion_time) &&
+    new Date(form.completion_time).getTime() < new Date(form.arrival_time).getTime();
+
   const handleSave = async () => {
     if (!id) return;
+    if (sameDayInversion) {
+      const bump = window.confirm(
+        'Completion time is earlier than arrival on the same day.\n\nDid the job cross midnight (finish next day)?\n\nClick OK to record completion on the NEXT day. Click Cancel to fix the time manually.',
+      );
+      if (!bump) return;
+      // Push completion forward by 24h.
+      const bumped = new Date(new Date(form.completion_time).getTime() + 24 * 60 * 60 * 1000).toISOString();
+      form.completion_time = bumped;
+      setForm((p: any) => ({ ...p, completion_time: bumped }));
+    }
+    // Detect time changes for audit trail.
+    const arrivalChanged = (visit as any).arrival_time !== form.arrival_time;
+    const completionChanged = (visit as any).completion_time !== form.completion_time;
     try {
       await updateVisit.mutateAsync({
         id, service_date: form.service_date, visit_type: form.visit_type,
@@ -63,6 +82,29 @@ export default function VisitDetail() {
         snow_depth: form.snow_depth, service_summary: form.service_summary,
         arrival_time: form.arrival_time || null, completion_time: form.completion_time || null,
       });
+      if (arrivalChanged || completionChanged) {
+        try {
+          const { data: ures } = await supabase.auth.getUser();
+          await (supabase as any).from('audit_log').insert({
+            actor_user_id: ures?.user?.id ?? null,
+            actor_email: ures?.user?.email ?? null,
+            action: 'visit_time_corrected',
+            target_type: 'visit',
+            target_id: id,
+            customer_id: (visit as any).customer_id ?? null,
+            success: true,
+            before_data: {
+              arrival_time: (visit as any).arrival_time,
+              completion_time: (visit as any).completion_time,
+            },
+            after_data: {
+              arrival_time: form.arrival_time,
+              completion_time: form.completion_time,
+            },
+            metadata: { visit_number: (visit as any).visit_number, reason: 'admin manual correction' },
+          });
+        } catch { /* audit failure non-fatal */ }
+      }
       toast({ title: 'Visit saved' });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
