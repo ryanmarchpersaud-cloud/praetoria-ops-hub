@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
+import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
@@ -31,6 +32,7 @@ export default function VisitDetail() {
   const { toast } = useToast();
   const [form, setForm] = useState<any>({});
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [proofOpen, setProofOpen] = useState(false);
   const { canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices for this visit
@@ -141,6 +143,10 @@ export default function VisitDetail() {
             <span className="hidden sm:inline">Create Invoice</span>
           </Button>
         )}
+        <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setProofOpen(true)}>
+          <FileCheck2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Proof of Service</span>
+        </Button>
         {canManageVisits && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -418,6 +424,15 @@ export default function VisitDetail() {
         jobId={(visit as any).job_id}
         visitId={id}
         quoteId={(visit as any).quote_id}
+      />
+
+      <ProofOfServiceDialog
+        open={proofOpen}
+        onOpenChange={setProofOpen}
+        mode="visit"
+        visitId={id || null}
+        jobId={(visit as any).job_id || null}
+        customerId={(visit as any).customer_id || null}
       />
     </div>
   );

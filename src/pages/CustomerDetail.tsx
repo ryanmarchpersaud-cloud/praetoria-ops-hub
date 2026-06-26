@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
+import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { Switch } from '@/components/ui/switch';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
@@ -42,6 +43,7 @@ export default function CustomerDetail() {
   // Password is always "praetoria" — handled server-side
   const [inviting, setInviting] = useState(false);
   const [invoiceSelectOpen, setInvoiceSelectOpen] = useState(false);
+  const [proofOpen, setProofOpen] = useState(false);
   const [resending, setResending] = useState(false);
   const [impersonating, setImpersonating] = useState(false);
   const [impersonateLink, setImpersonateLink] = useState<string | null>(null);
@@ -368,6 +370,9 @@ export default function CustomerDetail() {
         </Button>
         <Button variant="outline" className="h-11 gap-2" onClick={() => setInvoiceSelectOpen(true)}>
           <Receipt className="h-4 w-4" /> Invoice from Jobs
+        </Button>
+        <Button variant="outline" className="h-11 gap-2" onClick={() => setProofOpen(true)}>
+          <FileCheck2 className="h-4 w-4" /> Proof of Service
         </Button>
         {!hasPortalAccess ? (
           <Button variant="outline" className="h-11 gap-2" onClick={() => setInviteOpen(true)}>
@@ -782,6 +787,16 @@ export default function CustomerDetail() {
           onOpenChange={setInvoiceSelectOpen}
           customerId={id}
           customerName={`${customer.first_name} ${customer.last_name}`}
+        />
+      )}
+
+      {id && (
+        <ProofOfServiceDialog
+          open={proofOpen}
+          onOpenChange={setProofOpen}
+          mode="customer"
+          customerId={id}
+          defaultEmail={(customer as any)?.email || (customer as any)?.billing_contact_email || null}
         />
       )}
 

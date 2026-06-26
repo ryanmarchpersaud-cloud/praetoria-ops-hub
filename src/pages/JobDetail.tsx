@@ -14,7 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck, Trash2, XCircle, Gift } from 'lucide-react';
+import { ArrowLeft, Save, ClipboardCheck, MapPin, FileText, Plus, Receipt, LinkIcon, UserCheck, Trash2, XCircle, Gift, FileCheck2 } from 'lucide-react';
+import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -41,6 +42,7 @@ export default function JobDetail() {
   const [form, setForm] = useState<any>({});
   const [generating, setGenerating] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [proofOpen, setProofOpen] = useState(false);
   const { canManageJobs, canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices
@@ -267,6 +269,10 @@ export default function JobDetail() {
             className="h-11 shrink-0 gap-1.5"
           />
         )}
+        <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setProofOpen(true)}>
+          <FileCheck2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Proof of Service</span>
+        </Button>
         {canManageJobs && !isClosed && (
           <Button
             variant="outline"
@@ -584,6 +590,15 @@ export default function JobDetail() {
         quoteId={(job as any).quote_id}
         requestId={(job as any).request_id}
         billingMode={(form as any).billing_type || null}
+      />
+
+      <ProofOfServiceDialog
+        open={proofOpen}
+        onOpenChange={setProofOpen}
+        mode="job"
+        jobId={id || null}
+        customerId={(job as any).customer_id || null}
+        defaultEmail={(customer as any)?.email || (customer as any)?.billing_contact_email || null}
       />
     </div>
   );
