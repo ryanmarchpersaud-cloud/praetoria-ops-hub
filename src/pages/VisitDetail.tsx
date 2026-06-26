@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
@@ -19,6 +19,8 @@ import { VisitPhotoGallery } from '@/components/VisitPhotoGallery';
 import { supabase } from '@/integrations/supabase/client';
 import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkDialog';
 import { useQuery } from '@tanstack/react-query';
+import { tzTimeInputValue, reginaLocalToUtcIso, formatTzTime, formatTzDateTime, minutesBetween, formatDurationMinutes, tzDateKey } from '@/lib/timezone';
+import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
 
 export default function VisitDetail() {
   const { id } = useParams();
