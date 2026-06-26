@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
+import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { Switch } from '@/components/ui/switch';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
