@@ -3,6 +3,8 @@ import { Bot, X, Send, Loader2, Sparkles, Volume2, VolumeX, Mic, MicOff, Chevron
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import { supabase } from '@/integrations/supabase/client';
+import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
