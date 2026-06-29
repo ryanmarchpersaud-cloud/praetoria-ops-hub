@@ -346,6 +346,7 @@ export default function QuoteDetail() {
         workmanship_warranty: form.workmanship_warranty || null,
         terms_conditions: form.terms_conditions || null,
         approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
+        quote_date: form.quote_date || null,
         tax_rate: form.tax_rate == null || form.tax_rate === '' ? 0.11 : Number(form.tax_rate),
         gst_rate: form.gst_rate === '' || form.gst_rate == null ? null : Number(form.gst_rate),
         pst_rate: form.pst_rate === '' || form.pst_rate == null ? null : Number(form.pst_rate),
