@@ -397,6 +397,7 @@ export default function QuoteDetail() {
       const updates: any = {
         id, approval_status: newStatus as any,
         service_category: form.service_category, scope_of_work: form.scope_of_work,
+        quote_date: form.quote_date || null,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
         customer_notes: form.customer_notes || null,
         workmanship_warranty: form.workmanship_warranty || null,
