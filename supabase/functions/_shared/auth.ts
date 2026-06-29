@@ -47,22 +47,21 @@ export async function requireAuth(req: Request): Promise<AuthResult> {
     return { ok: false, response: jsonResp({ error: "Server misconfigured" }, 500) };
   }
 
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data, error } = await userClient.auth.getClaims(token);
-  if (error || !data?.claims?.sub) {
+  const adminClient = createClient(supabaseUrl, serviceKey);
+  // Verify user via admin client (works regardless of JWKS / signing-key rotation)
+  const { data: userData, error } = await adminClient.auth.getUser(token);
+  if (error || !userData?.user?.id) {
     return { ok: false, response: jsonResp({ error: "Unauthorized" }, 401) };
   }
 
-  const adminClient = createClient(supabaseUrl, serviceKey);
   return {
     ok: true,
-    userId: data.claims.sub as string,
-    email: (data.claims.email as string) ?? null,
+    userId: userData.user.id,
+    email: userData.user.email ?? null,
     token,
     adminClient,
   };
+
 }
 
 export async function requireRole(
@@ -113,18 +112,16 @@ export async function requireAuthOrServiceRole(req: Request): Promise<AuthOrServ
     return { ok: true, isServiceRole: true, userId: null, email: null, adminClient };
   }
 
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const { data, error } = await userClient.auth.getClaims(token);
-  if (error || !data?.claims?.sub) {
+  const { data: userData, error } = await adminClient.auth.getUser(token);
+  if (error || !userData?.user?.id) {
     return { ok: false, response: jsonResp({ error: "Unauthorized" }, 401) };
   }
   return {
     ok: true,
     isServiceRole: false,
-    userId: data.claims.sub as string,
-    email: (data.claims.email as string) ?? null,
+    userId: userData.user.id,
+    email: userData.user.email ?? null,
     adminClient,
   };
+
 }
