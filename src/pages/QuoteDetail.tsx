@@ -709,13 +709,27 @@ export default function QuoteDetail() {
           {/* Service & Scope — always visible */}
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <div>
-                <Label className="text-xs">Service Category</Label>
-                <select value={form.service_category || ''} onChange={e => set('service_category', e.target.value)}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10" disabled={isSentOrApproved}>
-                  {SERVICE_CATEGORIES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Service Category</Label>
+                  <select value={form.service_category || ''} onChange={e => set('service_category', e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10" disabled={isSentOrApproved}>
+                    {SERVICE_CATEGORIES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <Label className="text-xs">Quote Date (Issued)</Label>
+                  <Input
+                    type="date"
+                    value={form.quote_date || ''}
+                    onChange={e => set('quote_date', e.target.value)}
+                    disabled={isSentOrApproved}
+                    className="h-10"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">Shown as "Issued" on the printed quote.</p>
+                </div>
               </div>
+
               <div>
                 <Label className="text-xs">Scope of Work</Label>
                 <Textarea value={form.scope_of_work || ''} onChange={e => set('scope_of_work', e.target.value)} rows={3} disabled={isSentOrApproved} />
