@@ -6023,6 +6023,7 @@ export type Database = {
           price_per_cut: number | null
           price_weekly: number | null
           pst_rate: number | null
+          quote_date: string | null
           quote_number: string
           recurring_pricing_enabled: boolean
           recurring_pricing_notes: string | null
@@ -6064,6 +6065,7 @@ export type Database = {
           price_per_cut?: number | null
           price_weekly?: number | null
           pst_rate?: number | null
+          quote_date?: string | null
           quote_number: string
           recurring_pricing_enabled?: boolean
           recurring_pricing_notes?: string | null
@@ -6105,6 +6107,7 @@ export type Database = {
           price_per_cut?: number | null
           price_weekly?: number | null
           pst_rate?: number | null
+          quote_date?: string | null
           quote_number?: string
           recurring_pricing_enabled?: boolean
           recurring_pricing_notes?: string | null
