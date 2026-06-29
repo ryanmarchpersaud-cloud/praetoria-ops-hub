@@ -18,7 +18,9 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
   return {
     quoteNumber: quote.quote_number,
     status: quote.approval_status,
-    createdAt: quote.created_at,
+    createdAt: quote.quote_date
+      ? new Date(`${quote.quote_date}T12:00:00`).toISOString()
+      : quote.created_at,
     validUntil: quote.follow_up_due_at,
     serviceCategory: quote.service_category,
     scopeOfWork: quote.scope_of_work,

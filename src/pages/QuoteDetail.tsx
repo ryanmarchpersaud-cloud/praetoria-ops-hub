@@ -346,6 +346,7 @@ export default function QuoteDetail() {
         workmanship_warranty: form.workmanship_warranty || null,
         terms_conditions: form.terms_conditions || null,
         approval_status: form.approval_status, follow_up_due_at: nextFollowUp,
+        quote_date: form.quote_date || null,
         tax_rate: form.tax_rate == null || form.tax_rate === '' ? 0.11 : Number(form.tax_rate),
         gst_rate: form.gst_rate === '' || form.gst_rate == null ? null : Number(form.gst_rate),
         pst_rate: form.pst_rate === '' || form.pst_rate == null ? null : Number(form.pst_rate),
@@ -396,6 +397,7 @@ export default function QuoteDetail() {
       const updates: any = {
         id, approval_status: newStatus as any,
         service_category: form.service_category, scope_of_work: form.scope_of_work,
+        quote_date: form.quote_date || null,
         agent_summary: form.agent_summary, internal_notes: form.internal_notes,
         customer_notes: form.customer_notes || null,
         workmanship_warranty: form.workmanship_warranty || null,
@@ -1096,6 +1098,16 @@ export default function QuoteDetail() {
               <div>
                 <Label className="text-xs">Follow-up Due</Label>
                 <Input type="datetime-local" value={form.follow_up_due_at ? form.follow_up_due_at.slice(0, 16) : ''} onChange={e => set('follow_up_due_at', e.target.value)} className="h-10" />
+              </div>
+              <div>
+                <Label className="text-xs">Quote Date (Issued)</Label>
+                <Input
+                  type="date"
+                  value={form.quote_date || ''}
+                  onChange={e => set('quote_date', e.target.value)}
+                  className="h-10"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">Shown as "Issued" on the printed quote. Defaults to the created date if blank.</p>
               </div>
             </div>
             <div className="rounded-md border bg-muted/20 p-3 space-y-3">
