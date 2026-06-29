@@ -396,7 +396,7 @@ export function AICopilot() {
             {messages.length === 0 && (
               <div className="space-y-3 pt-4">
                 <div className="text-center">
-                  <Sparkles className="h-8 w-8 mx-auto text-primary/40 mb-2" />
+                  <img src={praetoriaLogo} alt="Praetoria AI" className="h-10 w-10 mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">Hi! I can help you with your operations.</p>
                   <p className="text-xs text-muted-foreground/60 mt-1">Try one of these:</p>
                 </div>
