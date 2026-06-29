@@ -1097,6 +1097,16 @@ export default function QuoteDetail() {
                 <Label className="text-xs">Follow-up Due</Label>
                 <Input type="datetime-local" value={form.follow_up_due_at ? form.follow_up_due_at.slice(0, 16) : ''} onChange={e => set('follow_up_due_at', e.target.value)} className="h-10" />
               </div>
+              <div>
+                <Label className="text-xs">Quote Date (Issued)</Label>
+                <Input
+                  type="date"
+                  value={form.quote_date || ''}
+                  onChange={e => set('quote_date', e.target.value)}
+                  className="h-10"
+                />
+                <p className="text-[10px] text-muted-foreground mt-1">Shown as "Issued" on the printed quote. Defaults to the created date if blank.</p>
+              </div>
             </div>
             <div className="rounded-md border bg-muted/20 p-3 space-y-3">
               <div className="flex items-center justify-between">
