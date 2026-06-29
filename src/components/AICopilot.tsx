@@ -3,6 +3,8 @@ import { Bot, X, Send, Loader2, Sparkles, Volume2, VolumeX, Mic, MicOff, Chevron
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import { supabase } from '@/integrations/supabase/client';
+import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -196,11 +198,19 @@ export function AICopilot() {
     const allMessages = [...messages, userMsg];
 
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) {
+        setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Your session has expired. Please sign in again.' }]);
+        setIsLoading(false);
+        return;
+      }
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         body: JSON.stringify({ messages: allMessages }),
       });
@@ -311,10 +321,11 @@ export function AICopilot() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform print:hidden"
-          title="AI Co-pilot"
+          className="fixed bottom-5 right-5 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform print:hidden overflow-hidden p-2"
+          title="Praetoria AI Co-pilot"
+          aria-label="Open Praetoria AI Co-pilot"
         >
-          <Sparkles className="h-6 w-6" />
+          <img src={praetoriaLogo} alt="Praetoria AI" className="h-9 w-9 object-contain" />
         </button>
       )}
 
