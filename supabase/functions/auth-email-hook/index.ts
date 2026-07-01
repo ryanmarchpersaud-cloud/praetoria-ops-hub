@@ -43,6 +43,16 @@ const FROM_DOMAIN = "praetoriagroup.ca" // Domain shown in From address (may be 
 
 function buildRecoveryUrl(data: Record<string, any>) {
   const resetUrl = `https://${ROOT_DOMAIN}/reset-password`
+
+  // Best recovery flow: do NOT put a one-time token in the link at all.
+  // Mail scanners/previews can safely open this URL because the user must
+  // manually enter the emailed code before the token is verified.
+  if (data.token) {
+    const params = new URLSearchParams({ mode: 'code' })
+    if (data.email) params.set('email', data.email)
+    return `${resetUrl}?${params.toString()}`
+  }
+
   let tokenHash = data.token_hash
 
   if (!tokenHash && typeof data.url === 'string') {
@@ -255,12 +265,24 @@ async function handleWebhook(req: Request): Promise<Response> {
   // requests in the iOS/Android app, opens the link in Safari/Chrome) and
   // also gets consumed by Gmail's link prefetch — producing the
   // "invalid or already used" error. Instead we send the user to our own
-  // /reset-password page with the token_hash, and call verifyOtp there at
-  // submit time. token_hash does NOT require the code_verifier.
+  // /reset-password page. Prefer the manual-code flow so email clients cannot
+  // consume the reset token by previewing the link. If a future payload omits
+  // the raw code, fall back to token_hash and verify it only on form submit.
   let confirmationUrl = payload.data.url
   if (emailType === 'recovery') {
     confirmationUrl = buildRecoveryUrl(payload.data)
   }
+
+  const safeRecoveryMetadata = emailType === 'recovery'
+    ? {
+        reset_link_path: (() => {
+          try { return new URL(confirmationUrl).pathname } catch { return 'invalid-url' }
+        })(),
+        reset_link_mode: payload.data.token ? 'manual_code' : 'token_hash_fallback',
+        has_manual_code: Boolean(payload.data.token),
+        has_token_hash: Boolean(payload.data.token_hash),
+      }
+    : undefined
 
   const templateProps = {
     siteName: SITE_NAME,
@@ -292,6 +314,7 @@ async function handleWebhook(req: Request): Promise<Response> {
     template_name: emailType,
     recipient_email: payload.data.email,
     status: 'pending',
+    metadata: safeRecoveryMetadata,
   })
 
   const { error: enqueueError } = await supabase.rpc('enqueue_email', {
