@@ -189,6 +189,7 @@ export default function CustomerDetail() {
         primary_contact_title: form.primary_contact_title || null,
         email: form.email || null, phone: form.phone || null,
         secondary_email: form.secondary_email || null,
+        secondary_phone: form.secondary_phone || null,
         billing_contact_name: form.billing_contact_name || null,
         billing_contact_title: form.billing_contact_title || null,
         billing_contact_email: form.billing_contact_email || null,
