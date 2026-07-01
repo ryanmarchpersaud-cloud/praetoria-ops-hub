@@ -21,6 +21,8 @@ export default function ResetPassword() {
   const [resendEmail, setResendEmail] = useState('');
   const [resending, setResending] = useState(false);
   const [pendingTokenHash, setPendingTokenHash] = useState('');
+  const [manualCodeMode, setManualCodeMode] = useState(false);
+  const [resetCode, setResetCode] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -46,6 +48,8 @@ export default function ResetPassword() {
       const code = searchParams.get('code');
       const tokenHash = searchParams.get('token_hash');
       const otpType = searchParams.get('type');
+      const mode = searchParams.get('mode');
+      const emailFromLink = searchParams.get('email') || '';
       const hasRecoveryHash = hash.includes('type=recovery') || hash.includes('access_token');
       const hasErrorInUrl =
         hash.includes('error=') || hash.includes('error_code=') ||
@@ -54,6 +58,18 @@ export default function ResetPassword() {
       if (hasErrorInUrl) {
         // Supabase returned an error in the URL fragment (expired/used token).
         if (mounted) setStatus('invalid_link');
+        return;
+      }
+
+      // Current robust flow: the link itself carries no one-time token, so
+      // email security scanners cannot consume it. The user enters the code
+      // from the email, and we verify it only when they submit the form.
+      if (mode === 'code') {
+        if (!mounted) return;
+        setManualCodeMode(true);
+        setRecoveryEmail(emailFromLink);
+        setResendEmail(emailFromLink);
+        setStatus('ready');
         return;
       }
 
@@ -142,6 +158,25 @@ export default function ResetPassword() {
           throw new Error('This reset link is invalid or already used. Please request a new reset link.');
         }
         setRecoveryEmail(data.session.user?.email ?? '');
+      } else if (manualCodeMode) {
+        const email = (recoveryEmail || resendEmail).trim();
+        const token = resetCode.trim().replace(/\s+/g, '');
+        if (!email) {
+          throw new Error('Enter the email address that received the reset code.');
+        }
+        if (!token) {
+          throw new Error('Enter the password reset code from the email.');
+        }
+        const { data, error } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: 'recovery',
+        });
+        if (error || !data?.session) {
+          setStatus('invalid_link');
+          throw new Error('This reset code is invalid or already used. Please request a new reset email.');
+        }
+        setRecoveryEmail(data.session.user?.email ?? email);
       }
 
       const { error } = await supabase.auth.updateUser({ password });
@@ -204,6 +239,40 @@ export default function ResetPassword() {
               <p className="text-sm text-muted-foreground">
                 Resetting password for <span className="font-medium text-foreground">{recoveryEmail}</span>
               </p>
+            )}
+            {manualCodeMode && (
+              <>
+                {!recoveryEmail && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="recovery-email" className="text-foreground text-sm font-medium">Email address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="recovery-email"
+                        type="email"
+                        value={resendEmail}
+                        onChange={(e) => setResendEmail(e.target.value)}
+                        placeholder="your personal email address"
+                        required
+                        className="pl-10 h-11"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <Label htmlFor="reset-code" className="text-foreground text-sm font-medium">Password reset code</Label>
+                  <Input
+                    id="reset-code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                    placeholder="Enter the code from your email"
+                    required
+                    className="h-11 text-center font-semibold tracking-widest"
+                  />
+                </div>
+              </>
             )}
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-foreground text-sm font-medium">New password</Label>
