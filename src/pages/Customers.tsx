@@ -207,7 +207,10 @@ export default function Customers() {
                 <div><Label>Email</Label><Input name="email" type="email" /></div>
                 <div><Label>Phone</Label><Input name="phone" /></div>
               </div>
-              <div><Label>Secondary Email</Label><Input name="secondary_email" type="email" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Secondary Email</Label><Input name="secondary_email" type="email" /></div>
+                <div><Label>Secondary Phone</Label><Input name="secondary_phone" /></div>
+              </div>
 
               {/* ── Billing Contact (Company only) ── */}
               {isCompany && (
