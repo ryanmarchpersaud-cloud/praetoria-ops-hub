@@ -20,6 +20,7 @@ export default function ResetPassword() {
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [resendEmail, setResendEmail] = useState('');
   const [resending, setResending] = useState(false);
+  const [pendingTokenHash, setPendingTokenHash] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -56,23 +57,14 @@ export default function ResetPassword() {
         return;
       }
 
-      // Preferred flow: token_hash + type=recovery. This does NOT require the
-      // PKCE code_verifier, so it works across browsers/devices and survives
-      // Gmail-style link prefetching (the token is only consumed by verifyOtp
-      // when called from the page, not by visiting the URL).
+      // Preferred flow: token_hash + type=recovery. Do NOT verify it on page
+      // load. Some email security scanners load links immediately; verifying
+      // here would consume the reset token before the real user can set a new
+      // password. Store it and verify only when the form is submitted.
       if (tokenHash && otpType === 'recovery') {
-        const { data, error } = await supabase.auth.verifyOtp({
-          type: 'recovery',
-          token_hash: tokenHash,
-        });
         if (!mounted) return;
-        if (error || !data?.session) {
-          setStatus('invalid_link');
-          return;
-        }
-        setRecoveryEmail(data.session.user?.email ?? '');
+        setPendingTokenHash(tokenHash);
         setStatus('ready');
-        window.history.replaceState({}, '', window.location.pathname);
         return;
       }
 
@@ -140,10 +132,23 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
+      if (pendingTokenHash) {
+        const { data, error } = await supabase.auth.verifyOtp({
+          type: 'recovery',
+          token_hash: pendingTokenHash,
+        });
+        if (error || !data?.session) {
+          setStatus('invalid_link');
+          throw new Error('This reset link is invalid or already used. Please request a new reset link.');
+        }
+        setRecoveryEmail(data.session.user?.email ?? '');
+      }
+
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast({ title: 'Password updated', description: 'Your password has been changed. Please sign in.' });
       await supabase.auth.signOut();
+      window.history.replaceState({}, '', window.location.pathname);
       navigate('/login');
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });

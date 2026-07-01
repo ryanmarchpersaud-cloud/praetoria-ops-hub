@@ -41,6 +41,35 @@ const SENDER_DOMAIN = "notify.praetoriagroup.ca"
 const ROOT_DOMAIN = "praetoriagroup.ca"
 const FROM_DOMAIN = "praetoriagroup.ca" // Domain shown in From address (may be root or sender subdomain)
 
+function buildRecoveryUrl(data: Record<string, any>) {
+  const resetUrl = `https://${ROOT_DOMAIN}/reset-password`
+  let tokenHash = data.token_hash
+
+  if (!tokenHash && typeof data.url === 'string') {
+    try {
+      const sourceUrl = new URL(data.url)
+      // Supabase's default /verify link often carries the hashed recovery token
+      // as `token`, not `token_hash`. If the hook payload omits token_hash,
+      // reuse that hashed token on our app page so the email never points at
+      // /verify, which consumes the token before the user reaches the form.
+      tokenHash =
+        sourceUrl.searchParams.get('token_hash') ||
+        sourceUrl.searchParams.get('token') ||
+        undefined
+    } catch {
+      // Keep the default reset URL if Supabase ever sends a non-URL value.
+    }
+  }
+
+  if (!tokenHash) return resetUrl
+
+  const params = new URLSearchParams({
+    token_hash: tokenHash,
+    type: 'recovery',
+  })
+  return `${resetUrl}?${params.toString()}`
+}
+
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
@@ -229,12 +258,8 @@ async function handleWebhook(req: Request): Promise<Response> {
   // /reset-password page with the token_hash, and call verifyOtp there at
   // submit time. token_hash does NOT require the code_verifier.
   let confirmationUrl = payload.data.url
-  if (emailType === 'recovery' && payload.data.token_hash) {
-    const params = new URLSearchParams({
-      token_hash: payload.data.token_hash,
-      type: 'recovery',
-    })
-    confirmationUrl = `https://${ROOT_DOMAIN}/reset-password?${params.toString()}`
+  if (emailType === 'recovery') {
+    confirmationUrl = buildRecoveryUrl(payload.data)
   }
 
   const templateProps = {
