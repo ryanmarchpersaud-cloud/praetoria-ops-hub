@@ -1452,6 +1452,7 @@ export type Database = {
           referral_source: string | null
           requires_po_number: boolean
           secondary_email: string | null
+          secondary_phone: string | null
           site_contact_email: string | null
           site_contact_name: string | null
           site_contact_phone: string | null
@@ -1501,6 +1502,7 @@ export type Database = {
           referral_source?: string | null
           requires_po_number?: boolean
           secondary_email?: string | null
+          secondary_phone?: string | null
           site_contact_email?: string | null
           site_contact_name?: string | null
           site_contact_phone?: string | null
@@ -1550,6 +1552,7 @@ export type Database = {
           referral_source?: string | null
           requires_po_number?: boolean
           secondary_email?: string | null
+          secondary_phone?: string | null
           site_contact_email?: string | null
           site_contact_name?: string | null
           site_contact_phone?: string | null

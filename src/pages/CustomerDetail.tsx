@@ -189,6 +189,7 @@ export default function CustomerDetail() {
         primary_contact_title: form.primary_contact_title || null,
         email: form.email || null, phone: form.phone || null,
         secondary_email: form.secondary_email || null,
+        secondary_phone: form.secondary_phone || null,
         billing_contact_name: form.billing_contact_name || null,
         billing_contact_title: form.billing_contact_title || null,
         billing_contact_email: form.billing_contact_email || null,
@@ -529,7 +530,10 @@ export default function CustomerDetail() {
                   <Input value={form?.phone || ''} onChange={e => set('phone', e.target.value)} />
                 </div>
               </div>
-              <div><Label className="text-xs">Secondary Email</Label><Input type="email" value={form?.secondary_email || ''} onChange={e => set('secondary_email', e.target.value)} /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label className="text-xs">Secondary Email</Label><Input type="email" value={form?.secondary_email || ''} onChange={e => set('secondary_email', e.target.value)} /></div>
+                <div><Label className="text-xs flex items-center gap-1"><Phone className="h-3 w-3" /> Secondary Phone</Label><Input value={form?.secondary_phone || ''} onChange={e => set('secondary_phone', e.target.value)} /></div>
+              </div>
             </CardContent>
           </Card>
 
