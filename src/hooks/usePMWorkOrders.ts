@@ -155,7 +155,14 @@ export function useCreateWorkOrder() {
         });
       }
 
-      // Notify assignee via existing in-app notifications table
+      // Resolve assignee's display name so admin/ops see who was assigned
+      const assigneeName = await resolveAssigneeName(
+        input.assignee_type,
+        input.assigned_worker_id,
+        input.assigned_subcontractor_id,
+      );
+
+      // Notify worker assignee via existing in-app notifications table
       const recipient = input.assigned_worker_id || null;
       if (recipient) {
         try {
@@ -176,21 +183,28 @@ export function useCreateWorkOrder() {
         }
       }
 
-      // Ops email
+      // Guaranteed admin in-app row so the red badge lights up immediately
+      await insertAdminInAppNotification(
+        `PM Work Order ${wo.work_order_number} — assigned to ${assigneeName}`,
+        `${wo.title} (${wo.priority}) has been assigned to ${assigneeName}.`,
+        wo.id,
+      );
+
+      // Ops email (also inserts an in_app row via the edge function)
       try {
         await supabase.functions.invoke('send-notification', {
           body: {
             event: 'pm_work_order_created',
             audience: 'admin',
-            channels: ['email', 'in_app'],
+            channels: ['email'],
             record_type: 'pm_work_order',
             record_id: wo.id,
             variables: {
-              subject: `PM Work Order ${wo.work_order_number} created — ${wo.title}`,
+              subject: `PM Work Order ${wo.work_order_number} — assigned to ${assigneeName}`,
               body:
-                `A property-management work order was created from maintenance request.\n\n` +
+                `A property-management work order was created from a maintenance request.\n\n` +
                 `WO: ${wo.work_order_number}\nTitle: ${wo.title}\nPriority: ${wo.priority}\n` +
-                `Assignee: ${input.assignee_type}\n\n` +
+                `Assignee: ${assigneeName} (${input.assignee_type})\n\n` +
                 `Open: https://praetoriagroup.ca/property-management/work-orders/${wo.id}`,
               reply_to: 'ops@praetoriagroup.ca',
             },
