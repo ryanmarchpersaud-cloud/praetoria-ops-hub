@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Paperclip, Save, Wrench, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
@@ -25,6 +26,8 @@ export default function PMMaintenanceRequestDetail() {
   const [status, setStatus] = useState('new');
   const [internalNotes, setInternalNotes] = useState('');
   const [tenantUpdate, setTenantUpdate] = useState('');
+  const [ownerVisible, setOwnerVisible] = useState(false);
+  const [ownerSummary, setOwnerSummary] = useState('');
   const [signed, setSigned] = useState<Record<string, string>>({});
   const [woDialogOpen, setWoDialogOpen] = useState(false);
   const nonRepair = data ? isNonRepairRequest({ issue_key: data.issue_key, category: data.category }) : false;
@@ -34,6 +37,8 @@ export default function PMMaintenanceRequestDetail() {
       setStatus(data.status);
       setInternalNotes(data.internal_notes ?? '');
       setTenantUpdate(data.tenant_facing_update ?? '');
+      setOwnerVisible(!!(data as any).owner_visible);
+      setOwnerSummary((data as any).owner_visible_summary ?? '');
     }
   }, [data?.id]);
 
@@ -57,8 +62,10 @@ export default function PMMaintenanceRequestDetail() {
           status,
           internal_notes: internalNotes,
           tenant_facing_update: tenantUpdate,
+          owner_visible: ownerVisible,
+          owner_visible_summary: ownerSummary || null,
           completed_at: status === 'completed' ? new Date().toISOString() : null,
-        },
+        } as any,
       });
       toast.success('Saved');
     } catch (e: any) {
