@@ -75,6 +75,7 @@ export function PMStaffLayout({ children }: { children: ReactNode }) {
       </header>
       <div className="w-full max-w-lg mx-auto">{children}</div>
       <PMStaffBottomNav />
+      <PMStaffFAB />
     </div>
   );
 }
