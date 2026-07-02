@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
+import { PropertyUsageBadge } from '@/components/PropertyUsageBadge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
 import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
@@ -1059,7 +1060,7 @@ function PaymentMethodCard({ customerId }: { customerId: string }) {
 interface RelatedItem {
   id: string;
   link: string;
-  primary: string;
+  primary: React.ReactNode;
   secondary?: string;
   badge?: React.ReactNode;
   mono?: boolean;
