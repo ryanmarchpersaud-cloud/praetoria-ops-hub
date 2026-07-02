@@ -1,0 +1,1 @@
+UPDATE pm_tenants SET email = 'ryansdeckbuilding@gmail.com', user_id = NULL WHERE id = 'fe98e7c6-738b-4f05-bb32-8431b9de599f';
