@@ -257,6 +257,7 @@ const SubcontractorPMWorkOrderDetail = lazy(() => import("./pages/subcontractor/
 const PMOwnerStatementsList = lazy(() => import("./pages/property-management/PMOwnerStatementsList"));
 const PMOwnerStatementDetail = lazy(() => import("./pages/property-management/PMOwnerStatementDetail"));
 const OwnerStatements = lazy(() => import("./pages/owner/OwnerStatements"));
+const OwnerStatementPrint = lazy(() => import("./pages/property-management/OwnerStatementPrint"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
