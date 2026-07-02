@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { usePmOwner, useSavePmOwner, useDeletePmOwner, usePmProperties } from '@/hooks/usePropertyManagement';
 import { toast } from 'sonner';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Mail } from 'lucide-react';
+import { InvitePropertyOwnerDialog } from '@/components/property-management/InvitePropertyOwnerDialog';
 
 export default function PMOwnerDetail() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export default function PMOwnerDetail() {
   const del = useDeletePmOwner();
   const { data: props = [] } = usePmProperties();
   const [form, setForm] = useState<any>({});
+  const [inviteOpen, setInviteOpen] = useState(false);
   useEffect(() => { if (data) setForm(data); }, [data]);
   if (!data) return <div className="p-6">Loading…</div>;
 
@@ -37,10 +39,20 @@ export default function PMOwnerDetail() {
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild><Link to="/property-management/owners"><ArrowLeft className="h-4 w-4 mr-1" />Back</Link></Button>
         <div className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+            <Mail className="h-4 w-4 mr-1" />Invite to portal
+          </Button>
           <Button variant="destructive" size="sm" onClick={remove}><Trash2 className="h-4 w-4 mr-1" />Delete</Button>
           <Button onClick={submit} disabled={save.isPending}>Save</Button>
         </div>
       </div>
+      <InvitePropertyOwnerDialog
+        ownerId={id!}
+        defaultEmail={form.email ?? ''}
+        ownerName={form.owner_name}
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+      />
       <Card>
         <CardHeader><CardTitle>{form.owner_name}</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">

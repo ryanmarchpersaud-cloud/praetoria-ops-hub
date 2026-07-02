@@ -33,6 +33,7 @@ export interface AuthorizationState {
   isSubcontractor: boolean;
   isCustomer: boolean;
   isTenant: boolean;
+  isPropertyOwner: boolean;
 
   /** Portal access flags (from team_members or role fallback) */
   canAccessAdminPortal: boolean;
@@ -40,6 +41,7 @@ export interface AuthorizationState {
   canAccessSubcontractorPortal: boolean;
   canAccessCustomerPortal: boolean;
   canAccessTenantPortal: boolean;
+  canAccessOwnerPortal: boolean;
 
   /** Whether the user account is active (non-blocked) */
   isActiveUser: boolean;
@@ -100,10 +102,12 @@ export function useAuthorization(): AuthorizationState {
   const isSubcontractor = roles.includes('subcontractor');
   // staff = any non-customer, non-subcontractor, non-tenant role holder with at least one role
   const isTenant = roles.includes('tenant' as AppRole);
-  const isStaff = !isCustomer && !isSubcontractor && !isTenant && roles.length > 0;
+  const isPropertyOwner = roles.includes('property_owner' as AppRole);
+  // staff = any non-customer, non-subcontractor, non-tenant, non-property_owner role holder with at least one role
+  const isStaff = !isCustomer && !isSubcontractor && !isTenant && !isPropertyOwner && roles.length > 0;
 
-  // Active status: customers/tenants don't have team_members records so default true
-  const isActiveUser = isCustomer || isTenant
+  // Active status: customers/tenants/external owners don't have team_members records so default true
+  const isActiveUser = isCustomer || isTenant || isPropertyOwner
     ? true
     : teamMember
       ? teamMember.is_active && ['Active', 'Invited'].includes(teamMember.status)
@@ -118,6 +122,9 @@ export function useAuthorization(): AuthorizationState {
   const canAccessCustomerPortal = isCustomer || isOwner || isAdmin || isManager;
   // Tenant portal: only tenant role, plus admin/owner for preview
   const canAccessTenantPortal = isTenant || isOwner || isAdmin;
+  // Property Owner Portal: external property_owner role + internal admin/owner for preview
+  // NOTE: internal 'owner' role is Praetoria staff and is intentionally allowed for support/preview.
+  const canAccessOwnerPortal = isPropertyOwner || isOwner || isAdmin;
 
   return {
     roles,
@@ -127,11 +134,13 @@ export function useAuthorization(): AuthorizationState {
     isSubcontractor,
     isCustomer,
     isTenant,
+    isPropertyOwner,
     canAccessAdminPortal,
     canAccessWorkerPortal,
     canAccessSubcontractorPortal,
     canAccessCustomerPortal,
     canAccessTenantPortal,
+    canAccessOwnerPortal,
     isActiveUser,
     isLoading: rolesLoading || teamLoading,
   };

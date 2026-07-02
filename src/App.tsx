@@ -230,6 +230,11 @@ const PMLeaseDetail = lazy(() => import("./pages/property-management/PMLeaseDeta
 const PMMaintenanceRequestsList = lazy(() => import("./pages/property-management/PMMaintenanceRequestsList"));
 const PMMaintenanceRequestDetail = lazy(() => import("./pages/property-management/PMMaintenanceRequestDetail"));
 const TenantHome = lazy(() => import("./pages/tenant/TenantHome"));
+const OwnerHome = lazy(() => import("./pages/owner/OwnerHome"));
+const OwnerProperties = lazy(() => import("./pages/owner/OwnerProperties"));
+const OwnerPropertyDetail = lazy(() => import("./pages/owner/OwnerPropertyDetail"));
+const OwnerMaintenance = lazy(() => import("./pages/owner/OwnerMaintenance"));
+const OwnerAccount = lazy(() => import("./pages/owner/OwnerAccount"));
 const TenantLease = lazy(() => import("./pages/tenant/TenantLease"));
 const TenantMaintenanceList = lazy(() => import("./pages/tenant/TenantMaintenanceList"));
 const TenantMaintenanceNew = lazy(() => import("./pages/tenant/TenantMaintenanceNew"));
@@ -424,17 +429,30 @@ function TenantRoute({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function OwnerRoute({ children }: { children?: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { canAccessOwnerPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
+  if (loading || isLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (!canAccessOwnerPortal) return <Navigate to="/access-denied" replace />;
+  return <SignedInPortalRouteShell>{children ?? <Outlet />}</SignedInPortalRouteShell>;
+}
+
 
 
 function LoginRoute() {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { isCustomer, isStaff, isSubcontractor, isTenant, canAccessAdminPortal, isLoading } = useAuthorization();
+  const { isCustomer, isStaff, isSubcontractor, isTenant, isPropertyOwner, canAccessAdminPortal, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Login />;
   if (isLoading || !mustChangePasswordChecked) return null;
   if (mustChangePassword) return <Navigate to="/change-password" replace />;
   if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
   if (isTenant && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
+  if (isPropertyOwner && !canAccessAdminPortal) return <Navigate to="/owner" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
   return <Navigate to="/" replace />;
@@ -763,6 +781,15 @@ function AppRoutes() {
         <Route path="/tenant/notices" element={<Suspense fallback={<RouteLoading />}><TenantNotices /></Suspense>} />
         <Route path="/tenant/profile" element={<Suspense fallback={<RouteLoading />}><TenantProfile /></Suspense>} />
       </Route>
+
+      <Route element={<OwnerRoute />}>
+        <Route path="/owner" element={<Suspense fallback={<RouteLoading />}><OwnerHome /></Suspense>} />
+        <Route path="/owner/properties" element={<Suspense fallback={<RouteLoading />}><OwnerProperties /></Suspense>} />
+        <Route path="/owner/properties/:id" element={<Suspense fallback={<RouteLoading />}><OwnerPropertyDetail /></Suspense>} />
+        <Route path="/owner/maintenance" element={<Suspense fallback={<RouteLoading />}><OwnerMaintenance /></Suspense>} />
+        <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
+      </Route>
+
 
 
       <Route path="*" element={<NotFound />} />
