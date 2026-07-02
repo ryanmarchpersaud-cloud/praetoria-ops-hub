@@ -241,6 +241,7 @@ const TenantNotices = lazy(() => import("./pages/tenant/TenantNotices"));
 const TenantProfile = lazy(() => import("./pages/tenant/TenantProfile"));
 const PMTenantPortalPreview = lazy(() => import("./pages/property-management/PMTenantPortalPreview"));
 const PMWorkOrderDetail = lazy(() => import("./pages/property-management/PMWorkOrderDetail"));
+const PMTenantReferralsList = lazy(() => import("./pages/property-management/PMTenantReferralsList"));
 const WorkerPMWorkOrders = lazy(() => import("./pages/worker/WorkerPMWorkOrders"));
 const WorkerPMWorkOrderDetail = lazy(() => import("./pages/worker/WorkerPMWorkOrderDetail"));
 const SubcontractorPMWorkOrders = lazy(() => import("./pages/subcontractor/SubcontractorPMWorkOrders"));
@@ -652,6 +653,7 @@ function AppRoutes() {
         <Route path="/property-management/maintenance" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/maintenance/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/work-orders/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMWorkOrderDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/referrals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantReferralsList /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}
