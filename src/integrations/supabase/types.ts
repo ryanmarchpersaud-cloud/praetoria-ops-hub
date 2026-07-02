@@ -5600,6 +5600,57 @@ export type Database = {
           },
         ]
       }
+      pm_maintenance_activity: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          created_at: string
+          detail: Json
+          event: string
+          id: string
+          request_id: string | null
+          tenant_visible: boolean
+          work_order_id: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event: string
+          id?: string
+          request_id?: string | null
+          tenant_visible?: boolean
+          work_order_id?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: Json
+          event?: string
+          id?: string
+          request_id?: string | null
+          tenant_visible?: boolean
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_maintenance_activity_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "pm_maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_maintenance_activity_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "pm_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_maintenance_request_attachments: {
         Row: {
           content_type: string | null
@@ -5608,6 +5659,7 @@ export type Database = {
           id: string
           request_id: string
           storage_path: string
+          tenant_visible: boolean
           uploaded_by_user_id: string | null
         }
         Insert: {
@@ -5617,6 +5669,7 @@ export type Database = {
           id?: string
           request_id: string
           storage_path: string
+          tenant_visible?: boolean
           uploaded_by_user_id?: string | null
         }
         Update: {
@@ -5626,6 +5679,7 @@ export type Database = {
           id?: string
           request_id?: string
           storage_path?: string
+          tenant_visible?: boolean
           uploaded_by_user_id?: string | null
         }
         Relationships: [
@@ -5663,6 +5717,7 @@ export type Database = {
           title: string
           unit_id: string | null
           updated_at: string
+          work_order_id: string | null
         }
         Insert: {
           category?: string
@@ -5688,6 +5743,7 @@ export type Database = {
           title: string
           unit_id?: string | null
           updated_at?: string
+          work_order_id?: string | null
         }
         Update: {
           category?: string
@@ -5713,6 +5769,7 @@ export type Database = {
           title?: string
           unit_id?: string | null
           updated_at?: string
+          work_order_id?: string | null
         }
         Relationships: [
           {
@@ -5741,6 +5798,13 @@ export type Database = {
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_maintenance_requests_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "pm_work_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -6498,6 +6562,189 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_work_order_attachments: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          file_name: string | null
+          id: string
+          kind: string
+          storage_path: string
+          tenant_visible: boolean
+          uploaded_by: string | null
+          work_order_id: string
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          kind?: string
+          storage_path: string
+          tenant_visible?: boolean
+          uploaded_by?: string | null
+          work_order_id: string
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          kind?: string
+          storage_path?: string
+          tenant_visible?: boolean
+          uploaded_by?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_work_order_attachments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "pm_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_work_orders: {
+        Row: {
+          access_notes: string | null
+          assigned_subcontractor_id: string | null
+          assigned_worker_id: string | null
+          assignee_type: string
+          category: string | null
+          completed_at: string | null
+          completed_by: string | null
+          completion_notes: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_urgent_safety: boolean
+          issue_key: string | null
+          issue_label: string | null
+          lease_id: string | null
+          maintenance_request_id: string
+          permission_to_enter: boolean | null
+          preferred_contact_time: string | null
+          priority: string
+          property_id: string | null
+          share_tenant_contact: boolean
+          status: string
+          tenant_id: string | null
+          tenant_visible_completion_note: string | null
+          title: string
+          unit_id: string | null
+          updated_at: string
+          work_order_number: string | null
+        }
+        Insert: {
+          access_notes?: string | null
+          assigned_subcontractor_id?: string | null
+          assigned_worker_id?: string | null
+          assignee_type?: string
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_urgent_safety?: boolean
+          issue_key?: string | null
+          issue_label?: string | null
+          lease_id?: string | null
+          maintenance_request_id: string
+          permission_to_enter?: boolean | null
+          preferred_contact_time?: string | null
+          priority?: string
+          property_id?: string | null
+          share_tenant_contact?: boolean
+          status?: string
+          tenant_id?: string | null
+          tenant_visible_completion_note?: string | null
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+          work_order_number?: string | null
+        }
+        Update: {
+          access_notes?: string | null
+          assigned_subcontractor_id?: string | null
+          assigned_worker_id?: string | null
+          assignee_type?: string
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_urgent_safety?: boolean
+          issue_key?: string | null
+          issue_label?: string | null
+          lease_id?: string | null
+          maintenance_request_id?: string
+          permission_to_enter?: boolean | null
+          preferred_contact_time?: string | null
+          priority?: string
+          property_id?: string | null
+          share_tenant_contact?: boolean
+          status?: string
+          tenant_id?: string | null
+          tenant_visible_completion_note?: string | null
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+          work_order_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_work_orders_assigned_subcontractor_id_fkey"
+            columns: ["assigned_subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_work_orders_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_work_orders_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: true
+            referencedRelation: "pm_maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_work_orders_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_work_orders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_work_orders_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
             referencedColumns: ["id"]
           },
         ]

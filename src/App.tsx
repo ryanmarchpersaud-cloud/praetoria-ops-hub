@@ -240,6 +240,11 @@ const TenantDocuments = lazy(() => import("./pages/tenant/TenantDocuments"));
 const TenantNotices = lazy(() => import("./pages/tenant/TenantNotices"));
 const TenantProfile = lazy(() => import("./pages/tenant/TenantProfile"));
 const PMTenantPortalPreview = lazy(() => import("./pages/property-management/PMTenantPortalPreview"));
+const PMWorkOrderDetail = lazy(() => import("./pages/property-management/PMWorkOrderDetail"));
+const WorkerPMWorkOrders = lazy(() => import("./pages/worker/WorkerPMWorkOrders"));
+const WorkerPMWorkOrderDetail = lazy(() => import("./pages/worker/WorkerPMWorkOrderDetail"));
+const SubcontractorPMWorkOrders = lazy(() => import("./pages/subcontractor/SubcontractorPMWorkOrders"));
+const SubcontractorPMWorkOrderDetail = lazy(() => import("./pages/subcontractor/SubcontractorPMWorkOrderDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -646,6 +651,7 @@ function AppRoutes() {
         <Route path="/property-management/leases/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeaseDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/maintenance" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/maintenance/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/work-orders/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMWorkOrderDetail /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}
@@ -686,6 +692,8 @@ function AppRoutes() {
         <Route path="/worker/property/:id" element={<WorkerPropertyDetail />} />
         <Route path="/worker/job/:id" element={<WorkerJobDetail />} />
         <Route path="/worker/more" element={<WorkerMore />} />
+        <Route path="/worker/pm-work-orders" element={<Suspense fallback={<RouteLoading />}><WorkerPMWorkOrders /></Suspense>} />
+        <Route path="/worker/pm-work-orders/:id" element={<Suspense fallback={<RouteLoading />}><WorkerPMWorkOrderDetail /></Suspense>} />
         <Route path="/worker/profile" element={<WorkerProfilePage />} />
         <Route path="/worker/employment" element={<WorkerEmploymentPage />} />
         <Route path="/worker/documents" element={<WorkerDocumentsPage />} />
@@ -717,6 +725,8 @@ function AppRoutes() {
         <Route path="/subcontractor/invoices" element={<SubcontractorInvoices />} />
         <Route path="/subcontractor/documents" element={<SubcontractorDocuments />} />
         <Route path="/subcontractor/more" element={<SubcontractorMore />} />
+        <Route path="/subcontractor/pm-work-orders" element={<Suspense fallback={<RouteLoading />}><SubcontractorPMWorkOrders /></Suspense>} />
+        <Route path="/subcontractor/pm-work-orders/:id" element={<Suspense fallback={<RouteLoading />}><SubcontractorPMWorkOrderDetail /></Suspense>} />
         <Route path="/subcontractor/profile" element={<SubcontractorProfile />} />
         <Route path="/subcontractor/company" element={<SubcontractorCompany />} />
         <Route path="/subcontractor/compliance" element={<SubcontractorCompliance />} />

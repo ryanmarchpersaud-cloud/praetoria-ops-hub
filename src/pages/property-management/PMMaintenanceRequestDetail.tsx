@@ -6,20 +6,28 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Paperclip, Save } from 'lucide-react';
+import { ArrowLeft, Paperclip, Save, Wrench, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAdminMaintenanceRequest, useUpdateMaintenanceRequest, signMaintenanceAttachment } from '@/hooks/useTenantPortal';
+import { useWorkOrderForRequest } from '@/hooks/usePMWorkOrders';
+import { CreateWorkOrderDialog } from '@/components/property-management/CreateWorkOrderDialog';
+import { WorkOrderCard } from '@/components/property-management/WorkOrderCard';
+import { ActivityTimeline } from '@/components/property-management/ActivityTimeline';
+import { isNonRepairRequest } from '@/lib/maintenanceCatalogHelpers';
 
-const STATUSES = ['new', 'reviewed', 'in_progress', 'completed', 'cancelled'];
+const STATUSES = ['new', 'reviewed', 'work_order_created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
 export default function PMMaintenanceRequestDetail() {
   const { id } = useParams();
   const { data, isLoading } = useAdminMaintenanceRequest(id);
   const update = useUpdateMaintenanceRequest();
+  const { data: wo } = useWorkOrderForRequest(id);
   const [status, setStatus] = useState('new');
   const [internalNotes, setInternalNotes] = useState('');
   const [tenantUpdate, setTenantUpdate] = useState('');
   const [signed, setSigned] = useState<Record<string, string>>({});
+  const [woDialogOpen, setWoDialogOpen] = useState(false);
+  const nonRepair = data ? isNonRepairRequest({ issue_key: data.issue_key, category: data.category }) : false;
 
   useEffect(() => {
     if (data?.id) {
@@ -64,12 +72,34 @@ export default function PMMaintenanceRequestDetail() {
         <Button variant="ghost" size="sm" asChild>
           <Link to="/property-management/maintenance"><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link>
         </Button>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {!wo && (
+            <Button
+              onClick={() => setWoDialogOpen(true)}
+              variant={nonRepair ? 'outline' : 'default'}
+              className={nonRepair ? '' : 'bg-emerald-700 hover:bg-emerald-800'}
+              title={nonRepair ? 'This is a non-repair request. Convert only if truly needed.' : 'Create a property-management work order from this request'}
+            >
+              <Wrench className="h-4 w-4 mr-1" /> Create Work Order
+            </Button>
+          )}
           <Button onClick={save} disabled={update.isPending} className="bg-emerald-700 hover:bg-emerald-800">
             <Save className="h-4 w-4 mr-1" />{update.isPending ? 'Saving…' : 'Save'}
           </Button>
         </div>
       </div>
+
+      {nonRepair && !wo && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          <ShieldAlert className="h-4 w-4 mt-0.5" />
+          <div>
+            <p className="font-medium">Non-repair / admin review request</p>
+            <p className="text-xs">This category is not automatically routed to workers or subcontractors. Handle it through property management, or create a work order manually only if a physical repair is actually needed.</p>
+          </div>
+        </div>
+      )}
+
+      {wo && <WorkOrderCard wo={wo} requestId={data.id} />}
 
       <Card>
         <CardHeader className="pb-2">
@@ -192,6 +222,15 @@ export default function PMMaintenanceRequestDetail() {
           </div>
         </CardContent>
       </Card>
+
+      <ActivityTimeline requestId={data.id} />
+
+      <CreateWorkOrderDialog
+        open={woDialogOpen}
+        onOpenChange={setWoDialogOpen}
+        requestId={data.id}
+        defaultAccessNotes={data.contact_notes}
+      />
     </div>
   );
 }

@@ -5,11 +5,25 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Paperclip } from 'lucide-react';
 import { useMyMaintenanceRequest, signMaintenanceAttachment } from '@/hooks/useTenantPortal';
+import { useMyRequestVisibleWOAttachments, useRequestActivity, signWOAttachment } from '@/hooks/usePMWorkOrders';
 
 export default function TenantMaintenanceDetail() {
   const { id } = useParams();
   const { data: r, isLoading } = useMyMaintenanceRequest(id);
   const [signed, setSigned] = useState<Record<string, string>>({});
+  const [woSigned, setWoSigned] = useState<Record<string, string>>({});
+  const { data: woView } = useMyRequestVisibleWOAttachments(id);
+  const { data: activity } = useRequestActivity(id, true);
+
+  useEffect(() => {
+    (async () => {
+      const out: Record<string, string> = {};
+      for (const a of woView?.attachments ?? []) {
+        try { out[a.id] = await signWOAttachment(a.storage_path); } catch {}
+      }
+      setWoSigned(out);
+    })();
+  }, [woView?.attachments]);
 
   useEffect(() => {
     (async () => {
@@ -71,6 +85,43 @@ export default function TenantMaintenanceDetail() {
           </CardContent>
         </Card>
       )}
+
+      {woView?.work_order?.tenant_visible_completion_note && (
+        <Card className="border-emerald-300 bg-emerald-50">
+          <CardHeader className="pb-2"><CardTitle className="text-sm text-emerald-800">Completion note</CardTitle></CardHeader>
+          <CardContent className="text-sm whitespace-pre-wrap">{woView.work_order.tenant_visible_completion_note}</CardContent>
+        </Card>
+      )}
+
+      {(woView?.attachments?.length ?? 0) > 0 && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Photos from the technician</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {woView!.attachments.map((a: any) => (
+              <a key={a.id} href={woSigned[a.id] || '#'} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-emerald-700 hover:underline">
+                <Paperclip className="h-4 w-4" /> {a.file_name || 'Photo'}
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {(activity?.length ?? 0) > 0 && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Progress</CardTitle></CardHeader>
+          <CardContent className="text-xs">
+            <ol className="space-y-2 border-l-2 border-emerald-200 pl-3">
+              {activity!.map((e: any) => (
+                <li key={e.id}>
+                  <p className="font-medium text-foreground">{e.event.replace(/_/g, ' ')}</p>
+                  <p className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+      )}
+
 
       {r.completed_at && (
         <p className="text-xs text-center text-muted-foreground">Completed {new Date(r.completed_at).toLocaleString()}</p>

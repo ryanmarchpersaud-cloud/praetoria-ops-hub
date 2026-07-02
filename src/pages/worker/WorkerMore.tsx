@@ -20,6 +20,7 @@ export default function WorkerMore() {
 
   const profileItems = [
     { icon: ClipboardCheck, label: 'My Tasks', to: '/worker/tasks', description: 'Assigned errands, pickups & checks' },
+    { icon: HardHat, label: 'PM Work Orders', to: '/worker/pm-work-orders', description: 'Property-management repair requests' },
     { icon: User, label: 'My Profile', to: '/worker/profile', description: 'Personal info & service lines' },
     { icon: Briefcase, label: 'My Employment', to: '/worker/employment', description: 'Job details & compensation' },
     { icon: ShieldAlert, label: 'Emergency & Safety', to: '/worker/emergency-safety', description: 'SOS, contacts & medical alerts' },
