@@ -136,8 +136,7 @@ export function useCreateMaintenanceRequest() {
             storage_path: path,
             file_name: file.name,
             content_type: file.type,
-            size_bytes: file.size,
-            uploaded_by: user!.id,
+            uploaded_by_user_id: user!.id,
           });
         }
       }
