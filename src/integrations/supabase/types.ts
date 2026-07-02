@@ -10202,6 +10202,8 @@ export type Database = {
         | "materials_used"
         | "account_deletion_requested"
         | "worker_crew_assigned"
+        | "new_maintenance_request"
+        | "new_tenant_insurance_submission"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       pm_lease_status: "draft" | "active" | "ended" | "terminated"
@@ -10508,6 +10510,8 @@ export const Constants = {
         "materials_used",
         "account_deletion_requested",
         "worker_crew_assigned",
+        "new_maintenance_request",
+        "new_tenant_insurance_submission",
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
