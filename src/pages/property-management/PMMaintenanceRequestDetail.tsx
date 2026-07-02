@@ -227,6 +227,18 @@ export default function PMMaintenanceRequestDetail() {
             <Label>Tenant-facing update</Label>
             <Textarea rows={3} value={tenantUpdate} onChange={e => setTenantUpdate(e.target.value)} placeholder="Shown to the tenant in their portal." />
           </div>
+          <div className="rounded-md border p-3 space-y-2 bg-emerald-50/40">
+            <div className="flex items-center gap-2">
+              <Switch checked={ownerVisible} onCheckedChange={setOwnerVisible} />
+              <Label>Visible to property owner</Label>
+            </div>
+            <Textarea
+              rows={2}
+              value={ownerSummary}
+              onChange={e => setOwnerSummary(e.target.value)}
+              placeholder="Owner-facing summary (shown only if the toggle above is on). No pricing or tenant PII."
+            />
+          </div>
         </CardContent>
       </Card>
 
