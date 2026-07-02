@@ -123,23 +123,28 @@ export default function TenantPayments() {
             </p>
           ) : (
             <div className="divide-y">
-              {entries.slice(0, 15).map((e: any) => {
-                const isPositive = ['payment', 'credit', 'refund'].includes(e.type);
+              {entries.slice(0, 25).map((e: any) => {
+                const isCredit = CREDIT_TYPES.includes(e.type);
+                const isVoid = ['waived', 'cancelled', 'reversed'].includes(e.status);
                 return (
                   <div key={e.id} className="py-2 flex items-center justify-between text-sm">
                     <div className="min-w-0">
-                      <p className="font-medium truncate">
+                      <p className={`font-medium truncate ${isVoid ? 'line-through text-muted-foreground' : ''}`}>
                         {TYPE_LABEL[e.type] ?? e.type}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {new Date(e.entry_date).toLocaleDateString()}
+                        {e.status && e.status !== 'posted' ? ` · ${String(e.status).replace('_', ' ')}` : ''}
                         {e.description ? ` · ${e.description}` : ''}
                       </p>
+                      {e.tenant_note && (
+                        <p className="text-[11px] text-emerald-800 mt-0.5">{e.tenant_note}</p>
+                      )}
                     </div>
                     <p
-                      className={`font-semibold ${isPositive ? 'text-emerald-700' : 'text-slate-900'}`}
+                      className={`font-semibold ${isVoid ? 'text-muted-foreground line-through' : isCredit ? 'text-emerald-700' : 'text-slate-900'}`}
                     >
-                      {isPositive ? '-' : '+'}${Number(e.amount).toFixed(2)}
+                      {isCredit ? '-' : '+'}${Number(e.amount).toFixed(2)}
                     </p>
                   </div>
                 );
