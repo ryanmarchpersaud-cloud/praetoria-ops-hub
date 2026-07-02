@@ -384,6 +384,15 @@ export function useAssignWorkOrder() {
         } catch (e) {
           console.warn('[wo] ops assign email failed', e);
         }
+
+        await notifyTenantByTenantId(
+          data.tenant_id,
+          'pm_request_assigned',
+          `Your maintenance request has been assigned`,
+          `"${data.title}" has been assigned. We'll update you as work progresses.`,
+          'pm_maintenance_request',
+          data.maintenance_request_id,
+        );
       }
       return data;
     },
