@@ -110,7 +110,7 @@ export default function PMOwnerStatementDetail() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" />Print</Button>
+          <Button variant="outline" size="sm" onClick={() => window.open(`/property-management/owner-statements/${stmt!.id}/print`, '_blank')}><Printer className="h-4 w-4 mr-1" />Print / PDF</Button>
           {stmt.status === 'draft' && (
             <>
               <Button size="sm" variant="outline" onClick={() => setStatus('under_review')}>Move to Review</Button>
