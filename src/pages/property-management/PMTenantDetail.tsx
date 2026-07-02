@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, UserPlus, CheckCircle2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { usePmTenant, useSavePmTenant, useDeletePmTenant, usePmLeases, usePmProperties } from '@/hooks/usePropertyManagement';
+import { InviteTenantDialog } from '@/components/property-management/InviteTenantDialog';
 
 export default function PMTenantDetail() {
   const { id } = useParams();
