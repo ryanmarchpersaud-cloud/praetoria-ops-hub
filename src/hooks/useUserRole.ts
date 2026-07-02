@@ -5,7 +5,9 @@ import { useAuth } from './useAuth';
 export type AppRole =
   | 'owner' | 'admin' | 'accountant' | 'hr_admin' | 'ops_manager'
   | 'manager' | 'dispatcher' | 'supervisor' | 'lead_worker' | 'staff'
-  | 'customer' | 'subcontractor';
+  | 'customer' | 'subcontractor'
+  | 'tenant' | 'property_owner'
+  | 'property_manager' | 'leasing_agent';
 
 export type PermissionKey =
   // Action-level
