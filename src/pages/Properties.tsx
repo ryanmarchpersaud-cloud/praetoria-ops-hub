@@ -13,6 +13,8 @@ import { Plus, Search, ChevronRight, MapPin } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PROPERTY_STATUSES, PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
 import { useCustomers } from '@/hooks/useCustomers';
+import { PROPERTY_USAGE_OPTIONS } from '@/lib/propertyUsage';
+import { PropertyUsageBadge } from '@/components/PropertyUsageBadge';
 
 export default function Properties() {
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ export default function Properties() {
         access_notes: (fd.get('access_notes') as string) || null,
         gate_code: (fd.get('gate_code') as string) || null,
         seasonal_notes: (fd.get('seasonal_notes') as string) || null,
+        usage_type: (fd.get('usage_type') as string) || null,
       });
       toast({ title: 'Property created' });
       setDialogOpen(false);
@@ -90,6 +93,13 @@ export default function Properties() {
                 </div>
                 <div className="col-span-2"><Label>Postal</Label><Input name="postal_code" /></div>
               </div>
+              <div>
+                <Label>Usage</Label>
+                <select name="usage_type" defaultValue="" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
+                  <option value="">— Not set —</option>
+                  {PROPERTY_USAGE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
               <div><Label>Access Notes</Label><Textarea name="access_notes" rows={2} placeholder="Entry instructions, key locations..." /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Gate Code</Label><Input name="gate_code" /></div>
@@ -125,7 +135,10 @@ export default function Properties() {
           <Link key={p.id} to={`/properties/${p.id}`} className="block bg-card border rounded-lg p-3 active:bg-muted/50 transition-colors">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm truncate">{p.property_name}</p>
+                <div className="flex items-center gap-1.5">
+                  <PropertyUsageBadge usage={p.usage_type} compact />
+                  <p className="font-medium text-sm truncate">{p.property_name}</p>
+                </div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                   <MapPin className="h-3 w-3" />
                   <span className="truncate">{[p.address_line_1, p.city].filter(Boolean).join(', ') || 'No address'}</span>
@@ -159,12 +172,20 @@ export default function Properties() {
             : properties.map((p: any) => (
               <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/properties/${p.id}`)}>
                 <TableCell>
-                  <Link to={`/properties/${p.id}`} className="block font-medium">{p.property_name}</Link>
+                  <Link to={`/properties/${p.id}`} className="flex items-center gap-2 font-medium">
+                    <PropertyUsageBadge usage={p.usage_type} compact />
+                    <span>{p.property_name}</span>
+                  </Link>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {p.customers ? `${p.customers.first_name} ${p.customers.last_name}` : '—'}
                 </TableCell>
-                <TableCell className="text-sm">{p.property_type}</TableCell>
+                <TableCell className="text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>{p.property_type}</span>
+                    <PropertyUsageBadge usage={p.usage_type} />
+                  </div>
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground">{[p.city, p.province].filter(Boolean).join(', ') || '—'}</TableCell>
                 <TableCell><StatusBadge status={p.status} /></TableCell>
               </TableRow>

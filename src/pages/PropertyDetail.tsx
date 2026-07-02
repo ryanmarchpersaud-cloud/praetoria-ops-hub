@@ -17,6 +17,8 @@ import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PROPERTY_STATUSES, PROPERTY_TYPES, PROVINCES } from '@/lib/constants';
+import { PROPERTY_USAGE_OPTIONS } from '@/lib/propertyUsage';
+import { PropertyUsageBadge } from '@/components/PropertyUsageBadge';
 
 const ACCESS_TYPES = ['Front Drive', 'Back Alley', 'Side Entrance', 'Garage', 'Shared Lot', 'Other'];
 
@@ -65,6 +67,7 @@ export default function PropertyDetail() {
         high_risk_flag: form.high_risk_flag || false,
         house_number_location: form.house_number_location || null,
         access_type: form.access_type || null,
+        usage_type: form.usage_type || null,
       });
       toast({ title: 'Property saved' });
     } catch (err: any) {
@@ -81,6 +84,7 @@ export default function PropertyDetail() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg md:text-xl font-bold truncate">{form.property_name}</h1>
+            <PropertyUsageBadge usage={form.usage_type} />
             <StatusBadge status={form.status || 'Active'} />
           </div>
           {customer && (
@@ -139,6 +143,14 @@ export default function PropertyDetail() {
                   </select>
                 </div>
                 <div><Label className="text-xs">Gate Code</Label><Input value={form.gate_code || ''} onChange={e => set('gate_code', e.target.value)} /></div>
+              </div>
+              <div>
+                <Label className="text-xs">Usage</Label>
+                <select value={form.usage_type || ''} onChange={e => set('usage_type', e.target.value || null)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm h-10">
+                  <option value="">— Not set —</option>
+                  {PROPERTY_USAGE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <p className="text-[11px] text-muted-foreground mt-1">Marks this as a private home vs rental — shown on lists, quotes &amp; invoices.</p>
               </div>
               <div><Label className="text-xs">Access Notes</Label><Textarea value={form.access_notes || ''} onChange={e => set('access_notes', e.target.value)} rows={2} /></div>
               <div><Label className="text-xs">Seasonal Notes</Label><Textarea value={form.seasonal_notes || ''} onChange={e => set('seasonal_notes', e.target.value)} rows={2} /></div>

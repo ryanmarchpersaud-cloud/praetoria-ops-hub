@@ -1,0 +1,2 @@
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS usage_type TEXT CHECK (usage_type IN ('private_residence','rental','commercial','other'));
+COMMENT ON COLUMN public.properties.usage_type IS 'Owner-facing usage tag: private_residence, rental, commercial, other. Used to distinguish personal vs rental properties for quoting/invoicing.';

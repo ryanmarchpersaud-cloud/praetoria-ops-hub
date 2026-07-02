@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
+import { PropertyUsageBadge } from '@/components/PropertyUsageBadge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
 import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
@@ -102,7 +103,7 @@ export default function CustomerDetail() {
     queryKey: ['customer_properties', id],
     queryFn: async () => {
       if (!id) return [];
-      const { data, error } = await supabase.from('properties').select('id, property_name, city, status').eq('customer_id', id).order('property_name');
+      const { data, error } = await supabase.from('properties').select('id, property_name, city, status, usage_type').eq('customer_id', id).order('property_name');
       if (error) throw error;
       return data;
     },
@@ -669,7 +670,12 @@ export default function CustomerDetail() {
             items={(properties as any[]).map((p: any) => ({
               id: p.id,
               link: `/properties/${p.id}`,
-              primary: p.property_name,
+              primary: (
+                <span className="inline-flex items-center gap-1.5">
+                  <PropertyUsageBadge usage={p.usage_type} compact />
+                  <span>{p.property_name}</span>
+                </span>
+              ),
               secondary: p.city,
               badge: <StatusBadge status={p.status || 'Active'} showIcon={false} />,
             }))}
@@ -1054,7 +1060,7 @@ function PaymentMethodCard({ customerId }: { customerId: string }) {
 interface RelatedItem {
   id: string;
   link: string;
-  primary: string;
+  primary: React.ReactNode;
   secondary?: string;
   badge?: React.ReactNode;
   mono?: boolean;
