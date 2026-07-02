@@ -21,10 +21,13 @@ export default function PMMaintenanceRequestDetail() {
   const { id } = useParams();
   const { data, isLoading } = useAdminMaintenanceRequest(id);
   const update = useUpdateMaintenanceRequest();
+  const { data: wo } = useWorkOrderForRequest(id);
   const [status, setStatus] = useState('new');
   const [internalNotes, setInternalNotes] = useState('');
   const [tenantUpdate, setTenantUpdate] = useState('');
   const [signed, setSigned] = useState<Record<string, string>>({});
+  const [woDialogOpen, setWoDialogOpen] = useState(false);
+  const nonRepair = data ? isNonRepairRequest({ issue_key: data.issue_key, category: data.category }) : false;
 
   useEffect(() => {
     if (data?.id) {
