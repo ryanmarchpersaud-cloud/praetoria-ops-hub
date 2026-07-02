@@ -1,156 +1,107 @@
+# Tenant Portal — Direction & Phased Roadmap
 
-# Property Management Module — Phase 0 Review & Phase 1 Plan
+Goal: align our Tenant Portal with proven patterns from Buildium, AppFolio, DoorLoop, TenantCloud, RentRedi, and Avail — without touching Admin, Worker, Subcontractor, Customer, Finance, HR, Stripe, saved cards, invoice logic, iOS/Android build config, or app store artifacts.
 
-## Phase 0 — Technical Review (findings from current app)
-
-**Roles & permissions**
-- `app_role` enum (see `useUserRole.ts`) already includes: owner, admin, accountant, hr_admin, ops_manager, manager, dispatcher, supervisor, lead_worker, staff, customer, subcontractor.
-- Access gating uses `user_roles` table + `has_role()` / `is_admin_or_owner()` / `is_ops_staff()` security-definer functions, plus `role_permissions` for permission keys.
-- Route guards: `AppLayout` + `AdminRoute` / `ModuleGuard` in `App.tsx`; sidebar filtering via `useSidebarAccess` / `useModuleAccess`.
-
-**Customer portal** — `/portal/*` routes, `customers.user_id -> auth.users`, `get_customer_id_for_user()` scopes RLS. Clean pattern to reuse.
-
-**Worker / subcontractor** — `/worker/*`, `/subcontractor/*`. RLS via `is_worker_assigned_to_visit/_job`, `is_sub_assigned_to_visit/_job`. Assignments in `visits.assigned_worker_id`, `visit_crew_members`, `subcontractor_assignments`.
-
-**Finance / invoices / Stripe / pay stubs** — mature: `invoices`, `invoice_line_items`, `finance_payments`, `subcontractor_pay_stubs`, Stripe edge functions, saved cards. **Do not touch.**
-
-**Service requests / work orders** — `service_requests` → `quotes` → `jobs` → `visits` → `invoices`. Property-management maintenance in Phase 3 will slot in as a new `service_requests.source` and reuse jobs/visits — no schema fork needed later.
-
-**RLS patterns** — every public table has explicit GRANTs + policies using `has_role`/`is_ops_staff`/scoped helpers. New tables will follow the same 4-step structure.
-
-**Docs/files/photos** — private Supabase buckets (`hr-documents`, `visit-photos`, `attachments`, etc.) with path-prefix RLS on `storage.objects`. Lease documents will use a new `property-management-documents` private bucket.
-
-**Mobile routing** — Capacitor + PWA share `App.tsx` routes. Adding admin-only routes has zero mobile impact; new portals (Phase 2/4) will register their own guarded routes later.
-
-### Safety principles for this build
-- Additive only — no changes to existing tables, enums, RLS, edge functions, or portals.
-- New `app_role` values `tenant` and `property_owner` added to the enum, but **no** portal routes exposed in Phase 1 (routes gated / hidden).
-- New tables live under a clear `pm_*` prefix to avoid collisions with the existing `properties` table (which is customer-service-property, not managed rental property).
-- All new admin UI is behind a new `pm.manage` permission granted only to `owner` + `admin` (finance & ops staff intentionally NOT granted in Phase 1).
+The current Home / Lease / Maintenance / Account pages (just polished) stay as the foundation. This plan adds only what's needed to make the next phases safe to build.
 
 ---
 
-## Phase 1 — Admin Property Management Foundation
+## Phase 2.5 — Structural Prep (this plan, safe to build now)
 
-### 1. Database (single migration)
+Only additive schema + a few disabled placeholders. No live payments, no messaging sends, no destructive changes.
 
-Enum additions:
-- `ALTER TYPE public.app_role ADD VALUE 'tenant';`
-- `ALTER TYPE public.app_role ADD VALUE 'property_owner';`
+### 1. Schema additions (all new columns/tables, nullable, safe)
 
-New tables (all with GRANTs → RLS enable → policies, plus `updated_at` trigger):
+**`pm_tenants`** — add optional fields to support business tenants and billing:
+- `tenant_type` ('individual' | 'business', default 'individual')
+- `business_name`, `billing_contact_name`, `billing_email`, `billing_phone`
+- `mailing_address_line_1`, `mailing_city`, `mailing_province`, `mailing_postal_code`
+- `po_reference`, `business_notes`
 
-```text
-pm_property_owners
-  id, owner_name, company_name, email, phone,
-  mailing_address, notes, user_id (nullable, future portal link),
-  is_active, created_at, updated_at
+**`pm_leases`** — add optional fields already used by good tenant portals:
+- `rent_frequency` ('monthly' | 'biweekly' | 'weekly' | 'end_of_month' | 'custom', default 'monthly')
+- `deposit_amount`, `deposit_held_since`, `deposit_notes`
 
-pm_managed_properties
-  id, property_name, address_line_1, city, province, postal_code,
-  property_type (enum: single_family, duplex, multi_unit, condo, commercial, other),
-  owner_id -> pm_property_owners (nullable),
-  notes, is_active, created_at, updated_at
+**New table `pm_tenant_ledger`** (read-only from tenant side, admin-managed):
+- Columns: tenant_id, lease_id, entry_date, type ('charge' | 'payment' | 'credit' | 'refund' | 'late_fee' | 'deposit'), amount, description, reference, created_by
+- RLS: tenants can SELECT own rows only; admins full access
+- Used later to render "current balance", "next rent due", payment history, receipts
 
-pm_units
-  id, property_id -> pm_managed_properties (cascade),
-  unit_label, bedrooms, bathrooms, rent_amount,
-  status (enum: vacant, occupied, pending, inactive),
-  notes, created_at, updated_at
+**New table `pm_tenant_notices`** (admin-published messages/notices):
+- Columns: tenant_id (nullable = broadcast), property_id (nullable), title, body, category ('announcement' | 'notice' | 'document' | 'maintenance_update'), published_at, requires_ack, ack_at
+- RLS: tenant sees rows where tenant_id = own OR (tenant_id IS NULL AND property_id = own property)
 
-pm_tenants
-  id, first_name, last_name, email, phone,
-  status (enum: active, pending, former),
-  user_id (nullable, future portal link),
-  notes, created_at, updated_at
+**New table `pm_tenant_documents`** (tenant-visible shared documents):
+- Columns: tenant_id, property_id (nullable), title, storage_path, category, shared_at, shared_by
+- Reuses existing `property-management-documents` bucket
+- RLS: tenant SELECT own; admin full
 
-pm_leases
-  id, tenant_id -> pm_tenants,
-  property_id -> pm_managed_properties,
-  unit_id -> pm_units (nullable for whole-property leases),
-  start_date, end_date, monthly_rent, deposit_amount,
-  rent_due_day (1-31), status (enum: draft, active, ended, terminated),
-  lease_document_path (storage key), notes,
-  created_at, updated_at
+All new public tables get GRANTs to `authenticated` + `service_role`, RLS enabled, tenant-scoped policies. Nothing exposed to `anon`.
 
-pm_owner_properties  (join, for future multi-owner support & RLS)
-  owner_id, property_id, primary key (owner_id, property_id)
-```
+### 2. UI scaffolding (visible but marked "Coming soon" where not wired)
 
-Helper functions (SECURITY DEFINER):
-- `pm_can_manage(_uid uuid)` → `is_admin_or_owner(_uid)`
-- `pm_get_tenant_id_for_user(_uid uuid)` — Phase 2 use, safe to add now
-- `pm_get_owner_id_for_user(_uid uuid)` — Phase 4 use, safe to add now
+- **Home dashboard**: add a "Balance & Next Rent" card that reads from `pm_tenant_ledger` when rows exist, otherwise shows a friendly "No balance on file" state. No payment buttons yet.
+- **New `/tenant/payments` route**: placeholder screen listing planned payment methods (card, bank, Interac e-transfer, autopay) with a clear "Online payments coming soon — contact ops@praetoriagroup.ca to pay" banner. No Stripe wiring. Bottom nav stays 4 tabs; Payments accessible from Home card only.
+- **New `/tenant/documents` route**: lists rows from `pm_tenant_documents` with signed-URL download; empty state if none. Linked from Lease page.
+- **New `/tenant/notices` route**: lists `pm_tenant_notices` with unread indicator; linked from Home. No push/email sending yet — display only.
+- **Maintenance**: no schema change needed; existing form already covers title, category, priority, description, files, access notes, status, tenant-facing update. Add a "Completion note" read-only block on detail page when status = completed.
+- **Account page**: already has email, tenant name, linked property/unit, ops@ support link, privacy link, sign out, Request Account Deletion (goes through existing `account_deletion_requests` review flow — never auto-deletes lease/payment/legal data).
 
-### 2. RLS policies (Phase 1 scope)
+### 3. Support email
 
-For every `pm_*` table:
-- `SELECT/INSERT/UPDATE/DELETE` for `authenticated` where `pm_can_manage(auth.uid())` — admin/owner only.
-- Forward-compatible read policies (added but scoped to nothing until Phase 2/4):
-  - `pm_leases`, `pm_units`, `pm_managed_properties` (tenant's own only via `pm_get_tenant_id_for_user`).
-  - `pm_managed_properties`, `pm_units`, `pm_leases` (owner's own only via `pm_owner_properties`).
-- Finance / ops / HR / workers / subcontractors / customers: **no policy = no access** in Phase 1. Explicitly documented.
-
-Storage: new **private** bucket `property-management-documents`, admin-only RLS on `storage.objects` (path `pm/{property_id}/...`).
-
-### 3. Admin UI (all new files — nothing existing touched)
-
-Sidebar: add one new collapsible group **"Property Management"** in `AppSidebar.tsx` (visible only when `pm.manage` permission present) with children:
-- Dashboard, Properties, Units, Owners, Tenants, Leases.
-
-New routes in `App.tsx` (wrapped in `AdminRoute` + permission check):
-```
-/property-management                → PMDashboard
-/property-management/properties     → PMPropertiesList
-/property-management/properties/:id → PMPropertyDetail
-/property-management/units          → PMUnitsList
-/property-management/owners         → PMOwnersList
-/property-management/owners/:id     → PMOwnerDetail
-/property-management/tenants        → PMTenantsList
-/property-management/tenants/:id    → PMTenantDetail
-/property-management/leases         → PMLeasesList
-/property-management/leases/:id     → PMLeaseDetail
-```
-
-New files:
-- `src/pages/property-management/PMDashboard.tsx` (KPIs: total properties, total units, occupied, vacant, active tenants, active leases; owner + tenant tables)
-- `src/pages/property-management/PMPropertiesList.tsx` + `PMPropertyDetail.tsx`
-- `src/pages/property-management/PMUnitsList.tsx`
-- `src/pages/property-management/PMOwnersList.tsx` + `PMOwnerDetail.tsx`
-- `src/pages/property-management/PMTenantsList.tsx` + `PMTenantDetail.tsx`
-- `src/pages/property-management/PMLeasesList.tsx` + `PMLeaseDetail.tsx`
-- `src/hooks/usePropertyManagement.ts` (queries + mutations)
-- `src/components/property-management/PMPropertyForm.tsx`, `PMUnitForm.tsx`, `PMOwnerForm.tsx`, `PMTenantForm.tsx`, `PMLeaseForm.tsx`
-- Sidebar section update (additive edit to `AppSidebar.tsx` only — new group).
-
-Naming: reuses existing shadcn UI components + design tokens. No color/typography changes.
-
-### 4. Permissions
-
-Insert into `role_permissions`:
-- `pm.manage` → owner, admin.
-- (No grant to accountant / hr_admin / ops_manager / manager in Phase 1.)
-
-`useModuleAccess` gets a new key `propertyManagement` returning `hasPermission('pm.manage')`.
-
-### 5. Intentionally NOT built in Phase 1
-
-- Tenant portal / property owner portal UI and routes.
-- Rent charges, rent payments, Stripe rent processing.
-- Owner statements, expense allocation, monthly summaries.
-- Maintenance request → work order conversion.
-- Move-in/move-out inspections, notices, mass documents.
-- Any changes to existing `properties`, `jobs`, `visits`, `invoices`, `service_requests`, `finance_*`, `subcontractor_*`, pay stubs, Stripe, iOS/Android, or portals.
-
-### 6. QA checklist (after Phase 1 ships)
-1. Admin sees new "Property Management" sidebar group; non-admin roles do NOT.
-2. Create property → unit → owner → tenant → lease end-to-end; all persist.
-3. Dashboard counts update after each CRUD.
-4. Lease document uploads to `property-management-documents` bucket; non-admin cannot download.
-5. Login as customer / worker / subcontractor / accountant / HR: no PM routes accessible, no sidebar entry, direct URL returns Access Denied.
-6. Existing flows unaffected: create a normal quote, job, visit, invoice, pay stub, service request, portal login, subcontractor login, worker mobile login — all still work.
-7. Supabase linter clean on new tables (RLS enabled, no permissive gaps).
+`ops@praetoriagroup.ca` continues as the single tenant-facing contact everywhere (Home, Account, Payments placeholder, empty states).
 
 ---
 
-Reply **"Approved, build Phase 1"** and I'll ship the migration, RLS, sidebar entry, routes, and admin CRUD pages in one focused pass. If you want any table/field adjusted (e.g. drop `bedrooms/bathrooms`, add insurance fields, split residential vs commercial), tell me now and I'll fold it in before writing the migration.
+## Phase 3 — Maintenance ⇄ Work Orders (next after 2.5)
+
+- Admin can convert a `pm_maintenance_request` into an internal Job/Visit assigned to a worker or subcontractor.
+- Tenant sees only the tenant-facing status + update note (never worker names, pricing, or internal scope).
+- No changes to worker/subcontractor portals beyond receiving the linked job.
+
+## Phase 4 — Notices & Email Notifications
+
+- Admin composes a notice → row in `pm_tenant_notices` → tenant sees it in-app.
+- Optional email via existing `send-notification` edge function to tenant `billing_email` or auth email.
+- No SMS.
+
+## Phase 5 — Tenant Payments (requires explicit approval)
+
+Ledger already exists from Phase 2.5, so admins can start recording manual payments (cash, cheque, Interac) any time without live processing. When approved:
+- Wire Stripe card + ACH into a new `tenant-collect-rent` edge function, reusing existing Stripe secret and saved-card patterns already used by invoices (no changes to invoice logic).
+- Autopay toggles per lease.
+- Late-fee rule engine reads from `pm_leases` config.
+- Receipts generated from ledger rows.
+
+## Phase 6 — Business Tenant Enhancements
+
+- Multiple billing contacts table.
+- PO number on receipts.
+- Consolidated statement PDF for multi-unit business tenants.
+
+---
+
+## Safety guarantees
+
+- No changes to: Stripe keys, `finance_*` tables, `invoices`, saved cards, worker/subcontractor/customer/admin portals, HR, pay stubs, service jobs, iOS/Android/Capacitor config, app icons, package name `ca.praetoriagroup.opshub`, Play Store or App Store artifacts.
+- All new tables are tenant-scoped via RLS; tenants can never query outside their own records.
+- No live rent processing until explicitly approved in a Phase 5 kickoff.
+
+---
+
+## Technical notes
+
+- Migrations run as a single additive batch; every new public table includes `GRANT` + RLS + tenant-scoped policy in the same migration.
+- `useTenantPortal.ts` gains hooks: `useMyLedger`, `useMyNotices`, `useMyTenantDocuments` — all filter by `auth.uid()` via existing `pm_tenants.user_id` linkage.
+- New routes registered inside existing `TenantRoute` guard in `App.tsx` — no changes to `WorkerRoute` / `SubcontractorRoute` / `PortalRoute` / `AdminRoute`.
+- Payments placeholder page contains zero Stripe imports so it cannot accidentally charge anyone.
+
+## Deliverable of Phase 2.5 (if you approve this plan)
+
+1. One migration adding tenant/lease optional columns + 3 new tables with RLS.
+2. Updated `useTenantPortal.ts` hooks.
+3. New `/tenant/payments`, `/tenant/documents`, `/tenant/notices` routes (documents + notices functional read-only; payments placeholder).
+4. Home dashboard gains Balance & Next Rent card + Notices preview.
+5. Admin side gets a minimal "Post Notice" and "Share Document" action on the tenant detail page so you can test end-to-end.
+
+Reply "approved" (or with edits) and I'll ship Phase 2.5.
