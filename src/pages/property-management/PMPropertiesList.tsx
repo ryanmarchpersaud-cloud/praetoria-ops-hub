@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,9 @@ export default function PMPropertiesList() {
   const save = useSavePmProperty();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({ property_name: '', property_type: 'single_family', is_active: true });
+  const [params] = useSearchParams();
+  const activeOnly = params.get('active') === 'true';
+  const visible = activeOnly ? properties.filter((p) => p.is_active) : properties;
 
   const submit = async () => {
     if (!form.property_name?.trim()) return toast.error('Property name is required');
@@ -83,11 +86,11 @@ export default function PMPropertiesList() {
       <Card>
         <CardHeader><CardTitle className="text-base">All properties</CardTitle></CardHeader>
         <CardContent>
-          {isLoading ? 'Loading…' : properties.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No managed properties yet.</p>
+          {isLoading ? 'Loading…' : visible.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{activeOnly ? 'No active properties.' : 'No managed properties yet.'}</p>
           ) : (
             <div className="divide-y">
-              {properties.map((p) => {
+              {visible.map((p) => {
                 const owner = owners.find(o => o.id === p.primary_owner_id);
                 return (
                   <Link key={p.id} to={`/property-management/properties/${p.id}`} className="flex items-center justify-between py-3 hover:bg-muted/40 px-2 rounded">
