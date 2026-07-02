@@ -10,6 +10,7 @@ import { ArrowLeft, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePmLease, useSavePmLease, useDeletePmLease, usePmTenants, usePmProperties, usePmUnits } from '@/hooks/usePropertyManagement';
 import { supabase } from '@/integrations/supabase/client';
+import TenantLedgerManager from '@/components/property-management/TenantLedgerManager';
 
 export default function PMLeaseDetail() {
   const { id } = useParams();
