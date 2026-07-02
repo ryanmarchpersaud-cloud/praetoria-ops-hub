@@ -3,7 +3,7 @@ import { PMStaffBottomNav } from './PMStaffBottomNav';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { isAndroidMobile } from '@/lib/platform';
-import praetoriaLogo from '@/assets/praetoria-logo-white.png';
+
 import { Building2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom';
@@ -45,12 +45,20 @@ export function PMStaffLayout({ children }: { children: ReactNode }) {
         }}
       >
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <div className="h-11 w-11 rounded-xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shrink-0 overflow-hidden">
-            <img src={praetoriaLogo} alt="Praetoria Group" className="h-8 w-8 object-contain" />
-          </div>
+          <Link
+            to="/pm-staff/profile"
+            className="shrink-0"
+            aria-label="Open my profile"
+            title={displayName || 'My profile'}
+          >
+            <Avatar className="h-11 w-11 ring-2 ring-white/30 hover:ring-white/70 transition">
+              <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+              <AvatarFallback className="bg-white/15 text-white text-sm font-semibold">{initials}</AvatarFallback>
+            </Avatar>
+          </Link>
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-emerald-100 font-semibold">
-              Praetoria Group · Property Management
+            <p className="text-[11px] uppercase tracking-[0.18em] text-emerald-100 font-semibold truncate">
+              {displayName}
             </p>
             <h1 className="text-lg sm:text-xl font-bold leading-tight text-white truncate">
               Staff / Leasing Portal
@@ -59,17 +67,6 @@ export function PMStaffLayout({ children }: { children: ReactNode }) {
           <div className="hidden sm:flex items-center gap-1 text-[11px] text-white/90 bg-white/10 px-2 py-1 rounded-full shrink-0">
             <Building2 className="h-3.5 w-3.5" /> {badge}
           </div>
-          <Link
-            to="/pm-staff/profile"
-            className="shrink-0"
-            aria-label="Open my profile"
-            title={displayName || 'My profile'}
-          >
-            <Avatar className="h-9 w-9 ring-2 ring-white/30 hover:ring-white/60 transition">
-              <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
-              <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">{initials}</AvatarFallback>
-            </Avatar>
-          </Link>
           <div className="shrink-0 [&_button>svg]:text-emerald-300">
             <NotificationCenter />
           </div>
