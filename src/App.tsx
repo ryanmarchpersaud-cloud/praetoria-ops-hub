@@ -279,6 +279,10 @@ const PMStaffMyPPE = lazy(() => import("./pages/pm-staff/MyPPE"));
 const PMStaffExpenseClaims = lazy(() => import("./pages/pm-staff/ExpenseClaims"));
 const PMStaffTimeOff = lazy(() => import("./pages/pm-staff/TimeOff"));
 const PMStaffMessages = lazy(() => import("./pages/pm-staff/Messages"));
+const PMStaffEmployment = lazy(() => import("./pages/pm-staff/Employment"));
+const PMStaffBenefits = lazy(() => import("./pages/pm-staff/Benefits"));
+const PMStaffTaxDocs = lazy(() => import("./pages/pm-staff/TaxDocuments"));
+const PMStaffEmergencyContact = lazy(() => import("./pages/pm-staff/EmergencyContact"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -866,6 +870,10 @@ function AppRoutes() {
         <Route path="/pm-staff/expenses" element={<Suspense fallback={<RouteLoading />}><PMStaffExpenseClaims /></Suspense>} />
         <Route path="/pm-staff/time-off" element={<Suspense fallback={<RouteLoading />}><PMStaffTimeOff /></Suspense>} />
         <Route path="/pm-staff/messages" element={<Suspense fallback={<RouteLoading />}><PMStaffMessages /></Suspense>} />
+        <Route path="/pm-staff/employment" element={<Suspense fallback={<RouteLoading />}><PMStaffEmployment /></Suspense>} />
+        <Route path="/pm-staff/benefits" element={<Suspense fallback={<RouteLoading />}><PMStaffBenefits /></Suspense>} />
+        <Route path="/pm-staff/tax-documents" element={<Suspense fallback={<RouteLoading />}><PMStaffTaxDocs /></Suspense>} />
+        <Route path="/pm-staff/emergency-contact" element={<Suspense fallback={<RouteLoading />}><PMStaffEmergencyContact /></Suspense>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
