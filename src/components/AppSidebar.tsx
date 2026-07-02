@@ -143,7 +143,7 @@ export function AppSidebar() {
                         </div>
                         {!collapsed && (
                           <span className="flex items-center justify-between flex-1">
-                            <span>{item.title}</span>
+                            <span className={COLORED_LABEL_TITLES.has(item.title) ? style.icon : undefined}>{item.title}</span>
                             {count > 0 && (
                               <span className="ml-auto text-[10px] font-semibold text-destructive">
                                 {count > 99 ? '99+' : count}
