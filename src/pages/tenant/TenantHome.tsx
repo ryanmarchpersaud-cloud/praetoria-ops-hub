@@ -77,6 +77,40 @@ export default function TenantHome() {
         </Link>
       </Button>
 
+      {/* Balance + Notices row */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          to="/tenant/payments"
+          className="rounded-xl border border-emerald-100 bg-white p-3 hover:border-emerald-300 transition-colors"
+        >
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            Balance
+          </p>
+          <p className="text-xl font-bold text-slate-900 mt-1">
+            ${balance.toFixed(2)}
+          </p>
+          <p className="text-[10px] text-emerald-700 mt-1">View activity ›</p>
+        </Link>
+        <Link
+          to="/tenant/notices"
+          className="rounded-xl border border-emerald-100 bg-white p-3 hover:border-emerald-300 transition-colors relative"
+        >
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            Notices
+          </p>
+          <p className="text-xl font-bold text-slate-900 mt-1">
+            {(notices as any[]).length}
+          </p>
+          <p className="text-[10px] text-emerald-700 mt-1">
+            {unreadNotices > 0 ? `${unreadNotices} unread ›` : 'View all ›'}
+          </p>
+          {unreadNotices > 0 && (
+            <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          )}
+        </Link>
+      </div>
+
+
       {/* Property */}
       {property && (
         <Card className="border-emerald-100">
