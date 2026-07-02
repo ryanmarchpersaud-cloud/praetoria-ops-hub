@@ -23,37 +23,51 @@ type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
   | 'jobs' | 'visits' | 'invoices' | 'schedule' | 'requests'
   | 'activity' | 'employees' | 'subcontractors' | 'messaging' | 'finance' | 'incidents' | 'hr';
 
-const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; accessKey: SidebarKey }[] = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard, accessKey: 'dashboard' },
-  { title: 'Leads', url: '/leads', icon: Users, countKey: 'leads', accessKey: 'leads' },
-  { title: 'Quotes', url: '/quotes', icon: FileText, countKey: 'quotes', accessKey: 'quotes' },
-  { title: 'Customers', url: '/customers', icon: Building2, accessKey: 'customers' },
-  { title: 'Properties', url: '/properties', icon: MapPin, accessKey: 'properties' },
-  { title: 'Jobs', url: '/jobs', icon: Briefcase, countKey: 'jobs', accessKey: 'jobs' },
-  { title: 'Visits', url: '/visits', icon: ClipboardCheck, countKey: 'visits', accessKey: 'visits' },
-  { title: 'Snow Log Archive', url: '/snow-logs', icon: ClipboardCheck, accessKey: 'visits' as SidebarKey },
-  { title: 'Labour Price List', url: '/price-list', icon: DollarSign, accessKey: 'quotes' as SidebarKey },
-  { title: 'Invoices', url: '/invoices', icon: Receipt, countKey: 'invoices', accessKey: 'invoices' },
-  { title: 'Schedule', url: '/schedule', icon: CalendarDays, accessKey: 'schedule' },
-  { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests' },
-  { title: 'Recurring Enrollments', url: '/requests/recurring', icon: RefreshCw, accessKey: 'requests' as SidebarKey },
-  { title: 'Activity', url: '/activity', icon: Activity, accessKey: 'activity' },
-  { title: 'Incidents', url: '/incidents', icon: ShieldAlert, countKey: 'incidents' as CountKey, accessKey: 'incidents' as SidebarKey },
-  { title: 'Tasks', url: '/tasks', icon: ClipboardCheck, accessKey: 'jobs' as SidebarKey },
-  { title: 'HR Workspace', url: '/hr', icon: BookOpen, accessKey: 'hr' as SidebarKey },
-  { title: 'Employees', url: '/employees', icon: HardHat, accessKey: 'employees' },
-  { title: 'Subcontractors', url: '/subcontractors', icon: Users, accessKey: 'subcontractors' },
-  { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages', accessKey: 'messaging' },
-  { title: 'Finance', url: '/finance', icon: Wallet, accessKey: 'finance' },
-  { title: 'Agreements', url: '/agreements', icon: FileSignature, accessKey: 'finance' as SidebarKey },
-  { title: 'Email Directory', url: '/email-directory', icon: Mail, accessKey: 'customers' as SidebarKey },
-  { title: 'Personal Accounts 🔒', url: '/personal-accounts', icon: Lock, accessKey: 'finance' as SidebarKey },
+// Subtle color identity per functional area (icon tint + active left border).
+// Kept muted so the sidebar reads professional, not rainbow.
+type AreaKey = 'admin' | 'finance' | 'hr' | 'workers' | 'subs' | 'customers' | 'tenants' | 'owners';
+const AREA_STYLES: Record<AreaKey, { icon: string; activeBorder: string; activeText: string; badgeBg: string; badgeText: string }> = {
+  admin:     { icon: 'text-amber-300',   activeBorder: 'border-amber-400',   activeText: 'text-amber-200',   badgeBg: 'bg-amber-500/15',   badgeText: 'text-amber-300' },
+  finance:   { icon: 'text-teal-300',    activeBorder: 'border-teal-400',    activeText: 'text-teal-200',    badgeBg: 'bg-teal-500/15',    badgeText: 'text-teal-300' },
+  hr:        { icon: 'text-violet-300',  activeBorder: 'border-violet-400',  activeText: 'text-violet-200',  badgeBg: 'bg-violet-500/15',  badgeText: 'text-violet-300' },
+  workers:   { icon: 'text-cyan-300',    activeBorder: 'border-cyan-400',    activeText: 'text-cyan-200',    badgeBg: 'bg-cyan-500/15',    badgeText: 'text-cyan-300' },
+  subs:      { icon: 'text-orange-300',  activeBorder: 'border-orange-400',  activeText: 'text-orange-200',  badgeBg: 'bg-orange-500/15',  badgeText: 'text-orange-300' },
+  customers: { icon: 'text-sky-300',     activeBorder: 'border-sky-400',     activeText: 'text-sky-200',     badgeBg: 'bg-sky-500/15',     badgeText: 'text-sky-300' },
+  tenants:   { icon: 'text-emerald-300', activeBorder: 'border-emerald-400', activeText: 'text-emerald-200', badgeBg: 'bg-emerald-500/15', badgeText: 'text-emerald-300' },
+  owners:    { icon: 'text-yellow-300',  activeBorder: 'border-yellow-400',  activeText: 'text-yellow-200',  badgeBg: 'bg-yellow-500/15',  badgeText: 'text-yellow-300' },
+};
+
+const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; accessKey: SidebarKey; area: AreaKey }[] = [
+  { title: 'Dashboard', url: '/', icon: LayoutDashboard, accessKey: 'dashboard', area: 'admin' },
+  { title: 'Leads', url: '/leads', icon: Users, countKey: 'leads', accessKey: 'leads', area: 'customers' },
+  { title: 'Quotes', url: '/quotes', icon: FileText, countKey: 'quotes', accessKey: 'quotes', area: 'finance' },
+  { title: 'Customers', url: '/customers', icon: Building2, accessKey: 'customers', area: 'customers' },
+  { title: 'Properties', url: '/properties', icon: MapPin, accessKey: 'properties', area: 'customers' },
+  { title: 'Jobs', url: '/jobs', icon: Briefcase, countKey: 'jobs', accessKey: 'jobs', area: 'workers' },
+  { title: 'Visits', url: '/visits', icon: ClipboardCheck, countKey: 'visits', accessKey: 'visits', area: 'workers' },
+  { title: 'Snow Log Archive', url: '/snow-logs', icon: ClipboardCheck, accessKey: 'visits' as SidebarKey, area: 'workers' },
+  { title: 'Labour Price List', url: '/price-list', icon: DollarSign, accessKey: 'quotes' as SidebarKey, area: 'finance' },
+  { title: 'Invoices', url: '/invoices', icon: Receipt, countKey: 'invoices', accessKey: 'invoices', area: 'finance' },
+  { title: 'Schedule', url: '/schedule', icon: CalendarDays, accessKey: 'schedule', area: 'workers' },
+  { title: 'Requests', url: '/requests', icon: MessageSquarePlus, countKey: 'requests', accessKey: 'requests', area: 'customers' },
+  { title: 'Recurring Enrollments', url: '/requests/recurring', icon: RefreshCw, accessKey: 'requests' as SidebarKey, area: 'customers' },
+  { title: 'Activity', url: '/activity', icon: Activity, accessKey: 'activity', area: 'admin' },
+  { title: 'Incidents', url: '/incidents', icon: ShieldAlert, countKey: 'incidents' as CountKey, accessKey: 'incidents' as SidebarKey, area: 'admin' },
+  { title: 'Tasks', url: '/tasks', icon: ClipboardCheck, accessKey: 'jobs' as SidebarKey, area: 'workers' },
+  { title: 'HR Workspace', url: '/hr', icon: BookOpen, accessKey: 'hr' as SidebarKey, area: 'hr' },
+  { title: 'Employees', url: '/employees', icon: HardHat, accessKey: 'employees', area: 'hr' },
+  { title: 'Subcontractors', url: '/subcontractors', icon: Users, accessKey: 'subcontractors', area: 'subs' },
+  { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages', accessKey: 'messaging', area: 'admin' },
+  { title: 'Finance', url: '/finance', icon: Wallet, accessKey: 'finance', area: 'finance' },
+  { title: 'Agreements', url: '/agreements', icon: FileSignature, accessKey: 'finance' as SidebarKey, area: 'finance' },
+  { title: 'Email Directory', url: '/email-directory', icon: Mail, accessKey: 'customers' as SidebarKey, area: 'customers' },
+  { title: 'Personal Accounts 🔒', url: '/personal-accounts', icon: Lock, accessKey: 'finance' as SidebarKey, area: 'admin' },
 ];
 
-const viewAsItems = [
-  { title: 'Worker Portal', url: '/worker', icon: Smartphone, badge: 'Worker view' },
-  { title: 'Subcontractor Portal', url: '/subcontractor', icon: HardHat, badge: 'Subcontractor view' },
-  { title: 'Customer Portal', url: '/portal/properties', icon: Eye, badge: 'Customer view' },
+const viewAsItems: { title: string; url: string; icon: any; badge: string; area: AreaKey }[] = [
+  { title: 'Worker Portal', url: '/worker', icon: Smartphone, badge: 'Worker view', area: 'workers' },
+  { title: 'Subcontractor Portal', url: '/subcontractor', icon: HardHat, badge: 'Subcontractor view', area: 'subs' },
+  { title: 'Customer Portal', url: '/portal/properties', icon: Eye, badge: 'Customer view', area: 'customers' },
 ];
 
 function BadgeCount({ count }: { count: number }) {
