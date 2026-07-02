@@ -834,7 +834,18 @@ function AppRoutes() {
         <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
       </Route>
 
-
+      <Route element={<PMStaffRoute />}>
+        <Route path="/pm-staff" element={<Suspense fallback={<RouteLoading />}><PMStaffHome /></Suspense>} />
+        <Route path="/pm-staff/vacancies" element={<Suspense fallback={<RouteLoading />}><PMStaffVacancies /></Suspense>} />
+        <Route path="/pm-staff/prospects" element={<Suspense fallback={<RouteLoading />}><PMStaffProspects /></Suspense>} />
+        <Route path="/pm-staff/showings" element={<Suspense fallback={<RouteLoading />}><PMStaffShowings /></Suspense>} />
+        <Route path="/pm-staff/applications" element={<Suspense fallback={<RouteLoading />}><PMStaffApplications /></Suspense>} />
+        <Route path="/pm-staff/tasks" element={<Suspense fallback={<RouteLoading />}><PMStaffTasks /></Suspense>} />
+        <Route path="/pm-staff/move-ins" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveIns /></Suspense>} />
+        <Route path="/pm-staff/move-outs" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveOuts /></Suspense>} />
+        <Route path="/pm-staff/more" element={<Suspense fallback={<RouteLoading />}><PMStaffMore /></Suspense>} />
+        <Route path="/pm-staff/account" element={<Suspense fallback={<RouteLoading />}><PMStaffAccount /></Suspense>} />
+      </Route>
 
       <Route path="*" element={<NotFound />} />
     </Routes>
