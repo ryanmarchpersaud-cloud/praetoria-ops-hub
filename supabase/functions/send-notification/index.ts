@@ -515,6 +515,7 @@ Deno.serve(async (req) => {
     "new_service_request",
     "new_maintenance_request",
     "new_tenant_insurance_submission",
+    "new_tenant_referral",
   ]);
 
   // Parse body early so we can role-gate based on event.
