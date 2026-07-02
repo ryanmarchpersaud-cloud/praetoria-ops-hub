@@ -68,7 +68,7 @@ async function getOperationalContext(supabase: any) {
       .limit(15),
     supabase
       .from("visits")
-      .select("id, visit_number, service_date, status, service_type, assigned_worker_id")
+      .select("id, visit_number, service_date, visit_status, service_type, assigned_worker_id")
       .gt("service_date", today)
       .order("service_date", { ascending: true })
       .limit(15),
