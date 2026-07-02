@@ -248,6 +248,27 @@ export function useCreateWorkOrder() {
         console.warn('[wo] ops email failed', e);
       }
 
+      // Tenant in-app notification — status changed on their request
+      if (status === 'assigned') {
+        await notifyTenantByTenantId(
+          req.tenant_id,
+          'pm_request_assigned',
+          `Your maintenance request has been assigned`,
+          `"${req.title}" has been assigned. We'll update you as work progresses.`,
+          'pm_maintenance_request',
+          req.id,
+        );
+      } else {
+        await notifyTenantByTenantId(
+          req.tenant_id,
+          'pm_request_reviewed',
+          `Your maintenance request has been reviewed`,
+          `"${req.title}" is being scheduled. We'll notify you when a worker is assigned.`,
+          'pm_maintenance_request',
+          req.id,
+        );
+      }
+
       return wo;
     },
     onSuccess: (_, v) => {
