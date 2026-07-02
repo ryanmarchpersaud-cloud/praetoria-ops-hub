@@ -222,6 +222,15 @@ export default function PMMaintenanceRequestDetail() {
           </div>
         </CardContent>
       </Card>
+
+      <ActivityTimeline requestId={data.id} />
+
+      <CreateWorkOrderDialog
+        open={woDialogOpen}
+        onOpenChange={setWoDialogOpen}
+        requestId={data.id}
+        defaultAccessNotes={data.contact_notes}
+      />
     </div>
   );
 }
