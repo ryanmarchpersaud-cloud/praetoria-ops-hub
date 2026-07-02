@@ -103,6 +103,8 @@ export default function PMDashboard() {
         <KpiCard label="Property owners"    value={s?.totalOwners ?? 0}      icon={Briefcase}    tone="slate"   to="/property-management/owners" />
       </div>
 
+      <RecentTenantActivity />
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div>
