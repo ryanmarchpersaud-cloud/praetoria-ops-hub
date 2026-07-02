@@ -56,7 +56,7 @@ export function useVacantUnits() {
       const { data, error } = await supabase
         .from('pm_units' as any)
         .select('*, property:pm_managed_properties(id, property_name, address_line_1, city)')
-        .in('status', ['vacant', 'available', 'Vacant', 'Available']);
+        .eq('status', 'vacant');
       if (error) throw error;
       return (data ?? []) as any[];
     },
