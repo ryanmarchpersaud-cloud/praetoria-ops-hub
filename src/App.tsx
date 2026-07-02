@@ -393,15 +393,13 @@ function SubcontractorRoute({ children }: { children?: React.ReactNode }) {
 
 function LoginRoute() {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { isCustomer, isStaff, isSubcontractor, canAccessAdminPortal, isLoading } = useAuthorization();
+  const { isCustomer, isStaff, isSubcontractor, isTenant, canAccessAdminPortal, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Login />;
-  // User just signed in — don't flash a blank "Loading…" frame over the
-  // login page while authorization resolves; render nothing so the
-  // destination route's own AppLayout takes over without a remount flash.
   if (isLoading || !mustChangePasswordChecked) return null;
   if (mustChangePassword) return <Navigate to="/change-password" replace />;
   if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
+  if (isTenant && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
   return <Navigate to="/" replace />;
