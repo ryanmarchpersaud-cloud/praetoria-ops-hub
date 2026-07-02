@@ -10332,6 +10332,10 @@ export type Database = {
         }
         Returns: number
       }
+      pm_property_owner_can_view_tenant: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
