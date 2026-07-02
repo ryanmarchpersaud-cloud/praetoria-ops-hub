@@ -279,6 +279,10 @@ const PMStaffMyPPE = lazy(() => import("./pages/pm-staff/MyPPE"));
 const PMStaffExpenseClaims = lazy(() => import("./pages/pm-staff/ExpenseClaims"));
 const PMStaffTimeOff = lazy(() => import("./pages/pm-staff/TimeOff"));
 const PMStaffMessages = lazy(() => import("./pages/pm-staff/Messages"));
+const PMStaffEmployment = lazy(() => import("./pages/pm-staff/Employment"));
+const PMStaffBenefits = lazy(() => import("./pages/pm-staff/Benefits"));
+const PMStaffTaxDocs = lazy(() => import("./pages/pm-staff/TaxDocuments"));
+const PMStaffEmergencyContact = lazy(() => import("./pages/pm-staff/EmergencyContact"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
