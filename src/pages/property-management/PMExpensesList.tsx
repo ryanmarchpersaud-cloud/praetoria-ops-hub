@@ -57,6 +57,42 @@ function usePMUnitsForProperty(propertyId?: string) {
   });
 }
 
+const PM_VENDOR_OPTIONS = [
+  'Rona',
+  'Home Depot',
+  'Home Hardware',
+  "Lowe's",
+  'Canadian Tire',
+  'Peavey Mart',
+  'Princess Auto',
+  'Costco',
+  'Walmart',
+  'Windsor Plywood',
+  'Sherwin-Williams',
+  'Dulux Paints',
+  'Benjamin Moore',
+  'Wolseley',
+  'EMCO',
+  'Westburne Electric',
+  'Nelson Lumber',
+  'Robinson Supply',
+  'Amazon',
+];
+
+const PM_PAYMENT_METHODS = [
+  'Cash',
+  'Debit Card',
+  'Credit Card',
+  'Company Card',
+  'e-Transfer',
+  'Cheque',
+  'Bank Transfer / EFT',
+  'Stripe Payment',
+  'PayPal',
+  'Other',
+];
+
+
 const emptyForm = {
   property_id: '',
   unit_id: null as string | null,
@@ -68,6 +104,8 @@ const emptyForm = {
   expense_date: format(new Date(), 'yyyy-MM-dd'),
   due_date: '',
   subtotal: '',
+  gst_percent: '5',
+  pst_percent: '6',
   gst_amount: '',
   pst_amount: '',
   status: 'draft',
@@ -185,6 +223,8 @@ export default function PMExpensesPage() {
       expense_date: row.expense_date,
       due_date: row.due_date ?? '',
       subtotal: String(row.subtotal ?? ''),
+      gst_percent: row.subtotal > 0 ? String(+(Number(row.gst_amount ?? 0) / Number(row.subtotal) * 100).toFixed(3)) : '5',
+      pst_percent: row.subtotal > 0 ? String(+(Number(row.pst_amount ?? 0) / Number(row.subtotal) * 100).toFixed(3)) : '6',
       gst_amount: String(row.gst_amount ?? ''),
       pst_amount: String(row.pst_amount ?? ''),
       status: row.status ?? 'draft',
@@ -212,9 +252,9 @@ export default function PMExpensesPage() {
       expense_date: form.expense_date,
       due_date: form.due_date || null,
       subtotal: Number(form.subtotal || 0),
-      gst_amount: Number(form.gst_amount || 0),
-      pst_amount: Number(form.pst_amount || 0),
-      total: Number(form.subtotal || 0) + Number(form.gst_amount || 0) + Number(form.pst_amount || 0),
+      gst_amount: +(Number(form.subtotal || 0) * Number(form.gst_percent || 0) / 100).toFixed(2),
+      pst_amount: +(Number(form.subtotal || 0) * Number(form.pst_percent || 0) / 100).toFixed(2),
+      total: +(Number(form.subtotal || 0) * (1 + Number(form.gst_percent || 0) / 100 + Number(form.pst_percent || 0) / 100)).toFixed(2),
       status: form.status,
       payment_method: form.payment_method || null,
       reference_number: form.reference_number || null,
@@ -419,7 +459,24 @@ export default function PMExpensesPage() {
               </div>
               <div>
                 <Label>Vendor / Supplier</Label>
-                <Input value={form.vendor_name} onChange={e => setForm({ ...form, vendor_name: e.target.value })} placeholder="e.g. Rona, Bob's Plumbing" />
+                <Select
+                  value={PM_VENDOR_OPTIONS.includes(form.vendor_name) ? form.vendor_name : (form.vendor_name ? '__other__' : '')}
+                  onValueChange={v => setForm({ ...form, vendor_name: v === '__other__' ? '' : v })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select vendor..." /></SelectTrigger>
+                  <SelectContent>
+                    {PM_VENDOR_OPTIONS.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                    <SelectItem value="__other__">Other (type below)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {(!PM_VENDOR_OPTIONS.includes(form.vendor_name)) && (
+                  <Input
+                    className="mt-2"
+                    value={form.vendor_name}
+                    onChange={e => setForm({ ...form, vendor_name: e.target.value })}
+                    placeholder="Enter vendor name..."
+                  />
+                )}
               </div>
             </div>
 
@@ -430,13 +487,22 @@ export default function PMExpensesPage() {
 
             <div className="grid grid-cols-4 gap-3">
               <div><Label>Subtotal</Label><Input type="number" step="0.01" value={form.subtotal} onChange={e => setForm({ ...form, subtotal: e.target.value })} /></div>
-              <div><Label>GST</Label><Input type="number" step="0.01" value={form.gst_amount} onChange={e => setForm({ ...form, gst_amount: e.target.value })} /></div>
-              <div><Label>PST</Label><Input type="number" step="0.01" value={form.pst_amount} onChange={e => setForm({ ...form, pst_amount: e.target.value })} /></div>
+              <div>
+                <Label>GST (%)</Label>
+                <Input type="number" step="0.01" value={form.gst_percent} onChange={e => setForm({ ...form, gst_percent: e.target.value })} />
+              </div>
+              <div>
+                <Label>PST (%)</Label>
+                <Input type="number" step="0.01" value={form.pst_percent} onChange={e => setForm({ ...form, pst_percent: e.target.value })} />
+              </div>
               <div>
                 <Label>Total</Label>
-                <Input disabled value={(Number(form.subtotal || 0) + Number(form.gst_amount || 0) + Number(form.pst_amount || 0)).toFixed(2)} />
+                <Input disabled value={(Number(form.subtotal || 0) * (1 + Number(form.gst_percent || 0) / 100 + Number(form.pst_percent || 0) / 100)).toFixed(2)} />
               </div>
             </div>
+            <p className="text-xs text-muted-foreground -mt-1">
+              GST {form.gst_percent || 0}% = ${(Number(form.subtotal || 0) * Number(form.gst_percent || 0) / 100).toFixed(2)} · PST {form.pst_percent || 0}% = ${(Number(form.subtotal || 0) * Number(form.pst_percent || 0) / 100).toFixed(2)}
+            </p>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -450,7 +516,12 @@ export default function PMExpensesPage() {
               </div>
               <div>
                 <Label>Payment Method</Label>
-                <Input value={form.payment_method} onChange={e => setForm({ ...form, payment_method: e.target.value })} placeholder="Cash, e-Transfer, Card..." />
+                <Select value={form.payment_method || ''} onValueChange={v => setForm({ ...form, payment_method: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select method..." /></SelectTrigger>
+                  <SelectContent>
+                    {PM_PAYMENT_METHODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
