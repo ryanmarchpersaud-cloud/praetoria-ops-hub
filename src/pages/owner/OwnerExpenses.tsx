@@ -12,6 +12,7 @@ import {
   getOwnerReceiptSignedUrl,
 } from '@/hooks/useOwnerPortal';
 import { toast } from '@/hooks/use-toast';
+import { formatStatusLabel } from '@/lib/statusLabel';
 
 function formatMoney(n?: number | string | null) {
   const v = Number(n ?? 0);
@@ -166,7 +167,7 @@ export default function OwnerExpenses() {
                 </CardHeader>
                 <CardContent className="pt-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="outline" className={statusTone(r.status)}>{r.status || 'draft'}</Badge>
+                    <Badge variant="outline" className={statusTone(r.status)}>{formatStatusLabel(r.status || 'draft')}</Badge>
                     {r.is_billable_to_owner && (
                       <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">
                         Billable to owner
