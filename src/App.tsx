@@ -724,6 +724,8 @@ function AppRoutes() {
         <Route path="/subcontractor/invoices" element={<SubcontractorInvoices />} />
         <Route path="/subcontractor/documents" element={<SubcontractorDocuments />} />
         <Route path="/subcontractor/more" element={<SubcontractorMore />} />
+        <Route path="/subcontractor/pm-work-orders" element={<Suspense fallback={<RouteLoading />}><SubcontractorPMWorkOrders /></Suspense>} />
+        <Route path="/subcontractor/pm-work-orders/:id" element={<Suspense fallback={<RouteLoading />}><SubcontractorPMWorkOrderDetail /></Suspense>} />
         <Route path="/subcontractor/profile" element={<SubcontractorProfile />} />
         <Route path="/subcontractor/company" element={<SubcontractorCompany />} />
         <Route path="/subcontractor/compliance" element={<SubcontractorCompliance />} />
