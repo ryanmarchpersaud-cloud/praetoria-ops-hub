@@ -287,11 +287,151 @@ export default function OwnerStatementPrint() {
           </div>
         )}
 
+        {/* ── Branded Final Page ── */}
+        <div className="mt-10 print:break-before-page print:mt-0 print:pt-4">
+          {/* Services */}
+          <div className="pt-6 border-t border-[#e5e7eb] print:border-t-0">
+            <p className="text-center text-[10px] uppercase tracking-[0.2em] font-bold mb-2 print:text-xs text-[#0F172A]">
+              Explore Our Full Range of Services
+            </p>
+            <p className="text-center text-[11px] text-[#6b7280] mb-4 print:text-xs max-w-2xl mx-auto">
+              One trusted partner for all your property needs — ask us about bundling, owner-preferred rates, and coordinated service support.
+            </p>
+            <div className="grid grid-cols-3 md:grid-cols-5 print:grid-cols-5 gap-1.5 print:gap-2 text-[9px] print:text-[10px]">
+              {[
+                { name: 'Snow & Ice', color: '#2563EB' },
+                { name: 'Maintenance & Repairs', color: '#EAB308' },
+                { name: 'Property Care & Landscaping', color: '#16A34A' },
+                { name: 'Property Management', color: '#0F766E' },
+                { name: 'Electrical', color: '#7C3AED' },
+                { name: 'Plumbing', color: '#0D9488' },
+                { name: 'Carpentry & Renovations', color: '#92400E' },
+                { name: 'Roofing & Exteriors', color: '#374151' },
+                { name: 'Painting & Finishing', color: '#EAB308' },
+                { name: 'Cleaning Services', color: '#0EA5E9' },
+                { name: 'Heating, Ventilation & Air Conditioning', color: '#F43F5E' },
+                { name: 'Concrete & Masonry', color: '#6B7280' },
+                { name: 'Security & Smart Home', color: '#111827' },
+                { name: 'Fencing & Decking', color: '#7c2d12' },
+                { name: 'Junk Removal', color: '#c2410c' },
+                { name: 'Power Washing', color: '#0891B2' },
+                { name: 'Tiling & Flooring', color: '#A16207' },
+                { name: 'Gutter Cleaning & Repair', color: '#65A30D' },
+                { name: 'Window Cleaning', color: '#0284C7' },
+                { name: 'Pest Control', color: '#854D0E' },
+                { name: 'Moving & Hauling', color: '#9333EA' },
+                { name: 'Insulation & Drywall', color: '#B91C1C' },
+                { name: 'Appliance Install & Repair', color: '#0F766E' },
+                { name: 'Garage Doors', color: '#475569' },
+                { name: 'Locksmith Services', color: '#1E40AF' },
+              ].map((s) => (
+                <div
+                  key={s.name}
+                  className="relative rounded-md border px-1.5 py-2 text-center font-semibold leading-tight overflow-hidden"
+                  style={{ borderColor: `${s.color}55`, color: s.color, backgroundColor: `${s.color}0D` }}
+                >
+                  <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ backgroundColor: s.color }} />
+                  <div className="pt-0.5">{s.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Manage Everything in One Place */}
+          <div className="mt-8 pt-6 border-t border-[#e5e7eb] print:mt-8">
+            <p className="text-center text-[10px] uppercase tracking-[0.2em] font-bold mb-4 print:text-xs text-[#0F172A]">
+              Manage Everything in One Place
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-3 print:gap-3">
+              {/* Owner Portal — primary */}
+              <div className="rounded-lg overflow-hidden border-2 border-[#0F172A]">
+                <div className="bg-[#0F172A] text-white px-3 py-2 text-center">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide print:text-xs">Owner Portal</p>
+                </div>
+                <div className="p-3 text-center bg-white">
+                  <p className="text-[9px] text-[#374151] leading-snug print:text-[10px]">
+                    View owner statements, property summaries, maintenance updates, shared documents, and owner-visible expenses.
+                  </p>
+                  <p className="text-[9px] font-mono text-[#0F172A] mt-2 print:text-[10px] break-all">
+                    praetoriagroup.ca/owner
+                  </p>
+                  <p className="text-[9px] font-bold text-[#16A34A] mt-1 print:text-[10px] uppercase tracking-wide">
+                    Live Now
+                  </p>
+                </div>
+              </div>
+
+              {/* Tenant Portal */}
+              <div className="rounded-lg overflow-hidden border-2 border-[#0F766E]">
+                <div className="bg-[#0F766E] text-white px-3 py-2 text-center">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide print:text-xs">Tenant Portal</p>
+                </div>
+                <div className="p-3 text-center bg-white">
+                  <p className="text-[9px] text-[#374151] leading-snug print:text-[10px]">
+                    Tenants submit maintenance requests, view lease info, notices, documents, and tenant-visible ledger updates.
+                  </p>
+                  <p className="text-[9px] font-mono text-[#0F766E] mt-2 print:text-[10px] break-all">
+                    praetoriagroup.ca/tenant
+                  </p>
+                  <p className="text-[9px] font-bold text-[#16A34A] mt-1 print:text-[10px] uppercase tracking-wide">
+                    Live Now
+                  </p>
+                </div>
+              </div>
+
+              {/* Android */}
+              <div className="rounded-lg overflow-hidden border-2 border-[#16A34A]">
+                <div className="bg-[#16A34A] text-white px-3 py-2 text-center">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide print:text-xs">Praetoria App — Android</p>
+                </div>
+                <div className="p-3 text-center bg-white">
+                  <div className="flex justify-center mb-1.5">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#16A34A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 3 L19 12 L5 21 Z" />
+                      <path d="M5 3 L15 13 M5 21 L15 11" />
+                    </svg>
+                  </div>
+                  <p className="text-[9px] text-[#374151] print:text-[10px]">Get it on Google Play</p>
+                  <p className="text-[9px] font-mono text-[#16A34A] mt-1 print:text-[10px]">Android</p>
+                  <p className="text-[9px] font-bold text-[#16A34A] mt-1 print:text-[10px] uppercase tracking-wide">
+                    Live Now
+                  </p>
+                </div>
+              </div>
+
+              {/* iOS */}
+              <div className="rounded-lg overflow-hidden border-2 border-[#111827]">
+                <div className="bg-[#111827] text-white px-3 py-2 text-center">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wide print:text-xs">Praetoria App — iOS</p>
+                </div>
+                <div className="p-3 text-center bg-white">
+                  <div className="flex justify-center mb-1.5">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#111827" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 3 a4 4 0 0 0-3 3" />
+                      <path d="M19 17 c-1 2-2 3-3.5 3 c-1 0-1.7-0.6-3-0.6 c-1.3 0-2 0.6-3 0.6 c-1.5 0-3-1.5-4-3.5 c-2-4-1-9 2-10 c1.5-0.5 3 0.5 4 0.5 c1 0 2.5-1 4.2-0.8 c1.7 0.2 3 1 3.8 2.3 c-3.4 2-2.8 6.7 0.5 8.5 z" />
+                    </svg>
+                  </div>
+                  <p className="text-[9px] text-[#374151] print:text-[10px]">Download on the App Store</p>
+                  <p className="text-[9px] font-mono text-[#111827] mt-1 print:text-[10px]">iOS</p>
+                  <p className="text-[9px] font-bold text-[#16A34A] mt-1 print:text-[10px] uppercase tracking-wide">
+                    Live Now
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p className="text-center text-[10px] text-[#6b7280] mt-3 italic print:text-xs">
+              A Customer Portal is also available at praetoriagroup.ca/portal for service history, quotes, and invoices.
+            </p>
+          </div>
+        </div>
+
         {/* Footer */}
-        <div className="mt-auto pt-6 border-t-2 border-[#e5e7eb] text-center text-xs text-[#6b7280] print:text-sm space-y-1">
-          <p className="font-semibold text-[#374151]">Thank you for trusting Praetoria Group with your property.</p>
-          <p>Questions about this statement? Contact us at {companyEmail} · {companyPhone}</p>
-          <p className="text-[10px] print:text-xs">
+        <div className="mt-auto pt-6 border-t-2 border-[#0F172A] text-center text-xs text-[#6b7280] print:text-sm space-y-1">
+          <p className="font-extrabold text-[#0F172A] text-sm print:text-base tracking-wide">PRAETORIA GROUP</p>
+          <p className="text-[#374151]">ops@praetoriagroup.ca · support@praetoriagroup.ca · 306-737-6269</p>
+          <p className="font-mono text-[#0F172A]">praetoriagroup.ca</p>
+          <p className="font-semibold text-[#374151] mt-2">Thank you for trusting Praetoria Group with your property.</p>
+          <p className="text-[10px] print:text-xs text-[#6b7280]">
             This statement summarizes activity for the period shown. Amounts are in CAD. Retained under Canadian record-keeping requirements.
           </p>
         </div>
