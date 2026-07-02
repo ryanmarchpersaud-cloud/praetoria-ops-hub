@@ -7684,6 +7684,7 @@ export type Database = {
           price_monthly: number | null
           price_per_cut: number | null
           price_weekly: number | null
+          property_id: string | null
           pst_rate: number | null
           quote_date: string | null
           quote_number: string
@@ -7726,6 +7727,7 @@ export type Database = {
           price_monthly?: number | null
           price_per_cut?: number | null
           price_weekly?: number | null
+          property_id?: string | null
           pst_rate?: number | null
           quote_date?: string | null
           quote_number: string
@@ -7768,6 +7770,7 @@ export type Database = {
           price_monthly?: number | null
           price_per_cut?: number | null
           price_weekly?: number | null
+          property_id?: string | null
           pst_rate?: number | null
           quote_date?: string | null
           quote_number?: string
@@ -7806,6 +7809,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
           {
