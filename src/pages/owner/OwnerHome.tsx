@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Wrench, Mail, ExternalLink } from 'lucide-react';
 import { useOwnerRecord, useOwnerProperties, useOwnerMaintenanceRequests } from '@/hooks/useOwnerPortal';
+import { formatStatusLabel } from '@/lib/statusLabel';
 
 export default function OwnerHome() {
   const { data: owner, isLoading } = useOwnerRecord();
@@ -64,7 +65,7 @@ export default function OwnerHome() {
                       </p>
                     </div>
                     <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 shrink-0">
-                      {r.status}
+                      {formatStatusLabel(r.status)}
                     </span>
                   </div>
                 </Link>

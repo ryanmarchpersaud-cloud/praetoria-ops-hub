@@ -38,12 +38,16 @@ export function OwnerLayout({ children }: { children: ReactNode }) {
               <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300 font-semibold">
                 Praetoria Group
               </p>
-              <h1 className="text-xl font-bold leading-tight">Property Owner Portal</h1>
+              <h1 className="text-lg sm:text-xl font-bold leading-tight text-white truncate">
+                Property Owner Portal
+              </h1>
             </div>
-            <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-100/90 bg-white/10 px-2 py-1 rounded-full">
+            <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-100/90 bg-white/10 px-2 py-1 rounded-full shrink-0">
               <ShieldCheck className="h-3.5 w-3.5" /> Secure
             </div>
-            <NotificationCenter />
+            <div className="shrink-0 [&_button]:text-white [&_svg]:text-white">
+              <NotificationCenter />
+            </div>
           </div>
         </header>
         <div className="w-full max-w-lg mx-auto">{children}</div>
