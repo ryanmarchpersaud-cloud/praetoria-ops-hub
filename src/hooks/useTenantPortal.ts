@@ -110,6 +110,11 @@ interface CreateReqInput {
   permission_to_enter?: boolean;
   preferred_contact_time?: string;
   files?: File[];
+  // Structured catalog fields (all optional)
+  issue_label?: string | null;
+  issue_key?: string | null;
+  is_urgent_safety?: boolean;
+  priority_suggested_by_catalog?: 'low' | 'normal' | 'urgent' | null;
 }
 
 export function useCreateMaintenanceRequest() {

@@ -73,15 +73,38 @@ export default function PMMaintenanceRequestDetail() {
 
       <Card>
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <CardTitle>{data.title}</CardTitle>
-            <Badge variant="outline">{status.replace('_', ' ')}</Badge>
+            <div className="flex items-center gap-2">
+              {data.is_urgent_safety && (
+                <Badge className="bg-red-600 hover:bg-red-700 text-white">URGENT SAFETY</Badge>
+              )}
+              <Badge variant="outline">{status.replace('_', ' ')}</Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Submitted {new Date(data.created_at).toLocaleString()} · {data.category.replace('_', ' ')} · Priority: {data.priority}
-          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+            <div>
+              <p className="text-xs text-muted-foreground">Category</p>
+              <p className="font-medium capitalize">{(data.category ?? '').replace(/_/g, ' ')}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Issue</p>
+              <p className="font-medium">{data.issue_label ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Priority</p>
+              <p className="font-medium capitalize">{data.priority}</p>
+              {data.priority_suggested_by_catalog && data.priority_suggested_by_catalog !== data.priority && (
+                <p className="text-[10px] text-muted-foreground">Suggested: {data.priority_suggested_by_catalog}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Submitted</p>
+              <p className="font-medium">{new Date(data.created_at).toLocaleString()}</p>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
             <div>
               <p className="text-xs text-muted-foreground">Tenant</p>

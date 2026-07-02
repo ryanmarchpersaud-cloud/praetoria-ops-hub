@@ -17,6 +17,7 @@ import {
   MaintenanceIssue,
   popularIssues,
   searchIssues,
+  issueKey,
 } from '@/lib/maintenanceCatalog';
 
 type Step = 'category' | 'issue' | 'details';
@@ -90,6 +91,11 @@ export default function TenantMaintenanceNew() {
         permission_to_enter: form.permission_to_enter,
         preferred_contact_time: form.preferred_contact_time || undefined,
         files,
+        // Structured catalog metadata
+        issue_label: issue?.label ?? null,
+        issue_key: issue ? issueKey(category.key, issue.label) : null,
+        is_urgent_safety: issue?.urgent === true,
+        priority_suggested_by_catalog: issue?.priority ?? null,
       });
       toast.success('Request submitted');
       nav('/tenant/maintenance');

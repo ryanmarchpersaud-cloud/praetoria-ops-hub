@@ -11,6 +11,16 @@ export interface MaintenanceIssue {
   popular?: boolean;        // surfaced in "Common issues"
 }
 
+// Build a stable key for a catalog issue: `${category.key}:${slug(issue.label)}`.
+// Used to persist the exact catalog selection on pm_maintenance_requests.issue_key.
+export function issueKey(categoryKey: string, issueLabel: string): string {
+  const slug = issueLabel
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return `${categoryKey}:${slug}`;
+}
+
 export interface MaintenanceCategory {
   key: string;          // stored on request.category
   label: string;
