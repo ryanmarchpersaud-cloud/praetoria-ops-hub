@@ -287,7 +287,7 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isActiveUser, isLoading } = useAuthorization();
+  const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isTenant, isActiveUser, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (!mustChangePasswordChecked) {
