@@ -127,17 +127,18 @@ export function AppSidebar() {
             <SidebarMenu>
               {visibleOpsItems.map((item) => {
                 const count = getBadgeCount(item.countKey);
+                const style = AREA_STYLES[item.area];
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
                         end={item.url === '/'}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                        className={`hover:bg-sidebar-accent/50 border-l-2 border-transparent pl-[calc(0.5rem-2px)]`}
+                        activeClassName={`bg-sidebar-accent font-semibold ${style.activeText} ${style.activeBorder}`}
                       >
                         <div className="relative mr-2">
-                          <item.icon className="h-4 w-4" />
+                          <item.icon className={`h-4 w-4 ${style.icon}`} />
                           <BadgeCount count={count} />
                         </div>
                         {!collapsed && (
@@ -164,19 +165,21 @@ export function AppSidebar() {
             <SidebarGroupLabel>View As</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {visibleViewAs.map((item) => (
+                {visibleViewAs.map((item) => {
+                  const style = AREA_STYLES[item.area];
+                  return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.url}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                        className={`hover:bg-sidebar-accent/50 border-l-2 border-transparent pl-[calc(0.5rem-2px)]`}
+                        activeClassName={`bg-sidebar-accent font-semibold ${style.activeText} ${style.activeBorder}`}
                       >
-                        <item.icon className="mr-2 h-4 w-4" />
+                        <item.icon className={`mr-2 h-4 w-4 ${style.icon}`} />
                         {!collapsed && (
                           <span className="flex items-center gap-2">
                             {item.title}
-                            <span className="text-[9px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${style.badgeBg} ${style.badgeText}`}>
                               {item.badge}
                             </span>
                           </span>
@@ -184,7 +187,8 @@ export function AppSidebar() {
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ))}
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
