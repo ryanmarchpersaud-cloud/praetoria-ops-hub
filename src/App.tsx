@@ -343,13 +343,15 @@ function AuthedRoute({ children }: { children: React.ReactNode }) {
 
 function WorkerRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isCustomer, canAccessWorkerPortal, isActiveUser, isLoading } = useAuthorization();
+  const { isCustomer, isTenant, isSubcontractor, canAccessWorkerPortal, isActiveUser, isLoading } = useAuthorization();
   const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (isTenant && !canAccessWorkerPortal) return <Navigate to="/tenant" replace />;
   if (isCustomer) return <Navigate to="/portal/properties" replace />;
+  if (isSubcontractor && !canAccessWorkerPortal) return <Navigate to="/subcontractor" replace />;
   if (!canAccessWorkerPortal) return <Navigate to="/access-denied" replace />;
   return (
     <SignedInPortalRouteShell>
@@ -360,12 +362,13 @@ function WorkerRoute({ children }: { children?: React.ReactNode }) {
 
 function PortalRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { isCustomer, canAccessCustomerPortal, isStaff, isActiveUser, isLoading } = useAuthorization();
+  const { isCustomer, isTenant, canAccessCustomerPortal, isStaff, isActiveUser, isLoading } = useAuthorization();
   const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (isTenant && !canAccessCustomerPortal) return <Navigate to="/tenant" replace />;
   if (!canAccessCustomerPortal) return <Navigate to="/access-denied" replace />;
   const isPreview = isStaff && !isCustomer;
   return (
@@ -378,12 +381,13 @@ function PortalRoute({ children }: { children?: React.ReactNode }) {
 
 function SubcontractorRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { canAccessSubcontractorPortal, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
+  const { isTenant, canAccessSubcontractorPortal, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
   const forceChange = useForcePasswordChangeRedirect();
   if (loading || isLoading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (forceChange) return forceChange;
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (isTenant && !canAccessSubcontractorPortal && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
   if (!canAccessSubcontractorPortal && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
   return (
     <SignedInPortalRouteShell>
@@ -391,6 +395,7 @@ function SubcontractorRoute({ children }: { children?: React.ReactNode }) {
     </SignedInPortalRouteShell>
   );
 }
+
 
 function TenantRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
