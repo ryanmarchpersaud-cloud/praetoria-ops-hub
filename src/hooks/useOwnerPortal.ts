@@ -316,3 +316,69 @@ export function useOwnerPortalLinked(ownerId?: string) {
     enabled: !!ownerId,
   });
 }
+
+/**
+ * Owner-visible property expenses. Reads from `pm_expenses_owner_safe`,
+ * which excludes `admin_note` at the SQL level. RLS further restricts rows
+ * to expenses where `is_owner_visible = true` AND the property is linked
+ * to this owner via `pm_owner_properties`.
+ */
+export function useOwnerExpenses(propertyId?: string) {
+  const { user } = useAuth();
+  const scope = useOwnerScope();
+  return useQuery({
+    queryKey: ['owner-portal', 'expenses', propertyId ?? 'all', scope.isPreview ? `preview:${scope.ownerId}` : user?.id, scope.propertyIds?.join(',') ?? null],
+    queryFn: async () => {
+      if (scopeBlocksAll(scope)) return [];
+      let q = (supabase as any)
+        .from('pm_expenses_owner_safe')
+        .select(`
+          id, expense_date, category, status, subtotal, gst_amount, pst_amount, total,
+          description, owner_visible_note, is_billable_to_owner, reference_number, vendor_name,
+          property_id, unit_id, work_order_id,
+          property:pm_managed_properties(id, property_name, address_line_1, city),
+          unit:pm_units(id, unit_label),
+          work_order:pm_work_orders(id, work_order_number, title)
+        `)
+        .order('expense_date', { ascending: false })
+        .limit(500);
+      if (propertyId) q = q.eq('property_id', propertyId);
+      else if (scope.isPreview && scope.propertyIds?.length) q = q.in('property_id', scope.propertyIds);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+    enabled: !!user && (!scope.isPreview || scope.ready),
+  });
+}
+
+/**
+ * Owner-visible receipts attached to an expense. RLS enforces:
+ *   attachment.is_owner_visible = true
+ *   AND parent expense.is_owner_visible = true
+ *   AND owner is linked to that property.
+ */
+export function useOwnerExpenseAttachments(expenseId?: string) {
+  return useQuery({
+    queryKey: ['owner-portal', 'expense-attachments', expenseId],
+    enabled: !!expenseId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('pm_expense_attachments')
+        .select('id, file_name, mime_type, size_bytes, storage_path, is_owner_visible, created_at')
+        .eq('expense_id', expenseId!)
+        .eq('is_owner_visible', true)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+}
+
+/** 5-minute signed URL for an owner-visible receipt. */
+export async function getOwnerReceiptSignedUrl(path: string) {
+  const { data, error } = await supabase.storage.from('pm-receipts').createSignedUrl(path, 300);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
