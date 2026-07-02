@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Paperclip } from 'lucide-react';
 import { useMyMaintenanceRequest, signMaintenanceAttachment } from '@/hooks/useTenantPortal';
+import { useMyRequestVisibleWOAttachments, useRequestActivity, signWOAttachment } from '@/hooks/usePMWorkOrders';
 
 export default function TenantMaintenanceDetail() {
   const { id } = useParams();
