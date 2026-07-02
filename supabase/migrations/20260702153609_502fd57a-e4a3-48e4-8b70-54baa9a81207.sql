@@ -1,0 +1,2 @@
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS property_id uuid REFERENCES public.properties(id) ON DELETE SET NULL;
+UPDATE public.quotes SET property_id='f774563a-1984-435c-be75-02c4a082c60f' WHERE quote_number='PQ-00106';

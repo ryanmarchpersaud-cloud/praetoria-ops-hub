@@ -26,7 +26,7 @@ export function useQuote(id: string | undefined) {
     queryKey: ['quote', id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase.from('quotes').select('*, leads(*), customers(*)').eq('id', id).single();
+      const { data, error } = await supabase.from('quotes').select('*, leads(*), customers(*), properties(*)').eq('id', id).single();
       if (error) throw error;
       return data;
     },
