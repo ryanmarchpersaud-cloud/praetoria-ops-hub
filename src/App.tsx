@@ -447,6 +447,23 @@ function TenantRoute({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function PMStaffRoute({ children }: { children?: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { canAccessPMStaffPortal, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
+  if (loading || isLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  // Admins can preview the staff portal
+  if (!canAccessPMStaffPortal && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
+  return (
+    <SignedInPortalRouteShell>
+      <PMStaffLayout>{children ?? <Outlet />}</PMStaffLayout>
+    </SignedInPortalRouteShell>
+  );
+}
+
 function OwnerRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { canAccessOwnerPortal, isActiveUser, isLoading } = useAuthorization();
