@@ -751,6 +751,17 @@ export default function InvoiceDetail() {
               {editingMeta ? (
                 <div className="space-y-3">
                   <div className="space-y-1">
+                    <Label className="text-xs">Invoice Heading (optional)</Label>
+                    <Input
+                      value={draftHeading}
+                      onChange={e => setDraftHeading(e.target.value)}
+                      className="h-8 text-xs"
+                      maxLength={80}
+                      placeholder="e.g. JUNE LITTER PICK — 921 BROAD STREET"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Shown at the top of the printed invoice. Leave blank to hide.</p>
+                  </div>
+                  <div className="space-y-1">
                     <Label className="text-xs">Issue Date</Label>
                     <Input type="date" value={draftIssueDate} onChange={e => setDraftIssueDate(e.target.value)} className="h-8" />
                   </div>
