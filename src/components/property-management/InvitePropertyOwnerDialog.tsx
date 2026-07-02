@@ -28,10 +28,18 @@ export function InvitePropertyOwnerDialog({ ownerId, defaultEmail, ownerName, op
     setBusy(true);
     setTempPassword(null);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Your session expired. Please sign in again.');
+        setBusy(false);
+        return;
+      }
       const { data, error } = await supabase.functions.invoke('send-owner-invite', {
         body: { owner_id: ownerId, email: email.trim() },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       if (data?.temp_password) setTempPassword(data.temp_password);
       if (data?.warning) toast.warning(data.warning);
       else toast.success('Property owner invited');
