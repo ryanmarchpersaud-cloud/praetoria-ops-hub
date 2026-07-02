@@ -240,6 +240,11 @@ const TenantDocuments = lazy(() => import("./pages/tenant/TenantDocuments"));
 const TenantNotices = lazy(() => import("./pages/tenant/TenantNotices"));
 const TenantProfile = lazy(() => import("./pages/tenant/TenantProfile"));
 const PMTenantPortalPreview = lazy(() => import("./pages/property-management/PMTenantPortalPreview"));
+const PMWorkOrderDetail = lazy(() => import("./pages/property-management/PMWorkOrderDetail"));
+const WorkerPMWorkOrders = lazy(() => import("./pages/worker/WorkerPMWorkOrders"));
+const WorkerPMWorkOrderDetail = lazy(() => import("./pages/worker/WorkerPMWorkOrderDetail"));
+const SubcontractorPMWorkOrders = lazy(() => import("./pages/subcontractor/SubcontractorPMWorkOrders"));
+const SubcontractorPMWorkOrderDetail = lazy(() => import("./pages/subcontractor/SubcontractorPMWorkOrderDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
