@@ -391,6 +391,24 @@ function SubcontractorRoute({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function TenantRoute({ children }: { children?: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { canAccessTenantPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
+  if (loading || isLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (!canAccessTenantPortal) return <Navigate to="/access-denied" replace />;
+  return (
+    <SignedInPortalRouteShell>
+      <TenantLayout>{children ?? <Outlet />}</TenantLayout>
+    </SignedInPortalRouteShell>
+  );
+}
+
+
+
 function LoginRoute() {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
   const { isCustomer, isStaff, isSubcontractor, isTenant, canAccessAdminPortal, isLoading } = useAuthorization();
