@@ -5705,6 +5705,8 @@ export type Database = {
           issue_key: string | null
           issue_label: string | null
           lease_id: string | null
+          owner_visible: boolean
+          owner_visible_summary: string | null
           permission_to_enter: boolean
           preferred_contact_time: string | null
           priority: string
@@ -5731,6 +5733,8 @@ export type Database = {
           issue_key?: string | null
           issue_label?: string | null
           lease_id?: string | null
+          owner_visible?: boolean
+          owner_visible_summary?: string | null
           permission_to_enter?: boolean
           preferred_contact_time?: string | null
           priority?: string
@@ -5757,6 +5761,8 @@ export type Database = {
           issue_key?: string | null
           issue_label?: string | null
           lease_id?: string | null
+          owner_visible?: boolean
+          owner_visible_summary?: string | null
           permission_to_enter?: boolean
           preferred_contact_time?: string | null
           priority?: string
@@ -5858,6 +5864,69 @@ export type Database = {
             columns: ["primary_owner_id"]
             isOneToOne: false
             referencedRelation: "pm_property_owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_owner_documents: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          file_path: string
+          file_size: number | null
+          id: string
+          is_owner_visible: boolean
+          mime_type: string | null
+          owner_id: string | null
+          property_id: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_path: string
+          file_size?: number | null
+          id?: string
+          is_owner_visible?: boolean
+          mime_type?: string | null
+          owner_id?: string | null
+          property_id?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          is_owner_visible?: boolean
+          mime_type?: string | null
+          owner_id?: string | null
+          property_id?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_documents_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "pm_property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
           },
         ]
@@ -6688,6 +6757,9 @@ export type Database = {
           issue_label: string | null
           lease_id: string | null
           maintenance_request_id: string
+          owner_visible: boolean
+          owner_visible_completion_note: string | null
+          owner_visible_summary: string | null
           permission_to_enter: boolean | null
           preferred_contact_time: string | null
           priority: string
@@ -6719,6 +6791,9 @@ export type Database = {
           issue_label?: string | null
           lease_id?: string | null
           maintenance_request_id: string
+          owner_visible?: boolean
+          owner_visible_completion_note?: string | null
+          owner_visible_summary?: string | null
           permission_to_enter?: boolean | null
           preferred_contact_time?: string | null
           priority?: string
@@ -6750,6 +6825,9 @@ export type Database = {
           issue_label?: string | null
           lease_id?: string | null
           maintenance_request_id?: string
+          owner_visible?: boolean
+          owner_visible_completion_note?: string | null
+          owner_visible_summary?: string | null
           permission_to_enter?: boolean | null
           preferred_contact_time?: string | null
           priority?: string
