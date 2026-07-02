@@ -1,93 +1,127 @@
-# Phase 6 — Property Management Staff / Leasing Agent Portal Foundation
 
-Additive-only. No changes to Admin, Tenant, Owner, Worker, Subcontractor, Customer, Finance, HR, Stripe, invoices, payments, mobile builds, or auth. Uses the existing PM emerald theme with a subtle indigo accent to distinguish the staff portal.
+# Phase 6.1 — PM Staff Self-Service
 
-## Roles
+Additive expansion of the PM Staff / Leasing Agent Portal. Reuses existing HR / timesheet / pay stub / document / training / PPE / expense systems with strict "own records only" access. Nothing on the leasing side changes.
 
-Add two values to the existing `app_role` enum:
-- `property_manager`
-- `leasing_agent`
+## Scope guarantees (nothing else touched)
 
-Add helper functions (SECURITY DEFINER, mirroring `has_role`/`is_ops_staff` pattern):
-- `is_pm_staff(uid)` → true for `property_manager` or `leasing_agent` (or admin/owner)
-- `is_leasing_agent(uid)`
-- `is_property_manager(uid)`
+- No changes to: Admin, Finance, Stripe, saved cards, tenant portal, owner portal, customer portal, worker portal, subcontractor portal, HR module UI, payroll logic, invoices, owner statements, tenant ledger, property expenses, service jobs/visits, mobile packaging (Android/iOS/Google Play/App Store, icons, signing, package name).
+- Existing PM Staff pages (Home, Vacancies, Prospects, Showings, Applications, Tasks, Move-Ins, More, Account) are preserved as-is. Bottom nav stays: Home / Vacancies / Prospects / Showings / Tasks / More.
+- Praetoria logo stays in header. Staff avatar shown separately in header (next to name) and inside Profile.
 
-Admin assigns these via existing user_roles UI (Personnel → role toggle). No new invite flow this phase.
+## Sidebar reorganization (PM Staff Layout only)
 
-## Database (new tables, all under `public`, RLS on, GRANTs included)
+Left sidebar / More menu grouped into two sections:
 
-1. `pm_prospects` — name, email, phone, preferred_contact, property_id, unit_id, desired_move_in, budget_min, budget_max, occupants, pets, parking, source, status, notes, assigned_to, created_by, timestamps.
-2. `pm_showings` — prospect_id, property_id, unit_id, scheduled_at, showing_type, assigned_to, status, notes, follow_up_required.
-3. `pm_applications` — prospect_id, property_id, unit_id, status, submitted_at, desired_move_in, notes, admin_review_status, timestamps. (No SIN/credit fields.)
-4. `pm_application_documents` — application_id, file_url, label, uploaded_by (simple metadata table; uses existing `attachments` bucket).
-5. `pm_move_in_checklists` — lease_id (nullable), prospect_id (nullable), property_id, unit_id, assigned_to, status, timestamps.
-6. `pm_move_in_checklist_items` — checklist_id, label, category, completed, completed_by, completed_at, notes, sort_order. Seeded with the standard items from the request.
-7. `pm_move_out_checklists` + `pm_move_out_checklist_items` — same shape, tagged as Phase 6B placeholder (tables created but only a stub UI page).
-8. `pm_staff_tasks` — title, description, assigned_to, property_id, unit_id, prospect_id, application_id, due_date, priority, status, notes.
+```text
+LEASING WORK
+  Home
+  Vacancies
+  Prospects
+  Showings
+  Applications
+  Move-Ins
+  Tasks
 
-### RLS
-
-- **Admin / owner / property_manager**: full SELECT/INSERT/UPDATE/DELETE on all 8 tables.
-- **Leasing agent**: SELECT/INSERT/UPDATE on prospects, showings, applications, application_documents, move_in_checklists, move_in_checklist_items, staff_tasks. No DELETE. No access to move_out tables. No access to `pm_tenant_ledger`, `pm_expenses`, `pm_owner_statements`, `pm_leases` write, finance, HR, Stripe.
-- **Everyone else** (worker, subcontractor, tenant, property_owner, customer, anon): denied.
-
-Existing tables (`pm_managed_properties`, `pm_units`, `pm_tenants`, `pm_leases`, `pm_maintenance_requests`) get additive policies so `property_manager` reads/writes as ops staff, and `leasing_agent` gets read-only on properties/units and read on tenants (name/email/phone only via UI-level filtering — no ledger/banking).
-
-## Routes & Files
-
-New portal mounted at `/pm-staff/*`, guarded by `ModuleGuard` requiring `is_pm_staff`.
-
-```
-src/pages/pm-staff/
-  PMStaffLayout.tsx        — emerald header, indigo accent, bottom nav (Home, Vacancies, Prospects, Showings, Tasks, More)
-  PMStaffHome.tsx          — dashboard: vacant units, upcoming showings, pending apps, upcoming move-ins/outs, open maint summary, my tasks, quick actions
-  Vacancies.tsx            — list vacant units with quick actions
-  Prospects.tsx + ProspectDetail.tsx
-  Showings.tsx + ShowingDetail.tsx
-  Applications.tsx + ApplicationDetail.tsx
-  MoveIns.tsx + MoveInChecklistDetail.tsx
-  MoveOuts.tsx             — Phase 6B stub
-  Tasks.tsx
-  Account.tsx              — profile + sign out (reuses existing account patterns)
-src/hooks/pm-staff/
-  useProspects.ts, useShowings.ts, useApplications.ts, useMoveInChecklists.ts, useStaffTasks.ts, useVacantUnits.ts
-src/components/pm-staff/
-  ProspectDialog.tsx, ShowingDialog.tsx, ApplicationDialog.tsx, StaffTaskDialog.tsx, MoveInChecklistCard.tsx
+MY STAFF ACCOUNT
+  My Profile
+  Time Clock
+  My Timesheets
+  My Pay Stubs
+  My Documents
+  Training & Safety
+  My PPE / Equipment
+  Expense Claims
+  Time Off / Sick Days
+  Messages
 ```
 
-Route registration in `src/App.tsx` (append-only inside existing routes block).
+Bottom nav (mobile) stays 6 items; self-service lives under **More** + **Account**.
 
-Admin gets one deep-link in existing PM section: "Staff / Leasing" → `/pm-staff` (no restructure of admin nav).
+## New PM Staff routes
 
-## UI
+All under `/pm-staff/*`, protected by `PMStaffRoute`:
 
-- Emerald primary (matches PM), with an indigo `--pm-staff-accent` for the top bar and active nav item so the portal is visually distinct.
-- Mobile-first, bottom nav with 5 items + More sheet.
-- Status labels via existing `statusLabel.ts`.
-- All lists paginated, empty states with primary CTA.
+- `/pm-staff/profile`
+- `/pm-staff/time-clock`
+- `/pm-staff/timesheets`
+- `/pm-staff/pay-stubs`
+- `/pm-staff/pay-stubs/:id`
+- `/pm-staff/documents`
+- `/pm-staff/training`
+- `/pm-staff/ppe`
+- `/pm-staff/expenses`
+- `/pm-staff/time-off`
+- `/pm-staff/messages`
 
-## Out of scope (explicit)
+## Reuse map (no duplication)
 
-Credit/background checks, application fees, online rent, Stripe, owner payouts, board portal, calendar sync, lease generation, e-signing, HR/finance access, mobile/build config, any change to existing portals.
+| Self-service area | Existing system reused | Access rule |
+|---|---|---|
+| Profile / avatar | `profiles` + `worker_profiles` (read own) | Own row only |
+| Time Clock | `timesheets` (new `source='pm_staff'` tag) | Own entries only |
+| Timesheets | `timesheets` | Own entries only |
+| Pay Stubs | `employee_pay_stubs` | Own stubs only (never SIN/bank) |
+| Documents | `worker_documents` | Own docs only |
+| Training | `training_assignments` + `training_courses` | Own assignments only |
+| PPE / Equipment | `worker_equipment_items` | Own items only |
+| Expense Claims | `worker_expense_claims` | Own claims only |
+| Time Off / Sick | `employee_time_off_requests` | Own requests only |
+| Messages | existing notifications | Own notifications only |
 
-## QA plan (delivered in completion report)
+Nothing about the worker portal's own use of these tables changes — RLS additions are **read/write own row** overlays, gated by the new `is_pm_staff()` helper (already added in Phase 6).
 
-1. Admin assigns `leasing_agent` role to a test user via Personnel.
-2. Test user signs in → redirected to `/pm-staff`.
-3. Verify visible: Home, Vacancies, Prospects, Showings, Applications, Tasks, Move-In, Account.
-4. Verify blocked (redirects/404): `/admin`, `/finance`, `/hr`, `/worker`, `/subcontractor`, `/tenant`, `/owner`, `/customer-portal`.
-5. Confirm leasing agent cannot read `pm_tenant_ledger`, `pm_expenses`, `pm_owner_statements` via network tab.
-6. Assign `property_manager` to another test user; verify broader PM access, still blocked from finance/HR/Stripe.
-7. Confirm worker/subcontractor/tenant/owner/customer roles cannot reach `/pm-staff`.
-8. Regression smoke: open Admin dashboard, Owner Portal (`latchminpersaud13@gmail.com`), a tenant login, an invoice, a job — nothing changed.
+## RLS additions (own-row overlay only)
 
-## Migration order
+For each table above, add a policy that grants PM staff `SELECT` on rows where the record belongs to them (matched by `user_id` / `worker_id` / `employee_id` depending on table), plus `INSERT`/`UPDATE` on their own draft time clock, expense claim, and time-off records. No policy grants access to other people's rows. No policy exposes SIN, banking, or payroll data — the UI simply does not query those columns.
 
-1. Enum add + helper functions.
-2. New tables + GRANTs + RLS.
-3. Additive policies on existing PM tables for the two new roles.
-4. Frontend routes/pages/hooks.
-5. Seed default move-in checklist items on insert via trigger.
+## Security rules enforced (portal-side + RLS-side)
 
-Ready to build on approval.
+PM staff (property_manager, leasing_agent) explicitly **cannot** access:
+
+- Other employees' pay stubs, SIN, banking, payroll runs
+- Admin dashboard, HR module, Finance, Stripe, saved cards
+- Owner statements, owner payouts, tenant ledger detail, property expenses (unless later specifically approved)
+- Worker/subcontractor private records outside leasing scope
+- Tenant / owner records outside PM staff scope
+- App / mobile / signing settings
+
+Enforced by: route guards (`PMStaffRoute`), sidebar visibility, RLS "own row" policies, and by never selecting sensitive columns in the queries these new pages issue.
+
+## UI pattern
+
+- Reuse existing components where clean (pay stub viewer, timesheet list, document list, expense form, time-off form) rendered inside `PMStaffLayout` — no admin chrome.
+- Placeholder-quality empty states where an admin hasn't populated data yet ("No pay stubs yet", etc.).
+- Praetoria emerald PM theme retained; staff avatar as a `<Avatar>` next to display name in header.
+
+## Technical Details
+
+**Files to add**
+- `src/pages/pm-staff/Profile.tsx`
+- `src/pages/pm-staff/TimeClock.tsx`
+- `src/pages/pm-staff/MyTimesheets.tsx`
+- `src/pages/pm-staff/MyPayStubs.tsx`
+- `src/pages/pm-staff/MyPayStubDetail.tsx`
+- `src/pages/pm-staff/MyDocuments.tsx`
+- `src/pages/pm-staff/Training.tsx`
+- `src/pages/pm-staff/MyPPE.tsx`
+- `src/pages/pm-staff/ExpenseClaims.tsx`
+- `src/pages/pm-staff/TimeOff.tsx`
+- `src/pages/pm-staff/Messages.tsx`
+- `src/hooks/usePMStaffSelfService.ts` (own-row fetchers)
+
+**Files to edit**
+- `src/components/pm-staff/PMStaffLayout.tsx` — add "My Staff Account" nav group.
+- `src/components/pm-staff/PMStaffBottomNav.tsx` — unchanged (6 items).
+- `src/pages/pm-staff/More.tsx` — surface self-service shortcuts.
+- `src/pages/pm-staff/Account.tsx` — surface Profile / Documents / Pay Stubs shortcuts + avatar.
+- `src/App.tsx` — register new routes inside existing `PMStaffRoute`.
+
+**Migration (single)**
+- Add `is_pm_staff_own_row(user_id uuid)` helper if needed, and add own-row `SELECT` (and limited `INSERT`/`UPDATE` for time clock / expense / time-off drafts) policies on: `timesheets`, `employee_pay_stubs`, `worker_documents`, `training_assignments`, `worker_equipment_items`, `worker_expense_claims`, `employee_time_off_requests`.
+- No table structure changes. No changes to existing worker/HR policies.
+
+**Roll-out**
+- Ship as a single additive change set. No mobile packaging, no third-party integrations, no changes to existing worker portal.
+
+Awaiting approval to build Phase 6.1.

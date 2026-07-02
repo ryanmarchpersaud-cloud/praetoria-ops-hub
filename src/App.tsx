@@ -269,6 +269,16 @@ const PMStaffMoveIns = lazy(() => import("./pages/pm-staff/MoveIns"));
 const PMStaffMoveOuts = lazy(() => import("./pages/pm-staff/MoveOuts"));
 const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
 const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
+const PMStaffProfile = lazy(() => import("./pages/pm-staff/Profile"));
+const PMStaffTimeClock = lazy(() => import("./pages/pm-staff/TimeClock"));
+const PMStaffMyTimesheets = lazy(() => import("./pages/pm-staff/MyTimesheets"));
+const PMStaffMyPayStubs = lazy(() => import("./pages/pm-staff/MyPayStubs"));
+const PMStaffMyDocuments = lazy(() => import("./pages/pm-staff/MyDocuments"));
+const PMStaffTraining = lazy(() => import("./pages/pm-staff/Training"));
+const PMStaffMyPPE = lazy(() => import("./pages/pm-staff/MyPPE"));
+const PMStaffExpenseClaims = lazy(() => import("./pages/pm-staff/ExpenseClaims"));
+const PMStaffTimeOff = lazy(() => import("./pages/pm-staff/TimeOff"));
+const PMStaffMessages = lazy(() => import("./pages/pm-staff/Messages"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -846,6 +856,16 @@ function AppRoutes() {
         <Route path="/pm-staff/move-outs" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveOuts /></Suspense>} />
         <Route path="/pm-staff/more" element={<Suspense fallback={<RouteLoading />}><PMStaffMore /></Suspense>} />
         <Route path="/pm-staff/account" element={<Suspense fallback={<RouteLoading />}><PMStaffAccount /></Suspense>} />
+        <Route path="/pm-staff/profile" element={<Suspense fallback={<RouteLoading />}><PMStaffProfile /></Suspense>} />
+        <Route path="/pm-staff/time-clock" element={<Suspense fallback={<RouteLoading />}><PMStaffTimeClock /></Suspense>} />
+        <Route path="/pm-staff/timesheets" element={<Suspense fallback={<RouteLoading />}><PMStaffMyTimesheets /></Suspense>} />
+        <Route path="/pm-staff/pay-stubs" element={<Suspense fallback={<RouteLoading />}><PMStaffMyPayStubs /></Suspense>} />
+        <Route path="/pm-staff/documents" element={<Suspense fallback={<RouteLoading />}><PMStaffMyDocuments /></Suspense>} />
+        <Route path="/pm-staff/training" element={<Suspense fallback={<RouteLoading />}><PMStaffTraining /></Suspense>} />
+        <Route path="/pm-staff/ppe" element={<Suspense fallback={<RouteLoading />}><PMStaffMyPPE /></Suspense>} />
+        <Route path="/pm-staff/expenses" element={<Suspense fallback={<RouteLoading />}><PMStaffExpenseClaims /></Suspense>} />
+        <Route path="/pm-staff/time-off" element={<Suspense fallback={<RouteLoading />}><PMStaffTimeOff /></Suspense>} />
+        <Route path="/pm-staff/messages" element={<Suspense fallback={<RouteLoading />}><PMStaffMessages /></Suspense>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
