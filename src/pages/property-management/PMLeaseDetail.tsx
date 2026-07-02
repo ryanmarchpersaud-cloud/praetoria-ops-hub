@@ -10,6 +10,7 @@ import { ArrowLeft, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePmLease, useSavePmLease, useDeletePmLease, usePmTenants, usePmProperties, usePmUnits } from '@/hooks/usePropertyManagement';
 import { supabase } from '@/integrations/supabase/client';
+import TenantLedgerManager from '@/components/property-management/TenantLedgerManager';
 
 export default function PMLeaseDetail() {
   const { id } = useParams();
@@ -101,6 +102,16 @@ export default function PMLeaseDetail() {
           </div>
         </CardContent>
       </Card>
+      {form.tenant_id && (
+        <TenantLedgerManager
+          tenantId={form.tenant_id}
+          leaseId={id!}
+          propertyId={form.property_id ?? null}
+          unitId={form.unit_id ?? null}
+          defaultRentAmount={Number(form.monthly_rent ?? 0)}
+          defaultRentDueDay={Number(form.rent_due_day ?? 1)}
+        />
+      )}
     </div>
   );
 }

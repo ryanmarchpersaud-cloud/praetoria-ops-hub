@@ -6,7 +6,7 @@ import {
   ArrowLeft, DollarSign, CreditCard, Landmark, Repeat, Send, Mail,
   Info, ReceiptText,
 } from 'lucide-react';
-import { useMyBalance } from '@/hooks/useTenantPortalExt';
+import { useMyBalance, useMyNextDue } from '@/hooks/useTenantPortalExt';
 
 const SUPPORT_EMAIL = 'ops@praetoriagroup.ca';
 
@@ -19,15 +19,26 @@ const METHODS = [
 
 const TYPE_LABEL: Record<string, string> = {
   charge: 'Charge',
+  rent_charge: 'Rent charge',
   payment: 'Payment received',
   credit: 'Credit',
+  adjustment_credit: 'Credit adjustment',
+  adjustment_charge: 'Charge adjustment',
   refund: 'Refund',
+  deposit_refund: 'Deposit refund',
   late_fee: 'Late fee',
-  deposit: 'Deposit',
+  deposit: 'Security deposit',
+  nsf_fee: 'Returned payment fee',
+  other_charge: 'Other charge',
+  other_credit: 'Other credit',
+  payment_plan_note: 'Payment plan',
 };
+
+const CREDIT_TYPES = ['payment', 'credit', 'refund', 'adjustment_credit', 'deposit_refund', 'other_credit'];
 
 export default function TenantPayments() {
   const { balance, entries } = useMyBalance();
+  const { data: nextDue } = useMyNextDue();
 
   return (
     <div className="p-4 space-y-4">
@@ -52,6 +63,11 @@ export default function TenantPayments() {
                 ? 'You have a credit on your account.'
                 : 'No outstanding balance.'}
           </p>
+          {nextDue && (
+            <p className="text-xs text-emerald-800 mt-2 font-medium">
+              Next rent due: {new Date(nextDue).toLocaleDateString()}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -107,23 +123,28 @@ export default function TenantPayments() {
             </p>
           ) : (
             <div className="divide-y">
-              {entries.slice(0, 15).map((e: any) => {
-                const isPositive = ['payment', 'credit', 'refund'].includes(e.type);
+              {entries.slice(0, 25).map((e: any) => {
+                const isCredit = CREDIT_TYPES.includes(e.type);
+                const isVoid = ['waived', 'cancelled', 'reversed'].includes(e.status);
                 return (
                   <div key={e.id} className="py-2 flex items-center justify-between text-sm">
                     <div className="min-w-0">
-                      <p className="font-medium truncate">
+                      <p className={`font-medium truncate ${isVoid ? 'line-through text-muted-foreground' : ''}`}>
                         {TYPE_LABEL[e.type] ?? e.type}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
                         {new Date(e.entry_date).toLocaleDateString()}
+                        {e.status && e.status !== 'posted' ? ` · ${String(e.status).replace('_', ' ')}` : ''}
                         {e.description ? ` · ${e.description}` : ''}
                       </p>
+                      {e.tenant_note && (
+                        <p className="text-[11px] text-emerald-800 mt-0.5">{e.tenant_note}</p>
+                      )}
                     </div>
                     <p
-                      className={`font-semibold ${isPositive ? 'text-emerald-700' : 'text-slate-900'}`}
+                      className={`font-semibold ${isVoid ? 'text-muted-foreground line-through' : isCredit ? 'text-emerald-700' : 'text-slate-900'}`}
                     >
-                      {isPositive ? '-' : '+'}${Number(e.amount).toFixed(2)}
+                      {isCredit ? '-' : '+'}${Number(e.amount).toFixed(2)}
                     </p>
                   </div>
                 );
