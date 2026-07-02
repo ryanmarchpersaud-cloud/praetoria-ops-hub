@@ -60,9 +60,10 @@ export function MessageInput({ conversationId, onSend, disabled, isAnnouncementO
         console.error('Upload error:', error);
         continue;
       }
-      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
+      const { data: urlData } = await supabase.storage.from('attachments').createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (!urlData?.signedUrl) continue;
       newFiles.push({
-        file_url: urlData.publicUrl,
+        file_url: urlData.signedUrl,
         file_name: file.name,
         file_type: file.type,
       });

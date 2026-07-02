@@ -248,8 +248,8 @@ export default function IncidentPhotoUpload({
           continue;
         }
 
-        const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
-        newUrls.push(urlData.publicUrl);
+        const { data: urlData } = await supabase.storage.from('attachments').createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (urlData?.signedUrl) newUrls.push(urlData.signedUrl);
         successCount += 1;
         if (isIOS) {
           setIosBatch((prev) => prev && {
