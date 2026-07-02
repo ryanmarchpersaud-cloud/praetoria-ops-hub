@@ -17,6 +17,7 @@ import {
   MaintenanceIssue,
   popularIssues,
   searchIssues,
+  issueKey,
 } from '@/lib/maintenanceCatalog';
 
 type Step = 'category' | 'issue' | 'details';
