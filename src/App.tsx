@@ -727,6 +727,15 @@ function AppRoutes() {
         <Route path="/subcontractor/tasks" element={<Suspense fallback={<RouteLoading />}><WorkerTasksPage /></Suspense>} />
       </Route>
 
+      <Route element={<TenantRoute />}>
+        <Route path="/tenant" element={<Suspense fallback={<RouteLoading />}><TenantHome /></Suspense>} />
+        <Route path="/tenant/lease" element={<Suspense fallback={<RouteLoading />}><TenantLease /></Suspense>} />
+        <Route path="/tenant/maintenance" element={<Suspense fallback={<RouteLoading />}><TenantMaintenanceList /></Suspense>} />
+        <Route path="/tenant/maintenance/new" element={<Suspense fallback={<RouteLoading />}><TenantMaintenanceNew /></Suspense>} />
+        <Route path="/tenant/maintenance/:id" element={<Suspense fallback={<RouteLoading />}><TenantMaintenanceDetail /></Suspense>} />
+        <Route path="/tenant/account" element={<Suspense fallback={<RouteLoading />}><TenantAccount /></Suspense>} />
+      </Route>
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
