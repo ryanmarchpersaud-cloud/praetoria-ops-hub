@@ -7,6 +7,7 @@ import {
   Sparkles, ChevronRight, ClipboardList,
 } from 'lucide-react';
 import { useMyTenantContext, useMyMaintenanceRequests } from '@/hooks/useTenantPortal';
+import { useMyBalance, useMyNotices } from '@/hooks/useTenantPortalExt';
 
 const SUPPORT_EMAIL = 'ops@praetoriagroup.ca';
 
@@ -21,6 +22,9 @@ const STATUS_COLORS: Record<string, string> = {
 export default function TenantHome() {
   const { data, isLoading } = useMyTenantContext();
   const { data: requests = [] } = useMyMaintenanceRequests();
+  const { balance } = useMyBalance();
+  const { data: notices = [] } = useMyNotices();
+  const unreadNotices = (notices as any[]).filter(n => !n.ack_at).length;
 
   if (isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
 
@@ -72,6 +76,40 @@ export default function TenantHome() {
           <Wrench className="h-5 w-5 mr-2" /> Submit Maintenance Request
         </Link>
       </Button>
+
+      {/* Balance + Notices row */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          to="/tenant/payments"
+          className="rounded-xl border border-emerald-100 bg-white p-3 hover:border-emerald-300 transition-colors"
+        >
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            Balance
+          </p>
+          <p className="text-xl font-bold text-slate-900 mt-1">
+            ${balance.toFixed(2)}
+          </p>
+          <p className="text-[10px] text-emerald-700 mt-1">View activity ›</p>
+        </Link>
+        <Link
+          to="/tenant/notices"
+          className="rounded-xl border border-emerald-100 bg-white p-3 hover:border-emerald-300 transition-colors relative"
+        >
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            Notices
+          </p>
+          <p className="text-xl font-bold text-slate-900 mt-1">
+            {(notices as any[]).length}
+          </p>
+          <p className="text-[10px] text-emerald-700 mt-1">
+            {unreadNotices > 0 ? `${unreadNotices} unread ›` : 'View all ›'}
+          </p>
+          {unreadNotices > 0 && (
+            <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          )}
+        </Link>
+      </div>
+
 
       {/* Property */}
       {property && (
