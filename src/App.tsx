@@ -236,6 +236,7 @@ const OwnerPropertyDetail = lazy(() => import("./pages/owner/OwnerPropertyDetail
 const OwnerMaintenance = lazy(() => import("./pages/owner/OwnerMaintenance"));
 const OwnerAccount = lazy(() => import("./pages/owner/OwnerAccount"));
 const OwnerDocuments = lazy(() => import("./pages/owner/OwnerDocuments"));
+const OwnerExpenses = lazy(() => import("./pages/owner/OwnerExpenses"));
 const TenantLease = lazy(() => import("./pages/tenant/TenantLease"));
 const TenantMaintenanceList = lazy(() => import("./pages/tenant/TenantMaintenanceList"));
 const TenantMaintenanceNew = lazy(() => import("./pages/tenant/TenantMaintenanceNew"));
