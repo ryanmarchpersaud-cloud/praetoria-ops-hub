@@ -106,11 +106,14 @@ export function useAuthorization(): AuthorizationState {
   // staff = any non-customer, non-subcontractor, non-tenant role holder with at least one role
   const isTenant = roles.includes('tenant' as AppRole);
   const isPropertyOwner = roles.includes('property_owner' as AppRole);
-  // staff = any non-customer, non-subcontractor, non-tenant, non-property_owner role holder with at least one role
-  const isStaff = !isCustomer && !isSubcontractor && !isTenant && !isPropertyOwner && roles.length > 0;
+  const isPropertyManager = roles.includes('property_manager' as AppRole);
+  const isLeasingAgent = roles.includes('leasing_agent' as AppRole);
+  // staff = any non-customer, non-subcontractor, non-tenant, non-property_owner, non-pm-staff role holder with at least one role
+  const isStaff = !isCustomer && !isSubcontractor && !isTenant && !isPropertyOwner
+    && !isPropertyManager && !isLeasingAgent && roles.length > 0;
 
   // Active status: customers/tenants/external owners don't have team_members records so default true
-  const isActiveUser = isCustomer || isTenant || isPropertyOwner
+  const isActiveUser = isCustomer || isTenant || isPropertyOwner || isPropertyManager || isLeasingAgent
     ? true
     : teamMember
       ? teamMember.is_active && ['Active', 'Invited'].includes(teamMember.status)
@@ -126,8 +129,9 @@ export function useAuthorization(): AuthorizationState {
   // Tenant portal: only tenant role, plus admin/owner for preview
   const canAccessTenantPortal = isTenant || isOwner || isAdmin;
   // Property Owner Portal: external property_owner role + internal admin/owner for preview
-  // NOTE: internal 'owner' role is Praetoria staff and is intentionally allowed for support/preview.
   const canAccessOwnerPortal = isPropertyOwner || isOwner || isAdmin;
+  // PM Staff Portal (Phase 6): property_manager / leasing_agent + admin/owner for preview
+  const canAccessPMStaffPortal = isPropertyManager || isLeasingAgent || isOwner || isAdmin;
 
   return {
     roles,
@@ -138,12 +142,15 @@ export function useAuthorization(): AuthorizationState {
     isCustomer,
     isTenant,
     isPropertyOwner,
+    isPropertyManager,
+    isLeasingAgent,
     canAccessAdminPortal,
     canAccessWorkerPortal,
     canAccessSubcontractorPortal,
     canAccessCustomerPortal,
     canAccessTenantPortal,
     canAccessOwnerPortal,
+    canAccessPMStaffPortal,
     isActiveUser,
     isLoading: rolesLoading || teamLoading,
   };
