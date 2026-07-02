@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Wrench, Mail, ExternalLink } from 'lucide-react';
 import { useOwnerRecord, useOwnerProperties, useOwnerMaintenanceRequests } from '@/hooks/useOwnerPortal';
+import { formatStatusLabel } from '@/lib/statusLabel';
 
 export default function OwnerHome() {
   const { data: owner, isLoading } = useOwnerRecord();
