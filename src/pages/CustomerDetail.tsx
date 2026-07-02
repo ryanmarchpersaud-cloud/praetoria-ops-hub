@@ -75,8 +75,20 @@ export default function CustomerDetail() {
     }
   };
 
+  // Billing fields are column-restricted; fetch via ops-only RPC and merge into form
+  const { data: billingDetails } = useQuery({
+    queryKey: ['customer-billing-details', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase.rpc('get_customer_billing_details', { _customer_id: id });
+      if (error) return null;
+      return data as Record<string, any> | null;
+    },
+    enabled: !!id,
+  });
+
   if (customer && !form) {
-    setForm(customer);
+    setForm({ ...customer, ...(billingDetails || {}) });
     setInviteEmail(customer.email || '');
   }
 
