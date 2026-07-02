@@ -11,6 +11,19 @@ export default function TenantMaintenanceDetail() {
   const { id } = useParams();
   const { data: r, isLoading } = useMyMaintenanceRequest(id);
   const [signed, setSigned] = useState<Record<string, string>>({});
+  const [woSigned, setWoSigned] = useState<Record<string, string>>({});
+  const { data: woView } = useMyRequestVisibleWOAttachments(id);
+  const { data: activity } = useRequestActivity(id, true);
+
+  useEffect(() => {
+    (async () => {
+      const out: Record<string, string> = {};
+      for (const a of woView?.attachments ?? []) {
+        try { out[a.id] = await signWOAttachment(a.storage_path); } catch {}
+      }
+      setWoSigned(out);
+    })();
+  }, [woView?.attachments]);
 
   useEffect(() => {
     (async () => {
