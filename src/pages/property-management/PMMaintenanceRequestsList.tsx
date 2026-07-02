@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Wrench } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Wrench, ArrowLeft } from 'lucide-react';
 import { useAdminMaintenanceRequests } from '@/hooks/useTenantPortal';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -16,6 +17,13 @@ export default function PMMaintenanceRequestsList() {
   const { data = [], isLoading } = useAdminMaintenanceRequests();
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-4">
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
+          </Link>
+        </Button>
+      </div>
       <div>
         <h1 className="text-2xl font-bold text-emerald-800 flex items-center gap-2">
           <Wrench className="h-6 w-6" /> Maintenance Requests
