@@ -36,6 +36,11 @@ const AREA_STYLES: Record<AreaKey, { icon: string; activeBorder: string; activeT
   tenants:   { icon: 'text-emerald-300', activeBorder: 'border-emerald-400', activeText: 'text-emerald-200', badgeBg: 'bg-emerald-500/15', badgeText: 'text-emerald-300' },
   owners:    { icon: 'text-yellow-300',  activeBorder: 'border-yellow-400',  activeText: 'text-yellow-200',  badgeBg: 'bg-yellow-500/15',  badgeText: 'text-yellow-300' },
 };
+// Items whose LABEL text should also carry the area color (matching the icon).
+// Other items keep the default white sidebar text.
+const COLORED_LABEL_TITLES = new Set<string>([
+  'Dashboard', 'Customers', 'HR Workspace', 'Employees', 'Subcontractors', 'Finance',
+]);
 
 const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; accessKey: SidebarKey; area: AreaKey }[] = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard, accessKey: 'dashboard', area: 'admin' },
