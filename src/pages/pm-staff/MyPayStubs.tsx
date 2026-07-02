@@ -83,6 +83,7 @@ export default function PMStaffMyPayStubsPage() {
           stub={selected}
           open={!!selected}
           onOpenChange={(o) => !o && setSelected(null)}
+          workerView
         />
       )}
     </div>
