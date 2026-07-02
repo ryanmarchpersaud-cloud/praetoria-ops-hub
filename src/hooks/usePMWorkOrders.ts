@@ -438,6 +438,26 @@ export function useUpdateWorkOrderStatus() {
         tenant_visible: true,
         actor_user_id: user?.id ?? null,
       });
+      if (status === 'completed') {
+        await notifyTenantByTenantId(
+          data.tenant_id,
+          'pm_request_completed',
+          `Your maintenance request is complete`,
+          `"${data.title}" has been marked complete. Please let us know if anything needs follow-up.`,
+          'pm_maintenance_request',
+          data.maintenance_request_id,
+        );
+      } else if (status === 'in_progress') {
+        await notifyTenantByTenantId(
+          data.tenant_id,
+          'pm_request_in_progress',
+          `Work started on your maintenance request`,
+          `A worker has started on "${data.title}".`,
+          'pm_maintenance_request',
+          data.maintenance_request_id,
+        );
+      }
+
       return data;
     },
     onSuccess: (_, v) => {
