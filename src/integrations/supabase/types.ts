@@ -6405,6 +6405,7 @@ export type Database = {
       }
       pm_tenant_referrals: {
         Row: {
+          admin_notes: string | null
           created_at: string
           friend_email: string | null
           friend_name: string
@@ -6420,6 +6421,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           friend_email?: string | null
           friend_name: string
@@ -6435,6 +6437,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           friend_email?: string | null
           friend_name?: string
