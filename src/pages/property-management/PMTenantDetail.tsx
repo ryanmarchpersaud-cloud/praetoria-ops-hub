@@ -14,6 +14,7 @@ import { InviteTenantDialog } from '@/components/property-management/InviteTenan
 import { TenantPortalAdminActions, TenantBusinessFields } from '@/components/property-management/TenantPortalAdminActions';
 import { TenantProfileAdminPanel } from '@/components/property-management/TenantProfileAdminPanel';
 import { InspectionAdminPanel } from '@/components/property-management/InspectionAdminPanel';
+import TenantLedgerManager from '@/components/property-management/TenantLedgerManager';
 
 export default function PMTenantDetail() {
   const { id } = useParams();
