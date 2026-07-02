@@ -76,21 +76,27 @@ export default function CustomerDetail() {
   };
 
   // Billing fields are column-restricted; fetch via ops-only RPC and merge into form
-  const { data: billingDetails } = useQuery({
+  const { data: billingDetails, isSuccess: billingLoaded, isError: billingErrored } = useQuery({
     queryKey: ['customer-billing-details', id],
     queryFn: async () => {
       if (!id) return null;
       const { data, error } = await supabase.rpc('get_customer_billing_details', { _customer_id: id });
-      if (error) return null;
+      if (error) throw error;
       return data as Record<string, any> | null;
     },
     enabled: !!id,
   });
 
-  if (customer && !form) {
+  // Seed form only once BOTH the customer row and the billing-details RPC have resolved,
+  // so we never save NULLs over restricted billing/notes columns during a race.
+  useEffect(() => {
+    if (form) return;
+    if (!customer) return;
+    if (!billingLoaded && !billingErrored) return;
     setForm({ ...customer, ...(billingDetails || {}) });
     setInviteEmail(customer.email || '');
-  }
+  }, [customer, billingDetails, billingLoaded, billingErrored, form]);
+
 
   const { data: properties = [] } = useQuery({
     queryKey: ['customer_properties', id],
