@@ -5,6 +5,7 @@ import { DoorOpen, Users, CalendarClock, FileText, ListChecks, LogIn, Plus, Cloc
 import { useVacantUnits, useShowings, useApplications, useStaffTasks, useMoveInChecklists } from '@/hooks/pm-staff/usePMStaffData';
 import { formatStatusLabel } from '@/lib/statusLabel';
 import { format } from 'date-fns';
+import { PMStaffClockInCard } from '@/components/pm-staff/PMStaffClockInCard';
 
 export default function PMStaffHome() {
   const vacancies = useVacantUnits();
@@ -20,6 +21,9 @@ export default function PMStaffHome() {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Clock In / Out — always visible on home */}
+      <PMStaffClockInCard />
+
       {/* KPI row */}
       <div className="grid grid-cols-2 gap-3">
         <KpiCard icon={DoorOpen} label="Vacant units" value={vacancies.data?.length ?? 0} to="/pm-staff/vacancies" />

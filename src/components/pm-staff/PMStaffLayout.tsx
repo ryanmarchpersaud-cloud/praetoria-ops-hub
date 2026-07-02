@@ -3,7 +3,7 @@ import { PMStaffBottomNav } from './PMStaffBottomNav';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { isAndroidMobile } from '@/lib/platform';
-import praetoriaLogo from '@/assets/praetoria-logo-white.png';
+
 import { Building2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom';
