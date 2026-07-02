@@ -334,15 +334,18 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
-                    <item.icon className="h-4 w-4" />
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {items.map((item) => {
+              const style = item.area ? AREA_STYLES[item.area] : null;
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
+                      <item.icon className={`h-4 w-4 ${style ? style.icon : ''}`} />
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
