@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { PMStaffBottomNav } from './PMStaffBottomNav';
+import { PMStaffFAB } from './PMStaffFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { isAndroidMobile } from '@/lib/platform';
