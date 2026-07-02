@@ -146,6 +146,37 @@ export function useUploadOwnInsurance() {
           .from('pm_tenant_insurance').insert({ ...payload, status: payload.status ?? 'requested' });
         if (error) throw error;
       }
+
+      // Notify Praetoria ops that a tenant submitted / updated insurance info.
+      try {
+        const summary = [
+          'Tenant submitted / updated renters insurance information for admin review.',
+          '',
+          input.provider ? `Provider: ${input.provider}` : null,
+          input.policy_number ? `Policy #: ${input.policy_number}` : null,
+          input.coverage_expiry ? `Expires: ${input.coverage_expiry}` : null,
+          input.file ? `Proof uploaded: ${input.file.name}` : 'No proof file attached',
+          '',
+          `Open in Praetoria Ops Hub: https://praetoriagroup.ca/property-management/tenants/${tid}`,
+        ].filter(Boolean).join('\n');
+
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            event: 'new_tenant_insurance_submission',
+            audience: 'admin',
+            channels: ['email', 'in_app'],
+            record_type: 'pm_tenant_insurance',
+            record_id: tid,
+            variables: {
+              subject: `Tenant insurance submitted — ${input.provider || 'Provider not specified'}`,
+              body: summary,
+              reply_to: 'ops@praetoriagroup.ca',
+            },
+          },
+        });
+      } catch (err) {
+        console.warn('[tenant-insurance] notification dispatch failed', err);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tenant-profile', 'insurance'] }),
   });
