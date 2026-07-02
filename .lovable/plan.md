@@ -1,107 +1,94 @@
-# Tenant Portal — Direction & Phased Roadmap
+# Phase 3 — PM Maintenance Request → Work Order Pipeline
 
-Goal: align our Tenant Portal with proven patterns from Buildium, AppFolio, DoorLoop, TenantCloud, RentRedi, and Avail — without touching Admin, Worker, Subcontractor, Customer, Finance, HR, Stripe, saved cards, invoice logic, iOS/Android build config, or app store artifacts.
+Additive only. No changes to existing Admin/Worker/Sub/Customer/Finance/HR/Jobs/Visits/Invoices/Pay stubs/Stripe/mobile/auth workflows.
 
-The current Home / Lease / Maintenance / Account pages (just polished) stay as the foundation. This plan adds only what's needed to make the next phases safe to build.
+## 1. Schema (single migration)
 
----
+**New table `public.pm_work_orders`** — dedicated PM work orders (kept separate from `jobs` so we don't disturb the existing job lifecycle, invoicing, or RLS surface). Fields:
 
-## Phase 2.5 — Structural Prep (this plan, safe to build now)
+- `id`, `work_order_number` (auto `WO-00001` via trigger + sequence)
+- `maintenance_request_id` → `pm_maintenance_requests(id)` (unique, one WO per request in Phase 3)
+- `property_id`, `unit_id`, `lease_id`, `tenant_id` (snapshot FKs)
+- `title`, `description`, `category`, `issue_label`, `issue_key`, `priority`, `is_urgent_safety`
+- `status` enum-like text: `created | assigned | in_progress | completed | cancelled`
+- `assignee_type` (`worker | subcontractor | unassigned`)
+- `assigned_worker_id` (uuid → auth user), `assigned_subcontractor_id` → `subcontractors(id)`
+- `share_tenant_contact` bool (Admin toggle — otherwise workers don't see tenant phone/email)
+- `access_notes`, `preferred_contact_time`, `permission_to_enter`
+- `completion_notes` (internal), `tenant_visible_completion_note`, `completed_at`, `completed_by`
+- `created_by`, `created_at`, `updated_at`
 
-Only additive schema + a few disabled placeholders. No live payments, no messaging sends, no destructive changes.
+Trigger: on WO status change → mirror to parent `pm_maintenance_requests.status` using the extended set (`work_order_created | assigned | in_progress | completed | cancelled`). Existing tenant-facing statuses continue to work.
 
-### 1. Schema additions (all new columns/tables, nullable, safe)
+**Extend `pm_maintenance_requests`**: add `work_order_id uuid` (nullable, → pm_work_orders), widen `status` allowed values to include `work_order_created | assigned`. No enum change (column is text).
 
-**`pm_tenants`** — add optional fields to support business tenants and billing:
-- `tenant_type` ('individual' | 'business', default 'individual')
-- `business_name`, `billing_contact_name`, `billing_email`, `billing_phone`
-- `mailing_address_line_1`, `mailing_city`, `mailing_province`, `mailing_postal_code`
-- `po_reference`, `business_notes`
+**New table `public.pm_work_order_attachments`** — before/after/completion photos uploaded by worker/sub. Fields: `id, work_order_id, storage_path, file_name, kind ('before'|'after'|'other'), tenant_visible bool default false, uploaded_by, created_at`. Uses existing `pm-maintenance-attachments` bucket under path `wo/<work_order_id>/…`.
 
-**`pm_leases`** — add optional fields already used by good tenant portals:
-- `rent_frequency` ('monthly' | 'biweekly' | 'weekly' | 'end_of_month' | 'custom', default 'monthly')
-- `deposit_amount`, `deposit_held_since`, `deposit_notes`
+**New table `public.pm_maintenance_activity`** — append-only audit trail: `id, request_id, work_order_id, actor_user_id, event ('submitted'|'reviewed'|'wo_created'|'assigned'|'status_changed'|'note_added'|'completed'|'tenant_notified'), detail jsonb, created_at`.
 
-**New table `pm_tenant_ledger`** (read-only from tenant side, admin-managed):
-- Columns: tenant_id, lease_id, entry_date, type ('charge' | 'payment' | 'credit' | 'refund' | 'late_fee' | 'deposit'), amount, description, reference, created_by
-- RLS: tenants can SELECT own rows only; admins full access
-- Used later to render "current balance", "next rent due", payment history, receipts
+**GRANTS + RLS** for every new table (following project rules):
+- `pm_work_orders`:
+  - Admin/ops: full via `is_ops_staff(auth.uid())`.
+  - Worker: SELECT/UPDATE own rows where `assigned_worker_id = auth.uid()` (limited columns via view for portal — actually enforced by only exposing safe columns in worker hook).
+  - Subcontractor: SELECT/UPDATE where linked via `subcontractors.user_id = auth.uid()`.
+  - Tenant: SELECT only rows tied to their tenant_id, and only a safe subset of columns (via a `pm_work_order_tenant_view` view — RLS on view + underlying).
+- `pm_work_order_attachments`: admin full; worker/sub full for their WOs; tenant SELECT only where `tenant_visible = true`.
+- `pm_maintenance_activity`: admin full; tenant SELECT own request rows filtered to safe events; worker/sub SELECT their WO events.
 
-**New table `pm_tenant_notices`** (admin-published messages/notices):
-- Columns: tenant_id (nullable = broadcast), property_id (nullable), title, body, category ('announcement' | 'notice' | 'document' | 'maintenance_update'), published_at, requires_ack, ack_at
-- RLS: tenant sees rows where tenant_id = own OR (tenant_id IS NULL AND property_id = own property)
+Storage bucket `pm-maintenance-attachments` (already exists, private) — reuse. Policies extended: allow worker/sub to insert under `wo/<work_order_id>/*` when assigned; tenant read for `tenant_visible` rows via signed URL from server (hook signs).
 
-**New table `pm_tenant_documents`** (tenant-visible shared documents):
-- Columns: tenant_id, property_id (nullable), title, storage_path, category, shared_at, shared_by
-- Reuses existing `property-management-documents` bucket
-- RLS: tenant SELECT own; admin full
+## 2. Hooks (new file `src/hooks/usePMWorkOrders.ts`)
 
-All new public tables get GRANTs to `authenticated` + `service_role`, RLS enabled, tenant-scoped policies. Nothing exposed to `anon`.
+- `useCreateWorkOrder(requestId, opts)` — inserts pm_work_orders, links `work_order_id` on request, sets request.status='work_order_created', logs activity, sends admin+worker notification via existing `send-notification`.
+- `useAssignWorkOrder(workOrderId, {assignee_type, assigned_worker_id?, assigned_subcontractor_id?, share_tenant_contact})` — sets status='assigned', logs activity, notifies assignee.
+- `useUpdateWorkOrderStatus`, `useCompleteWorkOrder(tenant_visible_note?)` — updates + syncs request completion.
+- `useMyWorkOrders()` (worker/sub portal), `useWorkOrder(id)`, `useAdminWorkOrder(id)`.
+- `useUploadWorkOrderAttachment(kind, tenant_visible)` + `useTenantWorkOrderView(requestId)` returning safe fields only.
 
-### 2. UI scaffolding (visible but marked "Coming soon" where not wired)
+## 3. UI
 
-- **Home dashboard**: add a "Balance & Next Rent" card that reads from `pm_tenant_ledger` when rows exist, otherwise shows a friendly "No balance on file" state. No payment buttons yet.
-- **New `/tenant/payments` route**: placeholder screen listing planned payment methods (card, bank, Interac e-transfer, autopay) with a clear "Online payments coming soon — contact ops@praetoriagroup.ca to pay" banner. No Stripe wiring. Bottom nav stays 4 tabs; Payments accessible from Home card only.
-- **New `/tenant/documents` route**: lists rows from `pm_tenant_documents` with signed-URL download; empty state if none. Linked from Lease page.
-- **New `/tenant/notices` route**: lists `pm_tenant_notices` with unread indicator; linked from Home. No push/email sending yet — display only.
-- **Maintenance**: no schema change needed; existing form already covers title, category, priority, description, files, access notes, status, tenant-facing update. Add a "Completion note" read-only block on detail page when status = completed.
-- **Account page**: already has email, tenant name, linked property/unit, ops@ support link, privacy link, sign out, Request Account Deletion (goes through existing `account_deletion_requests` review flow — never auto-deletes lease/payment/legal data).
+**Admin — `PMMaintenanceRequestDetail.tsx`**:
+- Big "Create Work Order" button (hidden and replaced with amber "Admin-review only — non-repair" hint when catalog entry has `nonRepair: true`; admin can still override via secondary menu "Create Work Order anyway").
+- After creation: "Work Order" card showing WO number, status, assignee, "Assign / Reassign" dialog (Worker picker from `team_members` where portal_worker; Subcontractor picker from `subcontractors`; "Keep unassigned"; toggle "Share tenant contact with assignee").
+- Activity/history timeline (from `pm_maintenance_activity`).
+- Existing internal notes + tenant-facing update fields stay.
+- "Mark tenant-visible" checkbox on each attachment (updates a new `tenant_visible` bool on `pm_maintenance_request_attachments` — small additive column).
 
-### 3. Support email
+**Admin — new `PMWorkOrderDetail.tsx`** (route `/property-management/work-orders/:id`): full WO view with attachments, status controls, completion.
 
-`ops@praetoriagroup.ca` continues as the single tenant-facing contact everywhere (Home, Account, Payments placeholder, empty states).
+**Worker/Subcontractor portals** — new list & detail:
+- `src/pages/worker/WorkerPMWorkOrders.tsx` list of assigned WOs.
+- `src/pages/worker/WorkerPMWorkOrderDetail.tsx`: shows property address, unit, category/issue, priority, safety badge, description, access notes, permission to enter, tenant contact (only if `share_tenant_contact`), photos (signed URLs), status control (In Progress / Completed), completion notes + before/after photo upload.
+- Mirror pages under `src/pages/subcontractor/`.
+- Add sidebar entry ("PM Work Orders") gated by portal.
+- Explicit exclusions: no pricing, no lease dates, no rent balance, no owner info, no internal admin notes.
 
----
+**Tenant portal — `TenantMaintenanceDetail.tsx`** (existing): add a "Progress" section showing safe events from activity feed + admin-visible completion note + tenant-visible attachments. Never show internal notes, worker notes, or cost data.
 
-## Phase 3 — Maintenance ⇄ Work Orders (next after 2.5)
+## 4. Non-repair guardrail
 
-- Admin can convert a `pm_maintenance_request` into an internal Job/Visit assigned to a worker or subcontractor.
-- Tenant sees only the tenant-facing status + update note (never worker names, pricing, or internal scope).
-- No changes to worker/subcontractor portals beyond receiving the linked job.
+`src/lib/maintenanceCatalog.ts` already flags `nonRepair`. In the admin detail page, look up the issue by `issue_key` and if `nonRepair === true`:
+- Hide the primary "Create Work Order" CTA.
+- Show a clear "Admin review only — non-repair concern" banner.
+- Provide a secondary "Create Work Order anyway" action (rare escalations like a fire-alarm test call).
+No auto-conversion anywhere.
 
-## Phase 4 — Notices & Email Notifications
+## 5. Notifications
 
-- Admin composes a notice → row in `pm_tenant_notices` → tenant sees it in-app.
-- Optional email via existing `send-notification` edge function to tenant `billing_email` or auth email.
-- No SMS.
+Reuse `send-notification`. Add whitelisted events: `pm_work_order_created`, `pm_work_order_assigned`, `pm_work_order_completed`. Recipients: `ops@praetoriagroup.ca` + assigned user (in-app). No tenant SMS/email in this phase (per launch constraints) — tenant sees updates in-portal.
 
-## Phase 5 — Tenant Payments (requires explicit approval)
+## 6. QA Checklist (delivered in reply after build)
 
-Ledger already exists from Phase 2.5, so admins can start recording manual payments (cash, cheque, Interac) any time without live processing. When approved:
-- Wire Stripe card + ACH into a new `tenant-collect-rent` edge function, reusing existing Stripe secret and saved-card patterns already used by invoices (no changes to invoice logic).
-- Autopay toggles per lease.
-- Late-fee rule engine reads from `pm_leases` config.
-- Receipts generated from ledger rows.
+Admin / Tenant / Worker / Subcontractor / Security walkthroughs matching the ones in the request.
 
-## Phase 6 — Business Tenant Enhancements
+## Out of scope (as requested)
 
-- Multiple billing contacts table.
-- PO number on receipts.
-- Consolidated statement PDF for multi-unit business tenants.
-
----
-
-## Safety guarantees
-
-- No changes to: Stripe keys, `finance_*` tables, `invoices`, saved cards, worker/subcontractor/customer/admin portals, HR, pay stubs, service jobs, iOS/Android/Capacitor config, app icons, package name `ca.praetoriagroup.opshub`, Play Store or App Store artifacts.
-- All new tables are tenant-scoped via RLS; tenants can never query outside their own records.
-- No live rent processing until explicitly approved in a Phase 5 kickoff.
+Rent payments, owner portal, owner statements, formal inspections module, PM finance/invoicing.
 
 ---
 
 ## Technical notes
 
-- Migrations run as a single additive batch; every new public table includes `GRANT` + RLS + tenant-scoped policy in the same migration.
-- `useTenantPortal.ts` gains hooks: `useMyLedger`, `useMyNotices`, `useMyTenantDocuments` — all filter by `auth.uid()` via existing `pm_tenants.user_id` linkage.
-- New routes registered inside existing `TenantRoute` guard in `App.tsx` — no changes to `WorkerRoute` / `SubcontractorRoute` / `PortalRoute` / `AdminRoute`.
-- Payments placeholder page contains zero Stripe imports so it cannot accidentally charge anyone.
-
-## Deliverable of Phase 2.5 (if you approve this plan)
-
-1. One migration adding tenant/lease optional columns + 3 new tables with RLS.
-2. Updated `useTenantPortal.ts` hooks.
-3. New `/tenant/payments`, `/tenant/documents`, `/tenant/notices` routes (documents + notices functional read-only; payments placeholder).
-4. Home dashboard gains Balance & Next Rent card + Notices preview.
-5. Admin side gets a minimal "Post Notice" and "Share Document" action on the tenant detail page so you can test end-to-end.
-
-Reply "approved" (or with edits) and I'll ship Phase 2.5.
+- Kept separate from `jobs` table intentionally: converting to `jobs` would pull WOs into invoicing, quotes, visits, RLS surface for customers/subs used elsewhere — high blast radius. `pm_work_orders` is a small dedicated table that reuses shared building blocks (notifications, storage bucket, worker/sub role helpers) without touching the field-service pipeline. A future phase can add "escalate to Job" if needed.
+- All new tables carry `GRANT` blocks per project rule.
+- Trigger `pm_work_orders_sync_request_status` keeps `pm_maintenance_requests.status` in sync so existing tenant list/detail views work with zero changes.
