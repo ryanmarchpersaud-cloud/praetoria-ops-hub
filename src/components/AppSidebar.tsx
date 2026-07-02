@@ -316,12 +316,12 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     try { window.localStorage.setItem(PM_STORAGE_KEY, open ? '1' : '0'); } catch {}
   }, [open]);
 
-  const items = [
+  const items: { title: string; url: string; icon: any; end?: boolean; area?: AreaKey }[] = [
     { title: 'Dashboard', url: '/property-management', icon: LayoutDashboard, end: true },
     { title: 'Properties', url: '/property-management/properties', icon: Building2 },
     { title: 'Units', url: '/property-management/units', icon: Home },
-    { title: 'Owners', url: '/property-management/owners', icon: UserCircle },
-    { title: 'Tenants', url: '/property-management/tenants', icon: Users },
+    { title: 'Owners', url: '/property-management/owners', icon: UserCircle, area: 'owners' },
+    { title: 'Tenants', url: '/property-management/tenants', icon: Users, area: 'tenants' },
     { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
     { title: 'Maintenance Requests', url: '/property-management/maintenance', icon: Wrench },
   ];
