@@ -5,7 +5,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bell, CheckCircle, FileText, Truck, CreditCard, Calendar, AlertCircle, Home, Wrench, Megaphone } from 'lucide-react';
+import { Bell, CheckCircle, FileText, Truck, CreditCard, Calendar, AlertCircle, Wrench, Megaphone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const EVENT_ICONS: Record<string, React.ElementType> = {
