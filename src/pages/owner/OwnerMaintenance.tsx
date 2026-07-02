@@ -2,6 +2,7 @@ import { OwnerLayout } from '@/components/owner/OwnerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useOwnerMaintenanceRequests, useOwnerWorkOrders } from '@/hooks/useOwnerPortal';
+import { formatStatusLabel } from '@/lib/statusLabel';
 
 export default function OwnerMaintenance() {
   const { data: requests = [], isLoading } = useOwnerMaintenanceRequests();
