@@ -254,6 +254,9 @@ const WorkerPMWorkOrders = lazy(() => import("./pages/worker/WorkerPMWorkOrders"
 const WorkerPMWorkOrderDetail = lazy(() => import("./pages/worker/WorkerPMWorkOrderDetail"));
 const SubcontractorPMWorkOrders = lazy(() => import("./pages/subcontractor/SubcontractorPMWorkOrders"));
 const SubcontractorPMWorkOrderDetail = lazy(() => import("./pages/subcontractor/SubcontractorPMWorkOrderDetail"));
+const PMOwnerStatementsList = lazy(() => import("./pages/property-management/PMOwnerStatementsList"));
+const PMOwnerStatementDetail = lazy(() => import("./pages/property-management/PMOwnerStatementDetail"));
+const OwnerStatements = lazy(() => import("./pages/owner/OwnerStatements"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -676,6 +679,8 @@ function AppRoutes() {
         <Route path="/property-management/work-orders/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMWorkOrderDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/referrals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantReferralsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/expenses" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMExpensesList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/owner-statements" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementsList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/owner-statements/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementDetail /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}
@@ -793,6 +798,7 @@ function AppRoutes() {
         <Route path="/owner/maintenance" element={<Suspense fallback={<RouteLoading />}><OwnerMaintenance /></Suspense>} />
         <Route path="/owner/documents" element={<Suspense fallback={<RouteLoading />}><OwnerDocuments /></Suspense>} />
         <Route path="/owner/expenses" element={<Suspense fallback={<RouteLoading />}><OwnerExpenses /></Suspense>} />
+        <Route path="/owner/statements" element={<Suspense fallback={<RouteLoading />}><OwnerStatements /></Suspense>} />
         <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
       </Route>
 
