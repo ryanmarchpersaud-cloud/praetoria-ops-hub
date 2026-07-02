@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { usePmOwner, useSavePmOwner, useDeletePmOwner, usePmProperties } from '@/hooks/usePropertyManagement';
 import { toast } from 'sonner';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Mail } from 'lucide-react';
+import { InvitePropertyOwnerDialog } from '@/components/property-management/InvitePropertyOwnerDialog';
 
 export default function PMOwnerDetail() {
   const { id } = useParams();
