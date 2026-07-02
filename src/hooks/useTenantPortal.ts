@@ -145,8 +145,46 @@ export function useCreateMaintenanceRequest() {
           });
         }
       }
+
+      // Notify Praetoria ops that a new tenant maintenance request was submitted.
+      // Whitelisted self-service event on send-notification, so no ops-role auth is required.
+      try {
+        const propertyLabel = (req as any).property_id ? `Property ${(req as any).property_id}` : 'Property';
+        const urgentTag = input.is_urgent_safety ? ' [URGENT SAFETY]' : '';
+        const summaryLines = [
+          `Tenant submitted a new maintenance request${urgentTag}.`,
+          '',
+          `Category: ${input.category}`,
+          input.issue_label ? `Issue: ${input.issue_label}` : null,
+          `Priority: ${input.priority}`,
+          input.title ? `Title: ${input.title}` : null,
+          input.description ? `Details: ${input.description}` : null,
+          input.contact_notes ? `Access/contact: ${input.contact_notes}` : null,
+          '',
+          `Open in Praetoria Ops Hub: https://praetoriagroup.ca/property-management/maintenance/${req.id}`,
+        ].filter(Boolean).join('\n');
+
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            event: 'new_maintenance_request',
+            audience: 'admin',
+            channels: ['email', 'in_app'],
+            record_type: 'pm_maintenance_request',
+            record_id: req.id,
+            variables: {
+              subject: `New tenant maintenance request${urgentTag} — ${input.issue_label || input.category}`,
+              body: summaryLines,
+              reply_to: 'ops@praetoriagroup.ca',
+            },
+          },
+        });
+      } catch (err) {
+        console.warn('[maintenance-request] notification dispatch failed', err);
+      }
+
       return req;
     },
+
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tenant-portal', 'requests'] });
     },
