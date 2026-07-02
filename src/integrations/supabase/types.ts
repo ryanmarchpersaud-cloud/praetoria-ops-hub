@@ -5515,6 +5515,293 @@ export type Database = {
         }
         Relationships: []
       }
+      pm_leases: {
+        Row: {
+          created_at: string
+          deposit_amount: number
+          end_date: string | null
+          id: string
+          lease_document_path: string | null
+          monthly_rent: number
+          notes: string | null
+          property_id: string
+          rent_due_day: number
+          start_date: string
+          status: Database["public"]["Enums"]["pm_lease_status"]
+          tenant_id: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deposit_amount?: number
+          end_date?: string | null
+          id?: string
+          lease_document_path?: string | null
+          monthly_rent?: number
+          notes?: string | null
+          property_id: string
+          rent_due_day?: number
+          start_date: string
+          status?: Database["public"]["Enums"]["pm_lease_status"]
+          tenant_id: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deposit_amount?: number
+          end_date?: string | null
+          id?: string
+          lease_document_path?: string | null
+          monthly_rent?: number
+          notes?: string | null
+          property_id?: string
+          rent_due_day?: number
+          start_date?: string
+          status?: Database["public"]["Enums"]["pm_lease_status"]
+          tenant_id?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_leases_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_leases_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_leases_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_managed_properties: {
+        Row: {
+          address_line_1: string | null
+          city: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          postal_code: string | null
+          primary_owner_id: string | null
+          property_name: string
+          property_type: Database["public"]["Enums"]["pm_property_type"]
+          province: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_line_1?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          postal_code?: string | null
+          primary_owner_id?: string | null
+          property_name: string
+          property_type?: Database["public"]["Enums"]["pm_property_type"]
+          province?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_line_1?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          postal_code?: string | null
+          primary_owner_id?: string | null
+          property_name?: string
+          property_type?: Database["public"]["Enums"]["pm_property_type"]
+          province?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_managed_properties_primary_owner_id_fkey"
+            columns: ["primary_owner_id"]
+            isOneToOne: false
+            referencedRelation: "pm_property_owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_owner_properties: {
+        Row: {
+          created_at: string
+          owner_id: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string
+          owner_id: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string
+          owner_id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_properties_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "pm_property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_properties_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_property_owners: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          mailing_address: string | null
+          notes: string | null
+          owner_name: string
+          phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          mailing_address?: string | null
+          notes?: string | null
+          owner_name: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          mailing_address?: string | null
+          notes?: string | null
+          owner_name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      pm_tenants: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string | null
+          notes: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["pm_tenant_status"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["pm_tenant_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["pm_tenant_status"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      pm_units: {
+        Row: {
+          bathrooms: number | null
+          bedrooms: number | null
+          created_at: string
+          id: string
+          notes: string | null
+          property_id: string
+          rent_amount: number | null
+          status: Database["public"]["Enums"]["pm_unit_status"]
+          unit_label: string
+          updated_at: string
+        }
+        Insert: {
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          property_id: string
+          rent_amount?: number | null
+          status?: Database["public"]["Enums"]["pm_unit_status"]
+          unit_label: string
+          updated_at?: string
+        }
+        Update: {
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+          rent_amount?: number | null
+          status?: Database["public"]["Enums"]["pm_unit_status"]
+          unit_label?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_units_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_settings: {
         Row: {
           allow_approve_quotes: boolean | null
@@ -9146,6 +9433,8 @@ export type Database = {
         | "accountant"
         | "hr_admin"
         | "ops_manager"
+        | "tenant"
+        | "property_owner"
       billing_frequency:
         | "per-visit"
         | "weekly"
@@ -9206,6 +9495,16 @@ export type Database = {
         | "worker_crew_assigned"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
+      pm_lease_status: "draft" | "active" | "ended" | "terminated"
+      pm_property_type:
+        | "single_family"
+        | "duplex"
+        | "multi_unit"
+        | "condo"
+        | "commercial"
+        | "other"
+      pm_tenant_status: "active" | "pending" | "former"
+      pm_unit_status: "vacant" | "occupied" | "pending" | "inactive"
       property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
       property_type:
         | "Residential"
@@ -9435,6 +9734,8 @@ export const Constants = {
         "accountant",
         "hr_admin",
         "ops_manager",
+        "tenant",
+        "property_owner",
       ],
       billing_frequency: [
         "per-visit",
@@ -9501,6 +9802,17 @@ export const Constants = {
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
+      pm_lease_status: ["draft", "active", "ended", "terminated"],
+      pm_property_type: [
+        "single_family",
+        "duplex",
+        "multi_unit",
+        "condo",
+        "commercial",
+        "other",
+      ],
+      pm_tenant_status: ["active", "pending", "former"],
+      pm_unit_status: ["vacant", "occupied", "pending", "inactive"],
       property_status: ["Active", "Inactive", "Seasonal", "Pending"],
       property_type: [
         "Residential",
