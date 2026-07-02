@@ -301,10 +301,8 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
   ];
 
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
-    isActive
-      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 pl-[calc(0.5rem-2px)]'
-      : 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';
+  const idleClass = 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';
+  const activeClass = 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 pl-[calc(0.5rem-2px)]';
 
   if (collapsed) {
     return (
