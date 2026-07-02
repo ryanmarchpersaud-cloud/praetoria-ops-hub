@@ -68,6 +68,8 @@ const emptyForm = {
   expense_date: format(new Date(), 'yyyy-MM-dd'),
   due_date: '',
   subtotal: '',
+  gst_percent: '5',
+  pst_percent: '6',
   gst_amount: '',
   pst_amount: '',
   status: 'draft',
