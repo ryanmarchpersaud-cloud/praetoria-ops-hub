@@ -511,7 +511,7 @@ Deno.serve(async (req) => {
   // the user themselves just performed. Without this exception, customer-
   // initiated requests get 403'd at the ops-role gate and the "New Request"
   // email never sends.
-  const SELF_SERVICE_EVENTS = new Set(["new_service_request"]);
+  const SELF_SERVICE_EVENTS = new Set(["new_service_request", "new_maintenance_request"]);
 
   // Parse body early so we can role-gate based on event.
   let body: any;
