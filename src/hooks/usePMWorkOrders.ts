@@ -38,6 +38,50 @@ async function logActivity(row: {
   }
 }
 
+async function resolveAssigneeName(
+  assignee_type: AssigneeType,
+  worker_id?: string | null,
+  sub_id?: string | null,
+): Promise<string> {
+  try {
+    if (assignee_type === 'worker' && worker_id) {
+      const { data } = await sb
+        .from('team_members')
+        .select('full_name, display_name')
+        .eq('user_id', worker_id)
+        .maybeSingle();
+      return data?.full_name || data?.display_name || 'Worker';
+    }
+    if (assignee_type === 'subcontractor' && sub_id) {
+      const { data } = await sb
+        .from('subcontractors')
+        .select('company_name, contact_name')
+        .eq('id', sub_id)
+        .maybeSingle();
+      return data?.company_name || data?.contact_name || 'Subcontractor';
+    }
+  } catch {}
+  return 'Unassigned';
+}
+
+async function insertAdminInAppNotification(subject: string, body: string, record_id?: string) {
+  try {
+    await sb.from('notifications').insert({
+      event: 'pm_work_order_assigned',
+      channel: 'in_app',
+      audience: 'admin',
+      record_type: 'pm_work_order',
+      record_id: record_id ?? null,
+      subject,
+      body,
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('[wo] admin in_app notify failed', e);
+  }
+}
+
 // ---------- Admin ----------
 export function useCreateWorkOrder() {
   const qc = useQueryClient();
