@@ -34,6 +34,8 @@ export interface AuthorizationState {
   isCustomer: boolean;
   isTenant: boolean;
   isPropertyOwner: boolean;
+  isPropertyManager: boolean;
+  isLeasingAgent: boolean;
 
   /** Portal access flags (from team_members or role fallback) */
   canAccessAdminPortal: boolean;
@@ -42,6 +44,7 @@ export interface AuthorizationState {
   canAccessCustomerPortal: boolean;
   canAccessTenantPortal: boolean;
   canAccessOwnerPortal: boolean;
+  canAccessPMStaffPortal: boolean;
 
   /** Whether the user account is active (non-blocked) */
   isActiveUser: boolean;
