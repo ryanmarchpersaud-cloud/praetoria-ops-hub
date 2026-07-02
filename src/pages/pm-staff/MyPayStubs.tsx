@@ -19,7 +19,7 @@ function usePMStaffPayStubs() {
       if (!user) return [];
       const { data, error } = await supabase
         .from('employee_pay_stubs')
-        .select('id, user_id, pay_period_start, pay_period_end, pay_date, gross_pay, deductions, net_pay, stub_pdf_url')
+        .select('id, user_id, pay_period_start, pay_period_end, pay_date, gross_pay, deductions, net_pay, ytd_gross, ytd_net, stub_pdf_url, notes')
         .eq('user_id', user.id)
         .order('pay_date', { ascending: false });
       if (error) throw error;
