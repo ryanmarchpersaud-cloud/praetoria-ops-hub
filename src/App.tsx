@@ -336,6 +336,7 @@ function AdminRoute({ children }: { children?: React.ReactNode }) {
   if (isTenant && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
   if (isCustomer && !canAccessAdminPortal) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
+  if ((isPropertyManager || isLeasingAgent) && !canAccessAdminPortal) return <Navigate to="/pm-staff" replace />;
   if (!canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children ?? <Outlet />}</AppLayout>;
 }
