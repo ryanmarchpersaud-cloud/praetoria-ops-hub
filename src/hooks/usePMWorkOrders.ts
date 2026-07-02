@@ -38,6 +38,50 @@ async function logActivity(row: {
   }
 }
 
+async function resolveAssigneeName(
+  assignee_type: AssigneeType,
+  worker_id?: string | null,
+  sub_id?: string | null,
+): Promise<string> {
+  try {
+    if (assignee_type === 'worker' && worker_id) {
+      const { data } = await sb
+        .from('team_members')
+        .select('full_name, display_name')
+        .eq('user_id', worker_id)
+        .maybeSingle();
+      return data?.full_name || data?.display_name || 'Worker';
+    }
+    if (assignee_type === 'subcontractor' && sub_id) {
+      const { data } = await sb
+        .from('subcontractors')
+        .select('company_name, contact_name')
+        .eq('id', sub_id)
+        .maybeSingle();
+      return data?.company_name || data?.contact_name || 'Subcontractor';
+    }
+  } catch {}
+  return 'Unassigned';
+}
+
+async function insertAdminInAppNotification(subject: string, body: string, record_id?: string) {
+  try {
+    await sb.from('notifications').insert({
+      event: 'pm_work_order_assigned',
+      channel: 'in_app',
+      audience: 'admin',
+      record_type: 'pm_work_order',
+      record_id: record_id ?? null,
+      subject,
+      body,
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('[wo] admin in_app notify failed', e);
+  }
+}
+
 // ---------- Admin ----------
 export function useCreateWorkOrder() {
   const qc = useQueryClient();
@@ -111,7 +155,14 @@ export function useCreateWorkOrder() {
         });
       }
 
-      // Notify assignee via existing in-app notifications table
+      // Resolve assignee's display name so admin/ops see who was assigned
+      const assigneeName = await resolveAssigneeName(
+        input.assignee_type,
+        input.assigned_worker_id,
+        input.assigned_subcontractor_id,
+      );
+
+      // Notify worker assignee via existing in-app notifications table
       const recipient = input.assigned_worker_id || null;
       if (recipient) {
         try {
@@ -132,21 +183,28 @@ export function useCreateWorkOrder() {
         }
       }
 
-      // Ops email
+      // Guaranteed admin in-app row so the red badge lights up immediately
+      await insertAdminInAppNotification(
+        `PM Work Order ${wo.work_order_number} — assigned to ${assigneeName}`,
+        `${wo.title} (${wo.priority}) has been assigned to ${assigneeName}.`,
+        wo.id,
+      );
+
+      // Ops email (also inserts an in_app row via the edge function)
       try {
         await supabase.functions.invoke('send-notification', {
           body: {
             event: 'pm_work_order_created',
             audience: 'admin',
-            channels: ['email', 'in_app'],
+            channels: ['email'],
             record_type: 'pm_work_order',
             record_id: wo.id,
             variables: {
-              subject: `PM Work Order ${wo.work_order_number} created — ${wo.title}`,
+              subject: `PM Work Order ${wo.work_order_number} — assigned to ${assigneeName}`,
               body:
-                `A property-management work order was created from maintenance request.\n\n` +
+                `A property-management work order was created from a maintenance request.\n\n` +
                 `WO: ${wo.work_order_number}\nTitle: ${wo.title}\nPriority: ${wo.priority}\n` +
-                `Assignee: ${input.assignee_type}\n\n` +
+                `Assignee: ${assigneeName} (${input.assignee_type})\n\n` +
                 `Open: https://praetoriagroup.ca/property-management/work-orders/${wo.id}`,
               reply_to: 'ops@praetoriagroup.ca',
             },
@@ -162,6 +220,8 @@ export function useCreateWorkOrder() {
       qc.invalidateQueries({ queryKey: ['pm', 'maintenance-request', v.request_id] });
       qc.invalidateQueries({ queryKey: ['pm', 'maintenance-requests'] });
       qc.invalidateQueries({ queryKey: ['pm', 'work-orders'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
     },
   });
 }
@@ -217,6 +277,12 @@ export function useAssignWorkOrder() {
         actor_role: 'admin',
       });
 
+      const assigneeName = await resolveAssigneeName(
+        input.assignee_type,
+        input.assigned_worker_id,
+        input.assigned_subcontractor_id,
+      );
+
       if (input.assignee_type === 'worker' && input.assigned_worker_id) {
         try {
           await sb.from('notifications').insert({
@@ -233,12 +299,45 @@ export function useAssignWorkOrder() {
           });
         } catch {}
       }
+
+      // Admin in-app + ops email so the red badge appears and ops has a record
+      if (input.assignee_type !== 'unassigned') {
+        await insertAdminInAppNotification(
+          `PM Work Order ${data.work_order_number} — assigned to ${assigneeName}`,
+          `${data.title} has been assigned to ${assigneeName}.`,
+          data.id,
+        );
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'pm_work_order_assigned',
+              audience: 'admin',
+              channels: ['email'],
+              record_type: 'pm_work_order',
+              record_id: data.id,
+              variables: {
+                subject: `PM Work Order ${data.work_order_number} — assigned to ${assigneeName}`,
+                body:
+                  `A property-management work order was assigned.\n\n` +
+                  `WO: ${data.work_order_number}\nTitle: ${data.title}\n` +
+                  `Assignee: ${assigneeName} (${input.assignee_type})\n\n` +
+                  `Open: https://praetoriagroup.ca/property-management/work-orders/${data.id}`,
+                reply_to: 'ops@praetoriagroup.ca',
+              },
+            },
+          });
+        } catch (e) {
+          console.warn('[wo] ops assign email failed', e);
+        }
+      }
       return data;
     },
     onSuccess: (_, v) => {
       qc.invalidateQueries({ queryKey: ['pm', 'work-order', v.work_order_id] });
       qc.invalidateQueries({ queryKey: ['pm', 'work-orders'] });
       qc.invalidateQueries({ queryKey: ['pm', 'maintenance-requests'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
     },
   });
 }
