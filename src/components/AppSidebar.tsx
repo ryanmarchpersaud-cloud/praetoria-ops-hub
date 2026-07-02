@@ -312,7 +312,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className={linkClass}>
+                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
                     <item.icon className="h-4 w-4" />
                   </NavLink>
                 </SidebarMenuButton>
@@ -344,7 +344,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className={linkClass}>
+                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
                     <item.icon className="mr-2 h-4 w-4" />
                     <span>{item.title}</span>
                   </NavLink>
