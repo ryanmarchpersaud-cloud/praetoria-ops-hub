@@ -288,6 +288,7 @@ export default function InvoiceDetail() {
   const startEditing = () => {
     setDraftMemo(invoice.customer_memo || '');
     setDraftNotes(invoice.internal_notes || '');
+    setDraftHeading((invoice as any).invoice_heading || '');
     setDraftIssueDate(invoice.issue_date);
     setDraftDueDate(invoice.due_date);
     setDraftPropertyId(invoice.property_id || '');
@@ -300,10 +301,11 @@ export default function InvoiceDetail() {
         id: invoice.id,
         customer_memo: draftMemo || null,
         internal_notes: draftNotes || null,
+        invoice_heading: draftHeading.trim() || null,
         issue_date: draftIssueDate,
         due_date: draftDueDate,
         property_id: draftPropertyId || null,
-      });
+      } as any);
       toast.success('Invoice details updated');
       setEditingMeta(false);
     } catch {
