@@ -102,6 +102,16 @@ export default function PMLeaseDetail() {
           </div>
         </CardContent>
       </Card>
+      {form.tenant_id && (
+        <TenantLedgerManager
+          tenantId={form.tenant_id}
+          leaseId={id!}
+          propertyId={form.property_id ?? null}
+          unitId={form.unit_id ?? null}
+          defaultRentAmount={Number(form.monthly_rent ?? 0)}
+          defaultRentDueDay={Number(form.rent_due_day ?? 1)}
+        />
+      )}
     </div>
   );
 }
