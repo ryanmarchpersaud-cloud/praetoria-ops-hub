@@ -34,11 +34,19 @@ export default function PMTenantDetail() {
         <Button variant="ghost" size="sm" asChild><Link to="/property-management/tenants"><ArrowLeft className="h-4 w-4 mr-1" />Back</Link></Button>
         <div className="ml-auto flex gap-2">
           <Button variant="destructive" size="sm" onClick={async () => { if (confirm('Delete tenant?')) { try { await del.mutateAsync(id!); toast.success('Deleted'); window.history.back(); } catch (e: any) { toast.error(e.message); } } }}><Trash2 className="h-4 w-4 mr-1" />Delete</Button>
+          <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-1" />{isLinked ? 'Re-invite tenant' : 'Invite to portal'}
+          </Button>
           <Button onClick={async () => { try { await save.mutateAsync({ ...form, id }); toast.success('Saved'); } catch (e: any) { toast.error(e.message); } }}>Save</Button>
         </div>
       </div>
       <Card>
-        <CardHeader><CardTitle>{form.first_name} {form.last_name}</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {form.first_name} {form.last_name}
+            {isLinked && <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3 mr-1" />Portal linked</Badge>}
+          </CardTitle>
+        </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div><Label>First name</Label><Input value={form.first_name ?? ''} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
           <div><Label>Last name</Label><Input value={form.last_name ?? ''} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
