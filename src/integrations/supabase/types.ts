@@ -10260,6 +10260,7 @@ export type Database = {
         }[]
       }
       get_customer_id_for_user: { Args: { _user_id: string }; Returns: string }
+      get_owner_property_ids: { Args: { _user_id: string }; Returns: string[] }
       get_pm_tenant_id_for_user: { Args: { _user_id: string }; Returns: string }
       get_subcontractor_id_for_user: {
         Args: { _user_id: string }
@@ -10282,6 +10283,10 @@ export type Database = {
       is_owner: { Args: { _user_id: string }; Returns: boolean }
       is_personal_account_owner: {
         Args: { _user_id: string }
+        Returns: boolean
+      }
+      is_property_owner_of: {
+        Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
       is_protected_customer: {
