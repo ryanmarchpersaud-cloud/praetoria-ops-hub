@@ -20,6 +20,7 @@ export function OwnerLayout({ children }: { children: ReactNode }) {
       }}
     >
       <AnnouncementBanner />
+      <AdminPreviewBanner />
       <header
         className="text-white px-4 pt-5 pb-6 shadow-md"
         style={{
