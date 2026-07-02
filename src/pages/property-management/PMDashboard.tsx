@@ -87,6 +87,7 @@ export default function PMDashboard() {
             <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/units">Units</Link></Button>
             <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/owners">Owners</Link></Button>
             <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/tenants">Tenants</Link></Button>
+            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/referrals">Referrals</Link></Button>
             <Button asChild size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white"><Link to="/property-management/leases">Leases</Link></Button>
           </div>
         </div>
