@@ -40,9 +40,15 @@ export default function PMOwnerDetail() {
 
   return (
     <div className="p-6 space-y-4 max-w-4xl mx-auto">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button variant="ghost" size="sm" asChild><Link to="/property-management/owners"><ArrowLeft className="h-4 w-4 mr-1" />Back</Link></Button>
-        <div className="ml-auto flex gap-2">
+        {portalLinked && (
+          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300"><CheckCircle2 className="h-3 w-3 mr-1" />Portal linked</Badge>
+        )}
+        <div className="ml-auto flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => window.open('/owner?adminPreview=1', '_blank', 'noopener,noreferrer')}>
+            <Eye className="h-4 w-4 mr-1" />Preview Owner Portal
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
             <Mail className="h-4 w-4 mr-1" />Invite to portal
           </Button>
