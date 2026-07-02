@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download } from 'lucide-react';
+import { Download, Building2, DoorOpen, CalendarDays, DollarSign, FileText } from 'lucide-react';
 import { useMyTenantContext } from '@/hooks/useTenantPortal';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -38,12 +38,15 @@ export default function TenantLease() {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Property */}
       {property && (
-        <Card>
+        <Card className="border-emerald-100">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Property</CardTitle>
+            <CardTitle className="text-sm text-emerald-800 flex items-center gap-2">
+              <Building2 className="h-4 w-4" /> Property
+            </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm space-y-1">
+          <CardContent className="text-sm space-y-1.5">
             <p className="font-semibold text-base">{property.property_name}</p>
             {property.address_line_1 && (
               <p className="text-muted-foreground">
@@ -53,26 +56,83 @@ export default function TenantLease() {
                 {property.postal_code ? ` ${property.postal_code}` : ''}
               </p>
             )}
-            {unit && <p className="mt-2"><span className="text-muted-foreground">Unit:</span> <span className="font-medium">{unit.unit_label}</span></p>}
+            {unit && (
+              <div className="mt-2 flex items-center gap-2">
+                <DoorOpen className="h-4 w-4 text-emerald-700" />
+                <span className="text-xs text-muted-foreground">Unit</span>
+                <span className="font-semibold">{unit.unit_label}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
+      {/* Active lease highlight */}
+      {activeLease && (
+        <Card className="border-emerald-200 bg-emerald-50/40">
+          <CardHeader className="pb-2 flex-row items-center justify-between">
+            <CardTitle className="text-sm text-emerald-800 flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" /> Current Lease
+            </CardTitle>
+            <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white capitalize">
+              {activeLease.status}
+            </Badge>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">Start date</p>
+              <p className="font-semibold">{activeLease.start_date}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">End date</p>
+              <p className="font-semibold">{activeLease.end_date || 'Ongoing'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <DollarSign className="h-3 w-3" /> Monthly rent
+              </p>
+              <p className="font-semibold">${Number(activeLease.monthly_rent).toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Rent due day</p>
+              <p className="font-semibold">Day {activeLease.rent_due_day}</p>
+            </div>
+            {docUrl && (
+              <div className="col-span-2 pt-1">
+                <Button asChild size="sm" className="bg-emerald-700 hover:bg-emerald-800 w-full">
+                  <a href={docUrl} target="_blank" rel="noreferrer">
+                    <Download className="h-4 w-4 mr-1" /> View lease document
+                  </a>
+                </Button>
+              </div>
+            )}
+            {!docUrl && activeLease.lease_document_path && !activeLease.tenant_visible && (
+              <p className="col-span-2 text-xs text-muted-foreground pt-1">
+                Lease document is on file. Ask your property manager if you need a copy.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Lease history */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Lease History</CardTitle>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <FileText className="h-4 w-4 text-emerald-700" /> Lease History
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {leases.length === 0 ? (
             <p className="text-sm text-muted-foreground">No leases on file.</p>
           ) : (
             leases.map((l: any) => (
-              <div key={l.id} className="border rounded-md p-3 text-sm">
+              <div key={l.id} className="border rounded-lg p-3 text-sm">
                 <div className="flex items-center justify-between">
                   <p className="font-medium">
                     {l.start_date} → {l.end_date || 'Ongoing'}
                   </p>
-                  <Badge variant="outline" className="text-xs">{l.status}</Badge>
+                  <Badge variant="outline" className="text-xs capitalize">{l.status}</Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                   <div>
@@ -84,18 +144,6 @@ export default function TenantLease() {
                     <p className="font-medium text-sm">Day {l.rent_due_day}</p>
                   </div>
                 </div>
-                {l.id === activeLease?.id && docUrl && (
-                  <Button asChild size="sm" className="mt-3 bg-emerald-700 hover:bg-emerald-800">
-                    <a href={docUrl} target="_blank" rel="noreferrer">
-                      <Download className="h-4 w-4 mr-1" /> View lease document
-                    </a>
-                  </Button>
-                )}
-                {l.id === activeLease?.id && !l.tenant_visible && l.lease_document_path && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Lease document is on file. Ask your property manager if you need a copy.
-                  </p>
-                )}
               </div>
             ))
           )}
