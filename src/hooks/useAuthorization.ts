@@ -32,12 +32,14 @@ export interface AuthorizationState {
   isStaff: boolean;
   isSubcontractor: boolean;
   isCustomer: boolean;
+  isTenant: boolean;
 
   /** Portal access flags (from team_members or role fallback) */
   canAccessAdminPortal: boolean;
   canAccessWorkerPortal: boolean;
   canAccessSubcontractorPortal: boolean;
   canAccessCustomerPortal: boolean;
+  canAccessTenantPortal: boolean;
 
   /** Whether the user account is active (non-blocked) */
   isActiveUser: boolean;
