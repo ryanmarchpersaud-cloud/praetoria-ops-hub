@@ -505,6 +505,18 @@ export function useCompleteWorkOrder() {
         tenant_visible: true,
         actor_user_id: user?.id ?? null,
       });
+
+      await notifyTenantByTenantId(
+        data.tenant_id,
+        'pm_request_completed',
+        `Your maintenance request is complete`,
+        tenant_visible_completion_note
+          ? `"${data.title}" is complete. Note: ${tenant_visible_completion_note}`
+          : `"${data.title}" has been marked complete. Please let us know if anything needs follow-up.`,
+        'pm_maintenance_request',
+        data.maintenance_request_id,
+      );
+
       return data;
     },
     onSuccess: (_, v) => {
