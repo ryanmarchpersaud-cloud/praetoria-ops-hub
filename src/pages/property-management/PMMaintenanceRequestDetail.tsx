@@ -72,12 +72,34 @@ export default function PMMaintenanceRequestDetail() {
         <Button variant="ghost" size="sm" asChild>
           <Link to="/property-management/maintenance"><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link>
         </Button>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          {!wo && (
+            <Button
+              onClick={() => setWoDialogOpen(true)}
+              variant={nonRepair ? 'outline' : 'default'}
+              className={nonRepair ? '' : 'bg-emerald-700 hover:bg-emerald-800'}
+              title={nonRepair ? 'This is a non-repair request. Convert only if truly needed.' : 'Create a property-management work order from this request'}
+            >
+              <Wrench className="h-4 w-4 mr-1" /> Create Work Order
+            </Button>
+          )}
           <Button onClick={save} disabled={update.isPending} className="bg-emerald-700 hover:bg-emerald-800">
             <Save className="h-4 w-4 mr-1" />{update.isPending ? 'Saving…' : 'Save'}
           </Button>
         </div>
       </div>
+
+      {nonRepair && !wo && (
+        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          <ShieldAlert className="h-4 w-4 mt-0.5" />
+          <div>
+            <p className="font-medium">Non-repair / admin review request</p>
+            <p className="text-xs">This category is not automatically routed to workers or subcontractors. Handle it through property management, or create a work order manually only if a physical repair is actually needed.</p>
+          </div>
+        </div>
+      )}
+
+      {wo && <WorkOrderCard wo={wo} requestId={data.id} />}
 
       <Card>
         <CardHeader className="pb-2">
