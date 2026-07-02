@@ -226,6 +226,14 @@ const PMTenantsList = lazy(() => import("./pages/property-management/PMTenantsLi
 const PMTenantDetail = lazy(() => import("./pages/property-management/PMTenantDetail"));
 const PMLeasesList = lazy(() => import("./pages/property-management/PMLeasesList"));
 const PMLeaseDetail = lazy(() => import("./pages/property-management/PMLeaseDetail"));
+const PMMaintenanceRequestsList = lazy(() => import("./pages/property-management/PMMaintenanceRequestsList"));
+const PMMaintenanceRequestDetail = lazy(() => import("./pages/property-management/PMMaintenanceRequestDetail"));
+const TenantHome = lazy(() => import("./pages/tenant/TenantHome"));
+const TenantLease = lazy(() => import("./pages/tenant/TenantLease"));
+const TenantMaintenanceList = lazy(() => import("./pages/tenant/TenantMaintenanceList"));
+const TenantMaintenanceNew = lazy(() => import("./pages/tenant/TenantMaintenanceNew"));
+const TenantMaintenanceDetail = lazy(() => import("./pages/tenant/TenantMaintenanceDetail"));
+const TenantAccount = lazy(() => import("./pages/tenant/TenantAccount"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
