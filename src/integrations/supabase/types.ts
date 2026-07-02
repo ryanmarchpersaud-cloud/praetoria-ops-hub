@@ -5519,6 +5519,8 @@ export type Database = {
         Row: {
           created_at: string
           deposit_amount: number
+          deposit_held_since: string | null
+          deposit_notes: string | null
           end_date: string | null
           id: string
           lease_document_path: string | null
@@ -5526,6 +5528,7 @@ export type Database = {
           notes: string | null
           property_id: string
           rent_due_day: number
+          rent_frequency: string
           start_date: string
           status: Database["public"]["Enums"]["pm_lease_status"]
           tenant_id: string
@@ -5536,6 +5539,8 @@ export type Database = {
         Insert: {
           created_at?: string
           deposit_amount?: number
+          deposit_held_since?: string | null
+          deposit_notes?: string | null
           end_date?: string | null
           id?: string
           lease_document_path?: string | null
@@ -5543,6 +5548,7 @@ export type Database = {
           notes?: string | null
           property_id: string
           rent_due_day?: number
+          rent_frequency?: string
           start_date: string
           status?: Database["public"]["Enums"]["pm_lease_status"]
           tenant_id: string
@@ -5553,6 +5559,8 @@ export type Database = {
         Update: {
           created_at?: string
           deposit_amount?: number
+          deposit_held_since?: string | null
+          deposit_notes?: string | null
           end_date?: string | null
           id?: string
           lease_document_path?: string | null
@@ -5560,6 +5568,7 @@ export type Database = {
           notes?: string | null
           property_id?: string
           rent_due_day?: number
+          rent_frequency?: string
           start_date?: string
           status?: Database["public"]["Enums"]["pm_lease_status"]
           tenant_id?: string
@@ -5852,40 +5861,244 @@ export type Database = {
         }
         Relationships: []
       }
+      pm_tenant_documents: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          property_id: string | null
+          shared_at: string
+          shared_by: string | null
+          storage_path: string
+          tenant_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          property_id?: string | null
+          shared_at?: string
+          shared_by?: string | null
+          storage_path: string
+          tenant_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          property_id?: string | null
+          shared_at?: string
+          shared_by?: string | null
+          storage_path?: string
+          tenant_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          entry_date: string
+          id: string
+          lease_id: string | null
+          reference: string | null
+          tenant_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          id?: string
+          lease_id?: string | null
+          reference?: string | null
+          tenant_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          id?: string
+          lease_id?: string | null
+          reference?: string | null
+          tenant_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_ledger_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_ledger_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_notices: {
+        Row: {
+          ack_at: string | null
+          body: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          property_id: string | null
+          published_at: string
+          requires_ack: boolean
+          tenant_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ack_at?: string | null
+          body?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          property_id?: string | null
+          published_at?: string
+          requires_ack?: boolean
+          tenant_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ack_at?: string | null
+          body?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          property_id?: string | null
+          published_at?: string
+          requires_ack?: boolean
+          tenant_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_notices_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_notices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_tenants: {
         Row: {
+          billing_contact_name: string | null
+          billing_email: string | null
+          billing_phone: string | null
+          business_name: string | null
+          business_notes: string | null
           created_at: string
           email: string | null
           first_name: string
           id: string
           last_name: string | null
+          mailing_address_line_1: string | null
+          mailing_city: string | null
+          mailing_postal_code: string | null
+          mailing_province: string | null
           notes: string | null
           phone: string | null
+          po_reference: string | null
           status: Database["public"]["Enums"]["pm_tenant_status"]
+          tenant_type: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          billing_contact_name?: string | null
+          billing_email?: string | null
+          billing_phone?: string | null
+          business_name?: string | null
+          business_notes?: string | null
           created_at?: string
           email?: string | null
           first_name: string
           id?: string
           last_name?: string | null
+          mailing_address_line_1?: string | null
+          mailing_city?: string | null
+          mailing_postal_code?: string | null
+          mailing_province?: string | null
           notes?: string | null
           phone?: string | null
+          po_reference?: string | null
           status?: Database["public"]["Enums"]["pm_tenant_status"]
+          tenant_type?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          billing_contact_name?: string | null
+          billing_email?: string | null
+          billing_phone?: string | null
+          business_name?: string | null
+          business_notes?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
           id?: string
           last_name?: string | null
+          mailing_address_line_1?: string | null
+          mailing_city?: string | null
+          mailing_postal_code?: string | null
+          mailing_province?: string | null
           notes?: string | null
           phone?: string | null
+          po_reference?: string | null
           status?: Database["public"]["Enums"]["pm_tenant_status"]
+          tenant_type?: string
           updated_at?: string
           user_id?: string | null
         }
