@@ -3,6 +3,7 @@ import { OwnerLayout } from '@/components/owner/OwnerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin } from 'lucide-react';
+import { formatStatusLabel } from '@/lib/statusLabel';
 import {
   useOwnerProperty,
   useOwnerUnitsForProperty,
@@ -50,7 +51,7 @@ export default function OwnerPropertyDetail() {
                   <li key={u.id} className="py-2 flex items-center justify-between text-sm">
                     <span className="font-medium">{u.unit_label}</span>
                     <span className="text-xs text-muted-foreground">
-                      {u.bedrooms ?? '—'} bd · {u.bathrooms ?? '—'} ba · {u.status}
+                      {u.bedrooms ?? '—'} bd · {u.bathrooms ?? '—'} ba · {formatStatusLabel(u.status)}
                     </span>
                   </li>
                 ))}
@@ -98,7 +99,7 @@ export default function OwnerPropertyDetail() {
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium truncate">{r.title || r.category}</p>
                       <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 shrink-0">
-                        {r.status}
+                        {formatStatusLabel(r.status)}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">
