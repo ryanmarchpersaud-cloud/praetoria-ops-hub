@@ -74,6 +74,7 @@ const viewAsItems: { title: string; url: string; icon: any; badge: string; area:
   { title: 'Worker Portal', url: '/worker', icon: Smartphone, badge: 'Worker view', area: 'workers' },
   { title: 'Subcontractor Portal', url: '/subcontractor', icon: HardHat, badge: 'Subcontractor view', area: 'subs' },
   { title: 'Customer Portal', url: '/portal/properties', icon: Eye, badge: 'Customer view', area: 'customers' },
+  { title: 'PM Staff Portal', url: '/pm-staff', icon: KeyRound, badge: 'Leasing Agent view', area: 'admin' },
 ];
 
 function BadgeCount({ count }: { count: number }) {
