@@ -18,6 +18,7 @@ export default function PMOwnerDetail() {
   const del = useDeletePmOwner();
   const { data: props = [] } = usePmProperties();
   const [form, setForm] = useState<any>({});
+  const [inviteOpen, setInviteOpen] = useState(false);
   useEffect(() => { if (data) setForm(data); }, [data]);
   if (!data) return <div className="p-6">Loading…</div>;
 
