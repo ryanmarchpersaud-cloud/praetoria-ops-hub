@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useOwnerScope, scopeBlocksAll } from './useOwnerScope';
 
 /**
  * Property Owner Portal — data hooks.
@@ -11,9 +12,20 @@ import { useAuth } from './useAuth';
 
 export function useOwnerRecord() {
   const { user } = useAuth();
+  const scope = useOwnerScope();
   return useQuery({
-    queryKey: ['owner-portal', 'owner-record', user?.id],
+    queryKey: ['owner-portal', 'owner-record', scope.isPreview ? `preview:${scope.ownerId}` : user?.id],
     queryFn: async () => {
+      if (scope.isPreview) {
+        if (!scope.ownerId) return null;
+        const { data, error } = await supabase
+          .from('pm_property_owners')
+          .select('id, owner_name, company_name, email, phone, mailing_address, is_active')
+          .eq('id', scope.ownerId)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
       if (!user) return null;
       const { data, error } = await supabase
         .from('pm_property_owners')
@@ -23,31 +35,37 @@ export function useOwnerRecord() {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: !!user && (!scope.isPreview || scope.ready),
   });
 }
 
 export function useOwnerProperties() {
   const { user } = useAuth();
+  const scope = useOwnerScope();
   return useQuery({
-    queryKey: ['owner-portal', 'properties', user?.id],
+    queryKey: ['owner-portal', 'properties', scope.isPreview ? `preview:${scope.ownerId}` : user?.id, scope.propertyIds?.join(',') ?? null],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (scopeBlocksAll(scope)) return [];
+      let q = supabase
         .from('pm_managed_properties')
         .select('id, property_name, address_line_1, city, province, postal_code, property_type, is_active, notes')
         .order('property_name');
+      if (scope.isPreview && scope.propertyIds?.length) q = q.in('id', scope.propertyIds);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && (!scope.isPreview || scope.ready),
   });
 }
 
 export function useOwnerProperty(id?: string) {
+  const scope = useOwnerScope();
+  const allowed = !scope.isPreview || !!(id && scope.propertyIds?.includes(id));
   return useQuery({
-    queryKey: ['owner-portal', 'property', id],
+    queryKey: ['owner-portal', 'property', id, scope.isPreview ? 'preview' : 'self'],
     queryFn: async () => {
-      if (!id) return null;
+      if (!id || !allowed) return null;
       const { data, error } = await supabase
         .from('pm_managed_properties')
         .select('id, property_name, address_line_1, city, province, postal_code, property_type, is_active, notes')
@@ -56,15 +74,17 @@ export function useOwnerProperty(id?: string) {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && (!scope.isPreview || scope.ready),
   });
 }
 
 export function useOwnerUnitsForProperty(propertyId?: string) {
+  const scope = useOwnerScope();
+  const allowed = !scope.isPreview || !!(propertyId && scope.propertyIds?.includes(propertyId));
   return useQuery({
-    queryKey: ['owner-portal', 'units', propertyId],
+    queryKey: ['owner-portal', 'units', propertyId, scope.isPreview ? 'preview' : 'self'],
     queryFn: async () => {
-      if (!propertyId) return [];
+      if (!propertyId || !allowed) return [];
       const { data, error } = await supabase
         .from('pm_units')
         .select('id, unit_label, bedrooms, bathrooms, status')
@@ -73,16 +93,18 @@ export function useOwnerUnitsForProperty(propertyId?: string) {
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!propertyId,
+    enabled: !!propertyId && (!scope.isPreview || scope.ready),
   });
 }
 
 /** Owner-visible lease summary only (no tenant PII). */
 export function useOwnerLeasesForProperty(propertyId?: string) {
+  const scope = useOwnerScope();
+  const allowed = !scope.isPreview || !!(propertyId && scope.propertyIds?.includes(propertyId));
   return useQuery({
-    queryKey: ['owner-portal', 'leases', propertyId],
+    queryKey: ['owner-portal', 'leases', propertyId, scope.isPreview ? 'preview' : 'self'],
     queryFn: async () => {
-      if (!propertyId) return [];
+      if (!propertyId || !allowed) return [];
       const { data, error } = await supabase
         .from('pm_leases')
         .select('id, start_date, end_date, monthly_rent, status, rent_frequency, unit_id')
@@ -91,7 +113,7 @@ export function useOwnerLeasesForProperty(propertyId?: string) {
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!propertyId,
+    enabled: !!propertyId && (!scope.isPreview || scope.ready),
   });
 }
 
