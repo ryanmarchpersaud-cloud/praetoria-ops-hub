@@ -115,6 +115,23 @@ export default function TenantLease() {
         </Card>
       )}
 
+      {/* Documents link */}
+      <Card className="hover:border-emerald-300 transition-colors">
+        <a href="/tenant/documents" className="block p-4 flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4 text-emerald-700" /> Shared Documents
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Notices, forms, and lease documents shared by your property manager.
+            </p>
+          </div>
+          <span className="text-emerald-700 text-sm font-medium">Open ›</span>
+        </a>
+      </Card>
+
+
+
       {/* Lease history */}
       <Card>
         <CardHeader className="pb-2">
