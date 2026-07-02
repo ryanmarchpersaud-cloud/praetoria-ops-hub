@@ -800,6 +800,7 @@ function AppRoutes() {
         <Route path="/owner/documents" element={<Suspense fallback={<RouteLoading />}><OwnerDocuments /></Suspense>} />
         <Route path="/owner/expenses" element={<Suspense fallback={<RouteLoading />}><OwnerExpenses /></Suspense>} />
         <Route path="/owner/statements" element={<Suspense fallback={<RouteLoading />}><OwnerStatements /></Suspense>} />
+        <Route path="/owner/statements/:id/print" element={<Suspense fallback={<RouteLoading />}><OwnerStatementPrint /></Suspense>} />
         <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
       </Route>
 
