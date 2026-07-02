@@ -26,7 +26,7 @@ export default function WorkerSettings() {
 
   const handleAvatarUploaded = async (url: string) => {
     if (!user) return;
-    await supabase.from('worker_profiles').update({ profile_photo_url: url }).eq('user_id', user.id);
+    await supabase.rpc('update_own_worker_photo', { _url: url });
     queryClient.invalidateQueries({ queryKey: ['worker_profile'] });
   };
 

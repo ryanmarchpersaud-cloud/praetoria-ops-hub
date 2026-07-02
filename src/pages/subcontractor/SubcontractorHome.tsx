@@ -130,7 +130,7 @@ export default function SubcontractorHome() {
             initials={firstName.charAt(0).toUpperCase()}
             onUploaded={async (url) => {
               if (!profile) return;
-              await supabase.from('subcontractors').update({ profile_photo_url: url }).eq('id', profile.id);
+              await supabase.rpc('update_own_subcontractor_photo', { _url: url });
               queryClient.invalidateQueries({ queryKey: ['subcontractor_profile'] });
             }}
             size="sm"
