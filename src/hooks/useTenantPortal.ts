@@ -158,6 +158,16 @@ export function useCreateMaintenanceRequest() {
       try {
         const propertyLabel = (req as any).property_id ? `Property ${(req as any).property_id}` : 'Property';
         const urgentTag = input.is_urgent_safety ? ' [URGENT SAFETY]' : '';
+
+        // Create 7-day signed URLs for each uploaded attachment so ops can download from the email
+        const attachmentLinks: string[] = [];
+        for (const f of uploadedFiles) {
+          const { data: signed } = await supabase.storage
+            .from('pm-maintenance-attachments')
+            .createSignedUrl(f.path, 60 * 60 * 24 * 7);
+          if (signed?.signedUrl) attachmentLinks.push(`- ${f.name}: ${signed.signedUrl}`);
+        }
+
         const summaryLines = [
           `Tenant submitted a new maintenance request${urgentTag}.`,
           '',
@@ -167,6 +177,9 @@ export function useCreateMaintenanceRequest() {
           input.title ? `Title: ${input.title}` : null,
           input.description ? `Details: ${input.description}` : null,
           input.contact_notes ? `Access/contact: ${input.contact_notes}` : null,
+          uploadedFiles.length > 0 ? '' : null,
+          uploadedFiles.length > 0 ? `Attachments (${uploadedFiles.length}) — links valid 7 days:` : null,
+          ...attachmentLinks,
           '',
           `Open in Praetoria Ops Hub: https://praetoriagroup.ca/property-management/maintenance/${req.id}`,
         ].filter(Boolean).join('\n');
