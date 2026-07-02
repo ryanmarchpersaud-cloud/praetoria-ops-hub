@@ -122,6 +122,27 @@ export default function PMMaintenanceRequestDetail() {
               <p className="font-medium">{data.unit?.unit_label ?? '—'}</p>
             </div>
           </div>
+          <div className="pt-2">
+            <p className="text-xs text-muted-foreground">Lease</p>
+            {data.lease?.id ? (
+              <div className="flex items-center gap-2 flex-wrap">
+                <Link
+                  to={`/property-management/leases/${data.lease.id}`}
+                  className="font-medium text-emerald-700 hover:underline"
+                >
+                  Lease #{String(data.lease.id).slice(0, 8)}
+                </Link>
+                <Badge variant="outline" className="capitalize">{data.lease.status ?? 'active'}</Badge>
+                {(data.lease.start_date || data.lease.end_date) && (
+                  <span className="text-xs text-muted-foreground">
+                    {data.lease.start_date ?? '—'} → {data.lease.end_date ?? 'open'}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No lease linked to this request.</p>
+            )}
+          </div>
           {data.description && (
             <div className="pt-2">
               <p className="text-xs text-muted-foreground">Description</p>
