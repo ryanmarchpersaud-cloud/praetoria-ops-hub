@@ -8582,9 +8582,13 @@ export type Database = {
           active_flag: boolean
           agreement_signed_status: string
           allergies: string | null
+          bank_account_ciphertext: string | null
+          bank_account_last4: string | null
           bank_account_number: string | null
+          bank_institution_ciphertext: string | null
           bank_institution_number: string | null
           bank_name: string | null
+          bank_transit_ciphertext: string | null
           bank_transit_number: string | null
           blocked_at: string | null
           blocked_reason: string | null
@@ -8634,7 +8638,9 @@ export type Database = {
           secondary_emergency_contact_relationship: string | null
           seizure_or_fainting_alert: boolean | null
           service_area_summary: string | null
+          sin_ciphertext: string | null
           sin_encrypted: string | null
+          sin_last3: string | null
           status: string
           updated_at: string
           user_id: string
@@ -8645,9 +8651,13 @@ export type Database = {
           active_flag?: boolean
           agreement_signed_status?: string
           allergies?: string | null
+          bank_account_ciphertext?: string | null
+          bank_account_last4?: string | null
           bank_account_number?: string | null
+          bank_institution_ciphertext?: string | null
           bank_institution_number?: string | null
           bank_name?: string | null
+          bank_transit_ciphertext?: string | null
           bank_transit_number?: string | null
           blocked_at?: string | null
           blocked_reason?: string | null
@@ -8697,7 +8707,9 @@ export type Database = {
           secondary_emergency_contact_relationship?: string | null
           seizure_or_fainting_alert?: boolean | null
           service_area_summary?: string | null
+          sin_ciphertext?: string | null
           sin_encrypted?: string | null
+          sin_last3?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -8708,9 +8720,13 @@ export type Database = {
           active_flag?: boolean
           agreement_signed_status?: string
           allergies?: string | null
+          bank_account_ciphertext?: string | null
+          bank_account_last4?: string | null
           bank_account_number?: string | null
+          bank_institution_ciphertext?: string | null
           bank_institution_number?: string | null
           bank_name?: string | null
+          bank_transit_ciphertext?: string | null
           bank_transit_number?: string | null
           blocked_at?: string | null
           blocked_reason?: string | null
@@ -8760,7 +8776,9 @@ export type Database = {
           secondary_emergency_contact_relationship?: string | null
           seizure_or_fainting_alert?: boolean | null
           service_area_summary?: string | null
+          sin_ciphertext?: string | null
           sin_encrypted?: string | null
+          sin_last3?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -9840,9 +9858,13 @@ export type Database = {
           address_postal_code: string | null
           address_province: string | null
           allergies: string | null
+          bank_account_ciphertext: string | null
+          bank_account_last4: string | null
           bank_account_number: string | null
+          bank_institution_ciphertext: string | null
           bank_institution_number: string | null
           bank_name: string | null
+          bank_transit_ciphertext: string | null
           bank_transit_number: string | null
           benefits_effective_date: string | null
           benefits_plan_summary: string | null
@@ -9893,7 +9915,9 @@ export type Database = {
           secondary_service_category: string | null
           seizure_or_fainting_alert: boolean | null
           sick_balance: number | null
+          sin_ciphertext: string | null
           sin_encrypted: string | null
+          sin_last3: string | null
           supervisor_name: string | null
           team: string | null
           updated_at: string
@@ -9907,9 +9931,13 @@ export type Database = {
           address_postal_code?: string | null
           address_province?: string | null
           allergies?: string | null
+          bank_account_ciphertext?: string | null
+          bank_account_last4?: string | null
           bank_account_number?: string | null
+          bank_institution_ciphertext?: string | null
           bank_institution_number?: string | null
           bank_name?: string | null
+          bank_transit_ciphertext?: string | null
           bank_transit_number?: string | null
           benefits_effective_date?: string | null
           benefits_plan_summary?: string | null
@@ -9960,7 +9988,9 @@ export type Database = {
           secondary_service_category?: string | null
           seizure_or_fainting_alert?: boolean | null
           sick_balance?: number | null
+          sin_ciphertext?: string | null
           sin_encrypted?: string | null
+          sin_last3?: string | null
           supervisor_name?: string | null
           team?: string | null
           updated_at?: string
@@ -9974,9 +10004,13 @@ export type Database = {
           address_postal_code?: string | null
           address_province?: string | null
           allergies?: string | null
+          bank_account_ciphertext?: string | null
+          bank_account_last4?: string | null
           bank_account_number?: string | null
+          bank_institution_ciphertext?: string | null
           bank_institution_number?: string | null
           bank_name?: string | null
+          bank_transit_ciphertext?: string | null
           bank_transit_number?: string | null
           benefits_effective_date?: string | null
           benefits_plan_summary?: string | null
@@ -10027,7 +10061,9 @@ export type Database = {
           secondary_service_category?: string | null
           seizure_or_fainting_alert?: boolean | null
           sick_balance?: number | null
+          sin_ciphertext?: string | null
           sin_encrypted?: string | null
+          sin_last3?: string | null
           supervisor_name?: string | null
           team?: string | null
           updated_at?: string
@@ -10259,6 +10295,14 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_customer_billing_details: {
+        Args: { _customer_id: string }
+        Returns: Json
+      }
+      get_customer_delivery_email: {
+        Args: { _customer_id: string }
+        Returns: string
+      }
       get_customer_id_for_user: { Args: { _user_id: string }; Returns: string }
       get_owner_property_ids: { Args: { _user_id: string }; Returns: string[] }
       get_pm_tenant_id_for_user: { Args: { _user_id: string }; Returns: string }
@@ -10266,7 +10310,9 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string
       }
+      get_subcontractor_pii: { Args: { _sub_id: string }; Returns: Json }
       get_unread_message_count: { Args: { _user_id: string }; Returns: number }
+      get_worker_pii: { Args: { _worker_id: string }; Returns: Json }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -10416,6 +10462,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_own_subcontractor_photo: {
+        Args: { _url: string }
+        Returns: undefined
+      }
+      update_own_worker_photo: { Args: { _url: string }; Returns: undefined }
       update_subcontractor_portal_profile: {
         Args: {
           p_company_name: string
