@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { DoorOpen, Users, CalendarClock, FileText, ListChecks, LogIn, Plus } from 'lucide-react';
+import { DoorOpen, Users, CalendarClock, FileText, ListChecks, LogIn, Plus, Clock, Receipt, ShieldAlert, Bell } from 'lucide-react';
 import { useVacantUnits, useShowings, useApplications, useStaffTasks, useMoveInChecklists } from '@/hooks/pm-staff/usePMStaffData';
 import { formatStatusLabel } from '@/lib/statusLabel';
 import { format } from 'date-fns';
@@ -33,9 +33,13 @@ export default function PMStaffHome() {
         <CardHeader className="pb-2"><CardTitle className="text-sm">Quick actions</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-2 gap-2">
           <Button asChild size="sm" variant="outline"><Link to="/pm-staff/prospects?new=1"><Plus className="h-4 w-4 mr-1" />Prospect</Link></Button>
-          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/showings?new=1"><Plus className="h-4 w-4 mr-1" />Showing</Link></Button>
-          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/applications?new=1"><Plus className="h-4 w-4 mr-1" />Application</Link></Button>
-          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/move-ins?new=1"><Plus className="h-4 w-4 mr-1" />Move-in</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/showings?new=1"><CalendarClock className="h-4 w-4 mr-1" />Showing</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/applications?new=1"><FileText className="h-4 w-4 mr-1" />Application</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/move-ins?new=1"><LogIn className="h-4 w-4 mr-1" />Move-in</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/tasks?new=1"><ListChecks className="h-4 w-4 mr-1" />Task</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/time-clock"><Clock className="h-4 w-4 mr-1" />Clock In</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/expenses"><Receipt className="h-4 w-4 mr-1" />Expense</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/pm-staff/messages"><Bell className="h-4 w-4 mr-1" />Message</Link></Button>
         </CardContent>
       </Card>
 

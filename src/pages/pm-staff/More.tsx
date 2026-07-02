@@ -1,65 +1,149 @@
-import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useAuthorization } from '@/hooks/useAuthorization';
 import { Card, CardContent } from '@/components/ui/card';
+import { Link, useNavigate } from 'react-router-dom';
+import { usePMStaffProfile } from '@/hooks/usePMStaffProfile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  FileText, LogIn, LogOut, User, Home,
-  Clock, CalendarClock, DollarSign, GraduationCap, HardHat,
-  Receipt, CalendarDays, Bell, UserCircle2,
+  Building2, Settings, LogOut, User, ChevronRight, Eye, Monitor,
+  Briefcase, FileText, Heart, DollarSign, Award, CalendarDays, UserCheck,
+  ShieldAlert, Receipt, CreditCard, ClipboardCheck, Trash2, Clock, CalendarClock,
+  HardHat, Bell, GraduationCap, Home as HomeIcon,
 } from 'lucide-react';
 
-const leasingItems = [
-  { to: '/pm-staff/applications', label: 'Applications', icon: FileText },
-  { to: '/pm-staff/move-ins', label: 'Move-In Checklists', icon: LogIn },
-  { to: '/pm-staff/move-outs', label: 'Move-Out (Phase 6B)', icon: LogOut },
-  { to: '/pm-staff', label: 'Home', icon: Home },
-];
+type Item = { icon: any; label: string; to?: string; description: string; soon?: boolean };
 
-const staffItems = [
-  { to: '/pm-staff/profile', label: 'My Profile', icon: UserCircle2 },
-  { to: '/pm-staff/time-clock', label: 'Time Clock', icon: Clock },
-  { to: '/pm-staff/timesheets', label: 'My Timesheets', icon: CalendarClock },
-  { to: '/pm-staff/pay-stubs', label: 'My Pay Stubs', icon: DollarSign },
-  { to: '/pm-staff/documents', label: 'My Documents', icon: FileText },
-  { to: '/pm-staff/training', label: 'Training & Safety', icon: GraduationCap },
-  { to: '/pm-staff/ppe', label: 'My PPE / Equipment', icon: HardHat },
-  { to: '/pm-staff/expenses', label: 'Expense Claims', icon: Receipt },
-  { to: '/pm-staff/time-off', label: 'Time Off / Sick Days', icon: CalendarDays },
-  { to: '/pm-staff/messages', label: 'Messages', icon: Bell },
-  { to: '/pm-staff/account', label: 'Account', icon: User },
-];
+export default function More() {
+  const { user, signOut } = useAuth();
+  const { isAdmin, isPropertyManager, isLeasingAgent } = useAuthorization();
+  const { data: profile } = usePMStaffProfile();
+  const navigate = useNavigate();
 
-function Row({ to, label, Icon, accent }: { to: string; label: string; Icon: any; accent: 'indigo' | 'emerald' }) {
-  const bg = accent === 'indigo' ? 'bg-indigo-50' : 'bg-emerald-50';
-  const fg = accent === 'indigo' ? 'text-indigo-700' : 'text-emerald-700';
-  return (
-    <Link to={to}>
-      <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-3 flex items-center gap-3">
-          <div className={`h-9 w-9 rounded-lg ${bg} flex items-center justify-center`}>
-            <Icon className={`h-5 w-5 ${fg}`} />
+  const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email || 'Staff';
+  const initials = (displayName || '?').slice(0, 2).toUpperCase();
+  const portalLabel = isPropertyManager ? 'Property Manager' : isLeasingAgent ? 'Leasing Agent' : 'PM Staff';
+
+  const leasingItems: Item[] = [
+    { icon: HomeIcon, label: 'Home', to: '/pm-staff', description: 'Leasing dashboard' },
+    { icon: ClipboardCheck, label: 'My Tasks', to: '/pm-staff/tasks', description: 'Leasing tasks assigned to you' },
+  ];
+
+  const profileItems: Item[] = [
+    { icon: User, label: 'My Profile', to: '/pm-staff/profile', description: 'Personal info & photo' },
+    { icon: Briefcase, label: 'My Employment', to: '/pm-staff/employment', description: 'Job details & compensation' },
+    { icon: ShieldAlert, label: 'Emergency & Safety', to: '/pm-staff/emergency-contact', description: 'Emergency contacts & alerts' },
+    { icon: Award, label: 'Training & Certifications', to: '/pm-staff/training', description: 'Certificates & assignments' },
+    { icon: GraduationCap, label: 'My Courses', description: 'Assigned learning', soon: true },
+    { icon: FileText, label: 'Training & Safety', description: 'WHMIS, first aid & policies', soon: true },
+    { icon: ShieldAlert, label: 'Safety & Incidents', description: 'Report incidents & near misses', soon: true },
+    { icon: FileText, label: 'My Documents', to: '/pm-staff/documents', description: 'Certificates & shared docs' },
+    { icon: Receipt, label: 'Tax Documents', to: '/pm-staff/tax-documents', description: 'T4 slips, ROE & pay summaries' },
+    { icon: CreditCard, label: 'Expense Claims', to: '/pm-staff/expenses', description: 'Submit receipts for reimbursement' },
+    { icon: DollarSign, label: 'Payroll / Pay Stubs', to: '/pm-staff/pay-stubs', description: 'Your pay history' },
+    { icon: Heart, label: 'Benefits', to: '/pm-staff/benefits', description: 'Health benefits & plan info' },
+    { icon: CalendarDays, label: 'Time Off', to: '/pm-staff/time-off', description: 'Vacation & sick leave' },
+    { icon: HardHat, label: 'PPE & Equipment', to: '/pm-staff/ppe', description: 'Issued gear & office equipment' },
+    { icon: UserCheck, label: 'Emergency Contact', to: '/pm-staff/emergency-contact', description: 'Emergency contact info' },
+    { icon: Bell, label: 'Messages', to: '/pm-staff/messages', description: 'Notifications & admin messages' },
+  ];
+
+  const timeItems: Item[] = [
+    { icon: Clock, label: 'Time Clock', to: '/pm-staff/time-clock', description: 'Clock in / out' },
+    { icon: CalendarClock, label: 'My Timesheets', to: '/pm-staff/timesheets', description: 'Timesheet history' },
+  ];
+
+  const switchItems: Item[] = [
+    ...(isAdmin ? [
+      { icon: Monitor, label: 'Admin Dashboard', to: '/', description: 'Switch to desktop admin view' },
+      { icon: Eye, label: 'Preview Worker Portal', to: '/worker', description: 'Preview field-worker experience' },
+    ] as Item[] : []),
+    { icon: Settings, label: 'Settings', to: '/pm-staff/account', description: 'Account & app settings' },
+  ];
+
+  const renderItem = (item: Item) => {
+    const inner = (
+      <Card className={`active:shadow-sm transition-shadow ${item.soon ? 'opacity-60' : ''}`}>
+        <CardContent className="p-4 flex items-center gap-3">
+          <item.icon className="h-5 w-5 text-muted-foreground shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground">{item.label}</p>
+            <p className="text-[11px] text-muted-foreground">{item.description}</p>
           </div>
-          <span className="font-medium">{label}</span>
+          {item.soon
+            ? <span className="text-[10px] font-semibold uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Soon</span>
+            : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
         </CardContent>
       </Card>
-    </Link>
+    );
+    if (item.soon || !item.to) return <div key={item.label}>{inner}</div>;
+    return <Link key={item.to + item.label} to={item.to}>{inner}</Link>;
+  };
+
+  return (
+    <div className="px-4 pt-6 pb-4 space-y-4">
+      <h1 className="text-lg font-bold text-foreground">More</h1>
+
+      {/* User card */}
+      <Card>
+        <CardContent className="p-4 flex items-center gap-3">
+          <Avatar className="h-11 w-11">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+            <AvatarFallback className="bg-emerald-100 text-emerald-800 font-semibold">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+            <p className="text-[11px] text-muted-foreground truncate">{user?.email}</p>
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+            {portalLabel}
+          </span>
+        </CardContent>
+      </Card>
+
+      <div className="flex items-center gap-2 px-1">
+        <Building2 className="h-4 w-4 text-emerald-700" />
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">PM Staff / Leasing Portal</span>
+      </div>
+
+      {/* Delete Account — Apple 5.1.1(v) discoverability */}
+      <Link to="/account-privacy">
+        <Card className="border-2 border-destructive bg-destructive/10 active:shadow-sm transition-shadow">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-destructive flex items-center justify-center shrink-0">
+              <Trash2 className="h-5 w-5 text-destructive-foreground" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-destructive">Delete Account</p>
+              <p className="text-[11px] text-destructive/80">Account &amp; Privacy — start account deletion</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-destructive shrink-0" />
+          </CardContent>
+        </Card>
+      </Link>
+
+      <Section title="Leasing Work" items={leasingItems} render={renderItem} />
+      <Section title="Time & Attendance" items={timeItems} render={renderItem} />
+      <Section title="My Staff Account" items={profileItems} render={renderItem} />
+      <Section title="Switch View" items={switchItems} render={renderItem} />
+
+      {/* Sign out */}
+      <button onClick={async () => { await signOut(); navigate('/login'); }} className="w-full">
+        <Card className="active:shadow-sm transition-shadow border-destructive/20">
+          <CardContent className="p-4 flex items-center gap-3">
+            <LogOut className="h-5 w-5 text-destructive shrink-0" />
+            <p className="text-sm font-medium text-destructive">Sign Out</p>
+          </CardContent>
+        </Card>
+      </button>
+    </div>
   );
 }
 
-export default function More() {
+function Section({ title, items, render }: { title: string; items: Item[]; render: (i: Item) => React.ReactNode }) {
   return (
-    <div className="p-4 space-y-4">
-      <section className="space-y-2">
-        <p className="text-[11px] uppercase tracking-[0.15em] font-semibold text-indigo-700">Leasing Work</p>
-        <div className="space-y-2">
-          {leasingItems.map((i) => <Row key={i.to} to={i.to} label={i.label} Icon={i.icon} accent="indigo" />)}
-        </div>
-      </section>
-
-      <section className="space-y-2">
-        <p className="text-[11px] uppercase tracking-[0.15em] font-semibold text-emerald-700">My Staff Account</p>
-        <div className="space-y-2">
-          {staffItems.map((i) => <Row key={i.to} to={i.to} label={i.label} Icon={i.icon} accent="emerald" />)}
-        </div>
-      </section>
+    <div className="space-y-1.5">
+      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-1">{title}</p>
+      {items.map(render)}
     </div>
   );
 }
