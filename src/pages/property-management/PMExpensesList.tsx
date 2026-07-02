@@ -221,8 +221,6 @@ export default function PMExpensesPage() {
       total: +(Number(form.subtotal || 0) * (1 + Number(form.gst_percent || 0) / 100 + Number(form.pst_percent || 0) / 100)).toFixed(2),
       status: form.status,
       payment_method: form.payment_method || null,
-      status: form.status,
-      payment_method: form.payment_method || null,
       reference_number: form.reference_number || null,
       description: form.description || null,
       admin_note: form.admin_note || null,
