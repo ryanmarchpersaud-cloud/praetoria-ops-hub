@@ -429,6 +429,18 @@ function TenantRoute({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function OwnerRoute({ children }: { children?: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { canAccessOwnerPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
+  if (loading || isLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (!canAccessOwnerPortal) return <Navigate to="/access-denied" replace />;
+  return <SignedInPortalRouteShell>{children ?? <Outlet />}</SignedInPortalRouteShell>;
+}
+
 
 
 function LoginRoute() {
