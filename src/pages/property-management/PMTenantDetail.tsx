@@ -78,6 +78,14 @@ export default function PMTenantDetail() {
           )}
         </CardContent>
       </Card>
+      <InviteTenantDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        tenantId={id!}
+        defaultEmail={form.email ?? ''}
+        tenantName={`${form.first_name ?? ''} ${form.last_name ?? ''}`.trim()}
+        isLinked={isLinked}
+      />
     </div>
   );
 }
