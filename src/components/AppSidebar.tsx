@@ -327,6 +327,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Maintenance Requests', url: '/property-management/maintenance', icon: Wrench },
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
+    { title: 'PM Staff Portal', url: '/pm-staff', icon: KeyRound },
   ];
 
   const idleClass = 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';
