@@ -5529,6 +5529,7 @@ export type Database = {
           start_date: string
           status: Database["public"]["Enums"]["pm_lease_status"]
           tenant_id: string
+          tenant_visible: boolean
           unit_id: string | null
           updated_at: string
         }
@@ -5545,6 +5546,7 @@ export type Database = {
           start_date: string
           status?: Database["public"]["Enums"]["pm_lease_status"]
           tenant_id: string
+          tenant_visible?: boolean
           unit_id?: string | null
           updated_at?: string
         }
@@ -5561,6 +5563,7 @@ export type Database = {
           start_date?: string
           status?: Database["public"]["Enums"]["pm_lease_status"]
           tenant_id?: string
+          tenant_visible?: boolean
           unit_id?: string | null
           updated_at?: string
         }
@@ -5581,6 +5584,139 @@ export type Database = {
           },
           {
             foreignKeyName: "pm_leases_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_maintenance_request_attachments: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          file_name: string | null
+          id: string
+          request_id: string
+          storage_path: string
+          uploaded_by_user_id: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          request_id: string
+          storage_path: string
+          uploaded_by_user_id?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          request_id?: string
+          storage_path?: string
+          uploaded_by_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_maintenance_request_attachments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "pm_maintenance_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_maintenance_requests: {
+        Row: {
+          category: string
+          completed_at: string | null
+          contact_notes: string | null
+          created_at: string
+          description: string | null
+          id: string
+          internal_notes: string | null
+          lease_id: string | null
+          permission_to_enter: boolean
+          preferred_contact_time: string | null
+          priority: string
+          property_id: string
+          status: string
+          submitted_by_user_id: string | null
+          tenant_facing_update: string | null
+          tenant_id: string
+          title: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          completed_at?: string | null
+          contact_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          internal_notes?: string | null
+          lease_id?: string | null
+          permission_to_enter?: boolean
+          preferred_contact_time?: string | null
+          priority?: string
+          property_id: string
+          status?: string
+          submitted_by_user_id?: string | null
+          tenant_facing_update?: string | null
+          tenant_id: string
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          completed_at?: string | null
+          contact_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          internal_notes?: string | null
+          lease_id?: string | null
+          permission_to_enter?: boolean
+          preferred_contact_time?: string | null
+          priority?: string
+          property_id?: string
+          status?: string
+          submitted_by_user_id?: string | null
+          tenant_facing_update?: string | null
+          tenant_id?: string
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_maintenance_requests_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_maintenance_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_maintenance_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_maintenance_requests_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "pm_units"
@@ -9254,6 +9390,7 @@ export type Database = {
         }[]
       }
       get_customer_id_for_user: { Args: { _user_id: string }; Returns: string }
+      get_pm_tenant_id_for_user: { Args: { _user_id: string }; Returns: string }
       get_subcontractor_id_for_user: {
         Args: { _user_id: string }
         Returns: string
@@ -9378,6 +9515,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      tenant_can_view_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
+      tenant_can_view_unit: {
+        Args: { _unit_id: string; _user_id: string }
+        Returns: boolean
       }
       update_customer_portal_profile: {
         Args: {
