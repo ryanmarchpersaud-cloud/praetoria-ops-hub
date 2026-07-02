@@ -568,9 +568,17 @@ export default function PMExpensesPage() {
               <Textarea rows={2} value={form.admin_note} onChange={e => setForm({ ...form, admin_note: e.target.value })} placeholder="Internal only — never shown to owner or tenant" />
             </div>
 
-            {editingId && (
-              <div className="border-t pt-3">
+            {editingId ? (
+              <div className="rounded-md border-2 border-emerald-500/40 bg-emerald-50/60 dark:bg-emerald-950/20 p-3">
+                <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-2 flex items-center gap-2">
+                  <FileText className="h-4 w-4" /> Attach Receipt (PDF or image)
+                </p>
                 <ReceiptsPanel expenseId={editingId} />
+              </div>
+            ) : (
+              <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-xs text-muted-foreground">
+                <FileText className="inline h-4 w-4 mr-1" />
+                Save the expense first — a <span className="font-semibold">receipt uploader (PDF / image)</span> will appear here so you can attach the store receipt.
               </div>
             )}
           </div>
