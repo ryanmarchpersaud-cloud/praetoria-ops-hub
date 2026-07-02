@@ -182,7 +182,20 @@ export default function InvoicePrint() {
         </div>
 
         {/* Accent Bar */}
-        <div className="h-[3px] mb-8 print:mb-10" style={{ backgroundColor: accentColor }} />
+        <div className="h-[3px] mb-4 print:mb-6" style={{ backgroundColor: accentColor }} />
+
+        {/* Optional Invoice Heading / Service Title */}
+        {(invoice as any).invoice_heading && (
+          <div className="mb-6 print:mb-8">
+            <p
+              className="text-center font-extrabold uppercase tracking-wide text-[#1a1a2e] text-base md:text-lg print:text-lg leading-snug break-words"
+              style={{ letterSpacing: '0.06em' }}
+            >
+              {(invoice as any).invoice_heading}
+            </p>
+          </div>
+        )}
+
 
         {/* Bill To */}
         {customer && (

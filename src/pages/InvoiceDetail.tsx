@@ -236,6 +236,7 @@ export default function InvoiceDetail() {
   const [editingMeta, setEditingMeta] = useState(false);
   const [draftMemo, setDraftMemo] = useState('');
   const [draftNotes, setDraftNotes] = useState('');
+  const [draftHeading, setDraftHeading] = useState('');
   const [draftIssueDate, setDraftIssueDate] = useState('');
   const [draftDueDate, setDraftDueDate] = useState('');
   const [draftPropertyId, setDraftPropertyId] = useState<string>('');
@@ -287,6 +288,7 @@ export default function InvoiceDetail() {
   const startEditing = () => {
     setDraftMemo(invoice.customer_memo || '');
     setDraftNotes(invoice.internal_notes || '');
+    setDraftHeading((invoice as any).invoice_heading || '');
     setDraftIssueDate(invoice.issue_date);
     setDraftDueDate(invoice.due_date);
     setDraftPropertyId(invoice.property_id || '');
@@ -299,10 +301,11 @@ export default function InvoiceDetail() {
         id: invoice.id,
         customer_memo: draftMemo || null,
         internal_notes: draftNotes || null,
+        invoice_heading: draftHeading.trim() || null,
         issue_date: draftIssueDate,
         due_date: draftDueDate,
         property_id: draftPropertyId || null,
-      });
+      } as any);
       toast.success('Invoice details updated');
       setEditingMeta(false);
     } catch {
@@ -747,6 +750,17 @@ export default function InvoiceDetail() {
             <CardContent className="text-sm space-y-2">
               {editingMeta ? (
                 <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Invoice Heading (optional)</Label>
+                    <Input
+                      value={draftHeading}
+                      onChange={e => setDraftHeading(e.target.value)}
+                      className="h-8 text-xs"
+                      maxLength={80}
+                      placeholder="e.g. JUNE LITTER PICK — 921 BROAD STREET"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Shown at the top of the printed invoice. Leave blank to hide.</p>
+                  </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Issue Date</Label>
                     <Input type="date" value={draftIssueDate} onChange={e => setDraftIssueDate(e.target.value)} className="h-8" />

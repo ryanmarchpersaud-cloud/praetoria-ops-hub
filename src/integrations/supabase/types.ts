@@ -3748,6 +3748,7 @@ export type Database = {
           gst_rate: number | null
           id: string
           internal_notes: string | null
+          invoice_heading: string | null
           invoice_number: string
           issue_date: string
           job_id: string | null
@@ -3782,6 +3783,7 @@ export type Database = {
           gst_rate?: number | null
           id?: string
           internal_notes?: string | null
+          invoice_heading?: string | null
           invoice_number: string
           issue_date?: string
           job_id?: string | null
@@ -3816,6 +3818,7 @@ export type Database = {
           gst_rate?: number | null
           id?: string
           internal_notes?: string | null
+          invoice_heading?: string | null
           invoice_number?: string
           issue_date?: string
           job_id?: string | null
