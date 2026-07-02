@@ -5515,6 +5515,222 @@ export type Database = {
         }
         Relationships: []
       }
+      pm_expense_attachments: {
+        Row: {
+          created_at: string
+          expense_id: string
+          file_name: string
+          id: string
+          is_owner_visible: boolean
+          mime_type: string | null
+          size_bytes: number | null
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          expense_id: string
+          file_name: string
+          id?: string
+          is_owner_visible?: boolean
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_bucket?: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          expense_id?: string
+          file_name?: string
+          id?: string
+          is_owner_visible?: boolean
+          mime_type?: string | null
+          size_bytes?: number | null
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_expense_attachments_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pm_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expense_attachments_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pm_expenses_owner_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_expenses: {
+        Row: {
+          admin_note: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          expense_date: string
+          gst_amount: number
+          id: string
+          is_billable_to_owner: boolean
+          is_billable_to_tenant: boolean
+          is_owner_visible: boolean
+          is_tenant_visible: boolean
+          lease_id: string | null
+          maintenance_request_id: string | null
+          owner_visible_note: string | null
+          paid_at: string | null
+          payment_method: string | null
+          property_id: string
+          pst_amount: number
+          reference_number: string | null
+          status: string
+          subcontractor_id: string | null
+          subtotal: number
+          tenant_id: string | null
+          tenant_visible_note: string | null
+          total: number
+          unit_id: string | null
+          updated_at: string
+          vendor_id: string | null
+          vendor_name: string | null
+          work_order_id: string | null
+        }
+        Insert: {
+          admin_note?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          expense_date?: string
+          gst_amount?: number
+          id?: string
+          is_billable_to_owner?: boolean
+          is_billable_to_tenant?: boolean
+          is_owner_visible?: boolean
+          is_tenant_visible?: boolean
+          lease_id?: string | null
+          maintenance_request_id?: string | null
+          owner_visible_note?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          property_id: string
+          pst_amount?: number
+          reference_number?: string | null
+          status?: string
+          subcontractor_id?: string | null
+          subtotal?: number
+          tenant_id?: string | null
+          tenant_visible_note?: string | null
+          total?: number
+          unit_id?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+          vendor_name?: string | null
+          work_order_id?: string | null
+        }
+        Update: {
+          admin_note?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          expense_date?: string
+          gst_amount?: number
+          id?: string
+          is_billable_to_owner?: boolean
+          is_billable_to_tenant?: boolean
+          is_owner_visible?: boolean
+          is_tenant_visible?: boolean
+          lease_id?: string | null
+          maintenance_request_id?: string | null
+          owner_visible_note?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          property_id?: string
+          pst_amount?: number
+          reference_number?: string | null
+          status?: string
+          subcontractor_id?: string | null
+          subtotal?: number
+          tenant_id?: string | null
+          tenant_visible_note?: string | null
+          total?: number
+          unit_id?: string | null
+          updated_at?: string
+          vendor_id?: string | null
+          vendor_name?: string | null
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_expenses_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "pm_maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_subcontractor_id_fkey"
+            columns: ["subcontractor_id"]
+            isOneToOne: false
+            referencedRelation: "subcontractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "finance_vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "pm_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_leases: {
         Row: {
           created_at: string
@@ -6357,10 +6573,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_tenant_ledger_related_charge_id_fkey"
+            columns: ["related_charge_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenant_ledger_tenant_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pm_tenant_ledger_reverses_entry_id_fkey"
             columns: ["reverses_entry_id"]
             isOneToOne: false
             referencedRelation: "pm_tenant_ledger"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_ledger_reverses_entry_id_fkey"
+            columns: ["reverses_entry_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenant_ledger_tenant_safe"
             referencedColumns: ["id"]
           },
           {
@@ -10292,7 +10522,167 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pm_expenses_owner_safe: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          expense_date: string | null
+          gst_amount: number | null
+          id: string | null
+          is_billable_to_owner: boolean | null
+          maintenance_request_id: string | null
+          owner_visible_note: string | null
+          paid_at: string | null
+          payment_method: string | null
+          property_id: string | null
+          pst_amount: number | null
+          reference_number: string | null
+          status: string | null
+          subtotal: number | null
+          total: number | null
+          unit_id: string | null
+          updated_at: string | null
+          vendor_name: string | null
+          work_order_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          expense_date?: string | null
+          gst_amount?: number | null
+          id?: string | null
+          is_billable_to_owner?: boolean | null
+          maintenance_request_id?: string | null
+          owner_visible_note?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          property_id?: string | null
+          pst_amount?: number | null
+          reference_number?: string | null
+          status?: string | null
+          subtotal?: number | null
+          total?: number | null
+          unit_id?: string | null
+          updated_at?: string | null
+          vendor_name?: string | null
+          work_order_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          expense_date?: string | null
+          gst_amount?: number | null
+          id?: string | null
+          is_billable_to_owner?: boolean | null
+          maintenance_request_id?: string | null
+          owner_visible_note?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          property_id?: string | null
+          pst_amount?: number | null
+          reference_number?: string | null
+          status?: string | null
+          subtotal?: number | null
+          total?: number | null
+          unit_id?: string | null
+          updated_at?: string | null
+          vendor_name?: string | null
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_expenses_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "pm_maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_expenses_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "pm_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_ledger_tenant_safe: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          entry_date: string | null
+          id: string | null
+          lease_id: string | null
+          status: string | null
+          tenant_id: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          entry_date?: string | null
+          id?: string | null
+          lease_id?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          entry_date?: string | null
+          id?: string | null
+          lease_id?: string | null
+          status?: string | null
+          tenant_id?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_ledger_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_ledger_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_delete_customer: { Args: { _customer_id: string }; Returns: Json }
