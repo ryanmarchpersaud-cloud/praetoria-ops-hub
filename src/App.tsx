@@ -691,6 +691,8 @@ function AppRoutes() {
         <Route path="/worker/property/:id" element={<WorkerPropertyDetail />} />
         <Route path="/worker/job/:id" element={<WorkerJobDetail />} />
         <Route path="/worker/more" element={<WorkerMore />} />
+        <Route path="/worker/pm-work-orders" element={<Suspense fallback={<RouteLoading />}><WorkerPMWorkOrders /></Suspense>} />
+        <Route path="/worker/pm-work-orders/:id" element={<Suspense fallback={<RouteLoading />}><WorkerPMWorkOrderDetail /></Suspense>} />
         <Route path="/worker/profile" element={<WorkerProfilePage />} />
         <Route path="/worker/employment" element={<WorkerEmploymentPage />} />
         <Route path="/worker/documents" element={<WorkerDocumentsPage />} />
