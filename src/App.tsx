@@ -792,6 +792,7 @@ function AppRoutes() {
         <Route path="/owner/properties/:id" element={<Suspense fallback={<RouteLoading />}><OwnerPropertyDetail /></Suspense>} />
         <Route path="/owner/maintenance" element={<Suspense fallback={<RouteLoading />}><OwnerMaintenance /></Suspense>} />
         <Route path="/owner/documents" element={<Suspense fallback={<RouteLoading />}><OwnerDocuments /></Suspense>} />
+        <Route path="/owner/expenses" element={<Suspense fallback={<RouteLoading />}><OwnerExpenses /></Suspense>} />
         <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
       </Route>
 
