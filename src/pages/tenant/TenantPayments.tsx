@@ -6,7 +6,7 @@ import {
   ArrowLeft, DollarSign, CreditCard, Landmark, Repeat, Send, Mail,
   Info, ReceiptText,
 } from 'lucide-react';
-import { useMyBalance } from '@/hooks/useTenantPortalExt';
+import { useMyBalance, useMyNextDue } from '@/hooks/useTenantPortalExt';
 
 const SUPPORT_EMAIL = 'ops@praetoriagroup.ca';
 
@@ -19,15 +19,26 @@ const METHODS = [
 
 const TYPE_LABEL: Record<string, string> = {
   charge: 'Charge',
+  rent_charge: 'Rent charge',
   payment: 'Payment received',
   credit: 'Credit',
+  adjustment_credit: 'Credit adjustment',
+  adjustment_charge: 'Charge adjustment',
   refund: 'Refund',
+  deposit_refund: 'Deposit refund',
   late_fee: 'Late fee',
-  deposit: 'Deposit',
+  deposit: 'Security deposit',
+  nsf_fee: 'Returned payment fee',
+  other_charge: 'Other charge',
+  other_credit: 'Other credit',
+  payment_plan_note: 'Payment plan',
 };
+
+const CREDIT_TYPES = ['payment', 'credit', 'refund', 'adjustment_credit', 'deposit_refund', 'other_credit'];
 
 export default function TenantPayments() {
   const { balance, entries } = useMyBalance();
+  const { data: nextDue } = useMyNextDue();
 
   return (
     <div className="p-4 space-y-4">
