@@ -32,12 +32,14 @@ export interface AuthorizationState {
   isStaff: boolean;
   isSubcontractor: boolean;
   isCustomer: boolean;
+  isTenant: boolean;
 
   /** Portal access flags (from team_members or role fallback) */
   canAccessAdminPortal: boolean;
   canAccessWorkerPortal: boolean;
   canAccessSubcontractorPortal: boolean;
   canAccessCustomerPortal: boolean;
+  canAccessTenantPortal: boolean;
 
   /** Whether the user account is active (non-blocked) */
   isActiveUser: boolean;
@@ -96,27 +98,26 @@ export function useAuthorization(): AuthorizationState {
   const isOpsManager = roles.includes('ops_manager' as AppRole);
   const isCustomer = roles.includes('customer');
   const isSubcontractor = roles.includes('subcontractor');
-  // staff = any non-customer, non-subcontractor role holder with at least one role
-  const isStaff = !isCustomer && !isSubcontractor && roles.length > 0;
+  // staff = any non-customer, non-subcontractor, non-tenant role holder with at least one role
+  const isTenant = roles.includes('tenant' as AppRole);
+  const isStaff = !isCustomer && !isSubcontractor && !isTenant && roles.length > 0;
 
-  // Active status: customers don't have team_members records so default true
-  // For team members: must be is_active AND status in (Active, Invited)
-  const isActiveUser = isCustomer
-    ? true // customers gated by their own customer record
+  // Active status: customers/tenants don't have team_members records so default true
+  const isActiveUser = isCustomer || isTenant
+    ? true
     : teamMember
       ? teamMember.is_active && ['Active', 'Invited'].includes(teamMember.status)
-      : roles.length === 0 // no roles = no access anyway
+      : roles.length === 0
         ? true
-        : true; // no team_member record but has roles (legacy) = allow
+        : true;
 
   // Portal access: role sets the ceiling, portal flags act as switches within that ceiling
   const canAccessAdminPortal = isOwner || isAdmin || isManager || isAccountant || isHrAdmin || isOpsManager;
-  // Worker portal: staff by role, OR admin/manager always, OR explicit flag
   const canAccessWorkerPortal = isStaff || isOwner || isAdmin || isManager || isOpsManager || (teamMember?.portal_worker ?? false);
-  // Subcontractor portal: subcontractor by role, OR admin (for oversight)
   const canAccessSubcontractorPortal = isSubcontractor || isOwner || isAdmin;
-  // Customer portal: customer by role, OR admin/manager for preview — plain staff CANNOT access
   const canAccessCustomerPortal = isCustomer || isOwner || isAdmin || isManager;
+  // Tenant portal: only tenant role, plus admin/owner for preview
+  const canAccessTenantPortal = isTenant || isOwner || isAdmin;
 
   return {
     roles,
@@ -125,10 +126,12 @@ export function useAuthorization(): AuthorizationState {
     isStaff,
     isSubcontractor,
     isCustomer,
+    isTenant,
     canAccessAdminPortal,
     canAccessWorkerPortal,
     canAccessSubcontractorPortal,
     canAccessCustomerPortal,
+    canAccessTenantPortal,
     isActiveUser,
     isLoading: rolesLoading || teamLoading,
   };

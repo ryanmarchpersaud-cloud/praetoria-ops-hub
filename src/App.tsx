@@ -14,6 +14,7 @@ import { useModuleAccess } from "@/hooks/useModuleAccess";
 import { AppLayout } from "@/components/AppLayout";
 import { PortalLayout } from "@/components/PortalLayout";
 import { SubcontractorLayout } from "@/components/subcontractor/SubcontractorLayout";
+import { TenantLayout } from "@/components/tenant/TenantLayout";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import ChangePassword from "./pages/ChangePassword";
@@ -226,6 +227,14 @@ const PMTenantsList = lazy(() => import("./pages/property-management/PMTenantsLi
 const PMTenantDetail = lazy(() => import("./pages/property-management/PMTenantDetail"));
 const PMLeasesList = lazy(() => import("./pages/property-management/PMLeasesList"));
 const PMLeaseDetail = lazy(() => import("./pages/property-management/PMLeaseDetail"));
+const PMMaintenanceRequestsList = lazy(() => import("./pages/property-management/PMMaintenanceRequestsList"));
+const PMMaintenanceRequestDetail = lazy(() => import("./pages/property-management/PMMaintenanceRequestDetail"));
+const TenantHome = lazy(() => import("./pages/tenant/TenantHome"));
+const TenantLease = lazy(() => import("./pages/tenant/TenantLease"));
+const TenantMaintenanceList = lazy(() => import("./pages/tenant/TenantMaintenanceList"));
+const TenantMaintenanceNew = lazy(() => import("./pages/tenant/TenantMaintenanceNew"));
+const TenantMaintenanceDetail = lazy(() => import("./pages/tenant/TenantMaintenanceDetail"));
+const TenantAccount = lazy(() => import("./pages/tenant/TenantAccount"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -278,7 +287,7 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isActiveUser, isLoading } = useAuthorization();
+  const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isTenant, isActiveUser, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (!mustChangePasswordChecked) {
@@ -290,6 +299,7 @@ function AdminRoute({ children }: { children?: React.ReactNode }) {
   }
   if (!isActiveUser) return <Navigate to="/access-denied" replace />;
   if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
+  if (isTenant && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
   if (isCustomer && !canAccessAdminPortal) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
   if (!canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
@@ -382,17 +392,33 @@ function SubcontractorRoute({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function TenantRoute({ children }: { children?: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { canAccessTenantPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
+  if (loading || isLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  if (!canAccessTenantPortal) return <Navigate to="/access-denied" replace />;
+  return (
+    <SignedInPortalRouteShell>
+      <TenantLayout>{children ?? <Outlet />}</TenantLayout>
+    </SignedInPortalRouteShell>
+  );
+}
+
+
+
 function LoginRoute() {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { isCustomer, isStaff, isSubcontractor, canAccessAdminPortal, isLoading } = useAuthorization();
+  const { isCustomer, isStaff, isSubcontractor, isTenant, canAccessAdminPortal, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Login />;
-  // User just signed in — don't flash a blank "Loading…" frame over the
-  // login page while authorization resolves; render nothing so the
-  // destination route's own AppLayout takes over without a remount flash.
   if (isLoading || !mustChangePasswordChecked) return null;
   if (mustChangePassword) return <Navigate to="/change-password" replace />;
   if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
+  if (isTenant && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
   return <Navigate to="/" replace />;
@@ -607,6 +633,8 @@ function AppRoutes() {
         <Route path="/property-management/tenants/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/leases" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeasesList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/leases/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeaseDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/maintenance" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestsList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/maintenance/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestDetail /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}
@@ -698,6 +726,15 @@ function AppRoutes() {
         <Route path="/subcontractor/training" element={<SubcontractorTrainingPage />} />
         <Route path="/subcontractor/training/:id" element={<WorkerCourseDetailPage backTo="/subcontractor/training" />} />
         <Route path="/subcontractor/tasks" element={<Suspense fallback={<RouteLoading />}><WorkerTasksPage /></Suspense>} />
+      </Route>
+
+      <Route element={<TenantRoute />}>
+        <Route path="/tenant" element={<Suspense fallback={<RouteLoading />}><TenantHome /></Suspense>} />
+        <Route path="/tenant/lease" element={<Suspense fallback={<RouteLoading />}><TenantLease /></Suspense>} />
+        <Route path="/tenant/maintenance" element={<Suspense fallback={<RouteLoading />}><TenantMaintenanceList /></Suspense>} />
+        <Route path="/tenant/maintenance/new" element={<Suspense fallback={<RouteLoading />}><TenantMaintenanceNew /></Suspense>} />
+        <Route path="/tenant/maintenance/:id" element={<Suspense fallback={<RouteLoading />}><TenantMaintenanceDetail /></Suspense>} />
+        <Route path="/tenant/account" element={<Suspense fallback={<RouteLoading />}><TenantAccount /></Suspense>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

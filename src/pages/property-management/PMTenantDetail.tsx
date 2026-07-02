@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, UserPlus, CheckCircle2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { usePmTenant, useSavePmTenant, useDeletePmTenant, usePmLeases, usePmProperties } from '@/hooks/usePropertyManagement';
+import { InviteTenantDialog } from '@/components/property-management/InviteTenantDialog';
 
 export default function PMTenantDetail() {
   const { id } = useParams();
@@ -18,8 +20,10 @@ export default function PMTenantDetail() {
   const { data: leases = [] } = usePmLeases();
   const { data: props = [] } = usePmProperties();
   const [form, setForm] = useState<any>({});
+  const [inviteOpen, setInviteOpen] = useState(false);
   useEffect(() => { if (data) setForm(data); }, [data]);
   if (!data) return <div className="p-6">Loading…</div>;
+  const isLinked = !!(data as any).user_id;
 
   const myLeases = leases.filter(l => l.tenant_id === id);
   const propMap = Object.fromEntries(props.map(p => [p.id, p]));
@@ -30,11 +34,19 @@ export default function PMTenantDetail() {
         <Button variant="ghost" size="sm" asChild><Link to="/property-management/tenants"><ArrowLeft className="h-4 w-4 mr-1" />Back</Link></Button>
         <div className="ml-auto flex gap-2">
           <Button variant="destructive" size="sm" onClick={async () => { if (confirm('Delete tenant?')) { try { await del.mutateAsync(id!); toast.success('Deleted'); window.history.back(); } catch (e: any) { toast.error(e.message); } } }}><Trash2 className="h-4 w-4 mr-1" />Delete</Button>
+          <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-1" />{isLinked ? 'Re-invite tenant' : 'Invite to portal'}
+          </Button>
           <Button onClick={async () => { try { await save.mutateAsync({ ...form, id }); toast.success('Saved'); } catch (e: any) { toast.error(e.message); } }}>Save</Button>
         </div>
       </div>
       <Card>
-        <CardHeader><CardTitle>{form.first_name} {form.last_name}</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {form.first_name} {form.last_name}
+            {isLinked && <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3 mr-1" />Portal linked</Badge>}
+          </CardTitle>
+        </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div><Label>First name</Label><Input value={form.first_name ?? ''} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></div>
           <div><Label>Last name</Label><Input value={form.last_name ?? ''} onChange={(e) => setForm({ ...form, last_name: e.target.value })} /></div>
@@ -66,6 +78,14 @@ export default function PMTenantDetail() {
           )}
         </CardContent>
       </Card>
+      <InviteTenantDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        tenantId={id!}
+        defaultEmail={form.email ?? ''}
+        tenantName={`${form.first_name ?? ''} ${form.last_name ?? ''}`.trim()}
+        isLinked={isLinked}
+      />
     </div>
   );
 }
