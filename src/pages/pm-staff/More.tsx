@@ -131,7 +131,10 @@ export default function More() {
         <Card className="active:shadow-sm transition-shadow border-destructive/20">
           <CardContent className="p-4 flex items-center gap-3">
             <LogOut className="h-5 w-5 text-destructive shrink-0" />
-            <p className="text-sm font-medium text-destructive">Sign Out</p>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="text-sm font-medium text-destructive">Sign Out</p>
+              <p className="text-[11px] text-destructive/70">Securely sign out of the portal</p>
+            </div>
           </CardContent>
         </Card>
       </button>
