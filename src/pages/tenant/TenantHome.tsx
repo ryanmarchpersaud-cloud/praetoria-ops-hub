@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Wrench, Building2, DoorOpen, CalendarDays, DollarSign, Phone, Mail,
-  Sparkles, ChevronRight, ClipboardList,
+  Sparkles, ChevronRight, ClipboardList, ExternalLink, UserPlus,
 } from 'lucide-react';
 import { useMyTenantContext, useMyMaintenanceRequests } from '@/hooks/useTenantPortal';
 import { useMyBalance, useMyNotices } from '@/hooks/useTenantPortalExt';
+import ReferFriendDialog from '@/components/tenant/ReferFriendDialog';
 
 const SUPPORT_EMAIL = 'ops@praetoriagroup.ca';
 
@@ -25,6 +27,7 @@ export default function TenantHome() {
   const { balance } = useMyBalance();
   const { data: notices = [] } = useMyNotices();
   const unreadNotices = (notices as any[]).filter(n => !n.ack_at).length;
+  const [referOpen, setReferOpen] = useState(false);
 
   if (isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
 
@@ -228,6 +231,62 @@ export default function TenantHome() {
           </a>
         </CardContent>
       </Card>
+
+      {/* About Praetoria Group (informational only) */}
+      <Card className="border-slate-200">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm text-slate-800">About Praetoria Group</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm space-y-2 text-slate-700">
+          <p>
+            Your property is managed by <strong>Praetoria Group</strong>. For all repair and property
+            matters, please use this portal or contact your property manager below.
+          </p>
+          <a
+            href="https://praetoriagroup.ca"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-emerald-700 font-medium"
+          >
+            praetoriagroup.ca <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+          <p className="text-xs text-muted-foreground">
+            Support: <a href={`mailto:${SUPPORT_EMAIL}`} className="text-emerald-700">{SUPPORT_EMAIL}</a>
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Refer a Friend / Neighbour */}
+      <Card className="border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-white">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm text-emerald-800 flex items-center gap-2">
+            <UserPlus className="h-4 w-4" /> Refer a Friend or Neighbour
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm space-y-3">
+          <p className="text-slate-700">
+            Know someone who could use Praetoria Group's services? Send us their info and we'll reach out.
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            Referrals are leads only — they do not book any service at your rental property.
+          </p>
+          <Button
+            variant="outline"
+            className="border-emerald-300 text-emerald-800 hover:bg-emerald-50 w-full"
+            onClick={() => setReferOpen(true)}
+          >
+            <UserPlus className="h-4 w-4 mr-2" /> Refer Someone
+          </Button>
+        </CardContent>
+      </Card>
+
+      <ReferFriendDialog
+        open={referOpen}
+        onOpenChange={setReferOpen}
+        tenantId={tenant.id}
+        referrerName={fullName}
+        referrerContact={tenant.email || tenant.phone || undefined}
+      />
     </div>
   );
 }
