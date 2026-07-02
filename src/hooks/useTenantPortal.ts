@@ -129,13 +129,19 @@ export function useCreateMaintenanceRequest() {
         .select().single();
       if (error) throw error;
 
+      const uploadedFiles: { name: string; path: string; type: string }[] = [];
       if (files && files.length > 0) {
         for (const file of files) {
-          const path = `${user!.id}/${req.id}/${Date.now()}-${file.name}`;
+          // Storage RLS requires the first folder to be the tenant_id
+          const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+          const path = `${input.tenant_id}/${req.id}/${Date.now()}-${safeName}`;
           const { error: upErr } = await supabase.storage
             .from('pm-maintenance-attachments')
-            .upload(path, file, { upsert: false });
-          if (upErr) throw upErr;
+            .upload(path, file, { upsert: false, contentType: file.type || undefined });
+          if (upErr) {
+            console.error('[maintenance-request] file upload failed', upErr);
+            throw upErr;
+          }
           await (supabase as any).from('pm_maintenance_request_attachments').insert({
             request_id: req.id,
             storage_path: path,
@@ -143,6 +149,7 @@ export function useCreateMaintenanceRequest() {
             content_type: file.type,
             uploaded_by_user_id: user!.id,
           });
+          uploadedFiles.push({ name: file.name, path, type: file.type });
         }
       }
 
