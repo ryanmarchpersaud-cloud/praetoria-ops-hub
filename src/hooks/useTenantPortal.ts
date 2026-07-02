@@ -120,7 +120,7 @@ export function useCreateMaintenanceRequest() {
       const { files, ...payload } = input;
       const { data: req, error } = await (supabase as any)
         .from('pm_maintenance_requests')
-        .insert({ ...payload, submitted_by: user!.id, status: 'new' })
+        .insert({ ...payload, submitted_by_user_id: user!.id, status: 'new' })
         .select().single();
       if (error) throw error;
 
