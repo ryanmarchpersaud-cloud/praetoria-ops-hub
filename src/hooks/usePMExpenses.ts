@@ -54,7 +54,7 @@ export function usePMExpenses(filters: PMExpenseFilters = {}) {
           *,
           pm_managed_properties:property_id (id, address_line_1, city),
           pm_units:unit_id (id, unit_label),
-          pm_tenants:tenant_id (id, first_name, last_name, company_name),
+          pm_tenants:tenant_id (id, first_name, last_name, business_name),
           pm_work_orders:work_order_id (id, work_order_number, title),
           pm_maintenance_requests:maintenance_request_id (id, title)
         `)
