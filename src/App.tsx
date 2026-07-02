@@ -782,6 +782,15 @@ function AppRoutes() {
         <Route path="/tenant/profile" element={<Suspense fallback={<RouteLoading />}><TenantProfile /></Suspense>} />
       </Route>
 
+      <Route element={<OwnerRoute />}>
+        <Route path="/owner" element={<Suspense fallback={<RouteLoading />}><OwnerHome /></Suspense>} />
+        <Route path="/owner/properties" element={<Suspense fallback={<RouteLoading />}><OwnerProperties /></Suspense>} />
+        <Route path="/owner/properties/:id" element={<Suspense fallback={<RouteLoading />}><OwnerPropertyDetail /></Suspense>} />
+        <Route path="/owner/maintenance" element={<Suspense fallback={<RouteLoading />}><OwnerMaintenance /></Suspense>} />
+        <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
+      </Route>
+
+
 
       <Route path="*" element={<NotFound />} />
     </Routes>
