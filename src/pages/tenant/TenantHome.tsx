@@ -7,6 +7,7 @@ import {
   Sparkles, ChevronRight, ClipboardList,
 } from 'lucide-react';
 import { useMyTenantContext, useMyMaintenanceRequests } from '@/hooks/useTenantPortal';
+import { useMyBalance, useMyNotices } from '@/hooks/useTenantPortalExt';
 
 const SUPPORT_EMAIL = 'ops@praetoriagroup.ca';
 
@@ -21,6 +22,9 @@ const STATUS_COLORS: Record<string, string> = {
 export default function TenantHome() {
   const { data, isLoading } = useMyTenantContext();
   const { data: requests = [] } = useMyMaintenanceRequests();
+  const { balance } = useMyBalance();
+  const { data: notices = [] } = useMyNotices();
+  const unreadNotices = (notices as any[]).filter(n => !n.ack_at).length;
 
   if (isLoading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
 
