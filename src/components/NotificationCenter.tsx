@@ -160,11 +160,11 @@ export function NotificationCenter() {
           )}
         </button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-80" aria-describedby={undefined}>
-        <SheetHeader>
+      <SheetContent side="right" className="w-80 flex flex-col p-0" aria-describedby={undefined}>
+        <SheetHeader className="px-6 pt-6 pb-2 shrink-0 border-b">
           <SheetTitle>Notifications</SheetTitle>
         </SheetHeader>
-        <div className="mt-4 space-y-2">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-2 overscroll-contain">
           {allNotifications.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">All caught up!</p>
           ) : (
