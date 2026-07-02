@@ -38,7 +38,7 @@ async function getOperationalContext(supabase: any) {
       .limit(20),
     supabase
       .from("visits")
-      .select("id, visit_number, service_date, status, service_type, assigned_worker_id, start_time, end_time")
+      .select("id, visit_number, service_date, visit_status, service_type, assigned_worker_id, start_time, end_time")
       .eq("service_date", today)
       .order("start_time", { ascending: true })
       .limit(30),
@@ -68,7 +68,7 @@ async function getOperationalContext(supabase: any) {
       .limit(15),
     supabase
       .from("visits")
-      .select("id, visit_number, service_date, status, service_type, assigned_worker_id")
+      .select("id, visit_number, service_date, visit_status, service_type, assigned_worker_id")
       .gt("service_date", today)
       .order("service_date", { ascending: true })
       .limit(15),
@@ -81,7 +81,7 @@ async function getOperationalContext(supabase: any) {
 ${overdueInvoices?.length ? overdueInvoices.map((i: any) => `- ${i.invoice_number}: $${Number(i.balance_due).toLocaleString()} due on ${i.due_date}`).join("\n") : "None"}
 
 ### Today's Visits (${todayVisits?.length || 0})
-${todayVisits?.length ? todayVisits.map((v: any) => `- ${v.visit_number}: ${v.service_type || "Service"} — ${v.status} (${v.start_time || "unscheduled"})`).join("\n") : "None scheduled"}
+${todayVisits?.length ? todayVisits.map((v: any) => `- ${v.visit_number}: ${v.service_type || "Service"} — ${v.visit_status} (${v.start_time || "unscheduled"})`).join("\n") : "None scheduled"}
 
 ### Active Jobs (${activeJobs?.length || 0})
 ${activeJobs?.length ? activeJobs.map((j: any) => `- ${j.job_number}: ${j.job_title} — ${j.status}`).join("\n") : "None"}
@@ -96,7 +96,7 @@ ${recentIncidents?.length ? recentIncidents.map((i: any) => `- ${i.report_number
 ${pendingQuotes?.length ? pendingQuotes.map((q: any) => `- ${q.quote_number}: $${Number(q.total).toLocaleString()} — ${q.approval_status}`).join("\n") : "None"}
 
 ### Upcoming Visits (next 7 days: ${upcomingVisits?.length || 0})
-${upcomingVisits?.length ? upcomingVisits.map((v: any) => `- ${v.visit_number}: ${v.service_date} — ${v.service_type || "Service"} — ${v.status}`).join("\n") : "None"}
+${upcomingVisits?.length ? upcomingVisits.map((v: any) => `- ${v.visit_number}: ${v.service_date} — ${v.service_type || "Service"} — ${v.visit_status}`).join("\n") : "None"}
 `;
 }
 
