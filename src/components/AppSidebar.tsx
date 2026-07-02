@@ -11,7 +11,7 @@ import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useMessaging';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
-import { useSidebarAccess } from '@/hooks/useModuleAccess';
+import { useSidebarAccess, useModuleAccess } from '@/hooks/useModuleAccess';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
@@ -72,6 +72,7 @@ export function AppSidebar() {
   const { data: unreadCount } = useUnreadCount();
   const { data: sidebarCounts } = useSidebarCounts();
   const access = useSidebarAccess();
+  const moduleAccess = useModuleAccess();
 
   const getBadgeCount = (key?: CountKey): number => {
     if (!key) return 0;
@@ -197,7 +198,7 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {access.dashboard && <PropertyManagementGroup />}
+        {moduleAccess.isOwnerOrAdmin && <PropertyManagementGroup collapsed={collapsed} />}
 
         {!collapsed && <ServiceHubGroup />}
       </SidebarContent>
