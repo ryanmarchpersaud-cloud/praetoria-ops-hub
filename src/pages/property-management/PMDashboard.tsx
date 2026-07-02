@@ -68,19 +68,26 @@ export default function PMDashboard() {
   const { data: s } = usePmSummary();
   return (
     <div className="p-6 space-y-8 max-w-7xl mx-auto">
-      <div className="flex items-end justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Property Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Managed properties, units, owners, tenants, and leases.
-          </p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button asChild variant="outline" size="sm"><Link to="/property-management/properties">Properties</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link to="/property-management/units">Units</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link to="/property-management/owners">Owners</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link to="/property-management/tenants">Tenants</Link></Button>
-          <Button asChild size="sm"><Link to="/property-management/leases">Leases</Link></Button>
+      <div className="rounded-xl border border-emerald-600/20 bg-gradient-to-r from-emerald-50 via-emerald-50/40 to-transparent dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent p-5">
+        <div className="flex items-end justify-between flex-wrap gap-3">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-lg bg-emerald-600 text-white shadow-sm">
+              <Building2 className="h-6 w-6" strokeWidth={2.25} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Property Management</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Managed properties, units, owners, tenants, and leases.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/properties">Properties</Link></Button>
+            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/units">Units</Link></Button>
+            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/owners">Owners</Link></Button>
+            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/tenants">Tenants</Link></Button>
+            <Button asChild size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white"><Link to="/property-management/leases">Leases</Link></Button>
+          </div>
         </div>
       </div>
 
