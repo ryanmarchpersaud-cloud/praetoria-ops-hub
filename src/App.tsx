@@ -15,6 +15,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PortalLayout } from "@/components/PortalLayout";
 import { SubcontractorLayout } from "@/components/subcontractor/SubcontractorLayout";
 import { TenantLayout } from "@/components/tenant/TenantLayout";
+import { PMStaffLayout } from "@/components/pm-staff/PMStaffLayout";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import ChangePassword from "./pages/ChangePassword";
