@@ -22,14 +22,29 @@ export function useMyLedger() {
 
 export function useMyBalance() {
   const { data = [] } = useMyLedger();
+  const CHARGE = ['rent_charge', 'late_fee', 'deposit', 'adjustment_charge', 'other_charge', 'nsf_fee', 'charge'];
+  const CREDIT = ['payment', 'credit', 'adjustment_credit', 'deposit_refund', 'other_credit', 'refund'];
   const balance = (data as any[]).reduce((sum, r) => {
+    if (['waived', 'cancelled', 'reversed', 'note'].includes(r.status)) return sum;
     const amt = Number(r.amount) || 0;
-    // charges/late_fees add to balance owing; payments/credits/refunds reduce it
-    if (['charge', 'late_fee'].includes(r.type)) return sum + amt;
-    if (['payment', 'credit', 'refund'].includes(r.type)) return sum - amt;
+    if (CHARGE.includes(r.type)) return sum + amt;
+    if (CREDIT.includes(r.type)) return sum - amt;
     return sum;
   }, 0);
   return { balance, entries: data as any[] };
+}
+
+export function useMyNextDue() {
+  const { user } = useAuth();
+  return useQuery({
+    enabled: !!user?.id,
+    queryKey: ['tenant-portal', 'next-due', user?.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('pm_my_next_due');
+      if (error) throw error;
+      return data as string | null;
+    },
+  });
 }
 
 /** Tenant notices: RLS lets tenant see own + property-broadcast notices. */
