@@ -197,6 +197,8 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
+        {access.dashboard && <PropertyManagementGroup />}
+
         {!collapsed && <ServiceHubGroup />}
       </SidebarContent>
 
