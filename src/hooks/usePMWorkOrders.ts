@@ -82,6 +82,40 @@ async function insertAdminInAppNotification(subject: string, body: string, recor
   }
 }
 
+async function notifyTenantByTenantId(
+  tenant_id: string | null | undefined,
+  event: string,
+  subject: string,
+  body: string,
+  record_type: string,
+  record_id?: string | null,
+) {
+  if (!tenant_id) return;
+  try {
+    const { data: t } = await sb
+      .from('pm_tenants')
+      .select('user_id')
+      .eq('id', tenant_id)
+      .maybeSingle();
+    const uid = t?.user_id;
+    if (!uid) return;
+    await sb.from('notifications').insert({
+      event,
+      channel: 'in_app',
+      audience: 'tenant',
+      recipient_id: uid,
+      record_type,
+      record_id: record_id ?? null,
+      subject,
+      body,
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('[wo] tenant in_app notify failed', e);
+  }
+}
+
 // ---------- Admin ----------
 export function useCreateWorkOrder() {
   const qc = useQueryClient();
@@ -214,6 +248,27 @@ export function useCreateWorkOrder() {
         console.warn('[wo] ops email failed', e);
       }
 
+      // Tenant in-app notification — status changed on their request
+      if (status === 'assigned') {
+        await notifyTenantByTenantId(
+          req.tenant_id,
+          'pm_request_assigned',
+          `Your maintenance request has been assigned`,
+          `"${req.title}" has been assigned. We'll update you as work progresses.`,
+          'pm_maintenance_request',
+          req.id,
+        );
+      } else {
+        await notifyTenantByTenantId(
+          req.tenant_id,
+          'pm_request_reviewed',
+          `Your maintenance request has been reviewed`,
+          `"${req.title}" is being scheduled. We'll notify you when a worker is assigned.`,
+          'pm_maintenance_request',
+          req.id,
+        );
+      }
+
       return wo;
     },
     onSuccess: (_, v) => {
@@ -329,6 +384,15 @@ export function useAssignWorkOrder() {
         } catch (e) {
           console.warn('[wo] ops assign email failed', e);
         }
+
+        await notifyTenantByTenantId(
+          data.tenant_id,
+          'pm_request_assigned',
+          `Your maintenance request has been assigned`,
+          `"${data.title}" has been assigned. We'll update you as work progresses.`,
+          'pm_maintenance_request',
+          data.maintenance_request_id,
+        );
       }
       return data;
     },
@@ -374,6 +438,26 @@ export function useUpdateWorkOrderStatus() {
         tenant_visible: true,
         actor_user_id: user?.id ?? null,
       });
+      if (status === 'completed') {
+        await notifyTenantByTenantId(
+          data.tenant_id,
+          'pm_request_completed',
+          `Your maintenance request is complete`,
+          `"${data.title}" has been marked complete. Please let us know if anything needs follow-up.`,
+          'pm_maintenance_request',
+          data.maintenance_request_id,
+        );
+      } else if (status === 'in_progress') {
+        await notifyTenantByTenantId(
+          data.tenant_id,
+          'pm_request_in_progress',
+          `Work started on your maintenance request`,
+          `A worker has started on "${data.title}".`,
+          'pm_maintenance_request',
+          data.maintenance_request_id,
+        );
+      }
+
       return data;
     },
     onSuccess: (_, v) => {
@@ -421,6 +505,18 @@ export function useCompleteWorkOrder() {
         tenant_visible: true,
         actor_user_id: user?.id ?? null,
       });
+
+      await notifyTenantByTenantId(
+        data.tenant_id,
+        'pm_request_completed',
+        `Your maintenance request is complete`,
+        tenant_visible_completion_note
+          ? `"${data.title}" is complete. Note: ${tenant_visible_completion_note}`
+          : `"${data.title}" has been marked complete. Please let us know if anything needs follow-up.`,
+        'pm_maintenance_request',
+        data.maintenance_request_id,
+      );
+
       return data;
     },
     onSuccess: (_, v) => {

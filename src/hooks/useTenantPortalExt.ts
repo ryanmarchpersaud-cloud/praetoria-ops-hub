@@ -91,6 +91,38 @@ export async function signTenantDocument(path: string) {
 
 // ---- Admin-side helpers (used by PMTenantDetail) ----
 
+async function notifyTenantByTenantId(
+  tenant_id: string | null | undefined,
+  event: string,
+  subject: string,
+  body: string,
+  record_type: string,
+) {
+  if (!tenant_id) return;
+  try {
+    const { data: t } = await (supabase as any)
+      .from('pm_tenants')
+      .select('user_id')
+      .eq('id', tenant_id)
+      .maybeSingle();
+    const uid = t?.user_id;
+    if (!uid) return;
+    await (supabase as any).from('notifications').insert({
+      event,
+      channel: 'in_app',
+      audience: 'tenant',
+      recipient_id: uid,
+      record_type,
+      subject,
+      body,
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('[pm-admin] tenant notify failed', e);
+  }
+}
+
 export function useAdminCreateTenantNotice() {
   const qc = useQueryClient();
   return useMutation({
@@ -108,6 +140,13 @@ export function useAdminCreateTenantNotice() {
         created_by: user?.id ?? null,
       });
       if (error) throw error;
+      await notifyTenantByTenantId(
+        input.tenant_id ?? null,
+        'pm_new_notice',
+        `New notice: ${input.title}`,
+        input.body?.slice(0, 200) ?? 'Open the Notices tab to view.',
+        'pm_tenant_notice',
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tenant-portal', 'notices'] }),
   });
@@ -131,6 +170,13 @@ export function useAdminCreateLedgerEntry() {
         created_by: user?.id ?? null,
       });
       if (error) throw error;
+      await notifyTenantByTenantId(
+        input.tenant_id,
+        'pm_ledger_updated',
+        `Account activity: ${input.type}`,
+        `${input.description ?? input.type} — $${Number(input.amount).toFixed(2)}`,
+        'pm_tenant_ledger',
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tenant-portal', 'ledger'] }),
   });
@@ -161,6 +207,13 @@ export function useAdminShareTenantDocument() {
         shared_by: user?.id ?? null,
       });
       if (error) throw error;
+      await notifyTenantByTenantId(
+        input.tenant_id ?? null,
+        'pm_new_document',
+        `New document shared: ${input.title}`,
+        'Open the Documents tab to view or download.',
+        'pm_tenant_document',
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tenant-portal', 'documents'] }),
   });

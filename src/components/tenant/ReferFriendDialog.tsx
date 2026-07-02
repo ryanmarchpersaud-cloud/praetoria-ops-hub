@@ -53,7 +53,7 @@ export default function ReferFriendDialog({ open, onOpenChange, tenantId, referr
     }
     setSubmitting(true);
     const { data: userData } = await supabase.auth.getUser();
-    const { error } = await supabase.from('pm_tenant_referrals').insert({
+    const { data: inserted, error } = await supabase.from('pm_tenant_referrals').insert({
       tenant_id: tenantId ?? null,
       referrer_user_id: userData.user?.id,
       referrer_name: referrerName ?? null,
@@ -63,12 +63,46 @@ export default function ReferFriendDialog({ open, onOpenChange, tenantId, referr
       friend_email: form.friend_email.trim() || null,
       service_interest: form.service_interest || null,
       notes: form.notes.trim() || null,
-    });
-    setSubmitting(false);
+    }).select().single();
     if (error) {
+      setSubmitting(false);
       toast.error('Could not submit referral. Please try again.');
       return;
     }
+
+    // Notify ops via email + in-app (whitelisted self-service event)
+    try {
+      const bodyLines = [
+        `A tenant referred a friend/neighbour to Praetoria Group.`,
+        '',
+        `Referred by: ${referrerName ?? 'Tenant'}${referrerContact ? ` (${referrerContact})` : ''}`,
+        `Friend name: ${form.friend_name.trim()}`,
+        form.friend_phone ? `Friend phone: ${form.friend_phone.trim()}` : null,
+        form.friend_email ? `Friend email: ${form.friend_email.trim()}` : null,
+        form.service_interest ? `Service interest: ${form.service_interest}` : null,
+        form.notes ? `Notes: ${form.notes.trim()}` : null,
+        '',
+        `This is a referral lead — not a service booking on the tenant's rental property.`,
+      ].filter(Boolean).join('\n');
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          event: 'new_tenant_referral',
+          audience: 'admin',
+          channels: ['email', 'in_app'],
+          record_type: 'pm_tenant_referral',
+          record_id: (inserted as any)?.id,
+          variables: {
+            subject: `Tenant referral — ${form.friend_name.trim()}${form.service_interest ? ` (${form.service_interest})` : ''}`,
+            body: bodyLines,
+            reply_to: 'ops@praetoriagroup.ca',
+          },
+        },
+      });
+    } catch (err) {
+      console.warn('[refer-friend] notify failed', err);
+    }
+
+    setSubmitting(false);
     toast.success('Thank you! Your referral has been sent to Praetoria Group.');
     reset();
     onOpenChange(false);
