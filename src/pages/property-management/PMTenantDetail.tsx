@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { usePmTenant, useSavePmTenant, useDeletePmTenant, usePmLeases, usePmProperties } from '@/hooks/usePropertyManagement';
 import { InviteTenantDialog } from '@/components/property-management/InviteTenantDialog';
+import { TenantPortalAdminActions, TenantBusinessFields } from '@/components/property-management/TenantPortalAdminActions';
 
 export default function PMTenantDetail() {
   const { id } = useParams();
@@ -62,6 +63,8 @@ export default function PMTenantDetail() {
           <div className="md:col-span-2"><Label>Notes</Label><Textarea value={form.notes ?? ''} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         </CardContent>
       </Card>
+      <TenantBusinessFields form={form} setForm={setForm} />
+      <TenantPortalAdminActions tenantId={id!} propertyId={myLeases[0]?.property_id ?? null} />
       <Card>
         <CardHeader><CardTitle className="text-base">Leases ({myLeases.length})</CardTitle></CardHeader>
         <CardContent>
