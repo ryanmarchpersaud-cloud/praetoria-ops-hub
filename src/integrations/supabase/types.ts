@@ -5915,43 +5915,247 @@ export type Database = {
           },
         ]
       }
+      pm_tenant_emergency_contacts: {
+        Row: {
+          contact_name: string
+          created_at: string
+          email: string | null
+          id: string
+          is_primary: boolean
+          notes: string | null
+          phone: string | null
+          relationship: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          phone?: string | null
+          relationship?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          notes?: string | null
+          phone?: string | null
+          relationship?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_emergency_contacts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_inspections: {
+        Row: {
+          checklist: Json
+          created_at: string
+          created_by: string | null
+          general_notes: string | null
+          id: string
+          inspection_date: string | null
+          inspection_type: string
+          keys_checklist: Json
+          lease_id: string | null
+          meter_readings: Json
+          photo_paths: Json
+          property_id: string | null
+          status: string
+          tenant_id: string | null
+          tenant_visible: boolean
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          checklist?: Json
+          created_at?: string
+          created_by?: string | null
+          general_notes?: string | null
+          id?: string
+          inspection_date?: string | null
+          inspection_type?: string
+          keys_checklist?: Json
+          lease_id?: string | null
+          meter_readings?: Json
+          photo_paths?: Json
+          property_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          tenant_visible?: boolean
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checklist?: Json
+          created_at?: string
+          created_by?: string | null
+          general_notes?: string | null
+          id?: string
+          inspection_date?: string | null
+          inspection_type?: string
+          keys_checklist?: Json
+          lease_id?: string | null
+          meter_readings?: Json
+          photo_paths?: Json
+          property_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          tenant_visible?: boolean
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_inspections_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_inspections_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_inspections_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_inspections_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_insurance: {
+        Row: {
+          admin_notes: string | null
+          admin_verified: boolean
+          coverage_expiry: string | null
+          coverage_start: string | null
+          created_at: string
+          id: string
+          policy_number: string | null
+          provider: string | null
+          status: string
+          storage_path: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          admin_verified?: boolean
+          coverage_expiry?: string | null
+          coverage_start?: string | null
+          created_at?: string
+          id?: string
+          policy_number?: string | null
+          provider?: string | null
+          status?: string
+          storage_path?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          admin_verified?: boolean
+          coverage_expiry?: string | null
+          coverage_start?: string | null
+          created_at?: string
+          id?: string
+          policy_number?: string | null
+          provider?: string | null
+          status?: string
+          storage_path?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_insurance_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_tenant_ledger: {
         Row: {
+          admin_note: string | null
           amount: number
           created_at: string
           created_by: string | null
           description: string | null
+          due_date: string | null
           entry_date: string
           id: string
           lease_id: string | null
+          paid_date: string | null
           reference: string | null
           tenant_id: string
+          tenant_note: string | null
+          tenant_visible: boolean
           type: string
           updated_at: string
         }
         Insert: {
+          admin_note?: string | null
           amount: number
           created_at?: string
           created_by?: string | null
           description?: string | null
+          due_date?: string | null
           entry_date?: string
           id?: string
           lease_id?: string | null
+          paid_date?: string | null
           reference?: string | null
           tenant_id: string
+          tenant_note?: string | null
+          tenant_visible?: boolean
           type: string
           updated_at?: string
         }
         Update: {
+          admin_note?: string | null
           amount?: number
           created_at?: string
           created_by?: string | null
           description?: string | null
+          due_date?: string | null
           entry_date?: string
           id?: string
           lease_id?: string | null
+          paid_date?: string | null
           reference?: string | null
           tenant_id?: string
+          tenant_note?: string | null
+          tenant_visible?: boolean
           type?: string
           updated_at?: string
         }
@@ -6025,6 +6229,141 @@ export type Database = {
           },
           {
             foreignKeyName: "pm_tenant_notices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_occupants: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_minor: boolean
+          notes: string | null
+          occupant_name: string
+          relationship: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_minor?: boolean
+          notes?: string | null
+          occupant_name: string
+          relationship?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_minor?: boolean
+          notes?: string | null
+          occupant_name?: string
+          relationship?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_occupants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_pets: {
+        Row: {
+          breed: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          is_approved: boolean
+          notes: string | null
+          pet_name: string
+          pet_type: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          breed?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_approved?: boolean
+          notes?: string | null
+          pet_name: string
+          pet_type?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          breed?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_approved?: boolean
+          notes?: string | null
+          pet_name?: string
+          pet_type?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_pets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_vehicles: {
+        Row: {
+          colour: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          make_model: string
+          parking_note: string | null
+          plate: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          colour?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          make_model: string
+          parking_note?: string | null
+          plate?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          colour?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          make_model?: string
+          parking_note?: string | null
+          plate?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_vehicles_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "pm_tenants"
