@@ -420,7 +420,7 @@ export default function SubcontractorDetail() {
                 <InfoRow label="Driver's License #" value={sub.driver_license_number} />
                 <InfoRow label="License Class" value={sub.driver_license_class} />
                 <InfoRow label="License Expiry" value={sub.driver_license_expiry ? format(new Date(sub.driver_license_expiry), 'MMM d, yyyy') : null} />
-                <InfoRow label="SIN" value={sub.sin_encrypted ? '••••••' + sub.sin_encrypted.slice(-3) : null} />
+                <InfoRow label="SIN" value={(sub as any).sin_last3 ? '••••••' + (sub as any).sin_last3 : (sub.sin_encrypted ? '••••••' : null)} />
                 <InfoRow label="Pay Type" value={sub.pay_type} />
                 <InfoRow label="Hourly Rate" value={sub.hourly_rate ? `$${Number(sub.hourly_rate).toFixed(2)}` : null} />
                 <InfoRow label="Pay Schedule" value={sub.pay_schedule} />
@@ -435,7 +435,7 @@ export default function SubcontractorDetail() {
                 <InfoRow label="Bank Name" value={sub.bank_name} />
                 <InfoRow label="Institution #" value={sub.bank_institution_number} />
                 <InfoRow label="Transit #" value={sub.bank_transit_number} />
-                <InfoRow label="Account #" value={sub.bank_account_number ? '••••' + sub.bank_account_number.slice(-4) : null} />
+                <InfoRow label="Account #" value={(sub as any).bank_account_last4 ? '••••' + (sub as any).bank_account_last4 : (sub.bank_account_number ? '••••' : null)} />
               </CardContent>
             </Card>
             <Card>

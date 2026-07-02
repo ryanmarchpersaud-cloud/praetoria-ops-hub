@@ -694,7 +694,7 @@ export default function EmployeeDetail() {
                 <InfoRow label="Bank Name" value={emp.bank_name} />
                 <InfoRow label="Institution #" value={emp.bank_institution_number} />
                 <InfoRow label="Transit #" value={emp.bank_transit_number} />
-                <InfoRow label="Account #" value={emp.bank_account_number ? '••••' + emp.bank_account_number.slice(-4) : null} />
+                <InfoRow label="Account #" value={(emp as any).bank_account_last4 ? '••••' + (emp as any).bank_account_last4 : (emp.bank_account_number ? '••••' : null)} />
               </CardContent>
             </Card>
           </div>
