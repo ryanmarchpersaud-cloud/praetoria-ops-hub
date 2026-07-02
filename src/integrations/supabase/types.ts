@@ -7421,6 +7421,7 @@ export type Database = {
           site_emergency_notes: string | null
           status: Database["public"]["Enums"]["property_status"]
           updated_at: string
+          usage_type: string | null
           verification_notes: string | null
         }
         Insert: {
@@ -7456,6 +7457,7 @@ export type Database = {
           site_emergency_notes?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
+          usage_type?: string | null
           verification_notes?: string | null
         }
         Update: {
@@ -7491,6 +7493,7 @@ export type Database = {
           site_emergency_notes?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
+          usage_type?: string | null
           verification_notes?: string | null
         }
         Relationships: [
