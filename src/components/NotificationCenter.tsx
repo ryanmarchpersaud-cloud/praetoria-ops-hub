@@ -94,11 +94,11 @@ if (typeof window !== 'undefined') {
   window.addEventListener('touchstart', unlock);
 }
 
-function playNotificationSound() {
+async function playNotificationSound() {
   try {
     const ctx = getAudioContext();
     if (ctx.state === 'suspended') {
-      void ctx.resume();
+      await ctx.resume();
       // Browsers only allow sound after the user taps/clicks once. The red badge still updates immediately.
       if (ctx.state === 'suspended') return;
     }
@@ -134,7 +134,7 @@ export function NotificationCenter() {
   // Play sound when new notifications arrive
   useEffect(() => {
     if (unreadNotifications.length > prevCountRef.current) {
-      playNotificationSound();
+      void playNotificationSound();
     }
     prevCountRef.current = unreadNotifications.length;
   }, [unreadNotifications.length]);
@@ -172,7 +172,7 @@ export function NotificationCenter() {
 
   const handleBellPointerDown = () => {
     ensureAudioResumed();
-    if (unreadCount > 0) playNotificationSound();
+    if (unreadCount > 0) void playNotificationSound();
   };
 
   return (
