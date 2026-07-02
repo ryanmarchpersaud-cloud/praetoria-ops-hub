@@ -25,7 +25,7 @@ type SidebarKey = 'dashboard' | 'leads' | 'quotes' | 'customers' | 'properties'
 
 // Subtle color identity per functional area (icon tint + active left border).
 // Kept muted so the sidebar reads professional, not rainbow.
-type AreaKey = 'admin' | 'finance' | 'hr' | 'workers' | 'subs' | 'customers' | 'tenants' | 'owners';
+type AreaKey = 'admin' | 'finance' | 'hr' | 'workers' | 'subs' | 'customers' | 'tenants' | 'owners' | 'employees';
 const AREA_STYLES: Record<AreaKey, { icon: string; activeBorder: string; activeText: string; badgeBg: string; badgeText: string }> = {
   admin:     { icon: 'text-amber-300',   activeBorder: 'border-amber-400',   activeText: 'text-amber-200',   badgeBg: 'bg-amber-500/15',   badgeText: 'text-amber-300' },
   finance:   { icon: 'text-teal-300',    activeBorder: 'border-teal-400',    activeText: 'text-teal-200',    badgeBg: 'bg-teal-500/15',    badgeText: 'text-teal-300' },
@@ -35,6 +35,7 @@ const AREA_STYLES: Record<AreaKey, { icon: string; activeBorder: string; activeT
   customers: { icon: 'text-sky-300',     activeBorder: 'border-sky-400',     activeText: 'text-sky-200',     badgeBg: 'bg-sky-500/15',     badgeText: 'text-sky-300' },
   tenants:   { icon: 'text-emerald-300', activeBorder: 'border-emerald-400', activeText: 'text-emerald-200', badgeBg: 'bg-emerald-500/15', badgeText: 'text-emerald-300' },
   owners:    { icon: 'text-yellow-300',  activeBorder: 'border-yellow-400',  activeText: 'text-yellow-200',  badgeBg: 'bg-yellow-500/15',  badgeText: 'text-yellow-300' },
+  employees: { icon: 'text-indigo-300', activeBorder: 'border-indigo-400', activeText: 'text-indigo-200', badgeBg: 'bg-indigo-500/15', badgeText: 'text-indigo-300' },
 };
 // Items whose LABEL text should also carry the area color (matching the icon).
 // Other items keep the default white sidebar text.
@@ -60,7 +61,7 @@ const opsItems: { title: string; url: string; icon: any; countKey?: CountKey; ac
   { title: 'Incidents', url: '/incidents', icon: ShieldAlert, countKey: 'incidents' as CountKey, accessKey: 'incidents' as SidebarKey, area: 'admin' },
   { title: 'Tasks', url: '/tasks', icon: ClipboardCheck, accessKey: 'jobs' as SidebarKey, area: 'workers' },
   { title: 'HR Workspace', url: '/hr', icon: BookOpen, accessKey: 'hr' as SidebarKey, area: 'hr' },
-  { title: 'Employees', url: '/employees', icon: HardHat, accessKey: 'employees', area: 'hr' },
+  { title: 'Employees', url: '/employees', icon: HardHat, accessKey: 'employees', area: 'employees' },
   { title: 'Subcontractors', url: '/subcontractors', icon: Users, accessKey: 'subcontractors', area: 'subs' },
   { title: 'Messages', url: '/messaging', icon: MessageSquare, countKey: 'messages', accessKey: 'messaging', area: 'admin' },
   { title: 'Finance', url: '/finance', icon: Wallet, accessKey: 'finance', area: 'finance' },
@@ -315,12 +316,12 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     try { window.localStorage.setItem(PM_STORAGE_KEY, open ? '1' : '0'); } catch {}
   }, [open]);
 
-  const items = [
+  const items: { title: string; url: string; icon: any; end?: boolean; area?: AreaKey }[] = [
     { title: 'Dashboard', url: '/property-management', icon: LayoutDashboard, end: true },
     { title: 'Properties', url: '/property-management/properties', icon: Building2 },
     { title: 'Units', url: '/property-management/units', icon: Home },
-    { title: 'Owners', url: '/property-management/owners', icon: UserCircle },
-    { title: 'Tenants', url: '/property-management/tenants', icon: Users },
+    { title: 'Owners', url: '/property-management/owners', icon: UserCircle, area: 'owners' },
+    { title: 'Tenants', url: '/property-management/tenants', icon: Users, area: 'tenants' },
     { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
     { title: 'Maintenance Requests', url: '/property-management/maintenance', icon: Wrench },
   ];
@@ -333,15 +334,18 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
-                    <item.icon className="h-4 w-4" />
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {items.map((item) => {
+              const style = item.area ? AREA_STYLES[item.area] : null;
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
+                      <item.icon className={`h-4 w-4 ${style ? style.icon : ''}`} />
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -365,16 +369,19 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
       {open && (
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
-                    <item.icon className="mr-2 h-4 w-4" />
-                    <span>{item.title}</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {items.map((item) => {
+              const style = item.area ? AREA_STYLES[item.area] : null;
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
+                      <item.icon className={`mr-2 h-4 w-4 ${style ? style.icon : ''}`} />
+                      <span className={style ? style.icon : ''}>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       )}
