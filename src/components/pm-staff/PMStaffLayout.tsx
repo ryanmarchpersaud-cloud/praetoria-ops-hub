@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { PMStaffBottomNav } from './PMStaffBottomNav';
+import { PMStaffFAB } from './PMStaffFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { isAndroidMobile } from '@/lib/platform';
@@ -74,6 +75,7 @@ export function PMStaffLayout({ children }: { children: ReactNode }) {
       </header>
       <div className="w-full max-w-lg mx-auto">{children}</div>
       <PMStaffBottomNav />
+      <PMStaffFAB />
     </div>
   );
 }

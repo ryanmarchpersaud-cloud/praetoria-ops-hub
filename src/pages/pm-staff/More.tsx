@@ -25,31 +25,31 @@ export default function More() {
 
   const leasingItems: Item[] = [
     { icon: HomeIcon, label: 'Home', to: '/pm-staff', description: 'Leasing dashboard' },
-    { icon: ClipboardCheck, label: 'My Tasks', to: '/pm-staff/tasks', description: 'Leasing tasks assigned to you' },
+    { icon: ClipboardCheck, label: 'My Tasks', to: '/pm-staff/tasks', description: 'Assigned leasing tasks, follow-ups & reminders' },
   ];
 
   const profileItems: Item[] = [
-    { icon: User, label: 'My Profile', to: '/pm-staff/profile', description: 'Personal info & photo' },
-    { icon: Briefcase, label: 'My Employment', to: '/pm-staff/employment', description: 'Job details & compensation' },
+    { icon: User, label: 'My Profile', to: '/pm-staff/profile', description: 'Personal info, contact details & profile photo' },
+    { icon: Briefcase, label: 'My Employment', to: '/pm-staff/employment', description: 'Job details, role & staff information' },
     { icon: ShieldAlert, label: 'Emergency & Safety', to: '/pm-staff/emergency-contact', description: 'Emergency contacts & alerts' },
-    { icon: Award, label: 'Training & Certifications', to: '/pm-staff/training', description: 'Certificates & assignments' },
-    { icon: GraduationCap, label: 'My Courses', to: '/pm-staff/courses', description: 'Assigned learning' },
-    { icon: FileText, label: 'Training & Safety', to: '/pm-staff/training-safety', description: 'WHMIS, first aid & policies' },
-    { icon: ShieldAlert, label: 'Safety & Incidents', to: '/pm-staff/incidents', description: 'Report incidents & near misses' },
-    { icon: FileText, label: 'My Documents', to: '/pm-staff/documents', description: 'Certificates & shared docs' },
+    { icon: Award, label: 'Training & Certifications', to: '/pm-staff/training', description: 'Licences, certificates & required training' },
+    { icon: GraduationCap, label: 'My Courses', to: '/pm-staff/courses', description: 'Assigned training courses & quizzes' },
+    { icon: FileText, label: 'Training & Safety', to: '/pm-staff/training-safety', description: 'WHMIS, first aid & policy acknowledgements' },
+    { icon: ShieldAlert, label: 'Safety & Incidents', to: '/pm-staff/incidents', description: 'Report incidents, hazards & near misses' },
+    { icon: FileText, label: 'My Documents', to: '/pm-staff/documents', description: 'Certificates, policies & uploaded documents' },
     { icon: Receipt, label: 'Tax Documents', to: '/pm-staff/tax-documents', description: 'T4 slips, ROE & pay summaries' },
     { icon: CreditCard, label: 'Expense Claims', to: '/pm-staff/expenses', description: 'Submit receipts for reimbursement' },
-    { icon: DollarSign, label: 'Payroll / Pay Stubs', to: '/pm-staff/pay-stubs', description: 'Your pay history' },
-    { icon: Heart, label: 'Benefits', to: '/pm-staff/benefits', description: 'Health benefits & plan info' },
-    { icon: CalendarDays, label: 'Time Off', to: '/pm-staff/time-off', description: 'Vacation & sick leave' },
-    { icon: HardHat, label: 'PPE & Equipment', to: '/pm-staff/ppe', description: 'Issued gear & office equipment' },
-    { icon: UserCheck, label: 'Emergency Contact', to: '/pm-staff/emergency-contact', description: 'Emergency contact info' },
-    { icon: Bell, label: 'Messages', to: '/pm-staff/messages', description: 'Notifications & admin messages' },
+    { icon: DollarSign, label: 'Payroll / Pay Stubs', to: '/pm-staff/pay-stubs', description: 'Pay stubs, earnings & pay history' },
+    { icon: Heart, label: 'Benefits', to: '/pm-staff/benefits', description: 'Health benefits & plan information' },
+    { icon: CalendarDays, label: 'Time Off', to: '/pm-staff/time-off', description: 'Vacation, sick days & leave requests' },
+    { icon: HardHat, label: 'PPE & Equipment', to: '/pm-staff/ppe', description: 'Issued gear, keys, devices & replacements' },
+    { icon: UserCheck, label: 'Emergency Contact', to: '/pm-staff/emergency-contact', description: 'Emergency contact information' },
+    { icon: Bell, label: 'Messages', to: '/pm-staff/messages', description: 'Contact Admin and receive updates' },
   ];
 
   const timeItems: Item[] = [
-    { icon: Clock, label: 'Time Clock', to: '/pm-staff/time-clock', description: 'Clock in / out' },
-    { icon: CalendarClock, label: 'My Timesheets', to: '/pm-staff/timesheets', description: 'Timesheet history' },
+    { icon: Clock, label: 'Time Clock', to: '/pm-staff/time-clock', description: 'Clock in, clock out & shift status' },
+    { icon: CalendarClock, label: 'Timesheet', to: '/pm-staff/timesheets', description: 'View hours, entries & submitted time' },
   ];
 
   const switchItems: Item[] = [
@@ -131,7 +131,10 @@ export default function More() {
         <Card className="active:shadow-sm transition-shadow border-destructive/20">
           <CardContent className="p-4 flex items-center gap-3">
             <LogOut className="h-5 w-5 text-destructive shrink-0" />
-            <p className="text-sm font-medium text-destructive">Sign Out</p>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="text-sm font-medium text-destructive">Sign Out</p>
+              <p className="text-[11px] text-destructive/70">Securely sign out of the portal</p>
+            </div>
           </CardContent>
         </Card>
       </button>
