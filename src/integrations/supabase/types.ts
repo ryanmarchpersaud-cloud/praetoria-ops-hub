@@ -5647,10 +5647,14 @@ export type Database = {
           description: string | null
           id: string
           internal_notes: string | null
+          is_urgent_safety: boolean
+          issue_key: string | null
+          issue_label: string | null
           lease_id: string | null
           permission_to_enter: boolean
           preferred_contact_time: string | null
           priority: string
+          priority_suggested_by_catalog: string | null
           property_id: string
           status: string
           submitted_by_user_id: string | null
@@ -5668,10 +5672,14 @@ export type Database = {
           description?: string | null
           id?: string
           internal_notes?: string | null
+          is_urgent_safety?: boolean
+          issue_key?: string | null
+          issue_label?: string | null
           lease_id?: string | null
           permission_to_enter?: boolean
           preferred_contact_time?: string | null
           priority?: string
+          priority_suggested_by_catalog?: string | null
           property_id: string
           status?: string
           submitted_by_user_id?: string | null
@@ -5689,10 +5697,14 @@ export type Database = {
           description?: string | null
           id?: string
           internal_notes?: string | null
+          is_urgent_safety?: boolean
+          issue_key?: string | null
+          issue_label?: string | null
           lease_id?: string | null
           permission_to_enter?: boolean
           preferred_contact_time?: string | null
           priority?: string
+          priority_suggested_by_catalog?: string | null
           property_id?: string
           status?: string
           submitted_by_user_id?: string | null
