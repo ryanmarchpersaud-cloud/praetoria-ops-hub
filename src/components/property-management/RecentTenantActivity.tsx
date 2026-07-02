@@ -27,28 +27,28 @@ function useRecentTenantActivity() {
       const [reqRes, insRes, docRes, notRes] = await Promise.all([
         (supabase as any)
           .from('pm_maintenance_requests')
-          .select('id, title, category, issue_label, is_urgent_safety, status, created_at, tenant:pm_tenants(display_name, first_name, last_name)')
+          .select('id, title, category, issue_label, is_urgent_safety, status, created_at, tenant:pm_tenants(business_name, first_name, last_name)')
           .order('created_at', { ascending: false })
           .limit(15),
         (supabase as any)
           .from('pm_tenant_insurance')
-          .select('id, provider, policy_number, created_at, tenant:pm_tenants(display_name, first_name, last_name)')
+          .select('id, provider, policy_number, created_at, tenant:pm_tenants(business_name, first_name, last_name)')
           .order('created_at', { ascending: false })
           .limit(10),
         (supabase as any)
           .from('pm_tenant_documents')
-          .select('id, title, doc_type, created_at, tenant:pm_tenants(display_name, first_name, last_name)')
+          .select('id, title, category, created_at, tenant:pm_tenants(business_name, first_name, last_name)')
           .order('created_at', { ascending: false })
           .limit(10),
         (supabase as any)
           .from('pm_tenant_notices')
-          .select('id, subject, notice_type, created_at, tenant:pm_tenants(display_name, first_name, last_name)')
+          .select('id, title, category, created_at, tenant:pm_tenants(business_name, first_name, last_name)')
           .order('created_at', { ascending: false })
           .limit(10),
       ]);
 
       const tenantName = (t: any) =>
-        t?.display_name || [t?.first_name, t?.last_name].filter(Boolean).join(' ') || null;
+        t?.business_name || [t?.first_name, t?.last_name].filter(Boolean).join(' ') || null;
 
       const items: ActivityItem[] = [];
 
