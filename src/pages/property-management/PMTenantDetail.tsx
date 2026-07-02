@@ -20,8 +20,10 @@ export default function PMTenantDetail() {
   const { data: leases = [] } = usePmLeases();
   const { data: props = [] } = usePmProperties();
   const [form, setForm] = useState<any>({});
+  const [inviteOpen, setInviteOpen] = useState(false);
   useEffect(() => { if (data) setForm(data); }, [data]);
   if (!data) return <div className="p-6">Loading…</div>;
+  const isLinked = !!data.user_id;
 
   const myLeases = leases.filter(l => l.tenant_id === id);
   const propMap = Object.fromEntries(props.map(p => [p.id, p]));
