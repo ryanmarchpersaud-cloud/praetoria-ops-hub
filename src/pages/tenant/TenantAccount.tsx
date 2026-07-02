@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LogOut, Mail, ShieldAlert, User as UserIcon, Building2, ChevronRight, HelpCircle } from 'lucide-react';
+import { LogOut, Mail, ShieldAlert, User as UserIcon, Building2, ChevronRight, HelpCircle, UserCog } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyTenantContext } from '@/hooks/useTenantPortal';
@@ -68,6 +68,21 @@ export default function TenantAccount() {
           </CardContent>
         </Card>
       )}
+
+      {/* Profile records */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <UserCog className="h-4 w-4 text-emerald-700" /> Profile Records
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm divide-y">
+          <Link to="/tenant/profile" className="flex items-center justify-between py-2 text-emerald-700 font-medium">
+            <span>Emergency contacts, insurance, occupants, vehicles, pets</span>
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </CardContent>
+      </Card>
 
       {/* Help & privacy */}
       <Card>

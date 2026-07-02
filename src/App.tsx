@@ -238,6 +238,8 @@ const TenantAccount = lazy(() => import("./pages/tenant/TenantAccount"));
 const TenantPayments = lazy(() => import("./pages/tenant/TenantPayments"));
 const TenantDocuments = lazy(() => import("./pages/tenant/TenantDocuments"));
 const TenantNotices = lazy(() => import("./pages/tenant/TenantNotices"));
+const TenantProfile = lazy(() => import("./pages/tenant/TenantProfile"));
+const PMTenantPortalPreview = lazy(() => import("./pages/property-management/PMTenantPortalPreview"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -639,6 +641,7 @@ function AppRoutes() {
         <Route path="/property-management/owners/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/tenants" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/tenants/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/tenants/:id/preview" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantPortalPreview /></Suspense></ModuleGuard>} />
         <Route path="/property-management/leases" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeasesList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/leases/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeaseDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/maintenance" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestsList /></Suspense></ModuleGuard>} />
@@ -746,6 +749,7 @@ function AppRoutes() {
         <Route path="/tenant/payments" element={<Suspense fallback={<RouteLoading />}><TenantPayments /></Suspense>} />
         <Route path="/tenant/documents" element={<Suspense fallback={<RouteLoading />}><TenantDocuments /></Suspense>} />
         <Route path="/tenant/notices" element={<Suspense fallback={<RouteLoading />}><TenantNotices /></Suspense>} />
+        <Route path="/tenant/profile" element={<Suspense fallback={<RouteLoading />}><TenantProfile /></Suspense>} />
       </Route>
 
 

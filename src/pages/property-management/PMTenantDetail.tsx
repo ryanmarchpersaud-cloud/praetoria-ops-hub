@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Trash2, UserPlus, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Trash2, UserPlus, CheckCircle2, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { usePmTenant, useSavePmTenant, useDeletePmTenant, usePmLeases, usePmProperties } from '@/hooks/usePropertyManagement';
 import { InviteTenantDialog } from '@/components/property-management/InviteTenantDialog';
 import { TenantPortalAdminActions, TenantBusinessFields } from '@/components/property-management/TenantPortalAdminActions';
+import { TenantProfileAdminPanel } from '@/components/property-management/TenantProfileAdminPanel';
+import { InspectionAdminPanel } from '@/components/property-management/InspectionAdminPanel';
 
 export default function PMTenantDetail() {
   const { id } = useParams();
@@ -33,8 +35,11 @@ export default function PMTenantDetail() {
     <div className="p-6 space-y-4 max-w-4xl mx-auto">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild><Link to="/property-management/tenants"><ArrowLeft className="h-4 w-4 mr-1" />Back</Link></Button>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex gap-2 flex-wrap">
           <Button variant="destructive" size="sm" onClick={async () => { if (confirm('Delete tenant?')) { try { await del.mutateAsync(id!); toast.success('Deleted'); window.history.back(); } catch (e: any) { toast.error(e.message); } } }}><Trash2 className="h-4 w-4 mr-1" />Delete</Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/property-management/tenants/${id}/preview`}><Eye className="h-4 w-4 mr-1" />Preview Tenant Portal</Link>
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
             <UserPlus className="h-4 w-4 mr-1" />{isLinked ? 'Re-invite tenant' : 'Invite to portal'}
           </Button>
@@ -65,6 +70,13 @@ export default function PMTenantDetail() {
       </Card>
       <TenantBusinessFields form={form} setForm={setForm} />
       <TenantPortalAdminActions tenantId={id!} propertyId={myLeases[0]?.property_id ?? null} />
+      <TenantProfileAdminPanel tenantId={id!} />
+      <InspectionAdminPanel
+        tenantId={id!}
+        propertyId={myLeases[0]?.property_id ?? null}
+        unitId={myLeases[0]?.unit_id ?? null}
+        leaseId={myLeases[0]?.id ?? null}
+      />
       <Card>
         <CardHeader><CardTitle className="text-base">Leases ({myLeases.length})</CardTitle></CardHeader>
         <CardContent>
