@@ -81,7 +81,7 @@ async function getOperationalContext(supabase: any) {
 ${overdueInvoices?.length ? overdueInvoices.map((i: any) => `- ${i.invoice_number}: $${Number(i.balance_due).toLocaleString()} due on ${i.due_date}`).join("\n") : "None"}
 
 ### Today's Visits (${todayVisits?.length || 0})
-${todayVisits?.length ? todayVisits.map((v: any) => `- ${v.visit_number}: ${v.service_type || "Service"} — ${v.status} (${v.start_time || "unscheduled"})`).join("\n") : "None scheduled"}
+${todayVisits?.length ? todayVisits.map((v: any) => `- ${v.visit_number}: ${v.service_type || "Service"} — ${v.visit_status} (${v.start_time || "unscheduled"})`).join("\n") : "None scheduled"}
 
 ### Active Jobs (${activeJobs?.length || 0})
 ${activeJobs?.length ? activeJobs.map((j: any) => `- ${j.job_number}: ${j.job_title} — ${j.status}`).join("\n") : "None"}
