@@ -10482,7 +10482,12 @@ export type Database = {
         | "Won"
         | "Lost"
         | "Archived"
-      notification_audience: "customer" | "worker" | "admin"
+      notification_audience:
+        | "customer"
+        | "worker"
+        | "admin"
+        | "tenant"
+        | "subcontractor"
       notification_channel: "email" | "sms" | "in_app"
       notification_event:
         | "quote_sent"
@@ -10507,6 +10512,16 @@ export type Database = {
         | "worker_crew_assigned"
         | "new_maintenance_request"
         | "new_tenant_insurance_submission"
+        | "new_tenant_referral"
+        | "pm_work_order_created"
+        | "pm_work_order_assigned"
+        | "pm_request_assigned"
+        | "pm_request_reviewed"
+        | "pm_request_in_progress"
+        | "pm_request_completed"
+        | "pm_new_notice"
+        | "pm_ledger_updated"
+        | "pm_new_document"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       pm_lease_status: "draft" | "active" | "ended" | "terminated"
@@ -10790,7 +10805,13 @@ export const Constants = {
         "Lost",
         "Archived",
       ],
-      notification_audience: ["customer", "worker", "admin"],
+      notification_audience: [
+        "customer",
+        "worker",
+        "admin",
+        "tenant",
+        "subcontractor",
+      ],
       notification_channel: ["email", "sms", "in_app"],
       notification_event: [
         "quote_sent",
@@ -10815,6 +10836,16 @@ export const Constants = {
         "worker_crew_assigned",
         "new_maintenance_request",
         "new_tenant_insurance_submission",
+        "new_tenant_referral",
+        "pm_work_order_created",
+        "pm_work_order_assigned",
+        "pm_request_assigned",
+        "pm_request_reviewed",
+        "pm_request_in_progress",
+        "pm_request_completed",
+        "pm_new_notice",
+        "pm_ledger_updated",
+        "pm_new_document",
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],

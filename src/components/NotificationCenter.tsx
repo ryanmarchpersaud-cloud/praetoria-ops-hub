@@ -5,7 +5,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bell, CheckCircle, FileText, Truck, CreditCard, Calendar, AlertCircle } from 'lucide-react';
+import { Bell, CheckCircle, FileText, Truck, CreditCard, Calendar, AlertCircle, Wrench, Megaphone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const EVENT_ICONS: Record<string, React.ElementType> = {
@@ -24,6 +24,18 @@ const EVENT_ICONS: Record<string, React.ElementType> = {
   equipment_issue: AlertCircle,
   worker_message: FileText,
   expense_submitted: CreditCard,
+  new_maintenance_request: Wrench,
+  new_tenant_insurance_submission: FileText,
+  new_tenant_referral: Megaphone,
+  pm_work_order_created: Wrench,
+  pm_work_order_assigned: Truck,
+  pm_request_assigned: Truck,
+  pm_request_reviewed: CheckCircle,
+  pm_request_in_progress: Wrench,
+  pm_request_completed: CheckCircle,
+  pm_new_notice: Megaphone,
+  pm_ledger_updated: CreditCard,
+  pm_new_document: FileText,
 };
 
 const RECORD_ROUTES: Record<string, string> = {
@@ -43,6 +55,13 @@ const RECORD_ROUTES: Record<string, string> = {
   agreement: '/agreements',
   incident: '/incidents',
   account_deletion_request: '/admin/account-deletion-requests',
+  pm_maintenance_request: '/property-management/maintenance',
+  pm_work_order: '/property-management/work-orders',
+  pm_tenant_referral: '/property-management',
+  pm_tenant_insurance: '/property-management/tenants',
+  pm_tenant_notice: '/tenant/notices',
+  pm_tenant_ledger: '/tenant/payments',
+  pm_tenant_document: '/tenant/documents',
 };
 
 let audioCtx: AudioContext | null = null;
@@ -57,7 +76,9 @@ function getAudioContext() {
 function ensureAudioResumed() {
   try {
     const ctx = getAudioContext();
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state === 'suspended') {
+      void ctx.resume();
+    }
   } catch { /* ignore */ }
 }
 
@@ -73,10 +94,14 @@ if (typeof window !== 'undefined') {
   window.addEventListener('touchstart', unlock);
 }
 
-function playNotificationSound() {
+async function playNotificationSound() {
   try {
     const ctx = getAudioContext();
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+      // Browsers only allow sound after the user taps/clicks once. The red badge still updates immediately.
+      if (ctx.state === 'suspended') return;
+    }
     const playTone = (freq: number, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -108,8 +133,8 @@ export function NotificationCenter() {
 
   // Play sound when new notifications arrive
   useEffect(() => {
-    if (unreadNotifications.length > prevCountRef.current && prevCountRef.current !== 0) {
-      playNotificationSound();
+    if (unreadNotifications.length > prevCountRef.current) {
+      void playNotificationSound();
     }
     prevCountRef.current = unreadNotifications.length;
   }, [unreadNotifications.length]);
@@ -145,12 +170,19 @@ export function NotificationCenter() {
 
   const unreadCount = unreadNotifications.length;
 
+  const handleBellPointerDown = () => {
+    ensureAudioResumed();
+    if (unreadCount > 0) void playNotificationSound();
+  };
+
   return (
     <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
       <SheetTrigger asChild>
         <button
           type="button"
           className="relative flex h-10 w-10 shrink-0 touch-manipulation items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          onPointerDown={handleBellPointerDown}
+          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         >
           <Bell className="h-4 w-4 text-foreground" />
           {unreadCount > 0 && (

@@ -64,6 +64,49 @@ async function resolveAssigneeName(
   return 'Unassigned';
 }
 
+async function resolveAssigneeUserId(
+  assignee_type: AssigneeType,
+  worker_id?: string | null,
+  sub_id?: string | null,
+): Promise<string | null> {
+  if (assignee_type === 'worker') return worker_id ?? null;
+  if (assignee_type === 'subcontractor' && sub_id) {
+    const { data } = await sb
+      .from('subcontractors')
+      .select('user_id')
+      .eq('id', sub_id)
+      .maybeSingle();
+    return data?.user_id ?? null;
+  }
+  return null;
+}
+
+async function insertAssigneeInAppNotification(
+  assignee_type: AssigneeType,
+  recipient_id: string | null,
+  subject: string,
+  body: string,
+  record_id?: string,
+) {
+  if (!recipient_id || assignee_type === 'unassigned') return;
+  try {
+    await sb.from('notifications').insert({
+      event: 'pm_work_order_assigned',
+      channel: 'in_app',
+      audience: assignee_type,
+      recipient_id,
+      record_type: 'pm_work_order',
+      record_id: record_id ?? null,
+      subject,
+      body,
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('[wo] assignee in_app notify failed', e);
+  }
+}
+
 async function insertAdminInAppNotification(subject: string, body: string, record_id?: string) {
   try {
     await sb.from('notifications').insert({
@@ -196,26 +239,19 @@ export function useCreateWorkOrder() {
         input.assigned_subcontractor_id,
       );
 
-      // Notify worker assignee via existing in-app notifications table
-      const recipient = input.assigned_worker_id || null;
-      if (recipient) {
-        try {
-          await sb.from('notifications').insert({
-            event: 'pm_work_order_assigned',
-            channel: 'in_app',
-            audience: 'worker',
-            recipient_id: recipient,
-            record_type: 'pm_work_order',
-            record_id: wo.id,
-            subject: `New PM Work Order: ${wo.work_order_number} — ${wo.title}`,
-            body: 'You have been assigned a property-management work order. Open it for details.',
-            status: 'sent',
-            sent_at: new Date().toISOString(),
-          });
-        } catch (e) {
-          console.warn('[wo] notify assignee failed', e);
-        }
-      }
+      // Notify worker/subcontractor assignee via in-app notifications table
+      const assigneeUserId = await resolveAssigneeUserId(
+        input.assignee_type,
+        input.assigned_worker_id,
+        input.assigned_subcontractor_id,
+      );
+      await insertAssigneeInAppNotification(
+        input.assignee_type,
+        assigneeUserId,
+        `New PM Work Order: ${wo.work_order_number} — ${wo.title}`,
+        'You have been assigned a property-management work order. Open it for details.',
+        wo.id,
+      );
 
       // Guaranteed admin in-app row so the red badge lights up immediately
       await insertAdminInAppNotification(
@@ -338,22 +374,18 @@ export function useAssignWorkOrder() {
         input.assigned_subcontractor_id,
       );
 
-      if (input.assignee_type === 'worker' && input.assigned_worker_id) {
-        try {
-          await sb.from('notifications').insert({
-            event: 'pm_work_order_assigned',
-            channel: 'in_app',
-            audience: 'worker',
-            recipient_id: input.assigned_worker_id,
-            record_type: 'pm_work_order',
-            record_id: data.id,
-            subject: `PM Work Order Assigned: ${data.work_order_number}`,
-            body: 'You have been assigned a property-management work order.',
-            status: 'sent',
-            sent_at: new Date().toISOString(),
-          });
-        } catch {}
-      }
+      const assigneeUserId = await resolveAssigneeUserId(
+        input.assignee_type,
+        input.assigned_worker_id,
+        input.assigned_subcontractor_id,
+      );
+      await insertAssigneeInAppNotification(
+        input.assignee_type,
+        assigneeUserId,
+        `PM Work Order Assigned: ${data.work_order_number}`,
+        `You have been assigned a property-management work order: ${data.title}.`,
+        data.id,
+      );
 
       // Admin in-app + ops email so the red badge appears and ops has a record
       if (input.assignee_type !== 'unassigned') {
