@@ -217,7 +217,8 @@ export function useAdminMaintenanceRequest(id?: string) {
         .from('pm_maintenance_requests')
         .select(`*, tenant:pm_tenants(id, first_name, last_name, phone, email),
                   property:pm_managed_properties(id, property_name, address_line_1, city),
-                  unit:pm_units(id, unit_label)`)
+                  unit:pm_units(id, unit_label),
+                  lease:pm_leases(id, start_date, end_date, status, monthly_rent, rent_frequency)`)
         .eq('id', id).maybeSingle();
       const { data: atts } = await (supabase as any)
         .from('pm_maintenance_request_attachments').select('*').eq('request_id', id);
