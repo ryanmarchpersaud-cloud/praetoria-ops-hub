@@ -16,6 +16,7 @@ export default function SubcontractorMore() {
 
   const items = [
     { icon: ClipboardCheck, label: 'My Tasks', to: '/subcontractor/tasks', description: 'Assigned errands, pickups & checks' },
+    { icon: Truck, label: 'PM Work Orders', to: '/subcontractor/pm-work-orders', description: 'Property-management repair requests' },
     { icon: User, label: 'My Profile', to: '/subcontractor/profile', description: 'Contact info & details' },
     { icon: Building2, label: 'Company Details', to: '/subcontractor/company', description: 'Business information' },
     { icon: Shield, label: 'Emergency & Safety', to: '/subcontractor/emergency-safety', description: 'SOS, contacts & medical alerts' },
