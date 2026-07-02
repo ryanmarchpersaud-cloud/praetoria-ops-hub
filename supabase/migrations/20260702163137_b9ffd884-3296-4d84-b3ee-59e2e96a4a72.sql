@@ -1,0 +1,2 @@
+UPDATE public.properties SET usage_type='private_residence' WHERE id='7b533149-cde2-4b0c-99b6-9fc9eabf066d';
+UPDATE public.properties SET usage_type='rental' WHERE id IN ('997270cd-8b31-4f75-a794-56ed506bd2df','f774563a-1984-435c-be75-02c4a082c60f');
