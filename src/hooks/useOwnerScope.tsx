@@ -28,8 +28,8 @@ export function OwnerScopeProvider({ children }: { children: ReactNode }) {
   const [params] = useSearchParams();
   const raw = params.get('adminPreview');
   const { user } = useAuth();
-  const { isAdmin, isOwner } = useAuthorization();
-  const canPreview = !!(user && (isAdmin || isOwner));
+  const { isAdmin, canAccessAdminPortal } = useAuthorization();
+  const canPreview = !!(user && (isAdmin || canAccessAdminPortal));
 
   // Accept `?adminPreview=<uuid>` or the legacy `?adminPreview=1`.
   const isUuid = !!raw && /^[0-9a-f-]{36}$/i.test(raw);
