@@ -46,7 +46,7 @@ export default function PMOwnerDetail() {
           <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300"><CheckCircle2 className="h-3 w-3 mr-1" />Portal linked</Badge>
         )}
         <div className="ml-auto flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => window.open('/owner?adminPreview=1', '_blank', 'noopener,noreferrer')}>
+          <Button variant="outline" size="sm" onClick={() => window.open(`/owner?adminPreview=${id}`, '_blank', 'noopener,noreferrer')}>
             <Eye className="h-4 w-4 mr-1" />Preview Owner Portal
           </Button>
           <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
