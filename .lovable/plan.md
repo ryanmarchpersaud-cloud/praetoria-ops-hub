@@ -1,94 +1,45 @@
-# Phase 3 — PM Maintenance Request → Work Order Pipeline
+## Phase 4 — Property Owner Portal Foundation
 
-Additive only. No changes to existing Admin/Worker/Sub/Customer/Finance/HR/Jobs/Visits/Invoices/Pay stubs/Stripe/mobile/auth workflows.
+A partial Phase 4 already exists (`/owner` routes, `OwnerLayout`, `useOwnerPortal`, `send-owner-invite` edge function, `pm_owner_properties` link table). Before I rewrite anything, I want to confirm scope so I don't accidentally break what's already live.
 
-## 1. Schema (single migration)
+### Two questions before I build
 
-**New table `public.pm_work_orders`** — dedicated PM work orders (kept separate from `jobs` so we don't disturb the existing job lifecycle, invoicing, or RLS surface). Fields:
+1. **Routes:** the spec says `/property-owner/*`, but the existing portal is already mounted at `/owner/*` and used by the invite flow. Do you want me to:
+   - **(A)** keep `/owner/*` (safer, additive, no auth/redirect breakage), or
+   - **(B)** migrate to `/property-owner/*` (adds redirect from `/owner/*`, more work, small risk).
 
-- `id`, `work_order_number` (auto `WO-00001` via trigger + sequence)
-- `maintenance_request_id` → `pm_maintenance_requests(id)` (unique, one WO per request in Phase 3)
-- `property_id`, `unit_id`, `lease_id`, `tenant_id` (snapshot FKs)
-- `title`, `description`, `category`, `issue_label`, `issue_key`, `priority`, `is_urgent_safety`
-- `status` enum-like text: `created | assigned | in_progress | completed | cancelled`
-- `assignee_type` (`worker | subcontractor | unassigned`)
-- `assigned_worker_id` (uuid → auth user), `assigned_subcontractor_id` → `subcontractors(id)`
-- `share_tenant_contact` bool (Admin toggle — otherwise workers don't see tenant phone/email)
-- `access_notes`, `preferred_contact_time`, `permission_to_enter`
-- `completion_notes` (internal), `tenant_visible_completion_note`, `completed_at`, `completed_by`
-- `created_by`, `created_at`, `updated_at`
+2. **"From scratch"**: do you want me to delete the current owner portal files and rebuild, or **extend** what's there to hit every Phase 4 item you listed? Extending is safer and faster; a full rebuild risks breaking the invite flow you already tested.
 
-Trigger: on WO status change → mirror to parent `pm_maintenance_requests.status` using the extended set (`work_order_created | assigned | in_progress | completed | cancelled`). Existing tenant-facing statuses continue to work.
+### What I will build (assuming A + extend)
 
-**Extend `pm_maintenance_requests`**: add `work_order_id uuid` (nullable, → pm_work_orders), widen `status` allowed values to include `work_order_created | assigned`. No enum change (column is text).
+**Database (additive migration)**
+- `pm_owner_documents` table (owner-visible docs), private `owner-documents` storage bucket, signed-URL access, RLS scoped through `pm_owner_properties`.
+- Add `owner_visible` boolean flags to `pm_maintenance_requests` and `pm_work_orders` (default false) plus `owner_visible_summary` / `owner_visible_completion_note` text.
+- `pm_owner_account_deletion_requests` table (or reuse `account_deletion_requests` with `requester_type='property_owner'`).
+- RLS helper functions already present (`is_property_owner_of`, `get_owner_property_ids`) — verify + tighten. Add `SECURITY DEFINER` read functions for maintenance/work-order/document lists to avoid recursion.
+- GRANTs for every new table.
 
-**New table `public.pm_work_order_attachments`** — before/after/completion photos uploaded by worker/sub. Fields: `id, work_order_id, storage_path, file_name, kind ('before'|'after'|'other'), tenant_visible bool default false, uploaded_by, created_at`. Uses existing `pm-maintenance-attachments` bucket under path `wo/<work_order_id>/…`.
+**Owner portal pages**
+- `OwnerHome` — welcome, KPI cards (properties, units, occupied, vacant, open maintenance), recent activity, docs shortcut, PM contact.
+- `OwnerProperties` — list of assigned properties with unit/occupancy/open-maintenance counts.
+- `OwnerPropertyDetail` — summary, units, occupancy, lease active/ending/ended chip only, owner-visible maintenance list, owner-visible docs, PM contact.
+- `OwnerMaintenance` — all owner-visible requests + WOs across assigned properties, filters, owner-facing summary only.
+- `OwnerDocuments` **(new)** — list of owner-visible docs with signed-URL open/download.
+- `OwnerAccount` — profile, assigned properties, support, privacy, Request Account Deletion, sign out.
+- Emerald theme, mobile-first, bottom nav: Home / Properties / Maintenance / Documents / Account.
 
-**New table `public.pm_maintenance_activity`** — append-only audit trail: `id, request_id, work_order_id, actor_user_id, event ('submitted'|'reviewed'|'wo_created'|'assigned'|'status_changed'|'note_added'|'completed'|'tenant_notified'), detail jsonb, created_at`.
+**Admin side**
+- Confirm "Invite to Owner Portal" on `PMOwnerDetail` (already wired via `send-owner-invite`) shows "Portal linked" badge.
+- Owner-visible toggles on maintenance request + WO admin pages (checkbox + summary/completion textareas).
+- Owner document upload UI on `PMOwnerDetail` and property detail (admin only).
+- **Admin Preview** button on `PMOwnerDetail` → opens owner portal in preview mode with amber banner "Admin Preview — read-only". Read-only enforced by a preview context flag that disables all mutating buttons; audit writes tagged `admin_preview=true`.
 
-**GRANTS + RLS** for every new table (following project rules):
-- `pm_work_orders`:
-  - Admin/ops: full via `is_ops_staff(auth.uid())`.
-  - Worker: SELECT/UPDATE own rows where `assigned_worker_id = auth.uid()` (limited columns via view for portal — actually enforced by only exposing safe columns in worker hook).
-  - Subcontractor: SELECT/UPDATE where linked via `subcontractors.user_id = auth.uid()`.
-  - Tenant: SELECT only rows tied to their tenant_id, and only a safe subset of columns (via a `pm_work_order_tenant_view` view — RLS on view + underlying).
-- `pm_work_order_attachments`: admin full; worker/sub full for their WOs; tenant SELECT only where `tenant_visible = true`.
-- `pm_maintenance_activity`: admin full; tenant SELECT own request rows filtered to safe events; worker/sub SELECT their WO events.
+**Guardrails (won't touch)**
+- No changes to tenant, worker, subcontractor, customer, admin, finance, HR, invoices, jobs, visits, pay stubs, Stripe, mobile config, package name, icons, signing, auth flow.
+- Additive migrations only; no revoked grants (the prior Phase 4 regression).
+- Every new `public` table gets `GRANT ... TO authenticated; GRANT ALL ... TO service_role;` in the same migration.
 
-Storage bucket `pm-maintenance-attachments` (already exists, private) — reuse. Policies extended: allow worker/sub to insert under `wo/<work_order_id>/*` when assigned; tenant read for `tenant_visible` rows via signed URL from server (hook signs).
+### Intentionally not built (Phase 5)
+Live rent, payouts, owner statements, Stripe rent, accounting reports.
 
-## 2. Hooks (new file `src/hooks/usePMWorkOrders.ts`)
-
-- `useCreateWorkOrder(requestId, opts)` — inserts pm_work_orders, links `work_order_id` on request, sets request.status='work_order_created', logs activity, sends admin+worker notification via existing `send-notification`.
-- `useAssignWorkOrder(workOrderId, {assignee_type, assigned_worker_id?, assigned_subcontractor_id?, share_tenant_contact})` — sets status='assigned', logs activity, notifies assignee.
-- `useUpdateWorkOrderStatus`, `useCompleteWorkOrder(tenant_visible_note?)` — updates + syncs request completion.
-- `useMyWorkOrders()` (worker/sub portal), `useWorkOrder(id)`, `useAdminWorkOrder(id)`.
-- `useUploadWorkOrderAttachment(kind, tenant_visible)` + `useTenantWorkOrderView(requestId)` returning safe fields only.
-
-## 3. UI
-
-**Admin — `PMMaintenanceRequestDetail.tsx`**:
-- Big "Create Work Order" button (hidden and replaced with amber "Admin-review only — non-repair" hint when catalog entry has `nonRepair: true`; admin can still override via secondary menu "Create Work Order anyway").
-- After creation: "Work Order" card showing WO number, status, assignee, "Assign / Reassign" dialog (Worker picker from `team_members` where portal_worker; Subcontractor picker from `subcontractors`; "Keep unassigned"; toggle "Share tenant contact with assignee").
-- Activity/history timeline (from `pm_maintenance_activity`).
-- Existing internal notes + tenant-facing update fields stay.
-- "Mark tenant-visible" checkbox on each attachment (updates a new `tenant_visible` bool on `pm_maintenance_request_attachments` — small additive column).
-
-**Admin — new `PMWorkOrderDetail.tsx`** (route `/property-management/work-orders/:id`): full WO view with attachments, status controls, completion.
-
-**Worker/Subcontractor portals** — new list & detail:
-- `src/pages/worker/WorkerPMWorkOrders.tsx` list of assigned WOs.
-- `src/pages/worker/WorkerPMWorkOrderDetail.tsx`: shows property address, unit, category/issue, priority, safety badge, description, access notes, permission to enter, tenant contact (only if `share_tenant_contact`), photos (signed URLs), status control (In Progress / Completed), completion notes + before/after photo upload.
-- Mirror pages under `src/pages/subcontractor/`.
-- Add sidebar entry ("PM Work Orders") gated by portal.
-- Explicit exclusions: no pricing, no lease dates, no rent balance, no owner info, no internal admin notes.
-
-**Tenant portal — `TenantMaintenanceDetail.tsx`** (existing): add a "Progress" section showing safe events from activity feed + admin-visible completion note + tenant-visible attachments. Never show internal notes, worker notes, or cost data.
-
-## 4. Non-repair guardrail
-
-`src/lib/maintenanceCatalog.ts` already flags `nonRepair`. In the admin detail page, look up the issue by `issue_key` and if `nonRepair === true`:
-- Hide the primary "Create Work Order" CTA.
-- Show a clear "Admin review only — non-repair concern" banner.
-- Provide a secondary "Create Work Order anyway" action (rare escalations like a fire-alarm test call).
-No auto-conversion anywhere.
-
-## 5. Notifications
-
-Reuse `send-notification`. Add whitelisted events: `pm_work_order_created`, `pm_work_order_assigned`, `pm_work_order_completed`. Recipients: `ops@praetoriagroup.ca` + assigned user (in-app). No tenant SMS/email in this phase (per launch constraints) — tenant sees updates in-portal.
-
-## 6. QA Checklist (delivered in reply after build)
-
-Admin / Tenant / Worker / Subcontractor / Security walkthroughs matching the ones in the request.
-
-## Out of scope (as requested)
-
-Rent payments, owner portal, owner statements, formal inspections module, PM finance/invoicing.
-
----
-
-## Technical notes
-
-- Kept separate from `jobs` table intentionally: converting to `jobs` would pull WOs into invoicing, quotes, visits, RLS surface for customers/subs used elsewhere — high blast radius. `pm_work_orders` is a small dedicated table that reuses shared building blocks (notifications, storage bucket, worker/sub role helpers) without touching the field-service pipeline. A future phase can add "escalate to Job" if needed.
-- All new tables carry `GRANT` blocks per project rule.
-- Trigger `pm_work_orders_sync_request_status` keeps `pm_maintenance_requests.status` in sync so existing tenant list/detail views work with zero changes.
+### Please reply with A or B, and confirm "extend" vs "rebuild from scratch" so I proceed correctly.

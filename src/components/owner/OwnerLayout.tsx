@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { OwnerBottomNav } from './OwnerBottomNav';
+import { AdminPreviewBanner } from './AdminPreviewBanner';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { isAndroidMobile } from '@/lib/platform';
@@ -19,6 +20,7 @@ export function OwnerLayout({ children }: { children: ReactNode }) {
       }}
     >
       <AnnouncementBanner />
+      <AdminPreviewBanner />
       <header
         className="text-white px-4 pt-5 pb-6 shadow-md"
         style={{

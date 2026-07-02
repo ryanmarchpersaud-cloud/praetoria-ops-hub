@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Building2, Wrench, User } from 'lucide-react';
+import { Home, Building2, Wrench, User, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
   { to: '/owner', icon: Home, label: 'Home', end: true },
   { to: '/owner/properties', icon: Building2, label: 'Properties', end: false },
   { to: '/owner/maintenance', icon: Wrench, label: 'Maintenance', end: false },
+  { to: '/owner/documents', icon: FileText, label: 'Documents', end: false },
   { to: '/owner/account', icon: User, label: 'Account', end: false },
 ];
 
@@ -24,16 +25,12 @@ export function OwnerBottomNav() {
               to={tab.to}
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors min-h-[56px] relative',
-                isActive ? 'text-slate-900' : 'text-muted-foreground active:text-foreground'
+                isActive ? 'text-emerald-700' : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-10 rounded-b bg-slate-900" />
-              )}
-              <tab.icon className={cn('h-5 w-5', isActive && 'stroke-[2.5]')} />
-              <span className={cn('text-[10px] font-medium', isActive && 'font-semibold')}>
-                {tab.label}
-              </span>
+              <tab.icon className="h-5 w-5" />
+              <span className="text-[10px] font-medium">{tab.label}</span>
+              {isActive && <span className="absolute top-0 h-0.5 w-8 rounded-b bg-emerald-600" />}
             </NavLink>
           );
         })}
