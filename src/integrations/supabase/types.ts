@@ -5518,6 +5518,108 @@ export type Database = {
         }
         Relationships: []
       }
+      pm_application_documents: {
+        Row: {
+          application_id: string
+          created_at: string
+          file_url: string | null
+          id: string
+          label: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          label: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          label?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_application_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "pm_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_applications: {
+        Row: {
+          admin_review_status: string | null
+          created_at: string
+          created_by: string | null
+          desired_move_in: string | null
+          id: string
+          notes: string | null
+          property_id: string | null
+          prospect_id: string | null
+          status: string
+          submitted_at: string | null
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_review_status?: string | null
+          created_at?: string
+          created_by?: string | null
+          desired_move_in?: string | null
+          id?: string
+          notes?: string | null
+          property_id?: string | null
+          prospect_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_review_status?: string | null
+          created_at?: string
+          created_by?: string | null
+          desired_move_in?: string | null
+          id?: string
+          notes?: string | null
+          property_id?: string | null
+          prospect_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_applications_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_applications_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "pm_prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_applications_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_expense_attachments: {
         Row: {
           created_at: string
@@ -6087,6 +6189,245 @@ export type Database = {
           },
         ]
       }
+      pm_move_in_checklist_items: {
+        Row: {
+          category: string | null
+          checklist_id: string
+          completed: boolean
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          label: string
+          notes: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          checklist_id: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          checklist_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_move_in_checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_in_checklists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_move_in_checklists: {
+        Row: {
+          application_id: string | null
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          lease_id: string | null
+          notes: string | null
+          property_id: string | null
+          prospect_id: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lease_id?: string | null
+          notes?: string | null
+          property_id?: string | null
+          prospect_id?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lease_id?: string | null
+          notes?: string | null
+          property_id?: string | null
+          prospect_id?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_move_in_checklists_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "pm_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_move_in_checklists_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_move_in_checklists_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_move_in_checklists_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "pm_prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_move_in_checklists_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_move_out_checklist_items: {
+        Row: {
+          category: string | null
+          checklist_id: string
+          completed: boolean
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          id: string
+          label: string
+          notes: string | null
+          sort_order: number
+        }
+        Insert: {
+          category?: string | null
+          checklist_id: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          notes?: string | null
+          sort_order?: number
+        }
+        Update: {
+          category?: string | null
+          checklist_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_move_out_checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_out_checklists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_move_out_checklists: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          lease_id: string | null
+          notes: string | null
+          property_id: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lease_id?: string | null
+          notes?: string | null
+          property_id?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          lease_id?: string | null
+          notes?: string | null
+          property_id?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_move_out_checklists_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_move_out_checklists_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_move_out_checklists_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_owner_documents: {
         Row: {
           category: string | null
@@ -6415,6 +6756,243 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      pm_prospects: {
+        Row: {
+          assigned_to: string | null
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          created_by: string | null
+          desired_move_in: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          occupants: number | null
+          parking: string | null
+          pets: string | null
+          phone: string | null
+          preferred_contact: string | null
+          property_id: string | null
+          source: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          created_by?: string | null
+          desired_move_in?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          occupants?: number | null
+          parking?: string | null
+          pets?: string | null
+          phone?: string | null
+          preferred_contact?: string | null
+          property_id?: string | null
+          source?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          created_by?: string | null
+          desired_move_in?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          occupants?: number | null
+          parking?: string | null
+          pets?: string | null
+          phone?: string | null
+          preferred_contact?: string | null
+          property_id?: string | null
+          source?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_prospects_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_prospects_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_showings: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          follow_up_required: boolean
+          id: string
+          notes: string | null
+          property_id: string | null
+          prospect_id: string | null
+          scheduled_at: string
+          showing_type: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          follow_up_required?: boolean
+          id?: string
+          notes?: string | null
+          property_id?: string | null
+          prospect_id?: string | null
+          scheduled_at: string
+          showing_type?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          follow_up_required?: boolean
+          id?: string
+          notes?: string | null
+          property_id?: string | null
+          prospect_id?: string | null
+          scheduled_at?: string
+          showing_type?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_showings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_showings_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "pm_prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_showings_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_staff_tasks: {
+        Row: {
+          application_id: string | null
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          priority: string | null
+          property_id: string | null
+          prospect_id: string | null
+          status: string
+          title: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          property_id?: string | null
+          prospect_id?: string | null
+          status?: string
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          property_id?: string | null
+          prospect_id?: string | null
+          status?: string
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_staff_tasks_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "pm_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_staff_tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_staff_tasks_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "pm_prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_staff_tasks_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pm_tenant_documents: {
         Row: {
@@ -11058,12 +11636,15 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
+      is_leasing_agent: { Args: { _user_id: string }; Returns: boolean }
       is_ops_staff: { Args: { _user_id: string }; Returns: boolean }
       is_owner: { Args: { _user_id: string }; Returns: boolean }
       is_personal_account_owner: {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_pm_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_property_manager: { Args: { _user_id: string }; Returns: boolean }
       is_property_owner_of: {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
@@ -11247,6 +11828,8 @@ export type Database = {
         | "ops_manager"
         | "tenant"
         | "property_owner"
+        | "property_manager"
+        | "leasing_agent"
       billing_frequency:
         | "per-visit"
         | "weekly"
@@ -11565,6 +12148,8 @@ export const Constants = {
         "ops_manager",
         "tenant",
         "property_owner",
+        "property_manager",
+        "leasing_agent",
       ],
       billing_frequency: [
         "per-visit",
