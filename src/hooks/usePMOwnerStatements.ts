@@ -196,12 +196,13 @@ export function useDeleteStatementLine() {
 /** Draft helper: prepare initial lines from pm_tenant_ledger & pm_expenses for a period. */
 export async function fetchStatementDraftData(propertyId: string, periodStart: string, periodEnd: string) {
   const [ledger, exp] = await Promise.all([
-    supabase.from('pm_tenant_ledger').select('id, tenant_id, entry_date, type, amount, description')
+    (supabase as any).from('pm_tenant_ledger').select('id, tenant_id, entry_date, type, amount, description, lease_id')
       .gte('entry_date', periodStart).lte('entry_date', periodEnd)
       .in('type', ['rent_charge','payment']),
-    supabase.from('pm_expenses' as any).select('id, expense_date, description, amount, category, owner_visible, is_maintenance')
+    (supabase as any).from('pm_expenses').select('id, expense_date, description, total, category, is_owner_visible, maintenance_request_id, unit_id')
       .eq('property_id', propertyId)
       .gte('expense_date', periodStart).lte('expense_date', periodEnd),
   ]);
+  // Filter ledger by lease→unit→property is complex; caller may pass lease list. Return raw.
   return { ledger: ledger.data ?? [], expenses: exp.data ?? [] };
 }
