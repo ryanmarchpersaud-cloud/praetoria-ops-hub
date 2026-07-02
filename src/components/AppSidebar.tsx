@@ -301,6 +301,11 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
   ];
 
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    isActive
+      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 pl-[calc(0.5rem-2px)]'
+      : 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';
+
   if (collapsed) {
     return (
       <SidebarGroup>
@@ -309,7 +314,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                  <NavLink to={item.url} end={item.end} className={linkClass}>
                     <item.icon className="h-4 w-4" />
                   </NavLink>
                 </SidebarMenuButton>
@@ -327,9 +332,12 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/80 hover:bg-sidebar-accent/50 cursor-pointer"
+        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer border-l-2 border-emerald-600/70"
       >
-        <span>Property Management</span>
+        <span className="flex items-center gap-1.5">
+          <Building2 className="h-3.5 w-3.5" />
+          Property Management
+        </span>
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
       </button>
       {open && (
@@ -338,7 +346,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                  <NavLink to={item.url} end={item.end} className={linkClass}>
                     <item.icon className="mr-2 h-4 w-4" />
                     <span>{item.title}</span>
                   </NavLink>
