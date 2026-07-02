@@ -96,7 +96,7 @@ ${recentIncidents?.length ? recentIncidents.map((i: any) => `- ${i.report_number
 ${pendingQuotes?.length ? pendingQuotes.map((q: any) => `- ${q.quote_number}: $${Number(q.total).toLocaleString()} — ${q.approval_status}`).join("\n") : "None"}
 
 ### Upcoming Visits (next 7 days: ${upcomingVisits?.length || 0})
-${upcomingVisits?.length ? upcomingVisits.map((v: any) => `- ${v.visit_number}: ${v.service_date} — ${v.service_type || "Service"} — ${v.status}`).join("\n") : "None"}
+${upcomingVisits?.length ? upcomingVisits.map((v: any) => `- ${v.visit_number}: ${v.service_date} — ${v.service_type || "Service"} — ${v.visit_status}`).join("\n") : "None"}
 `;
 }
 
