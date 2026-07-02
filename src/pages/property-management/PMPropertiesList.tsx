@@ -84,7 +84,7 @@ export default function PMPropertiesList() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">All properties</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{activeOnly ? 'Active properties' : 'All properties'} ({visible.length})</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? 'Loading…' : visible.length === 0 ? (
             <p className="text-sm text-muted-foreground">{activeOnly ? 'No active properties.' : 'No managed properties yet.'}</p>
