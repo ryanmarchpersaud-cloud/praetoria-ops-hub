@@ -275,6 +275,12 @@ export function useAssignWorkOrder() {
         actor_role: 'admin',
       });
 
+      const assigneeName = await resolveAssigneeName(
+        input.assignee_type,
+        input.assigned_worker_id,
+        input.assigned_subcontractor_id,
+      );
+
       if (input.assignee_type === 'worker' && input.assigned_worker_id) {
         try {
           await sb.from('notifications').insert({
@@ -290,6 +296,37 @@ export function useAssignWorkOrder() {
             sent_at: new Date().toISOString(),
           });
         } catch {}
+      }
+
+      // Admin in-app + ops email so the red badge appears and ops has a record
+      if (input.assignee_type !== 'unassigned') {
+        await insertAdminInAppNotification(
+          `PM Work Order ${data.work_order_number} — assigned to ${assigneeName}`,
+          `${data.title} has been assigned to ${assigneeName}.`,
+          data.id,
+        );
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              event: 'pm_work_order_assigned',
+              audience: 'admin',
+              channels: ['email'],
+              record_type: 'pm_work_order',
+              record_id: data.id,
+              variables: {
+                subject: `PM Work Order ${data.work_order_number} — assigned to ${assigneeName}`,
+                body:
+                  `A property-management work order was assigned.\n\n` +
+                  `WO: ${data.work_order_number}\nTitle: ${data.title}\n` +
+                  `Assignee: ${assigneeName} (${input.assignee_type})\n\n` +
+                  `Open: https://praetoriagroup.ca/property-management/work-orders/${data.id}`,
+                reply_to: 'ops@praetoriagroup.ca',
+              },
+            },
+          });
+        } catch (e) {
+          console.warn('[wo] ops assign email failed', e);
+        }
       }
       return data;
     },
