@@ -19,7 +19,7 @@ export default function PMMaintenanceRequestsList() {
     <div className="p-6 max-w-6xl mx-auto space-y-4">
       <div className="flex items-center gap-3">
         <Button variant="outline" size="sm" asChild>
-          <Link to="/">
+          <Link to="/property-management">
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
           </Link>
         </Button>
