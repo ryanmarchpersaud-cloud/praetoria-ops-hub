@@ -6,11 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Paperclip, Save } from 'lucide-react';
+import { ArrowLeft, Paperclip, Save, Wrench, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAdminMaintenanceRequest, useUpdateMaintenanceRequest, signMaintenanceAttachment } from '@/hooks/useTenantPortal';
+import { useWorkOrderForRequest } from '@/hooks/usePMWorkOrders';
+import { CreateWorkOrderDialog } from '@/components/property-management/CreateWorkOrderDialog';
+import { WorkOrderCard } from '@/components/property-management/WorkOrderCard';
+import { ActivityTimeline } from '@/components/property-management/ActivityTimeline';
+import { isNonRepairRequest } from '@/lib/maintenanceCatalogHelpers';
 
-const STATUSES = ['new', 'reviewed', 'in_progress', 'completed', 'cancelled'];
+const STATUSES = ['new', 'reviewed', 'work_order_created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
 export default function PMMaintenanceRequestDetail() {
   const { id } = useParams();
