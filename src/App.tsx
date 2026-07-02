@@ -269,6 +269,16 @@ const PMStaffMoveIns = lazy(() => import("./pages/pm-staff/MoveIns"));
 const PMStaffMoveOuts = lazy(() => import("./pages/pm-staff/MoveOuts"));
 const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
 const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
+const PMStaffProfile = lazy(() => import("./pages/pm-staff/Profile"));
+const PMStaffTimeClock = lazy(() => import("./pages/pm-staff/TimeClock"));
+const PMStaffMyTimesheets = lazy(() => import("./pages/pm-staff/MyTimesheets"));
+const PMStaffMyPayStubs = lazy(() => import("./pages/pm-staff/MyPayStubs"));
+const PMStaffMyDocuments = lazy(() => import("./pages/pm-staff/MyDocuments"));
+const PMStaffTraining = lazy(() => import("./pages/pm-staff/Training"));
+const PMStaffMyPPE = lazy(() => import("./pages/pm-staff/MyPPE"));
+const PMStaffExpenseClaims = lazy(() => import("./pages/pm-staff/ExpenseClaims"));
+const PMStaffTimeOff = lazy(() => import("./pages/pm-staff/TimeOff"));
+const PMStaffMessages = lazy(() => import("./pages/pm-staff/Messages"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
