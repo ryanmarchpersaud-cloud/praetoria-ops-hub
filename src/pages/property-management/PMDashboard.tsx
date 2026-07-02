@@ -6,6 +6,7 @@ import {
   KeyRound, CheckCircle2, XCircle, ArrowRight, Plus,
 } from 'lucide-react';
 import { usePmSummary } from '@/hooks/usePropertyManagement';
+import { RecentTenantActivity } from '@/components/property-management/RecentTenantActivity';
 import { cn } from '@/lib/utils';
 
 type KpiTone = 'indigo' | 'emerald' | 'amber' | 'rose' | 'sky' | 'violet' | 'slate' | 'teal';
@@ -101,6 +102,8 @@ export default function PMDashboard() {
         <KpiCard label="Active leases"      value={s?.activeLeases ?? 0}     icon={KeyRound}     tone="amber"   to="/property-management/leases" />
         <KpiCard label="Property owners"    value={s?.totalOwners ?? 0}      icon={Briefcase}    tone="slate"   to="/property-management/owners" />
       </div>
+
+      <RecentTenantActivity />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
