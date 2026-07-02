@@ -6261,11 +6261,21 @@ export type Database = {
           id: string
           lease_id: string | null
           paid_date: string | null
+          payment_method: string | null
+          period_end: string | null
+          period_start: string | null
+          property_id: string | null
+          receipt_path: string | null
+          receipt_tenant_visible: boolean
           reference: string | null
+          related_charge_id: string | null
+          reverses_entry_id: string | null
+          status: string
           tenant_id: string
           tenant_note: string | null
           tenant_visible: boolean
           type: string
+          unit_id: string | null
           updated_at: string
         }
         Insert: {
@@ -6279,11 +6289,21 @@ export type Database = {
           id?: string
           lease_id?: string | null
           paid_date?: string | null
+          payment_method?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          property_id?: string | null
+          receipt_path?: string | null
+          receipt_tenant_visible?: boolean
           reference?: string | null
+          related_charge_id?: string | null
+          reverses_entry_id?: string | null
+          status?: string
           tenant_id: string
           tenant_note?: string | null
           tenant_visible?: boolean
           type: string
+          unit_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -6297,11 +6317,21 @@ export type Database = {
           id?: string
           lease_id?: string | null
           paid_date?: string | null
+          payment_method?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          property_id?: string | null
+          receipt_path?: string | null
+          receipt_tenant_visible?: boolean
           reference?: string | null
+          related_charge_id?: string | null
+          reverses_entry_id?: string | null
+          status?: string
           tenant_id?: string
           tenant_note?: string | null
           tenant_visible?: boolean
           type?: string
+          unit_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -6313,10 +6343,38 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_tenant_ledger_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_ledger_related_charge_id_fkey"
+            columns: ["related_charge_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenant_ledger"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_ledger_reverses_entry_id_fkey"
+            columns: ["reverses_entry_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenant_ledger"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pm_tenant_ledger_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_ledger_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
             referencedColumns: ["id"]
           },
         ]
@@ -10456,6 +10514,10 @@ export type Database = {
         }
         Returns: number
       }
+      pm_get_lease_balance: { Args: { p_lease_id: string }; Returns: number }
+      pm_get_tenant_balance: { Args: { p_tenant_id: string }; Returns: number }
+      pm_my_balance: { Args: never; Returns: number }
+      pm_my_next_due: { Args: never; Returns: string }
       pm_property_owner_can_view_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
