@@ -187,6 +187,8 @@ export default function PMExpensesPage() {
       expense_date: row.expense_date,
       due_date: row.due_date ?? '',
       subtotal: String(row.subtotal ?? ''),
+      gst_percent: row.subtotal > 0 ? String(+(Number(row.gst_amount ?? 0) / Number(row.subtotal) * 100).toFixed(3)) : '5',
+      pst_percent: row.subtotal > 0 ? String(+(Number(row.pst_amount ?? 0) / Number(row.subtotal) * 100).toFixed(3)) : '6',
       gst_amount: String(row.gst_amount ?? ''),
       pst_amount: String(row.pst_amount ?? ''),
       status: row.status ?? 'draft',
