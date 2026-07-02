@@ -45,7 +45,7 @@ export function OwnerLayout({ children }: { children: ReactNode }) {
             <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-100/90 bg-white/10 px-2 py-1 rounded-full shrink-0">
               <ShieldCheck className="h-3.5 w-3.5" /> Secure
             </div>
-            <div className="shrink-0 [&_button]:text-white [&_svg]:text-white">
+            <div className="shrink-0 [&_button>svg]:text-green-500">
               <NotificationCenter />
             </div>
           </div>
