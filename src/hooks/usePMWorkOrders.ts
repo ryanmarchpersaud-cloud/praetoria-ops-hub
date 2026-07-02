@@ -336,6 +336,8 @@ export function useAssignWorkOrder() {
       qc.invalidateQueries({ queryKey: ['pm', 'work-order', v.work_order_id] });
       qc.invalidateQueries({ queryKey: ['pm', 'work-orders'] });
       qc.invalidateQueries({ queryKey: ['pm', 'maintenance-requests'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
     },
   });
 }
