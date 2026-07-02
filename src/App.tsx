@@ -258,6 +258,16 @@ const PMOwnerStatementsList = lazy(() => import("./pages/property-management/PMO
 const PMOwnerStatementDetail = lazy(() => import("./pages/property-management/PMOwnerStatementDetail"));
 const OwnerStatements = lazy(() => import("./pages/owner/OwnerStatements"));
 const OwnerStatementPrint = lazy(() => import("./pages/property-management/OwnerStatementPrint"));
+const PMStaffHome = lazy(() => import("./pages/pm-staff/PMStaffHome"));
+const PMStaffVacancies = lazy(() => import("./pages/pm-staff/Vacancies"));
+const PMStaffProspects = lazy(() => import("./pages/pm-staff/Prospects"));
+const PMStaffShowings = lazy(() => import("./pages/pm-staff/Showings"));
+const PMStaffApplications = lazy(() => import("./pages/pm-staff/Applications"));
+const PMStaffTasks = lazy(() => import("./pages/pm-staff/Tasks"));
+const PMStaffMoveIns = lazy(() => import("./pages/pm-staff/MoveIns"));
+const PMStaffMoveOuts = lazy(() => import("./pages/pm-staff/MoveOuts"));
+const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
+const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
