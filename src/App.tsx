@@ -215,6 +215,18 @@ import EmailsTextsPage from "./pages/EmailsTextsPage";
 import RequestsBookingsPage from "./pages/RequestsBookingsPage";
 import PortalSettingsPage from "./pages/PortalSettingsPage";
 
+// Property Management (Phase 1 — Admin foundation)
+const PMDashboard = lazy(() => import("./pages/property-management/PMDashboard"));
+const PMPropertiesList = lazy(() => import("./pages/property-management/PMPropertiesList"));
+const PMPropertyDetail = lazy(() => import("./pages/property-management/PMPropertyDetail"));
+const PMUnitsList = lazy(() => import("./pages/property-management/PMUnitsList"));
+const PMOwnersList = lazy(() => import("./pages/property-management/PMOwnersList"));
+const PMOwnerDetail = lazy(() => import("./pages/property-management/PMOwnerDetail"));
+const PMTenantsList = lazy(() => import("./pages/property-management/PMTenantsList"));
+const PMTenantDetail = lazy(() => import("./pages/property-management/PMTenantDetail"));
+const PMLeasesList = lazy(() => import("./pages/property-management/PMLeasesList"));
+const PMLeaseDetail = lazy(() => import("./pages/property-management/PMLeaseDetail"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -583,6 +595,18 @@ function AppRoutes() {
 
         <Route path="/snow-logs" element={<ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><SnowLogArchivePage /></Suspense></ModuleGuard>} />
         <Route path="/price-list" element={<ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><LabourPriceListPage /></Suspense></ModuleGuard>} />
+
+        {/* ── Property Management (Phase 1 — Admin/Owner only) ── */}
+        <Route path="/property-management" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMDashboard /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/properties" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMPropertiesList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/properties/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMPropertyDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/units" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMUnitsList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/owners" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnersList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/owners/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/tenants" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantsList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/tenants/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/leases" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeasesList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/leases/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeaseDetail /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}

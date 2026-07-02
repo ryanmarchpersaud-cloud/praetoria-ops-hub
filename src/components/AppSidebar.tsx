@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Trash2,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
   MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign, RefreshCw,
-  ChevronDown,
+  ChevronDown, Home, KeyRound, UserCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
@@ -11,7 +11,7 @@ import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useMessaging';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
-import { useSidebarAccess } from '@/hooks/useModuleAccess';
+import { useSidebarAccess, useModuleAccess } from '@/hooks/useModuleAccess';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
@@ -72,6 +72,7 @@ export function AppSidebar() {
   const { data: unreadCount } = useUnreadCount();
   const { data: sidebarCounts } = useSidebarCounts();
   const access = useSidebarAccess();
+  const moduleAccess = useModuleAccess();
 
   const getBadgeCount = (key?: CountKey): number => {
     if (!key) return 0;
@@ -197,6 +198,8 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
+        {moduleAccess.isOwnerOrAdmin && <PropertyManagementGroup collapsed={collapsed} />}
+
         {!collapsed && <ServiceHubGroup />}
       </SidebarContent>
 
@@ -277,3 +280,74 @@ function ServiceHubGroup() {
   );
 }
 
+
+const PM_STORAGE_KEY = 'praetoria.sidebar.propertyManagementOpen';
+
+function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
+  const [open, setOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(PM_STORAGE_KEY) === '1';
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(PM_STORAGE_KEY, open ? '1' : '0'); } catch {}
+  }, [open]);
+
+  const items = [
+    { title: 'Dashboard', url: '/property-management', icon: LayoutDashboard, end: true },
+    { title: 'Properties', url: '/property-management/properties', icon: Building2 },
+    { title: 'Units', url: '/property-management/units', icon: Home },
+    { title: 'Owners', url: '/property-management/owners', icon: UserCircle },
+    { title: 'Tenants', url: '/property-management/tenants', icon: Users },
+    { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
+  ];
+
+  if (collapsed) {
+    return (
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {items.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild>
+                  <NavLink to={item.url} end={item.end} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                    <item.icon className="h-4 w-4" />
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    );
+  }
+
+  return (
+    <SidebarGroup>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/80 hover:bg-sidebar-accent/50 cursor-pointer"
+      >
+        <span>Property Management</span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
+      </button>
+      {open && (
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {items.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild>
+                  <NavLink to={item.url} end={item.end} className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                    <item.icon className="mr-2 h-4 w-4" />
+                    <span>{item.title}</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      )}
+    </SidebarGroup>
+  );
+}
