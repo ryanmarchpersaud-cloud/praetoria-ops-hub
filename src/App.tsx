@@ -480,7 +480,7 @@ function OwnerRoute({ children }: { children?: React.ReactNode }) {
 
 function LoginRoute() {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { isCustomer, isStaff, isSubcontractor, isTenant, isPropertyOwner, canAccessAdminPortal, isLoading } = useAuthorization();
+  const { isCustomer, isStaff, isSubcontractor, isTenant, isPropertyOwner, isPropertyManager, isLeasingAgent, canAccessAdminPortal, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Login />;
   if (isLoading || !mustChangePasswordChecked) return null;
@@ -488,6 +488,7 @@ function LoginRoute() {
   if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
   if (isTenant && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
   if (isPropertyOwner && !canAccessAdminPortal) return <Navigate to="/owner" replace />;
+  if ((isPropertyManager || isLeasingAgent) && !canAccessAdminPortal) return <Navigate to="/pm-staff" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
   return <Navigate to="/" replace />;
