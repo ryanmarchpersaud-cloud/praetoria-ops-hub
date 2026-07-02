@@ -31,7 +31,7 @@ function useOwners() {
   return useQuery({
     queryKey: ['pm-owners-for-stmt'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('pm_property_owners').select('id, contact_name, company_name').order('contact_name');
+      const { data, error } = await supabase.from('pm_property_owners').select('id, owner_name, company_name').order('owner_name');
       if (error) throw error;
       return data ?? [];
     },
@@ -92,7 +92,7 @@ export default function PMOwnerStatementsList() {
                 <SelectContent>
                   <SelectItem value="all">All owners</SelectItem>
                   {(owners as any[]).map((o) => (
-                    <SelectItem key={o.id} value={o.id}>{o.contact_name || o.company_name}</SelectItem>
+                    <SelectItem key={o.id} value={o.id}>{o.owner_name || o.company_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -153,7 +153,7 @@ export default function PMOwnerStatementsList() {
                 {statements.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="font-mono text-xs">{s.statement_number}</TableCell>
-                    <TableCell>{(ownerMap[s.owner_id] as any)?.contact_name || (ownerMap[s.owner_id] as any)?.company_name || '—'}</TableCell>
+                    <TableCell>{(ownerMap[s.owner_id] as any)?.owner_name || (ownerMap[s.owner_id] as any)?.company_name || '—'}</TableCell>
                     <TableCell>{s.property_id ? ((propMap[s.property_id] as any)?.address_line_1 || '—') : '—'}</TableCell>
                     <TableCell className="whitespace-nowrap text-sm">
                       {format(new Date(s.period_start), 'MMM d')} – {format(new Date(s.period_end), 'MMM d, yyyy')}
@@ -221,7 +221,7 @@ function CreateStatementDialog({ open, onOpenChange, owners }: { open: boolean; 
             <Select value={ownerId} onValueChange={(v) => { setOwnerId(v); setPropertyId('none'); }}>
               <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
               <SelectContent>
-                {(owners as any[]).map((o) => <SelectItem key={o.id} value={o.id}>{o.contact_name || o.company_name}</SelectItem>)}
+                {(owners as any[]).map((o) => <SelectItem key={o.id} value={o.id}>{o.owner_name || o.company_name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

@@ -152,7 +152,7 @@ export default function PMOwnerStatementDetail() {
       <Card>
         <CardHeader><CardTitle className="text-base">Summary</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <SummaryTile label="Owner" value={owner ? (owner.contact_name || owner.company_name || '—') : '—'} />
+          <SummaryTile label="Owner" value={owner ? (owner.owner_name || owner.company_name || '—') : '—'} />
           <SummaryTile label="Property" value={property?.address_line_1 || 'Portfolio-wide'} />
           <SummaryTile label="Rent Collected" value={fmt(Number(stmt.rent_collected))} />
           <SummaryTile label="Property Expenses" value={fmt(Number(stmt.property_expenses))} />
