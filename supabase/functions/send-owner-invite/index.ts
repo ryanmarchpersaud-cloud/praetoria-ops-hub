@@ -150,6 +150,14 @@ Deno.serve(async (req) => {
     await adminClient.from("user_roles")
       .upsert({ user_id: userId, role: "property_owner" }, { onConflict: "user_id,role", ignoreDuplicates: true });
 
+    // Phase 5A: force password change on first login using the existing profiles flow.
+    // Additive — reuses the same must_change_password mechanism customers/workers already use.
+    await adminClient.from("profiles").upsert(
+      { user_id: userId, must_change_password: true },
+      { onConflict: "user_id" },
+    );
+
+
     if (resendApiKey && lovableApiKey) {
       const html = buildEmailHtml(firstName, normalizedEmail, tempPassword);
       const emailRes = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
