@@ -7,9 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { usePmOwner, useSavePmOwner, useDeletePmOwner, usePmProperties } from '@/hooks/usePropertyManagement';
+import { useOwnerPortalLinked } from '@/hooks/useOwnerPortal';
 import { toast } from 'sonner';
-import { ArrowLeft, Trash2, Mail } from 'lucide-react';
+import { ArrowLeft, Trash2, Mail, Eye, CheckCircle2 } from 'lucide-react';
 import { InvitePropertyOwnerDialog } from '@/components/property-management/InvitePropertyOwnerDialog';
+import { OwnerDocumentsManager } from '@/components/property-management/OwnerDocumentsManager';
+import { Badge } from '@/components/ui/badge';
 
 export default function PMOwnerDetail() {
   const { id } = useParams();
@@ -17,6 +20,7 @@ export default function PMOwnerDetail() {
   const save = useSavePmOwner();
   const del = useDeletePmOwner();
   const { data: props = [] } = usePmProperties();
+  const { data: portalLinked } = useOwnerPortalLinked(id);
   const [form, setForm] = useState<any>({});
   const [inviteOpen, setInviteOpen] = useState(false);
   useEffect(() => { if (data) setForm(data); }, [data]);
