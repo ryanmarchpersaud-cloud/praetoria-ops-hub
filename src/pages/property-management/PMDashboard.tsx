@@ -6,6 +6,7 @@ import {
   KeyRound, CheckCircle2, XCircle, ArrowRight, Plus,
 } from 'lucide-react';
 import { usePmSummary } from '@/hooks/usePropertyManagement';
+import { RecentTenantActivity } from '@/components/property-management/RecentTenantActivity';
 import { cn } from '@/lib/utils';
 
 type KpiTone = 'indigo' | 'emerald' | 'amber' | 'rose' | 'sky' | 'violet' | 'slate' | 'teal';
