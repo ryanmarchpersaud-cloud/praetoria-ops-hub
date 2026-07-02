@@ -6183,6 +6183,197 @@ export type Database = {
           },
         ]
       }
+      pm_owner_statement_lines: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          created_at: string
+          description: string | null
+          gst_amount: number | null
+          id: string
+          lease_id: string | null
+          line_date: string | null
+          line_type: string
+          owner_visible_note: string | null
+          property_id: string | null
+          pst_amount: number | null
+          sort_order: number | null
+          source_id: string | null
+          source_table: string | null
+          statement_id: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          description?: string | null
+          gst_amount?: number | null
+          id?: string
+          lease_id?: string | null
+          line_date?: string | null
+          line_type: string
+          owner_visible_note?: string | null
+          property_id?: string | null
+          pst_amount?: number | null
+          sort_order?: number | null
+          source_id?: string | null
+          source_table?: string | null
+          statement_id: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          description?: string | null
+          gst_amount?: number | null
+          id?: string
+          lease_id?: string | null
+          line_date?: string | null
+          line_type?: string
+          owner_visible_note?: string | null
+          property_id?: string | null
+          pst_amount?: number | null
+          sort_order?: number | null
+          source_id?: string | null
+          source_table?: string | null
+          statement_id?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_statement_lines_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_statement_lines_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_statement_lines_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_statement_lines_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_owner_statements: {
+        Row: {
+          adjustments: number | null
+          admin_notes: string | null
+          created_at: string
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string
+          maintenance_expenses: number | null
+          management_fees: number | null
+          net_owner_amount: number | null
+          opening_balance: number | null
+          owner_id: string
+          owner_visible: boolean
+          owner_visible_notes: string | null
+          period_end: string
+          period_start: string
+          prepared_at: string | null
+          prepared_by: string | null
+          property_expenses: number | null
+          property_id: string | null
+          rent_charged: number | null
+          rent_collected: number | null
+          shared_at: string | null
+          statement_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          adjustments?: number | null
+          admin_notes?: string | null
+          created_at?: string
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          maintenance_expenses?: number | null
+          management_fees?: number | null
+          net_owner_amount?: number | null
+          opening_balance?: number | null
+          owner_id: string
+          owner_visible?: boolean
+          owner_visible_notes?: string | null
+          period_end: string
+          period_start: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          property_expenses?: number | null
+          property_id?: string | null
+          rent_charged?: number | null
+          rent_collected?: number | null
+          shared_at?: string | null
+          statement_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          adjustments?: number | null
+          admin_notes?: string | null
+          created_at?: string
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          maintenance_expenses?: number | null
+          management_fees?: number | null
+          net_owner_amount?: number | null
+          opening_balance?: number | null
+          owner_id?: string
+          owner_visible?: boolean
+          owner_visible_notes?: string | null
+          period_end?: string
+          period_start?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          property_expenses?: number | null
+          property_id?: string | null
+          rent_charged?: number | null
+          rent_collected?: number | null
+          shared_at?: string | null
+          statement_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_statements_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "pm_property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_statements_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_property_owners: {
         Row: {
           company_name: string | null
