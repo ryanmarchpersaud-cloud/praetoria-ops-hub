@@ -57,6 +57,42 @@ function usePMUnitsForProperty(propertyId?: string) {
   });
 }
 
+const PM_VENDOR_OPTIONS = [
+  'Rona',
+  'Home Depot',
+  'Home Hardware',
+  "Lowe's",
+  'Canadian Tire',
+  'Peavey Mart',
+  'Princess Auto',
+  'Costco',
+  'Walmart',
+  'Windsor Plywood',
+  'Sherwin-Williams',
+  'Dulux Paints',
+  'Benjamin Moore',
+  'Wolseley',
+  'EMCO',
+  'Westburne Electric',
+  'Nelson Lumber',
+  'Robinson Supply',
+  'Amazon',
+];
+
+const PM_PAYMENT_METHODS = [
+  'Cash',
+  'Debit Card',
+  'Credit Card',
+  'Company Card',
+  'e-Transfer',
+  'Cheque',
+  'Bank Transfer / EFT',
+  'Stripe Payment',
+  'PayPal',
+  'Other',
+];
+
+
 const emptyForm = {
   property_id: '',
   unit_id: null as string | null,
