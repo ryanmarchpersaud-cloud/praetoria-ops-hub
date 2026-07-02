@@ -267,7 +267,13 @@ export default function PMExpensesPage() {
     if (editingId) {
       update.mutate({ id: editingId, updates: payload }, { onSuccess: () => setShowCreate(false) });
     } else {
-      create.mutate(payload, { onSuccess: () => setShowCreate(false) });
+      create.mutate(payload, {
+        onSuccess: (row: any) => {
+          // Switch to edit mode on the just-created row so the receipts panel appears
+          setEditingId(row.id);
+          toast({ title: 'Expense created', description: 'Now attach a receipt below (optional).' });
+        },
+      });
     }
   };
 
