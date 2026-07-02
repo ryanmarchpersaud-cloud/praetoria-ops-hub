@@ -1,42 +1,124 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, Mail, ShieldAlert, User as UserIcon, Building2, ChevronRight, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyTenantContext } from '@/hooks/useTenantPortal';
 import { Link } from 'react-router-dom';
+import { DeleteAccountSection } from '@/components/DeleteAccountSection';
+
+const SUPPORT_EMAIL = 'ops@praetoriagroup.ca';
 
 export default function TenantAccount() {
   const { user } = useAuth();
   const { data } = useMyTenantContext();
   const tenant = data?.tenant;
+  const property = data?.property;
+  const unit = data?.unit;
+  const fullName = tenant ? [tenant.first_name, tenant.last_name].filter(Boolean).join(' ') : '';
 
   return (
     <div className="p-4 space-y-4">
+      {/* Account */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-base">Account</CardTitle></CardHeader>
-        <CardContent className="text-sm space-y-2">
-          <div><p className="text-xs text-muted-foreground">Signed in as</p><p className="font-medium">{user?.email}</p></div>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <UserIcon className="h-4 w-4 text-emerald-700" /> Account
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm space-y-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Signed in as</p>
+            <p className="font-medium break-all">{user?.email}</p>
+          </div>
           {tenant && (
             <>
-              <div><p className="text-xs text-muted-foreground">Tenant name</p><p className="font-medium">{tenant.first_name} {tenant.last_name}</p></div>
-              {tenant.phone && <div><p className="text-xs text-muted-foreground">Phone</p><p className="font-medium">{tenant.phone}</p></div>}
+              <div>
+                <p className="text-xs text-muted-foreground">Tenant name</p>
+                <p className="font-medium">{fullName}</p>
+              </div>
+              {tenant.phone && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Phone</p>
+                  <p className="font-medium">{tenant.phone}</p>
+                </div>
+              )}
             </>
           )}
         </CardContent>
       </Card>
 
+      {/* Property */}
+      {property && (
+        <Card className="border-emerald-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-emerald-800 flex items-center gap-2">
+              <Building2 className="h-4 w-4" /> Linked Property
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm space-y-1">
+            <p className="font-semibold">{property.property_name}</p>
+            {unit && <p className="text-muted-foreground">Unit {unit.unit_label}</p>}
+            {property.address_line_1 && (
+              <p className="text-xs text-muted-foreground">
+                {property.address_line_1}
+                {property.city ? `, ${property.city}` : ''}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Help & privacy */}
       <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm">Help & privacy</CardTitle></CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <a className="text-emerald-700 block" href="mailto:support@praetoriagroup.ca">Email support@praetoriagroup.ca</a>
-          <Link className="text-emerald-700 block" to="/account-privacy">Account & privacy</Link>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <HelpCircle className="h-4 w-4 text-emerald-700" /> Help &amp; Privacy
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm divide-y">
+          <a
+            href={`mailto:${SUPPORT_EMAIL}`}
+            className="flex items-center justify-between py-2 text-emerald-700 font-medium"
+          >
+            <span className="flex items-center gap-2">
+              <Mail className="h-4 w-4" /> Email {SUPPORT_EMAIL}
+            </span>
+            <ChevronRight className="h-4 w-4" />
+          </a>
+          <Link
+            to="/account-privacy"
+            className="flex items-center justify-between py-2 text-emerald-700 font-medium"
+          >
+            <span>Account &amp; privacy</span>
+            <ChevronRight className="h-4 w-4" />
+          </Link>
         </CardContent>
       </Card>
 
-      <Button variant="outline" className="w-full" onClick={() => supabase.auth.signOut()}>
+      {/* Sign out */}
+      <Button
+        variant="outline"
+        className="w-full h-11"
+        onClick={() => supabase.auth.signOut()}
+      >
         <LogOut className="h-4 w-4 mr-1" /> Sign out
       </Button>
+
+      {/* Delete account (App Store / Play Store compliance) */}
+      <div className="pt-2">
+        <div className="flex items-center gap-2 mb-2 text-destructive">
+          <ShieldAlert className="h-4 w-4" />
+          <p className="text-sm font-semibold">Delete Account</p>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Submit a request to delete your Praetoria Group tenant account. Your request will be
+          reviewed by Praetoria before removal. Lease, payment, and legal records that
+          Praetoria is required to retain may be kept in anonymized form to comply with
+          Canadian record-keeping laws.
+        </p>
+        <DeleteAccountSection />
+      </div>
     </div>
   );
 }
