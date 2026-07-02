@@ -17,6 +17,8 @@ project_id = "czltgypfgegjmcsczpms"
     verify_jwt = true
   [functions.send-email]
     verify_jwt = false
+  [functions.send-owner-invite]
+    verify_jwt = false
   [functions.send-notification]
     verify_jwt = false
   [functions.send-sms]
