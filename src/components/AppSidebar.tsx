@@ -74,6 +74,7 @@ const viewAsItems: { title: string; url: string; icon: any; badge: string; area:
   { title: 'Worker Portal', url: '/worker', icon: Smartphone, badge: 'Worker view', area: 'workers' },
   { title: 'Subcontractor Portal', url: '/subcontractor', icon: HardHat, badge: 'Subcontractor view', area: 'subs' },
   { title: 'Customer Portal', url: '/portal/properties', icon: Eye, badge: 'Customer view', area: 'customers' },
+  { title: 'PM Staff Portal', url: '/pm-staff', icon: KeyRound, badge: 'Leasing Agent view', area: 'admin' },
 ];
 
 function BadgeCount({ count }: { count: number }) {
@@ -326,6 +327,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Maintenance Requests', url: '/property-management/maintenance', icon: Wrench },
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
+    { title: 'PM Staff Portal', url: '/pm-staff', icon: KeyRound },
   ];
 
   const idleClass = 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';
