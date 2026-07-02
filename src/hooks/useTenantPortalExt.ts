@@ -10,7 +10,7 @@ export function useMyLedger() {
     queryKey: ['tenant-portal', 'ledger', user?.id],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
-        .from('pm_tenant_ledger')
+        .from('pm_tenant_ledger_tenant_safe')
         .select('*')
         .order('entry_date', { ascending: false })
         .limit(200);

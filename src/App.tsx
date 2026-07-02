@@ -236,6 +236,7 @@ const OwnerPropertyDetail = lazy(() => import("./pages/owner/OwnerPropertyDetail
 const OwnerMaintenance = lazy(() => import("./pages/owner/OwnerMaintenance"));
 const OwnerAccount = lazy(() => import("./pages/owner/OwnerAccount"));
 const OwnerDocuments = lazy(() => import("./pages/owner/OwnerDocuments"));
+const OwnerExpenses = lazy(() => import("./pages/owner/OwnerExpenses"));
 const TenantLease = lazy(() => import("./pages/tenant/TenantLease"));
 const TenantMaintenanceList = lazy(() => import("./pages/tenant/TenantMaintenanceList"));
 const TenantMaintenanceNew = lazy(() => import("./pages/tenant/TenantMaintenanceNew"));
@@ -791,6 +792,7 @@ function AppRoutes() {
         <Route path="/owner/properties/:id" element={<Suspense fallback={<RouteLoading />}><OwnerPropertyDetail /></Suspense>} />
         <Route path="/owner/maintenance" element={<Suspense fallback={<RouteLoading />}><OwnerMaintenance /></Suspense>} />
         <Route path="/owner/documents" element={<Suspense fallback={<RouteLoading />}><OwnerDocuments /></Suspense>} />
+        <Route path="/owner/expenses" element={<Suspense fallback={<RouteLoading />}><OwnerExpenses /></Suspense>} />
         <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
       </Route>
 

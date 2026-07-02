@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Building2, Wrench, User, FileText } from 'lucide-react';
+import { Home, Building2, Wrench, User, FileText, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
   { to: '/owner', icon: Home, label: 'Home', end: true },
   { to: '/owner/properties', icon: Building2, label: 'Properties', end: false },
   { to: '/owner/maintenance', icon: Wrench, label: 'Maintenance', end: false },
+  { to: '/owner/expenses', icon: Receipt, label: 'Expenses', end: false },
   { to: '/owner/documents', icon: FileText, label: 'Documents', end: false },
   { to: '/owner/account', icon: User, label: 'Account', end: false },
 ];
