@@ -72,6 +72,14 @@ export default function PMTenantDetail() {
       <TenantBusinessFields form={form} setForm={setForm} />
       <TenantPortalAdminActions tenantId={id!} propertyId={myLeases[0]?.property_id ?? null} />
       <TenantProfileAdminPanel tenantId={id!} />
+      <TenantLedgerManager
+        tenantId={id!}
+        leaseId={myLeases[0]?.id ?? null}
+        propertyId={myLeases[0]?.property_id ?? null}
+        unitId={myLeases[0]?.unit_id ?? null}
+        defaultRentAmount={Number(myLeases[0]?.monthly_rent ?? 0)}
+        defaultRentDueDay={Number(myLeases[0]?.rent_due_day ?? 1)}
+      />
       <InspectionAdminPanel
         tenantId={id!}
         propertyId={myLeases[0]?.property_id ?? null}
