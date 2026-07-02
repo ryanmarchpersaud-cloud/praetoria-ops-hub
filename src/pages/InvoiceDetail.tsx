@@ -236,6 +236,7 @@ export default function InvoiceDetail() {
   const [editingMeta, setEditingMeta] = useState(false);
   const [draftMemo, setDraftMemo] = useState('');
   const [draftNotes, setDraftNotes] = useState('');
+  const [draftHeading, setDraftHeading] = useState('');
   const [draftIssueDate, setDraftIssueDate] = useState('');
   const [draftDueDate, setDraftDueDate] = useState('');
   const [draftPropertyId, setDraftPropertyId] = useState<string>('');
