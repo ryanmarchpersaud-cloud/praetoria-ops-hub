@@ -257,6 +257,7 @@ const SubcontractorPMWorkOrderDetail = lazy(() => import("./pages/subcontractor/
 const PMOwnerStatementsList = lazy(() => import("./pages/property-management/PMOwnerStatementsList"));
 const PMOwnerStatementDetail = lazy(() => import("./pages/property-management/PMOwnerStatementDetail"));
 const OwnerStatements = lazy(() => import("./pages/owner/OwnerStatements"));
+const OwnerStatementPrint = lazy(() => import("./pages/property-management/OwnerStatementPrint"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -681,6 +682,7 @@ function AppRoutes() {
         <Route path="/property-management/expenses" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMExpensesList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-statements" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-statements/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/owner-statements/:id/print" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><OwnerStatementPrint /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}
@@ -799,6 +801,7 @@ function AppRoutes() {
         <Route path="/owner/documents" element={<Suspense fallback={<RouteLoading />}><OwnerDocuments /></Suspense>} />
         <Route path="/owner/expenses" element={<Suspense fallback={<RouteLoading />}><OwnerExpenses /></Suspense>} />
         <Route path="/owner/statements" element={<Suspense fallback={<RouteLoading />}><OwnerStatements /></Suspense>} />
+        <Route path="/owner/statements/:id/print" element={<Suspense fallback={<RouteLoading />}><OwnerStatementPrint /></Suspense>} />
         <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
       </Route>
 

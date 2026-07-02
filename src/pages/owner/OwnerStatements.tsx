@@ -122,7 +122,7 @@ function StatementDetail({ id, onBack }: { id: string; onBack: () => void }) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={onBack}><ArrowLeft className="h-4 w-4 mr-1" />Back</Button>
-        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" />Print</Button>
+        <Button variant="outline" size="sm" onClick={() => window.open(`/owner/statements/${id}/print`, '_blank')}><Printer className="h-4 w-4 mr-1" />Print / PDF</Button>
       </div>
       <Card>
         <CardHeader className="pb-2">
