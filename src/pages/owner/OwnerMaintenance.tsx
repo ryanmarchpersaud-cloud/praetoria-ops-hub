@@ -30,7 +30,7 @@ export default function OwnerMaintenance() {
                 <div key={r.id} className="p-3 border rounded-md">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium">{r.title || r.category}</p>
-                    <Badge variant="outline" className="capitalize">{(r.status || '').replace('_',' ')}</Badge>
+                    <Badge variant="outline">{formatStatusLabel(r.status)}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {r.property?.property_name}{r.unit?.unit_label ? ` · ${r.unit.unit_label}` : ''} · Opened {new Date(r.created_at).toLocaleDateString()}
@@ -57,7 +57,7 @@ export default function OwnerMaintenance() {
                 <div key={w.id} className="p-3 border rounded-md">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium">{w.work_order_number ? `${w.work_order_number} — ` : ''}{w.title}</p>
-                    <Badge variant="outline" className="capitalize">{(w.status || '').replace('_',' ')}</Badge>
+                    <Badge variant="outline">{formatStatusLabel(w.status)}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {w.property?.property_name}{w.unit?.unit_label ? ` · ${w.unit.unit_label}` : ''}
