@@ -82,6 +82,40 @@ async function insertAdminInAppNotification(subject: string, body: string, recor
   }
 }
 
+async function notifyTenantByTenantId(
+  tenant_id: string | null | undefined,
+  event: string,
+  subject: string,
+  body: string,
+  record_type: string,
+  record_id?: string | null,
+) {
+  if (!tenant_id) return;
+  try {
+    const { data: t } = await sb
+      .from('pm_tenants')
+      .select('user_id')
+      .eq('id', tenant_id)
+      .maybeSingle();
+    const uid = t?.user_id;
+    if (!uid) return;
+    await sb.from('notifications').insert({
+      event,
+      channel: 'in_app',
+      audience: 'tenant',
+      recipient_id: uid,
+      record_type,
+      record_id: record_id ?? null,
+      subject,
+      body,
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn('[wo] tenant in_app notify failed', e);
+  }
+}
+
 // ---------- Admin ----------
 export function useCreateWorkOrder() {
   const qc = useQueryClient();
