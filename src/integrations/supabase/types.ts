@@ -6403,6 +6403,62 @@ export type Database = {
           },
         ]
       }
+      pm_tenant_referrals: {
+        Row: {
+          created_at: string
+          friend_email: string | null
+          friend_name: string
+          friend_phone: string | null
+          id: string
+          notes: string | null
+          referrer_contact: string | null
+          referrer_name: string | null
+          referrer_user_id: string | null
+          service_interest: string | null
+          status: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          friend_email?: string | null
+          friend_name: string
+          friend_phone?: string | null
+          id?: string
+          notes?: string | null
+          referrer_contact?: string | null
+          referrer_name?: string | null
+          referrer_user_id?: string | null
+          service_interest?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          friend_email?: string | null
+          friend_name?: string
+          friend_phone?: string | null
+          id?: string
+          notes?: string | null
+          referrer_contact?: string | null
+          referrer_name?: string | null
+          referrer_user_id?: string | null
+          service_interest?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_referrals_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_tenant_vehicles: {
         Row: {
           colour: string | null
