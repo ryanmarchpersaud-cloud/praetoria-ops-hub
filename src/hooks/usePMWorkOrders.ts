@@ -220,6 +220,8 @@ export function useCreateWorkOrder() {
       qc.invalidateQueries({ queryKey: ['pm', 'maintenance-request', v.request_id] });
       qc.invalidateQueries({ queryKey: ['pm', 'maintenance-requests'] });
       qc.invalidateQueries({ queryKey: ['pm', 'work-orders'] });
+      qc.invalidateQueries({ queryKey: ['notifications_unread'] });
+      qc.invalidateQueries({ queryKey: ['notifications_all_recent'] });
     },
   });
 }
