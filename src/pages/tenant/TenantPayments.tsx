@@ -63,6 +63,11 @@ export default function TenantPayments() {
                 ? 'You have a credit on your account.'
                 : 'No outstanding balance.'}
           </p>
+          {nextDue && (
+            <p className="text-xs text-emerald-800 mt-2 font-medium">
+              Next rent due: {new Date(nextDue).toLocaleDateString()}
+            </p>
+          )}
         </CardContent>
       </Card>
 
