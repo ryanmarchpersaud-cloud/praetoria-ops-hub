@@ -102,7 +102,7 @@ export default function CustomerDetail() {
     queryKey: ['customer_properties', id],
     queryFn: async () => {
       if (!id) return [];
-      const { data, error } = await supabase.from('properties').select('id, property_name, city, status').eq('customer_id', id).order('property_name');
+      const { data, error } = await supabase.from('properties').select('id, property_name, city, status, usage_type').eq('customer_id', id).order('property_name');
       if (error) throw error;
       return data;
     },
@@ -669,7 +669,12 @@ export default function CustomerDetail() {
             items={(properties as any[]).map((p: any) => ({
               id: p.id,
               link: `/properties/${p.id}`,
-              primary: p.property_name,
+              primary: (
+                <span className="inline-flex items-center gap-1.5">
+                  <PropertyUsageBadge usage={p.usage_type} compact />
+                  <span>{p.property_name}</span>
+                </span>
+              ),
               secondary: p.city,
               badge: <StatusBadge status={p.status || 'Active'} showIcon={false} />,
             }))}
