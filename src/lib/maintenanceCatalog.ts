@@ -9,7 +9,9 @@ export interface MaintenanceIssue {
   priority?: IssuePriority; // default normal
   urgent?: boolean;         // shows emergency warning
   popular?: boolean;        // surfaced in "Common issues"
+  nonRepair?: boolean;      // property-management concern, not a physical repair — do not auto-route to work orders
 }
+
 
 // Build a stable key for a catalog issue: `${category.key}:${slug(issue.label)}`.
 // Used to persist the exact catalog selection on pm_maintenance_requests.issue_key.
