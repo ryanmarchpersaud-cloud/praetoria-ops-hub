@@ -29,8 +29,9 @@ export function PropertyPhotoUpload({ propertyId, label, currentUrl, photoKey, o
         .upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage.from('property-photos').getPublicUrl(path);
-      onUploaded(urlData.publicUrl);
+      const { data: urlData, error: signErr } = await supabase.storage.from('property-photos').createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr) throw signErr;
+      onUploaded(urlData.signedUrl);
       toast({ title: `${label} photo uploaded` });
     } catch (err: any) {
       toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });

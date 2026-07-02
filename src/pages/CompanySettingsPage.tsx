@@ -78,8 +78,9 @@ export default function CompanySettingsPage() {
       const path = `company-logo-${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from('attachments').upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
-      update('logo_url', urlData.publicUrl);
+      const { data: urlData, error: signErr } = await supabase.storage.from('attachments').createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr) throw signErr;
+      update('logo_url', urlData.signedUrl);
       toast.success('Logo uploaded');
     } catch (err: any) {
       toast.error(err.message || 'Upload failed');
@@ -102,8 +103,9 @@ export default function CompanySettingsPage() {
       const path = `authorized-signature-${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from('attachments').upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('attachments').getPublicUrl(path);
-      update('signature_url', urlData.publicUrl);
+      const { data: urlData, error: signErr } = await supabase.storage.from('attachments').createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr) throw signErr;
+      update('signature_url', urlData.signedUrl);
       toast.success('Signature uploaded — remember to Save');
     } catch (err: any) {
       toast.error(err.message || 'Upload failed');

@@ -60,7 +60,7 @@ export default function SubcontractorSettings() {
 
   const handleAvatarUploaded = async (url: string) => {
     if (!profile) return;
-    await supabase.from('subcontractors').update({ profile_photo_url: url }).eq('id', profile.id);
+    await supabase.rpc('update_own_subcontractor_photo', { _url: url });
     queryClient.invalidateQueries({ queryKey: ['subcontractor_profile'] });
   };
 

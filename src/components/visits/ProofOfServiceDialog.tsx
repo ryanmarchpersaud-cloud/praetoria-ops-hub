@@ -85,10 +85,14 @@ export function ProofOfServiceDialog({ open, onOpenChange, mode, customerId, job
     queryFn: async () => {
       const { data } = await supabase
         .from('customers')
-        .select('email, billing_contact_email, accounts_payable_email, site_contact_email')
+        .select('email, site_contact_email')
         .eq('id', customerId!)
         .maybeSingle();
-      const fallback = data?.email || (data as any)?.billing_contact_email || (data as any)?.accounts_payable_email || (data as any)?.site_contact_email;
+      let fallback: string | null = data?.email || (data as any)?.site_contact_email || null;
+      if (!fallback) {
+        const { data: emailRpc } = await supabase.rpc('get_customer_delivery_email', { _customer_id: customerId! });
+        if (typeof emailRpc === 'string') fallback = emailRpc;
+      }
       if (fallback && !emailTo) setEmailTo(fallback);
       return data;
     },
