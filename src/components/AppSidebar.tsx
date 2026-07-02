@@ -369,16 +369,19 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
       {open && (
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
-                    <item.icon className="mr-2 h-4 w-4" />
-                    <span>{item.title}</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {items.map((item) => {
+              const style = item.area ? AREA_STYLES[item.area] : null;
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
+                      <item.icon className={`mr-2 h-4 w-4 ${style ? style.icon : ''}`} />
+                      <span className={style ? style.icon : ''}>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       )}
