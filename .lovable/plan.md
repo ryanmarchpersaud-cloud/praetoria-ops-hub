@@ -1,71 +1,93 @@
-# Property Owner Portal — Roadmap & Immediate Polish
+# Phase 6 — Property Management Staff / Leasing Agent Portal Foundation
 
-This is a **planning document only**. No new finance, payments, statements, approvals, board, or role features will be built until each phase is explicitly approved. Only the small header/status polish below will be shipped now.
+Additive-only. No changes to Admin, Tenant, Owner, Worker, Subcontractor, Customer, Finance, HR, Stripe, invoices, payments, mobile builds, or auth. Uses the existing PM emerald theme with a subtle indigo accent to distinguish the staff portal.
 
----
+## Roles
 
-## Current Foundation (Locked — do not modify)
-Home · Properties · Maintenance · Expenses · Documents · Account
-RLS, roles, routes, signed URLs, tenant privacy, Admin/Tenant/Worker/Sub/Customer portals, Finance, HR, Stripe, saved cards, pay stubs, iOS/Android packaging — **untouched**.
+Add two values to the existing `app_role` enum:
+- `property_manager`
+- `leasing_agent`
 
----
+Add helper functions (SECURITY DEFINER, mirroring `has_role`/`is_ops_staff` pattern):
+- `is_pm_staff(uid)` → true for `property_manager` or `leasing_agent` (or admin/owner)
+- `is_leasing_agent(uid)`
+- `is_property_manager(uid)`
 
-## Immediate Work (safe polish only — ship now)
+Admin assigns these via existing user_roles UI (Personnel → role toggle). No new invite flow this phase.
 
-1. **Header title readability** — `src/components/owner/OwnerLayout.tsx`
-   - "Property Owner Portal" → explicit white/light gray
-   - Proper spacing, truncation, cannot collide with bell
-   - Mobile-tested
-2. **Friendly status labels** — extend `src/lib/statusLabel.ts`
-   - `in_progress` → "In Progress", `on_hold` → "On Hold", `awaiting_parts` → "Awaiting Parts", etc.
-   - Apply across OwnerHome, OwnerMaintenance, OwnerExpenses, OwnerProperties where raw enums still show.
+## Database (new tables, all under `public`, RLS on, GRANTs included)
 
-Nothing else changes in this pass.
+1. `pm_prospects` — name, email, phone, preferred_contact, property_id, unit_id, desired_move_in, budget_min, budget_max, occupants, pets, parking, source, status, notes, assigned_to, created_by, timestamps.
+2. `pm_showings` — prospect_id, property_id, unit_id, scheduled_at, showing_type, assigned_to, status, notes, follow_up_required.
+3. `pm_applications` — prospect_id, property_id, unit_id, status, submitted_at, desired_move_in, notes, admin_review_status, timestamps. (No SIN/credit fields.)
+4. `pm_application_documents` — application_id, file_url, label, uploaded_by (simple metadata table; uses existing `attachments` bucket).
+5. `pm_move_in_checklists` — lease_id (nullable), prospect_id (nullable), property_id, unit_id, assigned_to, status, timestamps.
+6. `pm_move_in_checklist_items` — checklist_id, label, category, completed, completed_by, completed_at, notes, sort_order. Seeded with the standard items from the request.
+7. `pm_move_out_checklists` + `pm_move_out_checklist_items` — same shape, tagged as Phase 6B placeholder (tables created but only a stub UI page).
+8. `pm_staff_tasks` — title, description, assigned_to, property_id, unit_id, prospect_id, application_id, due_date, priority, status, notes.
 
----
+### RLS
 
-## Roadmap (each phase requires separate approval before build)
+- **Admin / owner / property_manager**: full SELECT/INSERT/UPDATE/DELETE on all 8 tables.
+- **Leasing agent**: SELECT/INSERT/UPDATE on prospects, showings, applications, application_documents, move_in_checklists, move_in_checklist_items, staff_tasks. No DELETE. No access to move_out tables. No access to `pm_tenant_ledger`, `pm_expenses`, `pm_owner_statements`, `pm_leases` write, finance, HR, Stripe.
+- **Everyone else** (worker, subcontractor, tenant, property_owner, customer, anon): denied.
 
-### Phase 5D — Owner Dashboard Enhancements
-KPIs on `/owner`: assigned properties, total units, occupied, vacant, open maintenance, recent maintenance activity, recent owner-visible expenses, statement shortcut, documents shortcut, Praetoria contact card, "Items needing review" placeholder.
-Read-only. Uses existing `pm_` tables + owner-scoped RLS. No new writes.
+Existing tables (`pm_managed_properties`, `pm_units`, `pm_tenants`, `pm_leases`, `pm_maintenance_requests`) get additive policies so `property_manager` reads/writes as ops staff, and `leasing_agent` gets read-only on properties/units and read on tenants (name/email/phone only via UI-level filtering — no ledger/banking).
 
-### Phase 5E — Properties / Units / Occupancy (Owner View)
-Per-property drill-down: units list, occupied/vacant, lease active/ending/ended, rent summary (only if `owner_visible`), owner-visible manager notes, per-unit maintenance summary.
-Strict exclusions enforced by RLS: tenant email/phone, emergency contacts, insurance, occupants, vehicles, pets, tenant private docs, deletion requests, admin notes, worker/sub private notes.
+## Routes & Files
 
-### Phase 5F — Maintenance / Work Orders (Owner View expansion)
-Owner-visible requests + WOs with status, priority, property/unit, category, completion note, before/after photos (only when `owner_visible=true`), owner-facing summary.
-Hidden: internal/tenant/worker/sub notes, sub pricing unless explicitly flagged.
+New portal mounted at `/pm-staff/*`, guarded by `ModuleGuard` requiring `is_pm_staff`.
 
-### Phase 5G — Expenses (Owner View expansion)
-Owner-visible expenses with category, date, property/unit, status, subtotal/GST/PST/total, owner note, owner-visible receipts (signed URLs).
-Hidden: admin notes, unrelated properties, private receipts, internal accounting.
+```
+src/pages/pm-staff/
+  PMStaffLayout.tsx        — emerald header, indigo accent, bottom nav (Home, Vacancies, Prospects, Showings, Tasks, More)
+  PMStaffHome.tsx          — dashboard: vacant units, upcoming showings, pending apps, upcoming move-ins/outs, open maint summary, my tasks, quick actions
+  Vacancies.tsx            — list vacant units with quick actions
+  Prospects.tsx + ProspectDetail.tsx
+  Showings.tsx + ShowingDetail.tsx
+  Applications.tsx + ApplicationDetail.tsx
+  MoveIns.tsx + MoveInChecklistDetail.tsx
+  MoveOuts.tsx             — Phase 6B stub
+  Tasks.tsx
+  Account.tsx              — profile + sign out (reuses existing account patterns)
+src/hooks/pm-staff/
+  useProspects.ts, useShowings.ts, useApplications.ts, useMoveInChecklists.ts, useStaffTasks.ts, useVacantUnits.ts
+src/components/pm-staff/
+  ProspectDialog.tsx, ShowingDialog.tsx, ApplicationDialog.tsx, StaffTaskDialog.tsx, MoveInChecklistCard.tsx
+```
 
-### Phase 5H — Documents (Owner View expansion)
-Owner-visible categories: PM agreement, inspection reports, WO summaries, owner notices, property docs, owner-visible receipts, future monthly statements. Signed URLs only.
+Route registration in `src/App.tsx` (append-only inside existing routes block).
 
-### Phase 5I — Owner Statements *(future, approval-gated)*
-Fields: period, rent charged/collected, property expenses, maintenance expenses, management fees, taxes, adjustments/credits, net payout. Status: draft → reviewed → finalized → sent. PDF/print. Owner sees only after Admin finalizes/marks visible. **No automation, no payouts.**
+Admin gets one deep-link in existing PM section: "Staff / Leasing" → `/pm-staff` (no restructure of admin nav).
 
-### Phase 5J — Owner Approvals *(future, approval-gated)*
-Maintenance estimate approval, large repair, expense approval, funding request. Approve/decline + comments + history + emergency exception notes. **Admin controls what is routed to owner. No auto-approvals.**
+## UI
 
-### Phase 5K — Messages / Updates *(future)*
-Owner ↔ Admin messages, property notices, maintenance updates, statement notices, approval notifications. Built after 5I + 5J.
+- Emerald primary (matches PM), with an indigo `--pm-staff-accent` for the top bar and active nav item so the portal is visually distinct.
+- Mobile-first, bottom nav with 5 items + More sheet.
+- Status labels via existing `statusLabel.ts`.
+- All lists paginated, empty states with primary CTA.
 
-### Future (parked — not on active roadmap)
-- **Board Member / Condo / Association**: new `board_member` role, board dashboard, minutes, agendas, budgets, voting, common-area maintenance, building notices. Kept separate from rental owners.
-- **Property Manager / Leasing Agent roles**: scoped access to tenants, leases, units, maintenance, notices, documents, inspections, owner comms. **No Admin/Finance/Stripe/HR/payroll/SIN/bank access.**
+## Out of scope (explicit)
 
----
+Credit/background checks, application fees, online rent, Stripe, owner payouts, board portal, calendar sync, lease generation, e-signing, HR/finance access, mobile/build config, any change to existing portals.
 
-## Explicitly NOT building (until separately approved)
-Live rent payments · Stripe rent · owner payouts · automated statements · owner approvals · board portal · voting · finance automation · recurring billing · saved-card charging.
+## QA plan (delivered in completion report)
 
-## Untouched invariants
-Android/Google Play/iOS/App Store/icons/signing/package name · Stripe/saved cards/invoice payment logic · Customer/Tenant/Worker/Subcontractor portals · HR/Finance/pay stubs · service jobs/visits · auth/roles/RLS outside approved scope.
+1. Admin assigns `leasing_agent` role to a test user via Personnel.
+2. Test user signs in → redirected to `/pm-staff`.
+3. Verify visible: Home, Vacancies, Prospects, Showings, Applications, Tasks, Move-In, Account.
+4. Verify blocked (redirects/404): `/admin`, `/finance`, `/hr`, `/worker`, `/subcontractor`, `/tenant`, `/owner`, `/customer-portal`.
+5. Confirm leasing agent cannot read `pm_tenant_ledger`, `pm_expenses`, `pm_owner_statements` via network tab.
+6. Assign `property_manager` to another test user; verify broader PM access, still blocked from finance/HR/Stripe.
+7. Confirm worker/subcontractor/tenant/owner/customer roles cannot reach `/pm-staff`.
+8. Regression smoke: open Admin dashboard, Owner Portal (`latchminpersaud13@gmail.com`), a tenant login, an invoice, a job — nothing changed.
 
----
+## Migration order
 
-**Approve this plan** to ship the immediate header + status-label polish. Each Phase 5D+ item will be planned and approved individually before any build.
+1. Enum add + helper functions.
+2. New tables + GRANTs + RLS.
+3. Additive policies on existing PM tables for the two new roles.
+4. Frontend routes/pages/hooks.
+5. Seed default move-in checklist items on insert via trigger.
+
+Ready to build on approval.

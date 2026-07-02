@@ -15,6 +15,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PortalLayout } from "@/components/PortalLayout";
 import { SubcontractorLayout } from "@/components/subcontractor/SubcontractorLayout";
 import { TenantLayout } from "@/components/tenant/TenantLayout";
+import { PMStaffLayout } from "@/components/pm-staff/PMStaffLayout";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import ChangePassword from "./pages/ChangePassword";
@@ -258,6 +259,16 @@ const PMOwnerStatementsList = lazy(() => import("./pages/property-management/PMO
 const PMOwnerStatementDetail = lazy(() => import("./pages/property-management/PMOwnerStatementDetail"));
 const OwnerStatements = lazy(() => import("./pages/owner/OwnerStatements"));
 const OwnerStatementPrint = lazy(() => import("./pages/property-management/OwnerStatementPrint"));
+const PMStaffHome = lazy(() => import("./pages/pm-staff/PMStaffHome"));
+const PMStaffVacancies = lazy(() => import("./pages/pm-staff/Vacancies"));
+const PMStaffProspects = lazy(() => import("./pages/pm-staff/Prospects"));
+const PMStaffShowings = lazy(() => import("./pages/pm-staff/Showings"));
+const PMStaffApplications = lazy(() => import("./pages/pm-staff/Applications"));
+const PMStaffTasks = lazy(() => import("./pages/pm-staff/Tasks"));
+const PMStaffMoveIns = lazy(() => import("./pages/pm-staff/MoveIns"));
+const PMStaffMoveOuts = lazy(() => import("./pages/pm-staff/MoveOuts"));
+const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
+const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -310,7 +321,7 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { canAccessAdminPortal, isCustomer, isSubcontractor, isStaff, isTenant, isActiveUser, isLoading } = useAuthorization();
+  const { canAccessAdminPortal, canAccessPMStaffPortal, isCustomer, isSubcontractor, isStaff, isTenant, isPropertyManager, isLeasingAgent, isActiveUser, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Navigate to="/login" replace />;
   if (!mustChangePasswordChecked) {
@@ -325,6 +336,7 @@ function AdminRoute({ children }: { children?: React.ReactNode }) {
   if (isTenant && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
   if (isCustomer && !canAccessAdminPortal) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
+  if ((isPropertyManager || isLeasingAgent) && !canAccessAdminPortal) return <Navigate to="/pm-staff" replace />;
   if (!canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
   return <AppLayout>{children ?? <Outlet />}</AppLayout>;
 }
@@ -436,6 +448,23 @@ function TenantRoute({ children }: { children?: React.ReactNode }) {
   );
 }
 
+function PMStaffRoute({ children }: { children?: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { canAccessPMStaffPortal, canAccessAdminPortal, isActiveUser, isLoading } = useAuthorization();
+  const forceChange = useForcePasswordChangeRedirect();
+  if (loading || isLoading) return <RouteLoading />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (forceChange) return forceChange;
+  if (!isActiveUser) return <Navigate to="/access-denied" replace />;
+  // Admins can preview the staff portal
+  if (!canAccessPMStaffPortal && !canAccessAdminPortal) return <Navigate to="/access-denied" replace />;
+  return (
+    <SignedInPortalRouteShell>
+      <PMStaffLayout>{children ?? <Outlet />}</PMStaffLayout>
+    </SignedInPortalRouteShell>
+  );
+}
+
 function OwnerRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { canAccessOwnerPortal, isActiveUser, isLoading } = useAuthorization();
@@ -452,7 +481,7 @@ function OwnerRoute({ children }: { children?: React.ReactNode }) {
 
 function LoginRoute() {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
-  const { isCustomer, isStaff, isSubcontractor, isTenant, isPropertyOwner, canAccessAdminPortal, isLoading } = useAuthorization();
+  const { isCustomer, isStaff, isSubcontractor, isTenant, isPropertyOwner, isPropertyManager, isLeasingAgent, canAccessAdminPortal, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
   if (!user) return <Login />;
   if (isLoading || !mustChangePasswordChecked) return null;
@@ -460,6 +489,7 @@ function LoginRoute() {
   if (isSubcontractor && !canAccessAdminPortal) return <Navigate to="/subcontractor" replace />;
   if (isTenant && !canAccessAdminPortal) return <Navigate to="/tenant" replace />;
   if (isPropertyOwner && !canAccessAdminPortal) return <Navigate to="/owner" replace />;
+  if ((isPropertyManager || isLeasingAgent) && !canAccessAdminPortal) return <Navigate to="/pm-staff" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
   return <Navigate to="/" replace />;
@@ -805,7 +835,18 @@ function AppRoutes() {
         <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
       </Route>
 
-
+      <Route element={<PMStaffRoute />}>
+        <Route path="/pm-staff" element={<Suspense fallback={<RouteLoading />}><PMStaffHome /></Suspense>} />
+        <Route path="/pm-staff/vacancies" element={<Suspense fallback={<RouteLoading />}><PMStaffVacancies /></Suspense>} />
+        <Route path="/pm-staff/prospects" element={<Suspense fallback={<RouteLoading />}><PMStaffProspects /></Suspense>} />
+        <Route path="/pm-staff/showings" element={<Suspense fallback={<RouteLoading />}><PMStaffShowings /></Suspense>} />
+        <Route path="/pm-staff/applications" element={<Suspense fallback={<RouteLoading />}><PMStaffApplications /></Suspense>} />
+        <Route path="/pm-staff/tasks" element={<Suspense fallback={<RouteLoading />}><PMStaffTasks /></Suspense>} />
+        <Route path="/pm-staff/move-ins" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveIns /></Suspense>} />
+        <Route path="/pm-staff/move-outs" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveOuts /></Suspense>} />
+        <Route path="/pm-staff/more" element={<Suspense fallback={<RouteLoading />}><PMStaffMore /></Suspense>} />
+        <Route path="/pm-staff/account" element={<Suspense fallback={<RouteLoading />}><PMStaffAccount /></Suspense>} />
+      </Route>
 
       <Route path="*" element={<NotFound />} />
     </Routes>
