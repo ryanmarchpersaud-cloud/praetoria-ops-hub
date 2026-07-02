@@ -120,9 +120,11 @@ export function useOwnerLeasesForProperty(propertyId?: string) {
 /** Only requests flagged owner_visible are returned to the owner portal. */
 export function useOwnerMaintenanceRequests(propertyId?: string) {
   const { user } = useAuth();
+  const scope = useOwnerScope();
   return useQuery({
-    queryKey: ['owner-portal', 'maintenance', propertyId ?? 'all', user?.id],
+    queryKey: ['owner-portal', 'maintenance', propertyId ?? 'all', scope.isPreview ? `preview:${scope.ownerId}` : user?.id, scope.propertyIds?.join(',') ?? null],
     queryFn: async () => {
+      if (scopeBlocksAll(scope)) return [];
       let q = supabase
         .from('pm_maintenance_requests')
         .select(`
@@ -135,20 +137,23 @@ export function useOwnerMaintenanceRequests(propertyId?: string) {
         .eq('owner_visible', true)
         .order('created_at', { ascending: false });
       if (propertyId) q = q.eq('property_id', propertyId);
+      else if (scope.isPreview && scope.propertyIds?.length) q = q.in('property_id', scope.propertyIds);
       const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && (!scope.isPreview || scope.ready),
   });
 }
 
 /** Owner-visible work orders across assigned properties. */
 export function useOwnerWorkOrders(propertyId?: string) {
   const { user } = useAuth();
+  const scope = useOwnerScope();
   return useQuery({
-    queryKey: ['owner-portal', 'work-orders', propertyId ?? 'all', user?.id],
+    queryKey: ['owner-portal', 'work-orders', propertyId ?? 'all', scope.isPreview ? `preview:${scope.ownerId}` : user?.id, scope.propertyIds?.join(',') ?? null],
     queryFn: async () => {
+      if (scopeBlocksAll(scope)) return [];
       let q = supabase
         .from('pm_work_orders')
         .select(`
@@ -161,30 +166,44 @@ export function useOwnerWorkOrders(propertyId?: string) {
         .eq('owner_visible', true)
         .order('created_at', { ascending: false });
       if (propertyId) q = q.eq('property_id', propertyId);
+      else if (scope.isPreview && scope.propertyIds?.length) q = q.in('property_id', scope.propertyIds);
       const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && (!scope.isPreview || scope.ready),
   });
 }
 
 /** Owner documents (RLS-scoped: owner-visible + linked to owner/property). */
 export function useOwnerDocuments(propertyId?: string) {
   const { user } = useAuth();
+  const scope = useOwnerScope();
   return useQuery({
-    queryKey: ['owner-portal', 'documents', propertyId ?? 'all', user?.id],
+    queryKey: ['owner-portal', 'documents', propertyId ?? 'all', scope.isPreview ? `preview:${scope.ownerId}` : user?.id, scope.propertyIds?.join(',') ?? null],
     queryFn: async () => {
+      if (scopeBlocksAll(scope) && !scope.ownerId) return [];
       let q = supabase
         .from('pm_owner_documents')
-        .select('id, title, description, category, file_path, mime_type, file_size, created_at, property_id, owner_id, property:pm_managed_properties(id, property_name)')
+        .select('id, title, description, category, file_path, mime_type, file_size, created_at, property_id, owner_id, is_owner_visible, property:pm_managed_properties(id, property_name)')
+        .eq('is_owner_visible', true)
         .order('created_at', { ascending: false });
-      if (propertyId) q = q.eq('property_id', propertyId);
+      if (propertyId) {
+        q = q.eq('property_id', propertyId);
+      } else if (scope.isPreview) {
+        // Preview: mirror the RLS rule client-side.
+        const ids = scope.propertyIds ?? [];
+        const parts: string[] = [];
+        if (scope.ownerId) parts.push(`owner_id.eq.${scope.ownerId}`);
+        if (ids.length) parts.push(`property_id.in.(${ids.join(',')})`);
+        if (parts.length === 0) return [];
+        q = q.or(parts.join(','));
+      }
       const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!user,
+    enabled: !!user && (!scope.isPreview || scope.ready),
   });
 }
 
