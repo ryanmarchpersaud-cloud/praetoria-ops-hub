@@ -7104,6 +7104,109 @@ export type Database = {
           },
         ]
       }
+      pm_payments: {
+        Row: {
+          amount: number
+          amount_allocated: number
+          amount_refunded: number
+          cleared_at: string | null
+          created_at: string
+          created_by: string | null
+          external_ref: string | null
+          id: string
+          internal_notes: string | null
+          lease_id: string | null
+          method: Database["public"]["Enums"]["pm_payment_method"]
+          notes: string | null
+          payment_number: string | null
+          property_id: string | null
+          received_at: string
+          refund_reason: string | null
+          refunded_at: string | null
+          reversal_reason: string | null
+          reversed_at: string | null
+          reversed_by: string | null
+          status: Database["public"]["Enums"]["pm_payment_status"]
+          stripe_payment_intent_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          amount_allocated?: number
+          amount_refunded?: number
+          cleared_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          external_ref?: string | null
+          id?: string
+          internal_notes?: string | null
+          lease_id?: string | null
+          method: Database["public"]["Enums"]["pm_payment_method"]
+          notes?: string | null
+          payment_number?: string | null
+          property_id?: string | null
+          received_at?: string
+          refund_reason?: string | null
+          refunded_at?: string | null
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+          status?: Database["public"]["Enums"]["pm_payment_status"]
+          stripe_payment_intent_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          amount_allocated?: number
+          amount_refunded?: number
+          cleared_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          external_ref?: string | null
+          id?: string
+          internal_notes?: string | null
+          lease_id?: string | null
+          method?: Database["public"]["Enums"]["pm_payment_method"]
+          notes?: string | null
+          payment_number?: string | null
+          property_id?: string | null
+          received_at?: string
+          refund_reason?: string | null
+          refunded_at?: string | null
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          reversed_by?: string | null
+          status?: Database["public"]["Enums"]["pm_payment_status"]
+          stripe_payment_intent_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_payments_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_property_owners: {
         Row: {
           company_name: string | null
@@ -12334,6 +12437,22 @@ export type Database = {
         | "parking"
         | "pet_fee"
       pm_lease_status: "draft" | "active" | "ended" | "terminated"
+      pm_payment_method:
+        | "cash"
+        | "cheque"
+        | "e_transfer"
+        | "card"
+        | "ach"
+        | "manual"
+        | "stripe"
+        | "other"
+      pm_payment_status:
+        | "pending"
+        | "cleared"
+        | "failed"
+        | "refunded"
+        | "reversed"
+        | "cancelled"
       pm_property_type:
         | "single_family"
         | "duplex"
@@ -12680,6 +12799,24 @@ export const Constants = {
         "pet_fee",
       ],
       pm_lease_status: ["draft", "active", "ended", "terminated"],
+      pm_payment_method: [
+        "cash",
+        "cheque",
+        "e_transfer",
+        "card",
+        "ach",
+        "manual",
+        "stripe",
+        "other",
+      ],
+      pm_payment_status: [
+        "pending",
+        "cleared",
+        "failed",
+        "refunded",
+        "reversed",
+        "cancelled",
+      ],
       pm_property_type: [
         "single_family",
         "duplex",
