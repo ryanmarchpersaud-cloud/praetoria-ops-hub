@@ -87,6 +87,26 @@ export function useOwnerOwnThreads() {
   });
 }
 
+// ============ Owner: unread messages count (staff messages not yet read) ============
+export function useOwnerUnreadMessagesCount() {
+  return useQuery({
+    queryKey: ['pm_owner_messages_unread_count'],
+    queryFn: async () => {
+      // RLS restricts to the owner's own visible messages automatically.
+      const { data, error } = await supabase
+        .from('pm_owner_messages' as any)
+        .select('id, sender_type, read_at, is_owner_visible')
+        .is('read_at', null)
+        .eq('is_owner_visible', true)
+        .in('sender_type', ['admin', 'property_manager', 'system']);
+      if (error) throw error;
+      return ((data as any[]) || []).length;
+    },
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+  });
+}
+
 // ============ Messages within a thread ============
 export function useThreadMessages(threadId: string | undefined, opts?: { ownerVisibleOnly?: boolean }) {
   return useQuery({
