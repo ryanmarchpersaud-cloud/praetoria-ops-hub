@@ -29,7 +29,10 @@ export default function PMDashboard() {
   const isLeasingAgentOnly =
     roles.includes('leasing_agent') &&
     !isAdmin && !roles.includes('property_manager') && !roles.includes('ops_manager') && !roles.includes('owner');
-  const canSeeStaffActivity = isAdmin || roles.includes('owner') || roles.includes('ops_manager');
+  // Staff Activity: Admin, Ops Manager, and Property Manager only.
+  // Owners and Leasing Agents do NOT see internal staff clock-in/out.
+  const canSeeStaffActivity =
+    isAdmin || roles.includes('ops_manager') || roles.includes('property_manager');
 
   const emptyState = totalProperties === 0;
   const [open, setOpen] = useState(emptyState);
