@@ -89,6 +89,12 @@ export default function PMOwnerDetail() {
         </CardContent>
       </Card>
       <OwnerDocumentsManager ownerId={id!} />
+      <PMDocumentsSection
+        title="PM Document Hub"
+        filters={{ owner_id: id }}
+        uploadDefaults={{ owner_id: id }}
+        defaultVisibility="owner_visible"
+      />
     </div>
   );
 }
