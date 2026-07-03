@@ -657,7 +657,7 @@ export default function CustomerDetail() {
         {/* Sidebar: Related Records */}
         <div className="space-y-3">
           {/* Payment Method Status */}
-          {id && <PaymentMethodCard customerId={id} />}
+          {id && <PaymentMethodCard customerId={id} onCompleteSetup={() => setInviteOpen(true)} />}
           {/* Properties */}
           <RelatedRecordCard
             title="Properties"
