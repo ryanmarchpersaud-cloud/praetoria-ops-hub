@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { usePMStaffProfile, useUpdatePMStaffProfile } from '@/hooks/usePMStaffProfile';
@@ -28,9 +29,19 @@ export default function PMStaffProfilePage() {
   const roleLabel = isPropertyManager ? 'Property Manager' : isLeasingAgent ? 'Leasing Agent' : 'PM Staff';
   const initials = (displayName || user?.email || '?').slice(0, 2).toUpperCase();
 
+  const onAvatarUploaded = async (url: string) => {
+    setAvatarUrl(url);
+    try {
+      await update.mutateAsync({ display_name: displayName || (null as any), avatar_url: url });
+      toast.success('Profile photo updated');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Failed to save photo');
+    }
+  };
+
   const onSave = async () => {
     try {
-      await update.mutateAsync({ display_name: displayName || null as any, avatar_url: avatarUrl || null });
+      await update.mutateAsync({ display_name: displayName || (null as any), avatar_url: avatarUrl || null });
       toast.success('Profile updated');
     } catch (e: any) {
       toast.error(e?.message ?? 'Failed to update profile');
@@ -61,16 +72,29 @@ export default function PMStaffProfilePage() {
       </Card>
 
       <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Profile photo</CardTitle></CardHeader>
+        <CardContent className="flex items-center gap-4">
+          <div className="rounded-full bg-emerald-700 p-1">
+            <AvatarUpload
+              currentUrl={avatarUrl || null}
+              initials={initials}
+              onUploaded={onAvatarUploaded}
+              size="lg"
+            />
+          </div>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">Upload a profile photo from your device.</p>
+            <p>Tap the camera icon to choose an image. JPG or PNG, up to 5&nbsp;MB.</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Edit profile</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-1">
             <Label htmlFor="displayName">Display name</Label>
             <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="avatarUrl">Avatar image URL</Label>
-            <Input id="avatarUrl" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…" />
-            <p className="text-[11px] text-muted-foreground">Paste a public image URL. Uploading from device coming soon.</p>
           </div>
           <Button onClick={onSave} disabled={update.isPending} className="w-full">
             {update.isPending ? 'Saving…' : 'Save changes'}
@@ -88,3 +112,4 @@ export default function PMStaffProfilePage() {
     </div>
   );
 }
+
