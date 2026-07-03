@@ -87,6 +87,8 @@ export default function OwnerPropertyDetail() {
             )}
           </CardContent>
         </Card>
+        <OwnerRenewalsCard propertyId={id} />
+
 
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Recent maintenance ({requests.length})</CardTitle></CardHeader>
