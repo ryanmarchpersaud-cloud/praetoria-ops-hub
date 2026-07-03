@@ -67,6 +67,7 @@ export function RecentWinsTicker() {
 
   const { data: completed, isLoading: l3 } = useQuery({
     queryKey: ['wins_jobs', cutoff],
+    staleTime: 60000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('jobs')
@@ -82,6 +83,7 @@ export function RecentWinsTicker() {
 
   const { data: newCust, isLoading: l4 } = useQuery({
     queryKey: ['wins_customers', cutoff],
+    staleTime: 60000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers')
