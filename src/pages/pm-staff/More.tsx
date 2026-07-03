@@ -29,7 +29,7 @@ export default function More() {
     { icon: KeyRound, label: 'Move-Ins', to: '/pm-staff/move-ins', description: 'Move-in coordination & checklists' },
     { icon: KeyRound, label: 'Move-Outs', to: '/pm-staff/move-outs', description: 'Move-out workflow, inspections & keys' },
     { icon: ClipboardCheck, label: 'My Tasks', to: '/pm-staff/tasks', description: 'Assigned leasing tasks, follow-ups & reminders' },
-    { icon: CalendarClock, label: 'Lease Renewals', description: 'Renewal workflow — coming soon', soon: true },
+    { icon: CalendarClock, label: 'Lease Renewals', to: '/pm-staff/lease-renewals', description: 'Renewals assigned to you & follow-ups' },
   ];
 
   const profileItems: Item[] = [

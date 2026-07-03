@@ -267,6 +267,8 @@ const PMStaffApplications = lazy(() => import("./pages/pm-staff/Applications"));
 const PMStaffTasks = lazy(() => import("./pages/pm-staff/Tasks"));
 const PMStaffMoveIns = lazy(() => import("./pages/pm-staff/MoveIns"));
 const PMStaffMoveOuts = lazy(() => import("./pages/pm-staff/MoveOuts"));
+const PMStaffLeaseRenewals = lazy(() => import("./pages/pm-staff/LeaseRenewals"));
+const PMLeaseRenewalsList = lazy(() => import("./pages/property-management/PMLeaseRenewalsList"));
 const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
 const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
 const PMStaffProfile = lazy(() => import("./pages/pm-staff/Profile"));
@@ -722,6 +724,7 @@ function AppRoutes() {
         <Route path="/property-management/maintenance" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/maintenance/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/move-outs" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMStaffMoveOuts /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/lease-renewals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeaseRenewalsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/work-orders/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMWorkOrderDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/referrals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantReferralsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/expenses" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMExpensesList /></Suspense></ModuleGuard>} />
@@ -859,6 +862,7 @@ function AppRoutes() {
         <Route path="/pm-staff/tasks" element={<Suspense fallback={<RouteLoading />}><PMStaffTasks /></Suspense>} />
         <Route path="/pm-staff/move-ins" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveIns /></Suspense>} />
         <Route path="/pm-staff/move-outs" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveOuts /></Suspense>} />
+        <Route path="/pm-staff/lease-renewals" element={<Suspense fallback={<RouteLoading />}><PMStaffLeaseRenewals /></Suspense>} />
         <Route path="/pm-staff/more" element={<Suspense fallback={<RouteLoading />}><PMStaffMore /></Suspense>} />
         <Route path="/pm-staff/account" element={<Suspense fallback={<RouteLoading />}><PMStaffAccount /></Suspense>} />
         <Route path="/pm-staff/profile" element={<Suspense fallback={<RouteLoading />}><PMStaffProfile /></Suspense>} />

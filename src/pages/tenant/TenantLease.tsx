@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Download, Building2, DoorOpen, CalendarDays, DollarSign, FileText } from 'lucide-react';
 import { useMyTenantContext } from '@/hooks/useTenantPortal';
 import { supabase } from '@/integrations/supabase/client';
+import { TenantRenewalCard } from '@/components/tenant/TenantRenewalCard';
 
 export default function TenantLease() {
   const { data, isLoading } = useMyTenantContext();
@@ -114,6 +115,10 @@ export default function TenantLease() {
           </CardContent>
         </Card>
       )}
+
+      {/* Renewal (only shown when Admin marks tenant-visible) */}
+      <TenantRenewalCard />
+
 
       {/* Documents link */}
       <Card className="hover:border-emerald-300 transition-colors">

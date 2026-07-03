@@ -5839,6 +5839,160 @@ export type Database = {
           },
         ]
       }
+      pm_lease_renewal_activity: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          internal_only: boolean
+          message: string | null
+          renewal_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          internal_only?: boolean
+          message?: string | null
+          renewal_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          internal_only?: boolean
+          message?: string | null
+          renewal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_lease_renewal_activity_renewal_id_fkey"
+            columns: ["renewal_id"]
+            isOneToOne: false
+            referencedRelation: "pm_lease_renewals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_lease_renewals: {
+        Row: {
+          admin_notes: string | null
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          current_lease_end_date: string | null
+          current_rent: number | null
+          id: string
+          lease_id: string
+          owner_visible: boolean
+          owner_visible_note: string | null
+          property_id: string | null
+          proposed_end_date: string | null
+          proposed_rent: number | null
+          proposed_start_date: string | null
+          rent_frequency: string | null
+          sent_to_tenant_at: string | null
+          status: string
+          tenant_contacted_at: string | null
+          tenant_id: string | null
+          tenant_responded_at: string | null
+          tenant_response: string | null
+          tenant_visible: boolean
+          tenant_visible_note: string | null
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_lease_end_date?: string | null
+          current_rent?: number | null
+          id?: string
+          lease_id: string
+          owner_visible?: boolean
+          owner_visible_note?: string | null
+          property_id?: string | null
+          proposed_end_date?: string | null
+          proposed_rent?: number | null
+          proposed_start_date?: string | null
+          rent_frequency?: string | null
+          sent_to_tenant_at?: string | null
+          status?: string
+          tenant_contacted_at?: string | null
+          tenant_id?: string | null
+          tenant_responded_at?: string | null
+          tenant_response?: string | null
+          tenant_visible?: boolean
+          tenant_visible_note?: string | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_lease_end_date?: string | null
+          current_rent?: number | null
+          id?: string
+          lease_id?: string
+          owner_visible?: boolean
+          owner_visible_note?: string | null
+          property_id?: string | null
+          proposed_end_date?: string | null
+          proposed_rent?: number | null
+          proposed_start_date?: string | null
+          rent_frequency?: string | null
+          sent_to_tenant_at?: string | null
+          status?: string
+          tenant_contacted_at?: string | null
+          tenant_id?: string | null
+          tenant_responded_at?: string | null
+          tenant_response?: string | null
+          tenant_visible?: boolean
+          tenant_visible_note?: string | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_lease_renewals_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_lease_renewals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_lease_renewals_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_lease_renewals_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_leases: {
         Row: {
           created_at: string
