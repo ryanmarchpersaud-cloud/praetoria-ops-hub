@@ -20,6 +20,7 @@ import {
 } from '@/hooks/usePMWorkOrders';
 import { ActivityTimeline } from '@/components/property-management/ActivityTimeline';
 import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
+import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
 
 const STATUSES: WOStatus[] = ['created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
