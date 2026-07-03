@@ -211,10 +211,10 @@ export function AppSidebar() {
                     <NavLink
                       to="/settings"
                       className="hover:bg-sidebar-accent/50 border-l-2 border-transparent pl-[calc(0.5rem-2px)]"
-                      activeClassName="bg-sidebar-accent font-semibold text-amber-200 border-amber-400"
+                      activeClassName="bg-sidebar-accent font-semibold text-yellow-300 border-yellow-400"
                     >
-                      <Settings className="mr-2 h-4 w-4 text-amber-300" />
-                      {!collapsed && <span>Settings</span>}
+                      <Settings className="mr-2 h-4 w-4 text-yellow-400" />
+                      {!collapsed && <span className="text-yellow-400">Settings</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -329,6 +329,12 @@ const PM_ACCENTS = {
     idle: 'hover:bg-slate-500/10 hover:text-slate-700 dark:hover:text-slate-200',
     active: 'bg-slate-500/15 text-slate-800 dark:text-slate-100 font-semibold border-l-2 border-slate-500 pl-[calc(0.5rem-2px)]',
     border: 'border-slate-500/60',
+  },
+  yellow: {
+    header: 'text-yellow-600 dark:text-yellow-300 hover:bg-yellow-500/10 border-yellow-500/60',
+    idle: 'hover:bg-yellow-500/10 hover:text-yellow-700 dark:hover:text-yellow-300',
+    active: 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-200 font-semibold border-l-2 border-yellow-500 pl-[calc(0.5rem-2px)]',
+    border: 'border-yellow-500/60',
   },
   owners: {
     header: 'text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 border-amber-500/60',
@@ -473,8 +479,8 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
   const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
   const isActiveIn = (items: PMItem[]) => items.some((i) => currentPath === i.url || (!i.end && currentPath.startsWith(i.url + '/')));
 
-  const idleClass = PM_ACCENTS.owners.idle;
-  const activeClass = PM_ACCENTS.owners.active;
+  const idleClass = PM_ACCENTS.yellow.idle;
+  const activeClass = PM_ACCENTS.yellow.active;
 
   if (collapsed) {
     const flatItems = [...mainItems, ...ownerItems, ...tenantItems, ...leaseItems, ...opsItems, ...financeItems];
@@ -503,10 +509,10 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300 hover:bg-amber-500/10 cursor-pointer border-l-2 border-amber-500/70"
+        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/10 cursor-pointer border-l-2 border-emerald-500/70"
       >
         <span className="flex items-center gap-1.5">
-          <Building2 className="h-3.5 w-3.5 text-amber-400" />
+          <Building2 className="h-3.5 w-3.5 text-emerald-400" />
           Property Management
         </span>
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
@@ -514,16 +520,19 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
       {open && (
         <SidebarGroupContent>
           <SidebarMenu>
-            {mainItems.map((item) => (
-              <SidebarMenuItem key={item.url}>
-                <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
-                    <item.icon className="mr-2 h-4 w-4" />
-                    <span>{item.title}</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {mainItems.map((item) => {
+              const isDashboard = item.title === 'Dashboard';
+              return (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
+                      <item.icon className={`mr-2 h-4 w-4 ${isDashboard ? 'text-yellow-400' : ''}`} />
+                      <span className={isDashboard ? 'text-yellow-400' : ''}>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
           {subgroups.map((g) => (
             <PMSubgroupBlock key={g.key} group={g} defaultOpen={isActiveIn(g.items)} />
