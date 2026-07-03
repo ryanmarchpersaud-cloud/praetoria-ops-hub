@@ -329,7 +329,6 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Lease Renewals', url: '/property-management/lease-renewals', icon: CalendarClock },
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
-    { title: 'PM Staff Portal', url: '/pm-staff', icon: KeyRound },
   ];
 
   const idleClass = 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';
