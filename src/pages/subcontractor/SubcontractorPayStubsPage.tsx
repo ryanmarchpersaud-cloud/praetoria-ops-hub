@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { AlertCircle, DollarSign, Download, ExternalLink, FileText, Mail, Printer, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 
 function parseLocalDate(s: string | null | undefined): Date {
   if (!s) return new Date(NaN);
@@ -27,6 +28,10 @@ const STATUS_COLORS: Record<string, string> = {
   paid: 'bg-green-100 text-green-800',
 };
 
+function formatMoney(n: number | null | undefined) {
+  return `$${Number(n || 0).toFixed(2)}`;
+}
+
 type PdfLink = {
   signedUrl: string;
   downloadUrl: string;
@@ -34,10 +39,7 @@ type PdfLink = {
 };
 
 async function getPayStubPdf(payStubId: string): Promise<PdfLink> {
-  const { data, error } = await supabase.functions.invoke('subcontractor-pay-stub-pdf', {
-    body: { pay_stub_id: payStubId, action: 'signed_url' },
-  });
-  if (error) throw error;
+  const data = await callEdgeFunction('subcontractor-pay-stub-pdf', { pay_stub_id: payStubId, action: 'signed_url' });
   if (!data?.signedUrl) throw new Error(data?.error || 'Could not create secure PDF link.');
   return data as PdfLink;
 }
@@ -46,6 +48,21 @@ function PayStubActionsDialog({ stub, open, onOpenChange }: { stub: any; open: b
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [pdf, setPdf] = useState<PdfLink | null>(null);
   const [email, setEmail] = useState('');
+
+  const { data: items = [], isLoading: loadingItems } = useQuery({
+    queryKey: ['sub_portal_pay_stub_items', stub?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subcontractor_pay_stub_line_items')
+        .select('*')
+        .eq('pay_stub_id', stub.id)
+        .order('sort_order', { ascending: true })
+        .order('work_date', { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: open && !!stub?.id,
+  });
 
   const withPdf = async (action: string, fn: (link: PdfLink) => Promise<void> | void) => {
     setBusyAction(action);
@@ -60,51 +77,40 @@ function PayStubActionsDialog({ stub, open, onOpenChange }: { stub: any; open: b
     }
   };
 
-  const viewOrPrintPdf = async (action: 'view' | 'print') => {
-    const previewWindow = window.open('about:blank', '_blank');
-    if (!previewWindow) {
-      toast.error('Pop-up blocked. Please allow pop-ups to open the PDF.');
-      return;
-    }
-    previewWindow.document.write('<p style="font-family:system-ui;padding:24px;">Preparing secure PDF…</p>');
-    setBusyAction(action);
-    try {
-      const link = pdf ?? await getPayStubPdf(stub.id);
-      setPdf(link);
-      previewWindow.location.href = link.signedUrl;
-    } catch (e: any) {
-      previewWindow.close();
-      toast.error(e?.message || 'Could not open the PDF.');
-    } finally {
-      setBusyAction(null);
-    }
+  const openPrintPage = (autoPrint = false) => {
+    const path = `/subcontractor/pay-stubs/${stub.id}/print${autoPrint ? '?print=1' : ''}`;
+    const previewWindow = window.open(path, '_blank');
+    if (previewWindow) previewWindow.opener = null;
+    else toast.error('Pop-up blocked. Please allow pop-ups to open the pay stub.');
   };
 
   const downloadPdf = async (link: PdfLink) => {
-    const res = await fetch(link.downloadUrl || link.signedUrl);
-    if (!res.ok) throw new Error('Could not download the PDF file.');
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = blobUrl;
+    a.href = link.downloadUrl || link.signedUrl;
     a.download = link.fileName || `${stub.pay_stub_number || 'payment-statement'}.pdf`;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(blobUrl);
     toast.success('PDF download started.');
   };
 
   const sharePdf = async (link: PdfLink) => {
     const title = `${stub.pay_stub_number || 'Payment Statement'} - Praetoria Group`;
     try {
-      const res = await fetch(link.downloadUrl || link.signedUrl);
-      if (!res.ok) throw new Error('Could not prepare PDF for sharing.');
-      const blob = await res.blob();
-      const file = new File([blob], link.fileName || 'payment-statement.pdf', { type: 'application/pdf' });
-      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
-        await navigator.share({ title, text: 'Praetoria Group payment statement', files: [file] });
-        return;
+      try {
+        const res = await fetch(link.downloadUrl || link.signedUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          const file = new File([blob], link.fileName || 'payment-statement.pdf', { type: 'application/pdf' });
+          if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+            await navigator.share({ title, text: 'Praetoria Group payment statement', files: [file] });
+            return;
+          }
+        }
+      } catch {
+        // Fall back to sharing the secure link below.
       }
       if (navigator.share) {
         await navigator.share({ title, text: 'Praetoria Group payment statement', url: link.signedUrl });
@@ -122,10 +128,7 @@ function PayStubActionsDialog({ stub, open, onOpenChange }: { stub: any; open: b
     if (!email.trim()) { toast.error('Enter an email address first.'); return; }
     setBusyAction('email');
     try {
-      const { data, error } = await supabase.functions.invoke('subcontractor-pay-stub-pdf', {
-        body: { pay_stub_id: stub.id, action: 'email', email: email.trim() },
-      });
-      if (error) throw error;
+      const data = await callEdgeFunction('subcontractor-pay-stub-pdf', { pay_stub_id: stub.id, action: 'email', email: email.trim() });
       if (data?.error) throw new Error(data.error);
       toast.success(`PDF emailed to ${email.trim()}.`);
     } catch (e: any) {
@@ -155,29 +158,66 @@ function PayStubActionsDialog({ stub, open, onOpenChange }: { stub: any; open: b
             </div>
             <div className="rounded-md border p-3">
               <p className="text-[10px] uppercase text-muted-foreground">Total</p>
-              <p className="font-semibold">${Number(stub.total || 0).toFixed(2)} CAD</p>
+              <p className="font-semibold">{formatMoney(stub.total)} CAD</p>
+            </div>
+          </div>
+
+          <div className="rounded-md border overflow-hidden">
+            <div className="bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Pay stub detail</div>
+            <div className="divide-y">
+              {loadingItems ? (
+                <p className="p-3 text-sm text-muted-foreground">Loading work entries…</p>
+              ) : items.length === 0 ? (
+                <p className="p-3 text-sm text-muted-foreground">No work entries are attached to this pay stub yet.</p>
+              ) : items.map((it: any) => (
+                <div key={it.id} className="p-3 text-sm space-y-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground">{format(parseLocalDate(it.work_date), 'MMM d, yyyy')} · {it.service_type || 'Service'}</p>
+                      {it.notes && <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words">{it.notes}</p>}
+                    </div>
+                    <p className="font-semibold shrink-0">{formatMoney(it.line_total)}</p>
+                  </div>
+                  <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
+                    <span>{it.hours ?? '—'} hours</span>
+                    <span>{it.is_mixed ? 'split rate' : it.hourly_rate ? `${formatMoney(it.hourly_rate)}/hr` : 'rate —'}</span>
+                    <span>{it.start_time && it.end_time ? `${it.start_time} – ${it.end_time}` : 'time —'}</span>
+                  </div>
+                  {it.is_mixed && Array.isArray(it.mixed_split) && it.mixed_split.length > 0 && (
+                    <div className="text-xs text-muted-foreground pl-3 border-l space-y-0.5">
+                      {it.mixed_split.map((split: any, i: number) => (
+                        <div key={i}>{split.service_type}: {split.hours}h × {formatMoney(split.hourly_rate)} = {formatMoney(split.line_total)}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="px-3 py-2 bg-muted/30 flex justify-between text-sm font-bold">
+              <span>Grand total payable</span>
+              <span>{formatMoney(stub.total)} CAD</span>
             </div>
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <Button variant="outline" className="justify-start gap-2" disabled={!!busyAction} onClick={() => viewOrPrintPdf('view')}>
-              <ExternalLink className="h-4 w-4" /> View PDF
+            <Button variant="outline" className="justify-start gap-2" disabled={!!busyAction} onClick={() => openPrintPage(false)}>
+              <ExternalLink className="h-4 w-4" /> View Pay Stub
             </Button>
             <Button variant="outline" className="justify-start gap-2" disabled={!!busyAction} onClick={() => withPdf('download', downloadPdf)}>
               <Download className="h-4 w-4" /> Download PDF
             </Button>
             <Button variant="outline" className="justify-start gap-2" disabled={!!busyAction} onClick={() => withPdf('share', sharePdf)}>
-              <Share2 className="h-4 w-4" /> Share PDF
+              <Share2 className="h-4 w-4" /> Email / Share
             </Button>
-            <Button variant="outline" className="justify-start gap-2" disabled={!!busyAction} onClick={() => viewOrPrintPdf('print')}>
-              <Printer className="h-4 w-4" /> Print PDF
+            <Button variant="outline" className="justify-start gap-2" disabled={!!busyAction} onClick={() => openPrintPage(true)}>
+              <Printer className="h-4 w-4" /> Print
             </Button>
           </div>
 
           <Separator />
 
           <div className="space-y-2">
-            <Label htmlFor="pay-stub-email">Email PDF</Label>
+            <Label htmlFor="pay-stub-email">Email PDF copy</Label>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input id="pay-stub-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
               <Button onClick={emailPdf} disabled={busyAction === 'email'} className="gap-2 sm:w-32">
@@ -258,7 +298,7 @@ export default function SubcontractorPayStubsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <button className="text-left text-sm font-mono font-semibold text-foreground flex items-center gap-2" onClick={() => setActiveStub(s)}>
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
                       {s.pay_stub_number}
                     </button>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -270,10 +310,10 @@ export default function SubcontractorPayStubsPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</p>
-                    <p className="text-xl font-bold text-foreground">${Number(s.total || 0).toFixed(2)}</p>
+                    <p className="text-xl font-bold text-foreground">{formatMoney(s.total)}</p>
                   </div>
                   <Button size="sm" onClick={() => setActiveStub(s)} className="gap-1.5 sm:w-auto">
-                    <FileText className="h-3.5 w-3.5" /> Open PDF Actions
+                    <FileText className="h-3.5 w-3.5" /> View Pay Stub
                   </Button>
                 </div>
               </CardContent>
