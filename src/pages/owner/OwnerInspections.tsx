@@ -90,6 +90,13 @@ export default function OwnerInspections() {
                     ))}
                   </div>
                 )}
+                <div className="pt-1">
+                  <Button asChild size="sm" variant="outline">
+                    <Link to={`/owner/inspections/${insp.id}/print`} target="_blank" rel="noopener">
+                      <Printer className="h-3.5 w-3.5 mr-1" /> Print / Save PDF
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))
