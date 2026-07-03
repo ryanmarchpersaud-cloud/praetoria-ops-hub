@@ -1,83 +1,108 @@
 
-# Phase 10 — Property Management Document Hub
+# Phase 11 — Property Management Inspection Reports Foundation
 
-Additive only. No changes to Android/iOS packaging, Stripe, Finance, HR, payroll, Worker/Sub/Customer portals, tenant ledger, owner statements logic, invoices, jobs, or unrelated systems.
+Additive only. No changes to mobile packaging, Stripe, invoices, Finance, HR, payroll, service jobs, tenant ledger, owner statements, property expenses, worker/sub/customer portals, or unrelated systems.
 
-## 1. Database
+## 1. Database (single migration)
 
-New table `public.pm_documents` with fields:
-- `id`, `created_at`, `updated_at`, `uploaded_by`
-- `title`, `description`, `document_type`, `category`
-- Relations (all nullable): `property_id`, `unit_id`, `owner_id`, `tenant_id`, `lease_id`, `maintenance_request_id`, `work_order_id`, `expense_id`, `owner_statement_id`, `owner_approval_id`, `owner_thread_id`, `tenant_thread_id`, `lease_renewal_id`, `move_in_id`, `move_out_id`, `inspection_id`, `notice_id`
-- `file_path`, `file_name`, `file_size`, `mime_type`
-- `visibility` enum: `internal_only | tenant_visible | owner_visible | tenant_and_owner_visible`
-- Convenience booleans `owner_visible`, `tenant_visible` (derived, kept for filtering)
-- `status` enum: `active | archived | expired | deleted`
-- `expires_at` (nullable)
+### Enums
+- `pm_inspection_type`: `move_in | move_out | routine | maintenance | safety | exterior | interior | seasonal | complaint_followup | other`
+- `pm_inspection_status`: `draft | scheduled | in_progress | completed | reviewed | archived | cancelled`
+- `pm_inspection_condition`: `excellent | good | fair | poor | damaged | needs_cleaning | not_applicable`
 
-Grants: `SELECT/INSERT/UPDATE/DELETE` to `authenticated`; `ALL` to `service_role`. Enable RLS.
+### `public.pm_inspections`
+Fields: `title`, `inspection_type`, `status` (default `draft`), `inspected_at`, `scheduled_for`, `completed_at`, `reviewed_at`, links: `property_id`, `unit_id`, `tenant_id`, `owner_id`, `lease_id`, `move_in_id`, `move_out_id`, `maintenance_request_id`, `work_order_id`, `document_id`, `created_by`, `assigned_to` (auth.users), `summary`, `admin_notes`, `tenant_visible_notes`, `owner_visible_notes`, `tenant_visible` bool, `owner_visible` bool.
 
-RLS policies:
-- ops staff (`is_ops_staff` / property_manager role): full manage
-- tenant: `SELECT` where `visibility in (tenant_visible, tenant_and_owner_visible)` AND doc's `tenant_id` maps to the current user's tenant record
-- owner: `SELECT` where `visibility in (owner_visible, tenant_and_owner_visible)` AND doc's `owner_id` matches current owner (or `property_id` in owner's assigned properties)
-- workers/subs/customers/anon: no access
-- `updated_at` trigger
+### `public.pm_inspection_items`
+`inspection_id`, `area`, `item_label`, `condition` (enum), `notes`, `issue_found` bool, `repair_needed` bool, `cleaning_needed` bool, `tenant_visible` bool, `owner_visible` bool, `sort_order`, `photo_count` (int).
+
+### `public.pm_inspection_photos`
+`inspection_id`, `item_id` (nullable), `uploaded_by`, `file_path`, `file_name`, `file_size`, `mime_type`, `caption`, `tenant_visible` bool, `owner_visible` bool.
+
+### `public.pm_inspection_activity`
+`inspection_id`, `actor_id`, `action` (text), `detail` (jsonb), `visibility` (`internal_only|tenant_visible|owner_visible|tenant_and_owner_visible`).
+
+Standard `created_at`/`updated_at` + trigger, GRANTs to `authenticated`/`service_role`, indexes on FKs and status.
+
+### RLS
+- **Ops staff / property_manager**: full manage on all four tables (via `is_ops_staff`).
+- **Leasing agent** (via `has_role(auth.uid(),'leasing_agent')`): SELECT / limited UPDATE on inspections + items + photos + activity only when `assigned_to = auth.uid()`; may INSERT items/photos/activity for their own inspection.
+- **Tenant**: SELECT on inspection when `tenant_visible = true AND status IN ('completed','reviewed') AND tenant matches (tenant_id via pm_tenants.user_id or lease chain)`. Items + photos: SELECT only when parent inspection is tenant-visible AND item/photo `tenant_visible = true`. Activity: SELECT only when `visibility IN ('tenant_visible','tenant_and_owner_visible')` and parent inspection tenant-visible.
+- **Owner**: mirror rules using owner match (owner_id via pm_property_owners.user_id, pm_owner_properties, primary_owner_id).
+- **Workers / subcontractors / customers / anon**: no policy → no access.
 
 ## 2. Storage
 
-Create private bucket `pm-documents` (public=false). Storage.objects RLS:
-- ops staff: full manage under `pm-documents/`
-- tenant/owner: `SELECT` only when a matching `pm_documents` row exists for their scope and visibility (via EXISTS check on `file_path`)
-- others: no access
-- All downloads go through signed URLs (edge helper or `supabase.storage.createSignedUrl`)
+Create private bucket `pm-inspection-photos`. RLS on `storage.objects`:
+- Ops staff: full manage.
+- Leasing agent: SELECT/INSERT/UPDATE when photo row's inspection is assigned to them.
+- Tenant: SELECT via EXISTS on `pm_inspection_photos` where photo `tenant_visible` AND parent inspection tenant-visible AND tenant-match.
+- Owner: mirror.
+- All downloads via signed URLs (no `getPublicUrl`).
 
-## 3. Admin route
+## 3. Hooks
 
-`/property-management/documents` — `PMDocumentsList.tsx`
-- Filters: property, unit, owner, tenant, category/type, visibility, search
-- Actions: Upload (with picker of related record + visibility + type), archive, download (signed URL), view
-- Reusable `<PMDocumentUploadDialog>` component
+`src/hooks/pm/usePmInspections.ts`:
+- `usePmInspections(filters)` — list + filter (property/unit/tenant/type/status/assigned/date)
+- `usePmInspection(id)` — full record + items + photos + activity
+- `useCreatePmInspection`, `useUpdatePmInspection`, `useAssignInspection`, `useCompleteInspection`, `useReviewInspection`, `useArchiveInspection`
+- Items: `useUpsertInspectionItem`, `useDeleteInspectionItem`
+- Photos: `useUploadInspectionPhoto` (writes to `pm-inspection-photos`), `useDeleteInspectionPhoto`, `signInspectionPhoto`
+- Activity: `useLogInspectionActivity` + hook to fetch
 
-## 4. Integration entry points (Phase 10 scope)
+## 4. Admin route `/property-management/inspections`
 
-Add "Documents" section / "Upload Document" button to:
-- PMPropertyDetail
-- PMTenantDetail
-- PMOwnerDetail
-- PMLeaseDetail
-- PMMaintenanceRequestDetail
-- PMWorkOrderDetail
+`PMInspectionsList.tsx` — filters (property, unit, tenant, type, status, assigned staff, date range) + create button.
 
-(Move-in/Move-out/renewal detail pages don't exist yet as standalone detail routes; deferred as noted.)
+`PMInspectionDetail.tsx` (`/property-management/inspections/:id`) — header (type/status/dates/assignee), links pickers (property/unit/tenant/lease/move-in/move-out/maintenance/work-order/document), summary, tenant_visible_notes, owner_visible_notes, admin_notes, items editor (add row per area with condition + issue/repair/cleaning flags + tenant/owner visibility), photo grid with upload + per-photo tenant/owner visibility toggles, activity timeline, actions: Assign / Start / Submit / Complete / Review / Archive.
 
-## 5. Tenant / Owner portals
+Sidebar link under Property Management: "Inspections" (ClipboardCheck icon).
 
-- `TenantDocuments.tsx`: add PM Documents section listing tenant-visible docs for the tenant's lease/unit/property with signed-URL download.
-- `OwnerDocuments.tsx`: add PM Documents section listing owner-visible docs for owner's assigned properties with signed-URL download.
-- Existing customer/tenant/owner document tables remain untouched.
+## 5. PM staff route `/pm-staff/inspections`
 
-## 6. Navigation
+`pages/pm-staff/Inspections.tsx` — mobile-friendly list of inspections `assigned_to = auth.uid()` (filter status). Detail page `pages/pm-staff/InspectionDetail.tsx` (`/pm-staff/inspections/:id`) — read-only header, checklist edit, photo upload, notes, buttons: Start / Submit for review. No admin notes visible.
 
-- Admin sidebar (Property Management): add "Documents" link → `/property-management/documents`.
-- Tenant/Owner: reuse existing Documents pages — no new bottom-nav entries.
+Add "Inspections" tile in PMStaffHome (safe — additive) linking to `/pm-staff/inspections`.
 
-## 7. Not built (deferred, per spec)
+## 6. Tenant portal
 
-E-signature, legal generation, public links, SMS/email delivery, OCR, AI review, tenant↔owner sharing, worker/sub access, HR/Finance/Stripe changes, leasing-agent per-thread access, move-in/out/renewal/notice detail attach buttons.
+Add hook `useTenantInspections` (relies on RLS). Add `pages/tenant/TenantInspections.tsx` route `/tenant/inspections` — lists tenant-visible completed inspections with type/date/summary + tenant-visible checklist items + tenant-visible photos (signed URLs). Add link card on TenantHome (safe placeholder if list empty). Bottom-nav untouched (spec says don't overcrowd).
 
-## 8. QA (manual)
+## 7. Owner portal
 
-1. Admin uploads `internal_only` doc → tenant & owner cannot see.
-2. Admin uploads `tenant_visible` linked to tenant A → tenant A sees, tenant B does not, owner does not.
-3. Admin uploads `owner_visible` linked to owner X / property P → owner X sees, owner Y does not, tenant does not.
-4. Worker/sub/customer/anon → no access.
-5. Signed URLs open; no public URL is generated.
-6. No other systems touched.
+Add hook `useOwnerInspections`. Add `pages/owner/OwnerInspections.tsx` route `/owner/inspections` — same shape for owner-visible. Owner bottom-nav untouched.
+
+## 8. Integration entry points
+
+Add "Inspections" section (list + "Create inspection" button) to:
+- PMPropertyDetail (filter by property)
+- PMTenantDetail (filter by tenant)
+- PMLeaseDetail (filter by lease)
+- PMMaintenanceRequestDetail (filter by maintenance_request_id)
+- PMWorkOrderDetail (filter by work_order_id)
+
+Deferred (no detail pages exist): unit / move-in / move-out.
+
+## 9. Deferred (per spec)
+
+E-signature, damage charges, auto deposit deductions, auto tenant ledger changes, auto expenses, auto work orders from findings, SMS/email automation, public links, AI detection, OCR, full PDF report generation, per-thread doc hub push (link column exists; UI in future phase).
+
+## 10. QA
+
+1. Admin creates a move-in inspection for a test unit/tenant.
+2. Admin assigns to `junk@praetoriagroup.ca` (leasing agent).
+3. Leasing agent signs in → `/pm-staff/inspections` shows only that record; other inspections don't appear.
+4. Leasing agent opens, starts, updates checklist, uploads photo, submits.
+5. Admin reviews and completes; toggles selected notes/photos tenant-visible; toggles others owner-visible; marks inspection tenant-visible / owner-visible.
+6. Test tenant → sees only that inspection's tenant-visible summary, notes, items, photos.
+7. Test owner → sees only owner-visible pieces for their property.
+8. Other tenant/owner sees nothing. Worker/sub/customer/anon see nothing at DB and storage levels.
+9. Photo URLs are signed (`createSignedUrl`); grep confirms no `getPublicUrl` for the bucket.
+10. Confirm no other systems changed.
 
 ## Technical notes
 
-- Migration is one call (schema only). Data reads/writes happen from the app after regenerated types land.
-- Signed URL TTL: 3600s default.
-- Reuse existing `has_role` / `is_ops_staff` helpers; do not add new role tables.
-- Table follows the required order: CREATE → GRANT → ENABLE RLS → POLICIES → trigger.
+- Migration order: enums → tables → GRANTs → ENABLE RLS → POLICIES → triggers. Storage bucket via `supabase--storage_create_bucket`; storage.objects policies via migration.
+- Use existing `is_ops_staff` and `has_role(uuid, app_role)` helpers.
+- `assigned_to` references `auth.users` (uuid, no FK per platform rules).
+- Reuse `update_updated_at_column` trigger fn.

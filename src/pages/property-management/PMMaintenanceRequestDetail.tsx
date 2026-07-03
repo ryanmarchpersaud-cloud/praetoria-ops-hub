@@ -18,6 +18,7 @@ import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
 import { ShieldCheck } from 'lucide-react';
 import { isNonRepairRequest } from '@/lib/maintenanceCatalogHelpers';
 import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
+import { InspectionsSection } from '@/components/property-management/inspections/InspectionsSection';
 
 const STATUSES = ['new', 'reviewed', 'work_order_created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
@@ -278,6 +279,16 @@ export default function PMMaintenanceRequestDetail() {
           property_id: (data as any).property_id ?? null,
           unit_id: (data as any).unit_id ?? null,
         }}
+      />
+
+      <InspectionsSection
+        filters={{ maintenance_request_id: id }}
+        defaults={{
+          maintenance_request_id: id,
+          property_id: (data as any).property_id ?? null,
+          unit_id: (data as any).unit_id ?? null,
+        }}
+        defaultType="maintenance"
       />
     </div>
   );

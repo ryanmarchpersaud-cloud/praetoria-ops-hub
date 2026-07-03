@@ -21,6 +21,7 @@ import {
 import { ActivityTimeline } from '@/components/property-management/ActivityTimeline';
 import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
 import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
+import { InspectionsSection } from '@/components/property-management/inspections/InspectionsSection';
 
 const STATUSES: WOStatus[] = ['created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
@@ -222,6 +223,17 @@ export default function PMWorkOrderDetail() {
           property_id: (data as any).property_id ?? null,
           unit_id: (data as any).unit_id ?? null,
         }}
+      />
+
+      <InspectionsSection
+        filters={{ work_order_id: id }}
+        defaults={{
+          work_order_id: id,
+          maintenance_request_id: data.request?.id ?? null,
+          property_id: (data as any).property_id ?? null,
+          unit_id: (data as any).unit_id ?? null,
+        }}
+        defaultType="maintenance"
       />
     </div>
   );

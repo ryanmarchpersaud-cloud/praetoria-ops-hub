@@ -340,6 +340,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
     { title: 'Documents', url: '/property-management/documents', icon: FolderOpen },
+    { title: 'Inspections', url: '/property-management/inspections', icon: ClipboardCheck },
   ];
 
 

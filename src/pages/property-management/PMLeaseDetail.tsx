@@ -12,6 +12,7 @@ import { usePmLease, useSavePmLease, useDeletePmLease, usePmTenants, usePmProper
 import { supabase } from '@/integrations/supabase/client';
 import TenantLedgerManager from '@/components/property-management/TenantLedgerManager';
 import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
+import { InspectionsSection } from '@/components/property-management/inspections/InspectionsSection';
 
 export default function PMLeaseDetail() {
   const { id } = useParams();
@@ -123,6 +124,16 @@ export default function PMLeaseDetail() {
           unit_id: form.unit_id ?? null,
         }}
         defaultVisibility="tenant_visible"
+      />
+
+      <InspectionsSection
+        filters={{ lease_id: id }}
+        defaults={{
+          lease_id: id,
+          tenant_id: form.tenant_id ?? null,
+          property_id: form.property_id ?? null,
+          unit_id: form.unit_id ?? null,
+        }}
       />
     </div>
   );

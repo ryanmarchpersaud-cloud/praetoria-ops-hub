@@ -16,6 +16,7 @@ import { TenantProfileAdminPanel } from '@/components/property-management/Tenant
 import { InspectionAdminPanel } from '@/components/property-management/InspectionAdminPanel';
 import TenantLedgerManager from '@/components/property-management/TenantLedgerManager';
 import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
+import { InspectionsSection } from '@/components/property-management/inspections/InspectionsSection';
 
 export default function PMTenantDetail() {
   const { id } = useParams();
@@ -116,6 +117,11 @@ export default function PMTenantDetail() {
         filters={{ tenant_id: id }}
         uploadDefaults={{ tenant_id: id }}
         defaultVisibility="tenant_visible"
+      />
+
+      <InspectionsSection
+        filters={{ tenant_id: id }}
+        defaults={{ tenant_id: id }}
       />
     </div>
   );

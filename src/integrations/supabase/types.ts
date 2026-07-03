@@ -6248,6 +6248,262 @@ export type Database = {
           },
         ]
       }
+      pm_inspection_activity: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          detail: Json | null
+          id: string
+          inspection_id: string
+          visibility: Database["public"]["Enums"]["pm_inspection_visibility"]
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          inspection_id: string
+          visibility?: Database["public"]["Enums"]["pm_inspection_visibility"]
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          id?: string
+          inspection_id?: string
+          visibility?: Database["public"]["Enums"]["pm_inspection_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_inspection_activity_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "pm_inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_inspection_items: {
+        Row: {
+          area: string
+          cleaning_needed: boolean
+          condition: Database["public"]["Enums"]["pm_inspection_condition"]
+          created_at: string
+          id: string
+          inspection_id: string
+          issue_found: boolean
+          item_label: string | null
+          notes: string | null
+          owner_visible: boolean
+          photo_count: number
+          repair_needed: boolean
+          sort_order: number
+          tenant_visible: boolean
+          updated_at: string
+        }
+        Insert: {
+          area: string
+          cleaning_needed?: boolean
+          condition?: Database["public"]["Enums"]["pm_inspection_condition"]
+          created_at?: string
+          id?: string
+          inspection_id: string
+          issue_found?: boolean
+          item_label?: string | null
+          notes?: string | null
+          owner_visible?: boolean
+          photo_count?: number
+          repair_needed?: boolean
+          sort_order?: number
+          tenant_visible?: boolean
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          cleaning_needed?: boolean
+          condition?: Database["public"]["Enums"]["pm_inspection_condition"]
+          created_at?: string
+          id?: string
+          inspection_id?: string
+          issue_found?: boolean
+          item_label?: string | null
+          notes?: string | null
+          owner_visible?: boolean
+          photo_count?: number
+          repair_needed?: boolean
+          sort_order?: number
+          tenant_visible?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_inspection_items_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "pm_inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_inspection_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          inspection_id: string
+          item_id: string | null
+          mime_type: string | null
+          owner_visible: boolean
+          tenant_visible: boolean
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          inspection_id: string
+          item_id?: string | null
+          mime_type?: string | null
+          owner_visible?: boolean
+          tenant_visible?: boolean
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          inspection_id?: string
+          item_id?: string | null
+          mime_type?: string | null
+          owner_visible?: boolean
+          tenant_visible?: boolean
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_inspection_photos_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "pm_inspections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_inspection_photos_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "pm_inspection_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_inspections: {
+        Row: {
+          admin_notes: string | null
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          document_id: string | null
+          id: string
+          inspected_at: string | null
+          inspection_type: Database["public"]["Enums"]["pm_inspection_type"]
+          lease_id: string | null
+          maintenance_request_id: string | null
+          move_in_id: string | null
+          move_out_id: string | null
+          owner_id: string | null
+          owner_visible: boolean
+          owner_visible_notes: string | null
+          property_id: string | null
+          reviewed_at: string | null
+          scheduled_for: string | null
+          status: Database["public"]["Enums"]["pm_inspection_status"]
+          summary: string | null
+          tenant_id: string | null
+          tenant_visible: boolean
+          tenant_visible_notes: string | null
+          title: string
+          unit_id: string | null
+          updated_at: string
+          work_order_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          id?: string
+          inspected_at?: string | null
+          inspection_type?: Database["public"]["Enums"]["pm_inspection_type"]
+          lease_id?: string | null
+          maintenance_request_id?: string | null
+          move_in_id?: string | null
+          move_out_id?: string | null
+          owner_id?: string | null
+          owner_visible?: boolean
+          owner_visible_notes?: string | null
+          property_id?: string | null
+          reviewed_at?: string | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["pm_inspection_status"]
+          summary?: string | null
+          tenant_id?: string | null
+          tenant_visible?: boolean
+          tenant_visible_notes?: string | null
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          id?: string
+          inspected_at?: string | null
+          inspection_type?: Database["public"]["Enums"]["pm_inspection_type"]
+          lease_id?: string | null
+          maintenance_request_id?: string | null
+          move_in_id?: string | null
+          move_out_id?: string | null
+          owner_id?: string | null
+          owner_visible?: boolean
+          owner_visible_notes?: string | null
+          property_id?: string | null
+          reviewed_at?: string | null
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["pm_inspection_status"]
+          summary?: string | null
+          tenant_id?: string | null
+          tenant_visible?: boolean
+          tenant_visible_notes?: string | null
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Relationships: []
+      }
       pm_lease_renewal_activity: {
         Row: {
           actor_id: string | null
@@ -14145,6 +14401,38 @@ export type Database = {
         | "receipt_issued"
         | "receipt_annotated"
         | "receipt_voided"
+      pm_inspection_condition:
+        | "excellent"
+        | "good"
+        | "fair"
+        | "poor"
+        | "damaged"
+        | "needs_cleaning"
+        | "not_applicable"
+      pm_inspection_status:
+        | "draft"
+        | "scheduled"
+        | "in_progress"
+        | "completed"
+        | "reviewed"
+        | "archived"
+        | "cancelled"
+      pm_inspection_type:
+        | "move_in"
+        | "move_out"
+        | "routine"
+        | "maintenance"
+        | "safety"
+        | "exterior"
+        | "interior"
+        | "seasonal"
+        | "complaint_followup"
+        | "other"
+      pm_inspection_visibility:
+        | "internal_only"
+        | "tenant_visible"
+        | "owner_visible"
+        | "tenant_and_owner_visible"
       pm_lease_status: "draft" | "active" | "ended" | "terminated"
       pm_payment_method:
         | "cash"
@@ -14550,6 +14838,42 @@ export const Constants = {
         "receipt_issued",
         "receipt_annotated",
         "receipt_voided",
+      ],
+      pm_inspection_condition: [
+        "excellent",
+        "good",
+        "fair",
+        "poor",
+        "damaged",
+        "needs_cleaning",
+        "not_applicable",
+      ],
+      pm_inspection_status: [
+        "draft",
+        "scheduled",
+        "in_progress",
+        "completed",
+        "reviewed",
+        "archived",
+        "cancelled",
+      ],
+      pm_inspection_type: [
+        "move_in",
+        "move_out",
+        "routine",
+        "maintenance",
+        "safety",
+        "exterior",
+        "interior",
+        "seasonal",
+        "complaint_followup",
+        "other",
+      ],
+      pm_inspection_visibility: [
+        "internal_only",
+        "tenant_visible",
+        "owner_visible",
+        "tenant_and_owner_visible",
       ],
       pm_lease_status: ["draft", "active", "ended", "terminated"],
       pm_payment_method: [
