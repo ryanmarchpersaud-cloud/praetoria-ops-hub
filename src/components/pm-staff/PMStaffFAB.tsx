@@ -39,6 +39,7 @@ export function PMStaffFAB() {
     { icon: CalendarClock, label: 'Schedule Showing', color: 'bg-sky-500', action: '/pm-staff/showings?new=1' },
     { icon: FileText, label: 'Add Application', color: 'bg-violet-500', action: '/pm-staff/applications?new=1' },
     { icon: KeyRound, label: 'Start Move-In', color: 'bg-amber-500', action: '/pm-staff/move-ins?new=1' },
+    { icon: KeyRound, label: 'Start Move-Out', color: 'bg-orange-600', action: '/pm-staff/move-outs?new=1' },
     { icon: ClipboardList, label: 'Create Task', color: 'bg-blue-500', action: '/pm-staff/tasks?new=1' },
     { icon: MessageSquare, label: 'Message Admin', color: 'bg-slate-500', action: '/pm-staff/messages' },
   ], []);
