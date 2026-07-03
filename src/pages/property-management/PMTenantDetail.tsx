@@ -111,6 +111,12 @@ export default function PMTenantDetail() {
         tenantName={`${form.first_name ?? ''} ${form.last_name ?? ''}`.trim()}
         isLinked={isLinked}
       />
+
+      <PMDocumentsSection
+        filters={{ tenant_id: id }}
+        uploadDefaults={{ tenant_id: id }}
+        defaultVisibility="tenant_visible"
+      />
     </div>
   );
 }
