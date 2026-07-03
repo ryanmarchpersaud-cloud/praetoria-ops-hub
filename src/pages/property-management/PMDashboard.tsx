@@ -9,8 +9,9 @@ import { usePmSummary } from '@/hooks/usePropertyManagement';
 import { RecentTenantActivity } from '@/components/property-management/RecentTenantActivity';
 import {
   PMBusinessKPIs, LeasingPipelineCard, TodayShowingsCard, StaffTasksTodayCard,
-  RenewalsAttentionCard, MaintenanceByPriorityCard, StaffActivityCard,
+  RenewalsAttentionCard, MaintenanceByPriorityCard,
 } from '@/components/property-management/dashboard/PMDashboardSections';
+import { LiveWorkforcePanel } from '@/components/dashboard/LiveWorkforcePanel';
 import { useUserRole } from '@/hooks/useUserRole';
 
 const STEPS = [
@@ -29,10 +30,14 @@ export default function PMDashboard() {
   const isLeasingAgentOnly =
     roles.includes('leasing_agent') &&
     !isAdmin && !roles.includes('property_manager') && !roles.includes('ops_manager') && !roles.includes('owner');
-  // Staff Activity: Admin, Ops Manager, and Property Manager only.
+  // PM Live Workforce visible to Admin, Ops Manager, and Property Manager only.
   // Owners and Leasing Agents do NOT see internal staff clock-in/out.
-  const canSeeStaffActivity =
+  const canSeePMWorkforce =
     isAdmin || roles.includes('ops_manager') || roles.includes('property_manager');
+  // Force clock-out allowed only for Admin and Ops Manager. Property Manager is view-only.
+  const canForcePMClockOut = isAdmin || roles.includes('ops_manager');
+  // Hide labor cost for property_manager unless they're also admin/ops_manager.
+  const canSeeLaborCost = isAdmin || roles.includes('ops_manager');
 
   const emptyState = totalProperties === 0;
   const [open, setOpen] = useState(emptyState);
@@ -73,8 +78,14 @@ export default function PMDashboard() {
         <MaintenanceByPriorityCard />
       </div>
 
-      {/* Row 5 — Staff activity (admin only) */}
-      <StaffActivityCard enabled={canSeeStaffActivity} />
+      {/* Row 5 — PM Live Workforce (Admin, Ops Manager, Property Manager only) */}
+      {canSeePMWorkforce && (
+        <LiveWorkforcePanel
+          scope="pm"
+          canForceClockOut={canForcePMClockOut}
+          showLaborCost={canSeeLaborCost}
+        />
+      )}
 
       {/* Recent tenant activity */}
       <RecentTenantActivity />
