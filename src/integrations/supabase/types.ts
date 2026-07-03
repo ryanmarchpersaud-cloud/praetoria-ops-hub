@@ -5843,6 +5843,111 @@ export type Database = {
           },
         ]
       }
+      pm_documents: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          document_type: string | null
+          expense_id: string | null
+          expires_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          inspection_id: string | null
+          lease_id: string | null
+          lease_renewal_id: string | null
+          maintenance_request_id: string | null
+          mime_type: string | null
+          move_in_id: string | null
+          move_out_id: string | null
+          notice_id: string | null
+          owner_approval_id: string | null
+          owner_id: string | null
+          owner_statement_id: string | null
+          owner_thread_id: string | null
+          property_id: string | null
+          status: Database["public"]["Enums"]["pm_document_status"]
+          tenant_id: string | null
+          tenant_thread_id: string | null
+          title: string
+          unit_id: string | null
+          updated_at: string
+          uploaded_by: string | null
+          visibility: Database["public"]["Enums"]["pm_document_visibility"]
+          work_order_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          document_type?: string | null
+          expense_id?: string | null
+          expires_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          inspection_id?: string | null
+          lease_id?: string | null
+          lease_renewal_id?: string | null
+          maintenance_request_id?: string | null
+          mime_type?: string | null
+          move_in_id?: string | null
+          move_out_id?: string | null
+          notice_id?: string | null
+          owner_approval_id?: string | null
+          owner_id?: string | null
+          owner_statement_id?: string | null
+          owner_thread_id?: string | null
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["pm_document_status"]
+          tenant_id?: string | null
+          tenant_thread_id?: string | null
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          visibility?: Database["public"]["Enums"]["pm_document_visibility"]
+          work_order_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          document_type?: string | null
+          expense_id?: string | null
+          expires_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          inspection_id?: string | null
+          lease_id?: string | null
+          lease_renewal_id?: string | null
+          maintenance_request_id?: string | null
+          mime_type?: string | null
+          move_in_id?: string | null
+          move_out_id?: string | null
+          notice_id?: string | null
+          owner_approval_id?: string | null
+          owner_id?: string | null
+          owner_statement_id?: string | null
+          owner_thread_id?: string | null
+          property_id?: string | null
+          status?: Database["public"]["Enums"]["pm_document_status"]
+          tenant_id?: string | null
+          tenant_thread_id?: string | null
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          visibility?: Database["public"]["Enums"]["pm_document_visibility"]
+          work_order_id?: string | null
+        }
+        Relationships: []
+      }
       pm_expense_attachments: {
         Row: {
           created_at: string
@@ -14014,6 +14119,12 @@ export type Database = {
         | "partially_consumed"
         | "fully_consumed"
         | "void"
+      pm_document_status: "active" | "archived" | "expired" | "deleted"
+      pm_document_visibility:
+        | "internal_only"
+        | "tenant_visible"
+        | "owner_visible"
+        | "tenant_and_owner_visible"
       pm_finance_activity_type:
         | "charge_created"
         | "charge_updated"
@@ -14411,6 +14522,13 @@ export const Constants = {
         "partially_consumed",
         "fully_consumed",
         "void",
+      ],
+      pm_document_status: ["active", "archived", "expired", "deleted"],
+      pm_document_visibility: [
+        "internal_only",
+        "tenant_visible",
+        "owner_visible",
+        "tenant_and_owner_visible",
       ],
       pm_finance_activity_type: [
         "charge_created",
