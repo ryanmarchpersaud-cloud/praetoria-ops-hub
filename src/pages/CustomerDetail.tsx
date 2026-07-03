@@ -1065,7 +1065,9 @@ function PaymentMethodCard({ customerId, onCompleteSetup }: { customerId: string
                 <Input type="number" min="2024" max="2040" value={cardExpYear} onChange={e => setCardExpYear(e.target.value)} placeholder="YYYY" className="h-9" />
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground">Only safe metadata is stored — no full card numbers.</p>
+            <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded p-1.5">
+              ⚠️ Reference only — this does NOT create a chargeable saved card. To collect payment, ask the customer to complete payment setup in their portal.
+            </p>
             <Button className="w-full h-9" onClick={handleSaveCard} disabled={saving || cardLast4.length !== 4}>
               {saving ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
               Save Card Info
