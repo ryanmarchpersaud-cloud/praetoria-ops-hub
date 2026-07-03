@@ -334,9 +334,13 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     ...(canSeeOwnerMessages
       ? [{ title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare }]
       : []),
+    ...(canSeeOwnerMessages
+      ? [{ title: 'Tenant Messages', url: '/property-management/tenant-messages', icon: MessageSquare }]
+      : []),
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
   ];
+
 
 
   const idleClass = 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';

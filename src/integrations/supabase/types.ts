@@ -9014,6 +9014,251 @@ export type Database = {
           },
         ]
       }
+      pm_tenant_message_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          is_tenant_visible: boolean
+          message_id: string
+          mime_type: string | null
+          size_bytes: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          is_tenant_visible?: boolean
+          message_id: string
+          mime_type?: string | null
+          size_bytes?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          is_tenant_visible?: boolean
+          message_id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenant_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_message_threads: {
+        Row: {
+          assigned_staff_id: string | null
+          category: string
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          last_message_at: string | null
+          last_tenant_visible_message_at: string | null
+          lease_id: string | null
+          priority: string
+          property_id: string | null
+          related_document_id: string | null
+          related_lease_renewal_id: string | null
+          related_maintenance_request_id: string | null
+          related_move_in_id: string | null
+          related_move_out_id: string | null
+          related_notice_id: string | null
+          related_work_order_id: string | null
+          status: string
+          subject: string
+          tenant_id: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_staff_id?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_tenant_visible_message_at?: string | null
+          lease_id?: string | null
+          priority?: string
+          property_id?: string | null
+          related_document_id?: string | null
+          related_lease_renewal_id?: string | null
+          related_maintenance_request_id?: string | null
+          related_move_in_id?: string | null
+          related_move_out_id?: string | null
+          related_notice_id?: string | null
+          related_work_order_id?: string | null
+          status?: string
+          subject: string
+          tenant_id: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_staff_id?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_tenant_visible_message_at?: string | null
+          lease_id?: string | null
+          priority?: string
+          property_id?: string | null
+          related_document_id?: string | null
+          related_lease_renewal_id?: string | null
+          related_maintenance_request_id?: string | null
+          related_move_in_id?: string | null
+          related_move_out_id?: string | null
+          related_notice_id?: string | null
+          related_work_order_id?: string | null
+          status?: string
+          subject?: string
+          tenant_id?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_message_threads_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_related_document_id_fkey"
+            columns: ["related_document_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenant_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_related_lease_renewal_id_fkey"
+            columns: ["related_lease_renewal_id"]
+            isOneToOne: false
+            referencedRelation: "pm_lease_renewals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_related_maintenance_request_id_fkey"
+            columns: ["related_maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "pm_maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_related_move_in_id_fkey"
+            columns: ["related_move_in_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_in_checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_related_move_out_id_fkey"
+            columns: ["related_move_out_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_out_checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_related_notice_id_fkey"
+            columns: ["related_notice_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenant_notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_related_work_order_id_fkey"
+            columns: ["related_work_order_id"]
+            isOneToOne: false
+            referencedRelation: "pm_work_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_message_threads_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_tenant_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_tenant_visible: boolean
+          read_at: string | null
+          sender_id: string | null
+          sender_type: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_tenant_visible?: boolean
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_tenant_visible?: boolean
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_tenant_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenant_message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_tenant_notices: {
         Row: {
           ack_at: string | null
@@ -13585,6 +13830,19 @@ export type Database = {
       tenant_can_view_unit: {
         Args: { _unit_id: string; _user_id: string }
         Returns: boolean
+      }
+      tenant_mark_thread_read: {
+        Args: { _thread_id: string }
+        Returns: undefined
+      }
+      tenant_open_message_thread: {
+        Args: {
+          _body: string
+          _category?: string
+          _related_maintenance_request_id?: string
+          _subject: string
+        }
+        Returns: string
       }
       update_customer_portal_profile: {
         Args: {

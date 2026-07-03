@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Paperclip } from 'lucide-react';
+import { ArrowLeft, Paperclip, MessageSquare } from 'lucide-react';
 import { useMyMaintenanceRequest, signMaintenanceAttachment } from '@/hooks/useTenantPortal';
 import { useMyRequestVisibleWOAttachments, useRequestActivity, signWOAttachment } from '@/hooks/usePMWorkOrders';
 
@@ -65,6 +65,13 @@ export default function TenantMaintenanceDetail() {
           <p className="text-xs">Permission to enter: <span className="font-medium">{r.permission_to_enter ? 'Yes' : 'No'}</span></p>
         </CardContent>
       </Card>
+
+      <Button asChild variant="outline" className="w-full border-emerald-300 text-emerald-800 hover:bg-emerald-50">
+        <Link to={`/tenant/messages?new=1&category=maintenance&maintenance=${r.id}&subject=${encodeURIComponent(`Maintenance follow-up: ${r.title}`)}`}>
+          <MessageSquare className="h-4 w-4 mr-2" /> Message Praetoria about this request
+        </Link>
+      </Button>
+
 
       {r.tenant_facing_update && (
         <Card className="border-emerald-200 bg-emerald-50/40">

@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Wrench, Building2, DoorOpen, CalendarDays, DollarSign, Phone, Mail,
-  Sparkles, ChevronRight, ClipboardList, ExternalLink, UserPlus,
+  Sparkles, ChevronRight, ClipboardList, ExternalLink, UserPlus, MessageSquare,
 } from 'lucide-react';
+
 import { useMyTenantContext, useMyMaintenanceRequests } from '@/hooks/useTenantPortal';
 import { useMyBalance, useMyNotices } from '@/hooks/useTenantPortalExt';
 import ReferFriendDialog from '@/components/tenant/ReferFriendDialog';
@@ -79,6 +80,24 @@ export default function TenantHome() {
           <Wrench className="h-5 w-5 mr-2" /> Submit Maintenance Request
         </Link>
       </Button>
+
+      {/* Messages entry */}
+      <Link
+        to="/tenant/messages"
+        className="flex items-center justify-between rounded-xl border border-emerald-100 bg-white p-3 hover:border-emerald-300 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+            <MessageSquare className="h-5 w-5 text-emerald-700" />
+          </div>
+          <div>
+            <p className="font-medium text-sm text-slate-900">Messages</p>
+            <p className="text-[11px] text-muted-foreground">Talk to Praetoria Group</p>
+          </div>
+        </div>
+        <ChevronRight className="h-4 w-4 text-emerald-700" />
+      </Link>
+
 
       {/* Balance + Notices row */}
       <div className="grid grid-cols-2 gap-3">
