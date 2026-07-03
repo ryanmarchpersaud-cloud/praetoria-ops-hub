@@ -40,6 +40,7 @@ export function useTrainingQuizQuestions(courseId: string | undefined) {
     queryKey: ['training_quiz_questions', courseId],
     queryFn: async () => {
       if (!courseId) return [];
+      // Ops-staff path: returns full row including correct_answer (RLS-gated).
       const { data, error } = await supabase
         .from('training_quiz_questions')
         .select('*')
@@ -47,6 +48,23 @@ export function useTrainingQuizQuestions(courseId: string | undefined) {
         .order('sort_order', { ascending: true });
       if (error) throw error;
       return data ?? [];
+    },
+    enabled: !!courseId,
+  });
+}
+
+// Test-taker path — returns quiz questions WITHOUT correct_answer via a
+// SECURITY DEFINER RPC. Use this on any worker/subcontractor quiz screen.
+export function useAssignedQuizQuestions(courseId: string | undefined) {
+  return useQuery({
+    queryKey: ['assigned_quiz_questions', courseId],
+    queryFn: async () => {
+      if (!courseId) return [];
+      const { data, error } = await (supabase.rpc as any)('get_training_quiz_questions', {
+        _course_id: courseId,
+      });
+      if (error) throw error;
+      return (data as any[]) ?? [];
     },
     enabled: !!courseId,
   });
