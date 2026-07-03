@@ -30,6 +30,7 @@ import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInv
 import { supabase } from '@/integrations/supabase/client';
 import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+import { isChargeable } from '@/lib/billingProfile';
 
 export default function CustomerDetail() {
   const { id } = useParams();
