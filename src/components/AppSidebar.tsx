@@ -330,6 +330,12 @@ const PM_ACCENTS = {
     active: 'bg-slate-500/15 text-slate-800 dark:text-slate-100 font-semibold border-l-2 border-slate-500 pl-[calc(0.5rem-2px)]',
     border: 'border-slate-500/60',
   },
+  yellow: {
+    header: 'text-yellow-600 dark:text-yellow-300 hover:bg-yellow-500/10 border-yellow-500/60',
+    idle: 'hover:bg-yellow-500/10 hover:text-yellow-700 dark:hover:text-yellow-300',
+    active: 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-200 font-semibold border-l-2 border-yellow-500 pl-[calc(0.5rem-2px)]',
+    border: 'border-yellow-500/60',
+  },
   owners: {
     header: 'text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 border-amber-500/60',
     idle: 'hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300',
