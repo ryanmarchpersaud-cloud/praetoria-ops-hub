@@ -13025,6 +13025,8 @@ export type Database = {
         | "pm_new_notice"
         | "pm_ledger_updated"
         | "pm_new_document"
+        | "pm_task_assigned"
+        | "pm_showing_assigned"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       pm_charge_status:
@@ -13416,6 +13418,8 @@ export const Constants = {
         "pm_new_notice",
         "pm_ledger_updated",
         "pm_new_document",
+        "pm_task_assigned",
+        "pm_showing_assigned",
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
