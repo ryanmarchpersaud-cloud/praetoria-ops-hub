@@ -556,33 +556,109 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ── Self-service hardening ────────────────────────────────────────────
+  // For SELF_SERVICE_EVENTS, any authenticated user can call this function.
+  // We must NOT trust caller-supplied to_email / customer_id / record_id,
+  // otherwise a customer could relay branded emails to arbitrary addresses
+  // or exfiltrate another customer's request details.
+  //
+  // Strategy:
+  //   • Force audience = "admin" (self-service events notify ops/staff).
+  //   • Resolve the caller's own customer_id from customers.user_id = auth.userId.
+  //   • Override body.customer_id with the resolved value.
+  //   • If a record_id is supplied, verify it belongs to the resolved customer.
+  //   • Strip variables.to_email / variables.to_phone so the recipient is
+  //     derived server-side (ops inbox) via resolveRecipient().
+  let effectiveAudience = audience;
+  let effectiveCustomerId = customer_id;
+  let effectiveRecordId = record_id;
+  let effectiveVariables: Record<string, any> = { ...(variables || {}) };
+
+  if (!auth.isServiceRole && SELF_SERVICE_EVENTS.has(event)) {
+    effectiveAudience = "admin";
+    delete effectiveVariables.to_email;
+    delete effectiveVariables.to_phone;
+
+    let ownedCustomerId: string | null = null;
+    const { data: ownCust } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("user_id", auth.userId)
+      .maybeSingle();
+    if (ownCust?.id) ownedCustomerId = ownCust.id;
+
+    // Fallback for tenants (PM portal): resolve to their linked customer.
+    if (!ownedCustomerId) {
+      const { data: tenant } = await supabase
+        .from("pm_tenants")
+        .select("customer_id")
+        .eq("user_id", auth.userId)
+        .maybeSingle();
+      if (tenant?.customer_id) ownedCustomerId = tenant.customer_id;
+    }
+
+    if (!ownedCustomerId) {
+      return json({ error: "No customer/tenant record linked to this account" }, 403);
+    }
+
+    effectiveCustomerId = ownedCustomerId;
+
+    // If a record_id is supplied, verify caller owns it. We check the most
+    // common self-service source tables. Any mismatch → 403.
+    if (effectiveRecordId) {
+      const tablesToCheck = [
+        "service_requests",
+        "pm_maintenance_requests",
+        "pm_tenant_insurance",
+        "pm_tenant_referrals",
+      ];
+      let ownershipOk = false;
+      for (const t of tablesToCheck) {
+        const { data: row } = await supabase
+          .from(t)
+          .select("id, customer_id")
+          .eq("id", effectiveRecordId)
+          .maybeSingle();
+        if (row) {
+          if (row.customer_id && row.customer_id === ownedCustomerId) {
+            ownershipOk = true;
+          }
+          break;
+        }
+      }
+      if (!ownershipOk) {
+        return json({ error: "You do not own the referenced record" }, 403);
+      }
+    }
+  }
+
   try {
 
     const results: Record<string, unknown>[] = [];
 
     // Resolve recipient contact info for email/SMS channels
     const resolved = await resolveRecipient(supabase, {
-      customer_id,
+      customer_id: effectiveCustomerId,
       recipient_id,
-      audience,
-      variables,
+      audience: effectiveAudience,
+      variables: effectiveVariables,
     });
 
     // Inject resolved contact info into variables for template rendering
     const enrichedVars = {
-      ...variables,
-      to_email: variables.to_email || resolved.email || "",
-      to_phone: variables.to_phone || resolved.phone || "",
-      company_name: variables.company_name || "Praetoria Group",
+      ...effectiveVariables,
+      to_email: effectiveVariables.to_email || resolved.email || "",
+      to_phone: effectiveVariables.to_phone || resolved.phone || "",
+      company_name: effectiveVariables.company_name || "Praetoria Group",
     };
 
     // Check customer notification preferences if customer audience
     let prefs: Record<string, boolean> | null = null;
-    if (audience === "customer" && customer_id) {
+    if (effectiveAudience === "customer" && effectiveCustomerId) {
       const { data: prefData } = await supabase
         .from("customer_notification_preferences")
         .select("email_enabled, sms_enabled, in_app_enabled")
-        .eq("customer_id", customer_id)
+        .eq("customer_id", effectiveCustomerId)
         .eq("event", event)
         .maybeSingle();
       if (prefData) prefs = prefData;
@@ -615,7 +691,7 @@ Deno.serve(async (req) => {
         .from("notification_templates")
         .select("subject_template, body_template, is_active")
         .eq("event", event)
-        .eq("audience", audience)
+        .eq("audience", effectiveAudience)
         .eq("channel", channel)
         .maybeSingle();
 
@@ -643,11 +719,11 @@ Deno.serve(async (req) => {
         .insert({
           event,
           channel,
-          audience,
+          audience: effectiveAudience,
           recipient_id: recipient_id || null,
-          customer_id: customer_id || null,
+          customer_id: effectiveCustomerId || null,
           record_type: record_type || null,
-          record_id: record_id || null,
+          record_id: effectiveRecordId || null,
           subject,
           body: notifBody,
           metadata: enrichedVars,
@@ -671,14 +747,14 @@ Deno.serve(async (req) => {
             let finalReplyTo = enrichedVars.reply_to || "ops@praetoriagroup.ca";
             let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subjectHtml}</h2><div>${notifBodyHtml}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
 
-            if (event === "worker_assigned" && (audience === "worker" || audience === "subcontractor")) {
-              const rich = await buildAssignmentEmail(supabase, record_type, record_id, audience, subject);
+            if (event === "worker_assigned" && (effectiveAudience === "worker" || effectiveAudience === "subcontractor")) {
+              const rich = await buildAssignmentEmail(supabase, record_type, effectiveRecordId, effectiveAudience, subject);
               if (rich) {
                 finalSubject = rich.subject;
                 finalHtml = rich.html;
               }
             } else if (event === "new_service_request") {
-              const rich = await buildServiceRequestEmail(supabase, record_id, customer_id, enrichedVars, subject);
+              const rich = await buildServiceRequestEmail(supabase, effectiveRecordId, effectiveCustomerId, enrichedVars, subject);
               if (rich) {
                 finalSubject = rich.subject;
                 finalHtml = rich.html;
@@ -780,9 +856,9 @@ Deno.serve(async (req) => {
       action_name: `Notification: ${event.replace(/_/g, " ")}`,
       workflow_name: "notifications",
       record_type: record_type || null,
-      record_id: record_id || null,
+      record_id: effectiveRecordId || null,
       status: "completed",
-      payload_summary: { event, audience, channels, customer_id, results_summary: results.map(r => `${r.channel}:${r.status}`) },
+      payload_summary: { event, audience: effectiveAudience, channels, customer_id: effectiveCustomerId, results_summary: results.map(r => `${r.channel}:${r.status}`) },
     });
 
     return json({ success: true, results });

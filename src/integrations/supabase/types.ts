@@ -12650,6 +12650,17 @@ export type Database = {
         Returns: string
       }
       get_subcontractor_pii: { Args: { _sub_id: string }; Returns: Json }
+      get_training_quiz_questions: {
+        Args: { _course_id: string }
+        Returns: {
+          course_id: string
+          id: string
+          options: Json
+          question_text: string
+          question_type: string
+          sort_order: number
+        }[]
+      }
       get_unread_message_count: { Args: { _user_id: string }; Returns: number }
       get_worker_pii: { Args: { _worker_id: string }; Returns: Json }
       has_permission: {
@@ -12848,6 +12859,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      submit_training_quiz: {
+        Args: { _answers: Json; _assignment_id: string }
+        Returns: {
+          correct_count: number
+          passed: boolean
+          score: number
+          total: number
+        }[]
       }
       tenant_can_view_property: {
         Args: { _property_id: string; _user_id: string }
