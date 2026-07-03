@@ -267,6 +267,8 @@ const PMStaffApplications = lazy(() => import("./pages/pm-staff/Applications"));
 const PMStaffTasks = lazy(() => import("./pages/pm-staff/Tasks"));
 const PMStaffMoveIns = lazy(() => import("./pages/pm-staff/MoveIns"));
 const PMStaffMoveOuts = lazy(() => import("./pages/pm-staff/MoveOuts"));
+const PMStaffLeaseRenewals = lazy(() => import("./pages/pm-staff/LeaseRenewals"));
+const PMLeaseRenewalsList = lazy(() => import("./pages/property-management/PMLeaseRenewalsList"));
 const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
 const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
 const PMStaffProfile = lazy(() => import("./pages/pm-staff/Profile"));
