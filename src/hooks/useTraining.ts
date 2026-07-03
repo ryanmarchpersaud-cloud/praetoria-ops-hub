@@ -212,50 +212,31 @@ export function useMyQuizAttempts(assignmentId: string | undefined) {
 export function useSubmitQuiz() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ assignment_id, user_id, answers, score, passed }: {
+    mutationFn: async ({ assignment_id, answers }: {
       assignment_id: string;
-      user_id: string;
+      user_id?: string; // ignored; server uses auth.uid()
       answers: any;
-      score: number;
-      passed: boolean;
+      score?: number;   // ignored — server grades
+      passed?: boolean; // ignored — server grades
     }) => {
-      // Insert attempt
-      const { error: aErr } = await supabase
-        .from('training_quiz_attempts')
-        .insert({ assignment_id, user_id, answers, score, passed } as any);
-      if (aErr) throw aErr;
-
-      // Update assignment
-      const updates: any = {
-        score,
-        attempts: undefined, // will be incremented via raw query
-        status: passed ? 'passed' : 'failed',
+      // Server-side grading via SECURITY DEFINER RPC.
+      // The client never sees correct_answer.
+      const { data, error } = await (supabase.rpc as any)('submit_training_quiz', {
+        _assignment_id: assignment_id,
+        _answers: answers,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        score: row?.score ?? 0,
+        passed: !!row?.passed,
+        correct_count: row?.correct_count ?? 0,
+        total: row?.total ?? 0,
       };
-      if (passed) {
-        updates.completed_at = new Date().toISOString();
-        updates.status = 'passed';
-      }
-
-      // Get current attempts count then update
-      const { data: current } = await supabase
-        .from('training_assignments')
-        .select('attempts')
-        .eq('id', assignment_id)
-        .single();
-
-      const { error: uErr } = await supabase
-        .from('training_assignments')
-        .update({
-          score,
-          attempts: (current?.attempts ?? 0) + 1,
-          status: passed ? 'passed' : 'failed',
-          ...(passed ? { completed_at: new Date().toISOString() } : {}),
-        } as any)
-        .eq('id', assignment_id);
-      if (uErr) throw uErr;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['training_assignments'] });
+      qc.invalidateQueries({ queryKey: ['training_assignments_all'] });
       qc.invalidateQueries({ queryKey: ['training_quiz_attempts'] });
     },
   });
