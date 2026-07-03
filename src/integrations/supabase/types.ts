@@ -5727,6 +5727,101 @@ export type Database = {
           },
         ]
       }
+      pm_credits: {
+        Row: {
+          amount: number
+          consumed_amount: number
+          created_at: string
+          credit_number: string
+          id: string
+          issued_at: string
+          issued_by: string | null
+          lease_id: string | null
+          notes: string | null
+          property_id: string | null
+          remaining_amount: number
+          source: Database["public"]["Enums"]["pm_credit_source"]
+          source_payment_id: string | null
+          status: Database["public"]["Enums"]["pm_credit_status"]
+          tenant_id: string
+          updated_at: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          amount: number
+          consumed_amount?: number
+          created_at?: string
+          credit_number?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          lease_id?: string | null
+          notes?: string | null
+          property_id?: string | null
+          remaining_amount?: number
+          source: Database["public"]["Enums"]["pm_credit_source"]
+          source_payment_id?: string | null
+          status?: Database["public"]["Enums"]["pm_credit_status"]
+          tenant_id: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          amount?: number
+          consumed_amount?: number
+          created_at?: string
+          credit_number?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          lease_id?: string | null
+          notes?: string | null
+          property_id?: string | null
+          remaining_amount?: number
+          source?: Database["public"]["Enums"]["pm_credit_source"]
+          source_payment_id?: string | null
+          status?: Database["public"]["Enums"]["pm_credit_status"]
+          tenant_id?: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_credits_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_credits_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_credits_source_payment_id_fkey"
+            columns: ["source_payment_id"]
+            isOneToOne: false
+            referencedRelation: "pm_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_credits_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_expense_attachments: {
         Row: {
           created_at: string
@@ -12116,6 +12211,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      generate_pm_credit_number: { Args: never; Returns: string }
       get_agreement_by_token: {
         Args: { _token: string }
         Returns: {
@@ -12484,6 +12580,17 @@ export type Database = {
         | "nsf_fee"
         | "parking"
         | "pet_fee"
+      pm_credit_source:
+        | "overpayment"
+        | "goodwill"
+        | "deposit_refund"
+        | "correction"
+        | "other"
+      pm_credit_status:
+        | "available"
+        | "partially_consumed"
+        | "fully_consumed"
+        | "void"
       pm_lease_status: "draft" | "active" | "ended" | "terminated"
       pm_payment_method:
         | "cash"
@@ -12845,6 +12952,19 @@ export const Constants = {
         "nsf_fee",
         "parking",
         "pet_fee",
+      ],
+      pm_credit_source: [
+        "overpayment",
+        "goodwill",
+        "deposit_refund",
+        "correction",
+        "other",
+      ],
+      pm_credit_status: [
+        "available",
+        "partially_consumed",
+        "fully_consumed",
+        "void",
       ],
       pm_lease_status: ["draft", "active", "ended", "terminated"],
       pm_payment_method: [
