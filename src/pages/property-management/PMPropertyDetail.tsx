@@ -16,6 +16,7 @@ import {
   usePmOwners, usePmUnits, useSavePmUnit, useDeletePmUnit,
   type PmUnitStatus,
 } from '@/hooks/usePropertyManagement';
+import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
 
 const UNIT_STATUSES: PmUnitStatus[] = ['vacant', 'occupied', 'pending', 'inactive'];
 
