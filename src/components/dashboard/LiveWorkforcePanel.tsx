@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Users, CheckCircle2, ChevronRight, LogOut, Loader2, Activity, AlertTriangle, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAdminLiveWorkforce, useAdminForceClockOut } from '@/hooks/useTimesheets';
+import { useAdminLiveWorkforce, usePMLiveWorkforce, useAdminForceClockOut } from '@/hooks/useTimesheets';
 import { formatDistanceToNow } from 'date-fns';
 import {
   AlertDialog,
@@ -18,11 +18,42 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
-export function LiveWorkforcePanel() {
-  const { data, isLoading } = useAdminLiveWorkforce();
+type LiveWorkforcePanelProps = {
+  /** 'all' = every clocked-in worker (main admin dashboard, default).
+   *  'pm'  = filtered to Property Management staff only. */
+  scope?: 'all' | 'pm';
+  title?: string;
+  subtitle?: string;
+  viewAllHref?: string;
+  viewAllLabel?: string;
+  /** Show the "Clock out" button on active sessions. Default true for scope='all'. */
+  canForceClockOut?: boolean;
+  /** Hide the labor cost block (e.g., for viewers without finance access). */
+  showLaborCost?: boolean;
+};
+
+export function LiveWorkforcePanel({
+  scope = 'all',
+  title,
+  subtitle,
+  viewAllHref,
+  viewAllLabel = 'View all',
+  canForceClockOut,
+  showLaborCost = true,
+}: LiveWorkforcePanelProps = {}) {
+  const isPM = scope === 'pm';
+  const adminQuery = useAdminLiveWorkforce();
+  const pmQuery = usePMLiveWorkforce(isPM);
+  const { data, isLoading } = isPM ? pmQuery : adminQuery;
+
   const forceOut = useAdminForceClockOut();
   const { toast } = useToast();
   const [target, setTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const resolvedCanForceClockOut = canForceClockOut ?? true;
+  const resolvedTitle = title ?? (isPM ? 'PM Live Workforce' : 'Live Workforce');
+  const resolvedSubtitle = subtitle ?? (isPM ? "PM staff clocked in right now" : "Who's clocked in right now");
+  const resolvedHref = viewAllHref ?? (isPM ? '/pm-staff/time-clock' : '/employees');
 
   const handleConfirm = async () => {
     if (!target) return;
@@ -46,16 +77,17 @@ export function LiveWorkforcePanel() {
             </span>
           </span>
           <div>
-            <CardTitle className="text-base md:text-lg font-extrabold tracking-tight">Live Workforce</CardTitle>
-            <p className="text-[11px] md:text-xs text-muted-foreground mt-0.5 font-medium">Who's clocked in right now</p>
+            <CardTitle className="text-base md:text-lg font-extrabold tracking-tight">{resolvedTitle}</CardTitle>
+            <p className="text-[11px] md:text-xs text-muted-foreground mt-0.5 font-medium">{resolvedSubtitle}</p>
           </div>
         </div>
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/employees">
-            View all <ChevronRight className="h-4 w-4 ml-1" />
+          <Link to={resolvedHref}>
+            {viewAllLabel} <ChevronRight className="h-4 w-4 ml-1" />
           </Link>
         </Button>
       </CardHeader>
+
       <CardContent className="space-y-4">
         {/* KPI strip */}
         <div className="grid grid-cols-3 gap-2">
