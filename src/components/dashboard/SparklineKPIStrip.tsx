@@ -65,6 +65,7 @@ interface SparkTile {
   key: string;
   label: string;
   value: string;
+  subnote?: string;
   series: { v: number }[];
   trend: number;
   color: string;
