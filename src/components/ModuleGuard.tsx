@@ -22,8 +22,10 @@ type ModuleType =
   | 'hr' | 'hrFull'
   | 'ops' | 'opsOrFinance' | 'opsOrHr'
   | 'ownerOnly'
+  | 'ownerMessages'
   | 'messaging'
   | 'dashboard';
+
 
 type SettingsKey =
   | 'companySettings' | 'productsServices' | 'payments' | 'expenseTracking' | 'automations'
@@ -90,6 +92,12 @@ export function ModuleGuard({ children, module, settingsKey }: ModuleGuardProps)
       case 'ownerOnly':
         allowed = access.isOwnerOrAdmin;
         break;
+      case 'ownerMessages':
+        // Phase 8 tightening: Admin/Ops or Property Manager only.
+        // Leasing agents explicitly excluded from broad owner-message access.
+        allowed = access.isOwnerOrAdmin || access.isPropertyManager;
+        break;
+
       case 'messaging':
         allowed = !access.messagingDisabled;
         break;
