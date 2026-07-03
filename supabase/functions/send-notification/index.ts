@@ -654,11 +654,11 @@ Deno.serve(async (req) => {
 
     // Check customer notification preferences if customer audience
     let prefs: Record<string, boolean> | null = null;
-    if (audience === "customer" && customer_id) {
+    if (effectiveAudience === "customer" && effectiveCustomerId) {
       const { data: prefData } = await supabase
         .from("customer_notification_preferences")
         .select("email_enabled, sms_enabled, in_app_enabled")
-        .eq("customer_id", customer_id)
+        .eq("customer_id", effectiveCustomerId)
         .eq("event", event)
         .maybeSingle();
       if (prefData) prefs = prefData;
