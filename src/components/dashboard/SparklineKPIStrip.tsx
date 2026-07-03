@@ -21,7 +21,7 @@ function useTimesheetsLast30d() {
       const { data, error } = await supabase
         .from('timesheets')
         .select('clock_in, clock_out, status')
-        .eq('status', 'approved')
+        .in('status', ['approved', 'submitted', 'pending'])
         .not('clock_out', 'is', null)
         .gte('clock_in', since);
       if (error) throw error;

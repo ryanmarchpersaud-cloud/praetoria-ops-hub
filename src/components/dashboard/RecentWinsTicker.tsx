@@ -35,6 +35,7 @@ export function RecentWinsTicker() {
 
   const { data: payments, isLoading: l1 } = useQuery({
     queryKey: ['wins_payments', cutoff],
+    staleTime: 60000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('invoices')
