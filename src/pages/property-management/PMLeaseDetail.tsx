@@ -125,6 +125,16 @@ export default function PMLeaseDetail() {
         }}
         defaultVisibility="tenant_visible"
       />
+
+      <InspectionsSection
+        filters={{ lease_id: id }}
+        defaults={{
+          lease_id: id,
+          tenant_id: form.tenant_id ?? null,
+          property_id: form.property_id ?? null,
+          unit_id: form.unit_id ?? null,
+        }}
+      />
     </div>
   );
 }
