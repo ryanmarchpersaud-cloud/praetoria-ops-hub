@@ -318,18 +318,18 @@ function InspectionBlock({ moveOut, canManage }: { moveOut: any; canManage: bool
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Inspection</p>
       <div>
         <Label className="text-xs">General condition</Label>
-        <Textarea rows={2} className="text-xs" defaultValue={inspection?.general_condition_notes ?? ''} disabled={!canManage}
+        <Textarea rows={2} className="text-xs" defaultValue={inspAny?.general_condition_notes ?? ''} disabled={!canManage}
           onBlur={e => upsert.mutate({ general_condition_notes: e.target.value })} />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
           <Label className="text-xs">Damage</Label>
-          <Textarea rows={2} className="text-xs" defaultValue={inspection?.damage_notes ?? ''} disabled={!canManage}
+          <Textarea rows={2} className="text-xs" defaultValue={inspAny?.damage_notes ?? ''} disabled={!canManage}
             onBlur={e => upsert.mutate({ damage_notes: e.target.value })} />
         </div>
         <div>
           <Label className="text-xs">Cleaning</Label>
-          <Textarea rows={2} className="text-xs" defaultValue={inspection?.cleaning_notes ?? ''} disabled={!canManage}
+          <Textarea rows={2} className="text-xs" defaultValue={inspAny?.cleaning_notes ?? ''} disabled={!canManage}
             onBlur={e => upsert.mutate({ cleaning_notes: e.target.value })} />
         </div>
       </div>
