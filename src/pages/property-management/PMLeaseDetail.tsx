@@ -12,6 +12,7 @@ import { usePmLease, useSavePmLease, useDeletePmLease, usePmTenants, usePmProper
 import { supabase } from '@/integrations/supabase/client';
 import TenantLedgerManager from '@/components/property-management/TenantLedgerManager';
 import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
+import { InspectionsSection } from '@/components/property-management/inspections/InspectionsSection';
 
 export default function PMLeaseDetail() {
   const { id } = useParams();
