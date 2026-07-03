@@ -100,7 +100,7 @@ export function useMoveOutChecklists() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('pm_move_out_checklists' as any)
-        .select('*, property:pm_managed_properties(property_name), unit:pm_units(unit_number), tenant:pm_tenants(first_name,last_name)')
+        .select('*, property:pm_managed_properties(property_name), unit:pm_units(unit_label), tenant:pm_tenants(first_name,last_name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data ?? []) as any[];
