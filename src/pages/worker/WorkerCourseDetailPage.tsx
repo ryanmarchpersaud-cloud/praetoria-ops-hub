@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useMyAssignments, useTrainingQuizQuestions, useSubmitQuiz, useUpdateAssignmentStatus, useMyQuizAttempts } from '@/hooks/useTraining';
+import { useMyAssignments, useAssignedQuizQuestions, useSubmitQuiz, useUpdateAssignmentStatus, useMyQuizAttempts } from '@/hooks/useTraining';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
