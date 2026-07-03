@@ -66,6 +66,10 @@ export default function PMStaffHome() {
         <KpiCard icon={ListChecks} label="Open tasks" value={myTasks.length} to="/pm-staff/tasks" />
       </div>
 
+      {/* Renewals due soon */}
+      <RenewalsDueSoonCard />
+
+
       {/* Upcoming showings */}
       <Card>
         <CardHeader className="pb-2 flex-row items-center justify-between">
