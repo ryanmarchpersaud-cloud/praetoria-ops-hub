@@ -1016,7 +1016,7 @@ function PaymentMethodCard({ customerId, onCompleteSetup }: { customerId: string
                   This card was entered for records only. To charge it, complete payment setup with the customer.
                 </p>
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  <Button size="sm" variant="default" className="h-7 px-2 text-[10px]" onClick={() => setInviteOpen(true)}>
+                  <Button size="sm" variant="default" className="h-7 px-2 text-[10px]" onClick={onCompleteSetup}>
                     Complete payment setup
                   </Button>
                   <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-destructive" onClick={handleRemoveCard} disabled={saving}>
