@@ -447,7 +447,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
 
   const leaseItems: PMItem[] = [
     { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
-    { title: 'Lease Renewals', url: '/property-ground/lease-renewals'.replace('property-ground', 'property-management'), icon: CalendarClock },
+    { title: 'Lease Renewals', url: '/property-management/lease-renewals', icon: CalendarClock },
     { title: 'Move-Ins', url: '/property-management/move-ins', icon: KeyRound },
     { title: 'Move-Outs', url: '/property-management/move-outs', icon: KeyRound },
   ];
