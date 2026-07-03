@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, Download } from 'lucide-react';
 import { useMyTenantDocuments, signTenantDocument } from '@/hooks/useTenantPortalExt';
+import { TenantPMDocumentsSection } from '@/components/tenant/TenantPMDocumentsSection';
 
 export default function TenantDocuments() {
   const { data = [], isLoading } = useMyTenantDocuments();
