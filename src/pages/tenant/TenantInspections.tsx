@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ClipboardCheck, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, ClipboardCheck, Image as ImageIcon, Printer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { signInspectionPhoto } from '@/hooks/pm/usePmInspections';
@@ -94,6 +94,13 @@ export default function TenantInspections() {
                   ))}
                 </div>
               )}
+              <div className="pt-1">
+                <Button asChild size="sm" variant="outline">
+                  <Link to={`/tenant/inspections/${insp.id}/print`} target="_blank" rel="noopener">
+                    <Printer className="h-3.5 w-3.5 mr-1" /> Print / Save PDF
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))

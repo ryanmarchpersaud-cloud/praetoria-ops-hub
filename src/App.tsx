@@ -279,6 +279,9 @@ const PMStaffInspections = lazy(() => import("./pages/pm-staff/Inspections"));
 const PMStaffInspectionDetail = lazy(() => import("./pages/pm-staff/InspectionDetail"));
 const TenantInspections = lazy(() => import("./pages/tenant/TenantInspections"));
 const OwnerInspections = lazy(() => import("./pages/owner/OwnerInspections"));
+const PMInspectionPrint = lazy(() => import("./pages/property-management/PMInspectionPrint"));
+const TenantInspectionPrint = lazy(() => import("./pages/tenant/TenantInspectionPrint"));
+const OwnerInspectionPrint = lazy(() => import("./pages/owner/OwnerInspectionPrint"));
 const OwnerApprovals = lazy(() => import("./pages/owner/OwnerApprovals"));
 const OwnerMessages = lazy(() => import("./pages/owner/OwnerMessages"));
 const TenantMessages = lazy(() => import("./pages/tenant/TenantMessages"));
@@ -753,6 +756,7 @@ function AppRoutes() {
         <Route path="/property-management/documents" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMDocumentsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/inspections" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMInspectionsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/inspections/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMInspectionDetail /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/inspections/:id/print" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMInspectionPrint /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}
@@ -864,6 +868,7 @@ function AppRoutes() {
         <Route path="/tenant/profile" element={<Suspense fallback={<RouteLoading />}><TenantProfile /></Suspense>} />
         <Route path="/tenant/messages" element={<Suspense fallback={<RouteLoading />}><TenantMessages /></Suspense>} />
         <Route path="/tenant/inspections" element={<Suspense fallback={<RouteLoading />}><TenantInspections /></Suspense>} />
+        <Route path="/tenant/inspections/:id/print" element={<Suspense fallback={<RouteLoading />}><TenantInspectionPrint /></Suspense>} />
       </Route>
 
 
@@ -880,6 +885,7 @@ function AppRoutes() {
         <Route path="/owner/approvals" element={<Suspense fallback={<RouteLoading />}><OwnerApprovals /></Suspense>} />
         <Route path="/owner/messages" element={<Suspense fallback={<RouteLoading />}><OwnerMessages /></Suspense>} />
         <Route path="/owner/inspections" element={<Suspense fallback={<RouteLoading />}><OwnerInspections /></Suspense>} />
+        <Route path="/owner/inspections/:id/print" element={<Suspense fallback={<RouteLoading />}><OwnerInspectionPrint /></Suspense>} />
       </Route>
 
       <Route element={<PMStaffRoute />}>
