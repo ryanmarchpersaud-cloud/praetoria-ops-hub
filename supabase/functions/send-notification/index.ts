@@ -856,9 +856,9 @@ Deno.serve(async (req) => {
       action_name: `Notification: ${event.replace(/_/g, " ")}`,
       workflow_name: "notifications",
       record_type: record_type || null,
-      record_id: record_id || null,
+      record_id: effectiveRecordId || null,
       status: "completed",
-      payload_summary: { event, audience, channels, customer_id, results_summary: results.map(r => `${r.channel}:${r.status}`) },
+      payload_summary: { event, audience: effectiveAudience, channels, customer_id: effectiveCustomerId, results_summary: results.map(r => `${r.channel}:${r.status}`) },
     });
 
     return json({ success: true, results });
