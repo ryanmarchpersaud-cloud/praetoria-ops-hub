@@ -750,6 +750,8 @@ function AppRoutes() {
         <Route path="/property-management/owner-statements/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-statements/:id/print" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><OwnerStatementPrint /></Suspense></ModuleGuard>} />
         <Route path="/property-management/documents" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMDocumentsList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/inspections" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMInspectionsList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/inspections/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMInspectionDetail /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}
