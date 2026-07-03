@@ -30,6 +30,7 @@ import { useBillingProfile } from '@/hooks/useInvoices';
 import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
+import { isChargeable, isDisplayOnly } from '@/lib/billingProfile';
 
 function getStatusAfterTotalChange(invoice: any, nextTotal: number) {
   if (['Draft', 'Voided', 'Refunded'].includes(invoice.status)) return invoice.status;
