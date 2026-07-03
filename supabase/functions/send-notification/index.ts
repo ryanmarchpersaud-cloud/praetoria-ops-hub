@@ -747,14 +747,14 @@ Deno.serve(async (req) => {
             let finalReplyTo = enrichedVars.reply_to || "ops@praetoriagroup.ca";
             let finalHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}.container{max-width:560px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);}.header{background:#1a1a2e;padding:24px 32px;}.header h1{margin:0;color:#fff;font-size:18px;font-weight:600;}.body{padding:32px;color:#27272a;line-height:1.6;font-size:15px;}h2{font-size:16px;margin:0 0 16px;}p{margin:0 0 12px;}.footer{padding:16px 32px;background:#fafafa;color:#71717a;font-size:12px;text-align:center;border-top:1px solid #e4e4e7;}</style></head><body><div class="container"><div class="header"><h1>Praetoria Group</h1></div><div class="body"><h2>${subjectHtml}</h2><div>${notifBodyHtml}</div></div><div class="footer">Praetoria Group &bull; praetoriagroup.ca</div></div></body></html>`;
 
-            if (event === "worker_assigned" && (audience === "worker" || audience === "subcontractor")) {
-              const rich = await buildAssignmentEmail(supabase, record_type, record_id, audience, subject);
+            if (event === "worker_assigned" && (effectiveAudience === "worker" || effectiveAudience === "subcontractor")) {
+              const rich = await buildAssignmentEmail(supabase, record_type, effectiveRecordId, effectiveAudience, subject);
               if (rich) {
                 finalSubject = rich.subject;
                 finalHtml = rich.html;
               }
             } else if (event === "new_service_request") {
-              const rich = await buildServiceRequestEmail(supabase, record_id, customer_id, enrichedVars, subject);
+              const rich = await buildServiceRequestEmail(supabase, effectiveRecordId, effectiveCustomerId, enrichedVars, subject);
               if (rich) {
                 finalSubject = rich.subject;
                 finalHtml = rich.html;
