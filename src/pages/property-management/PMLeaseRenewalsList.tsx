@@ -96,7 +96,7 @@ export default function PMLeaseRenewalsList() {
 
   const staffLabel = (id: string | null) => {
     if (!id) return '—';
-    const s = staff.find((x: any) => x.id === id);
+    const s = staff.find((x: any) => x.user_id === id);
     return s?.display_name || s?.email || '—';
   };
 
@@ -211,7 +211,7 @@ export default function PMLeaseRenewalsList() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All staff</SelectItem>
-                  {staff.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.display_name || s.email}</SelectItem>)}
+                  {staff.map((s: any) => <SelectItem key={s.user_id} value={s.user_id}>{s.display_name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -362,7 +362,7 @@ export function RenewalForm({ form, setForm, leases, tenants, properties, units,
           <Select value={form.assigned_to ?? ''} onValueChange={v => setForm({ ...form, assigned_to: v })}>
             <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
             <SelectContent>
-              {staff.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.display_name || s.email}</SelectItem>)}
+              {staff.map((s: any) => <SelectItem key={s.user_id} value={s.user_id}>{s.display_name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
