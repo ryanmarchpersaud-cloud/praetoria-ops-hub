@@ -55,22 +55,16 @@ export default function WorkerCourseDetailPage({ backTo }: { backTo?: string }) 
 
   const handleSubmitQuiz = () => {
     if (!user) return;
-    // Grade the quiz
-    let correct = 0;
-    questions.forEach((q: any) => {
-      if (answers[q.id] === q.correct_answer) correct++;
-    });
-    const score = Math.round((correct / questions.length) * 100);
-    const passed = course?.pass_mark ? score >= course.pass_mark : score >= 70;
-
+    // Grading happens server-side (SECURITY DEFINER RPC). The client
+    // never sees correct_answer.
     submitQuiz.mutate({
       assignment_id: assignment.id,
       user_id: user.id,
       answers,
-      score,
-      passed,
     }, {
-      onSuccess: () => {
+      onSuccess: (res: any) => {
+        const score = res?.score ?? 0;
+        const passed = !!res?.passed;
         toast({ title: passed ? `Passed! Score: ${score}%` : `Failed. Score: ${score}%`, variant: passed ? 'default' : 'destructive' });
         setShowQuiz(false);
         setAnswers({});
