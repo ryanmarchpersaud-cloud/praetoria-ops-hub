@@ -396,6 +396,30 @@ Deno.serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      // Resolve the target user_id from the email so we can apply the
+      // owner-only guard — without this, a non-owner admin could mint a
+      // password-recovery link for the owner and take over the account.
+      const { data: userLookup, error: lookupErr } = await adminClient.auth.admin.listUsers();
+      if (lookupErr) {
+        return new Response(JSON.stringify({ error: lookupErr.message }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const targetUser = (userLookup?.users || []).find(
+        (u: any) => (u.email || "").toLowerCase() === String(targetEmail).toLowerCase()
+      );
+      if (targetUser) {
+        const ownerErr3 = await ownerOnlyGuard(targetUser.id, null);
+        if (ownerErr3) {
+          return new Response(JSON.stringify({ error: ownerErr3 }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+      // If no matching user was found we still fall through — the recovery
+      // link generation will surface a normal error without leaking whether
+      // an owner exists at that email.
+
       const { data, error } = await adminClient.auth.admin.generateLink({
         type: "recovery",
         email: targetEmail,
