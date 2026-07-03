@@ -193,6 +193,9 @@ export function SparklineKPIStrip({
                 <p className="text-base md:text-lg font-extrabold tabular-nums leading-tight mt-0.5" style={{ color: t.color }}>
                   {t.value}
                 </p>
+                {t.subnote && (
+                  <p className="text-[9px] text-muted-foreground/80 font-medium mt-0.5 tabular-nums">{t.subnote}</p>
+                )}
                 <div className="-mx-1 mt-1">
                   <Sparkline data={t.series} color={t.color} />
                 </div>
