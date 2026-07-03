@@ -474,6 +474,8 @@ export default function PMLeaseRenewalsList() {
               <Input type="date" value={endFrom} onChange={e => setEndFrom(e.target.value)} title="End date from" />
               <Input type="date" value={endTo} onChange={e => setEndTo(e.target.value)} title="End date to" />
             </div>
+          </div>
+          <div className="flex justify-end">
             <Button variant="ghost" size="sm" onClick={clearFilters}><X className="h-3.5 w-3.5 mr-1" />Clear</Button>
           </div>
 
