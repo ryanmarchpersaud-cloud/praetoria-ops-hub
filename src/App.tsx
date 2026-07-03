@@ -868,6 +868,7 @@ function AppRoutes() {
         <Route path="/tenant/profile" element={<Suspense fallback={<RouteLoading />}><TenantProfile /></Suspense>} />
         <Route path="/tenant/messages" element={<Suspense fallback={<RouteLoading />}><TenantMessages /></Suspense>} />
         <Route path="/tenant/inspections" element={<Suspense fallback={<RouteLoading />}><TenantInspections /></Suspense>} />
+        <Route path="/tenant/inspections/:id/print" element={<Suspense fallback={<RouteLoading />}><TenantInspectionPrint /></Suspense>} />
       </Route>
 
 
