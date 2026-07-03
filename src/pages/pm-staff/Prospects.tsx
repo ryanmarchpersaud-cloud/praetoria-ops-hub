@@ -320,7 +320,7 @@ function ConsentsSection({ f, set }: { f: FormShape; set: (p: Partial<FormShape>
         <Checkbox id="bg" checked={f.background_check_consent} onCheckedChange={c => set({ background_check_consent: !!c })} />
         <Label htmlFor="bg" className="text-xs leading-snug">Applicant consents to a <strong>background check</strong>.</Label>
       </div>
-      <div="flex items-start gap-2" className="flex items-start gap-2">
+      <div className="flex items-start gap-2">
         <Checkbox id="ref" checked={f.reference_check_consent} onCheckedChange={c => set({ reference_check_consent: !!c })} />
         <Label htmlFor="ref" className="text-xs leading-snug">Applicant consents to <strong>reference checks</strong> (current & previous landlords, employer).</Label>
       </div>
