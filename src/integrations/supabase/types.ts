@@ -7327,6 +7327,248 @@ export type Database = {
           },
         ]
       }
+      pm_owner_message_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          is_owner_visible: boolean
+          message_id: string
+          mime_type: string | null
+          size_bytes: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          is_owner_visible?: boolean
+          message_id: string
+          mime_type?: string | null
+          size_bytes?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          is_owner_visible?: boolean
+          message_id?: string
+          mime_type?: string | null
+          size_bytes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_owner_message_threads: {
+        Row: {
+          assigned_staff_id: string | null
+          category: string
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          last_message_at: string | null
+          last_owner_visible_message_at: string | null
+          owner_id: string
+          priority: string
+          property_id: string | null
+          related_approval_id: string | null
+          related_expense_id: string | null
+          related_lease_renewal_id: string | null
+          related_maintenance_request_id: string | null
+          related_move_out_id: string | null
+          related_statement_id: string | null
+          related_work_order_id: string | null
+          status: string
+          subject: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_staff_id?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_owner_visible_message_at?: string | null
+          owner_id: string
+          priority?: string
+          property_id?: string | null
+          related_approval_id?: string | null
+          related_expense_id?: string | null
+          related_lease_renewal_id?: string | null
+          related_maintenance_request_id?: string | null
+          related_move_out_id?: string | null
+          related_statement_id?: string | null
+          related_work_order_id?: string | null
+          status?: string
+          subject: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_staff_id?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_owner_visible_message_at?: string | null
+          owner_id?: string
+          priority?: string
+          property_id?: string | null
+          related_approval_id?: string | null
+          related_expense_id?: string | null
+          related_lease_renewal_id?: string | null
+          related_maintenance_request_id?: string | null
+          related_move_out_id?: string | null
+          related_statement_id?: string | null
+          related_work_order_id?: string | null
+          status?: string
+          subject?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_message_threads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "pm_property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_related_approval_id_fkey"
+            columns: ["related_approval_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_approvals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_related_expense_id_fkey"
+            columns: ["related_expense_id"]
+            isOneToOne: false
+            referencedRelation: "pm_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_related_expense_id_fkey"
+            columns: ["related_expense_id"]
+            isOneToOne: false
+            referencedRelation: "pm_expenses_owner_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_related_lease_renewal_id_fkey"
+            columns: ["related_lease_renewal_id"]
+            isOneToOne: false
+            referencedRelation: "pm_lease_renewals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_related_maintenance_request_id_fkey"
+            columns: ["related_maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "pm_maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_related_move_out_id_fkey"
+            columns: ["related_move_out_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_out_checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_related_statement_id_fkey"
+            columns: ["related_statement_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_related_work_order_id_fkey"
+            columns: ["related_work_order_id"]
+            isOneToOne: false
+            referencedRelation: "pm_work_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_message_threads_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_owner_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_owner_visible: boolean
+          read_at: string | null
+          sender_id: string | null
+          sender_type: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_owner_visible?: boolean
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_owner_visible?: boolean
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_owner_properties: {
         Row: {
           created_at: string
@@ -13145,6 +13387,19 @@ export type Database = {
       owner_mark_approval_viewed: {
         Args: { _approval_id: string }
         Returns: undefined
+      }
+      owner_mark_thread_read: {
+        Args: { _thread_id: string }
+        Returns: undefined
+      }
+      owner_open_message_thread: {
+        Args: {
+          _body: string
+          _category?: string
+          _property_id: string
+          _subject: string
+        }
+        Returns: string
       }
       owner_respond_to_approval: {
         Args: { _approval_id: string; _note?: string; _response: string }
