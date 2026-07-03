@@ -1,0 +1,2 @@
+ALTER TABLE public.pm_staff_tasks ADD COLUMN IF NOT EXISTS renewal_id uuid REFERENCES public.pm_lease_renewals(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS pm_staff_tasks_renewal_id_idx ON public.pm_staff_tasks(renewal_id);
