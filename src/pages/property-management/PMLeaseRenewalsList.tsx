@@ -521,12 +521,12 @@ export default function PMLeaseRenewalsList() {
                     {canBulk && (
                       <TableHead className="w-8"><Checkbox checked={allChecked} onCheckedChange={toggleAll} /></TableHead>
                     )}
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort('property')}>Tenant / Property</TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort('end_date')}>Current End</TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort('proposed_rent')}>Proposed Rent</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('property')}>Tenant / Property {sortKey==='property' && (sortDir==='asc'?'↑':'↓')}</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('end_date')}>Current End {sortKey==='end_date' && (sortDir==='asc'?'↑':'↓')}</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('proposed_rent')}>Proposed Rent {sortKey==='proposed_rent' && (sortDir==='asc'?'↑':'↓')}</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Response</TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => toggleSort('assigned')}>Assigned</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('assigned')}>Assigned {sortKey==='assigned' && (sortDir==='asc'?'↑':'↓')}</TableHead>
                     <TableHead>Visibility</TableHead>
                     <TableHead />
                   </TableRow>
