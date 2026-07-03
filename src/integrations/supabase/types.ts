@@ -12732,7 +12732,35 @@ export type Database = {
         Returns: undefined
       }
       pm_get_lease_balance: { Args: { p_lease_id: string }; Returns: number }
+      pm_get_tenant_aging: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          as_of: string
+          balance: number
+          current_amt: number
+          d_0_30: number
+          d_31_60: number
+          d_61_90: number
+          d_90_plus: number
+          oldest_due: string
+          tenant_id: string
+        }[]
+      }
       pm_get_tenant_balance: { Args: { p_tenant_id: string }; Returns: number }
+      pm_my_aging: {
+        Args: never
+        Returns: {
+          as_of: string
+          balance: number
+          current_amt: number
+          d_0_30: number
+          d_31_60: number
+          d_61_90: number
+          d_90_plus: number
+          oldest_due: string
+          tenant_id: string
+        }[]
+      }
       pm_my_balance: { Args: never; Returns: number }
       pm_my_next_due: { Args: never; Returns: string }
       pm_owner_can_see_property: {
