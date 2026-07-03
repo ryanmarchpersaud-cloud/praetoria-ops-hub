@@ -25,7 +25,11 @@ export default function More() {
 
   const leasingItems: Item[] = [
     { icon: HomeIcon, label: 'Home', to: '/pm-staff', description: 'Leasing dashboard' },
+    { icon: FileText, label: 'Applications', to: '/pm-staff/applications', description: 'Rental applications & review' },
+    { icon: KeyRound, label: 'Move-Ins', to: '/pm-staff/move-ins', description: 'Move-in coordination & checklists' },
+    { icon: KeyRound, label: 'Move-Outs', to: '/pm-staff/move-outs', description: 'Move-out workflow, inspections & keys' },
     { icon: ClipboardCheck, label: 'My Tasks', to: '/pm-staff/tasks', description: 'Assigned leasing tasks, follow-ups & reminders' },
+    { icon: CalendarClock, label: 'Lease Renewals', description: 'Renewal workflow — coming soon', soon: true },
   ];
 
   const profileItems: Item[] = [
