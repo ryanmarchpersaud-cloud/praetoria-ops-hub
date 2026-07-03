@@ -147,6 +147,11 @@ export default function PMPropertyDetail() {
           )}
         </CardContent>
       </Card>
+
+      <PMDocumentsSection
+        filters={{ property_id: id }}
+        uploadDefaults={{ property_id: id }}
+      />
     </div>
   );
 }
