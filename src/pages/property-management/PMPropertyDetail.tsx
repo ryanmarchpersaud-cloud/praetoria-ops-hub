@@ -154,6 +154,11 @@ export default function PMPropertyDetail() {
         filters={{ property_id: id }}
         uploadDefaults={{ property_id: id }}
       />
+
+      <InspectionsSection
+        filters={{ property_id: id }}
+        defaults={{ property_id: id }}
+      />
     </div>
   );
 }
