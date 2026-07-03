@@ -271,8 +271,11 @@ const PMStaffLeaseRenewals = lazy(() => import("./pages/pm-staff/LeaseRenewals")
 const PMLeaseRenewalsList = lazy(() => import("./pages/property-management/PMLeaseRenewalsList"));
 const PMOwnerApprovalsList = lazy(() => import("./pages/property-management/PMOwnerApprovalsList"));
 const PMOwnerMessagesList = lazy(() => import("./pages/property-management/PMOwnerMessagesList"));
+const PMTenantMessagesList = lazy(() => import("./pages/property-management/PMTenantMessagesList"));
 const OwnerApprovals = lazy(() => import("./pages/owner/OwnerApprovals"));
 const OwnerMessages = lazy(() => import("./pages/owner/OwnerMessages"));
+const TenantMessages = lazy(() => import("./pages/tenant/TenantMessages"));
+
 const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
 const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
 const PMStaffProfile = lazy(() => import("./pages/pm-staff/Profile"));
