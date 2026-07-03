@@ -8,7 +8,7 @@ import {
   Building2, Settings, LogOut, User, ChevronRight, Eye, Monitor,
   Briefcase, FileText, Heart, DollarSign, Award, CalendarDays, UserCheck,
   ShieldAlert, Receipt, CreditCard, ClipboardCheck, Trash2, Clock, CalendarClock,
-  HardHat, Bell, GraduationCap, Home as HomeIcon,
+  HardHat, Bell, GraduationCap, Home as HomeIcon, KeyRound,
 } from 'lucide-react';
 
 type Item = { icon: any; label: string; to?: string; description: string; soon?: boolean };
@@ -25,7 +25,11 @@ export default function More() {
 
   const leasingItems: Item[] = [
     { icon: HomeIcon, label: 'Home', to: '/pm-staff', description: 'Leasing dashboard' },
+    { icon: FileText, label: 'Applications', to: '/pm-staff/applications', description: 'Rental applications & review' },
+    { icon: KeyRound, label: 'Move-Ins', to: '/pm-staff/move-ins', description: 'Move-in coordination & checklists' },
+    { icon: KeyRound, label: 'Move-Outs', to: '/pm-staff/move-outs', description: 'Move-out workflow, inspections & keys' },
     { icon: ClipboardCheck, label: 'My Tasks', to: '/pm-staff/tasks', description: 'Assigned leasing tasks, follow-ups & reminders' },
+    { icon: CalendarClock, label: 'Lease Renewals', description: 'Renewal workflow — coming soon', soon: true },
   ];
 
   const profileItems: Item[] = [
