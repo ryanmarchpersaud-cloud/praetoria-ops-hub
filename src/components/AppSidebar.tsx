@@ -503,10 +503,10 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer border-l-2 border-emerald-600/70"
+        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-300 hover:bg-amber-500/10 cursor-pointer border-l-2 border-amber-500/70"
       >
         <span className="flex items-center gap-1.5">
-          <Building2 className="h-3.5 w-3.5" />
+          <Building2 className="h-3.5 w-3.5 text-amber-400" />
           Property Management
         </span>
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? '' : '-rotate-90'}`} />
