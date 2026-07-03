@@ -79,6 +79,8 @@ export default function OwnerHome() {
 
         <OwnerApprovalsCard />
 
+        <OwnerMessagesCard />
+
         <OwnerRenewalsCard />
 
         <Card>
