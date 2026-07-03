@@ -5608,6 +5608,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_applications_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_applications_prospect_id_fkey"
             columns: ["prospect_id"]
             isOneToOne: false
@@ -5712,6 +5719,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_charges_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_charges_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -5805,6 +5819,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_credits_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_credits_source_payment_id_fkey"
@@ -6002,6 +6023,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_expenses_subcontractor_id_fkey"
             columns: ["subcontractor_id"]
             isOneToOne: false
@@ -6098,6 +6126,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_finance_activity_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_finance_activity_tenant_id_fkey"
@@ -6247,6 +6282,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_lease_renewals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_lease_renewals_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -6330,6 +6372,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_leases_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_leases_tenant_id_fkey"
@@ -6540,6 +6589,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_maintenance_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_maintenance_requests_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -6731,6 +6787,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_move_in_checklists_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_move_in_checklists_prospect_id_fkey"
             columns: ["prospect_id"]
             isOneToOne: false
@@ -6877,6 +6940,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_move_out_checklists_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_move_out_checklists_tenant_id_fkey"
@@ -7043,6 +7113,13 @@ export type Database = {
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pm_owner_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
         ]
       }
       pm_owner_properties: {
@@ -7075,6 +7152,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_properties_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
         ]
       }
@@ -7153,6 +7237,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_statement_lines_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_owner_statement_lines_statement_id_fkey"
@@ -7266,6 +7357,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_statements_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
         ]
       }
@@ -7412,6 +7510,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_payments_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -7538,6 +7643,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_prospects_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_prospects_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
@@ -7639,6 +7751,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_receipts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_receipts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -7700,6 +7819,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_showings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_showings_prospect_id_fkey"
@@ -7805,6 +7931,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_staff_tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_staff_tasks_prospect_id_fkey"
             columns: ["prospect_id"]
             isOneToOne: false
@@ -7864,6 +7997,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_tenant_documents_tenant_id_fkey"
@@ -7993,6 +8133,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_inspections_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_tenant_inspections_tenant_id_fkey"
@@ -8164,6 +8311,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_tenant_ledger_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_tenant_ledger_related_charge_id_fkey"
             columns: ["related_charge_id"]
             isOneToOne: false
@@ -8257,6 +8411,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_tenant_notices_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_tenant_notices_tenant_id_fkey"
@@ -8578,6 +8739,13 @@ export type Database = {
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pm_units_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
         ]
       }
       pm_work_order_attachments: {
@@ -8755,6 +8923,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pm_managed_properties"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_work_orders_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
           },
           {
             foreignKeyName: "pm_work_orders_tenant_id_fkey"
@@ -12222,6 +12397,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
             foreignKeyName: "pm_expenses_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
@@ -12236,6 +12418,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pm_owner_statement_sources: {
+        Row: {
+          charges_count: number | null
+          charges_total: number | null
+          charges_waived_total: number | null
+          net_collected: number | null
+          payments_cleared_count: number | null
+          payments_cleared_total: number | null
+          payments_refunded_total: number | null
+          period_month: string | null
+          property_id: string | null
+          property_name: string | null
+        }
+        Relationships: []
       }
       pm_tenant_ledger_tenant_safe: {
         Row: {
@@ -12538,6 +12735,10 @@ export type Database = {
       pm_get_tenant_balance: { Args: { p_tenant_id: string }; Returns: number }
       pm_my_balance: { Args: never; Returns: number }
       pm_my_next_due: { Args: never; Returns: string }
+      pm_owner_can_see_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
       pm_property_owner_can_view_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
