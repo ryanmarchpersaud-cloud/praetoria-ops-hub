@@ -113,6 +113,17 @@ export default function PMLeaseDetail() {
           defaultRentDueDay={Number(form.rent_due_day ?? 1)}
         />
       )}
+
+      <PMDocumentsSection
+        filters={{ lease_id: id }}
+        uploadDefaults={{
+          lease_id: id,
+          tenant_id: form.tenant_id ?? null,
+          property_id: form.property_id ?? null,
+          unit_id: form.unit_id ?? null,
+        }}
+        defaultVisibility="tenant_visible"
+      />
     </div>
   );
 }
