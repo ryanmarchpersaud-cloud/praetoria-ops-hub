@@ -7104,6 +7104,54 @@ export type Database = {
           },
         ]
       }
+      pm_payment_allocations: {
+        Row: {
+          amount: number
+          charge_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          payment_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          charge_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          charge_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_payment_allocations_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "pm_charges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_payment_allocations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "pm_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_payments: {
         Row: {
           amount: number
