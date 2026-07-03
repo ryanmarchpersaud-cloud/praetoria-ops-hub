@@ -1,9 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
   Building2, DoorOpen, Users, FileSignature, Briefcase,
-  KeyRound, CheckCircle2, XCircle, ArrowRight, Plus,
+  KeyRound, CheckCircle2, XCircle, ArrowRight, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { usePmSummary } from '@/hooks/usePropertyManagement';
 import { RecentTenantActivity } from '@/components/property-management/RecentTenantActivity';
@@ -49,13 +49,6 @@ function KpiCard({
   );
 }
 
-const QUICK_ACTIONS = [
-  { label: 'Create Owner',    to: '/property-management/owners',     icon: Briefcase },
-  { label: 'Create Property', to: '/property-management/properties', icon: Building2 },
-  { label: 'Create Unit',     to: '/property-management/units',      icon: DoorOpen },
-  { label: 'Create Tenant',   to: '/property-management/tenants',    icon: Users },
-  { label: 'Create Lease',    to: '/property-management/leases',     icon: FileSignature },
-];
 
 const STEPS = [
   { n: 1, title: 'Add a property owner',      to: '/property-management/owners',     icon: Briefcase,     hint: 'Landlord or LLC that owns the property.' },
@@ -67,28 +60,27 @@ const STEPS = [
 
 export default function PMDashboard() {
   const { data: s } = usePmSummary();
+  const totalProperties = s?.totalProperties ?? 0;
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    if (totalProperties > 0) {
+      setOpen(false);
+    }
+  }, [totalProperties]);
+
   return (
     <div className="p-6 space-y-8 max-w-7xl mx-auto">
       <div className="rounded-xl border border-emerald-600/20 bg-gradient-to-r from-emerald-50 via-emerald-50/40 to-transparent dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent p-5">
-        <div className="flex items-end justify-between flex-wrap gap-3">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-lg bg-emerald-600 text-white shadow-sm">
-              <Building2 className="h-6 w-6" strokeWidth={2.25} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">Property Management</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Managed properties, units, owners, tenants, and leases.
-              </p>
-            </div>
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 rounded-lg bg-emerald-600 text-white shadow-sm">
+            <Building2 className="h-6 w-6" strokeWidth={2.25} />
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/properties">Properties</Link></Button>
-            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/units">Units</Link></Button>
-            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/owners">Owners</Link></Button>
-            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/tenants">Tenants</Link></Button>
-            <Button asChild variant="outline" size="sm" className="border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-800"><Link to="/property-management/referrals">Referrals</Link></Button>
-            <Button asChild size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white"><Link to="/property-management/leases">Leases</Link></Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Property Management</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Managed properties, units, owners, tenants, and leases.
+            </p>
           </div>
         </div>
       </div>
@@ -114,44 +106,39 @@ export default function PMDashboard() {
               Phase 1 — Admin foundation only. Tenant and owner portals are reserved for future phases.
             </p>
           </div>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring h-8 w-8 hover:bg-accent hover:text-accent-foreground"
+            aria-label={open ? 'Collapse getting started' : 'Expand getting started'}
+          >
+            {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Quick-action shortcuts */}
-          <div className="flex flex-wrap gap-2">
-            {QUICK_ACTIONS.map((a) => (
-              <Button key={a.label} asChild variant="outline" size="sm" className="h-9">
-                <Link to={a.to}>
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  <a.icon className="mr-1.5 h-4 w-4" />
-                  {a.label}
-                </Link>
-              </Button>
-            ))}
-          </div>
-
-          {/* Numbered step list */}
-          <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-            {STEPS.map((step) => (
-              <li key={step.n}>
-                <Link
-                  to={step.to}
-                  className="group flex h-full flex-col gap-2 rounded-lg border bg-card p-3 hover:border-primary/40 hover:bg-accent/30 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                      {step.n}
-                    </span>
-                    <step.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">{step.title}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{step.hint}</div>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </CardContent>
+        {open && (
+          <CardContent className="space-y-6">
+            <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {STEPS.map((step) => (
+                <li key={step.n}>
+                  <Link
+                    to={step.to}
+                    className="group flex h-full flex-col gap-2 rounded-lg border bg-card p-3 hover:border-primary/40 hover:bg-accent/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                        {step.n}
+                      </span>
+                      <step.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">{step.title}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{step.hint}</div>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        )}
       </Card>
     </div>
   );
