@@ -7774,72 +7774,212 @@ export type Database = {
       }
       pm_prospects: {
         Row: {
+          alternate_phone: string | null
           assigned_to: string | null
+          background_check_consent: boolean | null
+          background_check_consent_at: string | null
           budget_max: number | null
           budget_min: number | null
+          co_applicants: Json | null
+          consent_ip: string | null
           created_at: string
           created_by: string | null
+          credit_check_consent: boolean | null
+          credit_check_consent_at: string | null
+          current_address: string | null
+          current_landlord_name: string | null
+          current_landlord_phone: string | null
+          current_monthly_rent: number | null
+          current_move_in_date: string | null
+          date_of_birth: string | null
+          desired_lease_term_months: number | null
           desired_move_in: string | null
           email: string | null
+          employer_name: string | null
+          employment_start_date: string | null
+          gender: string | null
+          gross_monthly_income: number | null
+          has_pets: boolean | null
           id: string
+          id_expiry: string | null
+          id_number: string | null
+          id_photo_path: string | null
+          id_type: string | null
+          income_proof_path: string | null
+          interested_property_id: string | null
+          interested_unit_id: string | null
+          is_smoker: boolean | null
+          job_title: string | null
           name: string
           notes: string | null
+          occupant_count: number | null
           occupants: number | null
           parking: string | null
           pets: string | null
           phone: string | null
           preferred_contact: string | null
+          preferred_contact_method: string | null
+          preferred_name: string | null
+          previous_address: string | null
+          previous_landlord_name: string | null
+          previous_landlord_phone: string | null
           property_id: string | null
+          reason_for_leaving: string | null
+          reference_check_consent: boolean | null
+          reference_check_consent_at: string | null
+          secondary_income_amount: number | null
+          secondary_income_source: string | null
           source: string | null
           status: string
+          supervisor_name: string | null
+          supervisor_phone: string | null
           unit_id: string | null
           updated_at: string
+          vehicles: Json | null
         }
         Insert: {
+          alternate_phone?: string | null
           assigned_to?: string | null
+          background_check_consent?: boolean | null
+          background_check_consent_at?: string | null
           budget_max?: number | null
           budget_min?: number | null
+          co_applicants?: Json | null
+          consent_ip?: string | null
           created_at?: string
           created_by?: string | null
+          credit_check_consent?: boolean | null
+          credit_check_consent_at?: string | null
+          current_address?: string | null
+          current_landlord_name?: string | null
+          current_landlord_phone?: string | null
+          current_monthly_rent?: number | null
+          current_move_in_date?: string | null
+          date_of_birth?: string | null
+          desired_lease_term_months?: number | null
           desired_move_in?: string | null
           email?: string | null
+          employer_name?: string | null
+          employment_start_date?: string | null
+          gender?: string | null
+          gross_monthly_income?: number | null
+          has_pets?: boolean | null
           id?: string
+          id_expiry?: string | null
+          id_number?: string | null
+          id_photo_path?: string | null
+          id_type?: string | null
+          income_proof_path?: string | null
+          interested_property_id?: string | null
+          interested_unit_id?: string | null
+          is_smoker?: boolean | null
+          job_title?: string | null
           name: string
           notes?: string | null
+          occupant_count?: number | null
           occupants?: number | null
           parking?: string | null
           pets?: string | null
           phone?: string | null
           preferred_contact?: string | null
+          preferred_contact_method?: string | null
+          preferred_name?: string | null
+          previous_address?: string | null
+          previous_landlord_name?: string | null
+          previous_landlord_phone?: string | null
           property_id?: string | null
+          reason_for_leaving?: string | null
+          reference_check_consent?: boolean | null
+          reference_check_consent_at?: string | null
+          secondary_income_amount?: number | null
+          secondary_income_source?: string | null
           source?: string | null
           status?: string
+          supervisor_name?: string | null
+          supervisor_phone?: string | null
           unit_id?: string | null
           updated_at?: string
+          vehicles?: Json | null
         }
         Update: {
+          alternate_phone?: string | null
           assigned_to?: string | null
+          background_check_consent?: boolean | null
+          background_check_consent_at?: string | null
           budget_max?: number | null
           budget_min?: number | null
+          co_applicants?: Json | null
+          consent_ip?: string | null
           created_at?: string
           created_by?: string | null
+          credit_check_consent?: boolean | null
+          credit_check_consent_at?: string | null
+          current_address?: string | null
+          current_landlord_name?: string | null
+          current_landlord_phone?: string | null
+          current_monthly_rent?: number | null
+          current_move_in_date?: string | null
+          date_of_birth?: string | null
+          desired_lease_term_months?: number | null
           desired_move_in?: string | null
           email?: string | null
+          employer_name?: string | null
+          employment_start_date?: string | null
+          gender?: string | null
+          gross_monthly_income?: number | null
+          has_pets?: boolean | null
           id?: string
+          id_expiry?: string | null
+          id_number?: string | null
+          id_photo_path?: string | null
+          id_type?: string | null
+          income_proof_path?: string | null
+          interested_property_id?: string | null
+          interested_unit_id?: string | null
+          is_smoker?: boolean | null
+          job_title?: string | null
           name?: string
           notes?: string | null
+          occupant_count?: number | null
           occupants?: number | null
           parking?: string | null
           pets?: string | null
           phone?: string | null
           preferred_contact?: string | null
+          preferred_contact_method?: string | null
+          preferred_name?: string | null
+          previous_address?: string | null
+          previous_landlord_name?: string | null
+          previous_landlord_phone?: string | null
           property_id?: string | null
+          reason_for_leaving?: string | null
+          reference_check_consent?: boolean | null
+          reference_check_consent_at?: string | null
+          secondary_income_amount?: number | null
+          secondary_income_source?: string | null
           source?: string | null
           status?: string
+          supervisor_name?: string | null
+          supervisor_phone?: string | null
           unit_id?: string | null
           updated_at?: string
+          vehicles?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pm_prospects_interested_property_fk"
+            columns: ["interested_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_prospects_interested_unit_fk"
+            columns: ["interested_unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pm_prospects_property_id_fkey"
             columns: ["property_id"]
@@ -7974,10 +8114,18 @@ export type Database = {
       pm_showings: {
         Row: {
           assigned_to: string | null
+          confirmation_status: string | null
+          confirmed_at: string | null
           created_at: string
           created_by: string | null
+          duration_minutes: number | null
+          feedback_notes: string | null
+          feedback_rating: number | null
           follow_up_required: boolean
           id: string
+          interest_level: string | null
+          meeting_location: string | null
+          no_show: boolean | null
           notes: string | null
           property_id: string | null
           prospect_id: string | null
@@ -7989,10 +8137,18 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          confirmation_status?: string | null
+          confirmed_at?: string | null
           created_at?: string
           created_by?: string | null
+          duration_minutes?: number | null
+          feedback_notes?: string | null
+          feedback_rating?: number | null
           follow_up_required?: boolean
           id?: string
+          interest_level?: string | null
+          meeting_location?: string | null
+          no_show?: boolean | null
           notes?: string | null
           property_id?: string | null
           prospect_id?: string | null
@@ -8004,10 +8160,18 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          confirmation_status?: string | null
+          confirmed_at?: string | null
           created_at?: string
           created_by?: string | null
+          duration_minutes?: number | null
+          feedback_notes?: string | null
+          feedback_rating?: number | null
           follow_up_required?: boolean
           id?: string
+          interest_level?: string | null
+          meeting_location?: string | null
+          no_show?: boolean | null
           notes?: string | null
           property_id?: string | null
           prospect_id?: string | null
@@ -8052,17 +8216,23 @@ export type Database = {
         Row: {
           application_id: string | null
           assigned_to: string | null
+          attachments: Json | null
+          category: string | null
+          checklist: Json | null
           created_at: string
           created_by: string | null
           description: string | null
           due_date: string | null
           id: string
+          linked_prospect_id: string | null
+          linked_showing_id: string | null
           move_in_id: string | null
           move_out_id: string | null
           notes: string | null
           priority: string | null
           property_id: string | null
           prospect_id: string | null
+          reminder_at: string | null
           renewal_id: string | null
           status: string
           title: string
@@ -8072,17 +8242,23 @@ export type Database = {
         Insert: {
           application_id?: string | null
           assigned_to?: string | null
+          attachments?: Json | null
+          category?: string | null
+          checklist?: Json | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          linked_prospect_id?: string | null
+          linked_showing_id?: string | null
           move_in_id?: string | null
           move_out_id?: string | null
           notes?: string | null
           priority?: string | null
           property_id?: string | null
           prospect_id?: string | null
+          reminder_at?: string | null
           renewal_id?: string | null
           status?: string
           title: string
@@ -8092,17 +8268,23 @@ export type Database = {
         Update: {
           application_id?: string | null
           assigned_to?: string | null
+          attachments?: Json | null
+          category?: string | null
+          checklist?: Json | null
           created_at?: string
           created_by?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          linked_prospect_id?: string | null
+          linked_showing_id?: string | null
           move_in_id?: string | null
           move_out_id?: string | null
           notes?: string | null
           priority?: string | null
           property_id?: string | null
           prospect_id?: string | null
+          reminder_at?: string | null
           renewal_id?: string | null
           status?: string
           title?: string
@@ -8115,6 +8297,20 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "pm_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_staff_tasks_linked_prospect_fk"
+            columns: ["linked_prospect_id"]
+            isOneToOne: false
+            referencedRelation: "pm_prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_staff_tasks_linked_showing_fk"
+            columns: ["linked_showing_id"]
+            isOneToOne: false
+            referencedRelation: "pm_showings"
             referencedColumns: ["id"]
           },
           {
