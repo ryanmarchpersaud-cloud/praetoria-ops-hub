@@ -65,6 +65,7 @@ export function useClockIn() {
       qc.invalidateQueries({ queryKey: ['active_timesheet'] });
       qc.invalidateQueries({ queryKey: ['timesheets'] });
       qc.invalidateQueries({ queryKey: ['admin_live_workforce'] });
+      qc.invalidateQueries({ queryKey: ['pm_dash_staff_activity'] });
     },
   });
 }
@@ -86,6 +87,7 @@ export function useClockOut() {
       qc.invalidateQueries({ queryKey: ['active_timesheet'] });
       qc.invalidateQueries({ queryKey: ['timesheets'] });
       qc.invalidateQueries({ queryKey: ['admin_live_workforce'] });
+      qc.invalidateQueries({ queryKey: ['pm_dash_staff_activity'] });
       qc.invalidateQueries({ queryKey: ['employee_timesheets_admin'] });
     },
   });
@@ -125,6 +127,7 @@ export function useAdminForceClockOut() {
       qc.invalidateQueries({ queryKey: ['active_timesheet'] });
       qc.invalidateQueries({ queryKey: ['timesheets'] });
       qc.invalidateQueries({ queryKey: ['admin_live_workforce'] });
+      qc.invalidateQueries({ queryKey: ['pm_dash_staff_activity'] });
       qc.invalidateQueries({ queryKey: ['employee_timesheets_admin'] });
     },
   });
