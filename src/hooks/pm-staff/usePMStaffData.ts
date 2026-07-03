@@ -94,6 +94,36 @@ export function useMoveInChecklists() {
   });
 }
 
+export function useMoveOutChecklists() {
+  return useQuery({
+    queryKey: ['pm_move_out_checklists'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('pm_move_out_checklists' as any)
+        .select('*, property:pm_managed_properties(property_name), unit:pm_units(unit_number), tenant:pm_tenants(first_name,last_name)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+    staleTime,
+  });
+}
+
+export function usePMStaffUsers() {
+  return useQuery({
+    queryKey: ['pm_staff_users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles' as any)
+        .select('user_id, role, profiles:profiles!inner(display_name)')
+        .in('role', ['leasing_agent', 'property_manager']);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+    staleTime,
+  });
+}
+
 export function useCreateRecord(table: string, invalidate: string[]) {
   const qc = useQueryClient();
   return useMutation({
