@@ -2,6 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 const staleTime = 60_000;
+const PM_STAFF_ROLES = ['leasing_agent', 'property_manager'] as const;
+
+type PMStaffActivity = {
+  clockedIn: any[];
+  clockedOutToday: any[];
+  hoursTodayTotal: number;
+  appsWaiting: number;
+};
 
 function monthWindow() {
   const now = new Date();
@@ -12,6 +20,32 @@ function monthWindow() {
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 function inDays(days: number) {
   return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+function reginaStartOfTodayISO() {
+  // America/Regina is fixed UTC-6. Anchor PM dashboards to the business day,
+  // not the browser timezone, so late-night clock entries don't disappear.
+  const now = new Date();
+  const reginaNow = new Date(now.getTime() - 6 * 3600_000);
+  const reginaMidnightUtcMs = Date.UTC(
+    reginaNow.getUTCFullYear(), reginaNow.getUTCMonth(), reginaNow.getUTCDate()
+  ) + 6 * 3600_000;
+  return new Date(reginaMidnightUtcMs).toISOString();
+}
+
+function emptyPMStaffActivity(): PMStaffActivity {
+  return { clockedIn: [], clockedOutToday: [], hoursTodayTotal: 0, appsWaiting: 0 };
+}
+
+function normalizePMStaffActivity(value: any): PMStaffActivity | null {
+  if (!value) return null;
+  const payload = typeof value === 'string' ? JSON.parse(value) : value;
+  return {
+    clockedIn: Array.isArray(payload.clockedIn) ? payload.clockedIn : [],
+    clockedOutToday: Array.isArray(payload.clockedOutToday) ? payload.clockedOutToday : [],
+    hoursTodayTotal: Number(payload.hoursTodayTotal ?? 0),
+    appsWaiting: Number(payload.appsWaiting ?? 0),
+  };
 }
 
 /* ─── Row 1 — Business KPIs ─────────────────────────────────────────── */
@@ -185,37 +219,47 @@ export function usePMStaffActivity(enabled: boolean) {
     queryKey: ['pm_dash_staff_activity'],
     enabled,
     queryFn: async () => {
-      // Regina start-of-day (America/Regina is UTC-6, no DST)
-      const now = new Date();
-      const reginaNow = new Date(now.getTime() - 6 * 3600_000);
-      const reginaMidnightUtcMs = Date.UTC(
-        reginaNow.getUTCFullYear(), reginaNow.getUTCMonth(), reginaNow.getUTCDate()
-      ) + 6 * 3600_000;
-      const startISO = new Date(reginaMidnightUtcMs).toISOString();
+      // Prefer the security-definer RPC so admin/owner/ops dashboards are not
+      // blocked by user_roles RLS and so active/clocked-out PM staff are counted
+      // from one authoritative database query.
+      const rpc = await (supabase as any).rpc('pm_get_staff_activity_today');
+      if (!rpc.error) {
+        const normalized = normalizePMStaffActivity(rpc.data);
+        if (normalized) return normalized;
+      } else if (rpc.error.code !== '42883') {
+        throw rpc.error;
+      }
+
+      const startISO = reginaStartOfTodayISO();
 
       // Fetch PM staff role holders
-      const { data: roleRows } = await supabase.from('user_roles' as any)
+      const { data: roleRows, error: roleErr } = await supabase.from('user_roles' as any)
         .select('user_id, role')
-        .in('role', ['leasing_agent', 'property_manager', 'pm_staff']);
+        .in('role', [...PM_STAFF_ROLES]);
+      if (roleErr) throw roleErr;
       const roleMap = new Map<string, string>();
       (roleRows ?? []).forEach((r: any) => { if (!roleMap.has(r.user_id)) roleMap.set(r.user_id, r.role); });
       const pmIds = Array.from(roleMap.keys());
 
       if (pmIds.length === 0) {
-        return { clockedIn: [], clockedOutToday: [], hoursTodayTotal: 0, appsWaiting: 0 };
+        return emptyPMStaffActivity();
       }
 
       const [tsRows, appsWaiting, profs] = await Promise.all([
-        // Include shifts started today (Regina) OR still-active shifts regardless of start
+        // Include shifts that overlap today (Regina) OR are still active.
         supabase.from('timesheets' as any)
           .select('user_id, clock_in, clock_out, status')
           .in('user_id', pmIds)
-          .or(`clock_in.gte.${startISO},clock_out.is.null`)
+          .or(`clock_in.gte.${startISO},clock_out.gte.${startISO},clock_out.is.null`)
           .order('clock_in', { ascending: false }),
         supabase.from('pm_applications' as any).select('id', { count: 'exact', head: true })
           .in('admin_review_status', ['in_review', 'pending']),
         supabase.from('profiles' as any).select('user_id, display_name').in('user_id', pmIds),
       ]);
+
+      if (tsRows.error) throw tsRows.error;
+      if (appsWaiting.error) throw appsWaiting.error;
+      if (profs.error) throw profs.error;
 
 
       const nameMap = new Map<string, string>();
@@ -225,6 +269,7 @@ export function usePMStaffActivity(enabled: boolean) {
       const clockedIn: any[] = [];
       const clockedOutToday: any[] = [];
       let hoursTodayTotal = 0;
+      const startMs = new Date(startISO).getTime();
 
       // Track most recent shift per user
       const seen = new Set<string>();
@@ -232,14 +277,15 @@ export function usePMStaffActivity(enabled: boolean) {
         const name = nameMap.get(r.user_id) || 'PM Staff';
         const role = roleMap.get(r.user_id) || 'pm_staff';
         if (r.clock_out) {
-          const hrs = (new Date(r.clock_out).getTime() - new Date(r.clock_in).getTime()) / 3_600_000;
+          const hrs = (new Date(r.clock_out).getTime() - Math.max(new Date(r.clock_in).getTime(), startMs)) / 3_600_000;
           hoursTodayTotal += Math.max(0, hrs);
           if (!seen.has(r.user_id)) {
             clockedOutToday.push({ user_id: r.user_id, name, role, hours: hrs, clock_out: r.clock_out });
           }
         } else {
           const elapsed = (Date.now() - new Date(r.clock_in).getTime()) / 3_600_000;
-          hoursTodayTotal += Math.max(0, elapsed);
+          const todaysActiveHours = (Date.now() - Math.max(new Date(r.clock_in).getTime(), startMs)) / 3_600_000;
+          hoursTodayTotal += Math.max(0, todaysActiveHours);
           if (!seen.has(r.user_id)) {
             clockedIn.push({ user_id: r.user_id, name, role, clock_in: r.clock_in, elapsed });
           }
@@ -254,7 +300,8 @@ export function usePMStaffActivity(enabled: boolean) {
         appsWaiting: appsWaiting.count ?? 0,
       };
     },
-    staleTime: 30_000,
-    refetchInterval: 60_000,
+    staleTime: 5_000,
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: true,
   });
 }

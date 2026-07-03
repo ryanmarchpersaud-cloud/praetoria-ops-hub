@@ -26,7 +26,7 @@ function useElapsed(startIso?: string | null) {
  *  Reuses the existing timesheet hooks — does not duplicate logic. */
 export function PMStaffClockInCard() {
   const { data: active, isLoading } = useActiveTimesheet();
-  const clockIn = useClockIn();
+  const clockIn = useClockIn('pm_staff');
   const clockOut = useClockOut();
   const elapsed = useElapsed(active?.clock_in);
 

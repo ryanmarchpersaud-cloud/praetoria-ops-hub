@@ -13,6 +13,11 @@ import {
 } from '@/hooks/pm/useDashboardData';
 
 const fmt$ = (n: number) => n.toLocaleString('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 });
+const fmtHours = (hours: number) => {
+  if (!Number.isFinite(hours) || hours <= 0) return '0m';
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m`;
+  return `${hours.toFixed(1)}h`;
+};
 
 /* ─── Row 1 ─────────────────────────────────────────────────────────── */
 export function PMBusinessKPIs({ hideFinance = false }: { hideFinance?: boolean }) {
@@ -248,8 +253,9 @@ export function MaintenanceByPriorityCard() {
 
 /* ─── Row 5 (admin-only) ───────────────────────────────────────────── */
 export function StaffActivityCard({ enabled }: { enabled: boolean }) {
-  const { data, isLoading } = usePMStaffActivity(enabled);
+  const { data, isLoading, error } = usePMStaffActivity(enabled);
   if (!enabled) return null;
+  const loadError = error instanceof Error ? error.message : error ? 'Unable to load staff activity.' : null;
   return (
     <Card>
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
@@ -259,18 +265,23 @@ export function StaffActivityCard({ enabled }: { enabled: boolean }) {
         <Badge variant="outline" className="text-[10px]">Admin only</Badge>
       </CardHeader>
       <CardContent className="space-y-4">
+        {loadError && (
+          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-700">
+            Staff activity is not loading: {loadError}
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-lg border p-3 bg-emerald-500/5">
             <div className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Clocked in</div>
-            <div className="text-2xl font-bold tabular-nums">{data?.clockedIn.length ?? 0}</div>
+            <div className="text-2xl font-bold tabular-nums">{isLoading ? '—' : (data?.clockedIn.length ?? 0)}</div>
           </div>
           <div className="rounded-lg border p-3 bg-slate-500/5">
             <div className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Clocked out</div>
-            <div className="text-2xl font-bold tabular-nums">{data?.clockedOutToday.length ?? 0}</div>
+            <div className="text-2xl font-bold tabular-nums">{isLoading ? '—' : (data?.clockedOutToday.length ?? 0)}</div>
           </div>
           <div className="rounded-lg border p-3 bg-indigo-500/5">
             <div className="text-xs text-muted-foreground">Hours logged</div>
-            <div className="text-2xl font-bold tabular-nums">{(data?.hoursTodayTotal ?? 0).toFixed(1)}h</div>
+            <div className="text-2xl font-bold tabular-nums">{isLoading ? '—' : fmtHours(data?.hoursTodayTotal ?? 0)}</div>
           </div>
         </div>
 
@@ -284,7 +295,7 @@ export function StaffActivityCard({ enabled }: { enabled: boolean }) {
                 {data!.clockedIn.map((r: any) => (
                   <li key={r.user_id} className="py-1.5 flex items-center justify-between text-sm">
                     <span className="truncate">{r.name} <span className="text-xs text-muted-foreground">· {r.role}</span></span>
-                    <span className="tabular-nums text-emerald-600 font-medium">{r.elapsed.toFixed(1)}h</span>
+                    <span className="tabular-nums text-emerald-600 font-medium">{fmtHours(Number(r.elapsed ?? 0))}</span>
                   </li>
                 ))}
               </ul>
@@ -299,7 +310,7 @@ export function StaffActivityCard({ enabled }: { enabled: boolean }) {
                 {data!.clockedOutToday.map((r: any) => (
                   <li key={r.user_id} className="py-1.5 flex items-center justify-between text-sm">
                     <span className="truncate">{r.name} <span className="text-xs text-muted-foreground">· {r.role}</span></span>
-                    <span className="tabular-nums text-muted-foreground">{r.hours.toFixed(1)}h</span>
+                    <span className="tabular-nums text-muted-foreground">{fmtHours(Number(r.hours ?? 0))}</span>
                   </li>
                 ))}
               </ul>

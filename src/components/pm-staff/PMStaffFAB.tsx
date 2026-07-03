@@ -21,7 +21,7 @@ export function PMStaffFAB() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: active } = useActiveTimesheet();
-  const clockIn = useClockIn();
+  const clockIn = useClockIn('pm_staff');
   const clockOut = useClockOut();
 
   const handleClock = useCallback(() => {

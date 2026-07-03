@@ -23,7 +23,7 @@ function useElapsed(startIso?: string | null) {
 
 export default function PMStaffTimeClockPage() {
   const { data: active, isLoading } = useActiveTimesheet();
-  const clockIn = useClockIn();
+  const clockIn = useClockIn('pm_staff');
   const clockOut = useClockOut();
   const elapsed = useElapsed(active?.clock_in);
 

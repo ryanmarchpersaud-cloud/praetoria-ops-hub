@@ -47,7 +47,7 @@ export function useActiveTimesheet() {
   });
 }
 
-export function useClockIn() {
+export function useClockIn(timeClockContext: 'operations' | 'pm_staff' = 'operations') {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
@@ -55,7 +55,11 @@ export function useClockIn() {
       if (!user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('timesheets')
-        .insert({ user_id: user.id, clock_in: new Date().toISOString() } as any)
+        .insert({
+          user_id: user.id,
+          clock_in: new Date().toISOString(),
+          time_clock_context: timeClockContext,
+        } as any)
         .select()
         .single();
       if (error) throw error;
@@ -65,6 +69,7 @@ export function useClockIn() {
       qc.invalidateQueries({ queryKey: ['active_timesheet'] });
       qc.invalidateQueries({ queryKey: ['timesheets'] });
       qc.invalidateQueries({ queryKey: ['admin_live_workforce'] });
+      qc.invalidateQueries({ queryKey: ['pm_dash_staff_activity'] });
     },
   });
 }
@@ -86,6 +91,7 @@ export function useClockOut() {
       qc.invalidateQueries({ queryKey: ['active_timesheet'] });
       qc.invalidateQueries({ queryKey: ['timesheets'] });
       qc.invalidateQueries({ queryKey: ['admin_live_workforce'] });
+      qc.invalidateQueries({ queryKey: ['pm_dash_staff_activity'] });
       qc.invalidateQueries({ queryKey: ['employee_timesheets_admin'] });
     },
   });
@@ -125,6 +131,7 @@ export function useAdminForceClockOut() {
       qc.invalidateQueries({ queryKey: ['active_timesheet'] });
       qc.invalidateQueries({ queryKey: ['timesheets'] });
       qc.invalidateQueries({ queryKey: ['admin_live_workforce'] });
+      qc.invalidateQueries({ queryKey: ['pm_dash_staff_activity'] });
       qc.invalidateQueries({ queryKey: ['employee_timesheets_admin'] });
     },
   });

@@ -11071,6 +11071,7 @@ export type Database = {
           rejection_reason: string | null
           reviewed_at: string | null
           status: string
+          time_clock_context: string
           user_id: string
         }
         Insert: {
@@ -11084,6 +11085,7 @@ export type Database = {
           rejection_reason?: string | null
           reviewed_at?: string | null
           status?: string
+          time_clock_context?: string
           user_id: string
         }
         Update: {
@@ -11097,6 +11099,7 @@ export type Database = {
           rejection_reason?: string | null
           reviewed_at?: string | null
           status?: string
+          time_clock_context?: string
           user_id?: string
         }
         Relationships: []
@@ -12741,6 +12744,7 @@ export type Database = {
         }[]
       }
       pm_get_lease_balance: { Args: { p_lease_id: string }; Returns: number }
+      pm_get_staff_activity_today: { Args: never; Returns: Json }
       pm_get_tenant_aging: {
         Args: { p_tenant_id: string }
         Returns: {
