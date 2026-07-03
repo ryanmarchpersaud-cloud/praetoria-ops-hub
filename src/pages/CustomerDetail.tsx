@@ -983,32 +983,52 @@ function PaymentMethodCard({ customerId }: { customerId: string }) {
         </CardHeader>
         <CardContent>
           {bp?.payment_method_present ? (
-            <div className="space-y-1">
-              <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
-              {(bp as any).card_exp_month && (bp as any).card_exp_year && (
+            isChargeable(bp) ? (
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-medium">
+                  <CheckCircle2 className="h-3 w-3" /> Chargeable · Stripe
+                </div>
+                <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
+                {(bp as any).card_exp_month && (bp as any).card_exp_year && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Expires {String((bp as any).card_exp_month).padStart(2, '0')}/{(bp as any).card_exp_year}
+                  </p>
+                )}
+                <p className="text-[10px] text-accent">✓ Default payment method</p>
                 <p className="text-[10px] text-muted-foreground">
-                  Expires {String((bp as any).card_exp_month).padStart(2, '0')}/{(bp as any).card_exp_year}
+                  {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
                 </p>
-              )}
-              {(bp as any).default_payment_method_id && (
-                <p className="text-[10px] text-accent flex items-center gap-1">
-                  ✓ Default payment method
+                <p className="text-[10px] text-muted-foreground">
+                  Preference: {bp.payment_preference?.replace('_', ' ')}
                 </p>
-              )}
-              <p className="text-[10px] text-muted-foreground">
-                {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
-              </p>
-              <p className="text-[10px] text-muted-foreground">
-                Preference: {bp.payment_preference?.replace('_', ' ')}
-              </p>
-              <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-destructive mt-1" onClick={handleRemoveCard} disabled={saving}>
-                Remove Card
-              </Button>
-            </div>
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-destructive mt-1" onClick={handleRemoveCard} disabled={saving}>
+                  Remove Card
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 p-2">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-medium">
+                  <AlertTriangle className="h-3 w-3" /> Reference only — not chargeable
+                </div>
+                <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
+                <p className="text-[10px] text-amber-900">
+                  This card was entered for records only. To charge it, complete payment setup with the customer.
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <Button size="sm" variant="default" className="h-7 px-2 text-[10px]" onClick={() => setInviteOpen(true)}>
+                    Complete payment setup
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-destructive" onClick={handleRemoveCard} disabled={saving}>
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            )
           ) : (
             <p className="text-xs text-muted-foreground">No card on file</p>
           )}
         </CardContent>
+
       </Card>
 
       {/* Manual Card Entry Dialog */}
