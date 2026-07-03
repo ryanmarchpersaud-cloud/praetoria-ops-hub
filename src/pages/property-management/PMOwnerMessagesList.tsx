@@ -173,7 +173,11 @@ export default function PMOwnerMessagesList() {
           })}
         </div>
 
-        <ThreadDialog thread={openThread} onClose={() => setOpenThread(null)} owners={owners} />
+        <ThreadDialog
+          thread={openThread ? (threads.find(t => t.id === openThread.id) ?? openThread) : null}
+          onClose={() => setOpenThread(null)}
+          owners={owners}
+        />
         <CreateThreadDialog open={openCreate} onOpenChange={setOpenCreate} owners={owners} />
       </div>
     </AppLayout>
