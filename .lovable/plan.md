@@ -1,73 +1,63 @@
-# Phase 6B — Move-Out Workflow + Staff Assignment Foundation
 
-## Scope
-Additive only. Extends PM Staff / Leasing Agent portal with move-out workflow, staff assignment support, unit-scoped assignments, cross-staff task assignment, and an in-app notification foundation. No changes to Admin/Finance/HR/Stripe/Owner/Tenant/Worker/Sub/Customer portals or mobile packaging.
+# Phase 7A — PM Finance Foundation
 
-## Database Changes (single migration)
+Backbone-only phase. No tenant payment UI, no Stripe wiring, no owner statements PDFs, no reminders. Those are Phases 7B–7F. This phase gives every later phase a single, auditable source of truth for PM money movement.
 
-**New tables**
-- `pm_move_outs` — property_id, unit_id, tenant_id, lease_id, assigned_staff_id, move_out_date, notice_received_date, inspection_date, status (enum-like text with allowed set), tenant_instructions_sent_at, keys_returned, garage_opener_returned, parking_pass_returned, final_meter_reading, tenant_visible_notes, admin_notes, created_by, timestamps.
-- `pm_move_out_checklist_items` — move_out_id, label, category, is_complete, completed_at, completed_by, notes, sort_order.
-- `pm_move_out_inspections` — move_out_id, general_condition_notes, damage_notes, cleaning_notes, keys_remotes_returned, tenant_visible, admin_only_notes, inspected_by, inspected_at, timestamps.
-- `pm_move_out_inspection_photos` — inspection_id, storage_path, caption, uploaded_by, created_at.
+## Scope (in)
 
-**Extend existing tables (nullable columns)**
-- `pm_prospects.assigned_staff_id`, `pm_showings.assigned_staff_id`, `pm_applications.assigned_staff_id`, `pm_move_in_checklists.assigned_staff_id` — all nullable UUIDs.
-- `pm_staff_tasks.assigned_staff_id`, `pm_staff_tasks.unit_id`, `pm_staff_tasks.move_out_id`, `pm_staff_tasks.move_in_id`, `pm_staff_tasks.prospect_id`, `pm_staff_tasks.application_id` — nullable link columns (only add ones missing).
+1. **Charge model** — formal `pm_charges` records (rent, late fee, deposit, utility, adjustment charge, other) with due date, period, status, source ref, tenant + lease + unit + property linkage.
+2. **Payment model** — formal `pm_payments` records (method: cash, cheque, e‑transfer, card, ACH, manual, stripe placeholder), status (pending, cleared, failed, refunded, reversed), external ref, receipt number.
+3. **Payment allocations** — `pm_payment_allocations` mapping one payment to one or many charges (partial payments, overpayments → credit).
+4. **Credits & adjustments** — `pm_credits` (source: overpayment, goodwill, deposit refund, correction) with apply/consume tracking.
+5. **Receipts** — `pm_receipts` records auto-created on cleared payment; unique receipt number (RCPT-#####); PDF generation deferred to 7C.
+6. **Ledger unification** — refactor `pm_tenant_ledger` to be a *derived/append* view sourced from `pm_charges` + `pm_payments` + `pm_credits` + `pm_expenses` (owner-side). Keep `pm_get_tenant_balance` / `pm_my_balance` working; update to read from the normalized tables.
+7. **Owner statement source data** — `pm_owner_statement_sources` view/materialization joining rent collected, expenses, management fees per property per period (statement rendering stays in 5D scope; this only feeds it cleanly).
+8. **Finance RLS** — strict isolation:
+   - Tenant sees own charges/payments/receipts/credits only.
+   - Owner sees aggregate + own-property expense/rent totals, never other tenants' payment methods.
+   - PM staff scoped by assignment (reuse existing helpers).
+   - Ops/admin full.
+9. **Transaction statuses & state machine** — enum + guard triggers preventing invalid transitions (e.g., cleared → pending).
+10. **Audit / activity logging** — every insert/update on charges, payments, allocations, credits, receipts writes to `audit_log` via a shared trigger; also writes a plain-language row to `pm_finance_activity` for the future activity feed.
+11. **Numbering sequences** — `CHG-#####`, `PAY-#####`, `RCPT-#####`, `CRD-#####` via triggers matching existing PM patterns.
+12. **Backfill script** — one-shot migration to translate existing `pm_tenant_ledger` rows into `pm_charges` / `pm_payments` so nothing is lost and balances match to the cent.
 
-**Helpers / policies**
-- Reuse `is_ops_staff()`, `is_pm_staff()`, `is_leasing_agent()`, `has_role('property_manager')`.
-- New helper `is_property_manager(uuid)`.
-- RLS pattern for all new/updated tables:
-  - Ops staff and property_manager: full SELECT/INSERT/UPDATE within PM scope, DELETE ops-only.
-  - Leasing agent: SELECT/UPDATE only rows where `assigned_staff_id = auth.uid()` (or checklist/inspection rows whose parent move-out is assigned to them).
-- GRANTs to `authenticated` + `service_role` on every new table.
+## Scope (explicitly out — deferred)
 
-**Notifications**
-- Reuse existing `notifications` table (event/audience/recipient_id). Add DB triggers:
-  - Move-out inserted → notify assigned staff (if set).
-  - `pm_staff_tasks` inserted/assigned → notify assigned staff.
-  - `pm_showings.assigned_staff_id` set → notify staff.
-- No SMS/email — in-app only.
+- Tenant-facing pay button, card entry, Stripe checkout, e‑transfer instructions UI → **7B**
+- Any PDF (receipts, invoices, statements) → **7C**
+- Owner-facing finance dashboards / downloads → **7D**
+- Payout setup, disbursements, reconciliation → **7E**
+- Reminders, overdue notices, statement-ready emails → **7F**
+- No changes to core company invoicing (`invoices`, `finance_payments`, Stripe) — PM finance stays in its own namespace.
 
-**Storage**
-- Reuse existing `pm-inspections` bucket if present, else create private `pm-move-out-photos` bucket with RLS: ops/pm_staff read+write, leasing agent limited to move-outs assigned to them.
+## Technical outline
 
-## Frontend Changes
+```text
+pm_charges ───┐
+              ├──> pm_payment_allocations <── pm_payments
+pm_credits ───┘                                   │
+                                                  ▼
+                                            pm_receipts
 
-**New files**
-- `src/pages/pm-staff/MoveOuts.tsx` — list view (filters: mine / all / status).
-- `src/pages/pm-staff/MoveOutDetail.tsx` — details, checklist, inspection, photo upload.
-- `src/pages/property-management/PMMoveOutsList.tsx` — admin list.
-- `src/pages/property-management/PMMoveOutDetail.tsx` — admin edit + assign staff.
-- `src/components/pm/MoveOutChecklist.tsx` — shared checklist component.
-- `src/components/pm/MoveOutInspectionForm.tsx` — inspection form.
-- `src/hooks/usePMMoveOuts.ts`, `usePMMoveOutChecklist.ts`, `usePMMoveOutInspection.ts`.
+pm_finance_activity  ◄── triggers on all four tables
+audit_log            ◄── shared write_audit_log()
+```
 
-**Updated files**
-- `src/App.tsx` — routes: `/pm-staff/move-outs`, `/pm-staff/move-outs/:id`, `/property-management/move-outs`, `/property-management/move-outs/:id`.
-- `src/pages/pm-staff/More.tsx` — add Move-Outs card + "Lease Renewals (Coming soon)" placeholder card.
-- `src/pages/pm-staff/PMStaffHome.tsx` — add Move-Outs KPI + upcoming list.
-- `src/pages/pm-staff/Tasks.tsx` — filter by `assigned_staff_id = me`.
-- `src/pages/pm-staff/Showings.tsx`, `Prospects.tsx`, `Applications.tsx`, `MoveIns.tsx` — respect `assigned_staff_id` for leasing_agent views (mine only), all for property_manager/ops.
-- `src/components/pm-staff/PMStaffFAB.tsx` — add "New Move-Out" quick action.
-- `src/components/AppSidebar.tsx` — add "Move-Outs" under Property Management group.
-- Admin task form / assignment dialogs — add staff picker (leasing_agent + property_manager users).
+- One migration per concern (tables → grants → RLS → policies → triggers → backfill), each following the mandatory GRANT + RLS pattern.
+- Security-definer RPCs for balance/aging so the tenant/owner portals never touch base tables directly.
+- No frontend changes in 7A beyond removing now-dead direct writes to `pm_tenant_ledger` in admin tools (replaced with charge/payment RPC calls). Existing PM admin UIs keep working.
 
-**Guards**
-- All `/pm-staff/*` routes remain behind `PMStaffRoute`. Admin routes behind existing ops guard.
+## Deliverables
 
-## Deferred (explicit)
-Full lease renewal workflow, e-signature, deposit deduction automation, legal notices, Stripe/online payments, owner payouts, board portal, approval workflow, credit/background checks, SMS/email automation.
+- Migrations creating the 5 new tables + view, grants, RLS, triggers, sequences.
+- Refactored `pm_get_tenant_balance` / `pm_my_balance` reading from normalized tables.
+- Backfill migration with row-count + balance-parity check.
+- Updated `usePMLedger` / related hooks to read the unified view (no visible UI change).
+- QA note: tenant balance before vs after backfill must match exactly.
 
-## QA Steps
-1. Admin creates a move-out at `/property-management/move-outs`, assigns to TEST Leasing Agent.
-2. Log in as `junk@praetoriagroup.ca` → `/pm-staff/move-outs` shows only assigned move-out.
-3. Leasing agent updates checklist items and uploads a photo.
-4. Leasing agent cannot see unassigned move-outs, tasks, or applications.
-5. Worker/sub/tenant/owner/customer accounts hit `/pm-staff/move-outs` → redirected.
-6. Confirm Finance/Stripe/owner statements/tenant ledger/pay stubs untouched.
-7. Property manager account sees broader PM work but no Admin/Finance/HR.
+## Approval gate
 
-## Non-Goals / Untouched
-Android, iOS, Google Play, App Store, package name, app icons, signing, Stripe, saved cards, invoice payment logic, tenant portal, owner portal, customer portal, worker portal, subcontractor portal, Finance, HR, pay stubs, service jobs, existing visits/jobs, owner statements, tenant ledger, property expenses.
+Nothing in 7B–7F begins until 7A migrations are applied, backfill parity is verified, and you lock the phase.
+
+Reply **approve 7A** to proceed, or send edits to this scope.
