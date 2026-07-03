@@ -24,7 +24,7 @@ export default function WorkerCourseDetailPage({ backTo }: { backTo?: string }) 
   const course = (assignment as any)?.training_courses;
   const courseId = course?.id;
 
-  const { data: questions = [] } = useTrainingQuizQuestions(courseId);
+  const { data: questions = [] } = useAssignedQuizQuestions(courseId);
   const { data: attempts = [] } = useMyQuizAttempts(assignmentId);
 
   const [showQuiz, setShowQuiz] = useState(false);
