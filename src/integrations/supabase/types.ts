@@ -12741,6 +12741,7 @@ export type Database = {
         }[]
       }
       pm_get_lease_balance: { Args: { p_lease_id: string }; Returns: number }
+      pm_get_staff_activity_today: { Args: never; Returns: Json }
       pm_get_tenant_aging: {
         Args: { p_tenant_id: string }
         Returns: {
