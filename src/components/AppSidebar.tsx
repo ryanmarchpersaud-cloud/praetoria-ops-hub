@@ -211,10 +211,10 @@ export function AppSidebar() {
                     <NavLink
                       to="/settings"
                       className="hover:bg-sidebar-accent/50 border-l-2 border-transparent pl-[calc(0.5rem-2px)]"
-                      activeClassName="bg-sidebar-accent font-semibold text-amber-200 border-amber-400"
+                      activeClassName="bg-sidebar-accent font-semibold text-yellow-300 border-yellow-400"
                     >
-                      <Settings className="mr-2 h-4 w-4 text-amber-300" />
-                      {!collapsed && <span>Settings</span>}
+                      <Settings className="mr-2 h-4 w-4 text-yellow-400" />
+                      {!collapsed && <span className="text-yellow-400">Settings</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
