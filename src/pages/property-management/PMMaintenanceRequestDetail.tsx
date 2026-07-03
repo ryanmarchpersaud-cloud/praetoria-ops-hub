@@ -14,6 +14,8 @@ import { useWorkOrderForRequest } from '@/hooks/usePMWorkOrders';
 import { CreateWorkOrderDialog } from '@/components/property-management/CreateWorkOrderDialog';
 import { WorkOrderCard } from '@/components/property-management/WorkOrderCard';
 import { ActivityTimeline } from '@/components/property-management/ActivityTimeline';
+import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
+import { ShieldCheck } from 'lucide-react';
 import { isNonRepairRequest } from '@/lib/maintenanceCatalogHelpers';
 
 const STATUSES = ['new', 'reviewed', 'work_order_created', 'assigned', 'in_progress', 'completed', 'cancelled'];
@@ -30,6 +32,7 @@ export default function PMMaintenanceRequestDetail() {
   const [ownerSummary, setOwnerSummary] = useState('');
   const [signed, setSigned] = useState<Record<string, string>>({});
   const [woDialogOpen, setWoDialogOpen] = useState(false);
+  const [approvalOpen, setApprovalOpen] = useState(false);
   const nonRepair = data ? isNonRepairRequest({ issue_key: data.issue_key, category: data.category }) : false;
 
   useEffect(() => {
@@ -244,11 +247,27 @@ export default function PMMaintenanceRequestDetail() {
 
       <ActivityTimeline requestId={data.id} />
 
+      <div className="pt-2">
+        <Button variant="outline" onClick={() => setApprovalOpen(true)}>
+          <ShieldCheck className="h-4 w-4 mr-1" /> Request Owner Approval
+        </Button>
+      </div>
+
       <CreateWorkOrderDialog
         open={woDialogOpen}
         onOpenChange={setWoDialogOpen}
         requestId={data.id}
         defaultAccessNotes={data.contact_notes}
+      />
+
+      <OwnerApprovalDialog
+        open={approvalOpen}
+        onOpenChange={setApprovalOpen}
+        defaultPropertyId={(data as any).property_id}
+        defaultUnitId={(data as any).unit_id ?? null}
+        maintenanceRequestId={data.id}
+        defaultCategory="maintenance"
+        defaultTitle={`Approval for maintenance: ${data.title || data.category || ''}`.trim()}
       />
     </div>
   );

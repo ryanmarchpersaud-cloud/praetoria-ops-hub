@@ -7052,6 +7052,211 @@ export type Database = {
           },
         ]
       }
+      pm_owner_approval_activity: {
+        Row: {
+          actor_id: string | null
+          approval_id: string
+          created_at: string
+          detail: Json | null
+          event_type: string
+          id: string
+          is_owner_visible: boolean
+          message: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          approval_id: string
+          created_at?: string
+          detail?: Json | null
+          event_type: string
+          id?: string
+          is_owner_visible?: boolean
+          message?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          approval_id?: string
+          created_at?: string
+          detail?: Json | null
+          event_type?: string
+          id?: string
+          is_owner_visible?: boolean
+          message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_approval_activity_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_owner_approvals: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          decided_at: string | null
+          due_date: string | null
+          estimate_reference: string | null
+          expense_id: string | null
+          id: string
+          maintenance_request_id: string | null
+          move_out_id: string | null
+          owner_id: string
+          owner_response: string | null
+          owner_response_note: string | null
+          owner_viewed_at: string | null
+          owner_visible_note: string | null
+          priority: string
+          property_id: string
+          renewal_id: string | null
+          requested_amount: number | null
+          sent_at: string | null
+          status: string
+          summary: string | null
+          title: string
+          unit_id: string | null
+          updated_at: string
+          work_order_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          decided_at?: string | null
+          due_date?: string | null
+          estimate_reference?: string | null
+          expense_id?: string | null
+          id?: string
+          maintenance_request_id?: string | null
+          move_out_id?: string | null
+          owner_id: string
+          owner_response?: string | null
+          owner_response_note?: string | null
+          owner_viewed_at?: string | null
+          owner_visible_note?: string | null
+          priority?: string
+          property_id: string
+          renewal_id?: string | null
+          requested_amount?: number | null
+          sent_at?: string | null
+          status?: string
+          summary?: string | null
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          decided_at?: string | null
+          due_date?: string | null
+          estimate_reference?: string | null
+          expense_id?: string | null
+          id?: string
+          maintenance_request_id?: string | null
+          move_out_id?: string | null
+          owner_id?: string
+          owner_response?: string | null
+          owner_response_note?: string | null
+          owner_viewed_at?: string | null
+          owner_visible_note?: string | null
+          priority?: string
+          property_id?: string
+          renewal_id?: string | null
+          requested_amount?: number | null
+          sent_at?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_owner_approvals_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pm_expenses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "pm_expenses_owner_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "pm_maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_move_out_id_fkey"
+            columns: ["move_out_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_out_checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "pm_property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_owner_statement_sources"
+            referencedColumns: ["property_id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_renewal_id_fkey"
+            columns: ["renewal_id"]
+            isOneToOne: false
+            referencedRelation: "pm_lease_renewals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_owner_approvals_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "pm_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_owner_documents: {
         Row: {
           category: string | null
@@ -12740,6 +12945,49 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      owner_mark_approval_viewed: {
+        Args: { _approval_id: string }
+        Returns: undefined
+      }
+      owner_respond_to_approval: {
+        Args: { _approval_id: string; _note?: string; _response: string }
+        Returns: {
+          admin_notes: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          decided_at: string | null
+          due_date: string | null
+          estimate_reference: string | null
+          expense_id: string | null
+          id: string
+          maintenance_request_id: string | null
+          move_out_id: string | null
+          owner_id: string
+          owner_response: string | null
+          owner_response_note: string | null
+          owner_viewed_at: string | null
+          owner_visible_note: string | null
+          priority: string
+          property_id: string
+          renewal_id: string | null
+          requested_amount: number | null
+          sent_at: string | null
+          status: string
+          summary: string | null
+          title: string
+          unit_id: string | null
+          updated_at: string
+          work_order_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pm_owner_approvals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       pm_finance_activity_write: {
         Args: {

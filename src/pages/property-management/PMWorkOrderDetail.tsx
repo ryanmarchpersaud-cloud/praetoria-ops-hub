@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Paperclip, Upload } from 'lucide-react';
+import { ArrowLeft, Paperclip, Upload, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useAdminWorkOrder,
@@ -19,6 +19,7 @@ import {
   WOStatus,
 } from '@/hooks/usePMWorkOrders';
 import { ActivityTimeline } from '@/components/property-management/ActivityTimeline';
+import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
 
 const STATUSES: WOStatus[] = ['created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
@@ -34,6 +35,7 @@ export default function PMWorkOrderDetail() {
   const [completion, setCompletion] = useState('');
   const [tenantNote, setTenantNote] = useState('');
   const [signed, setSigned] = useState<Record<string, string>>({});
+  const [approvalOpen, setApprovalOpen] = useState(false);
 
   useEffect(() => {
     if (data?.id) {
@@ -78,7 +80,20 @@ export default function PMWorkOrderDetail() {
             <Link to={`/property-management/maintenance/${data.request.id}`}>Open Related Request</Link>
           </Button>
         )}
+        <Button variant="outline" size="sm" onClick={() => setApprovalOpen(true)}>
+          <ShieldCheck className="h-4 w-4 mr-1" /> Request Owner Approval
+        </Button>
       </div>
+
+      <OwnerApprovalDialog
+        open={approvalOpen}
+        onOpenChange={setApprovalOpen}
+        defaultPropertyId={(data as any).property_id}
+        defaultUnitId={(data as any).unit_id ?? null}
+        workOrderId={data.id}
+        defaultCategory="repair"
+        defaultTitle={`Approval for work order: ${data.title || ''}`.trim()}
+      />
 
       <Card>
         <CardHeader className="pb-2">
