@@ -479,8 +479,8 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
   const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
   const isActiveIn = (items: PMItem[]) => items.some((i) => currentPath === i.url || (!i.end && currentPath.startsWith(i.url + '/')));
 
-  const idleClass = PM_ACCENTS.owners.idle;
-  const activeClass = PM_ACCENTS.owners.active;
+  const idleClass = PM_ACCENTS.yellow.idle;
+  const activeClass = PM_ACCENTS.yellow.active;
 
   if (collapsed) {
     const flatItems = [...mainItems, ...ownerItems, ...tenantItems, ...leaseItems, ...opsItems, ...financeItems];
