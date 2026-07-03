@@ -118,6 +118,11 @@ export default function PMTenantDetail() {
         uploadDefaults={{ tenant_id: id }}
         defaultVisibility="tenant_visible"
       />
+
+      <InspectionsSection
+        filters={{ tenant_id: id }}
+        defaults={{ tenant_id: id }}
+      />
     </div>
   );
 }
