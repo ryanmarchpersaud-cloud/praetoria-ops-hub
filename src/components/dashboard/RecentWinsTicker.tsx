@@ -35,6 +35,7 @@ export function RecentWinsTicker() {
 
   const { data: payments, isLoading: l1 } = useQuery({
     queryKey: ['wins_payments', cutoff],
+    staleTime: 60000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('invoices')
@@ -50,6 +51,7 @@ export function RecentWinsTicker() {
 
   const { data: approved, isLoading: l2 } = useQuery({
     queryKey: ['wins_quotes', cutoff],
+    staleTime: 60000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quotes')
@@ -65,6 +67,7 @@ export function RecentWinsTicker() {
 
   const { data: completed, isLoading: l3 } = useQuery({
     queryKey: ['wins_jobs', cutoff],
+    staleTime: 60000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('jobs')
@@ -80,6 +83,7 @@ export function RecentWinsTicker() {
 
   const { data: newCust, isLoading: l4 } = useQuery({
     queryKey: ['wins_customers', cutoff],
+    staleTime: 60000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customers')

@@ -21,7 +21,7 @@ function useTimesheetsLast30d() {
       const { data, error } = await supabase
         .from('timesheets')
         .select('clock_in, clock_out, status')
-        .eq('status', 'approved')
+        .in('status', ['approved', 'submitted', 'pending'])
         .not('clock_out', 'is', null)
         .gte('clock_in', since);
       if (error) throw error;
@@ -65,6 +65,7 @@ interface SparkTile {
   key: string;
   label: string;
   value: string;
+  subnote?: string;
   series: { v: number }[];
   trend: number;
   color: string;
@@ -115,12 +116,15 @@ export function SparklineKPIStrip({
     const j2 = jobBuckets.slice(15).reduce((s, d) => s + d.v, 0);
     const jobTrend = j1 > 0 ? Math.round(((j2 - j1) / j1) * 100) : 0;
 
-    // Hours worked per day
+    // Hours worked per day (approved + submitted + pending)
     const hourBuckets = buildBuckets(timesheets, (t) => t.clock_in, (t) => {
       if (!t.clock_out) return 0;
       return (new Date(t.clock_out).getTime() - new Date(t.clock_in).getTime()) / 3600000;
     });
     const hourTotal = hourBuckets.reduce((s, d) => s + d.v, 0);
+    const pendingHours = timesheets
+      .filter((t: any) => t.status !== 'approved' && t.clock_out)
+      .reduce((s: number, t: any) => s + (new Date(t.clock_out).getTime() - new Date(t.clock_in).getTime()) / 3600000, 0);
     const h1 = hourBuckets.slice(0, 15).reduce((s, d) => s + d.v, 0);
     const h2 = hourBuckets.slice(15).reduce((s, d) => s + d.v, 0);
     const hourTrend = h1 > 0 ? Math.round(((h2 - h1) / h1) * 100) : 0;
@@ -154,7 +158,7 @@ export function SparklineKPIStrip({
     return [
       { key: 'rev', label: 'Revenue', value: `$${(revTotal / 1000).toFixed(1)}k`, series: revBuckets.map(d => ({ v: d.v })), trend: revTrend, color: 'hsl(142 71% 45%)', bgGradient: 'from-emerald-50 to-transparent dark:from-emerald-950/30', icon: DollarSign, link: '/finance/invoices' },
       { key: 'jobs', label: 'Jobs', value: `${jobTotal}`, series: jobBuckets.map(d => ({ v: d.v })), trend: jobTrend, color: 'hsl(217 91% 60%)', bgGradient: 'from-blue-50 to-transparent dark:from-blue-950/30', icon: Briefcase, link: '/jobs' },
-      { key: 'hours', label: 'Hours', value: `${hourTotal.toFixed(0)}h`, series: hourBuckets.map(d => ({ v: d.v })), trend: hourTrend, color: 'hsl(280 65% 60%)', bgGradient: 'from-violet-50 to-transparent dark:from-violet-950/30', icon: Clock, link: '/finance/payroll' },
+      { key: 'hours', label: 'Hours', value: `${hourTotal.toFixed(0)}h`, subnote: pendingHours > 0 ? `${pendingHours.toFixed(0)}h awaiting approval` : undefined, series: hourBuckets.map(d => ({ v: d.v })), trend: hourTrend, color: 'hsl(280 65% 60%)', bgGradient: 'from-violet-50 to-transparent dark:from-violet-950/30', icon: Clock, link: '/finance/payroll' },
       { key: 'ar', label: 'AR Open', value: `$${(arOutstanding / 1000).toFixed(1)}k`, series: arOverdueDaily.map(d => ({ v: d.v })), trend: arTrend, color: 'hsl(0 72% 60%)', bgGradient: 'from-rose-50 to-transparent dark:from-rose-950/30', icon: AlertCircle, link: '/finance/invoices' },
       { key: 'cust', label: 'Customers', value: `${custTotal}`, series: custBuckets.map(d => ({ v: d.v })), trend: custTrend, color: 'hsl(195 85% 55%)', bgGradient: 'from-cyan-50 to-transparent dark:from-cyan-950/30', icon: Users, link: '/customers' },
       { key: 'quotes', label: 'Quotes', value: `${qTotal}`, series: qBuckets.map(d => ({ v: d.v })), trend: qTrend, color: 'hsl(38 92% 50%)', bgGradient: 'from-amber-50 to-transparent dark:from-amber-950/30', icon: FileText, link: '/quotes' },
@@ -189,6 +193,9 @@ export function SparklineKPIStrip({
                 <p className="text-base md:text-lg font-extrabold tabular-nums leading-tight mt-0.5" style={{ color: t.color }}>
                   {t.value}
                 </p>
+                {t.subnote && (
+                  <p className="text-[9px] text-muted-foreground/80 font-medium mt-0.5 tabular-nums">{t.subnote}</p>
+                )}
                 <div className="-mx-1 mt-1">
                   <Sparkline data={t.series} color={t.color} />
                 </div>
