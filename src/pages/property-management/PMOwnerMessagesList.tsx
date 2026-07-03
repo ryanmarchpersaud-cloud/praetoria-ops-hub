@@ -65,20 +65,18 @@ function usePropertiesForOwner(owner_id: string | null) {
         .select('property_id')
         .eq('owner_id', owner_id as string);
       if (error) throw error;
-      const ids = ((links as any[]) || []).map(r => r.property_id);
+      const ids = ((links as any[]) || []).map((r: any) => r.property_id);
       if (ids.length === 0) return [] as Array<{ id: string; name: string }>;
       const { data: mgd, error: mgdErr } = await supabase
         .from('pm_managed_properties' as any)
-        .select('id, property_id')
-        .in('id', ids);
+        .select('id, property_name, address_line_1, city')
+        .in('id', ids)
+        .eq('is_active', true);
       if (mgdErr) throw mgdErr;
-      const propIds = ((mgd as any[]) || []).map(r => r.property_id);
-      const { data: props } = await supabase
-        .from('properties')
-        .select('id, property_name')
-        .in('id', propIds);
-      const nameById = new Map(((props as any[]) || []).map(p => [p.id, p.property_name]));
-      return ((mgd as any[]) || []).map(r => ({ id: r.id, name: nameById.get(r.property_id) ?? 'Property' }));
+      return ((mgd as any[]) || []).map((r: any) => ({
+        id: r.id,
+        name: r.property_name || [r.address_line_1, r.city].filter(Boolean).join(', ') || 'Property',
+      }));
     },
   });
 }
