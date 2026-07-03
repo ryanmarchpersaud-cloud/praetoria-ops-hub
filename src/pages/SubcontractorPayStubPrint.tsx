@@ -142,7 +142,35 @@ export default function SubcontractorPayStubPrint() {
           </div>
         </div>
 
-        <div className="overflow-x-auto print:overflow-visible mb-6">
+        <div className="sm:hidden space-y-3 mb-6">
+          {items.map((it) => (
+            <div key={it.id} className="border border-gray-200 rounded-lg p-3 text-sm break-words">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold">{format(parseLocalDate(it.work_date), 'MMM d, yyyy')}</p>
+                  <p className="font-semibold mt-1">{it.service_type}</p>
+                </div>
+                <p className="font-extrabold shrink-0">{fmt(it.line_total)}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
+                <div><p className="text-gray-600 uppercase">Hours</p><p className="font-semibold">{it.hours ?? '—'}</p></div>
+                <div><p className="text-gray-600 uppercase">Rate</p><p className="font-semibold">{it.is_mixed ? 'split' : it.hourly_rate ? `$${Number(it.hourly_rate).toFixed(2)}` : '—'}</p></div>
+                <div><p className="text-gray-600 uppercase">Status</p><p className="font-semibold">{it.is_confirmed ? 'Confirmed' : 'Pending'}</p></div>
+              </div>
+              <p className="text-xs text-gray-700 mt-2">{it.start_time && it.end_time ? `${it.start_time} – ${it.end_time}` : 'Time not recorded'}</p>
+              {it.is_mixed && Array.isArray(it.mixed_split) && (
+                <div className="text-xs text-gray-600 mt-2 space-y-1 border-l-2 border-gray-200 pl-2">
+                  {it.mixed_split.map((m: any, i: number) => (
+                    <div key={i}>{m.service_type}: {m.hours}h × ${m.hourly_rate} = {fmt(m.line_total)}</div>
+                  ))}
+                </div>
+              )}
+              {it.notes && <div className="text-xs text-gray-600 mt-2 italic whitespace-pre-wrap">{it.notes}</div>}
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden sm:block print:block overflow-x-auto print:overflow-visible mb-6">
         <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead>
             <tr className="text-white" style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
