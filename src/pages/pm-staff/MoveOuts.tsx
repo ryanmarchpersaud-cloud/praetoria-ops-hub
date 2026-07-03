@@ -80,7 +80,7 @@ export default function MoveOuts() {
       <div className="space-y-2">
         {data.map((m: any) => {
           const tenantName = m.tenant ? `${m.tenant.first_name ?? ''} ${m.tenant.last_name ?? ''}`.trim() : '—';
-          const propUnit = [m.property?.property_name, m.unit?.unit_number].filter(Boolean).join(' · ');
+          const propUnit = [m.property?.property_name, m.unit?.unit_label].filter(Boolean).join(' · ');
           const isMine = m.assigned_to === user?.id;
           return (
             <Card key={m.id}>
