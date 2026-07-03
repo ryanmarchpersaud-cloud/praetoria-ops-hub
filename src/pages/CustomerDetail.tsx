@@ -895,7 +895,7 @@ export default function CustomerDetail() {
 }
 
 /* ─── Payment Method Status Card (Admin View) ──────── */
-function PaymentMethodCard({ customerId }: { customerId: string }) {
+function PaymentMethodCard({ customerId, onCompleteSetup }: { customerId: string; onCompleteSetup: () => void }) {
   const { data: bp, refetch } = useBillingProfile(customerId);
   const [manualOpen, setManualOpen] = useState(false);
   const [cardBrand, setCardBrand] = useState('visa');
