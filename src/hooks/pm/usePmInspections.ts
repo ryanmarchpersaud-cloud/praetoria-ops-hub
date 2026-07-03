@@ -98,13 +98,13 @@ async function logActivity(
   visibility: PmInspectionVisibility = 'internal_only',
 ) {
   const { data: u } = await supabase.auth.getUser();
-  await supabase.from('pm_inspection_activity').insert({
+  await supabase.from('pm_inspection_activity').insert([{
     inspection_id,
     actor_id: u.user?.id,
     action,
-    detail: detail ?? null,
+    detail: (detail ?? null) as any,
     visibility,
-  });
+  }]);
 }
 
 export function useCreatePmInspection() {
