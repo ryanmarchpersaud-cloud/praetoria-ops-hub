@@ -142,7 +142,7 @@ export default function SubcontractorPayStubPrint() {
           </div>
         </div>
 
-        <div className="sm:hidden space-y-3 mb-6">
+        <div className="sm:hidden print:hidden space-y-3 mb-6">
           {items.map((it) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 text-sm break-words">
               <div className="flex items-start justify-between gap-3">
