@@ -12760,6 +12760,12 @@ export type Database = {
         }[]
       }
       pm_get_tenant_balance: { Args: { p_tenant_id: string }; Returns: number }
+      pm_get_workforce_user_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       pm_my_aging: {
         Args: never
         Returns: {
