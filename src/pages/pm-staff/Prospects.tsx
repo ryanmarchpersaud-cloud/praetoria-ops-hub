@@ -369,16 +369,16 @@ export default function Prospects() {
   const { data: properties = [] } = useQuery({
     queryKey: ['properties-lite'],
     queryFn: async () => {
-      const { data } = await supabase.from('properties').select('id,name').order('name');
-      return (data || []) as Array<{ id: string; name: string }>;
+      const { data } = await supabase.from('properties').select('id,property_name').order('property_name');
+      return ((data as any[]) || []).map(r => ({ id: r.id, name: r.property_name })) as Array<{ id: string; name: string }>;
     },
     enabled: open,
   });
   const { data: units = [] } = useQuery({
     queryKey: ['pm-units-lite'],
     queryFn: async () => {
-      const { data } = await supabase.from('pm_units').select('id,unit_number,property_id');
-      return (data || []) as Array<{ id: string; unit_number: string; property_id: string }>;
+      const { data } = await supabase.from('pm_units').select('id,unit_label,property_id');
+      return ((data as any[]) || []).map(r => ({ id: r.id, unit_number: r.unit_label, property_id: r.property_id })) as Array<{ id: string; unit_number: string; property_id: string }>;
     },
     enabled: open,
   });
