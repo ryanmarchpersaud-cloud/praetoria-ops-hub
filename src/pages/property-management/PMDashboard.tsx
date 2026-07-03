@@ -9,8 +9,9 @@ import { usePmSummary } from '@/hooks/usePropertyManagement';
 import { RecentTenantActivity } from '@/components/property-management/RecentTenantActivity';
 import {
   PMBusinessKPIs, LeasingPipelineCard, TodayShowingsCard, StaffTasksTodayCard,
-  RenewalsAttentionCard, MaintenanceByPriorityCard, StaffActivityCard,
+  RenewalsAttentionCard, MaintenanceByPriorityCard,
 } from '@/components/property-management/dashboard/PMDashboardSections';
+import { LiveWorkforcePanel } from '@/components/dashboard/LiveWorkforcePanel';
 import { useUserRole } from '@/hooks/useUserRole';
 
 const STEPS = [
