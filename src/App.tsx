@@ -885,6 +885,7 @@ function AppRoutes() {
         <Route path="/owner/approvals" element={<Suspense fallback={<RouteLoading />}><OwnerApprovals /></Suspense>} />
         <Route path="/owner/messages" element={<Suspense fallback={<RouteLoading />}><OwnerMessages /></Suspense>} />
         <Route path="/owner/inspections" element={<Suspense fallback={<RouteLoading />}><OwnerInspections /></Suspense>} />
+        <Route path="/owner/inspections/:id/print" element={<Suspense fallback={<RouteLoading />}><OwnerInspectionPrint /></Suspense>} />
       </Route>
 
       <Route element={<PMStaffRoute />}>
