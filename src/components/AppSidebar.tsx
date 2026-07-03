@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, FileText, Building2, Activity, Settings, LogOut, Trash2,
   MapPin, Briefcase, ClipboardCheck, CalendarDays, Smartphone, Receipt,
   MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign, RefreshCw,
-  ChevronDown, Home, KeyRound, UserCircle, Wrench, CalendarClock, ShieldCheck,
+  ChevronDown, Home, KeyRound, UserCircle, Wrench, CalendarClock, ShieldCheck, FolderOpen,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
@@ -339,6 +339,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
       : []),
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
+    { title: 'Documents', url: '/property-management/documents', icon: FolderOpen },
   ];
 
 

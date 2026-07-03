@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useOwnerDocuments, signOwnerDocument } from '@/hooks/useOwnerPortal';
+import { OwnerPMDocumentsSection } from '@/components/owner/OwnerPMDocumentsSection';
 
 export default function OwnerDocuments() {
   const { data: docs = [], isLoading } = useOwnerDocuments();
@@ -67,6 +68,8 @@ export default function OwnerDocuments() {
             </Card>
           ))
         )}
+
+        <OwnerPMDocumentsSection />
       </div>
     </OwnerLayout>
   );

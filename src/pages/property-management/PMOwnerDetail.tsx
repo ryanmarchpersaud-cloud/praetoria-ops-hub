@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Trash2, Mail, Eye, CheckCircle2 } from 'lucide-react';
 import { InvitePropertyOwnerDialog } from '@/components/property-management/InvitePropertyOwnerDialog';
 import { OwnerDocumentsManager } from '@/components/property-management/OwnerDocumentsManager';
+import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
 import { Badge } from '@/components/ui/badge';
 
 export default function PMOwnerDetail() {
@@ -88,6 +89,12 @@ export default function PMOwnerDetail() {
         </CardContent>
       </Card>
       <OwnerDocumentsManager ownerId={id!} />
+      <PMDocumentsSection
+        title="PM Document Hub"
+        filters={{ owner_id: id }}
+        uploadDefaults={{ owner_id: id }}
+        defaultVisibility="owner_visible"
+      />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { ActivityTimeline } from '@/components/property-management/ActivityTimel
 import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
 import { ShieldCheck } from 'lucide-react';
 import { isNonRepairRequest } from '@/lib/maintenanceCatalogHelpers';
+import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
 
 const STATUSES = ['new', 'reviewed', 'work_order_created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
@@ -268,6 +269,15 @@ export default function PMMaintenanceRequestDetail() {
         maintenanceRequestId={data.id}
         defaultCategory="maintenance"
         defaultTitle={`Approval for maintenance: ${data.title || data.category || ''}`.trim()}
+      />
+
+      <PMDocumentsSection
+        filters={{ maintenance_request_id: id }}
+        uploadDefaults={{
+          maintenance_request_id: id,
+          property_id: (data as any).property_id ?? null,
+          unit_id: (data as any).unit_id ?? null,
+        }}
       />
     </div>
   );

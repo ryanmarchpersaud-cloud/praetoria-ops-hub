@@ -272,6 +272,7 @@ const PMLeaseRenewalsList = lazy(() => import("./pages/property-management/PMLea
 const PMOwnerApprovalsList = lazy(() => import("./pages/property-management/PMOwnerApprovalsList"));
 const PMOwnerMessagesList = lazy(() => import("./pages/property-management/PMOwnerMessagesList"));
 const PMTenantMessagesList = lazy(() => import("./pages/property-management/PMTenantMessagesList"));
+const PMDocumentsList = lazy(() => import("./pages/property-management/PMDocumentsList"));
 const OwnerApprovals = lazy(() => import("./pages/owner/OwnerApprovals"));
 const OwnerMessages = lazy(() => import("./pages/owner/OwnerMessages"));
 const TenantMessages = lazy(() => import("./pages/tenant/TenantMessages"));
@@ -742,6 +743,7 @@ function AppRoutes() {
         <Route path="/property-management/owner-statements" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-statements/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-statements/:id/print" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><OwnerStatementPrint /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/documents" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMDocumentsList /></Suspense></ModuleGuard>} />
       </Route>
 
       {/* ───────────────────────── Customer portal layout group ───────────────── */}

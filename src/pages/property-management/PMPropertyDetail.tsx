@@ -16,6 +16,7 @@ import {
   usePmOwners, usePmUnits, useSavePmUnit, useDeletePmUnit,
   type PmUnitStatus,
 } from '@/hooks/usePropertyManagement';
+import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
 
 const UNIT_STATUSES: PmUnitStatus[] = ['vacant', 'occupied', 'pending', 'inactive'];
 
@@ -147,6 +148,11 @@ export default function PMPropertyDetail() {
           )}
         </CardContent>
       </Card>
+
+      <PMDocumentsSection
+        filters={{ property_id: id }}
+        uploadDefaults={{ property_id: id }}
+      />
     </div>
   );
 }

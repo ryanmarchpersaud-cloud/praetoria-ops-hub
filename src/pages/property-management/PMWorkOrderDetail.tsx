@@ -20,6 +20,7 @@ import {
 } from '@/hooks/usePMWorkOrders';
 import { ActivityTimeline } from '@/components/property-management/ActivityTimeline';
 import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
+import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
 
 const STATUSES: WOStatus[] = ['created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
@@ -212,6 +213,16 @@ export default function PMWorkOrderDetail() {
       </Card>
 
       {data.request?.id && <ActivityTimeline requestId={data.request.id} title="History" />}
+
+      <PMDocumentsSection
+        filters={{ work_order_id: id }}
+        uploadDefaults={{
+          work_order_id: id,
+          maintenance_request_id: data.request?.id ?? null,
+          property_id: (data as any).property_id ?? null,
+          unit_id: (data as any).unit_id ?? null,
+        }}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { usePmLease, useSavePmLease, useDeletePmLease, usePmTenants, usePmProperties, usePmUnits } from '@/hooks/usePropertyManagement';
 import { supabase } from '@/integrations/supabase/client';
 import TenantLedgerManager from '@/components/property-management/TenantLedgerManager';
+import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
 
 export default function PMLeaseDetail() {
   const { id } = useParams();
@@ -112,6 +113,17 @@ export default function PMLeaseDetail() {
           defaultRentDueDay={Number(form.rent_due_day ?? 1)}
         />
       )}
+
+      <PMDocumentsSection
+        filters={{ lease_id: id }}
+        uploadDefaults={{
+          lease_id: id,
+          tenant_id: form.tenant_id ?? null,
+          property_id: form.property_id ?? null,
+          unit_id: form.unit_id ?? null,
+        }}
+        defaultVisibility="tenant_visible"
+      />
     </div>
   );
 }
