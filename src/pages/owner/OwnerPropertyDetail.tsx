@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { OwnerLayout } from '@/components/owner/OwnerLayout';
+import { OwnerRenewalsCard } from '@/components/owner/OwnerRenewalsCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MapPin } from 'lucide-react';
@@ -86,6 +87,8 @@ export default function OwnerPropertyDetail() {
             )}
           </CardContent>
         </Card>
+        <OwnerRenewalsCard propertyId={id} />
+
 
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Recent maintenance ({requests.length})</CardTitle></CardHeader>
