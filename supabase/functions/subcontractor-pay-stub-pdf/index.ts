@@ -295,7 +295,7 @@ Deno.serve(async (req) => {
     if (action === "email") {
       const to = String(body.email || "").trim();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return json({ error: "Enter a valid email address." }, 400);
-      const resendKey = Deno.env.get("RESEND_API_KEY");
+      const resendKey = Deno.env.get("RESEND_API_KEY_1") || Deno.env.get("RESEND_API_KEY");
       if (!resendKey) return json({ error: "Email delivery is not configured yet." }, 503);
       const period = `${dateLabel(stub.period_start)} - ${dateLabel(stub.period_end)}`;
       const result = await fetch("https://api.resend.com/emails", {

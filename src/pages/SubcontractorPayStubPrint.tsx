@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Printer } from 'lucide-react';
+import { AlertCircle, Download, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 
 function fmt(n: number | null | undefined) { return `$${Number(n || 0).toFixed(2)}`; }
@@ -15,27 +15,68 @@ function parseLocalDate(s: string | null | undefined): Date {
 
 export default function SubcontractorPayStubPrint() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const [stub, setStub] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [sub, setSub] = useState<any>(null);
   const [includeInternal, setIncludeInternal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       if (!id) return;
-      const { data: s } = await supabase.from('subcontractor_pay_stubs').select('*').eq('id', id).single();
-      setStub(s);
-      if (s) {
-        const { data: it } = await supabase.from('subcontractor_pay_stub_line_items')
-          .select('*').eq('pay_stub_id', id).order('work_date', { ascending: true });
-        setItems(it ?? []);
-        const { data: sc } = await supabase.from('subcontractors').select('*').eq('id', s.subcontractor_id).single();
-        setSub(sc);
+      setLoading(true);
+      setError(null);
+      const { data: s, error: stubError } = await supabase.from('subcontractor_pay_stubs').select('*').eq('id', id).single();
+      if (stubError || !s) {
+        setError(stubError?.message || 'Pay stub not found.');
+        setLoading(false);
+        return;
       }
+      setStub(s);
+
+      const [{ data: it, error: itemError }, { data: sc, error: subError }] = await Promise.all([
+        supabase.from('subcontractor_pay_stub_line_items')
+          .select('*')
+          .eq('pay_stub_id', id)
+          .order('sort_order', { ascending: true })
+          .order('work_date', { ascending: true }),
+        supabase.from('subcontractors').select('*').eq('id', s.subcontractor_id).single(),
+      ]);
+
+      if (itemError || subError || !sc) {
+        setError(itemError?.message || subError?.message || 'Could not load pay stub details.');
+        setLoading(false);
+        return;
+      }
+      setItems(it ?? []);
+      setSub(sc);
+      setLoading(false);
     })();
   }, [id]);
 
-  if (!stub || !sub) return <div className="p-8">Loading...</div>;
+  useEffect(() => {
+    if (!loading && stub && sub && searchParams.get('print') === '1') {
+      const handle = window.setTimeout(() => window.print(), 350);
+      return () => window.clearTimeout(handle);
+    }
+  }, [loading, searchParams, stub, sub]);
+
+  if (loading) return <div className="min-h-screen bg-white text-black p-8">Loading pay stub…</div>;
+  if (error || !stub || !sub) {
+    return (
+      <div className="min-h-screen bg-white text-black p-6">
+        <div className="max-w-xl mx-auto border border-red-200 bg-red-50 p-4 rounded-lg flex gap-3">
+          <AlertCircle className="h-5 w-5 text-red-700 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-red-900">Could not open this pay stub</p>
+            <p className="text-sm text-red-800">{error || 'Please sign in and try again.'}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const allConfirmed = items.length > 0 && items.every(i => i.is_confirmed);
 
@@ -59,27 +100,30 @@ export default function SubcontractorPayStubPrint() {
   const totalHours = Object.values(byService).reduce((a, b) => a + b.hours, 0);
 
   return (
-    <div className="min-h-screen bg-white text-black p-8 print:p-0">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex justify-between items-start mb-4 print:hidden">
-          <label className="flex items-center gap-2 text-sm">
+    <div className="min-h-screen bg-white text-black p-4 sm:p-8 print:p-0">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start mb-4 print:hidden">
+          <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" checked={includeInternal} onChange={(e) => setIncludeInternal(e.target.checked)} />
             Include internal admin notes on PDF
           </label>
-          <Button onClick={() => window.print()} className="gap-2"><Printer className="h-4 w-4" /> Print / Save PDF</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => window.print()} className="gap-2"><Printer className="h-4 w-4" /> Print</Button>
+            <Button onClick={() => window.print()} variant="outline" className="gap-2"><Download className="h-4 w-4" /> Save as PDF</Button>
+          </div>
         </div>
 
-        <div className="rounded-lg p-8 mb-6 flex items-center gap-8 text-white print:rounded-none" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-          <img src="/praetoria-logo-white.png" alt="Praetoria Group" className="h-44 w-44 object-contain flex-shrink-0" />
+        <div className="rounded-lg p-5 sm:p-8 mb-6 flex flex-col sm:flex-row items-center gap-5 sm:gap-8 text-white print:rounded-none" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+          <img src="/praetoria-logo-white.png" alt="Praetoria Group" className="h-28 w-28 sm:h-40 sm:w-40 object-contain flex-shrink-0" />
           <div className="flex-1">
-            <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow">Praetoria Operations Group Inc.</h1>
-            <p className="text-base text-white/95 mt-2">Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
-            <p className="text-base text-white/95">Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow">Praetoria Operations Group Inc.</h1>
+            <p className="text-sm sm:text-base text-white/95 mt-2">Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
+            <p className="text-sm sm:text-base text-white/95">Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
             <h2 className="text-lg font-bold mt-4 inline-block bg-white text-[#0F172A] px-4 py-1.5 rounded">Subcontractor Pay Stub</h2>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+        <div className="grid sm:grid-cols-2 gap-4 mb-6 text-sm">
           <div>
             <p className="text-gray-600 text-xs uppercase">Subcontractor</p>
             <p className="font-bold text-lg">{sub.contact_name}</p>
@@ -88,7 +132,7 @@ export default function SubcontractorPayStubPrint() {
             {sub.phone && <p>Phone: {sub.phone}</p>}
             {sub.email && <p>Email: {sub.email}</p>}
           </div>
-          <div className="text-right">
+          <div className="sm:text-right">
             <p className="text-gray-600 text-xs uppercase">Pay Stub #</p>
             <p className="font-mono font-bold">{stub.pay_stub_number}</p>
             <p className="text-gray-600 text-xs uppercase mt-2">Pay Period</p>
@@ -98,7 +142,8 @@ export default function SubcontractorPayStubPrint() {
           </div>
         </div>
 
-        <table className="w-full border-collapse text-sm mb-6">
+        <div className="overflow-x-auto print:overflow-visible mb-6">
+        <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead>
             <tr className="text-white" style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
               <th className="text-left p-2">Date</th>
@@ -134,8 +179,9 @@ export default function SubcontractorPayStubPrint() {
             ))}
           </tbody>
         </table>
+        </div>
 
-        <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="grid sm:grid-cols-2 gap-6 mb-6">
           <div>
             <p className="text-xs uppercase font-semibold text-gray-600 mb-1">Totals by Service Type</p>
             <table className="w-full text-sm border-collapse">
@@ -169,7 +215,11 @@ export default function SubcontractorPayStubPrint() {
             )}
             <div className="flex justify-between border-t-2 border-black pt-1 mt-1 text-base">
               <span className="font-bold">{allConfirmed ? 'Total Amount Owed:' : 'Provisional Total:'}</span>
-              <span className="font-bold">{allConfirmed ? fmt(stub.total) : 'Pending confirmation'}</span>
+              <span className="font-bold">{allConfirmed ? fmt(stub.total) : fmt(stub.total)}</span>
+            </div>
+            <div className="flex justify-between border-t border-gray-300 pt-2 mt-2 text-lg">
+              <span className="font-extrabold">Grand total payable:</span>
+              <span className="font-extrabold">{fmt(stub.total)}</span>
             </div>
           </div>
         </div>

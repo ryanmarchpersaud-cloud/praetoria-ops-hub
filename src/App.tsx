@@ -760,6 +760,7 @@ function AppRoutes() {
       {/* Subcontractor pay stub PDF view — standalone (no admin shell) so the
           print preview is clean and shows only the pay stub. */}
       <Route path="/admin/subcontractor-pay-stub/:id/print" element={<AuthedRoute><SubcontractorPayStubPrint /></AuthedRoute>} />
+      <Route path="/subcontractor/pay-stubs/:id/print" element={<AuthedRoute><SubcontractorPayStubPrint /></AuthedRoute>} />
 
       {/* ───────────────────────── Worker layout group ─────────────────────── */}
       <Route element={<WorkerRoute />}>
