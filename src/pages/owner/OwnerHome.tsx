@@ -75,6 +75,8 @@ export default function OwnerHome() {
           </CardContent>
         </Card>
 
+        <OwnerRenewalsCard />
+
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-base">Need help?</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
