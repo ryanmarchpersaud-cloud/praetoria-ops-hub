@@ -307,6 +307,107 @@ function ServiceHubGroup() {
 
 
 const PM_STORAGE_KEY = 'praetoria.sidebar.propertyManagementOpen';
+const PM_SUB_STORAGE_PREFIX = 'praetoria.sidebar.pm.';
+
+type PMItem = { title: string; url: string; icon: any; end?: boolean };
+type PMSubgroup = {
+  key: string;
+  label: string;
+  icon: any;
+  items: PMItem[];
+  accent: {
+    header: string;
+    idle: string;
+    active: string;
+    border: string;
+  };
+};
+
+const PM_ACCENTS = {
+  neutral: {
+    header: 'text-slate-600 dark:text-slate-300 hover:bg-slate-500/10 border-slate-500/50',
+    idle: 'hover:bg-slate-500/10 hover:text-slate-700 dark:hover:text-slate-200',
+    active: 'bg-slate-500/15 text-slate-800 dark:text-slate-100 font-semibold border-l-2 border-slate-500 pl-[calc(0.5rem-2px)]',
+    border: 'border-slate-500/60',
+  },
+  owners: {
+    header: 'text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 border-amber-500/60',
+    idle: 'hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300',
+    active: 'bg-amber-500/15 text-amber-800 dark:text-amber-200 font-semibold border-l-2 border-amber-500 pl-[calc(0.5rem-2px)]',
+    border: 'border-amber-500/60',
+  },
+  tenants: {
+    header: 'text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 border-emerald-500/60',
+    idle: 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300',
+    active: 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-semibold border-l-2 border-emerald-500 pl-[calc(0.5rem-2px)]',
+    border: 'border-emerald-500/60',
+  },
+  leases: {
+    header: 'text-teal-700 dark:text-teal-300 hover:bg-teal-500/10 border-teal-500/60',
+    idle: 'hover:bg-teal-500/10 hover:text-teal-700 dark:hover:text-teal-300',
+    active: 'bg-teal-500/15 text-teal-800 dark:text-teal-200 font-semibold border-l-2 border-teal-500 pl-[calc(0.5rem-2px)]',
+    border: 'border-teal-500/60',
+  },
+  ops: {
+    header: 'text-orange-700 dark:text-orange-300 hover:bg-orange-500/10 border-orange-500/60',
+    idle: 'hover:bg-orange-500/10 hover:text-orange-700 dark:hover:text-orange-300',
+    active: 'bg-orange-500/15 text-orange-800 dark:text-orange-200 font-semibold border-l-2 border-orange-500 pl-[calc(0.5rem-2px)]',
+    border: 'border-orange-500/60',
+  },
+  finance: {
+    header: 'text-sky-700 dark:text-sky-300 hover:bg-sky-500/10 border-sky-500/60',
+    idle: 'hover:bg-sky-500/10 hover:text-sky-700 dark:hover:text-sky-300',
+    active: 'bg-sky-500/15 text-sky-800 dark:text-sky-200 font-semibold border-l-2 border-sky-500 pl-[calc(0.5rem-2px)]',
+    border: 'border-sky-500/60',
+  },
+} as const;
+
+function PMSubgroupBlock({ group, defaultOpen }: { group: PMSubgroup; defaultOpen: boolean }) {
+  const storageKey = `${PM_SUB_STORAGE_PREFIX}${group.key}`;
+  const [open, setOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return defaultOpen;
+    const stored = window.localStorage.getItem(storageKey);
+    if (stored === '1') return true;
+    if (stored === '0') return false;
+    return defaultOpen;
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(storageKey, open ? '1' : '0'); } catch {}
+  }, [open, storageKey]);
+
+  if (group.items.length === 0) return null;
+
+  return (
+    <div className="mt-1">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wider cursor-pointer border-l-2 ${group.accent.header}`}
+      >
+        <span className="flex items-center gap-1.5">
+          <group.icon className="h-3.5 w-3.5" />
+          {group.label}
+        </span>
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? '' : '-rotate-90'}`} />
+      </button>
+      {open && (
+        <SidebarMenu className="mt-0.5">
+          {group.items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild size="sm">
+                <NavLink to={item.url} end={item.end} className={`pl-4 ${group.accent.idle}`} activeClassName={group.accent.active}>
+                  <item.icon className="mr-2 h-4 w-4" />
+                  <span>{item.title}</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      )}
+    </div>
+  );
+}
 
 function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
   const [open, setOpen] = useState<boolean>(() => {
@@ -319,52 +420,77 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
 
   const access = useModuleAccess();
   const canSeeOwnerMessages = access.isOwnerOrAdmin || access.isPropertyManager;
+  const canSeeTenantMessages = access.isOwnerOrAdmin || access.isPropertyManager;
 
-  const items: { title: string; url: string; icon: any; end?: boolean; area?: AreaKey }[] = [
+  const mainItems: PMItem[] = [
     { title: 'Dashboard', url: '/property-management', icon: LayoutDashboard, end: true },
     { title: 'Properties', url: '/property-management/properties', icon: Building2 },
     { title: 'Units', url: '/property-management/units', icon: Home },
-    { title: 'Owners', url: '/property-management/owners', icon: UserCircle, area: 'owners' },
-    { title: 'Tenants', url: '/property-management/tenants', icon: Users, area: 'tenants' },
-    { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
-    { title: 'Maintenance Requests', url: '/property-management/maintenance', icon: Wrench },
-    { title: 'Move-Outs', url: '/property-management/move-outs', icon: KeyRound },
-    { title: 'Lease Renewals', url: '/property-management/lease-renewals', icon: CalendarClock },
+    { title: 'Documents', url: '/property-management/documents', icon: FolderOpen },
+  ];
+
+  const ownerItems: PMItem[] = [
+    { title: 'Owners', url: '/property-management/owners', icon: UserCircle },
     { title: 'Owner Approvals', url: '/property-management/owner-approvals', icon: ShieldCheck },
     ...(canSeeOwnerMessages
       ? [{ title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare }]
       : []),
-    ...(canSeeOwnerMessages
+    { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
+  ];
+
+  const tenantItems: PMItem[] = [
+    { title: 'Tenants', url: '/property-management/tenants', icon: Users },
+    ...(canSeeTenantMessages
       ? [{ title: 'Tenant Messages', url: '/property-management/tenant-messages', icon: MessageSquare }]
       : []),
-    { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
-    { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
-    { title: 'Documents', url: '/property-management/documents', icon: FolderOpen },
+  ];
+
+  const leaseItems: PMItem[] = [
+    { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
+    { title: 'Lease Renewals', url: '/property-ground/lease-renewals'.replace('property-ground', 'property-management'), icon: CalendarClock },
+    { title: 'Move-Ins', url: '/property-management/move-ins', icon: KeyRound },
+    { title: 'Move-Outs', url: '/property-management/move-outs', icon: KeyRound },
+  ];
+
+  const opsItems: PMItem[] = [
+    { title: 'Maintenance Requests', url: '/property-management/maintenance', icon: Wrench },
     { title: 'Inspections', url: '/property-management/inspections', icon: ClipboardCheck },
   ];
 
+  const financeItems: PMItem[] = [
+    { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
+  ];
 
+  const subgroups: PMSubgroup[] = [
+    { key: 'owners', label: 'Owners', icon: UserCircle, items: ownerItems, accent: PM_ACCENTS.owners },
+    { key: 'tenants', label: 'Tenants', icon: Users, items: tenantItems, accent: PM_ACCENTS.tenants },
+    { key: 'leases', label: 'Leases & Lifecycle', icon: CalendarClock, items: leaseItems, accent: PM_ACCENTS.leases },
+    { key: 'ops', label: 'Maintenance & Inspections', icon: Wrench, items: opsItems, accent: PM_ACCENTS.ops },
+    { key: 'finance', label: 'Finance & Records', icon: Receipt, items: financeItems, accent: PM_ACCENTS.finance },
+  ].filter((g) => g.items.length > 0);
 
-  const idleClass = 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';
-  const activeClass = 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 pl-[calc(0.5rem-2px)]';
+  // Auto-open the subgroup whose route is active
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isActiveIn = (items: PMItem[]) => items.some((i) => currentPath === i.url || (!i.end && currentPath.startsWith(i.url + '/')));
+
+  const idleClass = PM_ACCENTS.neutral.idle;
+  const activeClass = PM_ACCENTS.neutral.active;
 
   if (collapsed) {
+    const flatItems = [...mainItems, ...ownerItems, ...tenantItems, ...leaseItems, ...opsItems, ...financeItems];
     return (
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((item) => {
-              const style = item.area ? AREA_STYLES[item.area] : null;
-              return (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
-                      <item.icon className={`h-4 w-4 ${style ? style.icon : ''}`} />
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
+            {flatItems.map((item) => (
+              <SidebarMenuItem key={item.url}>
+                <SidebarMenuButton asChild>
+                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
+                    <item.icon className="h-4 w-4" />
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -388,22 +514,23 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
       {open && (
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((item) => {
-              const style = item.area ? AREA_STYLES[item.area] : null;
-              return (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
-                      <item.icon className={`mr-2 h-4 w-4 ${style ? style.icon : ''}`} />
-                      <span className={style ? style.icon : ''}>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
+            {mainItems.map((item) => (
+              <SidebarMenuItem key={item.url}>
+                <SidebarMenuButton asChild>
+                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
+                    <item.icon className="mr-2 h-4 w-4" />
+                    <span>{item.title}</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
           </SidebarMenu>
+          {subgroups.map((g) => (
+            <PMSubgroupBlock key={g.key} group={g} defaultOpen={isActiveIn(g.items)} />
+          ))}
         </SidebarGroupContent>
       )}
     </SidebarGroup>
   );
 }
+
