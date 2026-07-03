@@ -11,6 +11,7 @@ import {
 import { formatStatusLabel } from '@/lib/statusLabel';
 import { format, isAfter, addDays } from 'date-fns';
 import { PMStaffClockInCard } from '@/components/pm-staff/PMStaffClockInCard';
+import { RenewalsDueSoonCard } from '@/components/pm-staff/RenewalsDueSoonCard';
 
 export default function PMStaffHome() {
   const vacancies = useVacantUnits();
@@ -64,6 +65,10 @@ export default function PMStaffHome() {
         <KpiCard icon={LogIn} label="Move-ins in progress" value={openMoveIns.length} to="/pm-staff/move-ins" />
         <KpiCard icon={ListChecks} label="Open tasks" value={myTasks.length} to="/pm-staff/tasks" />
       </div>
+
+      {/* Renewals due soon */}
+      <RenewalsDueSoonCard />
+
 
       {/* Upcoming showings */}
       <Card>

@@ -7858,6 +7858,7 @@ export type Database = {
           priority: string | null
           property_id: string | null
           prospect_id: string | null
+          renewal_id: string | null
           status: string
           title: string
           unit_id: string | null
@@ -7877,6 +7878,7 @@ export type Database = {
           priority?: string | null
           property_id?: string | null
           prospect_id?: string | null
+          renewal_id?: string | null
           status?: string
           title: string
           unit_id?: string | null
@@ -7896,6 +7898,7 @@ export type Database = {
           priority?: string | null
           property_id?: string | null
           prospect_id?: string | null
+          renewal_id?: string | null
           status?: string
           title?: string
           unit_id?: string | null
@@ -7942,6 +7945,13 @@ export type Database = {
             columns: ["prospect_id"]
             isOneToOne: false
             referencedRelation: "pm_prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_staff_tasks_renewal_id_fkey"
+            columns: ["renewal_id"]
+            isOneToOne: false
+            referencedRelation: "pm_lease_renewals"
             referencedColumns: ["id"]
           },
           {

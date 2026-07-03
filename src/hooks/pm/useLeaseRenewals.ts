@@ -59,6 +59,53 @@ export function useLeasesEndingSoon(days = 90) {
   });
 }
 
+function addBusinessDays(from: Date, days: number): Date {
+  const d = new Date(from);
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) added++;
+  }
+  return d;
+}
+
+export const RENEWAL_FOLLOWUP_TITLE = 'Contact tenant about renewal';
+
+async function ensureRenewalFollowUpTask(renewal: any, actorId?: string) {
+  if (!renewal?.id || !renewal?.assigned_to) return;
+  // Dedup: skip if an open follow-up task already exists for this renewal
+  const { data: existing } = await supabase
+    .from('pm_staff_tasks' as any)
+    .select('id,status')
+    .eq('renewal_id', renewal.id)
+    .eq('title', RENEWAL_FOLLOWUP_TITLE)
+    .not('status', 'in', '("completed","cancelled")')
+    .limit(1);
+  if (existing && existing.length > 0) return;
+
+  const due = addBusinessDays(new Date(), 3).toISOString().slice(0, 10);
+  const { error: taskErr } = await supabase.from('pm_staff_tasks' as any).insert({
+    title: RENEWAL_FOLLOWUP_TITLE,
+    description: 'Auto-created from lease renewal record. Reach out to the tenant regarding their upcoming lease renewal.',
+    assigned_to: renewal.assigned_to,
+    property_id: renewal.property_id ?? null,
+    unit_id: renewal.unit_id ?? null,
+    renewal_id: renewal.id,
+    due_date: due,
+    priority: 'normal',
+    status: 'pending',
+    created_by: actorId ?? null,
+  });
+  if (taskErr) return;
+  await supabase.from('pm_lease_renewal_activity' as any).insert({
+    renewal_id: renewal.id,
+    event_type: 'task_created',
+    message: 'Renewal follow-up task created and assigned.',
+    actor_id: actorId,
+  });
+}
+
 export function useCreateLeaseRenewal() {
   const qc = useQueryClient();
   const { user } = useAuth();
@@ -74,9 +121,13 @@ export function useCreateLeaseRenewal() {
         message: 'Renewal record created',
         actor_id: user?.id,
       });
+      await ensureRenewalFollowUpTask(data, user?.id);
       return data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: KEY }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ['pm_staff_tasks'] });
+    },
   });
 }
 
