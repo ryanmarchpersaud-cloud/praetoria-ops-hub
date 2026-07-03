@@ -94,7 +94,7 @@ async function ensureRenewalFollowUpTask(renewal: any, actorId?: string) {
     renewal_id: renewal.id,
     due_date: due,
     priority: 'normal',
-    status: 'pending',
+    status: 'open',
     created_by: actorId ?? null,
   });
   if (taskErr) return;
