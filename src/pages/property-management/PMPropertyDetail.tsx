@@ -17,6 +17,7 @@ import {
   type PmUnitStatus,
 } from '@/hooks/usePropertyManagement';
 import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
+import { InspectionsSection } from '@/components/property-management/inspections/InspectionsSection';
 
 const UNIT_STATUSES: PmUnitStatus[] = ['vacant', 'occupied', 'pending', 'inactive'];
 
