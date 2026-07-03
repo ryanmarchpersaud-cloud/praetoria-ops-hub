@@ -12731,6 +12731,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      pm_finance_parity_report: {
+        Args: never
+        Returns: {
+          delta: number
+          legacy_balance: number
+          new_balance: number
+          tenant_id: string
+        }[]
+      }
       pm_get_lease_balance: { Args: { p_lease_id: string }; Returns: number }
       pm_get_tenant_aging: {
         Args: { p_tenant_id: string }
