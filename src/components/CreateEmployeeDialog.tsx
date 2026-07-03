@@ -24,8 +24,11 @@ const ROLES = [
   { value: 'hr_admin', label: 'HR Admin' },
   { value: 'ops_manager', label: 'Ops Manager' },
   { value: 'accountant', label: 'Accountant' },
+  { value: 'property_manager', label: 'Property Manager (PM)' },
+  { value: 'leasing_agent', label: 'Leasing Agent (PM)' },
 ];
 
+const PM_ROLES = ['property_manager', 'leasing_agent'];
 const EMPLOYMENT_TYPES = ['full-time', 'part-time', 'seasonal', 'contract', 'casual'];
 const PAY_TYPES = ['hourly', 'salary', 'contract', 'percentage', 'fifty-fifty'];
 const PAY_SCHEDULES = ['weekly', 'bi-weekly', 'semi-monthly', 'monthly'];
@@ -33,6 +36,7 @@ const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 const SERVICE_CATEGORIES = [
   'Snow & Ice', 'Landscaping & Grounds', 'Junk Removal',
   'Property Care & Maintenance', 'Cleaning Services', 'Power Washing',
+  'Property Management',
 ];
 
 const DOC_CATEGORIES = [
