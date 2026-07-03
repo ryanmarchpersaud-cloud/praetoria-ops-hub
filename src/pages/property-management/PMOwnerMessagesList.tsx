@@ -50,7 +50,7 @@ function useOwnersLite() {
         .eq('is_active', true)
         .order('owner_name');
       if (error) throw error;
-      return (data || []) as Array<{ id: string; owner_name: string; company_name: string | null }>;
+      return ((data as any[]) || []) as Array<{ id: string; owner_name: string; company_name: string | null }>;
     },
   });
 }
