@@ -21,6 +21,7 @@ import {
 import { ActivityTimeline } from '@/components/property-management/ActivityTimeline';
 import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
 import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
+import { InspectionsSection } from '@/components/property-management/inspections/InspectionsSection';
 
 const STATUSES: WOStatus[] = ['created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
