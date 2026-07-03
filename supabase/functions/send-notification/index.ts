@@ -556,24 +556,100 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ── Self-service hardening ────────────────────────────────────────────
+  // For SELF_SERVICE_EVENTS, any authenticated user can call this function.
+  // We must NOT trust caller-supplied to_email / customer_id / record_id,
+  // otherwise a customer could relay branded emails to arbitrary addresses
+  // or exfiltrate another customer's request details.
+  //
+  // Strategy:
+  //   • Force audience = "admin" (self-service events notify ops/staff).
+  //   • Resolve the caller's own customer_id from customers.user_id = auth.userId.
+  //   • Override body.customer_id with the resolved value.
+  //   • If a record_id is supplied, verify it belongs to the resolved customer.
+  //   • Strip variables.to_email / variables.to_phone so the recipient is
+  //     derived server-side (ops inbox) via resolveRecipient().
+  let effectiveAudience = audience;
+  let effectiveCustomerId = customer_id;
+  let effectiveRecordId = record_id;
+  let effectiveVariables: Record<string, any> = { ...(variables || {}) };
+
+  if (!auth.isServiceRole && SELF_SERVICE_EVENTS.has(event)) {
+    effectiveAudience = "admin";
+    delete effectiveVariables.to_email;
+    delete effectiveVariables.to_phone;
+
+    let ownedCustomerId: string | null = null;
+    const { data: ownCust } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("user_id", auth.userId)
+      .maybeSingle();
+    if (ownCust?.id) ownedCustomerId = ownCust.id;
+
+    // Fallback for tenants (PM portal): resolve to their linked customer.
+    if (!ownedCustomerId) {
+      const { data: tenant } = await supabase
+        .from("pm_tenants")
+        .select("customer_id")
+        .eq("user_id", auth.userId)
+        .maybeSingle();
+      if (tenant?.customer_id) ownedCustomerId = tenant.customer_id;
+    }
+
+    if (!ownedCustomerId) {
+      return json({ error: "No customer/tenant record linked to this account" }, 403);
+    }
+
+    effectiveCustomerId = ownedCustomerId;
+
+    // If a record_id is supplied, verify caller owns it. We check the most
+    // common self-service source tables. Any mismatch → 403.
+    if (effectiveRecordId) {
+      const tablesToCheck = [
+        "service_requests",
+        "pm_maintenance_requests",
+        "pm_tenant_insurance",
+        "pm_tenant_referrals",
+      ];
+      let ownershipOk = false;
+      for (const t of tablesToCheck) {
+        const { data: row } = await supabase
+          .from(t)
+          .select("id, customer_id")
+          .eq("id", effectiveRecordId)
+          .maybeSingle();
+        if (row) {
+          if (row.customer_id && row.customer_id === ownedCustomerId) {
+            ownershipOk = true;
+          }
+          break;
+        }
+      }
+      if (!ownershipOk) {
+        return json({ error: "You do not own the referenced record" }, 403);
+      }
+    }
+  }
+
   try {
 
     const results: Record<string, unknown>[] = [];
 
     // Resolve recipient contact info for email/SMS channels
     const resolved = await resolveRecipient(supabase, {
-      customer_id,
+      customer_id: effectiveCustomerId,
       recipient_id,
-      audience,
-      variables,
+      audience: effectiveAudience,
+      variables: effectiveVariables,
     });
 
     // Inject resolved contact info into variables for template rendering
     const enrichedVars = {
-      ...variables,
-      to_email: variables.to_email || resolved.email || "",
-      to_phone: variables.to_phone || resolved.phone || "",
-      company_name: variables.company_name || "Praetoria Group",
+      ...effectiveVariables,
+      to_email: effectiveVariables.to_email || resolved.email || "",
+      to_phone: effectiveVariables.to_phone || resolved.phone || "",
+      company_name: effectiveVariables.company_name || "Praetoria Group",
     };
 
     // Check customer notification preferences if customer audience
