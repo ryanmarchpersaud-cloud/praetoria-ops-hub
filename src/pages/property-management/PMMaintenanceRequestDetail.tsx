@@ -270,6 +270,15 @@ export default function PMMaintenanceRequestDetail() {
         defaultCategory="maintenance"
         defaultTitle={`Approval for maintenance: ${data.title || data.category || ''}`.trim()}
       />
+
+      <PMDocumentsSection
+        filters={{ maintenance_request_id: id }}
+        uploadDefaults={{
+          maintenance_request_id: id,
+          property_id: (data as any).property_id ?? null,
+          unit_id: (data as any).unit_id ?? null,
+        }}
+      />
     </div>
   );
 }
