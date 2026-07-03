@@ -224,6 +224,17 @@ export default function PMWorkOrderDetail() {
           unit_id: (data as any).unit_id ?? null,
         }}
       />
+
+      <InspectionsSection
+        filters={{ work_order_id: id }}
+        defaults={{
+          work_order_id: id,
+          maintenance_request_id: data.request?.id ?? null,
+          property_id: (data as any).property_id ?? null,
+          unit_id: (data as any).unit_id ?? null,
+        }}
+        defaultType="maintenance"
+      />
     </div>
   );
 }
