@@ -116,6 +116,10 @@ export default function TenantLease() {
         </Card>
       )}
 
+      {/* Renewal (only shown when Admin marks tenant-visible) */}
+      <TenantRenewalCard />
+
+
       {/* Documents link */}
       <Card className="hover:border-emerald-300 transition-colors">
         <a href="/tenant/documents" className="block p-4 flex items-center justify-between">
