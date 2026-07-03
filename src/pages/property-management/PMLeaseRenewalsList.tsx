@@ -470,10 +470,8 @@ export default function PMLeaseRenewalsList() {
                 <SelectItem value="no">Owner visible: no</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex gap-1 items-center">
-              <Input type="date" value={endFrom} onChange={e => setEndFrom(e.target.value)} title="End date from" />
-              <Input type="date" value={endTo} onChange={e => setEndTo(e.target.value)} title="End date to" />
-            </div>
+            <Input type="date" value={endFrom} onChange={e => setEndFrom(e.target.value)} title="End date from" />
+            <Input type="date" value={endTo} onChange={e => setEndTo(e.target.value)} title="End date to" />
           </div>
           <div className="flex justify-end">
             <Button variant="ghost" size="sm" onClick={clearFilters}><X className="h-3.5 w-3.5 mr-1" />Clear</Button>
