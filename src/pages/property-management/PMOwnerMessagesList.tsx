@@ -60,15 +60,25 @@ function usePropertiesForOwner(owner_id: string | null) {
     queryKey: ['pm-managed-props-for-owner', owner_id],
     enabled: !!owner_id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: links, error } = await supabase
         .from('pm_owner_properties' as any)
-        .select('property_id, pm_managed_properties!inner(id, property_id, properties:property_id(id, property_name))')
+        .select('property_id')
         .eq('owner_id', owner_id as string);
       if (error) throw error;
-      return ((data as any[]) || []).map(r => ({
-        id: r.pm_managed_properties.id,
-        name: r.pm_managed_properties.properties?.property_name ?? 'Property',
-      }));
+      const ids = ((links as any[]) || []).map(r => r.property_id);
+      if (ids.length === 0) return [] as Array<{ id: string; name: string }>;
+      const { data: mgd, error: mgdErr } = await supabase
+        .from('pm_managed_properties' as any)
+        .select('id, property_id')
+        .in('id', ids);
+      if (mgdErr) throw mgdErr;
+      const propIds = ((mgd as any[]) || []).map(r => r.property_id);
+      const { data: props } = await supabase
+        .from('properties')
+        .select('id, property_name')
+        .in('id', propIds);
+      const nameById = new Map(((props as any[]) || []).map(p => [p.id, p.property_name]));
+      return ((mgd as any[]) || []).map(r => ({ id: r.id, name: nameById.get(r.property_id) ?? 'Property' }));
     },
   });
 }
