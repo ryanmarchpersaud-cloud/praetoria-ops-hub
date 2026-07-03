@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SettingsLayout } from '@/components/SettingsLayout';
+import { PMStaffRoleSection } from '@/components/settings/PMStaffRoleSection';
 import { cn } from '@/lib/utils';
 
 /* ── Constants ── */
@@ -609,6 +610,11 @@ export default function ManageTeamPage() {
                   </div>
                 </div>
               </div>
+
+              {/* PM Staff Role (Property Management portal) */}
+              {editingUserId && (
+                <PMStaffRoleSection userId={editingUserId} onChanged={invalidateAll} />
+              )}
 
               {/* Notes */}
               <div className="space-y-1.5">
