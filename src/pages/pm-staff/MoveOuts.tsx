@@ -256,24 +256,25 @@ function ReturnToggle({ label, value, disabled, onChange }: any) {
 function InspectionBlock({ moveOut, canManage }: { moveOut: any; canManage: boolean }) {
   const qc = useQueryClient();
   const { user } = useAuth();
-  const { data: inspection } = useQuery({
+  const { data: inspection } = useQuery<any>({
     queryKey: ['pm_move_out_inspection', moveOut.id],
     queryFn: async () => {
       const { data } = await supabase.from('pm_move_out_inspections' as any)
         .select('*').eq('move_out_id', moveOut.id).maybeSingle();
-      return data;
+      return data as any;
     },
   });
+  const inspAny = inspection as any;
 
-  const { data: photos = [] } = useQuery({
-    queryKey: ['pm_move_out_photos', inspection?.id],
+  const { data: photos = [] } = useQuery<any[]>({
+    queryKey: ['pm_move_out_photos', inspAny?.id],
     queryFn: async () => {
-      if (!inspection?.id) return [];
+      if (!inspAny?.id) return [];
       const { data } = await supabase.from('pm_move_out_inspection_photos' as any)
-        .select('*').eq('inspection_id', inspection.id).order('created_at', { ascending: false });
-      return data ?? [];
+        .select('*').eq('inspection_id', inspAny.id).order('created_at', { ascending: false });
+      return (data ?? []) as any[];
     },
-    enabled: !!inspection?.id,
+    enabled: !!inspAny?.id,
   });
 
   const upsert = useMutation({
