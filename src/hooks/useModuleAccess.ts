@@ -46,7 +46,9 @@ export interface ModuleAccess {
 
   // ── Convenience ──
   isOwnerOrAdmin: boolean;
+  isPropertyManager: boolean;
   isLoading: boolean;
+
 }
 
 /** Map of sidebar item URLs → required access checks */
@@ -118,8 +120,10 @@ export function useModuleAccess(): ModuleAccess {
       messagingAll, messagingInternal, messagingAssigned, messagingDisabled,
       canAccessAdminSidebar, canViewDashboard,
       isOwnerOrAdmin: ownerOrAdmin,
+      isPropertyManager: auth.isPropertyManager,
       isLoading: permLoading || authLoading,
     };
+
   }, [permissions, auth]);
 }
 

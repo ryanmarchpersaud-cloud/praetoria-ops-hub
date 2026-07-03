@@ -317,6 +317,9 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     try { window.localStorage.setItem(PM_STORAGE_KEY, open ? '1' : '0'); } catch {}
   }, [open]);
 
+  const access = useModuleAccess();
+  const canSeeOwnerMessages = access.isOwnerOrAdmin || access.isPropertyManager;
+
   const items: { title: string; url: string; icon: any; end?: boolean; area?: AreaKey }[] = [
     { title: 'Dashboard', url: '/property-management', icon: LayoutDashboard, end: true },
     { title: 'Properties', url: '/property-management/properties', icon: Building2 },
@@ -328,10 +331,13 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Move-Outs', url: '/property-management/move-outs', icon: KeyRound },
     { title: 'Lease Renewals', url: '/property-management/lease-renewals', icon: CalendarClock },
     { title: 'Owner Approvals', url: '/property-management/owner-approvals', icon: ShieldCheck },
-    { title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare },
+    ...(canSeeOwnerMessages
+      ? [{ title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare }]
+      : []),
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
   ];
+
 
   const idleClass = 'hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300';
   const activeClass = 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold border-l-2 border-emerald-600 pl-[calc(0.5rem-2px)]';
