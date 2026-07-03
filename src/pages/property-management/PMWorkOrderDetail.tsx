@@ -35,6 +35,7 @@ export default function PMWorkOrderDetail() {
   const [completion, setCompletion] = useState('');
   const [tenantNote, setTenantNote] = useState('');
   const [signed, setSigned] = useState<Record<string, string>>({});
+  const [approvalOpen, setApprovalOpen] = useState(false);
 
   useEffect(() => {
     if (data?.id) {
