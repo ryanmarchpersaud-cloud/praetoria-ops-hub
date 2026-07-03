@@ -30,6 +30,7 @@ import { useBillingProfile } from '@/hooks/useInvoices';
 import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
+import { isChargeable } from '@/lib/billingProfile';
 
 function getStatusAfterTotalChange(invoice: any, nextTotal: number) {
   if (['Draft', 'Voided', 'Refunded'].includes(invoice.status)) return invoice.status;
@@ -873,16 +874,22 @@ export default function InvoiceDetail() {
               <CardContent className="text-sm space-y-2">
                 <div><span className="text-muted-foreground">Preference</span><p className="font-medium capitalize">{billingProfile.payment_preference?.replace('-', ' ')}</p></div>
                 {billingProfile.payment_method_present && (
-                  <div>
-                    <span className="text-muted-foreground">Card on File</span>
-                    <p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p>
-                    {(billingProfile as any).card_exp_month && (billingProfile as any).card_exp_year && (
-                      <p className="text-xs text-muted-foreground">Exp {String((billingProfile as any).card_exp_month).padStart(2, '0')}/{(billingProfile as any).card_exp_year}</p>
-                    )}
-                    {(billingProfile as any).default_payment_method_id && (
-                      <p className="text-xs text-accent">✓ Default</p>
-                    )}
-                  </div>
+                  isChargeable(billingProfile) ? (
+                    <div>
+                      <span className="text-muted-foreground">Card on File</span>
+                      <p className="font-medium capitalize">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p>
+                      {(billingProfile as any).card_exp_month && (billingProfile as any).card_exp_year && (
+                        <p className="text-xs text-muted-foreground">Exp {String((billingProfile as any).card_exp_month).padStart(2, '0')}/{(billingProfile as any).card_exp_year}</p>
+                      )}
+                      <p className="text-xs text-accent">✓ Default · Chargeable via Stripe</p>
+                    </div>
+                  ) : (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
+                      <span className="text-amber-800 text-xs font-semibold">Reference card on file (not chargeable)</span>
+                      <p className="font-medium capitalize text-sm">{billingProfile.card_brand} •••• {billingProfile.card_last4}</p>
+                      <p className="text-xs text-amber-900 mt-1">Ask the customer to complete payment setup in their portal to enable saved-card charges.</p>
+                    </div>
+                  )
                 )}
                 <div><span className="text-muted-foreground">Auto-pay</span><p className={`font-medium ${billingProfile.autopay_enabled ? 'text-success' : 'text-muted-foreground'}`}>{billingProfile.autopay_enabled ? 'Enabled' : 'Disabled'}</p></div>
               </CardContent>

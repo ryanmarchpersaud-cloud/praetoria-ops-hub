@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PropertyUsageBadge } from '@/components/PropertyUsageBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, CheckCircle2, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
 import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { Switch } from '@/components/ui/switch';
@@ -30,6 +30,7 @@ import { SelectJobsToInvoiceDialog } from '@/components/customer/SelectJobsToInv
 import { supabase } from '@/integrations/supabase/client';
 import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+import { isChargeable } from '@/lib/billingProfile';
 
 export default function CustomerDetail() {
   const { id } = useParams();
@@ -657,7 +658,7 @@ export default function CustomerDetail() {
         {/* Sidebar: Related Records */}
         <div className="space-y-3">
           {/* Payment Method Status */}
-          {id && <PaymentMethodCard customerId={id} />}
+          {id && <PaymentMethodCard customerId={id} onCompleteSetup={() => setInviteOpen(true)} />}
           {/* Properties */}
           <RelatedRecordCard
             title="Properties"
@@ -895,7 +896,7 @@ export default function CustomerDetail() {
 }
 
 /* ─── Payment Method Status Card (Admin View) ──────── */
-function PaymentMethodCard({ customerId }: { customerId: string }) {
+function PaymentMethodCard({ customerId, onCompleteSetup }: { customerId: string; onCompleteSetup: () => void }) {
   const { data: bp, refetch } = useBillingProfile(customerId);
   const [manualOpen, setManualOpen] = useState(false);
   const [cardBrand, setCardBrand] = useState('visa');
@@ -983,32 +984,52 @@ function PaymentMethodCard({ customerId }: { customerId: string }) {
         </CardHeader>
         <CardContent>
           {bp?.payment_method_present ? (
-            <div className="space-y-1">
-              <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
-              {(bp as any).card_exp_month && (bp as any).card_exp_year && (
+            isChargeable(bp) ? (
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-medium">
+                  <CheckCircle2 className="h-3 w-3" /> Chargeable · Stripe
+                </div>
+                <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
+                {(bp as any).card_exp_month && (bp as any).card_exp_year && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Expires {String((bp as any).card_exp_month).padStart(2, '0')}/{(bp as any).card_exp_year}
+                  </p>
+                )}
+                <p className="text-[10px] text-accent">✓ Default payment method</p>
                 <p className="text-[10px] text-muted-foreground">
-                  Expires {String((bp as any).card_exp_month).padStart(2, '0')}/{(bp as any).card_exp_year}
+                  {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
                 </p>
-              )}
-              {(bp as any).default_payment_method_id && (
-                <p className="text-[10px] text-accent flex items-center gap-1">
-                  ✓ Default payment method
+                <p className="text-[10px] text-muted-foreground">
+                  Preference: {bp.payment_preference?.replace('_', ' ')}
                 </p>
-              )}
-              <p className="text-[10px] text-muted-foreground">
-                {bp.autopay_enabled ? '✅ Auto-pay enabled' : 'Manual payments'}
-              </p>
-              <p className="text-[10px] text-muted-foreground">
-                Preference: {bp.payment_preference?.replace('_', ' ')}
-              </p>
-              <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-destructive mt-1" onClick={handleRemoveCard} disabled={saving}>
-                Remove Card
-              </Button>
-            </div>
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-destructive mt-1" onClick={handleRemoveCard} disabled={saving}>
+                  Remove Card
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 p-2">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-medium">
+                  <AlertTriangle className="h-3 w-3" /> Reference only — not chargeable
+                </div>
+                <p className="text-sm font-medium capitalize">{bp.card_brand} •••• {bp.card_last4}</p>
+                <p className="text-[10px] text-amber-900">
+                  This card was entered for records only. To charge it, complete payment setup with the customer.
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <Button size="sm" variant="default" className="h-7 px-2 text-[10px]" onClick={onCompleteSetup}>
+                    Complete payment setup
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-destructive" onClick={handleRemoveCard} disabled={saving}>
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            )
           ) : (
             <p className="text-xs text-muted-foreground">No card on file</p>
           )}
         </CardContent>
+
       </Card>
 
       {/* Manual Card Entry Dialog */}
@@ -1016,7 +1037,7 @@ function PaymentMethodCard({ customerId }: { customerId: string }) {
         <DialogContent className="max-w-xs">
           <DialogHeader>
             <DialogTitle className="text-base flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> {bp?.payment_method_present ? 'Update' : 'Add'} Card on File
+              <CreditCard className="h-4 w-4" /> {bp?.payment_method_present ? 'Update' : 'Add'} Reference Card (not chargeable)
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
@@ -1044,7 +1065,9 @@ function PaymentMethodCard({ customerId }: { customerId: string }) {
                 <Input type="number" min="2024" max="2040" value={cardExpYear} onChange={e => setCardExpYear(e.target.value)} placeholder="YYYY" className="h-9" />
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground">Only safe metadata is stored — no full card numbers.</p>
+            <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded p-1.5">
+              ⚠️ Reference only — this does NOT create a chargeable saved card. To collect payment, ask the customer to complete payment setup in their portal.
+            </p>
             <Button className="w-full h-9" onClick={handleSaveCard} disabled={saving || cardLast4.length !== 4}>
               {saving ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
               Save Card Info

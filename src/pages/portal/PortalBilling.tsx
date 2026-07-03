@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { AppDownloadBadges } from '@/components/AppDownloadBadges';
+import { isChargeable } from '@/lib/billingProfile';
 
 export default function PortalBilling() {
   const { user } = useAuth();
@@ -391,7 +392,7 @@ export default function PortalBilling() {
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>Verifying saved card...</span>
             </div>
-          ) : billingProfile?.payment_method_present ? (
+          ) : billingProfile?.payment_method_present && isChargeable(billingProfile) ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -423,6 +424,22 @@ export default function PortalBilling() {
                   </Button>
                 </div>
               </div>
+            </div>
+          ) : billingProfile?.payment_method_present ? (
+            <div className="space-y-3 rounded-md border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                <div className="text-sm">
+                  <p className="font-semibold text-amber-900">Payment setup not complete</p>
+                  <p className="text-xs text-amber-800 mt-0.5">
+                    We have a reference card ({billingProfile.card_brand} •••• {billingProfile.card_last4}) on file, but it isn't set up for charges yet. Complete payment setup to enable saved-card payments.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" onClick={handleSaveCard} disabled={savingCard} className="w-full">
+                {savingCard ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5 mr-1.5" />}
+                Complete payment setup
+              </Button>
             </div>
           ) : (
             <div className="space-y-2">
