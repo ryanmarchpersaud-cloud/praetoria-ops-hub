@@ -15,6 +15,7 @@ import {
   APPROVAL_STATUSES, APPROVAL_CATEGORIES, APPROVAL_PRIORITIES,
 } from '@/hooks/pm/useOwnerApprovals';
 import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
+import { MessageOwnerFromApprovalButton } from '@/components/pm/MessageOwnerFromApprovalButton';
 import { formatStatusLabel } from '@/lib/statusLabel';
 import { toast } from 'sonner';
 
