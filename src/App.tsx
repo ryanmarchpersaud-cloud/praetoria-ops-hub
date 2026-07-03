@@ -891,6 +891,8 @@ function AppRoutes() {
         <Route path="/pm-staff/move-ins" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveIns /></Suspense>} />
         <Route path="/pm-staff/move-outs" element={<Suspense fallback={<RouteLoading />}><PMStaffMoveOuts /></Suspense>} />
         <Route path="/pm-staff/lease-renewals" element={<Suspense fallback={<RouteLoading />}><PMStaffLeaseRenewals /></Suspense>} />
+        <Route path="/pm-staff/inspections" element={<Suspense fallback={<RouteLoading />}><PMStaffInspections /></Suspense>} />
+        <Route path="/pm-staff/inspections/:id" element={<Suspense fallback={<RouteLoading />}><PMStaffInspectionDetail /></Suspense>} />
         <Route path="/pm-staff/more" element={<Suspense fallback={<RouteLoading />}><PMStaffMore /></Suspense>} />
         <Route path="/pm-staff/account" element={<Suspense fallback={<RouteLoading />}><PMStaffAccount /></Suspense>} />
         <Route path="/pm-staff/profile" element={<Suspense fallback={<RouteLoading />}><PMStaffProfile /></Suspense>} />
