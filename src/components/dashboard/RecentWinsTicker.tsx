@@ -51,6 +51,7 @@ export function RecentWinsTicker() {
 
   const { data: approved, isLoading: l2 } = useQuery({
     queryKey: ['wins_quotes', cutoff],
+    staleTime: 60000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quotes')
