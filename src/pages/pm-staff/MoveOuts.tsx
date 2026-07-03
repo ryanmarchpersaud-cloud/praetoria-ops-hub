@@ -155,8 +155,8 @@ export default function MoveOuts() {
 
 function MoveOutDetail({ moveOut, staff, canManage, onUpdate }: any) {
   const { user } = useAuth();
-  const { isOpsStaff, isPropertyManager } = useAuthorization();
-  const canReassign = isOpsStaff || isPropertyManager;
+  const auth = useAuthorization();
+  const canReassign = auth.isAdmin || auth.isManager || auth.isPropertyManager;
   const itemUpdate = useUpdateRecord('pm_move_out_checklist_items', ['pm_move_out_items', moveOut.id]);
 
   const { data: items = [] } = useQuery({
