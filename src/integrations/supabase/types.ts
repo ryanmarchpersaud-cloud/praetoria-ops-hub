@@ -7476,6 +7476,107 @@ export type Database = {
           },
         ]
       }
+      pm_receipts: {
+        Row: {
+          amount: number
+          cleared_at: string
+          created_at: string
+          id: string
+          issued_at: string
+          lease_id: string | null
+          method: Database["public"]["Enums"]["pm_payment_method"]
+          notes: string | null
+          payment_id: string
+          property_id: string | null
+          receipt_number: string
+          refund_note: string | null
+          refunded_at: string | null
+          reversal_note: string | null
+          reversed_at: string | null
+          status: Database["public"]["Enums"]["pm_receipt_status"]
+          tenant_id: string
+          updated_at: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: {
+          amount: number
+          cleared_at: string
+          created_at?: string
+          id?: string
+          issued_at?: string
+          lease_id?: string | null
+          method: Database["public"]["Enums"]["pm_payment_method"]
+          notes?: string | null
+          payment_id: string
+          property_id?: string | null
+          receipt_number?: string
+          refund_note?: string | null
+          refunded_at?: string | null
+          reversal_note?: string | null
+          reversed_at?: string | null
+          status?: Database["public"]["Enums"]["pm_receipt_status"]
+          tenant_id: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Update: {
+          amount?: number
+          cleared_at?: string
+          created_at?: string
+          id?: string
+          issued_at?: string
+          lease_id?: string | null
+          method?: Database["public"]["Enums"]["pm_payment_method"]
+          notes?: string | null
+          payment_id?: string
+          property_id?: string | null
+          receipt_number?: string
+          refund_note?: string | null
+          refunded_at?: string | null
+          reversal_note?: string | null
+          reversed_at?: string | null
+          status?: Database["public"]["Enums"]["pm_receipt_status"]
+          tenant_id?: string
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_receipts_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_receipts_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "pm_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_receipts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_receipts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_showings: {
         Row: {
           assigned_to: string | null
@@ -12212,6 +12313,7 @@ export type Database = {
         Returns: number
       }
       generate_pm_credit_number: { Args: never; Returns: string }
+      generate_pm_receipt_number: { Args: never; Returns: string }
       get_agreement_by_token: {
         Args: { _token: string }
         Returns: {
@@ -12615,6 +12717,7 @@ export type Database = {
         | "condo"
         | "commercial"
         | "other"
+      pm_receipt_status: "issued" | "superseded" | "voided"
       pm_tenant_status: "active" | "pending" | "former"
       pm_unit_status: "vacant" | "occupied" | "pending" | "inactive"
       property_status: "Active" | "Inactive" | "Seasonal" | "Pending"
@@ -12993,6 +13096,7 @@ export const Constants = {
         "commercial",
         "other",
       ],
+      pm_receipt_status: ["issued", "superseded", "voided"],
       pm_tenant_status: ["active", "pending", "former"],
       pm_unit_status: ["vacant", "occupied", "pending", "inactive"],
       property_status: ["Active", "Inactive", "Seasonal", "Pending"],
