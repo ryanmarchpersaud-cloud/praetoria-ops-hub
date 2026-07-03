@@ -27,7 +27,7 @@ const STATUSES = [
 export default function MoveOuts() {
   const { user } = useAuth();
   const auth = useAuthorization();
-  const canCreate = auth.isAdmin || auth.isManager || auth.isOpsManager || auth.isPropertyManager;
+  const canCreate = auth.isAdmin || auth.isManager || auth.isPropertyManager;
   const { data = [] } = useMoveOutChecklists();
   const { data: staff = [] } = usePMStaffUsers();
   const createMut = useCreateRecord('pm_move_out_checklists', ['pm_move_out_checklists']);
