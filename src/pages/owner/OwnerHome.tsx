@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { OwnerLayout } from '@/components/owner/OwnerLayout';
 import { OwnerRenewalsCard } from '@/components/owner/OwnerRenewalsCard';
 import { OwnerApprovalsCard } from '@/components/owner/OwnerApprovalsCard';
+import { OwnerMessagesCard } from '@/components/owner/OwnerMessagesCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Wrench, Mail, ExternalLink } from 'lucide-react';
@@ -77,6 +78,8 @@ export default function OwnerHome() {
         </Card>
 
         <OwnerApprovalsCard />
+
+        <OwnerMessagesCard />
 
         <OwnerRenewalsCard />
 

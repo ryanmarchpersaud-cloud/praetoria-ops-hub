@@ -270,7 +270,9 @@ const PMStaffMoveOuts = lazy(() => import("./pages/pm-staff/MoveOuts"));
 const PMStaffLeaseRenewals = lazy(() => import("./pages/pm-staff/LeaseRenewals"));
 const PMLeaseRenewalsList = lazy(() => import("./pages/property-management/PMLeaseRenewalsList"));
 const PMOwnerApprovalsList = lazy(() => import("./pages/property-management/PMOwnerApprovalsList"));
+const PMOwnerMessagesList = lazy(() => import("./pages/property-management/PMOwnerMessagesList"));
 const OwnerApprovals = lazy(() => import("./pages/owner/OwnerApprovals"));
+const OwnerMessages = lazy(() => import("./pages/owner/OwnerMessages"));
 const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
 const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
 const PMStaffProfile = lazy(() => import("./pages/pm-staff/Profile"));
@@ -728,6 +730,7 @@ function AppRoutes() {
         <Route path="/property-management/move-outs" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMStaffMoveOuts /></Suspense></ModuleGuard>} />
         <Route path="/property-management/lease-renewals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeaseRenewalsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-approvals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerApprovalsList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/owner-messages" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerMessagesList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/work-orders/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMWorkOrderDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/referrals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantReferralsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/expenses" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMExpensesList /></Suspense></ModuleGuard>} />
@@ -856,6 +859,7 @@ function AppRoutes() {
         <Route path="/owner/statements/:id/print" element={<Suspense fallback={<RouteLoading />}><OwnerStatementPrint /></Suspense>} />
         <Route path="/owner/account" element={<Suspense fallback={<RouteLoading />}><OwnerAccount /></Suspense>} />
         <Route path="/owner/approvals" element={<Suspense fallback={<RouteLoading />}><OwnerApprovals /></Suspense>} />
+        <Route path="/owner/messages" element={<Suspense fallback={<RouteLoading />}><OwnerMessages /></Suspense>} />
       </Route>
 
       <Route element={<PMStaffRoute />}>

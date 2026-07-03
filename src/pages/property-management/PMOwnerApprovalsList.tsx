@@ -15,6 +15,7 @@ import {
   APPROVAL_STATUSES, APPROVAL_CATEGORIES, APPROVAL_PRIORITIES,
 } from '@/hooks/pm/useOwnerApprovals';
 import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
+import { MessageOwnerFromApprovalButton } from '@/components/pm/MessageOwnerFromApprovalButton';
 import { formatStatusLabel } from '@/lib/statusLabel';
 import { toast } from 'sonner';
 
@@ -241,6 +242,7 @@ function ApprovalDetail({
       <div className="flex flex-wrap gap-2 pt-2 border-t">
         {canSend && <Button size="sm" onClick={onSend}><Send className="h-3 w-3 mr-1" /> Send to owner</Button>}
         {canComplete && <Button size="sm" variant="outline" onClick={onComplete}><CheckCircle2 className="h-3 w-3 mr-1" /> Mark completed</Button>}
+        <MessageOwnerFromApprovalButton approval={{ id: approval.id, title: approval.title, owner_id: approval.owner_id, property_id: approval.property_id, unit_id: approval.unit_id }} />
         {canCancel && <Button size="sm" variant="outline" className="text-rose-700 border-rose-200 hover:bg-rose-50" onClick={onCancel}><XCircle className="h-3 w-3 mr-1" /> Cancel</Button>}
       </div>
 

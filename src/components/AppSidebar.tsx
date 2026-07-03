@@ -328,6 +328,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Move-Outs', url: '/property-management/move-outs', icon: KeyRound },
     { title: 'Lease Renewals', url: '/property-management/lease-renewals', icon: CalendarClock },
     { title: 'Owner Approvals', url: '/property-management/owner-approvals', icon: ShieldCheck },
+    { title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare },
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
   ];
