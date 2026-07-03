@@ -520,16 +520,19 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
       {open && (
         <SidebarGroupContent>
           <SidebarMenu>
-            {mainItems.map((item) => (
-              <SidebarMenuItem key={item.url}>
-                <SidebarMenuButton asChild>
-                  <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
-                    <item.icon className="mr-2 h-4 w-4" />
-                    <span>{item.title}</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {mainItems.map((item) => {
+              const isDashboard = item.title === 'Dashboard';
+              return (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={item.url} end={item.end} className={idleClass} activeClassName={activeClass}>
+                      <item.icon className={`mr-2 h-4 w-4 ${isDashboard ? 'text-yellow-400' : ''}`} />
+                      <span className={isDashboard ? 'text-yellow-400' : ''}>{item.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
           {subgroups.map((g) => (
             <PMSubgroupBlock key={g.key} group={g} defaultOpen={isActiveIn(g.items)} />
