@@ -5556,6 +5556,7 @@ export type Database = {
       pm_applications: {
         Row: {
           admin_review_status: string | null
+          assigned_to: string | null
           created_at: string
           created_by: string | null
           desired_move_in: string | null
@@ -5570,6 +5571,7 @@ export type Database = {
         }
         Insert: {
           admin_review_status?: string | null
+          assigned_to?: string | null
           created_at?: string
           created_by?: string | null
           desired_move_in?: string | null
@@ -5584,6 +5586,7 @@ export type Database = {
         }
         Update: {
           admin_review_status?: string | null
+          assigned_to?: string | null
           created_at?: string
           created_by?: string | null
           desired_move_in?: string | null
@@ -6369,38 +6372,71 @@ export type Database = {
       }
       pm_move_out_checklists: {
         Row: {
+          admin_notes: string | null
           assigned_to: string | null
           created_at: string
           created_by: string | null
+          final_meter_reading: string | null
+          garage_opener_returned: boolean
           id: string
+          inspection_date: string | null
+          keys_returned: boolean
           lease_id: string | null
+          move_out_date: string | null
           notes: string | null
+          notice_received_date: string | null
+          parking_pass_returned: boolean
           property_id: string | null
           status: string
+          tenant_id: string | null
+          tenant_instructions_sent_at: string | null
+          tenant_visible_notes: string | null
           unit_id: string | null
           updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           assigned_to?: string | null
           created_at?: string
           created_by?: string | null
+          final_meter_reading?: string | null
+          garage_opener_returned?: boolean
           id?: string
+          inspection_date?: string | null
+          keys_returned?: boolean
           lease_id?: string | null
+          move_out_date?: string | null
           notes?: string | null
+          notice_received_date?: string | null
+          parking_pass_returned?: boolean
           property_id?: string | null
           status?: string
+          tenant_id?: string | null
+          tenant_instructions_sent_at?: string | null
+          tenant_visible_notes?: string | null
           unit_id?: string | null
           updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           assigned_to?: string | null
           created_at?: string
           created_by?: string | null
+          final_meter_reading?: string | null
+          garage_opener_returned?: boolean
           id?: string
+          inspection_date?: string | null
+          keys_returned?: boolean
           lease_id?: string | null
+          move_out_date?: string | null
           notes?: string | null
+          notice_received_date?: string | null
+          parking_pass_returned?: boolean
           property_id?: string | null
           status?: string
+          tenant_id?: string | null
+          tenant_instructions_sent_at?: string | null
+          tenant_visible_notes?: string | null
           unit_id?: string | null
           updated_at?: string
         }
@@ -6420,10 +6456,105 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pm_move_out_checklists_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pm_move_out_checklists_unit_id_fkey"
             columns: ["unit_id"]
             isOneToOne: false
             referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_move_out_inspection_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          inspection_id: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          inspection_id: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          inspection_id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_move_out_inspection_photos_inspection_id_fkey"
+            columns: ["inspection_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_out_inspections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pm_move_out_inspections: {
+        Row: {
+          admin_only_notes: string | null
+          cleaning_notes: string | null
+          created_at: string
+          damage_notes: string | null
+          general_condition_notes: string | null
+          id: string
+          inspected_at: string | null
+          inspected_by: string | null
+          keys_remotes_returned: boolean
+          move_out_id: string
+          tenant_visible: boolean
+          updated_at: string
+        }
+        Insert: {
+          admin_only_notes?: string | null
+          cleaning_notes?: string | null
+          created_at?: string
+          damage_notes?: string | null
+          general_condition_notes?: string | null
+          id?: string
+          inspected_at?: string | null
+          inspected_by?: string | null
+          keys_remotes_returned?: boolean
+          move_out_id: string
+          tenant_visible?: boolean
+          updated_at?: string
+        }
+        Update: {
+          admin_only_notes?: string | null
+          cleaning_notes?: string | null
+          created_at?: string
+          damage_notes?: string | null
+          general_condition_notes?: string | null
+          id?: string
+          inspected_at?: string | null
+          inspected_by?: string | null
+          keys_remotes_returned?: boolean
+          move_out_id?: string
+          tenant_visible?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_move_out_inspections_move_out_id_fkey"
+            columns: ["move_out_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_out_checklists"
             referencedColumns: ["id"]
           },
         ]
@@ -6920,6 +7051,8 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          move_in_id: string | null
+          move_out_id: string | null
           notes: string | null
           priority: string | null
           property_id: string | null
@@ -6937,6 +7070,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          move_in_id?: string | null
+          move_out_id?: string | null
           notes?: string | null
           priority?: string | null
           property_id?: string | null
@@ -6954,6 +7089,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          move_in_id?: string | null
+          move_out_id?: string | null
           notes?: string | null
           priority?: string | null
           property_id?: string | null
@@ -6969,6 +7106,20 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "pm_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_staff_tasks_move_in_id_fkey"
+            columns: ["move_in_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_in_checklists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_staff_tasks_move_out_id_fkey"
+            columns: ["move_out_id"]
+            isOneToOne: false
+            referencedRelation: "pm_move_out_checklists"
             referencedColumns: ["id"]
           },
           {
