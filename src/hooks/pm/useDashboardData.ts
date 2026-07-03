@@ -185,9 +185,13 @@ export function usePMStaffActivity(enabled: boolean) {
     queryKey: ['pm_dash_staff_activity'],
     enabled,
     queryFn: async () => {
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-      const startISO = startOfDay.toISOString();
+      // Regina start-of-day (America/Regina is UTC-6, no DST)
+      const now = new Date();
+      const reginaNow = new Date(now.getTime() - 6 * 3600_000);
+      const reginaMidnightUtcMs = Date.UTC(
+        reginaNow.getUTCFullYear(), reginaNow.getUTCMonth(), reginaNow.getUTCDate()
+      ) + 6 * 3600_000;
+      const startISO = new Date(reginaMidnightUtcMs).toISOString();
 
       // Fetch PM staff role holders
       const { data: roleRows } = await supabase.from('user_roles' as any)
@@ -202,15 +206,17 @@ export function usePMStaffActivity(enabled: boolean) {
       }
 
       const [tsRows, appsWaiting, profs] = await Promise.all([
+        // Include shifts started today (Regina) OR still-active shifts regardless of start
         supabase.from('timesheets' as any)
           .select('user_id, clock_in, clock_out, status')
           .in('user_id', pmIds)
-          .gte('clock_in', startISO)
+          .or(`clock_in.gte.${startISO},clock_out.is.null`)
           .order('clock_in', { ascending: false }),
         supabase.from('pm_applications' as any).select('id', { count: 'exact', head: true })
           .in('admin_review_status', ['in_review', 'pending']),
         supabase.from('profiles' as any).select('user_id, display_name').in('user_id', pmIds),
       ]);
+
 
       const nameMap = new Map<string, string>();
       (profs.data ?? []).forEach((p: any) => nameMap.set(p.user_id, p.display_name || 'PM Staff'));
