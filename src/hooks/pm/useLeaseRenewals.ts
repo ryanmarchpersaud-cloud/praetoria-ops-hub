@@ -139,16 +139,23 @@ export function useTenantRespondRenewal() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async ({ id, response }: { id: string; response: 'interested' | 'questions' | 'not_renewing' }) => {
+      const status = response === 'interested' ? 'tenant_accepted'
+                   : response === 'not_renewing' ? 'tenant_declined'
+                   : 'tenant_reviewing';
       const { data, error } = await supabase.from('pm_lease_renewals' as any)
         .update({
           tenant_response: response,
           tenant_responded_at: new Date().toISOString(),
-          status: response === 'interested' ? 'tenant_accepted'
-                : response === 'not_renewing' ? 'tenant_declined'
-                : 'tenant_reviewing',
+          status,
         })
         .eq('id', id).select().single();
       if (error) throw error;
+      await supabase.from('pm_lease_renewal_activity' as any).insert({
+        renewal_id: id,
+        event_type: 'tenant_response',
+        message: `Tenant responded: ${response.replace('_', ' ')}`,
+        actor_id: user?.id,
+      });
       return data;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant_renewal', user?.id] }); },
