@@ -1052,7 +1052,7 @@ export default function EmployeeDetail() {
               <Select value={ef('role_title')} onValueChange={v => setEf('role_title', v)}>
                 <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                 <SelectContent>
-                  {['Field Technician', 'Lead Worker', 'Crew Lead', 'Supervisor', 'Dispatcher', 'Equipment Operator', 'Snow Plow Driver', 'Landscaper', 'General Labourer', 'Cleaner', 'Site Inspector', 'Safety Officer', 'Maintenance Worker', 'Driver', 'Foreman', 'Operations Manager', 'Admin Assistant', 'Estimator'].map(r => (
+                  {['Field Technician', 'Lead Worker', 'Crew Lead', 'Supervisor', 'Dispatcher', 'Equipment Operator', 'Snow Plow Driver', 'Landscaper', 'General Labourer', 'Cleaner', 'Site Inspector', 'Safety Officer', 'Maintenance Worker', 'Driver', 'Foreman', 'Operations Manager', 'Property Manager', 'Leasing Agent', 'Admin Assistant', 'Estimator'].map(r => (
                     <SelectItem key={r} value={r}>{r}</SelectItem>
                   ))}
                 </SelectContent>
