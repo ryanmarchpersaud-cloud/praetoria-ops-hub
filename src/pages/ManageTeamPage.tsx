@@ -610,6 +610,11 @@ export default function ManageTeamPage() {
                 </div>
               </div>
 
+              {/* PM Staff Role (Property Management portal) */}
+              {editingUserId && (
+                <PMStaffRoleSection userId={editingUserId} onChanged={invalidateAll} />
+              )}
+
               {/* Notes */}
               <div className="space-y-1.5">
                 <Label className="text-xs">Notes</Label>
