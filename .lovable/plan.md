@@ -1,63 +1,83 @@
-## Phase 7.1 — Full Leasing Intake Forms (Additive Only)
 
-Goal: replace the current minimal Prospect / Showing / Task dialogs in the PM Staff portal with real, industry-standard leasing intake forms. Additive schema only — nothing existing breaks, seeded test records stay valid.
+# Phase 10 — Property Management Document Hub
 
-### 1. Database migration (all new columns nullable, no policy changes)
+Additive only. No changes to Android/iOS packaging, Stripe, Finance, HR, payroll, Worker/Sub/Customer portals, tenant ledger, owner statements logic, invoices, jobs, or unrelated systems.
 
-**`pm_prospects`** — add:
-- Identity: `preferred_name`, `date_of_birth` (date), `gender` (text, optional)
-- Government ID: `id_type` (enum-like text: drivers_license / sk_id / passport / other), `id_number`, `id_expiry` (date), `id_photo_path` (storage path, optional)
-- Contact: `alternate_phone`, `preferred_contact_method` (email/phone/sms)
-- Current housing: `current_address`, `current_move_in_date`, `current_monthly_rent`, `reason_for_leaving`, `current_landlord_name`, `current_landlord_phone`
-- Previous housing: `previous_address`, `previous_landlord_name`, `previous_landlord_phone`
-- Employment: `employer_name`, `job_title`, `employment_start_date`, `gross_monthly_income`, `supervisor_name`, `supervisor_phone`, `secondary_income_source`, `secondary_income_amount`, `income_proof_path`
-- Household: `occupant_count`, `co_applicants` (jsonb — array of {name, relationship, dob}), `has_pets`, `pets` (jsonb — array of {type, breed, weight, name}), `is_smoker`, `vehicles` (jsonb — array of {make, model, year, plate})
-- Desired unit: `interested_property_id` (fk properties, nullable), `interested_unit_id` (fk pm_units, nullable), `desired_lease_term_months`, `budget_max`
-- Consents (with timestamps): `credit_check_consent`, `credit_check_consent_at`, `background_check_consent`, `background_check_consent_at`, `reference_check_consent`, `reference_check_consent_at`, `consent_ip`
+## 1. Database
 
-**`pm_showings`** — add:
-- `duration_minutes` (default 30), `meeting_location`, `confirmation_status` (unconfirmed/confirmed/declined), `confirmed_at`, `no_show` (bool), `feedback_rating` (1-5), `feedback_notes`, `interest_level` (low/medium/high/none)
+New table `public.pm_documents` with fields:
+- `id`, `created_at`, `updated_at`, `uploaded_by`
+- `title`, `description`, `document_type`, `category`
+- Relations (all nullable): `property_id`, `unit_id`, `owner_id`, `tenant_id`, `lease_id`, `maintenance_request_id`, `work_order_id`, `expense_id`, `owner_statement_id`, `owner_approval_id`, `owner_thread_id`, `tenant_thread_id`, `lease_renewal_id`, `move_in_id`, `move_out_id`, `inspection_id`, `notice_id`
+- `file_path`, `file_name`, `file_size`, `mime_type`
+- `visibility` enum: `internal_only | tenant_visible | owner_visible | tenant_and_owner_visible`
+- Convenience booleans `owner_visible`, `tenant_visible` (derived, kept for filtering)
+- `status` enum: `active | archived | expired | deleted`
+- `expires_at` (nullable)
 
-**`pm_staff_tasks`** — add:
-- `category` (general/showing/renewal/maintenance/inspection/screening/documents/other), `checklist` (jsonb — array of {label, done}), `reminder_at` (timestamptz), `attachments` (jsonb — array of {name, path}), `linked_prospect_id` (fk pm_prospects, nullable), `linked_showing_id` (fk pm_showings, nullable)
+Grants: `SELECT/INSERT/UPDATE/DELETE` to `authenticated`; `ALL` to `service_role`. Enable RLS.
 
-No RLS/grant changes required — new columns inherit existing table policies.
+RLS policies:
+- ops staff (`is_ops_staff` / property_manager role): full manage
+- tenant: `SELECT` where `visibility in (tenant_visible, tenant_and_owner_visible)` AND doc's `tenant_id` maps to the current user's tenant record
+- owner: `SELECT` where `visibility in (owner_visible, tenant_and_owner_visible)` AND doc's `owner_id` matches current owner (or `property_id` in owner's assigned properties)
+- workers/subs/customers/anon: no access
+- `updated_at` trigger
 
-### 2. Storage
-Add private bucket `pm-prospect-docs` for ID photos and income proof. RLS: only ops staff (PM/admin/leasing agent) can read/write. Signed URLs for display.
+## 2. Storage
 
-### 3. Form components (rewrite dialogs — same trigger points)
+Create private bucket `pm-documents` (public=false). Storage.objects RLS:
+- ops staff: full manage under `pm-documents/`
+- tenant/owner: `SELECT` only when a matching `pm_documents` row exists for their scope and visibility (via EXISTS check on `file_path`)
+- others: no access
+- All downloads go through signed URLs (edge helper or `supabase.storage.createSignedUrl`)
 
-Files:
-- `src/components/pm-staff/ProspectDialog.tsx` — multi-section form with tabs/accordion: Identity · Contact · Current Housing · Previous Housing · Employment & Income · Household (dynamic co-applicant/pet/vehicle rows) · Desired Unit · Consents. Zod validation, file upload for ID photo + income proof.
-- `src/components/pm-staff/ShowingDialog.tsx` — Prospect picker, date/time, duration, type, meeting location, agent, notes; after-showing section (only if past): confirmation, no-show, interest level, feedback.
-- `src/components/pm-staff/TaskDialog.tsx` — Title, description, category, priority, due date, reminder, assignee, linked prospect/showing, checklist builder (add/remove rows), attachments.
+## 3. Admin route
 
-Reused pattern: sub-components declared outside main component (per Core rule), semantic tokens only.
+`/property-management/documents` — `PMDocumentsList.tsx`
+- Filters: property, unit, owner, tenant, category/type, visibility, search
+- Actions: Upload (with picker of related record + visibility + type), archive, download (signed URL), view
+- Reusable `<PMDocumentUploadDialog>` component
 
-### 4. Hooks updates
-- `src/hooks/pm/useProspects.ts` — extend insert/update payload types; keep existing calls backward-compatible (all new fields optional).
-- `src/hooks/pm/useShowings.ts` — same.
-- `src/hooks/pm/usePMStaffTasks.ts` — same, plus checklist toggle helper.
+## 4. Integration entry points (Phase 10 scope)
 
-### 5. Detail views (light additions, read-only)
-- Prospect detail page: show all captured fields grouped by section, redact SIN, show ID photo via signed URL, show consent audit stamps.
-- Showing card: show duration, meeting spot, confirmation badge, feedback after completion.
-- Task card: show category chip, checklist progress "3/5", reminder time.
+Add "Documents" section / "Upload Document" button to:
+- PMPropertyDetail
+- PMTenantDetail
+- PMOwnerDetail
+- PMLeaseDetail
+- PMMaintenanceRequestDetail
+- PMWorkOrderDetail
 
-### 6. Out of scope (explicitly not touched)
-Android, iOS, Play Store, App Store, icons, signing, package name, Stripe, saved cards, invoices, tenant ledger, owner statements, owner payouts, Finance, HR, payroll, pay stubs, service jobs, visits, worker/subcontractor/customer portals, tenant portal, owner portal, lease renewals workflow, owner approvals workflow, notifications.
+(Move-in/Move-out/renewal detail pages don't exist yet as standalone detail routes; deferred as noted.)
 
-### 7. Verification
-- Existing 3 seeded prospects still load in list and detail (all new fields null).
-- New prospect can be created with only Name (required) — all other fields optional.
-- New prospect can be created with the full intake.
-- Showings and Tasks unchanged for existing records; new fields editable.
-- No RLS regressions (existing policies untouched).
-- No other portals or modules changed.
+## 5. Tenant / Owner portals
 
-### Technical notes
-- Migration: single file, `ALTER TABLE ... ADD COLUMN IF NOT EXISTS ...` for each; new FKs use `ON DELETE SET NULL`.
-- Storage bucket created with `supabase--storage_create_bucket` (private).
-- Zod schemas colocated with each dialog for client-side validation; server-side length limits enforced by column types.
-- No changes to `pm_staff_tasks_status_check` constraint; existing `'open'` status remains default.
+- `TenantDocuments.tsx`: add PM Documents section listing tenant-visible docs for the tenant's lease/unit/property with signed-URL download.
+- `OwnerDocuments.tsx`: add PM Documents section listing owner-visible docs for owner's assigned properties with signed-URL download.
+- Existing customer/tenant/owner document tables remain untouched.
+
+## 6. Navigation
+
+- Admin sidebar (Property Management): add "Documents" link → `/property-management/documents`.
+- Tenant/Owner: reuse existing Documents pages — no new bottom-nav entries.
+
+## 7. Not built (deferred, per spec)
+
+E-signature, legal generation, public links, SMS/email delivery, OCR, AI review, tenant↔owner sharing, worker/sub access, HR/Finance/Stripe changes, leasing-agent per-thread access, move-in/out/renewal/notice detail attach buttons.
+
+## 8. QA (manual)
+
+1. Admin uploads `internal_only` doc → tenant & owner cannot see.
+2. Admin uploads `tenant_visible` linked to tenant A → tenant A sees, tenant B does not, owner does not.
+3. Admin uploads `owner_visible` linked to owner X / property P → owner X sees, owner Y does not, tenant does not.
+4. Worker/sub/customer/anon → no access.
+5. Signed URLs open; no public URL is generated.
+6. No other systems touched.
+
+## Technical notes
+
+- Migration is one call (schema only). Data reads/writes happen from the app after regenerated types land.
+- Signed URL TTL: 3600s default.
+- Reuse existing `has_role` / `is_ops_staff` helpers; do not add new role tables.
+- Table follows the required order: CREATE → GRANT → ENABLE RLS → POLICIES → trigger.
