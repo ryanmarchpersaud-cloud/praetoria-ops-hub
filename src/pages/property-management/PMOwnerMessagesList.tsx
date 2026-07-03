@@ -216,11 +216,31 @@ function ThreadDialog({ thread, onClose, owners }: { thread: OwnerThread | null;
         </DialogHeader>
 
         <div className="flex flex-wrap gap-2 items-center pb-2 border-b">
-          <Select value={thread.status} onValueChange={v => update.mutate({ id: thread.id, patch: { status: v as OwnerThreadStatus } })}>
+          <Select
+            value={thread.status}
+            onValueChange={async v => {
+              try {
+                await update.mutateAsync({ id: thread.id, patch: { status: v as OwnerThreadStatus } });
+                toast.success(`Status updated to ${formatStatusLabel(v)}`);
+              } catch (e: any) {
+                toast.error(e?.message || 'Failed to update status');
+              }
+            }}
+          >
             <SelectTrigger className="h-8 text-xs w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{formatStatusLabel(s)}</SelectItem>)}</SelectContent>
           </Select>
-          <Select value={thread.priority} onValueChange={v => update.mutate({ id: thread.id, patch: { priority: v as any } })}>
+          <Select
+            value={thread.priority}
+            onValueChange={async v => {
+              try {
+                await update.mutateAsync({ id: thread.id, patch: { priority: v as any } });
+                toast.success(`Priority set to ${formatStatusLabel(v)}`);
+              } catch (e: any) {
+                toast.error(e?.message || 'Failed to update priority');
+              }
+            }}
+          >
             <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>{['low', 'normal', 'high', 'urgent'].map(p => <SelectItem key={p} value={p}>{formatStatusLabel(p)}</SelectItem>)}</SelectContent>
           </Select>
