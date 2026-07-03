@@ -5623,6 +5623,110 @@ export type Database = {
           },
         ]
       }
+      pm_charges: {
+        Row: {
+          amount: number
+          amount_paid: number
+          balance: number | null
+          charge_number: string | null
+          charge_type: Database["public"]["Enums"]["pm_charge_type"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string
+          id: string
+          internal_notes: string | null
+          lease_id: string | null
+          period_end: string | null
+          period_start: string | null
+          property_id: string | null
+          source_id: string | null
+          source_ref: string | null
+          source_table: string | null
+          status: Database["public"]["Enums"]["pm_charge_status"]
+          tenant_id: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          amount_paid?: number
+          balance?: number | null
+          charge_number?: string | null
+          charge_type: Database["public"]["Enums"]["pm_charge_type"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date: string
+          id?: string
+          internal_notes?: string | null
+          lease_id?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          property_id?: string | null
+          source_id?: string | null
+          source_ref?: string | null
+          source_table?: string | null
+          status?: Database["public"]["Enums"]["pm_charge_status"]
+          tenant_id: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          amount_paid?: number
+          balance?: number | null
+          charge_number?: string | null
+          charge_type?: Database["public"]["Enums"]["pm_charge_type"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string
+          id?: string
+          internal_notes?: string | null
+          lease_id?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          property_id?: string | null
+          source_id?: string | null
+          source_ref?: string | null
+          source_table?: string | null
+          status?: Database["public"]["Enums"]["pm_charge_status"]
+          tenant_id?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_charges_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_charges_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_charges_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_charges_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "pm_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_expense_attachments: {
         Row: {
           created_at: string
@@ -12212,6 +12316,23 @@ export type Database = {
         | "pm_new_document"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
+      pm_charge_status:
+        | "open"
+        | "partially_paid"
+        | "paid"
+        | "waived"
+        | "cancelled"
+        | "written_off"
+      pm_charge_type:
+        | "rent"
+        | "late_fee"
+        | "deposit"
+        | "utility"
+        | "adjustment_charge"
+        | "other"
+        | "nsf_fee"
+        | "parking"
+        | "pet_fee"
       pm_lease_status: "draft" | "active" | "ended" | "terminated"
       pm_property_type:
         | "single_family"
@@ -12539,6 +12660,25 @@ export const Constants = {
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
+      pm_charge_status: [
+        "open",
+        "partially_paid",
+        "paid",
+        "waived",
+        "cancelled",
+        "written_off",
+      ],
+      pm_charge_type: [
+        "rent",
+        "late_fee",
+        "deposit",
+        "utility",
+        "adjustment_charge",
+        "other",
+        "nsf_fee",
+        "parking",
+        "pet_fee",
+      ],
       pm_lease_status: ["draft", "active", "ended", "terminated"],
       pm_property_type: [
         "single_family",
