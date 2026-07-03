@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SettingsLayout } from '@/components/SettingsLayout';
+import { PMStaffRoleSection } from '@/components/settings/PMStaffRoleSection';
 import { cn } from '@/lib/utils';
 
 /* ── Constants ── */
