@@ -113,12 +113,23 @@ export function usePMStaffUsers() {
   return useQuery({
     queryKey: ['pm_staff_users'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: roles, error } = await supabase
         .from('user_roles' as any)
-        .select('user_id, role, profiles:profiles!inner(display_name)')
+        .select('user_id, role')
         .in('role', ['leasing_agent', 'property_manager']);
       if (error) throw error;
-      return (data ?? []) as any[];
+      const ids = Array.from(new Set((roles ?? []).map((r: any) => r.user_id)));
+      if (ids.length === 0) return [];
+      const { data: profs } = await supabase
+        .from('profiles' as any)
+        .select('user_id, display_name')
+        .in('user_id', ids);
+      const map = new Map((profs ?? []).map((p: any) => [p.user_id, p.display_name]));
+      return (roles ?? []).map((r: any) => ({
+        user_id: r.user_id,
+        role: r.role,
+        display_name: map.get(r.user_id) || r.user_id.slice(0, 8),
+      }));
     },
     staleTime,
   });
