@@ -15,6 +15,7 @@ import { TenantPortalAdminActions, TenantBusinessFields } from '@/components/pro
 import { TenantProfileAdminPanel } from '@/components/property-management/TenantProfileAdminPanel';
 import { InspectionAdminPanel } from '@/components/property-management/InspectionAdminPanel';
 import TenantLedgerManager from '@/components/property-management/TenantLedgerManager';
+import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
 
 export default function PMTenantDetail() {
   const { id } = useParams();
