@@ -80,7 +80,20 @@ export default function PMWorkOrderDetail() {
             <Link to={`/property-management/maintenance/${data.request.id}`}>Open Related Request</Link>
           </Button>
         )}
+        <Button variant="outline" size="sm" onClick={() => setApprovalOpen(true)}>
+          <ShieldCheck className="h-4 w-4 mr-1" /> Request Owner Approval
+        </Button>
       </div>
+
+      <OwnerApprovalDialog
+        open={approvalOpen}
+        onOpenChange={setApprovalOpen}
+        defaultPropertyId={(data as any).property_id}
+        defaultUnitId={(data as any).unit_id ?? null}
+        workOrderId={data.id}
+        defaultCategory="repair"
+        defaultTitle={`Approval for work order: ${data.title || ''}`.trim()}
+      />
 
       <Card>
         <CardHeader className="pb-2">
