@@ -46,12 +46,13 @@ export function AvatarUpload({ currentUrl, initials, onUploaded, size = 'lg', cl
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      // avatars bucket is private — use a long-lived signed URL so <img> can render it.
+      const { data: signed, error: signErr } = await supabase.storage
         .from('avatars')
-        .getPublicUrl(path);
+        .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year
+      if (signErr) throw signErr;
 
-      // Add cache-bust
-      const url = `${publicUrl}?t=${Date.now()}`;
+      const url = `${signed.signedUrl}${signed.signedUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
       onUploaded(url);
       toast.success('Photo updated!');
     } catch (err: any) {
