@@ -691,7 +691,7 @@ Deno.serve(async (req) => {
         .from("notification_templates")
         .select("subject_template, body_template, is_active")
         .eq("event", event)
-        .eq("audience", audience)
+        .eq("audience", effectiveAudience)
         .eq("channel", channel)
         .maybeSingle();
 
