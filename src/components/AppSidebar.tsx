@@ -326,6 +326,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Leases', url: '/property-management/leases', icon: KeyRound },
     { title: 'Maintenance Requests', url: '/property-management/maintenance', icon: Wrench },
     { title: 'Move-Outs', url: '/property-management/move-outs', icon: KeyRound },
+    { title: 'Lease Renewals', url: '/property-management/lease-renewals', icon: CalendarClock },
     { title: 'Expenses', url: '/property-management/expenses', icon: Receipt },
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
     { title: 'PM Staff Portal', url: '/pm-staff', icon: KeyRound },
