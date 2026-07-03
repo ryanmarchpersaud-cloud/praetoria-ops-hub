@@ -1037,7 +1037,7 @@ function PaymentMethodCard({ customerId, onCompleteSetup }: { customerId: string
         <DialogContent className="max-w-xs">
           <DialogHeader>
             <DialogTitle className="text-base flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> {bp?.payment_method_present ? 'Update' : 'Add'} Card on File
+              <CreditCard className="h-4 w-4" /> {bp?.payment_method_present ? 'Update' : 'Add'} Reference Card (not chargeable)
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
