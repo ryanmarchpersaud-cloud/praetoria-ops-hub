@@ -6038,6 +6038,76 @@ export type Database = {
           },
         ]
       }
+      pm_finance_activity: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: Database["public"]["Enums"]["pm_finance_activity_type"]
+          id: string
+          lease_id: string | null
+          message: string
+          metadata: Json
+          occurred_at: string
+          property_id: string | null
+          related_reference: string | null
+          related_resource_id: string | null
+          related_resource_type: string
+          tenant_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: Database["public"]["Enums"]["pm_finance_activity_type"]
+          id?: string
+          lease_id?: string | null
+          message: string
+          metadata?: Json
+          occurred_at?: string
+          property_id?: string | null
+          related_reference?: string | null
+          related_resource_id?: string | null
+          related_resource_type: string
+          tenant_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["pm_finance_activity_type"]
+          id?: string
+          lease_id?: string | null
+          message?: string
+          metadata?: Json
+          occurred_at?: string
+          property_id?: string | null
+          related_reference?: string | null
+          related_resource_id?: string | null
+          related_resource_type?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pm_finance_activity_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "pm_leases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_finance_activity_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "pm_managed_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pm_finance_activity_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "pm_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pm_lease_renewal_activity: {
         Row: {
           actor_id: string | null
@@ -12450,6 +12520,20 @@ export type Database = {
         }
         Returns: number
       }
+      pm_finance_activity_write: {
+        Args: {
+          p_event_type: Database["public"]["Enums"]["pm_finance_activity_type"]
+          p_lease_id: string
+          p_message: string
+          p_metadata?: Json
+          p_property_id: string
+          p_reference: string
+          p_resource_id: string
+          p_resource_type: string
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
       pm_get_lease_balance: { Args: { p_lease_id: string }; Returns: number }
       pm_get_tenant_balance: { Args: { p_tenant_id: string }; Returns: number }
       pm_my_balance: { Args: never; Returns: number }
@@ -12693,6 +12777,26 @@ export type Database = {
         | "partially_consumed"
         | "fully_consumed"
         | "void"
+      pm_finance_activity_type:
+        | "charge_created"
+        | "charge_updated"
+        | "charge_voided"
+        | "charge_waived"
+        | "charge_settled"
+        | "payment_received"
+        | "payment_cleared"
+        | "payment_failed"
+        | "payment_refunded"
+        | "payment_reversed"
+        | "payment_cancelled"
+        | "allocation_created"
+        | "allocation_removed"
+        | "credit_issued"
+        | "credit_consumed"
+        | "credit_voided"
+        | "receipt_issued"
+        | "receipt_annotated"
+        | "receipt_voided"
       pm_lease_status: "draft" | "active" | "ended" | "terminated"
       pm_payment_method:
         | "cash"
@@ -13068,6 +13172,27 @@ export const Constants = {
         "partially_consumed",
         "fully_consumed",
         "void",
+      ],
+      pm_finance_activity_type: [
+        "charge_created",
+        "charge_updated",
+        "charge_voided",
+        "charge_waived",
+        "charge_settled",
+        "payment_received",
+        "payment_cleared",
+        "payment_failed",
+        "payment_refunded",
+        "payment_reversed",
+        "payment_cancelled",
+        "allocation_created",
+        "allocation_removed",
+        "credit_issued",
+        "credit_consumed",
+        "credit_voided",
+        "receipt_issued",
+        "receipt_annotated",
+        "receipt_voided",
       ],
       pm_lease_status: ["draft", "active", "ended", "terminated"],
       pm_payment_method: [
