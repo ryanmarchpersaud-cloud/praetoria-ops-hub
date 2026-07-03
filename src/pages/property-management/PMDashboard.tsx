@@ -78,8 +78,14 @@ export default function PMDashboard() {
         <MaintenanceByPriorityCard />
       </div>
 
-      {/* Row 5 — Staff activity (admin only) */}
-      <StaffActivityCard enabled={canSeeStaffActivity} />
+      {/* Row 5 — PM Live Workforce (Admin, Ops Manager, Property Manager only) */}
+      {canSeePMWorkforce && (
+        <LiveWorkforcePanel
+          scope="pm"
+          canForceClockOut={canForcePMClockOut}
+          showLaborCost={canSeeLaborCost}
+        />
+      )}
 
       {/* Recent tenant activity */}
       <RecentTenantActivity />
