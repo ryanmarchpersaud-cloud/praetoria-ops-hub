@@ -116,12 +116,15 @@ export function SparklineKPIStrip({
     const j2 = jobBuckets.slice(15).reduce((s, d) => s + d.v, 0);
     const jobTrend = j1 > 0 ? Math.round(((j2 - j1) / j1) * 100) : 0;
 
-    // Hours worked per day
+    // Hours worked per day (approved + submitted + pending)
     const hourBuckets = buildBuckets(timesheets, (t) => t.clock_in, (t) => {
       if (!t.clock_out) return 0;
       return (new Date(t.clock_out).getTime() - new Date(t.clock_in).getTime()) / 3600000;
     });
     const hourTotal = hourBuckets.reduce((s, d) => s + d.v, 0);
+    const pendingHours = timesheets
+      .filter((t: any) => t.status !== 'approved' && t.clock_out)
+      .reduce((s: number, t: any) => s + (new Date(t.clock_out).getTime() - new Date(t.clock_in).getTime()) / 3600000, 0);
     const h1 = hourBuckets.slice(0, 15).reduce((s, d) => s + d.v, 0);
     const h2 = hourBuckets.slice(15).reduce((s, d) => s + d.v, 0);
     const hourTrend = h1 > 0 ? Math.round(((h2 - h1) / h1) * 100) : 0;
