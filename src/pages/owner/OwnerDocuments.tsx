@@ -68,6 +68,8 @@ export default function OwnerDocuments() {
             </Card>
           ))
         )}
+
+        <OwnerPMDocumentsSection />
       </div>
     </OwnerLayout>
   );
