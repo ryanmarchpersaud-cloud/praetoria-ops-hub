@@ -62,12 +62,13 @@ export default function Customers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customer_billing_profiles')
-        .select('customer_id, card_brand, card_last4, payment_method_present');
+        .select('customer_id, card_brand, card_last4, payment_method_present, processor_customer_id, default_payment_method_id');
       if (error) throw error;
-      const m = new Map<string, { brand: string | null; last4: string | null }>();
+      const m = new Map<string, { brand: string | null; last4: string | null; chargeable: boolean }>();
       for (const r of data ?? []) {
         if (r.customer_id && r.payment_method_present && r.card_last4) {
-          m.set(r.customer_id, { brand: r.card_brand, last4: r.card_last4 });
+          const chargeable = !!(r.processor_customer_id && r.default_payment_method_id);
+          m.set(r.customer_id, { brand: r.card_brand, last4: r.card_last4, chargeable });
         }
       }
       return m;
