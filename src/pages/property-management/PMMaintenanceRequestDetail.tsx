@@ -18,6 +18,7 @@ import { OwnerApprovalDialog } from '@/components/pm/OwnerApprovalDialog';
 import { ShieldCheck } from 'lucide-react';
 import { isNonRepairRequest } from '@/lib/maintenanceCatalogHelpers';
 import { PMDocumentsSection } from '@/components/property-management/PMDocumentsSection';
+import { InspectionsSection } from '@/components/property-management/inspections/InspectionsSection';
 
 const STATUSES = ['new', 'reviewed', 'work_order_created', 'assigned', 'in_progress', 'completed', 'cancelled'];
 
