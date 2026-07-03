@@ -97,7 +97,7 @@ export default function PMLeaseRenewalsList() {
   const staffLabel = (id: string | null) => {
     if (!id) return '—';
     const s = staff.find((x: any) => x.user_id === id);
-    return s?.display_name || s?.email || '—';
+    return s?.display_name || '—';
   };
 
   const rentedLeaseIds = new Set(renewals.map(r => r.lease_id));
