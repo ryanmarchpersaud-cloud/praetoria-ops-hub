@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
         full_name: full_name || email,
         email,
         phone: phone || null,
-        team_type: team_type || (role === 'admin' ? 'Admin' : role === 'subcontractor' ? 'Subcontractor' : 'Worker'),
+        team_type: team_type || (role === 'admin' ? 'Admin' : role === 'subcontractor' ? 'Subcontractor' : role === 'property_manager' || role === 'leasing_agent' ? 'Property Manager' : 'Worker'),
         status: 'Active', is_active: true,
         service_categories: service_categories || [],
         notes: notes || null,
