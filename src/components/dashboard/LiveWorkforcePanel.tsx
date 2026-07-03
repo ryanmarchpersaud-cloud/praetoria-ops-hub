@@ -285,16 +285,18 @@ export function LiveWorkforcePanel({
                     <Badge variant="secondary" className="font-mono text-[11px]">
                       {s.elapsed_hours.toFixed(1)}h
                     </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-[11px]"
-                      onClick={() => setTarget({ id: s.id, name: s.full_name })}
-                      title="Force clock out this worker"
-                    >
-                      <LogOut className="h-3 w-3 mr-1" />
-                      Clock out
-                    </Button>
+                    {resolvedCanForceClockOut && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-[11px]"
+                        onClick={() => setTarget({ id: s.id, name: s.full_name })}
+                        title="Force clock out this worker"
+                      >
+                        <LogOut className="h-3 w-3 mr-1" />
+                        Clock out
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
