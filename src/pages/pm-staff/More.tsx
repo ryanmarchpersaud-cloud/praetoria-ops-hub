@@ -8,7 +8,7 @@ import {
   Building2, Settings, LogOut, User, ChevronRight, Eye, Monitor,
   Briefcase, FileText, Heart, DollarSign, Award, CalendarDays, UserCheck,
   ShieldAlert, Receipt, CreditCard, ClipboardCheck, Trash2, Clock, CalendarClock,
-  HardHat, Bell, GraduationCap, Home as HomeIcon,
+  HardHat, Bell, GraduationCap, Home as HomeIcon, KeyRound,
 } from 'lucide-react';
 
 type Item = { icon: any; label: string; to?: string; description: string; soon?: boolean };
