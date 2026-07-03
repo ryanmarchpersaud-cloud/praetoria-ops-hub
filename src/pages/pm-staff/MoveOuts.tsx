@@ -279,8 +279,8 @@ function InspectionBlock({ moveOut, canManage }: { moveOut: any; canManage: bool
 
   const upsert = useMutation({
     mutationFn: async (patch: any) => {
-      if (inspection?.id) {
-        const { error } = await supabase.from('pm_move_out_inspections' as any).update(patch).eq('id', inspection.id);
+      if (inspAny?.id) {
+        const { error } = await supabase.from('pm_move_out_inspections' as any).update(patch).eq('id', inspAny.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from('pm_move_out_inspections' as any).insert({ move_out_id: moveOut.id, inspected_by: user?.id, inspected_at: new Date().toISOString(), ...patch });
@@ -293,13 +293,13 @@ function InspectionBlock({ moveOut, canManage }: { moveOut: any; canManage: bool
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    let insp = inspection;
+    let insp: any = inspAny;
     if (!insp?.id) {
       const { data, error } = await supabase.from('pm_move_out_inspections' as any)
         .insert({ move_out_id: moveOut.id, inspected_by: user?.id, inspected_at: new Date().toISOString() })
         .select().single();
       if (error) { toast.error(error.message); return; }
-      insp = data;
+      insp = data as any;
     }
     const path = `${moveOut.id}/${insp.id}/${Date.now()}_${file.name}`;
     const { error: upErr } = await supabase.storage.from('pm-move-out-photos').upload(path, file);
