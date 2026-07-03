@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { AppDownloadBadges } from '@/components/AppDownloadBadges';
+import { isChargeable } from '@/lib/billingProfile';
 
 export default function PortalBilling() {
   const { user } = useAuth();
