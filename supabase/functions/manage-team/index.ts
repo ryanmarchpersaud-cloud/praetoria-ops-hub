@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
         portal_subcontractor: portal_subcontractor || role === 'subcontractor',
       });
 
-      if (["staff", "lead_worker", "supervisor", "dispatcher", "manager", "admin", "hr_admin", "ops_manager", "accountant"].includes(role)) {
+      if (["staff", "lead_worker", "supervisor", "dispatcher", "manager", "admin", "hr_admin", "ops_manager", "accountant", "property_manager", "leasing_agent"].includes(role)) {
         const { data: existingWp } = await adminClient
           .from("worker_profiles").select("id").eq("user_id", newUserId).maybeSingle();
 
