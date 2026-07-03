@@ -724,6 +724,7 @@ function AppRoutes() {
         <Route path="/property-management/maintenance" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/maintenance/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMMaintenanceRequestDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/move-outs" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMStaffMoveOuts /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/lease-renewals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMLeaseRenewalsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/work-orders/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMWorkOrderDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/referrals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantReferralsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/expenses" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMExpensesList /></Suspense></ModuleGuard>} />
