@@ -251,84 +251,8 @@ export function MaintenanceByPriorityCard() {
   );
 }
 
-/* ─── Row 5 (admin-only) ───────────────────────────────────────────── */
-export function StaffActivityCard({ enabled }: { enabled: boolean }) {
-  const { data, isLoading, error } = usePMStaffActivity(enabled);
-  if (!enabled) return null;
-  const loadError = error instanceof Error ? error.message : error ? 'Unable to load staff activity.' : null;
-  return (
-    <Card>
-      <CardHeader className="pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <TimerReset className="h-4 w-4 text-indigo-600" /> PM staff activity (today)
-        </CardTitle>
-        <Badge variant="outline" className="text-[10px]">Admin only</Badge>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {loadError && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-700">
-            Staff activity is not loading: {loadError}
-          </div>
-        )}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-lg border p-3 bg-emerald-500/5">
-            <div className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Clocked in</div>
-            <div className="text-2xl font-bold tabular-nums">{isLoading ? '—' : (data?.clockedIn.length ?? 0)}</div>
-          </div>
-          <div className="rounded-lg border p-3 bg-slate-500/5">
-            <div className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Clocked out</div>
-            <div className="text-2xl font-bold tabular-nums">{isLoading ? '—' : (data?.clockedOutToday.length ?? 0)}</div>
-          </div>
-          <div className="rounded-lg border p-3 bg-indigo-500/5">
-            <div className="text-xs text-muted-foreground">Hours logged</div>
-            <div className="text-2xl font-bold tabular-nums">{isLoading ? '—' : fmtHours(data?.hoursTodayTotal ?? 0)}</div>
-          </div>
-        </div>
+/* Row 5 — StaffActivityCard REMOVED.
+   Replaced by the shared <LiveWorkforcePanel scope="pm" /> on PMDashboard,
+   which reuses the same underlying live workforce logic as the main admin
+   dashboard, filtered to PM roles (property_manager, leasing_agent, pm_staff). */
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Currently clocked in</div>
-            {(data?.clockedIn.length ?? 0) === 0 ? (
-              <p className="text-sm text-muted-foreground">No one clocked in.</p>
-            ) : (
-              <ul className="divide-y">
-                {data!.clockedIn.map((r: any) => (
-                  <li key={r.user_id} className="py-1.5 flex items-center justify-between text-sm">
-                    <span className="truncate">{r.name} <span className="text-xs text-muted-foreground">· {r.role}</span></span>
-                    <span className="tabular-nums text-emerald-600 font-medium">{fmtHours(Number(r.elapsed ?? 0))}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div>
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Clocked out today</div>
-            {(data?.clockedOutToday.length ?? 0) === 0 ? (
-              <p className="text-sm text-muted-foreground">No completed shifts yet.</p>
-            ) : (
-              <ul className="divide-y">
-                {data!.clockedOutToday.map((r: any) => (
-                  <li key={r.user_id} className="py-1.5 flex items-center justify-between text-sm">
-                    <span className="truncate">{r.name} <span className="text-xs text-muted-foreground">· {r.role}</span></span>
-                    <span className="tabular-nums text-muted-foreground">{fmtHours(Number(r.hours ?? 0))}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        <Link to="/pm-staff/applications"
-          className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/40 transition-colors">
-          <div>
-            <div className="text-sm font-medium">Applications waiting review</div>
-            <div className="text-xs text-muted-foreground">Ready for PM staff triage</div>
-          </div>
-          <div className="text-2xl font-bold tabular-nums text-amber-600">
-            {isLoading ? '—' : (data?.appsWaiting ?? 0)}
-          </div>
-        </Link>
-      </CardContent>
-    </Card>
-  );
-}
