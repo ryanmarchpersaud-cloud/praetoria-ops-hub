@@ -436,6 +436,16 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
   const canSeeOwnerMessages = access.isOwnerOrAdmin || access.isPropertyManager;
   const canSeeTenantMessages = access.isOwnerOrAdmin || access.isPropertyManager;
 
+  // Owner message unread badge + audio chime on increase (admin-side alert)
+  const { data: ownerUnread = 0 } = useAdminOwnerUnreadMessagesCount();
+  const prevOwnerUnread = useRef<number | null>(null);
+  useEffect(() => {
+    if (prevOwnerUnread.current !== null && ownerUnread > prevOwnerUnread.current) {
+      playOwnerMessageChime();
+    }
+    prevOwnerUnread.current = ownerUnread;
+  }, [ownerUnread]);
+
   const mainItems: PMItem[] = [
     { title: 'Dashboard', url: '/property-management', icon: LayoutDashboard, end: true },
     { title: 'Properties', url: '/property-management/properties', icon: Building2 },
@@ -447,7 +457,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Owners', url: '/property-management/owners', icon: UserCircle },
     { title: 'Owner Approvals', url: '/property-management/owner-approvals', icon: ShieldCheck },
     ...(canSeeOwnerMessages
-      ? [{ title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare }]
+      ? [{ title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare, badgeCount: ownerUnread }]
       : []),
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
   ];
