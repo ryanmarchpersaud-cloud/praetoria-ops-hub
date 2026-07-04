@@ -63,7 +63,7 @@ export function OwnerPMDocumentsSection() {
                 </p>
                 {d.description && <p className="text-xs text-muted-foreground mt-1">{d.description}</p>}
               </div>
-              <Button size="sm" variant="outline" disabled={busy === d.id} onClick={() => openDoc(d.id, d.file_path)}>
+              <Button size="sm" variant="outline" disabled={busy === d.id} onClick={() => openDoc(d)}>
                 <Download className="h-3.5 w-3.5 mr-1" />
                 {busy === d.id ? 'Opening…' : 'Open'}
               </Button>
