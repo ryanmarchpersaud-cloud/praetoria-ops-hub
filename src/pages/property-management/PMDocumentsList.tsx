@@ -82,10 +82,15 @@ export default function PMDocumentsList() {
   const tenants = useTenants();
   const [busy, setBusy] = useState<string | null>(null);
 
-  const openDoc = async (id: string, path: string) => {
-    setBusy(id);
+  const openDoc = async (doc: any) => {
+    // Inspection report archives don't have a real file — route to the admin print view.
+    if (doc.document_type === 'inspection' && doc.inspection_id) {
+      window.open(`/property-management/inspections/${doc.inspection_id}/print`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setBusy(doc.id);
     try {
-      const url = await signPmDocument(path);
+      const url = await signPmDocument(doc.file_path);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (e: any) { toast.error(e.message ?? 'Could not open'); }
     finally { setBusy(null); }
@@ -198,7 +203,7 @@ export default function PMDocumentsList() {
                       {d.file_name} · uploaded {new Date(d.created_at).toLocaleString()}
                     </p>
                   </div>
-                  <Button size="sm" variant="outline" disabled={busy === d.id} onClick={() => openDoc(d.id, d.file_path)}>
+                  <Button size="sm" variant="outline" disabled={busy === d.id} onClick={() => openDoc(d)}>
                     <Download className="h-4 w-4 mr-1" />
                     {busy === d.id ? 'Opening…' : 'Open'}
                   </Button>
