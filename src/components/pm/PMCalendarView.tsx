@@ -489,6 +489,7 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
             <TabsTrigger value="month">Month</TabsTrigger>
             <TabsTrigger value="week">Week</TabsTrigger>
             <TabsTrigger value="list">List</TabsTrigger>
+            <TabsTrigger value="reminders"><Bell className="h-3.5 w-3.5 mr-1" />Reminders</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setCursor(startOfDay(new Date()))}>Today</Button>
