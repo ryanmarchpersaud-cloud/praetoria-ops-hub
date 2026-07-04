@@ -7413,6 +7413,81 @@ export type Database = {
           },
         ]
       }
+      pm_notifications: {
+        Row: {
+          action_url: string | null
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          message: string
+          metadata: Json
+          notification_type: string
+          owner_id: string | null
+          priority: string
+          property_id: string | null
+          read_at: string | null
+          recipient_portal: string
+          recipient_role: string | null
+          recipient_user_id: string
+          related_id: string | null
+          related_type: string | null
+          status: string
+          tenant_id: string | null
+          title: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_url?: string | null
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message: string
+          metadata?: Json
+          notification_type: string
+          owner_id?: string | null
+          priority?: string
+          property_id?: string | null
+          read_at?: string | null
+          recipient_portal: string
+          recipient_role?: string | null
+          recipient_user_id: string
+          related_id?: string | null
+          related_type?: string | null
+          status?: string
+          tenant_id?: string | null
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_url?: string | null
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message?: string
+          metadata?: Json
+          notification_type?: string
+          owner_id?: string | null
+          priority?: string
+          property_id?: string | null
+          read_at?: string | null
+          recipient_portal?: string
+          recipient_role?: string | null
+          recipient_user_id?: string
+          related_id?: string | null
+          related_type?: string | null
+          status?: string
+          tenant_id?: string | null
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pm_owner_approval_activity: {
         Row: {
           actor_id: string | null
@@ -13820,6 +13895,25 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_pm_notification: {
+        Args: {
+          p_action_url?: string
+          p_message: string
+          p_metadata?: Json
+          p_notification_type: string
+          p_owner_id?: string
+          p_priority?: string
+          p_property_id?: string
+          p_recipient_portal: string
+          p_recipient_user_id: string
+          p_related_id?: string
+          p_related_type?: string
+          p_tenant_id?: string
+          p_title: string
+          p_unit_id?: string
+        }
+        Returns: string
+      }
       customer_has_active_warnings: {
         Args: { _customer_id: string }
         Returns: boolean
@@ -14108,6 +14202,7 @@ export type Database = {
       }
       pm_my_balance: { Args: never; Returns: number }
       pm_my_next_due: { Args: never; Returns: string }
+      pm_notifications_mark_all_read: { Args: never; Returns: number }
       pm_owner_can_see_property: {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
