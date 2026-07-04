@@ -109,7 +109,7 @@ type Props = {
   subheading?: string;
 };
 
-type ViewMode = 'month' | 'week' | 'list';
+type ViewMode = 'month' | 'week' | 'list' | 'reminders';
 
 // Event types that support drag-to-reschedule in the Month view.
 // Must match the types the pm_reschedule_event RPC accepts. Backend still enforces.
