@@ -23,7 +23,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   zap_baseline:
@@ -42,6 +41,10 @@ jobs:
           # -m 10: 10 minutes of spider/passive scan
           cmd_options: '-I -j -m 10'
           rules_file_name: '.zap/rules.tsv'
-          allow_issue_writing: true
+          # Disabled: the action's issue-writer step fails the job (and emits
+          # annotations) when the repo has Issues disabled or on push events
+          # where it can't reconcile prior issues. Findings are still fully
+          # captured in the uploaded HTML/MD/JSON artifact below.
+          allow_issue_writing: false
           fail_action: false
           artifact_name: zap-baseline-report
