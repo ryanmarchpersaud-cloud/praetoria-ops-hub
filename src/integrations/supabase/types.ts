@@ -5630,6 +5630,84 @@ export type Database = {
           },
         ]
       }
+      pm_calendar_reminders: {
+        Row: {
+          action_url: string | null
+          cancelled_at: string | null
+          created_at: string
+          created_by: string | null
+          event_ref: string
+          event_source: string
+          event_start_at: string
+          event_type: string
+          id: string
+          lead_time_minutes: number
+          message: string
+          owner_id: string | null
+          property_id: string | null
+          recipient_portal: string
+          recipient_user_id: string
+          related_id: string | null
+          remind_at: string
+          status: string
+          tenant_id: string | null
+          title: string
+          triggered_at: string | null
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_url?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_ref: string
+          event_source: string
+          event_start_at: string
+          event_type: string
+          id?: string
+          lead_time_minutes?: number
+          message: string
+          owner_id?: string | null
+          property_id?: string | null
+          recipient_portal?: string
+          recipient_user_id: string
+          related_id?: string | null
+          remind_at: string
+          status?: string
+          tenant_id?: string | null
+          title: string
+          triggered_at?: string | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_url?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_ref?: string
+          event_source?: string
+          event_start_at?: string
+          event_type?: string
+          id?: string
+          lead_time_minutes?: number
+          message?: string
+          owner_id?: string | null
+          property_id?: string | null
+          recipient_portal?: string
+          recipient_user_id?: string
+          related_id?: string | null
+          remind_at?: string
+          status?: string
+          tenant_id?: string | null
+          title?: string
+          triggered_at?: string | null
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pm_charges: {
         Row: {
           amount: number
@@ -14161,6 +14239,30 @@ export type Database = {
           unit_id: string
         }[]
       }
+      pm_cancel_reminder: { Args: { p_id: string }; Returns: boolean }
+      pm_create_reminder: {
+        Args: {
+          p_action_url: string
+          p_event_ref: string
+          p_event_source: string
+          p_event_start_at: string
+          p_event_type: string
+          p_lead_time_minutes: number
+          p_message: string
+          p_owner_id: string
+          p_property_id: string
+          p_recipient_portal: string
+          p_recipient_user_id: string
+          p_related_id: string
+          p_tenant_id: string
+          p_title: string
+          p_unit_id: string
+        }
+        Returns: {
+          id: string
+          is_duplicate: boolean
+        }[]
+      }
       pm_finance_activity_write: {
         Args: {
           p_event_type: Database["public"]["Enums"]["pm_finance_activity_type"]
@@ -14228,6 +14330,7 @@ export type Database = {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
+      pm_process_due_reminders: { Args: never; Returns: number }
       pm_property_owner_can_view_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
