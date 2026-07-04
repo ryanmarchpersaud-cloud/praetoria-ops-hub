@@ -403,7 +403,14 @@ function PMSubgroupBlock({ group, defaultOpen }: { group: PMSubgroup; defaultOpe
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
                 <NavLink to={item.url} end={item.end} className={`pl-4 ${group.accent.idle}`} activeClassName={group.accent.active}>
-                  <item.icon className="mr-2 h-4 w-4" />
+                  <span className="relative mr-2 inline-flex">
+                    <item.icon className="h-4 w-4" />
+                    {item.badgeCount && item.badgeCount > 0 ? (
+                      <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-sidebar">
+                        {item.badgeCount > 9 ? '9+' : item.badgeCount}
+                      </span>
+                    ) : null}
+                  </span>
                   <span>{item.title}</span>
                 </NavLink>
               </SidebarMenuButton>
