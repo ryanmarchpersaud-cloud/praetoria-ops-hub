@@ -12,6 +12,7 @@ import {
   RenewalsAttentionCard, MaintenanceByPriorityCard,
 } from '@/components/property-management/dashboard/PMDashboardSections';
 import { LiveWorkforcePanel } from '@/components/dashboard/LiveWorkforcePanel';
+import { PMNotificationsBell } from '@/components/pm/PMNotificationsBell';
 import { useUserRole } from '@/hooks/useUserRole';
 
 const STEPS = [
