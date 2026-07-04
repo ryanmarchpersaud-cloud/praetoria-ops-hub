@@ -22,6 +22,8 @@ type Props = {
   event: PMCalendarEvent | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  /** Optional preset target date (e.g. from a drag-drop). Preserves original time of day. */
+  presetDate?: Date | null;
 };
 
 // Map event_type -> RPC source + optional field selector config
@@ -46,7 +48,7 @@ export function isReschedulable(evt: PMCalendarEvent): boolean {
   return sourceFor(evt) !== null;
 }
 
-export function RescheduleEventDialog({ event, open, onOpenChange }: Props) {
+export function RescheduleEventDialog({ event, open, onOpenChange, presetDate }: Props) {
   const qc = useQueryClient();
   const cfg = event ? sourceFor(event) : null;
   const initial = event ? new Date(event.start_at) : new Date();
@@ -56,14 +58,20 @@ export function RescheduleEventDialog({ event, open, onOpenChange }: Props) {
   const [field, setField] = useState<string>(cfg?.fieldOptions?.[0]?.value ?? '');
   const [saving, setSaving] = useState(false);
 
-  // Re-init when event changes
+  // Re-init when event changes or a preset drop-target date is supplied
   useMemo(() => {
     if (!event) return;
-    const d = new Date(event.start_at);
+    const orig = new Date(event.start_at);
+    let d = orig;
+    if (presetDate) {
+      // Preserve original time-of-day on the new date
+      d = new Date(presetDate);
+      d.setHours(orig.getHours(), orig.getMinutes(), 0, 0);
+    }
     setDate(d);
     setTime(format(d, 'HH:mm'));
     setField(sourceFor(event)?.fieldOptions?.[0]?.value ?? '');
-  }, [event?.event_id]);
+  }, [event?.event_id, presetDate?.getTime()]);
 
   if (!event || !cfg) return null;
 
