@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  DndContext, PointerSensor, useSensor, useSensors, useDraggable, useDroppable,
+  type DragEndEvent,
+} from '@dnd-kit/core';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +14,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Calendar as CalendarIcon, ChevronRight, ChevronLeft, ClipboardCheck, KeyRound,
-  CalendarClock, ShieldCheck, Wrench, Home, ListChecks, Loader2,
+  CalendarClock, ShieldCheck, Wrench, Home, ListChecks, Loader2, GripVertical,
 } from 'lucide-react';
 import { usePMCalendar, type PMCalendarEvent } from '@/hooks/pm/usePMCalendar';
 import { RescheduleEventDialog, isReschedulable } from '@/components/pm/RescheduleEventDialog';
@@ -102,13 +106,74 @@ type Props = {
 
 type ViewMode = 'month' | 'week' | 'list';
 
+// Event types that support drag-to-reschedule in the Month view.
+// Must match the types the pm_reschedule_event RPC accepts. Backend still enforces.
+const DRAG_ELIGIBLE_TYPES = new Set([
+  'showing',
+  'inspection',
+  'move_out',
+  'staff_task',
+  'owner_approval_due', // RPC restricts to admin/property_manager
+]);
+
+function isDraggableEvent(e: PMCalendarEvent): boolean {
+  if (!isReschedulable(e)) return false;
+  if (!DRAG_ELIGIBLE_TYPES.has(e.event_type)) return false;
+  const s = (e.status ?? '').toLowerCase();
+  if (['completed', 'cancelled', 'archived', 'locked'].includes(s)) return false;
+  return true;
+}
+
+// --- DnD primitives (Month view only) ---
+function DraggableChip({ event, children }: { event: PMCalendarEvent; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: event.event_id,
+    data: { event },
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`cursor-grab active:cursor-grabbing touch-none ${isDragging ? 'opacity-40' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DroppableDay({ dayISO, children, className }: { dayISO: string; children: React.ReactNode; className?: string }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `day:${dayISO}`, data: { dayISO } });
+  return (
+    <div ref={setNodeRef} className={`${className ?? ''} ${isOver ? 'ring-2 ring-primary/70 bg-primary/5' : ''}`}>
+      {children}
+    </div>
+  );
+}
+
 export function PMCalendarView({ variant = 'admin', heading, subheading }: Props) {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [rescheduleEvent, setRescheduleEvent] = useState<PMCalendarEvent | null>(null);
+  const [presetDropDate, setPresetDropDate] = useState<Date | null>(null);
   const [view, setView] = useState<ViewMode>('month');
   const [cursor, setCursor] = useState<Date>(startOfDay(new Date()));
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (evt: DragEndEvent) => {
+    const ev = evt.active?.data?.current?.event as PMCalendarEvent | undefined;
+    const dayISO = evt.over?.data?.current?.dayISO as string | undefined;
+    if (!ev || !dayISO) return;
+    if (!isDraggableEvent(ev)) return;
+    const target = new Date(dayISO);
+    const orig = new Date(ev.start_at);
+    if (sameDay(target, orig)) return; // no-op if dropped on same day
+    setRescheduleEvent(ev);
+    setPresetDropDate(target);
+  };
+
 
   // Fetch a range large enough for month/week/list views
   const range = useMemo(() => {
@@ -216,38 +281,52 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
   const monthLabel = cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   const renderMonth = () => (
-    <Card>
-      <CardContent className="p-3">
-        <div className="grid grid-cols-7 gap-1 text-[10px] font-semibold text-muted-foreground mb-1">
-          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d) => (
-            <div key={d} className="px-1 py-1 uppercase">{d}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {monthGrid.map((d) => {
-            const inMonth = d.getMonth() === cursor.getMonth();
-            const isToday = sameDay(d, new Date());
-            const events = byDay.get(dayKey(d)) ?? [];
-            return (
-              <div
-                key={d.toISOString()}
-                className={`min-h-[92px] rounded border p-1 flex flex-col gap-0.5 ${inMonth ? 'bg-background' : 'bg-muted/40'} ${isToday ? 'ring-2 ring-primary' : ''}`}
-              >
-                <div className={`text-[11px] font-semibold ${inMonth ? 'text-foreground' : 'text-muted-foreground'} ${isToday ? 'text-primary' : ''}`}>
-                  {d.getDate()}
-                </div>
-                <div className="flex-1 space-y-0.5 overflow-hidden">
-                  {events.slice(0, 3).map(eventChip)}
-                  {events.length > 3 && (
-                    <div className="text-[10px] text-muted-foreground px-1">+{events.length - 3} more</div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <Card>
+        <CardContent className="p-3">
+          <div className="grid grid-cols-7 gap-1 text-[10px] font-semibold text-muted-foreground mb-1">
+            {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d) => (
+              <div key={d} className="px-1 py-1 uppercase">{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {monthGrid.map((d) => {
+              const inMonth = d.getMonth() === cursor.getMonth();
+              const isToday = sameDay(d, new Date());
+              const events = byDay.get(dayKey(d)) ?? [];
+              const dayISO = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
+              return (
+                <DroppableDay
+                  key={d.toISOString()}
+                  dayISO={dayISO}
+                  className={`min-h-[92px] rounded border p-1 flex flex-col gap-0.5 ${inMonth ? 'bg-background' : 'bg-muted/40'} ${isToday ? 'ring-2 ring-primary' : ''}`}
+                >
+                  <div className={`text-[11px] font-semibold ${inMonth ? 'text-foreground' : 'text-muted-foreground'} ${isToday ? 'text-primary' : ''}`}>
+                    {d.getDate()}
+                  </div>
+                  <div className="flex-1 space-y-0.5 overflow-hidden">
+                    {events.slice(0, 3).map((e) =>
+                      isDraggableEvent(e) ? (
+                        <DraggableChip key={e.event_id} event={e}>{eventChip(e)}</DraggableChip>
+                      ) : (
+                        eventChip(e)
+                      )
+                    )}
+                    {events.length > 3 && (
+                      <div className="text-[10px] text-muted-foreground px-1">+{events.length - 3} more</div>
+                    )}
+                  </div>
+                </DroppableDay>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
+            <GripVertical className="h-3 w-3" />
+            Drag eligible events (showings, inspections, move-outs, tasks, owner approvals) to another day to reschedule. Confirmation required.
+          </p>
+        </CardContent>
+      </Card>
+    </DndContext>
   );
 
   // ---- Week View ----
@@ -415,7 +494,8 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
       <RescheduleEventDialog
         event={rescheduleEvent}
         open={!!rescheduleEvent}
-        onOpenChange={(v) => !v && setRescheduleEvent(null)}
+        presetDate={presetDropDate}
+        onOpenChange={(v) => { if (!v) { setRescheduleEvent(null); setPresetDropDate(null); } }}
       />
     </div>
   );
