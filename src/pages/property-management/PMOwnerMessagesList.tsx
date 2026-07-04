@@ -190,8 +190,14 @@ function ThreadDialog({ thread, onClose, owners }: { thread: OwnerThread | null;
   const { data: messages = [], isLoading } = useThreadMessages(thread?.id);
   const reply = useStaffReply();
   const update = useUpdateOwnerThread();
+  const markRead = useAdminMarkOwnerThreadRead();
   const [body, setBody] = useState('');
   const [internal, setInternal] = useState(false);
+
+  useEffect(() => {
+    if (thread?.id) markRead.mutate(thread.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [thread?.id]);
 
   if (!thread) return null;
   const owner = owners.find(o => o.id === thread.owner_id);
