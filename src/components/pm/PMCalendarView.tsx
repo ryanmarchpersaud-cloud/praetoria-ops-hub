@@ -12,6 +12,7 @@ import {
   CalendarClock, ShieldCheck, Wrench, Home, ListChecks, Loader2,
 } from 'lucide-react';
 import { usePMCalendar, type PMCalendarEvent } from '@/hooks/pm/usePMCalendar';
+import { RescheduleEventDialog, isReschedulable } from '@/components/pm/RescheduleEventDialog';
 
 const TYPE_META: Record<string, { label: string; color: string; icon: any }> = {
   showing:              { label: 'Showing',        color: 'bg-blue-100 text-blue-800 border-blue-200',       icon: Home },
@@ -56,6 +57,7 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
+  const [rescheduleEvent, setRescheduleEvent] = useState<PMCalendarEvent | null>(null);
 
   const range = useMemo(() => {
     const start = new Date();
@@ -110,11 +112,18 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
             </div>
             <p className="text-xs text-muted-foreground mt-1">{fmtDate(e.start_at, e.all_day)}</p>
           </div>
-          {e.action_url && (
-            <Button asChild variant="ghost" size="sm">
-              <Link to={e.action_url}>Open <ChevronRight className="h-3.5 w-3.5 ml-1" /></Link>
-            </Button>
-          )}
+          <div className="flex items-center gap-1 shrink-0">
+            {isReschedulable(e) && (e.status ?? '').toLowerCase() !== 'completed' && (e.status ?? '').toLowerCase() !== 'cancelled' && (
+              <Button variant="outline" size="sm" onClick={() => setRescheduleEvent(e)}>
+                Reschedule
+              </Button>
+            )}
+            {e.action_url && (
+              <Button asChild variant="ghost" size="sm">
+                <Link to={e.action_url}>Open <ChevronRight className="h-3.5 w-3.5 ml-1" /></Link>
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
@@ -197,6 +206,12 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
           {section('Past 7 Days', 'past')}
         </div>
       )}
+
+      <RescheduleEventDialog
+        event={rescheduleEvent}
+        open={!!rescheduleEvent}
+        onOpenChange={(v) => !v && setRescheduleEvent(null)}
+      />
     </div>
   );
 }
