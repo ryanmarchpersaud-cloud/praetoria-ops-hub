@@ -107,6 +107,45 @@ export function useOwnerUnreadMessagesCount() {
   });
 }
 
+// ============ Admin/Staff: unread owner messages count (owner-sent, not yet read) ============
+export function useAdminOwnerUnreadMessagesCount() {
+  return useQuery({
+    queryKey: ['pm_owner_messages_admin_unread_count'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('pm_owner_messages' as any)
+        .select('id, sender_type, read_at')
+        .is('read_at', null)
+        .eq('sender_type', 'owner');
+      if (error) throw error;
+      return ((data as any[]) || []).length;
+    },
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+  });
+}
+
+// ============ Admin/Staff: mark all owner-sent messages in a thread as read ============
+export function useAdminMarkOwnerThreadRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (thread_id: string) => {
+      const { error } = await supabase
+        .from('pm_owner_messages' as any)
+        .update({ read_at: new Date().toISOString() })
+        .eq('thread_id', thread_id)
+        .eq('sender_type', 'owner')
+        .is('read_at', null);
+      if (error) throw error;
+    },
+    onSuccess: (_d, tid) => {
+      qc.invalidateQueries({ queryKey: ['pm_owner_messages', tid] });
+      qc.invalidateQueries({ queryKey: ['pm_owner_message_threads'] });
+      qc.invalidateQueries({ queryKey: ['pm_owner_messages_admin_unread_count'] });
+    },
+  });
+}
+
 // ============ Messages within a thread ============
 export function useThreadMessages(threadId: string | undefined, opts?: { ownerVisibleOnly?: boolean }) {
   return useQuery({

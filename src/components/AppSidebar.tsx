@@ -5,13 +5,14 @@ import {
   MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign, RefreshCw,
   ChevronDown, Home, KeyRound, UserCircle, Wrench, CalendarClock, ShieldCheck, FolderOpen,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useMessaging';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
 import { useSidebarAccess, useModuleAccess } from '@/hooks/useModuleAccess';
+import { useAdminOwnerUnreadMessagesCount } from '@/hooks/pm/useOwnerMessages';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
@@ -309,7 +310,7 @@ function ServiceHubGroup() {
 const PM_STORAGE_KEY = 'praetoria.sidebar.propertyManagementOpen';
 const PM_SUB_STORAGE_PREFIX = 'praetoria.sidebar.pm.';
 
-type PMItem = { title: string; url: string; icon: any; end?: boolean };
+type PMItem = { title: string; url: string; icon: any; end?: boolean; badgeCount?: number };
 type PMSubgroup = {
   key: string;
   label: string;
@@ -403,7 +404,14 @@ function PMSubgroupBlock({ group, defaultOpen }: { group: PMSubgroup; defaultOpe
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
                 <NavLink to={item.url} end={item.end} className={`pl-4 ${group.accent.idle}`} activeClassName={group.accent.active}>
-                  <item.icon className="mr-2 h-4 w-4" />
+                  <span className="relative mr-2 inline-flex">
+                    <item.icon className="h-4 w-4" />
+                    {item.badgeCount && item.badgeCount > 0 ? (
+                      <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-sidebar">
+                        {item.badgeCount > 9 ? '9+' : item.badgeCount}
+                      </span>
+                    ) : null}
+                  </span>
                   <span>{item.title}</span>
                 </NavLink>
               </SidebarMenuButton>
@@ -413,6 +421,31 @@ function PMSubgroupBlock({ group, defaultOpen }: { group: PMSubgroup; defaultOpe
       )}
     </div>
   );
+}
+
+function playOwnerMessageChime() {
+  try {
+    const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    const notes = [880, 1175]; // A5, D6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = now + i * 0.12;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.18, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.32);
+    });
+    setTimeout(() => ctx.close().catch(() => {}), 800);
+  } catch { /* ignore */ }
 }
 
 function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
@@ -428,6 +461,16 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
   const canSeeOwnerMessages = access.isOwnerOrAdmin || access.isPropertyManager;
   const canSeeTenantMessages = access.isOwnerOrAdmin || access.isPropertyManager;
 
+  // Owner message unread badge + audio chime on increase (admin-side alert)
+  const { data: ownerUnread = 0 } = useAdminOwnerUnreadMessagesCount();
+  const prevOwnerUnread = useRef<number | null>(null);
+  useEffect(() => {
+    if (prevOwnerUnread.current !== null && ownerUnread > prevOwnerUnread.current) {
+      playOwnerMessageChime();
+    }
+    prevOwnerUnread.current = ownerUnread;
+  }, [ownerUnread]);
+
   const mainItems: PMItem[] = [
     { title: 'Dashboard', url: '/property-management', icon: LayoutDashboard, end: true },
     { title: 'Properties', url: '/property-management/properties', icon: Building2 },
@@ -439,7 +482,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
     { title: 'Owners', url: '/property-management/owners', icon: UserCircle },
     { title: 'Owner Approvals', url: '/property-management/owner-approvals', icon: ShieldCheck },
     ...(canSeeOwnerMessages
-      ? [{ title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare }]
+      ? [{ title: 'Owner Messages', url: '/property-management/owner-messages', icon: MessageSquare, badgeCount: ownerUnread }]
       : []),
     { title: 'Owner Statements', url: '/property-management/owner-statements', icon: FileText },
   ];
