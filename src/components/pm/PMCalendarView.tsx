@@ -265,7 +265,23 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
             </div>
             <p className="text-xs text-muted-foreground mt-1">{fmtDate(e.start_at, e.all_day)}</p>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setReminderEvent(e)}
+              title="Add reminder"
+            >
+              <Bell className="h-3.5 w-3.5 mr-1" /> Remind
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExportICS(e)}
+              title="Add to calendar (.ics)"
+            >
+              <Download className="h-3.5 w-3.5 mr-1" /> .ics
+            </Button>
             {isReschedulable(e) && status !== 'completed' && status !== 'cancelled' && (
               <Button variant="outline" size="sm" onClick={() => setRescheduleEvent(e)}>
                 Reschedule
