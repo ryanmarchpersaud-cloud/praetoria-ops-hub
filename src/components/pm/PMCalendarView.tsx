@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   DndContext, PointerSensor, useSensor, useSensors, useDraggable, useDroppable,
@@ -15,9 +15,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Calendar as CalendarIcon, ChevronRight, ChevronLeft, ClipboardCheck, KeyRound,
   CalendarClock, ShieldCheck, Wrench, Home, ListChecks, Loader2, GripVertical,
+  Bell, Download,
 } from 'lucide-react';
 import { usePMCalendar, type PMCalendarEvent } from '@/hooks/pm/usePMCalendar';
 import { RescheduleEventDialog, isReschedulable } from '@/components/pm/RescheduleEventDialog';
+import { AddReminderDialog } from '@/components/pm/AddReminderDialog';
+import { PMRemindersList } from '@/components/pm/PMRemindersList';
+import { useProcessDueReminders } from '@/hooks/pm/usePMReminders';
+import { buildICS, downloadICS } from '@/lib/icsExport';
 
 const TYPE_META: Record<string, { label: string; color: string; icon: any; dot: string }> = {
   showing:               { label: 'Showing',        color: 'bg-blue-100 text-blue-800 border-blue-200',       icon: Home,           dot: 'bg-blue-500' },
@@ -104,7 +109,7 @@ type Props = {
   subheading?: string;
 };
 
-type ViewMode = 'month' | 'week' | 'list';
+type ViewMode = 'month' | 'week' | 'list' | 'reminders';
 
 // Event types that support drag-to-reschedule in the Month view.
 // Must match the types the pm_reschedule_event RPC accepts. Backend still enforces.
@@ -157,8 +162,15 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
   const [search, setSearch] = useState('');
   const [rescheduleEvent, setRescheduleEvent] = useState<PMCalendarEvent | null>(null);
   const [presetDropDate, setPresetDropDate] = useState<Date | null>(null);
+  const [reminderEvent, setReminderEvent] = useState<PMCalendarEvent | null>(null);
   const [view, setView] = useState<ViewMode>('month');
   const [cursor, setCursor] = useState<Date>(startOfDay(new Date()));
+
+  const processDue = useProcessDueReminders();
+  useEffect(() => {
+    processDue.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -217,6 +229,23 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
 
   const openLink = (e: PMCalendarEvent) => safeActionUrl(e);
 
+  const handleExportICS = (e: PMCalendarEvent) => {
+    const meta = TYPE_META[e.event_type] ?? TYPE_META.general_pm;
+    const absoluteUrl =
+      typeof window !== 'undefined' ? `${window.location.origin}${safeActionUrl(e)}` : safeActionUrl(e);
+    const ics = buildICS({
+      uid: e.event_id,
+      title: `[${meta.label}] ${e.title}`,
+      startISO: e.start_at,
+      endISO: e.end_at ?? null,
+      allDay: e.all_day,
+      description: `${meta.label} scheduled in Praetoria Ops Hub.`,
+      url: absoluteUrl,
+    });
+    const safeName = e.title.replace(/[^\w-]+/g, '_').slice(0, 40) || 'pm-event';
+    downloadICS(`${safeName}.ics`, ics);
+  };
+
   const eventChip = (e: PMCalendarEvent) => {
     const meta = TYPE_META[e.event_type] ?? TYPE_META.general_pm;
     return (
@@ -253,7 +282,23 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
             </div>
             <p className="text-xs text-muted-foreground mt-1">{fmtDate(e.start_at, e.all_day)}</p>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setReminderEvent(e)}
+              title="Add reminder"
+            >
+              <Bell className="h-3.5 w-3.5 mr-1" /> Remind
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleExportICS(e)}
+              title="Add to calendar (.ics)"
+            >
+              <Download className="h-3.5 w-3.5 mr-1" /> .ics
+            </Button>
             {isReschedulable(e) && status !== 'completed' && status !== 'cancelled' && (
               <Button variant="outline" size="sm" onClick={() => setRescheduleEvent(e)}>
                 Reschedule
@@ -444,10 +489,11 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
             <TabsTrigger value="month">Month</TabsTrigger>
             <TabsTrigger value="week">Week</TabsTrigger>
             <TabsTrigger value="list">List</TabsTrigger>
+            <TabsTrigger value="reminders"><Bell className="h-3.5 w-3.5 mr-1" />Reminders</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setCursor(startOfDay(new Date()))}>Today</Button>
-            {view !== 'list' && (
+            {view !== 'list' && view !== 'reminders' && (
               <>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => shiftCursor(-1)} aria-label="Previous">
                   <ChevronLeft className="h-4 w-4" />
@@ -487,6 +533,9 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
                 </div>
               )}
             </TabsContent>
+            <TabsContent value="reminders" className="mt-3">
+              <PMRemindersList />
+            </TabsContent>
           </>
         )}
       </Tabs>
@@ -496,6 +545,12 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
         open={!!rescheduleEvent}
         presetDate={presetDropDate}
         onOpenChange={(v) => { if (!v) { setRescheduleEvent(null); setPresetDropDate(null); } }}
+      />
+      <AddReminderDialog
+        event={reminderEvent}
+        open={!!reminderEvent}
+        onOpenChange={(v) => { if (!v) setReminderEvent(null); }}
+        actionUrl={reminderEvent ? safeActionUrl(reminderEvent) : undefined}
       />
     </div>
   );
