@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  DndContext, PointerSensor, useSensor, useSensors, useDraggable, useDroppable,
+  type DragEndEvent,
+} from '@dnd-kit/core';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +14,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Calendar as CalendarIcon, ChevronRight, ChevronLeft, ClipboardCheck, KeyRound,
-  CalendarClock, ShieldCheck, Wrench, Home, ListChecks, Loader2,
+  CalendarClock, ShieldCheck, Wrench, Home, ListChecks, Loader2, GripVertical,
 } from 'lucide-react';
 import { usePMCalendar, type PMCalendarEvent } from '@/hooks/pm/usePMCalendar';
 import { RescheduleEventDialog, isReschedulable } from '@/components/pm/RescheduleEventDialog';
