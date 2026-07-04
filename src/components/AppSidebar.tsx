@@ -5,7 +5,7 @@ import {
   MessageSquarePlus, Eye, HardHat, MessageSquare, Wallet, ShieldAlert, BookOpen, Mail, Lock, DollarSign, RefreshCw,
   ChevronDown, Home, KeyRound, UserCircle, Wrench, CalendarClock, ShieldCheck, FolderOpen,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/hooks/useAuth';
