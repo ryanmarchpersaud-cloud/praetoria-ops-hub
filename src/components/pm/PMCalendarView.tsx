@@ -162,8 +162,15 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
   const [search, setSearch] = useState('');
   const [rescheduleEvent, setRescheduleEvent] = useState<PMCalendarEvent | null>(null);
   const [presetDropDate, setPresetDropDate] = useState<Date | null>(null);
+  const [reminderEvent, setReminderEvent] = useState<PMCalendarEvent | null>(null);
   const [view, setView] = useState<ViewMode>('month');
   const [cursor, setCursor] = useState<Date>(startOfDay(new Date()));
+
+  const processDue = useProcessDueReminders();
+  useEffect(() => {
+    processDue.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
