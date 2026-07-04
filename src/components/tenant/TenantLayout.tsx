@@ -44,6 +44,7 @@ export function TenantLayout({ children }: { children: ReactNode }) {
           <div className="hidden sm:flex items-center gap-1 text-[11px] text-emerald-100/90 bg-white/10 px-2 py-1 rounded-full">
             <ShieldCheck className="h-3.5 w-3.5" /> Secure
           </div>
+          <PMNotificationsBell viewAllUrl="/tenant/notifications" className="text-white hover:bg-white/10" />
           <NotificationCenter />
         </div>
       </header>
