@@ -14140,6 +14140,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      pm_calendar_events: {
+        Args: { p_end: string; p_start: string }
+        Returns: {
+          action_url: string
+          all_day: boolean
+          assigned_staff_id: string
+          end_at: string
+          event_id: string
+          event_type: string
+          owner_id: string
+          priority: string
+          property_id: string
+          related_id: string
+          source: string
+          start_at: string
+          status: string
+          tenant_id: string
+          title: string
+          unit_id: string
+        }[]
+      }
       pm_finance_activity_write: {
         Args: {
           p_event_type: Database["public"]["Enums"]["pm_finance_activity_type"]
