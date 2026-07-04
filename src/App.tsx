@@ -287,6 +287,8 @@ const OwnerMessages = lazy(() => import("./pages/owner/OwnerMessages"));
 const TenantMessages = lazy(() => import("./pages/tenant/TenantMessages"));
 const PMNotificationsPage = lazy(() => import("./pages/property-management/PMNotificationsPage"));
 const PMStaffNotifications = lazy(() => import("./pages/pm-staff/Notifications"));
+const PMCalendarPage = lazy(() => import("./pages/property-management/PMCalendarPage"));
+const PMStaffCalendar = lazy(() => import("./pages/pm-staff/Calendar"));
 const TenantNotifications = lazy(() => import("./pages/tenant/TenantNotifications"));
 const OwnerNotifications = lazy(() => import("./pages/owner/OwnerNotifications"));
 
@@ -751,6 +753,7 @@ function AppRoutes() {
         <Route path="/property-management/owner-messages" element={<ModuleGuard module="ownerMessages"><Suspense fallback={<RouteLoading />}><PMOwnerMessagesList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/tenant-messages" element={<ModuleGuard module="ownerMessages"><Suspense fallback={<RouteLoading />}><PMTenantMessagesList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/notifications" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMNotificationsPage /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/calendar" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMCalendarPage /></Suspense></ModuleGuard>} />
 
         <Route path="/property-management/work-orders/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMWorkOrderDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/referrals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantReferralsList /></Suspense></ModuleGuard>} />
@@ -908,6 +911,7 @@ function AppRoutes() {
         <Route path="/pm-staff/inspections" element={<Suspense fallback={<RouteLoading />}><PMStaffInspections /></Suspense>} />
         <Route path="/pm-staff/inspections/:id" element={<Suspense fallback={<RouteLoading />}><PMStaffInspectionDetail /></Suspense>} />
         <Route path="/pm-staff/notifications" element={<Suspense fallback={<RouteLoading />}><PMStaffNotifications /></Suspense>} />
+        <Route path="/pm-staff/calendar" element={<Suspense fallback={<RouteLoading />}><PMStaffCalendar /></Suspense>} />
         <Route path="/pm-staff/more" element={<Suspense fallback={<RouteLoading />}><PMStaffMore /></Suspense>} />
         <Route path="/pm-staff/account" element={<Suspense fallback={<RouteLoading />}><PMStaffAccount /></Suspense>} />
         <Route path="/pm-staff/profile" element={<Suspense fallback={<RouteLoading />}><PMStaffProfile /></Suspense>} />

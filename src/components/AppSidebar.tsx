@@ -473,6 +473,7 @@ function PropertyManagementGroup({ collapsed }: { collapsed: boolean }) {
 
   const mainItems: PMItem[] = [
     { title: 'Dashboard', url: '/property-management', icon: LayoutDashboard, end: true },
+    { title: 'Calendar', url: '/property-management/calendar', icon: CalendarDays },
     { title: 'Properties', url: '/property-management/properties', icon: Building2 },
     { title: 'Units', url: '/property-management/units', icon: Home },
     { title: 'Documents', url: '/property-management/documents', icon: FolderOpen },
