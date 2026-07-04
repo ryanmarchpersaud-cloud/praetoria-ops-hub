@@ -206,6 +206,12 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
           {section('Past 7 Days', 'past')}
         </div>
       )}
+
+      <RescheduleEventDialog
+        event={rescheduleEvent}
+        open={!!rescheduleEvent}
+        onOpenChange={(v) => !v && setRescheduleEvent(null)}
+      />
     </div>
   );
 }
