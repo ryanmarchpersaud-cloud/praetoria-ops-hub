@@ -281,38 +281,52 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
   const monthLabel = cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   const renderMonth = () => (
-    <Card>
-      <CardContent className="p-3">
-        <div className="grid grid-cols-7 gap-1 text-[10px] font-semibold text-muted-foreground mb-1">
-          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d) => (
-            <div key={d} className="px-1 py-1 uppercase">{d}</div>
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {monthGrid.map((d) => {
-            const inMonth = d.getMonth() === cursor.getMonth();
-            const isToday = sameDay(d, new Date());
-            const events = byDay.get(dayKey(d)) ?? [];
-            return (
-              <div
-                key={d.toISOString()}
-                className={`min-h-[92px] rounded border p-1 flex flex-col gap-0.5 ${inMonth ? 'bg-background' : 'bg-muted/40'} ${isToday ? 'ring-2 ring-primary' : ''}`}
-              >
-                <div className={`text-[11px] font-semibold ${inMonth ? 'text-foreground' : 'text-muted-foreground'} ${isToday ? 'text-primary' : ''}`}>
-                  {d.getDate()}
-                </div>
-                <div className="flex-1 space-y-0.5 overflow-hidden">
-                  {events.slice(0, 3).map(eventChip)}
-                  {events.length > 3 && (
-                    <div className="text-[10px] text-muted-foreground px-1">+{events.length - 3} more</div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <Card>
+        <CardContent className="p-3">
+          <div className="grid grid-cols-7 gap-1 text-[10px] font-semibold text-muted-foreground mb-1">
+            {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d) => (
+              <div key={d} className="px-1 py-1 uppercase">{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {monthGrid.map((d) => {
+              const inMonth = d.getMonth() === cursor.getMonth();
+              const isToday = sameDay(d, new Date());
+              const events = byDay.get(dayKey(d)) ?? [];
+              const dayISO = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
+              return (
+                <DroppableDay
+                  key={d.toISOString()}
+                  dayISO={dayISO}
+                  className={`min-h-[92px] rounded border p-1 flex flex-col gap-0.5 ${inMonth ? 'bg-background' : 'bg-muted/40'} ${isToday ? 'ring-2 ring-primary' : ''}`}
+                >
+                  <div className={`text-[11px] font-semibold ${inMonth ? 'text-foreground' : 'text-muted-foreground'} ${isToday ? 'text-primary' : ''}`}>
+                    {d.getDate()}
+                  </div>
+                  <div className="flex-1 space-y-0.5 overflow-hidden">
+                    {events.slice(0, 3).map((e) =>
+                      isDraggableEvent(e) ? (
+                        <DraggableChip key={e.event_id} event={e}>{eventChip(e)}</DraggableChip>
+                      ) : (
+                        eventChip(e)
+                      )
+                    )}
+                    {events.length > 3 && (
+                      <div className="text-[10px] text-muted-foreground px-1">+{events.length - 3} more</div>
+                    )}
+                  </div>
+                </DroppableDay>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1">
+            <GripVertical className="h-3 w-3" />
+            Drag eligible events (showings, inspections, move-outs, tasks, owner approvals) to another day to reschedule. Confirmation required.
+          </p>
+        </CardContent>
+      </Card>
+    </DndContext>
   );
 
   // ---- Week View ----
