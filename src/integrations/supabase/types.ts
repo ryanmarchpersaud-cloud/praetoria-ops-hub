@@ -14232,6 +14232,15 @@ export type Database = {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
+      pm_reschedule_event: {
+        Args: {
+          p_field?: string
+          p_id: string
+          p_new_start: string
+          p_source: string
+        }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
