@@ -533,6 +533,9 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
                 </div>
               )}
             </TabsContent>
+            <TabsContent value="reminders" className="mt-3">
+              <PMRemindersList />
+            </TabsContent>
           </>
         )}
       </Tabs>
@@ -542,6 +545,12 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
         open={!!rescheduleEvent}
         presetDate={presetDropDate}
         onOpenChange={(v) => { if (!v) { setRescheduleEvent(null); setPresetDropDate(null); } }}
+      />
+      <AddReminderDialog
+        event={reminderEvent}
+        open={!!reminderEvent}
+        onOpenChange={(v) => { if (!v) setReminderEvent(null); }}
+        actionUrl={reminderEvent ? safeActionUrl(reminderEvent) : undefined}
       />
     </div>
   );
