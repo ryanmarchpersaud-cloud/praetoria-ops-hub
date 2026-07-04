@@ -12,6 +12,7 @@ import {
   CalendarClock, ShieldCheck, Wrench, Home, ListChecks, Loader2,
 } from 'lucide-react';
 import { usePMCalendar, type PMCalendarEvent } from '@/hooks/pm/usePMCalendar';
+import { RescheduleEventDialog, isReschedulable } from '@/components/pm/RescheduleEventDialog';
 
 const TYPE_META: Record<string, { label: string; color: string; icon: any }> = {
   showing:              { label: 'Showing',        color: 'bg-blue-100 text-blue-800 border-blue-200',       icon: Home },
