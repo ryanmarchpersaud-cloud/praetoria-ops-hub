@@ -23,10 +23,14 @@ export function OwnerPMDocumentsSection() {
   });
   const [busy, setBusy] = useState<string | null>(null);
 
-  const openDoc = async (id: string, path: string) => {
-    setBusy(id);
+  const openDoc = async (doc: any) => {
+    if (doc.document_type === 'inspection' && doc.inspection_id) {
+      window.open(`/owner/inspections/${doc.inspection_id}/print`, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setBusy(doc.id);
     try {
-      const url = await signPmDocument(path);
+      const url = await signPmDocument(doc.file_path);
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (e: any) { toast.error(e.message ?? 'Could not open'); }
     finally { setBusy(null); }
