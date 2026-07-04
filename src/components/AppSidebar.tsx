@@ -309,7 +309,7 @@ function ServiceHubGroup() {
 const PM_STORAGE_KEY = 'praetoria.sidebar.propertyManagementOpen';
 const PM_SUB_STORAGE_PREFIX = 'praetoria.sidebar.pm.';
 
-type PMItem = { title: string; url: string; icon: any; end?: boolean };
+type PMItem = { title: string; url: string; icon: any; end?: boolean; badgeCount?: number };
 type PMSubgroup = {
   key: string;
   label: string;
