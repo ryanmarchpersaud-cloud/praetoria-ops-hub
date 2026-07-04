@@ -229,6 +229,23 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
 
   const openLink = (e: PMCalendarEvent) => safeActionUrl(e);
 
+  const handleExportICS = (e: PMCalendarEvent) => {
+    const meta = TYPE_META[e.event_type] ?? TYPE_META.general_pm;
+    const absoluteUrl =
+      typeof window !== 'undefined' ? `${window.location.origin}${safeActionUrl(e)}` : safeActionUrl(e);
+    const ics = buildICS({
+      uid: e.event_id,
+      title: `[${meta.label}] ${e.title}`,
+      startISO: e.start_at,
+      endISO: e.end_at ?? null,
+      allDay: e.all_day,
+      description: `${meta.label} scheduled in Praetoria Ops Hub.`,
+      url: absoluteUrl,
+    });
+    const safeName = e.title.replace(/[^\w-]+/g, '_').slice(0, 40) || 'pm-event';
+    downloadICS(`${safeName}.ics`, ics);
+  };
+
   const eventChip = (e: PMCalendarEvent) => {
     const meta = TYPE_META[e.event_type] ?? TYPE_META.general_pm;
     return (
