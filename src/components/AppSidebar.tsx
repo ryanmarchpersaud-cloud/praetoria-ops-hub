@@ -12,6 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUnreadCount } from '@/hooks/useMessaging';
 import { useSidebarCounts } from '@/hooks/useSidebarCounts';
 import { useSidebarAccess, useModuleAccess } from '@/hooks/useModuleAccess';
+import { useAdminOwnerUnreadMessagesCount } from '@/hooks/pm/useOwnerMessages';
+import { useRef as useRefHook } from 'react';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
