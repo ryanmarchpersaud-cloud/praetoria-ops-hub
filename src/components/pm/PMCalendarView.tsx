@@ -493,7 +493,7 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
           </TabsList>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setCursor(startOfDay(new Date()))}>Today</Button>
-            {view !== 'list' && (
+            {view !== 'list' && view !== 'reminders' && (
               <>
                 <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => shiftCursor(-1)} aria-label="Previous">
                   <ChevronLeft className="h-4 w-4" />
