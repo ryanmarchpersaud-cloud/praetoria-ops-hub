@@ -285,6 +285,10 @@ const OwnerInspectionPrint = lazy(() => import("./pages/owner/OwnerInspectionPri
 const OwnerApprovals = lazy(() => import("./pages/owner/OwnerApprovals"));
 const OwnerMessages = lazy(() => import("./pages/owner/OwnerMessages"));
 const TenantMessages = lazy(() => import("./pages/tenant/TenantMessages"));
+const PMNotificationsPage = lazy(() => import("./pages/property-management/PMNotificationsPage"));
+const PMStaffNotifications = lazy(() => import("./pages/pm-staff/Notifications"));
+const TenantNotifications = lazy(() => import("./pages/tenant/TenantNotifications"));
+const OwnerNotifications = lazy(() => import("./pages/owner/OwnerNotifications"));
 
 const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
 const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
