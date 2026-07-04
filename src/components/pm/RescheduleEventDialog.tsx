@@ -73,10 +73,8 @@ export function RescheduleEventDialog({ event, open, onOpenChange, presetDate }:
     setField(sourceFor(event)?.fieldOptions?.[0]?.value ?? '');
   }, [event?.event_id, presetDate?.getTime()]);
 
-  if (!event || !cfg) return null;
-
   const newStart = useMemo(() => {
-    if (!date) return null;
+    if (!date || !event) return null;
     const [h, m] = (time || '00:00').split(':').map(Number);
     const d = new Date(date);
     if (event.all_day) {
@@ -85,7 +83,9 @@ export function RescheduleEventDialog({ event, open, onOpenChange, presetDate }:
       d.setHours(h ?? 0, m ?? 0, 0, 0);
     }
     return d;
-  }, [date, time, event.all_day]);
+  }, [date, time, event?.all_day]);
+
+  if (!event || !cfg) return null;
 
   const oldLabel = event.all_day
     ? format(new Date(event.start_at), 'PPP')
