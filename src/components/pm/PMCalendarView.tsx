@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   DndContext, PointerSensor, useSensor, useSensors, useDraggable, useDroppable,
@@ -15,9 +15,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Calendar as CalendarIcon, ChevronRight, ChevronLeft, ClipboardCheck, KeyRound,
   CalendarClock, ShieldCheck, Wrench, Home, ListChecks, Loader2, GripVertical,
+  Bell, Download,
 } from 'lucide-react';
 import { usePMCalendar, type PMCalendarEvent } from '@/hooks/pm/usePMCalendar';
 import { RescheduleEventDialog, isReschedulable } from '@/components/pm/RescheduleEventDialog';
+import { AddReminderDialog } from '@/components/pm/AddReminderDialog';
+import { PMRemindersList } from '@/components/pm/PMRemindersList';
+import { useProcessDueReminders } from '@/hooks/pm/usePMReminders';
+import { buildICS, downloadICS } from '@/lib/icsExport';
 
 const TYPE_META: Record<string, { label: string; color: string; icon: any; dot: string }> = {
   showing:               { label: 'Showing',        color: 'bg-blue-100 text-blue-800 border-blue-200',       icon: Home,           dot: 'bg-blue-500' },
