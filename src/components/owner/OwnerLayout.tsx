@@ -3,6 +3,7 @@ import { OwnerBottomNav } from './OwnerBottomNav';
 import { AdminPreviewBanner } from './AdminPreviewBanner';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { PMNotificationsBell } from '@/components/pm/PMNotificationsBell';
 import { isAndroidMobile } from '@/lib/platform';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { ShieldCheck } from 'lucide-react';
@@ -44,6 +45,9 @@ export function OwnerLayout({ children }: { children: ReactNode }) {
             </div>
             <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-100/90 bg-white/10 px-2 py-1 rounded-full shrink-0">
               <ShieldCheck className="h-3.5 w-3.5" /> Secure
+            </div>
+            <div className="shrink-0 text-white">
+              <PMNotificationsBell viewAllUrl="/owner/notifications" className="text-white hover:bg-white/10" />
             </div>
             <div className="shrink-0 [&_button>svg]:text-green-500">
               <NotificationCenter />

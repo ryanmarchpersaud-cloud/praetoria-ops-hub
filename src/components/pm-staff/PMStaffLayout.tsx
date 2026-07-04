@@ -3,6 +3,7 @@ import { PMStaffBottomNav } from './PMStaffBottomNav';
 import { PMStaffFAB } from './PMStaffFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { PMNotificationsBell } from '@/components/pm/PMNotificationsBell';
 import { isAndroidMobile } from '@/lib/platform';
 
 import { Building2 } from 'lucide-react';
@@ -67,6 +68,9 @@ export function PMStaffLayout({ children }: { children: ReactNode }) {
           </div>
           <div className="hidden sm:flex items-center gap-1 text-[11px] text-white/90 bg-white/10 px-2 py-1 rounded-full shrink-0">
             <Building2 className="h-3.5 w-3.5" /> {badge}
+          </div>
+          <div className="shrink-0 text-white">
+            <PMNotificationsBell viewAllUrl="/pm-staff/notifications" className="text-white hover:bg-white/10" />
           </div>
           <div className="shrink-0 [&_button>svg]:text-emerald-300">
             <NotificationCenter />

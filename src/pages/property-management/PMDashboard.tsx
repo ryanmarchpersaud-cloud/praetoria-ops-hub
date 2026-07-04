@@ -12,6 +12,7 @@ import {
   RenewalsAttentionCard, MaintenanceByPriorityCard,
 } from '@/components/property-management/dashboard/PMDashboardSections';
 import { LiveWorkforcePanel } from '@/components/dashboard/LiveWorkforcePanel';
+import { PMNotificationsBell } from '@/components/pm/PMNotificationsBell';
 import { useUserRole } from '@/hooks/useUserRole';
 
 const STEPS = [
@@ -47,18 +48,22 @@ export default function PMDashboard() {
     <div className="p-6 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="rounded-xl border border-emerald-600/20 bg-gradient-to-r from-emerald-50 via-emerald-50/40 to-transparent dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-transparent p-5">
-        <div className="flex items-start gap-3">
-          <div className="p-2.5 rounded-lg bg-emerald-600 text-white shadow-sm">
-            <Building2 className="h-6 w-6" strokeWidth={2.25} />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-lg bg-emerald-600 text-white shadow-sm">
+              <Building2 className="h-6 w-6" strokeWidth={2.25} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Property Management</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Live operational visibility across leasing, renewals, maintenance, and PM staff.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Property Management</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Live operational visibility across leasing, renewals, maintenance, and PM staff.
-            </p>
-          </div>
+          <PMNotificationsBell viewAllUrl="/property-management/notifications" />
         </div>
       </div>
+
 
       {/* Row 1 — Business KPIs (finance hidden for leasing-agent-only) */}
       <PMBusinessKPIs hideFinance={isLeasingAgentOnly} />

@@ -285,6 +285,10 @@ const OwnerInspectionPrint = lazy(() => import("./pages/owner/OwnerInspectionPri
 const OwnerApprovals = lazy(() => import("./pages/owner/OwnerApprovals"));
 const OwnerMessages = lazy(() => import("./pages/owner/OwnerMessages"));
 const TenantMessages = lazy(() => import("./pages/tenant/TenantMessages"));
+const PMNotificationsPage = lazy(() => import("./pages/property-management/PMNotificationsPage"));
+const PMStaffNotifications = lazy(() => import("./pages/pm-staff/Notifications"));
+const TenantNotifications = lazy(() => import("./pages/tenant/TenantNotifications"));
+const OwnerNotifications = lazy(() => import("./pages/owner/OwnerNotifications"));
 
 const PMStaffMore = lazy(() => import("./pages/pm-staff/More"));
 const PMStaffAccount = lazy(() => import("./pages/pm-staff/Account"));
@@ -746,6 +750,7 @@ function AppRoutes() {
         <Route path="/property-management/owner-approvals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerApprovalsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-messages" element={<ModuleGuard module="ownerMessages"><Suspense fallback={<RouteLoading />}><PMOwnerMessagesList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/tenant-messages" element={<ModuleGuard module="ownerMessages"><Suspense fallback={<RouteLoading />}><PMTenantMessagesList /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/notifications" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMNotificationsPage /></Suspense></ModuleGuard>} />
 
         <Route path="/property-management/work-orders/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMWorkOrderDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/referrals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMTenantReferralsList /></Suspense></ModuleGuard>} />
@@ -869,6 +874,7 @@ function AppRoutes() {
         <Route path="/tenant/messages" element={<Suspense fallback={<RouteLoading />}><TenantMessages /></Suspense>} />
         <Route path="/tenant/inspections" element={<Suspense fallback={<RouteLoading />}><TenantInspections /></Suspense>} />
         <Route path="/tenant/inspections/:id/print" element={<Suspense fallback={<RouteLoading />}><TenantInspectionPrint /></Suspense>} />
+        <Route path="/tenant/notifications" element={<Suspense fallback={<RouteLoading />}><TenantNotifications /></Suspense>} />
       </Route>
 
 
@@ -886,6 +892,7 @@ function AppRoutes() {
         <Route path="/owner/messages" element={<Suspense fallback={<RouteLoading />}><OwnerMessages /></Suspense>} />
         <Route path="/owner/inspections" element={<Suspense fallback={<RouteLoading />}><OwnerInspections /></Suspense>} />
         <Route path="/owner/inspections/:id/print" element={<Suspense fallback={<RouteLoading />}><OwnerInspectionPrint /></Suspense>} />
+        <Route path="/owner/notifications" element={<Suspense fallback={<RouteLoading />}><OwnerNotifications /></Suspense>} />
       </Route>
 
       <Route element={<PMStaffRoute />}>
@@ -900,6 +907,7 @@ function AppRoutes() {
         <Route path="/pm-staff/lease-renewals" element={<Suspense fallback={<RouteLoading />}><PMStaffLeaseRenewals /></Suspense>} />
         <Route path="/pm-staff/inspections" element={<Suspense fallback={<RouteLoading />}><PMStaffInspections /></Suspense>} />
         <Route path="/pm-staff/inspections/:id" element={<Suspense fallback={<RouteLoading />}><PMStaffInspectionDetail /></Suspense>} />
+        <Route path="/pm-staff/notifications" element={<Suspense fallback={<RouteLoading />}><PMStaffNotifications /></Suspense>} />
         <Route path="/pm-staff/more" element={<Suspense fallback={<RouteLoading />}><PMStaffMore /></Suspense>} />
         <Route path="/pm-staff/account" element={<Suspense fallback={<RouteLoading />}><PMStaffAccount /></Suspense>} />
         <Route path="/pm-staff/profile" element={<Suspense fallback={<RouteLoading />}><PMStaffProfile /></Suspense>} />

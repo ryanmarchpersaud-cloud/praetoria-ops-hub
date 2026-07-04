@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { TenantBottomNav } from './TenantBottomNav';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { PMNotificationsBell } from '@/components/pm/PMNotificationsBell';
 import { isAndroidMobile } from '@/lib/platform';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { ShieldCheck } from 'lucide-react';
@@ -43,6 +44,7 @@ export function TenantLayout({ children }: { children: ReactNode }) {
           <div className="hidden sm:flex items-center gap-1 text-[11px] text-emerald-100/90 bg-white/10 px-2 py-1 rounded-full">
             <ShieldCheck className="h-3.5 w-3.5" /> Secure
           </div>
+          <PMNotificationsBell viewAllUrl="/tenant/notifications" className="text-white hover:bg-white/10" />
           <NotificationCenter />
         </div>
       </header>
