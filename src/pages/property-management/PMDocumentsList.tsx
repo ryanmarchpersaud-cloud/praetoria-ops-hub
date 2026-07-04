@@ -203,7 +203,7 @@ export default function PMDocumentsList() {
                       {d.file_name} · uploaded {new Date(d.created_at).toLocaleString()}
                     </p>
                   </div>
-                  <Button size="sm" variant="outline" disabled={busy === d.id} onClick={() => openDoc(d.id, d.file_path)}>
+                  <Button size="sm" variant="outline" disabled={busy === d.id} onClick={() => openDoc(d)}>
                     <Download className="h-4 w-4 mr-1" />
                     {busy === d.id ? 'Opening…' : 'Open'}
                   </Button>
