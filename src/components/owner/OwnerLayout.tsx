@@ -3,6 +3,7 @@ import { OwnerBottomNav } from './OwnerBottomNav';
 import { AdminPreviewBanner } from './AdminPreviewBanner';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { PMNotificationsBell } from '@/components/pm/PMNotificationsBell';
 import { isAndroidMobile } from '@/lib/platform';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { ShieldCheck } from 'lucide-react';
