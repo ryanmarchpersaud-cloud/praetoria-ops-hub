@@ -69,6 +69,9 @@ export function PMStaffLayout({ children }: { children: ReactNode }) {
           <div className="hidden sm:flex items-center gap-1 text-[11px] text-white/90 bg-white/10 px-2 py-1 rounded-full shrink-0">
             <Building2 className="h-3.5 w-3.5" /> {badge}
           </div>
+          <div className="shrink-0 text-white">
+            <PMNotificationsBell viewAllUrl="/pm-staff/notifications" className="text-white hover:bg-white/10" />
+          </div>
           <div className="shrink-0 [&_button>svg]:text-emerald-300">
             <NotificationCenter />
           </div>
