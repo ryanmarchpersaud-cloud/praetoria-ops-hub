@@ -106,13 +106,74 @@ type Props = {
 
 type ViewMode = 'month' | 'week' | 'list';
 
+// Event types that support drag-to-reschedule in the Month view.
+// Must match the types the pm_reschedule_event RPC accepts. Backend still enforces.
+const DRAG_ELIGIBLE_TYPES = new Set([
+  'showing',
+  'inspection',
+  'move_out',
+  'staff_task',
+  'owner_approval_due', // RPC restricts to admin/property_manager
+]);
+
+function isDraggableEvent(e: PMCalendarEvent): boolean {
+  if (!isReschedulable(e)) return false;
+  if (!DRAG_ELIGIBLE_TYPES.has(e.event_type)) return false;
+  const s = (e.status ?? '').toLowerCase();
+  if (['completed', 'cancelled', 'archived', 'locked'].includes(s)) return false;
+  return true;
+}
+
+// --- DnD primitives (Month view only) ---
+function DraggableChip({ event, children }: { event: PMCalendarEvent; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: event.event_id,
+    data: { event },
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`cursor-grab active:cursor-grabbing touch-none ${isDragging ? 'opacity-40' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DroppableDay({ dayISO, children, className }: { dayISO: string; children: React.ReactNode; className?: string }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `day:${dayISO}`, data: { dayISO } });
+  return (
+    <div ref={setNodeRef} className={`${className ?? ''} ${isOver ? 'ring-2 ring-primary/70 bg-primary/5' : ''}`}>
+      {children}
+    </div>
+  );
+}
+
 export function PMCalendarView({ variant = 'admin', heading, subheading }: Props) {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [rescheduleEvent, setRescheduleEvent] = useState<PMCalendarEvent | null>(null);
+  const [presetDropDate, setPresetDropDate] = useState<Date | null>(null);
   const [view, setView] = useState<ViewMode>('month');
   const [cursor, setCursor] = useState<Date>(startOfDay(new Date()));
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (evt: DragEndEvent) => {
+    const ev = evt.active?.data?.current?.event as PMCalendarEvent | undefined;
+    const dayISO = evt.over?.data?.current?.dayISO as string | undefined;
+    if (!ev || !dayISO) return;
+    if (!isDraggableEvent(ev)) return;
+    const target = new Date(dayISO);
+    const orig = new Date(ev.start_at);
+    if (sameDay(target, orig)) return; // no-op if dropped on same day
+    setRescheduleEvent(ev);
+    setPresetDropDate(target);
+  };
+
 
   // Fetch a range large enough for month/week/list views
   const range = useMemo(() => {
