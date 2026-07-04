@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { TenantBottomNav } from './TenantBottomNav';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { PMNotificationsBell } from '@/components/pm/PMNotificationsBell';
 import { isAndroidMobile } from '@/lib/platform';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { ShieldCheck } from 'lucide-react';
