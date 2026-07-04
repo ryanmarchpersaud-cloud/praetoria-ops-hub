@@ -3,6 +3,7 @@ import { PMStaffBottomNav } from './PMStaffBottomNav';
 import { PMStaffFAB } from './PMStaffFAB';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { PMNotificationsBell } from '@/components/pm/PMNotificationsBell';
 import { isAndroidMobile } from '@/lib/platform';
 
 import { Building2 } from 'lucide-react';
