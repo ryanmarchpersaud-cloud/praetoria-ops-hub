@@ -494,7 +494,8 @@ export function PMCalendarView({ variant = 'admin', heading, subheading }: Props
       <RescheduleEventDialog
         event={rescheduleEvent}
         open={!!rescheduleEvent}
-        onOpenChange={(v) => !v && setRescheduleEvent(null)}
+        presetDate={presetDropDate}
+        onOpenChange={(v) => { if (!v) { setRescheduleEvent(null); setPresetDropDate(null); } }}
       />
     </div>
   );
