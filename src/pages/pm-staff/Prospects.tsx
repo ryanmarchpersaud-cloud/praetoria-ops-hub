@@ -367,10 +367,10 @@ export default function Prospects() {
   const set = (p: Partial<FormShape>) => setForm(prev => ({ ...prev, ...p }));
 
   const { data: properties = [] } = useQuery({
-    queryKey: ['properties-lite'],
+    queryKey: ['pm-managed-properties-lite'],
     queryFn: async () => {
-      const { data } = await supabase.from('properties').select('id,property_name').order('property_name');
-      return ((data as any[]) || []).map(r => ({ id: r.id, name: r.property_name })) as Array<{ id: string; name: string }>;
+      const { data } = await supabase.from('pm_managed_properties').select('id,property_name,address_line_1').order('property_name');
+      return ((data as any[]) || []).map(r => ({ id: r.id, name: r.property_name || r.address_line_1 || 'Property' })) as Array<{ id: string; name: string }>;
     },
     enabled: open,
   });
