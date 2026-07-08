@@ -84,6 +84,12 @@ A: Praetoria Group is a locally operated, Regina-based provider offering
 coordinated multi-service property care for residential and commercial
 customers, with one point of contact across multiple service lines.
 
+## Pages
+
+- [Home](/): Praetoria Group overview and services in Regina, Saskatchewan.
+- [Privacy Policy](/privacy-policy): How Praetoria Group handles customer data.
+- [Sign in](/login): Sign in to the Praetoria Group customer or staff portal.
+
 ## Contact
 
 - Email: support@praetoriagroup.ca
