@@ -133,6 +133,7 @@ export function LoginPromoPanel() {
           <div className="flex items-center justify-center gap-3 mb-6">
             <button
               onClick={prev}
+              aria-label="Previous service"
               className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -152,6 +153,7 @@ export function LoginPromoPanel() {
             </div>
             <button
               onClick={next}
+              aria-label="Next service"
               className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />

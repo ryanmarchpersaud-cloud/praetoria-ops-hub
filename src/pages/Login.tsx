@@ -78,6 +78,9 @@ export default function Login() {
               <img src={praetoriaLogo} alt="Praetoria Group" className="w-11 h-11 object-contain dark:invert-0 invert" />
               <span className="text-xl font-bold text-foreground tracking-tight">Praetoria Group</span>
             </div>
+            <h1 className="text-2xl font-bold text-foreground mt-2">
+              {mode === 'forgot' ? 'Reset your password' : mode === 'signup' ? 'Request access' : 'Sign in to Praetoria Group'}
+            </h1>
             <p className="text-muted-foreground text-sm mt-1">
               {mode === 'forgot'
                 ? 'Enter your email to reset your password'
@@ -120,6 +123,8 @@ export default function Login() {
                     placeholder="••••••••" required minLength={6} className="pl-10 pr-10 h-11"
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
