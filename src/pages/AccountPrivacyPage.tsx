@@ -50,38 +50,44 @@ export default function AccountPrivacyPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Signed in as</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm">{user?.email}</p>
-          </CardContent>
-        </Card>
+        <section aria-labelledby="signed-in-heading">
+          <h2 id="signed-in-heading" className="sr-only">Signed in</h2>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Signed in as</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">{user?.email}</p>
+            </CardContent>
+          </Card>
+        </section>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">What happens when you delete your account</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-2">
-            <p>
-              Tapping <strong>Start Account Deletion</strong> below submits your
-              account for permanent deletion. Your account will be scheduled for
-              deletion and our team will remove or anonymize your personal
-              profile, login credentials, contact info and saved preferences.
-            </p>
-            <p>
-              Business records that Praetoria Group is legally required to keep
-              (such as invoices, tax records, signed agreements, and completed
-              job/service history) may be retained in anonymized form to comply
-              with Canadian record-keeping laws.
-            </p>
-            <p>
-              You will receive an email confirmation once your account has been
-              fully removed. This action cannot be undone.
-            </p>
-          </CardContent>
-        </Card>
+        <section aria-labelledby="deletion-info-heading">
+          <h2 id="deletion-info-heading" className="sr-only">What happens when you delete your account</h2>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">What happens when you delete your account</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground space-y-2">
+              <p>
+                Tapping <strong>Start Account Deletion</strong> below submits your
+                account for permanent deletion. Your account will be scheduled for
+                deletion and our team will remove or anonymize your personal
+                profile, login credentials, contact info and saved preferences.
+              </p>
+              <p>
+                Business records that Praetoria Group is legally required to keep
+                (such as invoices, tax records, signed agreements, and completed
+                job/service history) may be retained in anonymized form to comply
+                with Canadian record-keeping laws.
+              </p>
+              <p>
+                You will receive an email confirmation once your account has been
+                fully removed. This action cannot be undone.
+              </p>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* The destructive delete flow with confirmation dialog */}
         <DeleteAccountSection />
