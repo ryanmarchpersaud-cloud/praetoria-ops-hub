@@ -401,6 +401,29 @@ export default function ScheduleNewVisits() {
       });
   }, [startDate, recurringJobs]);
 
+  // Multi-date duplicate detection for selected jobs across all effective dates
+  useEffect(() => {
+    if (!showModal || selectedJobIds.size === 0 || effectiveDates.length === 0) {
+      setMultiDupes({});
+      return;
+    }
+    const jobIds = [...selectedJobIds];
+    supabase
+      .from('visits')
+      .select('job_id, service_date')
+      .in('job_id', jobIds)
+      .in('service_date', effectiveDates)
+      .then(({ data }) => {
+        if (!data) { setMultiDupes({}); return; }
+        const m: Record<string, string[]> = {};
+        (data as any[]).forEach((v) => {
+          if (!m[v.job_id]) m[v.job_id] = [];
+          m[v.job_id].push(v.service_date);
+        });
+        setMultiDupes(m);
+      });
+  }, [showModal, selectedJobIds, effectiveDates]);
+
   // Filtered list
   const filteredJobs = useMemo(() => {
     let filtered = recurringJobs;
