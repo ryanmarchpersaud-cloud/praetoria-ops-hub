@@ -200,6 +200,15 @@ export default function ScheduleNewVisits() {
   const [pinCorrectionMode, setPinCorrectionMode] = useState(false);
   const [bulkAction, setBulkAction] = useState<'reassign' | 'unschedule' | null>(null);
 
+  // Multi-day scheduling state
+  const [scheduleType, setScheduleType] = useState<'single' | 'multiple'>('single');
+  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [weekdayMask, setWeekdayMask] = useState<Set<number>>(new Set([0, 1, 2, 3, 4, 5, 6]));
+  const [includeWeekends, setIncludeWeekends] = useState(true);
+  const [removedDates, setRemovedDates] = useState<Set<string>>(new Set());
+  const [multiDupes, setMultiDupes] = useState<Record<string, string[]>>({});
+  const [dupeStrategy, setDupeStrategy] = useState<'skip' | 'keep_add'>('skip');
+
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
