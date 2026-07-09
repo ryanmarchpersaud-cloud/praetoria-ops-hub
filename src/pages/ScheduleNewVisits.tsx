@@ -456,6 +456,26 @@ export default function ScheduleNewVisits() {
       .reduce((sum: number, j: any) => sum + (parseFloat(j.estimated_total) || 0), 0);
   }, [filteredJobs, selectedJobIds]);
 
+  // Effective dates for creation (single or multi-day)
+  const effectiveDates = useMemo<string[]>(() => {
+    if (scheduleType === 'single') return [format(startDate, 'yyyy-MM-dd')];
+    const end = endDate < startDate ? startDate : endDate;
+    return eachDayOfInterval({ start: startDate, end })
+      .filter(d => weekdayMask.has(d.getDay()))
+      .filter(d => includeWeekends || (d.getDay() !== 0 && d.getDay() !== 6))
+      .map(d => format(d, 'yyyy-MM-dd'))
+      .filter(ds => !removedDates.has(ds));
+  }, [scheduleType, startDate, endDate, weekdayMask, includeWeekends, removedDates]);
+
+  const totalVisitsToCreate = effectiveDates.length * selectedJobIds.size;
+
+  // Detect fixed-price selected jobs (billing_type !== 'Per Visit')
+  const fixedPriceSelectedJobs = useMemo(() => {
+    return (recurringJobs as any[]).filter(
+      j => selectedJobIds.has(j.id) && (j.billing_type || '').toLowerCase() !== 'per visit'
+    );
+  }, [recurringJobs, selectedJobIds]);
+
   // Travel time estimates for optimized route
   const travelEstimates = useMemo(() => {
     if (!showRouteOptimization || selectedJobIds.size < 2) return null;
