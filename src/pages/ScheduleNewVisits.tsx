@@ -24,7 +24,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval } from 'date-fns';
 import {
   CalendarIcon, ArrowLeft, Check, X, Search, Filter, MapPinOff,
   AlertTriangle, Heart, Accessibility, Dog, Lock, Mountain, Zap, Crown,
