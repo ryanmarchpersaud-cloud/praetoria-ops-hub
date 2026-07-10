@@ -836,17 +836,18 @@ export default function ScheduleNewVisits() {
   }, [selectedJobIds, existingVisits]);
 
   const handleCreateVisits = async () => {
-    if (selectedJobIds.size === 0) return;
+    if (isCreating) return; // prevent double-submit
+    if (selectedJobIds.size === 0 || effectiveDates.length === 0) return;
 
-    // Warn about duplicates
-    if (dupeCount > 0) {
+    // For single-day mode retain the original confirm() flow
+    if (scheduleType === 'single' && dupeCount > 0) {
       const confirmed = window.confirm(
         `${dupeCount} of the selected jobs already have visits on ${format(startDate, 'MMM d, yyyy')}. Create duplicates anyway?`
       );
       if (!confirmed) return;
     }
 
-    // Worker conflict check
+    // Worker conflict check (checks only the start date crew load — an approximation)
     if (selectedTeam.length > 0) {
       const overloaded = selectedTeam.filter(uid => (crewCounts[uid] || 0) >= 6);
       if (overloaded.length > 0) {
@@ -855,7 +856,7 @@ export default function ScheduleNewVisits() {
           return emp?.full_name || 'Unknown';
         });
         const confirmed = window.confirm(
-          `Warning: ${names.join(', ')} already ${overloaded.length > 1 ? 'have' : 'has'} 6+ visits on this date. Assign anyway?`
+          `Warning: ${names.join(', ')} already ${overloaded.length > 1 ? 'have' : 'has'} 6+ visits on ${format(startDate, 'MMM d')}. Assign anyway?`
         );
         if (!confirmed) return;
       }
@@ -863,78 +864,100 @@ export default function ScheduleNewVisits() {
 
     setIsCreating(true);
 
-    const dateStr = format(startDate, 'yyyy-MM-dd');
     const selectedJobs = recurringJobs.filter((j: any) => selectedJobIds.has(j.id));
     let successCount = 0;
     let errorCount = 0;
-    let protectedCount = 0;
+    let skippedCount = 0;
+    const successDates: string[] = [];
+    const failedItems: { job: string; date: string; error: string }[] = [];
 
-    for (const job of selectedJobs) {
-      try {
-        const leadWorkerId = selectedTeam[0] || null;
-        const visitPayload: any = {
-          job_id: job.id,
-          customer_id: job.customer_id,
-          property_id: job.property_id || null,
-          service_date: dateStr,
-          visit_type: 'Routine',
-          visit_status: 'Scheduled',
-          service_summary: job.job_title,
-          crew_notes: instructions || null,
-          assigned_worker_id: leadWorkerId,
-          service_category: (job as any).service_category || 'Snow & Ice',
-        };
-        const createdVisit: any = await createVisit.mutateAsync(visitPayload);
-
-        // Additional crew members (beyond the lead)
-        const extraCrew = selectedTeam.slice(1);
-        if (createdVisit?.id && extraCrew.length > 0) {
-          const crewRows = extraCrew.map((wid) => ({
-            visit_id: createdVisit.id,
-            worker_user_id: wid,
-            created_by: user?.id || null,
-          }));
-          await supabase.from('visit_crew_members').insert(crewRows as any);
+    for (const dateStr of effectiveDates) {
+      for (const job of selectedJobs) {
+        // Multi-day dupe strategy: skip if already exists on that date
+        const jobDupeDates = multiDupes[job.id] || [];
+        if (scheduleType === 'multiple' && dupeStrategy === 'skip' && jobDupeDates.includes(dateStr)) {
+          skippedCount++;
+          continue;
         }
-
-        // Subcontractor assignments
-        if (createdVisit?.id && selectedSubcontractorIds.length > 0) {
-          const subRows = selectedSubcontractorIds.map((sid) => ({
-            visit_id: createdVisit.id,
-            subcontractor_id: sid,
+        try {
+          const leadWorkerId = selectedTeam[0] || null;
+          const visitPayload: any = {
             job_id: job.id,
-          }));
-          await supabase.from('subcontractor_assignments').insert(subRows as any);
-        }
+            customer_id: job.customer_id,
+            property_id: job.property_id || null,
+            service_date: dateStr,
+            visit_type: 'Routine',
+            visit_status: 'Scheduled',
+            service_summary: job.job_title,
+            crew_notes: instructions || null,
+            assigned_worker_id: leadWorkerId,
+            service_category: (job as any).service_category || 'Snow & Ice',
+          };
+          const createdVisit: any = await createVisit.mutateAsync(visitPayload);
 
-        successCount++;
-      } catch (err: any) {
-        errorCount++;
-        if (handleProtectedCustomerError(err)) {
-          protectedCount++;
-        } else {
-          console.error(`Failed to create visit for job ${job.job_number}:`, err.message);
+          const extraCrew = selectedTeam.slice(1);
+          if (createdVisit?.id && extraCrew.length > 0) {
+            const crewRows = extraCrew.map((wid) => ({
+              visit_id: createdVisit.id,
+              worker_user_id: wid,
+              created_by: user?.id || null,
+            }));
+            await supabase.from('visit_crew_members').insert(crewRows as any);
+          }
+
+          if (createdVisit?.id && selectedSubcontractorIds.length > 0) {
+            const subRows = selectedSubcontractorIds.map((sid) => ({
+              visit_id: createdVisit.id,
+              subcontractor_id: sid,
+              job_id: job.id,
+            }));
+            await supabase.from('subcontractor_assignments').insert(subRows as any);
+          }
+
+          successCount++;
+          successDates.push(dateStr);
+        } catch (err: any) {
+          errorCount++;
+          if (handleProtectedCustomerError(err)) {
+            // protected — counted as error
+          } else {
+            console.error(`Failed to create visit for job ${job.job_number} on ${dateStr}:`, err.message);
+          }
+          failedItems.push({ job: job.job_number, date: dateStr, error: err?.message || 'unknown' });
         }
       }
     }
 
     // Audit trail
+    const firstDate = effectiveDates[0];
+    const lastDate = effectiveDates[effectiveDates.length - 1];
+    const rangeLabel = scheduleType === 'multiple' && firstDate !== lastDate
+      ? `${format(new Date(firstDate + 'T12:00:00'), 'MMM d')} – ${format(new Date(lastDate + 'T12:00:00'), 'MMM d, yyyy')}`
+      : format(new Date(firstDate + 'T12:00:00'), 'MMM d, yyyy');
+    const jobNumbers = selectedJobs.map((j: any) => j.job_number).join(', ');
+
     await supabase.from('activities').insert({
-      action_name: `Batch created ${successCount} visits`,
+      action_name: scheduleType === 'multiple'
+        ? `Created ${successCount} visits for ${selectedJobs.length} job${selectedJobs.length !== 1 ? 's' : ''} covering ${rangeLabel}`
+        : `Batch created ${successCount} visits`,
       workflow_name: 'dispatch',
       record_type: 'visit',
       user_id: user?.id || null,
-      status: 'completed',
+      status: errorCount > 0 ? 'failed' : 'completed',
       payload_summary: {
-        date: dateStr,
+        schedule_type: scheduleType,
+        dates: effectiveDates,
+        job_numbers: jobNumbers,
         job_count: selectedJobs.length,
         success: successCount,
         errors: errorCount,
+        skipped: skippedCount,
         assigned_team: selectedTeam,
+        failed_items: failedItems,
       },
     });
 
-    // Send notifications to assigned workers (in-app + email)
+    // Worker notifications
     if (selectedTeam.length > 0 && successCount > 0) {
       for (const workerId of selectedTeam) {
         try {
@@ -946,8 +969,8 @@ export default function ScheduleNewVisits() {
               channels: ['in_app', 'email'],
               variables: {
                 subject: `${successCount} new visit${successCount > 1 ? 's' : ''} assigned`,
-                body: `You have been assigned ${successCount} visit${successCount > 1 ? 's' : ''} for ${format(startDate, 'MMM d, yyyy')}.`,
-                scheduled_date: format(startDate, 'MMM d, yyyy'),
+                body: `You have been assigned ${successCount} visit${successCount > 1 ? 's' : ''} covering ${rangeLabel}.`,
+                scheduled_date: rangeLabel,
               },
             },
           });
@@ -955,7 +978,7 @@ export default function ScheduleNewVisits() {
       }
     }
 
-    // Send customer notifications for scheduled visits
+    // Customer notifications
     if (successCount > 0) {
       const uniqueCustomerIds = [...new Set(selectedJobs.map((j: any) => j.customer_id).filter(Boolean))];
       for (const custId of uniqueCustomerIds) {
@@ -976,7 +999,7 @@ export default function ScheduleNewVisits() {
                 customer_name: `${cust.first_name} ${cust.last_name}`,
                 property: prop?.property_name || '',
                 service_type: (custJob as any)?.service_category || '',
-                scheduled_date: format(startDate, 'MMM d, yyyy'),
+                scheduled_date: rangeLabel,
                 to_email: cust.email || '',
                 to_phone: cust.phone || '',
               },
@@ -987,19 +1010,34 @@ export default function ScheduleNewVisits() {
     }
 
     setIsCreating(false);
-    setShowModal(false);
 
     if (successCount > 0) {
+      const parts: string[] = [`Scheduled for ${rangeLabel}`];
+      if (skippedCount > 0) parts.push(`${skippedCount} skipped (already existed)`);
+      if (errorCount > 0) parts.push(`${errorCount} failed`);
       toast({
         title: `${successCount} visit${successCount > 1 ? 's' : ''} created`,
-        description: `Scheduled for ${format(startDate, 'MMM d, yyyy')}${errorCount > 0 ? `. ${errorCount} failed.` : ''}`,
+        description: parts.join(' · '),
       });
+      setShowModal(false);
       setSelectedJobIds(new Set());
       setInstructions('');
       setSelectedTeam([]);
       setSelectedSubcontractorIds([]);
+      setRemovedDates(new Set());
+    } else if (skippedCount > 0 && errorCount === 0) {
+      toast({
+        title: 'No visits created',
+        description: `All ${skippedCount} visits already existed and were skipped.`,
+      });
+      setShowModal(false);
     } else {
-      toast({ title: 'Failed to create visits', description: 'Please try again. Check the browser console for details.', variant: 'destructive' });
+      const failedSummary = failedItems.slice(0, 3).map(f => `${f.job} on ${f.date}`).join('; ');
+      toast({
+        title: 'Failed to create visits',
+        description: failedSummary ? `Failures: ${failedSummary}${failedItems.length > 3 ? '…' : ''}` : 'Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
