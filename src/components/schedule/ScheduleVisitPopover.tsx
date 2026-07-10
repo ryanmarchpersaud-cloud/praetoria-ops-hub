@@ -20,9 +20,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import {
   CalendarDays, Phone, MapPin, CheckSquare, MoreHorizontal,
-  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check, X, Users, HardHat
+  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check, X, Users, HardHat, Undo2
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { ReinstateVisitDialog } from '@/components/schedule/ReinstateVisitDialog';
 
 interface ScheduleVisitPopoverProps {
   visit: any;
@@ -42,6 +43,7 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
   const removeSub = useRemoveVisitSubAssignment();
   const { toast } = useToast();
   const [tab, setTab] = useState('info');
+  const [reinstateOpen, setReinstateOpen] = useState(false);
 
   if (!visit) return null;
 
@@ -174,7 +176,15 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
 
         {/* Action buttons */}
         <div className="px-5 pb-3 flex gap-2">
-          {visit.visit_status !== 'Completed' && visit.visit_status !== 'Cancelled' && (
+          {visit.visit_status === 'Cancelled' ? (
+            <Button
+              onClick={() => setReinstateOpen(true)}
+              className="flex-1 h-10"
+            >
+              <Undo2 className="h-4 w-4 mr-2" />
+              Reinstate Visit
+            </Button>
+          ) : visit.visit_status !== 'Completed' && (
             <Button
               onClick={handleMarkComplete}
               className="flex-1 h-10"
@@ -212,12 +222,21 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
                 <Mail className="h-4 w-4" /> Email Reminder
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleDelete}
-                className="flex items-center gap-2 text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" /> Cancel Visit
-              </DropdownMenuItem>
+              {visit.visit_status === 'Cancelled' ? (
+                <DropdownMenuItem
+                  onClick={() => setReinstateOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Undo2 className="h-4 w-4" /> Reinstate Visit
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="flex items-center gap-2 text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" /> Cancel Visit
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -464,6 +483,12 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
           </Button>
         </div>
       </DialogContent>
+      <ReinstateVisitDialog
+        visit={visit}
+        open={reinstateOpen}
+        onOpenChange={setReinstateOpen}
+        onReinstated={() => onOpenChange(false)}
+      />
     </Dialog>
   );
 }

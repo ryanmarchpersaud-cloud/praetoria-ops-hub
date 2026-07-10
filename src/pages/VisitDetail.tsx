@@ -11,8 +11,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2, AlertTriangle, FileCheck2, Undo2 } from 'lucide-react';
 import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
+import { ReinstateVisitDialog } from '@/components/schedule/ReinstateVisitDialog';
+import { format, parseISO } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VISIT_STATUSES, VISIT_TYPES } from '@/lib/constants';
@@ -33,6 +35,7 @@ export default function VisitDetail() {
   const [form, setForm] = useState<any>({});
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [proofOpen, setProofOpen] = useState(false);
+  const [reinstateOpen, setReinstateOpen] = useState(false);
   const { canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices for this visit
@@ -131,6 +134,26 @@ export default function VisitDetail() {
         </div>
       </div>
 
+      {form.visit_status === 'Cancelled' && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-start gap-2">
+            <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-destructive">This visit is cancelled</p>
+              <p className="text-muted-foreground">
+                {(visit as any).cancelled_at && `Cancelled ${format(parseISO((visit as any).cancelled_at), 'MMM d, yyyy')}`}
+                {(visit as any).cancellation_reason && ` · ${(visit as any).cancellation_reason}`}
+              </p>
+            </div>
+          </div>
+          {canManageVisits && (
+            <Button size="sm" onClick={() => setReinstateOpen(true)} className="gap-1.5">
+              <Undo2 className="h-3.5 w-3.5" /> Reinstate Visit
+            </Button>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-2 flex-wrap">
         {canManageVisits && (
           <Button onClick={handleSave} className="flex-1 h-11" disabled={updateVisit.isPending}>
@@ -167,15 +190,21 @@ export default function VisitDetail() {
                   <CheckSquare className="h-4 w-4" /> Mark Complete
                 </DropdownMenuItem>
               )}
-              {form.visit_status !== 'Cancelled' && (
+              {form.visit_status !== 'Cancelled' && form.visit_status !== 'Completed' && (
                 <DropdownMenuItem onClick={async () => {
+                  const reason = window.prompt('Reason for cancellation (optional):') ?? '';
                   try {
-                    await updateVisit.mutateAsync({ id, visit_status: 'Cancelled' });
+                    await updateVisit.mutateAsync({ id, visit_status: 'Cancelled', cancellation_reason: reason || null });
                     set('visit_status', 'Cancelled');
                     toast({ title: 'Visit cancelled' });
                   } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
                 }} className="gap-2">
                   <XCircle className="h-4 w-4" /> Cancel Visit
+                </DropdownMenuItem>
+              )}
+              {form.visit_status === 'Cancelled' && (
+                <DropdownMenuItem onClick={() => setReinstateOpen(true)} className="gap-2">
+                  <Undo2 className="h-4 w-4" /> Reinstate Visit
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={async () => {
@@ -433,6 +462,12 @@ export default function VisitDetail() {
         visitId={id || null}
         jobId={(visit as any).job_id || null}
         customerId={(visit as any).customer_id || null}
+      />
+
+      <ReinstateVisitDialog
+        visit={visit}
+        open={reinstateOpen}
+        onOpenChange={setReinstateOpen}
       />
     </div>
   );
