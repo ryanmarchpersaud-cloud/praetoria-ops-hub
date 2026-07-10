@@ -43,6 +43,7 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
   const removeSub = useRemoveVisitSubAssignment();
   const { toast } = useToast();
   const [tab, setTab] = useState('info');
+  const [reinstateOpen, setReinstateOpen] = useState(false);
 
   if (!visit) return null;
 
