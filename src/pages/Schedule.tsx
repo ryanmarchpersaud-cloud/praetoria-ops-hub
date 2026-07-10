@@ -13,6 +13,7 @@ import { DraggableItem, DragOverlayItem, MonthDraggableChip } from '@/components
 import { DroppableDay } from '@/components/schedule/DroppableDay';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ScheduleVisitPopover } from '@/components/schedule/ScheduleVisitPopover';
+import { DayScheduleDialog } from '@/components/schedule/DayScheduleDialog';
 
 type ViewMode = 'week' | 'month';
 
@@ -21,6 +22,7 @@ export default function Schedule() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeItem, setActiveItem] = useState<{ type: 'visit' | 'job'; data: any } | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
+  const [dayViewDate, setDayViewDate] = useState<string | null>(null);
 
   const { data: visits = [] } = useVisits();
   const { data: jobs = [] } = useJobs();
