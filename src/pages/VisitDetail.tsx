@@ -463,6 +463,12 @@ export default function VisitDetail() {
         jobId={(visit as any).job_id || null}
         customerId={(visit as any).customer_id || null}
       />
+
+      <ReinstateVisitDialog
+        visit={visit}
+        open={reinstateOpen}
+        onOpenChange={setReinstateOpen}
+      />
     </div>
   );
 }
