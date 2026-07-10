@@ -30,6 +30,7 @@ export const SERVICE_CATEGORIES = [
   'Locksmith Services',
   'Drywall Mudding & Taping',
   'Drywall Installation & Metal Stud Completion',
+  'Farm Building Demolition & Metal Recovery',
   'Other',
 ] as const;
 
