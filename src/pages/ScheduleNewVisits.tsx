@@ -225,12 +225,13 @@ export default function ScheduleNewVisits() {
   const routeNumberMarkersRef = useRef<L.Marker[]>([]);
   const listItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  // Filter recurring jobs
+  // Eligible jobs: any active job (recurring OR one-time multi-day).
+  // Duplicate protection is enforced per-date below, not by hiding jobs
+  // that already have visits — a multi-day job must be selectable repeatedly.
   const recurringJobs = useMemo(() => {
     return (allJobs as any[]).filter((j) => {
-      const isRecurring = j.service_frequency && j.service_frequency !== 'one-time';
       const isActive = j.status === 'Scheduled' || j.status === 'In Progress';
-      return isRecurring && isActive;
+      return isActive;
     });
   }, [allJobs]);
 
@@ -1131,7 +1132,7 @@ export default function ScheduleNewVisits() {
           </Button>
           <div>
             <h1 className="text-xl md:text-2xl font-bold">Schedule New Visits</h1>
-            <p className="text-sm text-muted-foreground">Quickly create visits for active <strong>recurring jobs</strong>.</p>
+            <p className="text-sm text-muted-foreground">Quickly create visits for active jobs (recurring or multi-day one-time).</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -1328,7 +1329,7 @@ export default function ScheduleNewVisits() {
             {jobsLoading ? (
               <p className="text-sm text-muted-foreground text-center py-8">Loading jobs...</p>
             ) : filteredJobs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">No active recurring jobs found</p>
+              <p className="text-sm text-muted-foreground text-center py-8">No active jobs found</p>
             ) : (
               filteredJobs.map((job: any) => {
                 const isSelected = selectedJobIds.has(job.id);
