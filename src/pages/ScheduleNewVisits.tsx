@@ -1132,7 +1132,7 @@ export default function ScheduleNewVisits() {
           </Button>
           <div>
             <h1 className="text-xl md:text-2xl font-bold">Schedule New Visits</h1>
-            <p className="text-sm text-muted-foreground">Quickly create visits for active <strong>recurring jobs</strong>.</p>
+            <p className="text-sm text-muted-foreground">Quickly create visits for active jobs (recurring or multi-day one-time).</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
