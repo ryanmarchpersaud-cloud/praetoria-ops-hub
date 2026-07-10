@@ -177,7 +177,15 @@ export default function ScheduleNewVisits() {
 
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
-  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [searchParams] = useSearchParams();
+  const [startDate, setStartDate] = useState<Date>(() => {
+    const p = searchParams.get('date');
+    if (p && /^\d{4}-\d{2}-\d{2}$/.test(p)) {
+      const d = new Date(p + 'T12:00:00');
+      if (!isNaN(d.getTime())) return d;
+    }
+    return new Date();
+  });
   const [selectedTeam, setSelectedTeam] = useState<string[]>([]);
   const [selectedSubcontractorIds, setSelectedSubcontractorIds] = useState<string[]>([]);
   const [instructions, setInstructions] = useState('');
