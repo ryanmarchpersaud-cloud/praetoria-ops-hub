@@ -622,6 +622,12 @@ export default function JobDetail() {
         customerId={(job as any).customer_id || null}
         defaultEmail={(customer as any)?.email || (customer as any)?.billing_contact_email || null}
       />
+
+      <ReinstateJobDialog
+        job={{ ...job, ...form }}
+        open={reinstateOpen}
+        onOpenChange={setReinstateOpen}
+      />
     </div>
   );
 }
