@@ -176,7 +176,15 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
 
         {/* Action buttons */}
         <div className="px-5 pb-3 flex gap-2">
-          {visit.visit_status !== 'Completed' && visit.visit_status !== 'Cancelled' && (
+          {visit.visit_status === 'Cancelled' ? (
+            <Button
+              onClick={() => setReinstateOpen(true)}
+              className="flex-1 h-10"
+            >
+              <Undo2 className="h-4 w-4 mr-2" />
+              Reinstate Visit
+            </Button>
+          ) : visit.visit_status !== 'Completed' && (
             <Button
               onClick={handleMarkComplete}
               className="flex-1 h-10"
