@@ -190,15 +190,21 @@ export default function VisitDetail() {
                   <CheckSquare className="h-4 w-4" /> Mark Complete
                 </DropdownMenuItem>
               )}
-              {form.visit_status !== 'Cancelled' && (
+              {form.visit_status !== 'Cancelled' && form.visit_status !== 'Completed' && (
                 <DropdownMenuItem onClick={async () => {
+                  const reason = window.prompt('Reason for cancellation (optional):') ?? '';
                   try {
-                    await updateVisit.mutateAsync({ id, visit_status: 'Cancelled' });
+                    await updateVisit.mutateAsync({ id, visit_status: 'Cancelled', cancellation_reason: reason || null });
                     set('visit_status', 'Cancelled');
                     toast({ title: 'Visit cancelled' });
                   } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
                 }} className="gap-2">
                   <XCircle className="h-4 w-4" /> Cancel Visit
+                </DropdownMenuItem>
+              )}
+              {form.visit_status === 'Cancelled' && (
+                <DropdownMenuItem onClick={() => setReinstateOpen(true)} className="gap-2">
+                  <Undo2 className="h-4 w-4" /> Reinstate Visit
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={async () => {
