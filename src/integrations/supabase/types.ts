@@ -4043,6 +4043,9 @@ export type Database = {
           billing_notes: string | null
           billing_status: string | null
           billing_type: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           complimentary_reason: string | null
           complimentary_value: number | null
           contract_end_date: string | null
@@ -4061,6 +4064,9 @@ export type Database = {
           priority: Database["public"]["Enums"]["job_priority"]
           property_id: string | null
           quote_id: string | null
+          reinstated_at: string | null
+          reinstated_by: string | null
+          reinstatement_reason: string | null
           request_id: string | null
           scheduled_date: string | null
           scope_of_work: string | null
@@ -4071,6 +4077,7 @@ export type Database = {
             | null
           service_instructions: string | null
           status: Database["public"]["Enums"]["job_status"]
+          status_before_cancellation: string | null
           updated_at: string
         }
         Insert: {
@@ -4079,6 +4086,9 @@ export type Database = {
           billing_notes?: string | null
           billing_status?: string | null
           billing_type?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           complimentary_reason?: string | null
           complimentary_value?: number | null
           contract_end_date?: string | null
@@ -4097,6 +4107,9 @@ export type Database = {
           priority?: Database["public"]["Enums"]["job_priority"]
           property_id?: string | null
           quote_id?: string | null
+          reinstated_at?: string | null
+          reinstated_by?: string | null
+          reinstatement_reason?: string | null
           request_id?: string | null
           scheduled_date?: string | null
           scope_of_work?: string | null
@@ -4107,6 +4120,7 @@ export type Database = {
             | null
           service_instructions?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          status_before_cancellation?: string | null
           updated_at?: string
         }
         Update: {
@@ -4115,6 +4129,9 @@ export type Database = {
           billing_notes?: string | null
           billing_status?: string | null
           billing_type?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           complimentary_reason?: string | null
           complimentary_value?: number | null
           contract_end_date?: string | null
@@ -4133,6 +4150,9 @@ export type Database = {
           priority?: Database["public"]["Enums"]["job_priority"]
           property_id?: string | null
           quote_id?: string | null
+          reinstated_at?: string | null
+          reinstated_by?: string | null
+          reinstatement_reason?: string | null
           request_id?: string | null
           scheduled_date?: string | null
           scope_of_work?: string | null
@@ -4143,6 +4163,7 @@ export type Database = {
             | null
           service_instructions?: string | null
           status?: Database["public"]["Enums"]["job_status"]
+          status_before_cancellation?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -12976,6 +12997,9 @@ export type Database = {
           arrival_time: string | null
           assigned_worker_id: string | null
           billing_status: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           completion_time: string | null
           created_at: string
           crew_notes: string | null
@@ -12991,6 +13015,9 @@ export type Database = {
           recurrence_end_date: string | null
           recurrence_frequency: string | null
           recurrence_parent_id: string | null
+          reinstated_at: string | null
+          reinstated_by: string | null
+          reinstatement_reason: string | null
           request_id: string | null
           requires_completion_notes: boolean | null
           requires_photo_proof: boolean | null
@@ -13002,6 +13029,7 @@ export type Database = {
           service_summary: string | null
           site_instructions: string | null
           snow_depth: string | null
+          status_before_cancellation: string | null
           updated_at: string
           visit_number: string
           visit_status: Database["public"]["Enums"]["visit_status"]
@@ -13013,6 +13041,9 @@ export type Database = {
           arrival_time?: string | null
           assigned_worker_id?: string | null
           billing_status?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           completion_time?: string | null
           created_at?: string
           crew_notes?: string | null
@@ -13028,6 +13059,9 @@ export type Database = {
           recurrence_end_date?: string | null
           recurrence_frequency?: string | null
           recurrence_parent_id?: string | null
+          reinstated_at?: string | null
+          reinstated_by?: string | null
+          reinstatement_reason?: string | null
           request_id?: string | null
           requires_completion_notes?: boolean | null
           requires_photo_proof?: boolean | null
@@ -13039,6 +13073,7 @@ export type Database = {
           service_summary?: string | null
           site_instructions?: string | null
           snow_depth?: string | null
+          status_before_cancellation?: string | null
           updated_at?: string
           visit_number: string
           visit_status?: Database["public"]["Enums"]["visit_status"]
@@ -13050,6 +13085,9 @@ export type Database = {
           arrival_time?: string | null
           assigned_worker_id?: string | null
           billing_status?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           completion_time?: string | null
           created_at?: string
           crew_notes?: string | null
@@ -13065,6 +13103,9 @@ export type Database = {
           recurrence_end_date?: string | null
           recurrence_frequency?: string | null
           recurrence_parent_id?: string | null
+          reinstated_at?: string | null
+          reinstated_by?: string | null
+          reinstatement_reason?: string | null
           request_id?: string | null
           requires_completion_notes?: boolean | null
           requires_photo_proof?: boolean | null
@@ -13076,6 +13117,7 @@ export type Database = {
           service_summary?: string | null
           site_instructions?: string | null
           snow_depth?: string | null
+          status_before_cancellation?: string | null
           updated_at?: string
           visit_number?: string
           visit_status?: Database["public"]["Enums"]["visit_status"]
@@ -13934,6 +13976,9 @@ export type Database = {
           arrival_time: string | null
           assigned_worker_id: string | null
           billing_status: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           completion_time: string | null
           created_at: string
           crew_notes: string | null
@@ -13949,6 +13994,9 @@ export type Database = {
           recurrence_end_date: string | null
           recurrence_frequency: string | null
           recurrence_parent_id: string | null
+          reinstated_at: string | null
+          reinstated_by: string | null
+          reinstatement_reason: string | null
           request_id: string | null
           requires_completion_notes: boolean | null
           requires_photo_proof: boolean | null
@@ -13960,6 +14008,7 @@ export type Database = {
           service_summary: string | null
           site_instructions: string | null
           snow_depth: string | null
+          status_before_cancellation: string | null
           updated_at: string
           visit_number: string
           visit_status: Database["public"]["Enums"]["visit_status"]
