@@ -13,6 +13,7 @@ import { DraggableItem, DragOverlayItem, MonthDraggableChip } from '@/components
 import { DroppableDay } from '@/components/schedule/DroppableDay';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ScheduleVisitPopover } from '@/components/schedule/ScheduleVisitPopover';
+import { DayScheduleDialog } from '@/components/schedule/DayScheduleDialog';
 
 type ViewMode = 'week' | 'month';
 
@@ -21,6 +22,7 @@ export default function Schedule() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeItem, setActiveItem] = useState<{ type: 'visit' | 'job'; data: any } | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
+  const [dayViewDate, setDayViewDate] = useState<string | null>(null);
 
   const { data: visits = [] } = useVisits();
   const { data: jobs = [] } = useJobs();
@@ -269,9 +271,14 @@ export default function Schedule() {
                     dateKey={dateKey}
                     className={`min-h-[60px] md:min-h-[80px] p-1 ${inMonth ? 'bg-card' : 'bg-muted/30'} ${isToday(day) ? 'ring-2 ring-inset ring-primary/40' : ''}`}
                   >
-                    <p className={`text-[10px] font-medium mb-0.5 ${isToday(day) ? 'text-primary' : inMonth ? '' : 'text-muted-foreground/50'}`}>
+                    <button
+                      type="button"
+                      onClick={() => setDayViewDate(dateKey)}
+                      aria-label={`View all ${dayVisits.length + dayJobs.length} items scheduled for ${format(day, 'MMMM d, yyyy')}`}
+                      className={`text-[10px] font-medium mb-0.5 rounded px-1 -mx-0.5 hover:bg-muted/70 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer ${isToday(day) ? 'text-primary' : inMonth ? '' : 'text-muted-foreground/50'}`}
+                    >
                       {format(day, 'd')}
-                    </p>
+                    </button>
                     {dayVisits.slice(0, 2).map((v: any) => (
                       <MonthDraggableChip key={v.id} id={v.id} type="visit" data={v} onVisitClick={setSelectedVisit} />
                     ))}
@@ -279,7 +286,23 @@ export default function Schedule() {
                       <MonthDraggableChip key={j.id} id={j.id} type="job" data={j} />
                     ))}
                     {(dayVisits.length + dayJobs.length) > 3 && (
-                      <p className="text-[8px] text-muted-foreground text-center">+{dayVisits.length + dayJobs.length - 3}</p>
+                      <button
+                        type="button"
+                        onClick={() => setDayViewDate(dateKey)}
+                        aria-label={`View all ${dayVisits.length + dayJobs.length} items scheduled for ${format(day, 'MMMM d, yyyy')}`}
+                        className="w-full text-[9px] text-muted-foreground text-center hover:text-primary hover:bg-muted/70 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                      >
+                        +{dayVisits.length + dayJobs.length - 3} more
+                      </button>
+                    )}
+                    {(dayVisits.length + dayJobs.length) <= 3 && (
+                      <button
+                        type="button"
+                        onClick={() => setDayViewDate(dateKey)}
+                        aria-label={`View schedule for ${format(day, 'MMMM d, yyyy')}`}
+                        tabIndex={-1}
+                        className="block w-full flex-1 min-h-[8px] cursor-pointer"
+                      />
                     )}
                   </DroppableDay>
                 );
@@ -299,6 +322,15 @@ export default function Schedule() {
         visit={selectedVisit}
         open={!!selectedVisit}
         onOpenChange={(open) => { if (!open) setSelectedVisit(null); }}
+      />
+
+      <DayScheduleDialog
+        dateKey={dayViewDate}
+        visits={dayViewDate ? (visitsByDate[dayViewDate] || []) : []}
+        jobs={dayViewDate ? (jobsByDate[dayViewDate] || []) : []}
+        open={!!dayViewDate}
+        onOpenChange={(open) => { if (!open) setDayViewDate(null); }}
+        onVisitClick={(v) => { setDayViewDate(null); setSelectedVisit(v); }}
       />
     </div>
   );
