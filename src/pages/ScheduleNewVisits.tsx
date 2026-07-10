@@ -24,7 +24,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval } from 'date-fns';
 import {
   CalendarIcon, ArrowLeft, Check, X, Search, Filter, MapPinOff,
   AlertTriangle, Heart, Accessibility, Dog, Lock, Mountain, Zap, Crown,
@@ -199,6 +199,15 @@ export default function ScheduleNewVisits() {
   const [existingVisits, setExistingVisits] = useState<Record<string, boolean>>({});
   const [pinCorrectionMode, setPinCorrectionMode] = useState(false);
   const [bulkAction, setBulkAction] = useState<'reassign' | 'unschedule' | null>(null);
+
+  // Multi-day scheduling state
+  const [scheduleType, setScheduleType] = useState<'single' | 'multiple'>('single');
+  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [weekdayMask, setWeekdayMask] = useState<Set<number>>(new Set([0, 1, 2, 3, 4, 5, 6]));
+  const [includeWeekends, setIncludeWeekends] = useState(true);
+  const [removedDates, setRemovedDates] = useState<Set<string>>(new Set());
+  const [multiDupes, setMultiDupes] = useState<Record<string, string[]>>({});
+  const [dupeStrategy, setDupeStrategy] = useState<'skip' | 'keep_add'>('skip');
 
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -446,6 +455,55 @@ export default function ScheduleNewVisits() {
       .filter((j: any) => selectedJobIds.has(j.id))
       .reduce((sum: number, j: any) => sum + (parseFloat(j.estimated_total) || 0), 0);
   }, [filteredJobs, selectedJobIds]);
+
+  // Effective dates for creation (single or multi-day)
+  const effectiveDates = useMemo<string[]>(() => {
+    if (scheduleType === 'single') return [format(startDate, 'yyyy-MM-dd')];
+    const end = endDate < startDate ? startDate : endDate;
+    return eachDayOfInterval({ start: startDate, end })
+      .filter(d => weekdayMask.has(d.getDay()))
+      .filter(d => includeWeekends || (d.getDay() !== 0 && d.getDay() !== 6))
+      .map(d => format(d, 'yyyy-MM-dd'))
+      .filter(ds => !removedDates.has(ds));
+  }, [scheduleType, startDate, endDate, weekdayMask, includeWeekends, removedDates]);
+
+  const totalVisitsToCreate = effectiveDates.length * selectedJobIds.size;
+
+  // Detect fixed-price selected jobs (billing_type !== 'Per Visit')
+  const fixedPriceSelectedJobs = useMemo(() => {
+    return (recurringJobs as any[]).filter(
+      j => selectedJobIds.has(j.id) && (j.billing_type || '').toLowerCase() !== 'per visit'
+    );
+  }, [recurringJobs, selectedJobIds]);
+
+  // Multi-date duplicate detection for selected jobs across all effective dates
+  useEffect(() => {
+    if (!showModal || selectedJobIds.size === 0 || effectiveDates.length === 0) {
+      setMultiDupes({});
+      return;
+    }
+    const jobIds = [...selectedJobIds];
+    supabase
+      .from('visits')
+      .select('job_id, service_date')
+      .in('job_id', jobIds)
+      .in('service_date', effectiveDates)
+      .then(({ data }) => {
+        if (!data) { setMultiDupes({}); return; }
+        const m: Record<string, string[]> = {};
+        (data as any[]).forEach((v) => {
+          if (!m[v.job_id]) m[v.job_id] = [];
+          m[v.job_id].push(v.service_date);
+        });
+        setMultiDupes(m);
+      });
+  }, [showModal, selectedJobIds, effectiveDates]);
+
+  const totalDupeConflicts = useMemo(() => {
+    let count = 0;
+    Object.values(multiDupes).forEach(arr => { count += arr.length; });
+    return count;
+  }, [multiDupes]);
 
   // Travel time estimates for optimized route
   const travelEstimates = useMemo(() => {
@@ -778,17 +836,18 @@ export default function ScheduleNewVisits() {
   }, [selectedJobIds, existingVisits]);
 
   const handleCreateVisits = async () => {
-    if (selectedJobIds.size === 0) return;
+    if (isCreating) return; // prevent double-submit
+    if (selectedJobIds.size === 0 || effectiveDates.length === 0) return;
 
-    // Warn about duplicates
-    if (dupeCount > 0) {
+    // For single-day mode retain the original confirm() flow
+    if (scheduleType === 'single' && dupeCount > 0) {
       const confirmed = window.confirm(
         `${dupeCount} of the selected jobs already have visits on ${format(startDate, 'MMM d, yyyy')}. Create duplicates anyway?`
       );
       if (!confirmed) return;
     }
 
-    // Worker conflict check
+    // Worker conflict check (checks only the start date crew load — an approximation)
     if (selectedTeam.length > 0) {
       const overloaded = selectedTeam.filter(uid => (crewCounts[uid] || 0) >= 6);
       if (overloaded.length > 0) {
@@ -797,7 +856,7 @@ export default function ScheduleNewVisits() {
           return emp?.full_name || 'Unknown';
         });
         const confirmed = window.confirm(
-          `Warning: ${names.join(', ')} already ${overloaded.length > 1 ? 'have' : 'has'} 6+ visits on this date. Assign anyway?`
+          `Warning: ${names.join(', ')} already ${overloaded.length > 1 ? 'have' : 'has'} 6+ visits on ${format(startDate, 'MMM d')}. Assign anyway?`
         );
         if (!confirmed) return;
       }
@@ -805,78 +864,100 @@ export default function ScheduleNewVisits() {
 
     setIsCreating(true);
 
-    const dateStr = format(startDate, 'yyyy-MM-dd');
     const selectedJobs = recurringJobs.filter((j: any) => selectedJobIds.has(j.id));
     let successCount = 0;
     let errorCount = 0;
-    let protectedCount = 0;
+    let skippedCount = 0;
+    const successDates: string[] = [];
+    const failedItems: { job: string; date: string; error: string }[] = [];
 
-    for (const job of selectedJobs) {
-      try {
-        const leadWorkerId = selectedTeam[0] || null;
-        const visitPayload: any = {
-          job_id: job.id,
-          customer_id: job.customer_id,
-          property_id: job.property_id || null,
-          service_date: dateStr,
-          visit_type: 'Routine',
-          visit_status: 'Scheduled',
-          service_summary: job.job_title,
-          crew_notes: instructions || null,
-          assigned_worker_id: leadWorkerId,
-          service_category: (job as any).service_category || 'Snow & Ice',
-        };
-        const createdVisit: any = await createVisit.mutateAsync(visitPayload);
-
-        // Additional crew members (beyond the lead)
-        const extraCrew = selectedTeam.slice(1);
-        if (createdVisit?.id && extraCrew.length > 0) {
-          const crewRows = extraCrew.map((wid) => ({
-            visit_id: createdVisit.id,
-            worker_user_id: wid,
-            created_by: user?.id || null,
-          }));
-          await supabase.from('visit_crew_members').insert(crewRows as any);
+    for (const dateStr of effectiveDates) {
+      for (const job of selectedJobs) {
+        // Multi-day dupe strategy: skip if already exists on that date
+        const jobDupeDates = multiDupes[job.id] || [];
+        if (scheduleType === 'multiple' && dupeStrategy === 'skip' && jobDupeDates.includes(dateStr)) {
+          skippedCount++;
+          continue;
         }
-
-        // Subcontractor assignments
-        if (createdVisit?.id && selectedSubcontractorIds.length > 0) {
-          const subRows = selectedSubcontractorIds.map((sid) => ({
-            visit_id: createdVisit.id,
-            subcontractor_id: sid,
+        try {
+          const leadWorkerId = selectedTeam[0] || null;
+          const visitPayload: any = {
             job_id: job.id,
-          }));
-          await supabase.from('subcontractor_assignments').insert(subRows as any);
-        }
+            customer_id: job.customer_id,
+            property_id: job.property_id || null,
+            service_date: dateStr,
+            visit_type: 'Routine',
+            visit_status: 'Scheduled',
+            service_summary: job.job_title,
+            crew_notes: instructions || null,
+            assigned_worker_id: leadWorkerId,
+            service_category: (job as any).service_category || 'Snow & Ice',
+          };
+          const createdVisit: any = await createVisit.mutateAsync(visitPayload);
 
-        successCount++;
-      } catch (err: any) {
-        errorCount++;
-        if (handleProtectedCustomerError(err)) {
-          protectedCount++;
-        } else {
-          console.error(`Failed to create visit for job ${job.job_number}:`, err.message);
+          const extraCrew = selectedTeam.slice(1);
+          if (createdVisit?.id && extraCrew.length > 0) {
+            const crewRows = extraCrew.map((wid) => ({
+              visit_id: createdVisit.id,
+              worker_user_id: wid,
+              created_by: user?.id || null,
+            }));
+            await supabase.from('visit_crew_members').insert(crewRows as any);
+          }
+
+          if (createdVisit?.id && selectedSubcontractorIds.length > 0) {
+            const subRows = selectedSubcontractorIds.map((sid) => ({
+              visit_id: createdVisit.id,
+              subcontractor_id: sid,
+              job_id: job.id,
+            }));
+            await supabase.from('subcontractor_assignments').insert(subRows as any);
+          }
+
+          successCount++;
+          successDates.push(dateStr);
+        } catch (err: any) {
+          errorCount++;
+          if (handleProtectedCustomerError(err)) {
+            // protected — counted as error
+          } else {
+            console.error(`Failed to create visit for job ${job.job_number} on ${dateStr}:`, err.message);
+          }
+          failedItems.push({ job: job.job_number, date: dateStr, error: err?.message || 'unknown' });
         }
       }
     }
 
     // Audit trail
+    const firstDate = effectiveDates[0];
+    const lastDate = effectiveDates[effectiveDates.length - 1];
+    const rangeLabel = scheduleType === 'multiple' && firstDate !== lastDate
+      ? `${format(new Date(firstDate + 'T12:00:00'), 'MMM d')} – ${format(new Date(lastDate + 'T12:00:00'), 'MMM d, yyyy')}`
+      : format(new Date(firstDate + 'T12:00:00'), 'MMM d, yyyy');
+    const jobNumbers = selectedJobs.map((j: any) => j.job_number).join(', ');
+
     await supabase.from('activities').insert({
-      action_name: `Batch created ${successCount} visits`,
+      action_name: scheduleType === 'multiple'
+        ? `Created ${successCount} visits for ${selectedJobs.length} job${selectedJobs.length !== 1 ? 's' : ''} covering ${rangeLabel}`
+        : `Batch created ${successCount} visits`,
       workflow_name: 'dispatch',
       record_type: 'visit',
       user_id: user?.id || null,
-      status: 'completed',
+      status: errorCount > 0 ? 'failed' : 'completed',
       payload_summary: {
-        date: dateStr,
+        schedule_type: scheduleType,
+        dates: effectiveDates,
+        job_numbers: jobNumbers,
         job_count: selectedJobs.length,
         success: successCount,
         errors: errorCount,
+        skipped: skippedCount,
         assigned_team: selectedTeam,
+        failed_items: failedItems,
       },
     });
 
-    // Send notifications to assigned workers (in-app + email)
+    // Worker notifications
     if (selectedTeam.length > 0 && successCount > 0) {
       for (const workerId of selectedTeam) {
         try {
@@ -888,8 +969,8 @@ export default function ScheduleNewVisits() {
               channels: ['in_app', 'email'],
               variables: {
                 subject: `${successCount} new visit${successCount > 1 ? 's' : ''} assigned`,
-                body: `You have been assigned ${successCount} visit${successCount > 1 ? 's' : ''} for ${format(startDate, 'MMM d, yyyy')}.`,
-                scheduled_date: format(startDate, 'MMM d, yyyy'),
+                body: `You have been assigned ${successCount} visit${successCount > 1 ? 's' : ''} covering ${rangeLabel}.`,
+                scheduled_date: rangeLabel,
               },
             },
           });
@@ -897,7 +978,7 @@ export default function ScheduleNewVisits() {
       }
     }
 
-    // Send customer notifications for scheduled visits
+    // Customer notifications
     if (successCount > 0) {
       const uniqueCustomerIds = [...new Set(selectedJobs.map((j: any) => j.customer_id).filter(Boolean))];
       for (const custId of uniqueCustomerIds) {
@@ -918,7 +999,7 @@ export default function ScheduleNewVisits() {
                 customer_name: `${cust.first_name} ${cust.last_name}`,
                 property: prop?.property_name || '',
                 service_type: (custJob as any)?.service_category || '',
-                scheduled_date: format(startDate, 'MMM d, yyyy'),
+                scheduled_date: rangeLabel,
                 to_email: cust.email || '',
                 to_phone: cust.phone || '',
               },
@@ -929,19 +1010,34 @@ export default function ScheduleNewVisits() {
     }
 
     setIsCreating(false);
-    setShowModal(false);
 
     if (successCount > 0) {
+      const parts: string[] = [`Scheduled for ${rangeLabel}`];
+      if (skippedCount > 0) parts.push(`${skippedCount} skipped (already existed)`);
+      if (errorCount > 0) parts.push(`${errorCount} failed`);
       toast({
         title: `${successCount} visit${successCount > 1 ? 's' : ''} created`,
-        description: `Scheduled for ${format(startDate, 'MMM d, yyyy')}${errorCount > 0 ? `. ${errorCount} failed.` : ''}`,
+        description: parts.join(' · '),
       });
+      setShowModal(false);
       setSelectedJobIds(new Set());
       setInstructions('');
       setSelectedTeam([]);
       setSelectedSubcontractorIds([]);
+      setRemovedDates(new Set());
+    } else if (skippedCount > 0 && errorCount === 0) {
+      toast({
+        title: 'No visits created',
+        description: `All ${skippedCount} visits already existed and were skipped.`,
+      });
+      setShowModal(false);
     } else {
-      toast({ title: 'Failed to create visits', description: 'Please try again. Check the browser console for details.', variant: 'destructive' });
+      const failedSummary = failedItems.slice(0, 3).map(f => `${f.job} on ${f.date}`).join('; ');
+      toast({
+        title: 'Failed to create visits',
+        description: failedSummary ? `Failures: ${failedSummary}${failedItems.length > 3 ? '…' : ''}` : 'Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -1403,10 +1499,12 @@ export default function ScheduleNewVisits() {
       </Dialog>
 
       {/* Create Visits Modal */}
-      <Dialog open={showModal} onOpenChange={setShowModal}>
+      <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) setRemovedDates(new Set()); }}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create {selectedJobIds.size} Visit{selectedJobIds.size !== 1 ? 's' : ''}</DialogTitle>
+            <DialogTitle>
+              Create {totalVisitsToCreate} Visit{totalVisitsToCreate !== 1 ? 's' : ''}
+            </DialogTitle>
             {estimatedRevenue > 0 && (
               <p className="text-sm text-emerald-600 font-medium flex items-center gap-1">
                 <DollarSign className="h-3.5 w-3.5" />
@@ -1415,13 +1513,67 @@ export default function ScheduleNewVisits() {
             )}
           </DialogHeader>
 
-          {/* Duplicate warning in modal */}
-          {dupeCount > 0 && (
+          {/* Fixed-price safety banner */}
+          {fixedPriceSelectedJobs.length > 0 && scheduleType === 'multiple' && effectiveDates.length > 1 && (
+            <div className="p-2.5 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-1">
+              <p className="text-xs text-blue-800 dark:text-blue-300 font-medium">
+                Fixed-price jobs: creating multiple visits will not multiply the job value.
+              </p>
+              <ul className="text-[11px] text-blue-700 dark:text-blue-400 space-y-0.5 pl-3">
+                {fixedPriceSelectedJobs.slice(0, 4).map((j: any) => (
+                  <li key={j.id}>
+                    #{j.job_number} — Job value: ${(parseFloat(j.estimated_total) || 0).toFixed(2)}
+                  </li>
+                ))}
+                {fixedPriceSelectedJobs.length > 4 && (
+                  <li>+ {fixedPriceSelectedJobs.length - 4} more…</li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Duplicate warning in modal (single-day) */}
+          {scheduleType === 'single' && dupeCount > 0 && (
             <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
               <p className="text-xs text-amber-700 dark:text-amber-400">
                 <strong>{dupeCount}</strong> selected job{dupeCount !== 1 ? 's' : ''} already {dupeCount !== 1 ? 'have' : 'has'} visits on this date.
               </p>
+            </div>
+          )}
+
+          {/* Multi-day duplicate conflicts */}
+          {scheduleType === 'multiple' && totalDupeConflicts > 0 && (
+            <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                    {totalDupeConflicts} conflicting visit{totalDupeConflicts !== 1 ? 's' : ''} already exist
+                  </p>
+                  <ul className="text-[11px] text-amber-700 dark:text-amber-400 mt-1 space-y-0.5 max-h-24 overflow-y-auto">
+                    {Object.entries(multiDupes).map(([jobId, dates]) => {
+                      const job = (recurringJobs as any[]).find((j) => j.id === jobId);
+                      if (!job) return null;
+                      return (
+                        <li key={jobId}>
+                          #{job.job_number}: {dates.sort().map(d => format(new Date(d + 'T12:00:00'), 'MMM d')).join(', ')}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1 pl-6">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="radio" checked={dupeStrategy === 'skip'} onChange={() => setDupeStrategy('skip')} />
+                  <span>Skip conflicting dates (recommended)</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="radio" checked={dupeStrategy === 'keep_add'} onChange={() => setDupeStrategy('keep_add')} />
+                  <span>Keep existing visits and create additional</span>
+                </label>
+              </div>
             </div>
           )}
 
@@ -1444,27 +1596,175 @@ export default function ScheduleNewVisits() {
           )}
 
           <div className="space-y-4">
-            {/* Start Date */}
+            {/* Schedule Type */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Start Date for New Visits</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={(d) => d && setStartDate(d)}
-                    initialFocus
-                    className={cn('p-3 pointer-events-auto')}
-                  />
-                </PopoverContent>
-              </Popover>
+              <label className="text-sm font-medium">Schedule Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScheduleType('single')}
+                  className={cn(
+                    'text-sm px-3 py-2 rounded-md border transition-colors',
+                    scheduleType === 'single'
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border bg-card hover:bg-muted/50'
+                  )}
+                >
+                  Single Day
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScheduleType('multiple')}
+                  className={cn(
+                    'text-sm px-3 py-2 rounded-md border transition-colors',
+                    scheduleType === 'multiple'
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border bg-card hover:bg-muted/50'
+                  )}
+                >
+                  Multiple Days
+                </button>
+              </div>
             </div>
+
+            {/* Start / End Date */}
+            <div className={cn('grid gap-3', scheduleType === 'multiple' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1')}>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">
+                  {scheduleType === 'multiple' ? 'Start Date' : 'Start Date for New Visits'}
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, 'PPP') : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(d) => { if (d) { setStartDate(d); setRemovedDates(new Set()); if (scheduleType === 'multiple' && d > endDate) setEndDate(d); } }}
+                      initialFocus
+                      className={cn('p-3 pointer-events-auto')}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {scheduleType === 'multiple' && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">End Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !endDate && 'text-muted-foreground')}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, 'PPP') : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(d) => { if (d) { setEndDate(d); setRemovedDates(new Set()); } }}
+                        disabled={(d) => d < startDate}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+            </div>
+
+            {/* Multi-day filters */}
+            {scheduleType === 'multiple' && (
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Days of Week</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { i: 1, l: 'Mon' }, { i: 2, l: 'Tue' }, { i: 3, l: 'Wed' },
+                      { i: 4, l: 'Thu' }, { i: 5, l: 'Fri' }, { i: 6, l: 'Sat' }, { i: 0, l: 'Sun' },
+                    ].map(({ i, l }) => {
+                      const on = weekdayMask.has(i);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setWeekdayMask(prev => {
+                              const next = new Set(prev);
+                              if (next.has(i)) next.delete(i); else next.add(i);
+                              return next;
+                            });
+                            setRemovedDates(new Set());
+                          }}
+                          className={cn(
+                            'text-xs px-2.5 py-1 rounded-md border transition-colors',
+                            on
+                              ? 'border-primary bg-primary/10 text-primary font-medium'
+                              : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
+                          )}
+                        >
+                          {l}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox
+                    checked={includeWeekends}
+                    onCheckedChange={(v) => { setIncludeWeekends(!!v); setRemovedDates(new Set()); }}
+                  />
+                  <span>Include weekends (Sat & Sun)</span>
+                </label>
+
+                {/* Generated dates list */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">
+                      Generated Dates ({effectiveDates.length})
+                    </label>
+                    {removedDates.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setRemovedDates(new Set())}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Restore removed ({removedDates.size})
+                      </button>
+                    )}
+                  </div>
+                  {effectiveDates.length === 0 ? (
+                    <p className="text-xs text-muted-foreground p-2 border rounded-md">
+                      No dates match your filters.
+                    </p>
+                  ) : (
+                    <div className="border rounded-md max-h-[140px] overflow-y-auto divide-y">
+                      {effectiveDates.map((ds) => {
+                        const d = new Date(ds + 'T12:00:00');
+                        return (
+                          <div key={ds} className="flex items-center justify-between px-3 py-1.5 text-sm">
+                            <span>{format(d, 'EEE, MMM d, yyyy')}</span>
+                            <button
+                              type="button"
+                              onClick={() => setRemovedDates(prev => new Set(prev).add(ds))}
+                              className="text-muted-foreground hover:text-destructive rounded-full p-1"
+                              aria-label={`Remove ${ds}`}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Team Selection with capacity */}
             <div className="space-y-1.5">
@@ -1501,6 +1801,11 @@ export default function ScheduleNewVisits() {
                   })}
                 </div>
               )}
+              {scheduleType === 'multiple' && selectedTeam.length > 0 && effectiveDates.length > 1 && (
+                <p className="text-[11px] text-muted-foreground">
+                  The same team will be assigned to all {effectiveDates.length} visits. You can change the crew on any individual visit afterwards.
+                </p>
+              )}
               <Input
                 placeholder="Search team members..."
                 value={teamSearch}
@@ -1528,7 +1833,6 @@ export default function ScheduleNewVisits() {
                             <span className="font-medium">{emp.full_name || 'Unnamed'}</span>
                             {emp.role_title && <span className="text-muted-foreground ml-1.5 text-xs">· {emp.role_title}</span>}
                           </div>
-                          {/* Crew capacity indicator */}
                           <span className={cn(
                             'text-[10px] px-1.5 py-0.5 rounded-full shrink-0',
                             existingCount === 0
@@ -1573,7 +1877,6 @@ export default function ScheduleNewVisits() {
               </div>
             </div>
 
-
             {/* Instructions */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Instructions</label>
@@ -1583,13 +1886,25 @@ export default function ScheduleNewVisits() {
                 onChange={(e) => setInstructions(e.target.value)}
                 rows={3}
               />
+              {scheduleType === 'multiple' && effectiveDates.length > 1 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Applied to all {effectiveDates.length} visits. Editable on each visit afterwards.
+                </p>
+              )}
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowModal(false)} disabled={isCreating}>Cancel</Button>
-            <Button onClick={handleCreateVisits} disabled={isCreating || selectedJobIds.size === 0}>
-              {isCreating ? 'Creating...' : `Let's make some visits!`}
+            <Button
+              onClick={handleCreateVisits}
+              disabled={isCreating || selectedJobIds.size === 0 || totalVisitsToCreate === 0}
+            >
+              {isCreating
+                ? 'Creating...'
+                : totalVisitsToCreate === 1
+                  ? 'Create Visit'
+                  : `Create ${totalVisitsToCreate} Visits`}
             </Button>
           </DialogFooter>
         </DialogContent>
