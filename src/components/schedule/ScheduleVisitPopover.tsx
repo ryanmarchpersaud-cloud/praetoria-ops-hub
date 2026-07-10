@@ -20,9 +20,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import {
   CalendarDays, Phone, MapPin, CheckSquare, MoreHorizontal,
-  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check, X, Users, HardHat
+  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check, X, Users, HardHat, Undo2
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { ReinstateVisitDialog } from '@/components/schedule/ReinstateVisitDialog';
 
 interface ScheduleVisitPopoverProps {
   visit: any;
