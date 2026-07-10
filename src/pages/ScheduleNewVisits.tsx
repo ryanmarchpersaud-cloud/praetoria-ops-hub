@@ -1499,10 +1499,12 @@ export default function ScheduleNewVisits() {
       </Dialog>
 
       {/* Create Visits Modal */}
-      <Dialog open={showModal} onOpenChange={setShowModal}>
+      <Dialog open={showModal} onOpenChange={(open) => { setShowModal(open); if (!open) setRemovedDates(new Set()); }}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create {selectedJobIds.size} Visit{selectedJobIds.size !== 1 ? 's' : ''}</DialogTitle>
+            <DialogTitle>
+              Create {totalVisitsToCreate} Visit{totalVisitsToCreate !== 1 ? 's' : ''}
+            </DialogTitle>
             {estimatedRevenue > 0 && (
               <p className="text-sm text-emerald-600 font-medium flex items-center gap-1">
                 <DollarSign className="h-3.5 w-3.5" />
@@ -1511,13 +1513,67 @@ export default function ScheduleNewVisits() {
             )}
           </DialogHeader>
 
-          {/* Duplicate warning in modal */}
-          {dupeCount > 0 && (
+          {/* Fixed-price safety banner */}
+          {fixedPriceSelectedJobs.length > 0 && scheduleType === 'multiple' && effectiveDates.length > 1 && (
+            <div className="p-2.5 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-1">
+              <p className="text-xs text-blue-800 dark:text-blue-300 font-medium">
+                Fixed-price jobs: creating multiple visits will not multiply the job value.
+              </p>
+              <ul className="text-[11px] text-blue-700 dark:text-blue-400 space-y-0.5 pl-3">
+                {fixedPriceSelectedJobs.slice(0, 4).map((j: any) => (
+                  <li key={j.id}>
+                    #{j.job_number} — Job value: ${(parseFloat(j.estimated_total) || 0).toFixed(2)}
+                  </li>
+                ))}
+                {fixedPriceSelectedJobs.length > 4 && (
+                  <li>+ {fixedPriceSelectedJobs.length - 4} more…</li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Duplicate warning in modal (single-day) */}
+          {scheduleType === 'single' && dupeCount > 0 && (
             <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
               <p className="text-xs text-amber-700 dark:text-amber-400">
                 <strong>{dupeCount}</strong> selected job{dupeCount !== 1 ? 's' : ''} already {dupeCount !== 1 ? 'have' : 'has'} visits on this date.
               </p>
+            </div>
+          )}
+
+          {/* Multi-day duplicate conflicts */}
+          {scheduleType === 'multiple' && totalDupeConflicts > 0 && (
+            <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                    {totalDupeConflicts} conflicting visit{totalDupeConflicts !== 1 ? 's' : ''} already exist
+                  </p>
+                  <ul className="text-[11px] text-amber-700 dark:text-amber-400 mt-1 space-y-0.5 max-h-24 overflow-y-auto">
+                    {Object.entries(multiDupes).map(([jobId, dates]) => {
+                      const job = (recurringJobs as any[]).find((j) => j.id === jobId);
+                      if (!job) return null;
+                      return (
+                        <li key={jobId}>
+                          #{job.job_number}: {dates.sort().map(d => format(new Date(d + 'T12:00:00'), 'MMM d')).join(', ')}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1 pl-6">
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="radio" checked={dupeStrategy === 'skip'} onChange={() => setDupeStrategy('skip')} />
+                  <span>Skip conflicting dates (recommended)</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="radio" checked={dupeStrategy === 'keep_add'} onChange={() => setDupeStrategy('keep_add')} />
+                  <span>Keep existing visits and create additional</span>
+                </label>
+              </div>
             </div>
           )}
 
@@ -1540,27 +1596,175 @@ export default function ScheduleNewVisits() {
           )}
 
           <div className="space-y-4">
-            {/* Start Date */}
+            {/* Schedule Type */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Start Date for New Visits</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={(d) => d && setStartDate(d)}
-                    initialFocus
-                    className={cn('p-3 pointer-events-auto')}
-                  />
-                </PopoverContent>
-              </Popover>
+              <label className="text-sm font-medium">Schedule Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScheduleType('single')}
+                  className={cn(
+                    'text-sm px-3 py-2 rounded-md border transition-colors',
+                    scheduleType === 'single'
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border bg-card hover:bg-muted/50'
+                  )}
+                >
+                  Single Day
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScheduleType('multiple')}
+                  className={cn(
+                    'text-sm px-3 py-2 rounded-md border transition-colors',
+                    scheduleType === 'multiple'
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border bg-card hover:bg-muted/50'
+                  )}
+                >
+                  Multiple Days
+                </button>
+              </div>
             </div>
+
+            {/* Start / End Date */}
+            <div className={cn('grid gap-3', scheduleType === 'multiple' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1')}>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">
+                  {scheduleType === 'multiple' ? 'Start Date' : 'Start Date for New Visits'}
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !startDate && 'text-muted-foreground')}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, 'PPP') : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(d) => { if (d) { setStartDate(d); setRemovedDates(new Set()); if (scheduleType === 'multiple' && d > endDate) setEndDate(d); } }}
+                      initialFocus
+                      className={cn('p-3 pointer-events-auto')}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {scheduleType === 'multiple' && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">End Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !endDate && 'text-muted-foreground')}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, 'PPP') : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(d) => { if (d) { setEndDate(d); setRemovedDates(new Set()); } }}
+                        disabled={(d) => d < startDate}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+            </div>
+
+            {/* Multi-day filters */}
+            {scheduleType === 'multiple' && (
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Days of Week</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { i: 1, l: 'Mon' }, { i: 2, l: 'Tue' }, { i: 3, l: 'Wed' },
+                      { i: 4, l: 'Thu' }, { i: 5, l: 'Fri' }, { i: 6, l: 'Sat' }, { i: 0, l: 'Sun' },
+                    ].map(({ i, l }) => {
+                      const on = weekdayMask.has(i);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setWeekdayMask(prev => {
+                              const next = new Set(prev);
+                              if (next.has(i)) next.delete(i); else next.add(i);
+                              return next;
+                            });
+                            setRemovedDates(new Set());
+                          }}
+                          className={cn(
+                            'text-xs px-2.5 py-1 rounded-md border transition-colors',
+                            on
+                              ? 'border-primary bg-primary/10 text-primary font-medium'
+                              : 'border-border bg-card text-muted-foreground hover:bg-muted/50'
+                          )}
+                        >
+                          {l}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox
+                    checked={includeWeekends}
+                    onCheckedChange={(v) => { setIncludeWeekends(!!v); setRemovedDates(new Set()); }}
+                  />
+                  <span>Include weekends (Sat & Sun)</span>
+                </label>
+
+                {/* Generated dates list */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">
+                      Generated Dates ({effectiveDates.length})
+                    </label>
+                    {removedDates.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setRemovedDates(new Set())}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Restore removed ({removedDates.size})
+                      </button>
+                    )}
+                  </div>
+                  {effectiveDates.length === 0 ? (
+                    <p className="text-xs text-muted-foreground p-2 border rounded-md">
+                      No dates match your filters.
+                    </p>
+                  ) : (
+                    <div className="border rounded-md max-h-[140px] overflow-y-auto divide-y">
+                      {effectiveDates.map((ds) => {
+                        const d = new Date(ds + 'T12:00:00');
+                        return (
+                          <div key={ds} className="flex items-center justify-between px-3 py-1.5 text-sm">
+                            <span>{format(d, 'EEE, MMM d, yyyy')}</span>
+                            <button
+                              type="button"
+                              onClick={() => setRemovedDates(prev => new Set(prev).add(ds))}
+                              className="text-muted-foreground hover:text-destructive rounded-full p-1"
+                              aria-label={`Remove ${ds}`}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Team Selection with capacity */}
             <div className="space-y-1.5">
@@ -1597,6 +1801,11 @@ export default function ScheduleNewVisits() {
                   })}
                 </div>
               )}
+              {scheduleType === 'multiple' && selectedTeam.length > 0 && effectiveDates.length > 1 && (
+                <p className="text-[11px] text-muted-foreground">
+                  The same team will be assigned to all {effectiveDates.length} visits. You can change the crew on any individual visit afterwards.
+                </p>
+              )}
               <Input
                 placeholder="Search team members..."
                 value={teamSearch}
@@ -1624,7 +1833,6 @@ export default function ScheduleNewVisits() {
                             <span className="font-medium">{emp.full_name || 'Unnamed'}</span>
                             {emp.role_title && <span className="text-muted-foreground ml-1.5 text-xs">· {emp.role_title}</span>}
                           </div>
-                          {/* Crew capacity indicator */}
                           <span className={cn(
                             'text-[10px] px-1.5 py-0.5 rounded-full shrink-0',
                             existingCount === 0
@@ -1669,7 +1877,6 @@ export default function ScheduleNewVisits() {
               </div>
             </div>
 
-
             {/* Instructions */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Instructions</label>
@@ -1679,13 +1886,25 @@ export default function ScheduleNewVisits() {
                 onChange={(e) => setInstructions(e.target.value)}
                 rows={3}
               />
+              {scheduleType === 'multiple' && effectiveDates.length > 1 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Applied to all {effectiveDates.length} visits. Editable on each visit afterwards.
+                </p>
+              )}
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowModal(false)} disabled={isCreating}>Cancel</Button>
-            <Button onClick={handleCreateVisits} disabled={isCreating || selectedJobIds.size === 0}>
-              {isCreating ? 'Creating...' : `Let's make some visits!`}
+            <Button
+              onClick={handleCreateVisits}
+              disabled={isCreating || selectedJobIds.size === 0 || totalVisitsToCreate === 0}
+            >
+              {isCreating
+                ? 'Creating...'
+                : totalVisitsToCreate === 1
+                  ? 'Create Visit'
+                  : `Create ${totalVisitsToCreate} Visits`}
             </Button>
           </DialogFooter>
         </DialogContent>
