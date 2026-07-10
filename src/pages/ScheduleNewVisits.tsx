@@ -225,12 +225,13 @@ export default function ScheduleNewVisits() {
   const routeNumberMarkersRef = useRef<L.Marker[]>([]);
   const listItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  // Filter recurring jobs
+  // Eligible jobs: any active job (recurring OR one-time multi-day).
+  // Duplicate protection is enforced per-date below, not by hiding jobs
+  // that already have visits — a multi-day job must be selectable repeatedly.
   const recurringJobs = useMemo(() => {
     return (allJobs as any[]).filter((j) => {
-      const isRecurring = j.service_frequency && j.service_frequency !== 'one-time';
       const isActive = j.status === 'Scheduled' || j.status === 'In Progress';
-      return isRecurring && isActive;
+      return isActive;
     });
   }, [allJobs]);
 
