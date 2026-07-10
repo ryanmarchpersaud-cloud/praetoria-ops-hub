@@ -1329,7 +1329,7 @@ export default function ScheduleNewVisits() {
             {jobsLoading ? (
               <p className="text-sm text-muted-foreground text-center py-8">Loading jobs...</p>
             ) : filteredJobs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">No active recurring jobs found</p>
+              <p className="text-sm text-muted-foreground text-center py-8">No active jobs found</p>
             ) : (
               filteredJobs.map((job: any) => {
                 const isSelected = selectedJobIds.has(job.id);
