@@ -252,6 +252,26 @@ export default function JobDetail() {
         </div>
       </div>
 
+      {form.status === 'Cancelled' && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-start gap-2">
+            <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-destructive">This job is cancelled</p>
+              <p className="text-muted-foreground">
+                {(job as any).cancelled_at && `Cancelled ${format(parseISO((job as any).cancelled_at), 'MMM d, yyyy')}`}
+                {(job as any).cancellation_reason && ` · ${(job as any).cancellation_reason}`}
+              </p>
+            </div>
+          </div>
+          {canManageJobs && (
+            <Button size="sm" onClick={() => setReinstateOpen(true)} className="gap-1.5">
+              <Undo2 className="h-3.5 w-3.5" /> Reinstate Job
+            </Button>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-2 flex-wrap">
         {canManageJobs && (
           <Button onClick={handleSave} className="flex-1 h-11" disabled={updateJob.isPending}>
