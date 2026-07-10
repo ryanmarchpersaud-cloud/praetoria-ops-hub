@@ -222,12 +222,21 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
                 <Mail className="h-4 w-4" /> Email Reminder
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleDelete}
-                className="flex items-center gap-2 text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" /> Cancel Visit
-              </DropdownMenuItem>
+              {visit.visit_status === 'Cancelled' ? (
+                <DropdownMenuItem
+                  onClick={() => setReinstateOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Undo2 className="h-4 w-4" /> Reinstate Visit
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="flex items-center gap-2 text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" /> Cancel Visit
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
