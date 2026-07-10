@@ -44,6 +44,7 @@ export default function JobDetail() {
   const [generating, setGenerating] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [proofOpen, setProofOpen] = useState(false);
+  const [reinstateOpen, setReinstateOpen] = useState(false);
   const { canManageJobs, canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices
