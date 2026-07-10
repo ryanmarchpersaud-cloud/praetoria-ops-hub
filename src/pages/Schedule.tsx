@@ -323,6 +323,15 @@ export default function Schedule() {
         open={!!selectedVisit}
         onOpenChange={(open) => { if (!open) setSelectedVisit(null); }}
       />
+
+      <DayScheduleDialog
+        dateKey={dayViewDate}
+        visits={dayViewDate ? (visitsByDate[dayViewDate] || []) : []}
+        jobs={dayViewDate ? (jobsByDate[dayViewDate] || []) : []}
+        open={!!dayViewDate}
+        onOpenChange={(open) => { if (!open) setDayViewDate(null); }}
+        onVisitClick={(v) => { setDayViewDate(null); setSelectedVisit(v); }}
+      />
     </div>
   );
 }
