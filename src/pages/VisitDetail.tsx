@@ -35,6 +35,7 @@ export default function VisitDetail() {
   const [form, setForm] = useState<any>({});
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [proofOpen, setProofOpen] = useState(false);
+  const [reinstateOpen, setReinstateOpen] = useState(false);
   const { canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices for this visit
