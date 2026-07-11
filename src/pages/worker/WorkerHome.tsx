@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { differenceInDays } from 'date-fns';
 import { TodayWorkOverviewDialog } from '@/components/TodayWorkOverviewDialog';
+import { useVisitRealtimeSync } from '@/hooks/useVisitRealtimeSync';
 
 function formatElapsed(seconds: number) {
   const h = Math.floor(seconds / 3600);
