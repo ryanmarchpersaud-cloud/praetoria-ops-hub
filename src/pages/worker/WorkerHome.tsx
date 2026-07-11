@@ -91,6 +91,9 @@ export default function WorkerHome() {
     enabled: !!user,
   });
 
+  // Live-refresh worker today's visits when Admin cancels/archives/reinstates.
+  useVisitRealtimeSync(['worker_today_visits']);
+
   const completedVisits = todayVisits.filter(v => v.visit_status === 'Completed');
   const inProgressVisit = todayVisits.find(v => v.visit_status === 'In Progress' || v.visit_status === 'En Route');
 
