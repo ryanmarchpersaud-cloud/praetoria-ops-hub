@@ -254,6 +254,7 @@ export default function VisitDetail() {
                   <Archive className="h-4 w-4" /> Archive Visit
                 </DropdownMenuItem>
               ) : null}
+            </DropdownMenuContent>
           </DropdownMenu>
         )}
       </div>
