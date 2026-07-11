@@ -26,6 +26,8 @@ import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog, shouldSkip
 import { isIOSNative } from '@/lib/platform';
 import { shouldUseNativeCamera, pickNativePhoto, type CameraSource } from '@/lib/nativeCamera';
 import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
+import { VisitTimerControls } from '@/components/visits/VisitTimerControls';
+import { useVisitPauses, closeOpenPauseIfAny } from '@/hooks/useVisitPauses';
 import { formatTzTime } from '@/lib/timezone';
 
 
