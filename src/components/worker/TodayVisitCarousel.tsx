@@ -505,12 +505,20 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
     return () => clearInterval(interval);
   }, []);
 
-  const completedCount = visits.filter((v) => v.visit_status === 'Completed').length;
+  // Defensive filter: never render cancelled/archived visits as active work,
+  // even if a stale query briefly returns them. Data source queries should also
+  // exclude these; this is an in-component safety net.
+  const activeVisits = useMemo(
+    () => visits.filter((v) => v.visit_status !== 'Cancelled' && !(v as any).archived_at),
+    [visits]
+  );
+
+  const completedCount = activeVisits.filter((v) => v.visit_status === 'Completed').length;
 
   const sorted = useMemo(() => {
     const order: Record<string, number> = { 'In Progress': 0, 'En Route': 1, Scheduled: 2, Planned: 3, Completed: 4 };
-    return [...visits].sort((a, b) => (order[a.visit_status] ?? 3) - (order[b.visit_status] ?? 3));
-  }, [visits]);
+    return [...activeVisits].sort((a, b) => (order[a.visit_status] ?? 3) - (order[b.visit_status] ?? 3));
+  }, [activeVisits]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return;
