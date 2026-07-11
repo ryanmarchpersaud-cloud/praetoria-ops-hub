@@ -125,16 +125,8 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
     }
   };
 
-  const handleDelete = async () => {
-    // For safety, we just set it to Cancelled rather than hard deleting
-    try {
-      await updateVisit.mutateAsync({ id: visit.id, visit_status: 'Cancelled' });
-      toast({ title: 'Visit cancelled' });
-      onOpenChange(false);
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
+  // Cancel now opens a confirmation dialog with reason + hide-or-keep options
+  const openCancelDialog = () => setCancelOpen(true);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
