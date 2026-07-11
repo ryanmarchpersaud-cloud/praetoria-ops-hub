@@ -407,6 +407,11 @@ export default function SubcontractorVisitExec() {
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm">{job?.job_title || visit.visit_type || 'Service Visit'}</span>
             <StatusBadge status={visit.visit_status} showIcon={false} />
+          </div>
+          <p className="text-[11px] text-muted-foreground truncate">
+            {visit.visit_number} · {visit.service_date} · {job?.service_category || 'Service'}
+          </p>
+        </div>
       </div>
 
       {isCancelledOrArchived && (
@@ -426,7 +431,6 @@ export default function SubcontractorVisitExec() {
         </div>
       )}
 
-      </div>
 
       {/* ── Property + Address + Quick Actions ── */}
       <Card>
