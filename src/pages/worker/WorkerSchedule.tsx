@@ -293,6 +293,8 @@ export default function WorkerSchedule() {
         .from('visits')
         .select(VISIT_SELECT)
         .eq('service_date', todayStr)
+        .neq('visit_status', 'Cancelled')
+        .is('archived_at', null)
         .order('arrival_time', { ascending: true });
       if (error) throw error;
       return (data || []) as unknown as Visit[];
@@ -311,6 +313,8 @@ export default function WorkerSchedule() {
         .select(VISIT_SELECT)
         .gte('service_date', tomorrowStr)
         .lte('service_date', upcomingEnd)
+        .neq('visit_status', 'Cancelled')
+        .is('archived_at', null)
         .order('service_date', { ascending: true })
         .order('arrival_time', { ascending: true });
       if (error) throw error;
@@ -328,6 +332,8 @@ export default function WorkerSchedule() {
         .select(VISIT_SELECT)
         .gte('service_date', startStr)
         .lte('service_date', endStr)
+        .neq('visit_status', 'Cancelled')
+        .is('archived_at', null)
         .order('service_date', { ascending: true })
         .order('arrival_time', { ascending: true });
       if (error) throw error;
