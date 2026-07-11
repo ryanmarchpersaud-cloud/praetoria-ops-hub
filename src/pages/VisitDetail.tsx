@@ -532,6 +532,16 @@ export default function VisitDetail() {
         visit={visit}
         open={reinstateOpen}
         onOpenChange={setReinstateOpen}
+        onReinstated={() => setForm((p: any) => ({
+          ...p,
+          visit_status: p.visit_status === 'Cancelled' ? 'Scheduled' : p.visit_status,
+        }))}
+      />
+      <CancelVisitDialog
+        visit={visit}
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        onCancelled={() => set('visit_status', 'Cancelled')}
       />
     </div>
   );
