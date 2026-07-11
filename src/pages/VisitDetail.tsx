@@ -218,42 +218,42 @@ export default function VisitDetail() {
                 </DropdownMenuItem>
               )}
               {form.visit_status !== 'Cancelled' && form.visit_status !== 'Completed' && (
-                <DropdownMenuItem onClick={async () => {
-                  const reason = window.prompt('Reason for cancellation (optional):') ?? '';
-                  try {
-                    await updateVisit.mutateAsync({ id, visit_status: 'Cancelled', cancellation_reason: reason || null });
-                    set('visit_status', 'Cancelled');
-                    toast({ title: 'Visit cancelled' });
-                  } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-                }} className="gap-2">
-                  <XCircle className="h-4 w-4" /> Cancel Visit
+                <DropdownMenuItem onClick={() => setCancelOpen(true)} className="gap-2">
+                  <XCircle className="h-4 w-4" /> Cancel Visit…
                 </DropdownMenuItem>
               )}
-              {form.visit_status === 'Cancelled' && (
+              {(form.visit_status === 'Cancelled' || (visit as any).archived_at) && (
                 <DropdownMenuItem onClick={() => setReinstateOpen(true)} className="gap-2">
                   <Undo2 className="h-4 w-4" /> Reinstate Visit
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={async () => {
-                try {
-                  await updateVisit.mutateAsync({ id, visit_status: 'Archived' });
-                  set('visit_status', 'Archived');
-                  toast({ title: 'Visit archived' });
-                } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-              }} className="gap-2">
-                <Archive className="h-4 w-4" /> Archive
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={async () => {
-                try {
-                  await updateVisit.mutateAsync({ id, visit_status: 'Deleted' });
-                  toast({ title: 'Visit deleted' });
-                  navigate('/visits');
-                } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-              }} className="gap-2 text-destructive focus:text-destructive">
-                <Trash2 className="h-4 w-4" /> Delete Visit
-              </DropdownMenuItem>
-            </DropdownMenuContent>
+              {!(visit as any).archived_at ? (
+                <DropdownMenuItem onClick={async () => {
+                  try {
+                    const { data: ures } = await supabase.auth.getUser();
+                    const nowIso = new Date().toISOString();
+                    await updateVisit.mutateAsync({
+                      id,
+                      archived_at: nowIso,
+                      archived_by: ures?.user?.id ?? null,
+                    });
+                    try {
+                      await (supabase as any).from('activities').insert({
+                        user_id: ures?.user?.id ?? null,
+                        workflow_name: 'visit_archived',
+                        action_name: `Archived Visit ${visit.visit_number}`,
+                        record_type: 'visit',
+                        record_id: id,
+                        status: 'completed',
+                        payload_summary: { visit_number: visit.visit_number },
+                      });
+                    } catch { /* non-critical */ }
+                    toast({ title: 'Visit archived', description: 'Hidden from active schedules and portals.' });
+                  } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+                }} className="gap-2">
+                  <Archive className="h-4 w-4" /> Archive Visit
+                </DropdownMenuItem>
+              ) : null}
           </DropdownMenu>
         )}
       </div>
