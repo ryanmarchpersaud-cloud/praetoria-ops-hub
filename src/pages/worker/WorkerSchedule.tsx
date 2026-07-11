@@ -343,6 +343,9 @@ export default function WorkerSchedule() {
     enabled: !!user,
   });
 
+  // Live-refresh when Admin cancels/archives/reinstates.
+  useVisitRealtimeSync(['worker_today_schedule', 'worker_upcoming_schedule', 'worker_week_visits']);
+
   // ── Operational Tasks ──
   const { data: myTasks = [] } = useQuery({
     queryKey: ['worker_schedule_tasks', user?.id],
