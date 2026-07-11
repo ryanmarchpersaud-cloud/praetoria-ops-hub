@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2, AlertTriangle, FileCheck2, Undo2 } from 'lucide-react';
 import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
 import { ReinstateVisitDialog } from '@/components/schedule/ReinstateVisitDialog';
+import { CancelVisitDialog } from '@/components/schedule/CancelVisitDialog';
 import { format, parseISO } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
