@@ -24,8 +24,13 @@ export default function Schedule() {
   const [activeItem, setActiveItem] = useState<{ type: 'visit' | 'job'; data: any } | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [dayViewDate, setDayViewDate] = useState<string | null>(null);
+  const [showHiddenCancelled, setShowHiddenCancelled] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const { data: visits = [] } = useVisits();
+  const { data: visits = [] } = useVisits({
+    includeHiddenCancelled: showHiddenCancelled,
+    includeArchived: showArchived,
+  });
   const { data: jobs = [] } = useJobs();
   const updateVisit = useUpdateVisit();
   const updateJob = useUpdateJob();
