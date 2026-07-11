@@ -344,9 +344,14 @@ export default function SubcontractorVisitExec() {
   ];
   const currentStepIndex = stateSteps.findIndex(s => s.key === execState);
 
+  const isCancelledOrArchived =
+    visit.visit_status === 'Cancelled' || !!(visit as any).archived_at;
+
   // ── Primary action button ──
   const renderPrimaryAction = () => {
     if (execState === 'completed') return null;
+    if (isCancelledOrArchived) return null;
+
 
     if (execState === 'assigned') {
       return (
@@ -408,6 +413,24 @@ export default function SubcontractorVisitExec() {
           </p>
         </div>
       </div>
+
+      {isCancelledOrArchived && (
+        <div className="rounded-lg border-2 border-destructive/60 bg-destructive/10 px-3 py-2.5 flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <p className="font-bold text-destructive">
+              {visit.visit_status === 'Cancelled'
+                ? 'This visit has been cancelled by Praetoria Group.'
+                : 'This visit has been archived by Praetoria Group.'}
+            </p>
+            <p className="text-muted-foreground mt-0.5">
+              You cannot start the timer, complete the visit, or submit new work.
+              Existing photos and notes are preserved.
+            </p>
+          </div>
+        </div>
+      )}
+
 
       {/* ── Property + Address + Quick Actions ── */}
       <Card>

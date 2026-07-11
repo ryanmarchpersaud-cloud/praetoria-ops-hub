@@ -1,7 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export function useVisits(filters?: { visit_status?: string; visit_type?: string; search?: string }) {
+export function useVisits(filters?: {
+  visit_status?: string;
+  visit_type?: string;
+  search?: string;
+  /** Include cancelled visits that were hidden via "Cancel and Hide". Default false. */
+  includeHiddenCancelled?: boolean;
+  /** Include archived visits (archived_at IS NOT NULL). Default false. */
+  includeArchived?: boolean;
+}) {
   return useQuery({
     queryKey: ['visits', filters],
     queryFn: async () => {
@@ -12,6 +20,11 @@ export function useVisits(filters?: { visit_status?: string; visit_type?: string
       if (filters?.visit_status) query = query.eq('visit_status', filters.visit_status as any);
       if (filters?.visit_type) query = query.eq('visit_type', filters.visit_type as any);
       if (filters?.search) query = query.or(`visit_number.ilike.%${filters.search}%,service_summary.ilike.%${filters.search}%`);
+      // Default: hide archived visits unless explicitly requested.
+      if (!filters?.includeArchived) query = query.is('archived_at' as any, null);
+      // Default: hide cancelled visits flagged hidden_from_schedule.
+      // We show non-hidden cancelled visits so admins still see the red badge on schedule.
+      if (!filters?.includeHiddenCancelled) query = query.or('hidden_from_schedule.is.false,visit_status.neq.Cancelled' as any);
       const { data, error } = await query;
       if (error) throw error;
 

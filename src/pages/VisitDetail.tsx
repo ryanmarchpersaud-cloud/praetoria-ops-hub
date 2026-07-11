@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { ArrowLeft, Save, MapPin, Briefcase, Cloud, Snowflake, Receipt, User, UserCheck, LinkIcon, FileText, MoreHorizontal, CheckSquare, XCircle, Archive, Trash2, AlertTriangle, FileCheck2, Undo2 } from 'lucide-react';
 import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
 import { ReinstateVisitDialog } from '@/components/schedule/ReinstateVisitDialog';
+import { CancelVisitDialog } from '@/components/schedule/CancelVisitDialog';
 import { format, parseISO } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -39,6 +40,7 @@ export default function VisitDetail() {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [proofOpen, setProofOpen] = useState(false);
   const [reinstateOpen, setReinstateOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
   const { canManageVisits } = useActionPermissions();
 
   // Fetch linked invoices for this visit
@@ -142,7 +144,10 @@ export default function VisitDetail() {
           <div className="flex items-start gap-2">
             <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-destructive">This visit is cancelled</p>
+              <p className="font-semibold text-destructive">
+                This visit is cancelled
+                {(visit as any).hidden_from_schedule && ' — hidden from active schedules'}
+              </p>
               <p className="text-muted-foreground">
                 {(visit as any).cancelled_at && `Cancelled ${format(parseISO((visit as any).cancelled_at), 'MMM d, yyyy')}`}
                 {(visit as any).cancellation_reason && ` · ${(visit as any).cancellation_reason}`}
@@ -152,6 +157,25 @@ export default function VisitDetail() {
           {canManageVisits && (
             <Button size="sm" onClick={() => setReinstateOpen(true)} className="gap-1.5">
               <Undo2 className="h-3.5 w-3.5" /> Reinstate Visit
+            </Button>
+          )}
+        </div>
+      )}
+
+      {(visit as any).archived_at && (
+        <div className="rounded-md border border-muted-foreground/30 bg-muted/40 px-3 py-2 text-xs flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-start gap-2">
+            <Archive className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-foreground">This visit is archived</p>
+              <p className="text-muted-foreground">
+                Archived {format(parseISO((visit as any).archived_at), 'MMM d, yyyy')} — hidden from active schedules and portals.
+              </p>
+            </div>
+          </div>
+          {canManageVisits && (
+            <Button size="sm" variant="outline" onClick={() => setReinstateOpen(true)} className="gap-1.5">
+              <Undo2 className="h-3.5 w-3.5" /> Reinstate
             </Button>
           )}
         </div>
@@ -194,41 +218,42 @@ export default function VisitDetail() {
                 </DropdownMenuItem>
               )}
               {form.visit_status !== 'Cancelled' && form.visit_status !== 'Completed' && (
-                <DropdownMenuItem onClick={async () => {
-                  const reason = window.prompt('Reason for cancellation (optional):') ?? '';
-                  try {
-                    await updateVisit.mutateAsync({ id, visit_status: 'Cancelled', cancellation_reason: reason || null });
-                    set('visit_status', 'Cancelled');
-                    toast({ title: 'Visit cancelled' });
-                  } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-                }} className="gap-2">
-                  <XCircle className="h-4 w-4" /> Cancel Visit
+                <DropdownMenuItem onClick={() => setCancelOpen(true)} className="gap-2">
+                  <XCircle className="h-4 w-4" /> Cancel Visit…
                 </DropdownMenuItem>
               )}
-              {form.visit_status === 'Cancelled' && (
+              {(form.visit_status === 'Cancelled' || (visit as any).archived_at) && (
                 <DropdownMenuItem onClick={() => setReinstateOpen(true)} className="gap-2">
                   <Undo2 className="h-4 w-4" /> Reinstate Visit
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={async () => {
-                try {
-                  await updateVisit.mutateAsync({ id, visit_status: 'Archived' });
-                  set('visit_status', 'Archived');
-                  toast({ title: 'Visit archived' });
-                } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-              }} className="gap-2">
-                <Archive className="h-4 w-4" /> Archive
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={async () => {
-                try {
-                  await updateVisit.mutateAsync({ id, visit_status: 'Deleted' });
-                  toast({ title: 'Visit deleted' });
-                  navigate('/visits');
-                } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-              }} className="gap-2 text-destructive focus:text-destructive">
-                <Trash2 className="h-4 w-4" /> Delete Visit
-              </DropdownMenuItem>
+              {!(visit as any).archived_at ? (
+                <DropdownMenuItem onClick={async () => {
+                  try {
+                    const { data: ures } = await supabase.auth.getUser();
+                    const nowIso = new Date().toISOString();
+                    await updateVisit.mutateAsync({
+                      id,
+                      archived_at: nowIso,
+                      archived_by: ures?.user?.id ?? null,
+                    });
+                    try {
+                      await (supabase as any).from('activities').insert({
+                        user_id: ures?.user?.id ?? null,
+                        workflow_name: 'visit_archived',
+                        action_name: `Archived Visit ${visit.visit_number}`,
+                        record_type: 'visit',
+                        record_id: id,
+                        status: 'completed',
+                        payload_summary: { visit_number: visit.visit_number },
+                      });
+                    } catch { /* non-critical */ }
+                    toast({ title: 'Visit archived', description: 'Hidden from active schedules and portals.' });
+                  } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+                }} className="gap-2">
+                  <Archive className="h-4 w-4" /> Archive Visit
+                </DropdownMenuItem>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -507,6 +532,16 @@ export default function VisitDetail() {
         visit={visit}
         open={reinstateOpen}
         onOpenChange={setReinstateOpen}
+        onReinstated={() => setForm((p: any) => ({
+          ...p,
+          visit_status: p.visit_status === 'Cancelled' ? 'Scheduled' : p.visit_status,
+        }))}
+      />
+      <CancelVisitDialog
+        visit={visit}
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        onCancelled={() => set('visit_status', 'Cancelled')}
       />
     </div>
   );

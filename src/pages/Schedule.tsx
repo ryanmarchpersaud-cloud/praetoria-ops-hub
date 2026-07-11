@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List, MoreHorizontal, CalendarPlus, Briefcase, FileText, CheckSquare, CalendarClock, ArrowRightLeft, Upload, RefreshCw, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List, MoreHorizontal, CalendarPlus, Briefcase, FileText, CheckSquare, CalendarClock, ArrowRightLeft, Upload, RefreshCw, ClipboardList, EyeOff, Archive } from 'lucide-react';
+import { DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { useVisits, useUpdateVisit } from '@/hooks/useVisits';
 import { useJobs, useUpdateJob } from '@/hooks/useJobs';
 import { useToast } from '@/hooks/use-toast';
@@ -23,8 +24,13 @@ export default function Schedule() {
   const [activeItem, setActiveItem] = useState<{ type: 'visit' | 'job'; data: any } | null>(null);
   const [selectedVisit, setSelectedVisit] = useState<any>(null);
   const [dayViewDate, setDayViewDate] = useState<string | null>(null);
+  const [showHiddenCancelled, setShowHiddenCancelled] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const { data: visits = [] } = useVisits();
+  const { data: visits = [] } = useVisits({
+    includeHiddenCancelled: showHiddenCancelled,
+    includeArchived: showArchived,
+  });
   const { data: jobs = [] } = useJobs();
   const updateVisit = useUpdateVisit();
   const updateJob = useUpdateJob();
@@ -162,6 +168,22 @@ export default function Schedule() {
                   <CalendarClock className="h-4 w-4" /> Schedule New Visits
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Filters</DropdownMenuLabel>
+              <DropdownMenuCheckboxItem
+                checked={showHiddenCancelled}
+                onCheckedChange={(v) => setShowHiddenCancelled(!!v)}
+                className="text-xs"
+              >
+                <EyeOff className="h-3.5 w-3.5 mr-2" /> Show Cancelled (hidden)
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showArchived}
+                onCheckedChange={(v) => setShowArchived(!!v)}
+                className="text-xs"
+              >
+                <Archive className="h-3.5 w-3.5 mr-2" /> Show Archived
+              </DropdownMenuCheckboxItem>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-xs text-muted-foreground">Tools</DropdownMenuLabel>
               <DropdownMenuItem disabled className="flex items-center gap-2 opacity-50">

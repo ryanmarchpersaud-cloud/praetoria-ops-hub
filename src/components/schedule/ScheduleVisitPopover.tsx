@@ -20,10 +20,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import {
   CalendarDays, Phone, MapPin, CheckSquare, MoreHorizontal,
-  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check, X, Users, HardHat, Undo2
+  Pencil, Trash2, Mail, MessageSquare, ExternalLink, Navigation, Briefcase, User, UserPlus, Check, X, Users, HardHat, Undo2, XCircle, EyeOff, Archive
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ReinstateVisitDialog } from '@/components/schedule/ReinstateVisitDialog';
+import { CancelVisitDialog } from '@/components/schedule/CancelVisitDialog';
 
 interface ScheduleVisitPopoverProps {
   visit: any;
@@ -44,6 +45,7 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
   const { toast } = useToast();
   const [tab, setTab] = useState('info');
   const [reinstateOpen, setReinstateOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   if (!visit) return null;
 
@@ -123,16 +125,8 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
     }
   };
 
-  const handleDelete = async () => {
-    // For safety, we just set it to Cancelled rather than hard deleting
-    try {
-      await updateVisit.mutateAsync({ id: visit.id, visit_status: 'Cancelled' });
-      toast({ title: 'Visit cancelled' });
-      onOpenChange(false);
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
+  // Cancel now opens a confirmation dialog with reason + hide-or-keep options
+  const openCancelDialog = () => setCancelOpen(true);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -145,7 +139,19 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
                 <p className="text-xs text-muted-foreground mt-1">{address}</p>
               )}
             </div>
-            <StatusBadge status={visit.visit_status || 'Scheduled'} />
+            <div className="flex flex-col items-end gap-1">
+              <StatusBadge status={visit.visit_status || 'Scheduled'} />
+              {visit.hidden_from_schedule && (
+                <Badge variant="outline" className="text-[10px] gap-1 border-muted-foreground/40 text-muted-foreground">
+                  <EyeOff className="h-2.5 w-2.5" /> Hidden
+                </Badge>
+              )}
+              {visit.archived_at && (
+                <Badge variant="outline" className="text-[10px] gap-1 border-muted-foreground/40 text-muted-foreground">
+                  <Archive className="h-2.5 w-2.5" /> Archived
+                </Badge>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
@@ -231,10 +237,10 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
-                  onClick={handleDelete}
+                  onClick={openCancelDialog}
                   className="flex items-center gap-2 text-destructive focus:text-destructive"
                 >
-                  <Trash2 className="h-4 w-4" /> Cancel Visit
+                  <XCircle className="h-4 w-4" /> Cancel Visit
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -488,6 +494,12 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
         open={reinstateOpen}
         onOpenChange={setReinstateOpen}
         onReinstated={() => onOpenChange(false)}
+      />
+      <CancelVisitDialog
+        visit={visit}
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        onCancelled={() => onOpenChange(false)}
       />
     </Dialog>
   );

@@ -80,6 +80,12 @@ export function ReinstateVisitDialog({ visit, open, onOpenChange, onReinstated }
         visit_status: restoredStatus,
         service_date: newDate,
         reinstatement_reason: reason || null,
+        // Un-hide and un-archive on reinstate so the visit re-enters
+        // active operational views.
+        hidden_from_schedule: false,
+        archived_at: null,
+        archived_by: null,
+        reinstated_at: new Date().toISOString(),
       });
 
       // Activity log (best-effort)
