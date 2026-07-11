@@ -20,6 +20,8 @@ import {
 import { cn } from '@/lib/utils';
 import { isIOSNative } from '@/lib/platform';
 import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
+import { VisitTimerControls } from '@/components/visits/VisitTimerControls';
+import { useVisitPauses, closeOpenPauseIfAny } from '@/hooks/useVisitPauses';
 import { formatTzTime } from '@/lib/timezone';
 
 // Hide direct camera capture on native iOS — see VisitPhotoGallery.
@@ -121,6 +123,7 @@ export default function SubcontractorVisitExec() {
   });
 
   const { data: photos = [] } = useVisitPhotos(id);
+  const { data: pauses = [] } = useVisitPauses(id);
   const uploadPhoto = useUploadVisitPhoto();
 
   const [crewNotes, setCrewNotes] = useState('');
@@ -234,7 +237,9 @@ export default function SubcontractorVisitExec() {
 
       if (nextExec === 'completed') {
         if (stagedFiles.length > 0) await uploadStaged();
-        updates.completion_time = new Date().toISOString();
+        const completionIso = new Date().toISOString();
+        try { await closeOpenPauseIfAny(id!, completionIso); } catch { /* non-critical */ }
+        updates.completion_time = completionIso;
         updates.crew_notes = crewNotes || null;
         updates.service_summary = serviceSummary || null;
       }
@@ -484,7 +489,17 @@ export default function SubcontractorVisitExec() {
 
       {/* ── Live On-Site Timer ── */}
       {(execState === 'on_site' || execState === 'completed') && visit.arrival_time && (
-        <LiveVisitTimer arrivalTime={visit.arrival_time} completionTime={visit.completion_time} variant="hero" />
+        <>
+          <LiveVisitTimer
+            arrivalTime={visit.arrival_time}
+            completionTime={visit.completion_time}
+            variant="hero"
+            pauses={pauses}
+          />
+          {execState === 'on_site' && id && (
+            <VisitTimerControls visitId={id} active size="lg" />
+          )}
+        </>
       )}
 
       {/* ── Primary Action ── */}

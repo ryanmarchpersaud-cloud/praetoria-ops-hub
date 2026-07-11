@@ -26,6 +26,8 @@ import { downscaleImageIfLarge, isIOSWebView, yieldToBrowser, iosLog, shouldSkip
 import { isIOSNative } from '@/lib/platform';
 import { shouldUseNativeCamera, pickNativePhoto, type CameraSource } from '@/lib/nativeCamera';
 import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
+import { VisitTimerControls } from '@/components/visits/VisitTimerControls';
+import { useVisitPauses, closeOpenPauseIfAny } from '@/hooks/useVisitPauses';
 import { formatTzTime } from '@/lib/timezone';
 
 
@@ -115,6 +117,7 @@ export default function WorkerVisitExec() {
   const { toast } = useToast();
   const { data: visit, isLoading } = useVisit(id);
   const { data: photos = [] } = useVisitPhotos(id);
+  const { data: pauses = [] } = useVisitPauses(id);
   const updateVisit = useUpdateVisit();
   const uploadPhoto = useUploadVisitPhoto();
 
@@ -299,7 +302,12 @@ export default function WorkerVisitExec() {
 
       if (nextExec === 'completed') {
         if (stagedFiles.length > 0) await uploadStaged();
-        updates.completion_time = new Date().toISOString();
+        const completionIso = new Date().toISOString();
+        // Close any active pause at the same timestamp so the pause log
+        // doesn't stay open forever. Informational-only; does not alter
+        // arrival/completion.
+        try { await closeOpenPauseIfAny(id!, completionIso); } catch { /* non-critical */ }
+        updates.completion_time = completionIso;
         updates.crew_notes = crewNotes || null;
         updates.service_summary = serviceSummary || null;
         updates.customer_visible_notes = customerNotes || null;
@@ -591,7 +599,17 @@ export default function WorkerVisitExec() {
 
       {/* ── Live On-Site Timer (workers need to see this is running) ── */}
       {(execState === 'on_site' || execState === 'completed') && visit.arrival_time && (
-        <LiveVisitTimer arrivalTime={visit.arrival_time} completionTime={visit.completion_time} variant="hero" />
+        <>
+          <LiveVisitTimer
+            arrivalTime={visit.arrival_time}
+            completionTime={visit.completion_time}
+            variant="hero"
+            pauses={pauses}
+          />
+          {execState === 'on_site' && id && (
+            <VisitTimerControls visitId={id} active size="lg" />
+          )}
+        </>
       )}
 
       {/* ── Primary Action ── */}
