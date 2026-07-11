@@ -34,6 +34,7 @@ export default function SubcontractorSchedule() {
   const { user } = useAuth();
   const { data: profile } = useSubcontractorProfile();
   const { data: assignments = [], isLoading } = useSubcontractorAssignments(profile?.id);
+  useVisitRealtimeSync(['subcontractor_assignments']);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
