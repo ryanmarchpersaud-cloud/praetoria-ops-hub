@@ -35,6 +35,8 @@ export default function WorkerPropertyDetail() {
         .from('visits')
         .select('id, visit_number, visit_status, service_date, visit_type, jobs(assigned_to)')
         .eq('property_id', id!)
+        .neq('visit_status', 'Cancelled')
+        .is('archived_at', null)
         .order('service_date', { ascending: false })
         .limit(20);
       if (error) throw error;
