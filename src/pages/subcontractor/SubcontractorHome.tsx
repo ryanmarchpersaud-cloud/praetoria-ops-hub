@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubcontractorProfile, useSubcontractorAssignments, useSubcontractorInvoices } from '@/hooks/useSubcontractor';
+import { useVisitRealtimeSync } from '@/hooks/useVisitRealtimeSync';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -57,6 +58,9 @@ export default function SubcontractorHome() {
   const { data: profile } = useSubcontractorProfile();
   const { data: assignments = [] } = useSubcontractorAssignments(profile?.id);
   const { data: invoices = [] } = useSubcontractorInvoices(profile?.id);
+
+  // Live-refresh assignments when Admin cancels/archives/reinstates a visit.
+  useVisitRealtimeSync(['subcontractor_assignments']);
 
   const [visitOpen, setVisitOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);

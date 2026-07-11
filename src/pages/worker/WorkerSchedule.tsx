@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom';
 import { startOfWeek, endOfWeek, addWeeks, format, isToday, addDays, isBefore, parseISO } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { DirectionsButton } from '@/components/DirectionsButton';
+import { useVisitRealtimeSync } from '@/hooks/useVisitRealtimeSync';
 
 type ScheduleTab = 'today' | 'upcoming' | 'week';
 
@@ -341,6 +342,9 @@ export default function WorkerSchedule() {
     },
     enabled: !!user,
   });
+
+  // Live-refresh when Admin cancels/archives/reinstates.
+  useVisitRealtimeSync(['worker_today_schedule', 'worker_upcoming_schedule', 'worker_week_visits']);
 
   // ── Operational Tasks ──
   const { data: myTasks = [] } = useQuery({

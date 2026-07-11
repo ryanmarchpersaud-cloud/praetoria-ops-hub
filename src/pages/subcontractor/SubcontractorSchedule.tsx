@@ -1,4 +1,5 @@
 import { useSubcontractorProfile, useSubcontractorAssignments } from '@/hooks/useSubcontractor';
+import { useVisitRealtimeSync } from '@/hooks/useVisitRealtimeSync';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { MapPin, ChevronRight, CalendarDays, Navigation, ClipboardList, Clock } from 'lucide-react';
@@ -34,6 +35,7 @@ export default function SubcontractorSchedule() {
   const { user } = useAuth();
   const { data: profile } = useSubcontractorProfile();
   const { data: assignments = [], isLoading } = useSubcontractorAssignments(profile?.id);
+  useVisitRealtimeSync(['subcontractor_assignments']);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
