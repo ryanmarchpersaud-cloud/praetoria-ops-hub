@@ -117,6 +117,7 @@ export default function WorkerVisitExec() {
   const { toast } = useToast();
   const { data: visit, isLoading } = useVisit(id);
   const { data: photos = [] } = useVisitPhotos(id);
+  const { data: pauses = [] } = useVisitPauses(id);
   const updateVisit = useUpdateVisit();
   const uploadPhoto = useUploadVisitPhoto();
 
