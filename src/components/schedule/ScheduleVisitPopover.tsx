@@ -139,7 +139,19 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
                 <p className="text-xs text-muted-foreground mt-1">{address}</p>
               )}
             </div>
-            <StatusBadge status={visit.visit_status || 'Scheduled'} />
+            <div className="flex flex-col items-end gap-1">
+              <StatusBadge status={visit.visit_status || 'Scheduled'} />
+              {visit.hidden_from_schedule && (
+                <Badge variant="outline" className="text-[10px] gap-1 border-muted-foreground/40 text-muted-foreground">
+                  <EyeOff className="h-2.5 w-2.5" /> Hidden
+                </Badge>
+              )}
+              {visit.archived_at && (
+                <Badge variant="outline" className="text-[10px] gap-1 border-muted-foreground/40 text-muted-foreground">
+                  <Archive className="h-2.5 w-2.5" /> Archived
+                </Badge>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
