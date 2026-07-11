@@ -225,10 +225,10 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem
-                  onClick={handleDelete}
+                  onClick={openCancelDialog}
                   className="flex items-center gap-2 text-destructive focus:text-destructive"
                 >
-                  <Trash2 className="h-4 w-4" /> Cancel Visit
+                  <XCircle className="h-4 w-4" /> Cancel Visit
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
