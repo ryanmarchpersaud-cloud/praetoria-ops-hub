@@ -31,6 +31,7 @@ export default function VisitDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: visit, isLoading } = useVisit(id);
+  const { data: pauses = [] } = useVisitPauses(id);
   const { data: employees = [] } = useEmployees();
   const updateVisit = useUpdateVisit();
   const { toast } = useToast();
