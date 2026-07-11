@@ -13044,6 +13044,8 @@ export type Database = {
       visits: {
         Row: {
           access_notes: string | null
+          archived_at: string | null
+          archived_by: string | null
           arrival_time: string | null
           assigned_worker_id: string | null
           billing_status: string | null
@@ -13056,6 +13058,7 @@ export type Database = {
           customer_id: string | null
           customer_visible_notes: string | null
           estimated_duration_minutes: number | null
+          hidden_from_schedule: boolean
           id: string
           is_recurring: boolean | null
           job_id: string | null
@@ -13088,6 +13091,8 @@ export type Database = {
         }
         Insert: {
           access_notes?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           arrival_time?: string | null
           assigned_worker_id?: string | null
           billing_status?: string | null
@@ -13100,6 +13105,7 @@ export type Database = {
           customer_id?: string | null
           customer_visible_notes?: string | null
           estimated_duration_minutes?: number | null
+          hidden_from_schedule?: boolean
           id?: string
           is_recurring?: boolean | null
           job_id?: string | null
@@ -13132,6 +13138,8 @@ export type Database = {
         }
         Update: {
           access_notes?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           arrival_time?: string | null
           assigned_worker_id?: string | null
           billing_status?: string | null
@@ -13144,6 +13152,7 @@ export type Database = {
           customer_id?: string | null
           customer_visible_notes?: string | null
           estimated_duration_minutes?: number | null
+          hidden_from_schedule?: boolean
           id?: string
           is_recurring?: boolean | null
           job_id?: string | null
@@ -14023,6 +14032,8 @@ export type Database = {
         }
         Returns: {
           access_notes: string | null
+          archived_at: string | null
+          archived_by: string | null
           arrival_time: string | null
           assigned_worker_id: string | null
           billing_status: string | null
@@ -14035,6 +14046,7 @@ export type Database = {
           customer_id: string | null
           customer_visible_notes: string | null
           estimated_duration_minutes: number | null
+          hidden_from_schedule: boolean
           id: string
           is_recurring: boolean | null
           job_id: string | null
