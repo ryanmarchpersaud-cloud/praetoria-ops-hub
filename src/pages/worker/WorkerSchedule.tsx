@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom';
 import { startOfWeek, endOfWeek, addWeeks, format, isToday, addDays, isBefore, parseISO } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { DirectionsButton } from '@/components/DirectionsButton';
+import { useVisitRealtimeSync } from '@/hooks/useVisitRealtimeSync';
 
 type ScheduleTab = 'today' | 'upcoming' | 'week';
 
