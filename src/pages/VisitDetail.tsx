@@ -278,7 +278,43 @@ export default function VisitDetail() {
 
               {/* Live or final timer */}
               {form.arrival_time && (
-                <LiveVisitTimer arrivalTime={form.arrival_time} completionTime={form.completion_time} variant="hero" />
+                <LiveVisitTimer arrivalTime={form.arrival_time} completionTime={form.completion_time} variant="hero" pauses={pauses} />
+              )}
+
+              {/* Pause history (admin visibility) */}
+              {pauses.length > 0 && (
+                <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-foreground">Timer Pause Log</span>
+                    <span className="text-muted-foreground">
+                      Total paused {formatDurationMinutes(Math.floor(sumPausedSeconds(pauses) / 60))}
+                      {findOpenPause(pauses) && ' · currently paused'}
+                    </span>
+                  </div>
+                  <ul className="space-y-1">
+                    {pauses.map(p => (
+                      <li key={p.id} className="flex items-start justify-between gap-2 text-[11px]">
+                        <div className="min-w-0">
+                          <span className="font-medium text-foreground">{p.reason}</span>
+                          {p.note ? <span className="text-muted-foreground"> — {p.note}</span> : null}
+                          <div className="text-muted-foreground">
+                            {formatTzDateTime(p.started_at)}
+                            {' → '}
+                            {p.ended_at ? formatTzDateTime(p.ended_at) : <span className="text-amber-600 dark:text-amber-400 font-medium">still paused</span>}
+                          </div>
+                        </div>
+                        <span className="shrink-0 tabular-nums text-muted-foreground">
+                          {p.duration_seconds != null
+                            ? formatDurationMinutes(Math.floor(p.duration_seconds / 60))
+                            : `~${formatDistanceToNow(new Date(p.started_at))}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/60">
+                    Informational only — does not change payroll, subcontractor payouts, or Job Cost Tracker.
+                  </p>
+                </div>
               )}
 
               {/* Cross-midnight / inverted time warning */}
