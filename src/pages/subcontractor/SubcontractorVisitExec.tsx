@@ -236,7 +236,9 @@ export default function SubcontractorVisitExec() {
 
       if (nextExec === 'completed') {
         if (stagedFiles.length > 0) await uploadStaged();
-        updates.completion_time = new Date().toISOString();
+        const completionIso = new Date().toISOString();
+        try { await closeOpenPauseIfAny(id!, completionIso); } catch { /* non-critical */ }
+        updates.completion_time = completionIso;
         updates.crew_notes = crewNotes || null;
         updates.service_summary = serviceSummary || null;
       }
