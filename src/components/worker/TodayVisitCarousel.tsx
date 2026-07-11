@@ -564,7 +564,7 @@ export function TodayVisitCarousel({ visits, workerInitials }: TodayVisitCarouse
       <div className="flex items-center justify-between">
         <div>
           <p className="text-base font-bold text-foreground">
-            {visits.length} visit{visits.length !== 1 ? 's' : ''} today
+            {activeVisits.length} visit{activeVisits.length !== 1 ? 's' : ''} today
           </p>
           {completedCount > 0 ? (
             <p className="text-xs text-muted-foreground">
