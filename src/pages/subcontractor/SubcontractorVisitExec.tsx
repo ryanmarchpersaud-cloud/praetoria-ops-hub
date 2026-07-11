@@ -20,6 +20,8 @@ import {
 import { cn } from '@/lib/utils';
 import { isIOSNative } from '@/lib/platform';
 import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
+import { VisitTimerControls } from '@/components/visits/VisitTimerControls';
+import { useVisitPauses, closeOpenPauseIfAny } from '@/hooks/useVisitPauses';
 import { formatTzTime } from '@/lib/timezone';
 
 // Hide direct camera capture on native iOS — see VisitPhotoGallery.
