@@ -1,4 +1,5 @@
 import { useSubcontractorProfile, useSubcontractorAssignments } from '@/hooks/useSubcontractor';
+import { useVisitRealtimeSync } from '@/hooks/useVisitRealtimeSync';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { MapPin, ChevronRight, CalendarDays, Navigation, ClipboardList, Clock } from 'lucide-react';
