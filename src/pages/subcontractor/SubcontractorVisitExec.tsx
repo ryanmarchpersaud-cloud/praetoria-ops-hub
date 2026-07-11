@@ -344,9 +344,14 @@ export default function SubcontractorVisitExec() {
   ];
   const currentStepIndex = stateSteps.findIndex(s => s.key === execState);
 
+  const isCancelledOrArchived =
+    visit.visit_status === 'Cancelled' || !!(visit as any).archived_at;
+
   // ── Primary action button ──
   const renderPrimaryAction = () => {
     if (execState === 'completed') return null;
+    if (isCancelledOrArchived) return null;
+
 
     if (execState === 'assigned') {
       return (
