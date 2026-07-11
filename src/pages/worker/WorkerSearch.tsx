@@ -36,6 +36,8 @@ export default function WorkerSearch() {
         .from('visits')
         .select('id, visit_number, visit_status, service_date, properties(property_name), customers(first_name, last_name), jobs(assigned_to)')
         .or(`visit_number.ilike.${q}`)
+        .neq('visit_status', 'Cancelled')
+        .is('archived_at', null)
         .limit(20);
       visits?.forEach((v: any) => {
         out.push({
