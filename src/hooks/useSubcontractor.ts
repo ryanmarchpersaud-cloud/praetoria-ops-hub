@@ -42,8 +42,10 @@ export function useSubcontractorAssignments(subcontractorId: string | undefined)
       if (jobIds.length) {
         const { data: vRows } = await supabase
           .from('visits')
-          .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, job_id, properties(property_name, address_line_1, city), customers:customer_id(first_name, last_name)')
-          .in('job_id', jobIds as string[]);
+          .select('id, visit_number, visit_status, visit_type, service_date, arrival_time, job_id, archived_at, properties(property_name, address_line_1, city), customers:customer_id(first_name, last_name)')
+          .in('job_id', jobIds as string[])
+          .neq('visit_status', 'Cancelled')
+          .is('archived_at', null);
         extraVisits = vRows ?? [];
       }
       const seenVisitIds = new Set(rows.filter(r => r.visits?.id).map(r => r.visits.id));
@@ -62,7 +64,14 @@ export function useSubcontractorAssignments(subcontractorId: string | undefined)
           };
         });
 
-      return [...rows, ...synthesized];
+      // Also strip out any direct-assignment rows whose joined visit is
+      // cancelled or archived so the sub portal never surfaces those.
+      const cleanedRows = rows.filter(r => {
+        if (!r.visits) return true;
+        return r.visits.visit_status !== 'Cancelled' && !r.visits.archived_at;
+      });
+
+      return [...cleanedRows, ...synthesized];
     },
     enabled: !!subcontractorId,
   });
