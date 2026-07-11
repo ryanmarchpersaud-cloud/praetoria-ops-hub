@@ -14123,6 +14123,12 @@ export type Database = {
         Returns: string
       }
       get_customer_id_for_user: { Args: { _user_id: string }; Returns: string }
+      get_my_permissions: {
+        Args: never
+        Returns: {
+          permission_key: string
+        }[]
+      }
       get_owner_property_ids: { Args: { _user_id: string }; Returns: string[] }
       get_pm_tenant_id_for_user: { Args: { _user_id: string }; Returns: string }
       get_subcontractor_id_for_user: {
