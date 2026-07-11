@@ -144,7 +144,10 @@ export default function VisitDetail() {
           <div className="flex items-start gap-2">
             <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-destructive">This visit is cancelled</p>
+              <p className="font-semibold text-destructive">
+                This visit is cancelled
+                {(visit as any).hidden_from_schedule && ' — hidden from active schedules'}
+              </p>
               <p className="text-muted-foreground">
                 {(visit as any).cancelled_at && `Cancelled ${format(parseISO((visit as any).cancelled_at), 'MMM d, yyyy')}`}
                 {(visit as any).cancellation_reason && ` · ${(visit as any).cancellation_reason}`}
@@ -154,6 +157,25 @@ export default function VisitDetail() {
           {canManageVisits && (
             <Button size="sm" onClick={() => setReinstateOpen(true)} className="gap-1.5">
               <Undo2 className="h-3.5 w-3.5" /> Reinstate Visit
+            </Button>
+          )}
+        </div>
+      )}
+
+      {(visit as any).archived_at && (
+        <div className="rounded-md border border-muted-foreground/30 bg-muted/40 px-3 py-2 text-xs flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-start gap-2">
+            <Archive className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-foreground">This visit is archived</p>
+              <p className="text-muted-foreground">
+                Archived {format(parseISO((visit as any).archived_at), 'MMM d, yyyy')} — hidden from active schedules and portals.
+              </p>
+            </div>
+          </div>
+          {canManageVisits && (
+            <Button size="sm" variant="outline" onClick={() => setReinstateOpen(true)} className="gap-1.5">
+              <Undo2 className="h-3.5 w-3.5" /> Reinstate
             </Button>
           )}
         </div>
