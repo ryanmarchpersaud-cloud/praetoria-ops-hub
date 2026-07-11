@@ -123,6 +123,7 @@ export default function SubcontractorVisitExec() {
   });
 
   const { data: photos = [] } = useVisitPhotos(id);
+  const { data: pauses = [] } = useVisitPauses(id);
   const uploadPhoto = useUploadVisitPhoto();
 
   const [crewNotes, setCrewNotes] = useState('');
