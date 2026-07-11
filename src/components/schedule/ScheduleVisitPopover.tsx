@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ReinstateVisitDialog } from '@/components/schedule/ReinstateVisitDialog';
+import { CancelVisitDialog } from '@/components/schedule/CancelVisitDialog';
 
 interface ScheduleVisitPopoverProps {
   visit: any;
