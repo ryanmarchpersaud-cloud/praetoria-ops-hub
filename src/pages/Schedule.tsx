@@ -169,6 +169,22 @@ export default function Schedule() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Filters</DropdownMenuLabel>
+              <DropdownMenuCheckboxItem
+                checked={showHiddenCancelled}
+                onCheckedChange={(v) => setShowHiddenCancelled(!!v)}
+                className="text-xs"
+              >
+                <EyeOff className="h-3.5 w-3.5 mr-2" /> Show Cancelled (hidden)
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showArchived}
+                onCheckedChange={(v) => setShowArchived(!!v)}
+                className="text-xs"
+              >
+                <Archive className="h-3.5 w-3.5 mr-2" /> Show Archived
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-xs text-muted-foreground">Tools</DropdownMenuLabel>
               <DropdownMenuItem disabled className="flex items-center gap-2 opacity-50">
                 <ArrowRightLeft className="h-4 w-4" /> Move Visit
