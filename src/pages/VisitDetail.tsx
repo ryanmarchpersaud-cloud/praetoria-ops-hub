@@ -24,6 +24,8 @@ import { CreateInvoiceFromWorkDialog } from '@/components/CreateInvoiceFromWorkD
 import { useQuery } from '@tanstack/react-query';
 import { tzTimeInputValue, reginaLocalToUtcIso, formatTzTime, formatTzDateTime, minutesBetween, formatDurationMinutes, tzDateKey } from '@/lib/timezone';
 import { LiveVisitTimer } from '@/components/visits/LiveVisitTimer';
+import { useVisitPauses, sumPausedSeconds, findOpenPause } from '@/hooks/useVisitPauses';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function VisitDetail() {
   const { id } = useParams();
