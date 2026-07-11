@@ -71,21 +71,12 @@ export function usePermissions() {
     queryKey: ['user_permissions', user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-      if (error) throw error;
-      const userRoles = data.map((r: any) => r.role);
-      if (userRoles.length === 0) return [];
-
-      const { data: perms, error: permErr } = await supabase
-        .from('role_permissions')
-        .select('permission_key')
-        .in('role', userRoles);
+      // Use SECURITY DEFINER RPC so non-admin users can resolve their own
+      // permission keys without the role_permissions table being broadly
+      // readable (tightened per security scan).
+      const { data: perms, error: permErr } = await supabase.rpc('get_my_permissions');
       if (permErr) throw permErr;
-      // Deduplicate
-      return [...new Set(perms.map((p: any) => p.permission_key as PermissionKey))];
+      return [...new Set((perms ?? []).map((p: any) => p.permission_key as PermissionKey))];
     },
     enabled: !!user,
     // Cache permissions so navigating between admin pages doesn't
