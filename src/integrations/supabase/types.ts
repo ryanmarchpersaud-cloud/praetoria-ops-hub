@@ -12930,6 +12930,56 @@ export type Database = {
           },
         ]
       }
+      visit_pauses: {
+        Row: {
+          billing_classification: string
+          created_at: string
+          created_by: string | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          note: string | null
+          reason: string
+          started_at: string
+          user_id: string
+          visit_id: string
+        }
+        Insert: {
+          billing_classification?: string
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          note?: string | null
+          reason: string
+          started_at?: string
+          user_id: string
+          visit_id: string
+        }
+        Update: {
+          billing_classification?: string
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          note?: string | null
+          reason?: string
+          started_at?: string
+          user_id?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_pauses_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visit_photos: {
         Row: {
           caption: string | null
