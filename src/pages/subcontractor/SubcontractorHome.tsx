@@ -59,6 +59,9 @@ export default function SubcontractorHome() {
   const { data: assignments = [] } = useSubcontractorAssignments(profile?.id);
   const { data: invoices = [] } = useSubcontractorInvoices(profile?.id);
 
+  // Live-refresh assignments when Admin cancels/archives/reinstates a visit.
+  useVisitRealtimeSync(['sub_assignments']);
+
   const [visitOpen, setVisitOpen] = useState(false);
   const [requestOpen, setRequestOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
