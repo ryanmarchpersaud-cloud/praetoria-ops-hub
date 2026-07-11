@@ -483,6 +483,12 @@ export function ScheduleVisitPopover({ visit, open, onOpenChange }: ScheduleVisi
         onOpenChange={setReinstateOpen}
         onReinstated={() => onOpenChange(false)}
       />
+      <CancelVisitDialog
+        visit={visit}
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        onCancelled={() => onOpenChange(false)}
+      />
     </Dialog>
   );
 }
