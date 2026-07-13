@@ -87,7 +87,7 @@ export default function Visits() {
       <CreateVisitDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <BulkInvoiceDialog open={bulkInvoiceOpen} onOpenChange={(v) => { setBulkInvoiceOpen(v); if (!v) setSelected(new Set()); }} selectedVisits={selectedVisits} />
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="flex flex-wrap gap-2 items-center pb-1">
         <div className="relative flex-1 min-w-[140px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
@@ -99,7 +99,22 @@ export default function Visits() {
             {VISIT_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+          <Checkbox
+            checked={showHiddenCancelled}
+            onCheckedChange={(v) => setShowHiddenCancelled(!!v)}
+          />
+          Show hidden cancelled
+        </label>
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+          <Checkbox
+            checked={showArchived}
+            onCheckedChange={(v) => setShowArchived(!!v)}
+          />
+          Show archived
+        </label>
       </div>
+
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-2">
