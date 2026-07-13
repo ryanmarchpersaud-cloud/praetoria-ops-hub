@@ -22,9 +22,21 @@ export default function Visits() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkInvoiceOpen, setBulkInvoiceOpen] = useState(false);
+  const [showHiddenCancelled, setShowHiddenCancelled] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const { data: visits = [], isLoading } = useVisits({ visit_status: statusFilter || undefined, search: search || undefined });
+  // Auto-include hidden cancelled visits when the user explicitly filters by "Cancelled",
+  // so cancellation history is never invisible from the primary Visits list.
+  const includeHiddenCancelled = showHiddenCancelled || statusFilter === 'Cancelled';
+
+  const { data: visits = [], isLoading } = useVisits({
+    visit_status: statusFilter || undefined,
+    search: search || undefined,
+    includeHiddenCancelled,
+    includeArchived: showArchived,
+  });
   const { canManageVisits, canManageInvoices } = useActionPermissions();
+
 
   const getPriorityIcon = (p: string) => {
     if (p === 'Urgent' || p === 'High') return <AlertTriangle className="h-3 w-3 text-destructive" />;
