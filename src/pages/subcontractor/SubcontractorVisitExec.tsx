@@ -528,15 +528,15 @@ export default function SubcontractorVisitExec() {
       </div>
 
       {/* ── Live On-Site Timer ── */}
-      {(execState === 'on_site' || execState === 'completed') && visit.arrival_time && (
+      {(execState === 'on_site' || execState === 'completed') && (
         <>
           <LiveVisitTimer
-            arrivalTime={visit.arrival_time}
+            arrivalTime={visit.arrival_time || new Date().toISOString()}
             completionTime={visit.completion_time}
             variant="hero"
             pauses={pauses}
           />
-          {execState === 'on_site' && id && (
+          {execState === 'on_site' && id && !isCancelledOrArchived && (
             <VisitTimerControls visitId={id} active size="lg" />
           )}
         </>
