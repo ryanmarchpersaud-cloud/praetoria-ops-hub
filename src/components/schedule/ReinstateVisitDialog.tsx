@@ -61,11 +61,17 @@ export function ReinstateVisitDialog({ visit, open, onOpenChange, onReinstated }
     enabled: open && !!newDate && !!visit?.id,
   });
 
+  const currentStatus: string = visit?.visit_status || 'Cancelled';
+  const wasCancelled = currentStatus === 'Cancelled';
+  const isArchivedOnly = !!visit?.archived_at && !wasCancelled;
+
   const restoredStatus = useMemo(() => {
+    // Archived-but-not-cancelled: preserve current status (e.g. Completed stays Completed).
+    if (isArchivedOnly) return currentStatus;
     const prior = visit?.status_before_cancellation as string | undefined;
     if (prior && prior !== 'Cancelled' && prior !== 'Completed') return prior;
     return 'Scheduled';
-  }, [visit]);
+  }, [visit, isArchivedOnly, currentStatus]);
 
   const hasConflicts = conflicts.length > 0;
   const needsConfirm = hasConflicts && !confirmAnyway;
@@ -150,7 +156,9 @@ export function ReinstateVisitDialog({ visit, open, onOpenChange, onReinstated }
             </p>
             <p className="text-xs">
               <span className="text-muted-foreground">Currently:</span>{' '}
-              <span className="font-semibold text-destructive">Cancelled</span>
+              <span className={`font-semibold ${wasCancelled ? 'text-destructive' : 'text-foreground'}`}>
+                {isArchivedOnly ? `${currentStatus} (Archived)` : currentStatus}
+              </span>
             </p>
             {visit.cancellation_reason && (
               <p className="text-xs text-muted-foreground">Reason: {visit.cancellation_reason}</p>

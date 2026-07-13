@@ -22,9 +22,21 @@ export default function Visits() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkInvoiceOpen, setBulkInvoiceOpen] = useState(false);
+  const [showHiddenCancelled, setShowHiddenCancelled] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const { data: visits = [], isLoading } = useVisits({ visit_status: statusFilter || undefined, search: search || undefined });
+  // Auto-include hidden cancelled visits when the user explicitly filters by "Cancelled",
+  // so cancellation history is never invisible from the primary Visits list.
+  const includeHiddenCancelled = showHiddenCancelled || statusFilter === 'Cancelled';
+
+  const { data: visits = [], isLoading } = useVisits({
+    visit_status: statusFilter || undefined,
+    search: search || undefined,
+    includeHiddenCancelled,
+    includeArchived: showArchived,
+  });
   const { canManageVisits, canManageInvoices } = useActionPermissions();
+
 
   const getPriorityIcon = (p: string) => {
     if (p === 'Urgent' || p === 'High') return <AlertTriangle className="h-3 w-3 text-destructive" />;
@@ -75,7 +87,7 @@ export default function Visits() {
       <CreateVisitDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <BulkInvoiceDialog open={bulkInvoiceOpen} onOpenChange={(v) => { setBulkInvoiceOpen(v); if (!v) setSelected(new Set()); }} selectedVisits={selectedVisits} />
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="flex flex-wrap gap-2 items-center pb-1">
         <div className="relative flex-1 min-w-[140px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
@@ -87,7 +99,22 @@ export default function Visits() {
             {VISIT_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+          <Checkbox
+            checked={showHiddenCancelled}
+            onCheckedChange={(v) => setShowHiddenCancelled(!!v)}
+          />
+          Show hidden cancelled
+        </label>
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+          <Checkbox
+            checked={showArchived}
+            onCheckedChange={(v) => setShowArchived(!!v)}
+          />
+          Show archived
+        </label>
       </div>
+
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-2">
