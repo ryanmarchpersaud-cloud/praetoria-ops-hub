@@ -146,6 +146,23 @@ export default function SubcontractorVisitExec() {
     }
   }, [visit]);
 
+  // Backfill arrival_time if visit is already On Site but arrival_time was never
+  // stamped (e.g. admin flipped the status manually). Without this, the live
+  // timer + Pause/Resume controls stay hidden on the subcontractor screen.
+  useEffect(() => {
+    if (!visit || !id) return;
+    if (visit.visit_status === 'In Progress' && !visit.arrival_time) {
+      const stamp = new Date().toISOString();
+      supabase
+        .from('visits')
+        .update({ arrival_time: stamp })
+        .eq('id', id)
+        .then(({ error }) => {
+          if (!error) queryClient.invalidateQueries({ queryKey: ['subcontractor_visit', id] });
+        });
+    }
+  }, [visit, id, queryClient]);
+
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
   if (!visit) return <div className="p-6 text-center text-muted-foreground">Visit not found</div>;
 
@@ -511,15 +528,15 @@ export default function SubcontractorVisitExec() {
       </div>
 
       {/* ── Live On-Site Timer ── */}
-      {(execState === 'on_site' || execState === 'completed') && visit.arrival_time && (
+      {(execState === 'on_site' || execState === 'completed') && (
         <>
           <LiveVisitTimer
-            arrivalTime={visit.arrival_time}
+            arrivalTime={visit.arrival_time || new Date().toISOString()}
             completionTime={visit.completion_time}
             variant="hero"
             pauses={pauses}
           />
-          {execState === 'on_site' && id && (
+          {execState === 'on_site' && id && !isCancelledOrArchived && (
             <VisitTimerControls visitId={id} active size="lg" />
           )}
         </>
