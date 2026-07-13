@@ -61,11 +61,17 @@ export function ReinstateVisitDialog({ visit, open, onOpenChange, onReinstated }
     enabled: open && !!newDate && !!visit?.id,
   });
 
+  const currentStatus: string = visit?.visit_status || 'Cancelled';
+  const wasCancelled = currentStatus === 'Cancelled';
+  const isArchivedOnly = !!visit?.archived_at && !wasCancelled;
+
   const restoredStatus = useMemo(() => {
+    // Archived-but-not-cancelled: preserve current status (e.g. Completed stays Completed).
+    if (isArchivedOnly) return currentStatus;
     const prior = visit?.status_before_cancellation as string | undefined;
     if (prior && prior !== 'Cancelled' && prior !== 'Completed') return prior;
     return 'Scheduled';
-  }, [visit]);
+  }, [visit, isArchivedOnly, currentStatus]);
 
   const hasConflicts = conflicts.length > 0;
   const needsConfirm = hasConflicts && !confirmAnyway;
