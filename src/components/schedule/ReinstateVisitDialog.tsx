@@ -156,7 +156,9 @@ export function ReinstateVisitDialog({ visit, open, onOpenChange, onReinstated }
             </p>
             <p className="text-xs">
               <span className="text-muted-foreground">Currently:</span>{' '}
-              <span className="font-semibold text-destructive">Cancelled</span>
+              <span className={`font-semibold ${wasCancelled ? 'text-destructive' : 'text-foreground'}`}>
+                {isArchivedOnly ? `${currentStatus} (Archived)` : currentStatus}
+              </span>
             </p>
             {visit.cancellation_reason && (
               <p className="text-xs text-muted-foreground">Reason: {visit.cancellation_reason}</p>
