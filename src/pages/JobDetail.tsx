@@ -295,7 +295,7 @@ export default function JobDetail() {
           <FileCheck2 className="h-4 w-4" />
           <span className="hidden sm:inline">Proof of Service</span>
         </Button>
-        {canManageJobs && !isClosed && (
+        {canManageJobs && !isClosed && !isCompleted && (
           <Button
             variant="outline"
             size="sm"
@@ -315,6 +315,39 @@ export default function JobDetail() {
           >
             <XCircle className="h-4 w-4" />
             <span className="hidden sm:inline">Close Job</span>
+          </Button>
+        )}
+        {canManageJobs && (isCompleted || isClosed) && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-11 shrink-0 gap-1.5"
+            disabled={updateJob.isPending}
+            onClick={async () => {
+              if (!id) return;
+              if (!window.confirm('Reopen this job for additional work?\n\nCompleted visits will remain completed. The job will return to active scheduling so additional visits can be created.')) return;
+              try {
+                await updateJob.mutateAsync({ id, status: 'In Progress' });
+                set('status', 'In Progress');
+                try {
+                  await supabase.from('activities').insert({
+                    action_name: `Job ${job.job_number} reopened`,
+                    workflow_name: 'admin',
+                    record_type: 'job',
+                    record_id: id,
+                    status: 'reopened',
+                    payload_summary: { previous_status: form.status, new_status: 'In Progress' },
+                  } as any);
+                } catch { /* non-critical */ }
+                qc.invalidateQueries({ queryKey: ['jobs'] });
+                toast({ title: 'Job reopened', description: 'Job is active again. You can schedule additional visits.' });
+              } catch (err: any) {
+                toast({ title: 'Error', description: err.message, variant: 'destructive' });
+              }
+            }}
+          >
+            <Undo2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Reopen Job</span>
           </Button>
         )}
         {canManageJobs && (
