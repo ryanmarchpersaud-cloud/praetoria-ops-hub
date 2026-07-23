@@ -12,7 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PropertyUsageBadge } from '@/components/PropertyUsageBadge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, CheckCircle2, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle, FileCheck2 } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, Mail, Phone, Building2, UserPlus, Check, CheckCircle2, FileText, Briefcase, Receipt, ClipboardCheck, MessageSquarePlus, Plus, Send, Loader2, FileSignature, CreditCard, Contact, Landmark, ShieldCheck, Eye, Copy, Trash2, AlertTriangle, FileCheck2, PauseCircle, PlayCircle } from 'lucide-react';
+import { PauseCustomerDialog } from '@/components/customer/PauseCustomerDialog';
 import { ProofOfServiceDialog } from '@/components/visits/ProofOfServiceDialog';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { Switch } from '@/components/ui/switch';
@@ -52,6 +53,8 @@ export default function CustomerDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [pauseOpen, setPauseOpen] = useState(false);
+  const [unpauseOpen, setUnpauseOpen] = useState(false);
   const { isAdmin, roles } = useAuthorization();
   const canHardDelete = isAdmin || roles.includes('owner' as any);
   const handleImpersonate = async () => {
@@ -417,6 +420,30 @@ export default function CustomerDetail() {
             </Button>
           </>
         )}
+        {(() => {
+          const currentStatus = (form?.customer_status || customer.customer_status || 'Active') as string;
+          return currentStatus === 'Paused' ? (
+            <Button
+              variant="outline"
+              className="h-11 gap-2 text-emerald-700 border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
+              onClick={() => setUnpauseOpen(true)}
+              disabled={!!form?.is_protected}
+              title={form?.is_protected ? 'Protected customer — change status manually.' : 'Reactivate and reinstate cancelled future visits'}
+            >
+              <PlayCircle className="h-4 w-4" /> Reactivate
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="h-11 gap-2 text-amber-700 border-amber-300 hover:bg-amber-50 hover:text-amber-800"
+              onClick={() => setPauseOpen(true)}
+              disabled={!!form?.is_protected || currentStatus === 'Lost'}
+              title={form?.is_protected ? 'Protected customer — change status manually.' : 'Pause customer and cancel upcoming visits'}
+            >
+              <PauseCircle className="h-4 w-4" /> Pause Customer
+            </Button>
+          );
+        })()}
         {canHardDelete && (
           <Button
             variant="outline"
@@ -429,6 +456,22 @@ export default function CustomerDetail() {
           </Button>
         )}
       </div>
+      <PauseCustomerDialog
+        mode="pause"
+        customerId={customer.id}
+        customerName={`${customer.first_name ?? ''} ${customer.last_name ?? ''}`.trim() || customer.company_name || 'this customer'}
+        open={pauseOpen}
+        onOpenChange={setPauseOpen}
+        onDone={() => setForm((f: any) => ({ ...f, customer_status: 'Paused' }))}
+      />
+      <PauseCustomerDialog
+        mode="unpause"
+        customerId={customer.id}
+        customerName={`${customer.first_name ?? ''} ${customer.last_name ?? ''}`.trim() || customer.company_name || 'this customer'}
+        open={unpauseOpen}
+        onOpenChange={setUnpauseOpen}
+        onDone={() => setForm((f: any) => ({ ...f, customer_status: 'Active', pause_reason: null }))}
+      />
       {impersonateLink && (
         <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary flex items-center justify-between gap-2">
           <span className="truncate">A new tab opened with the customer's portal view. The customer was <strong>not</strong> notified.</span>
