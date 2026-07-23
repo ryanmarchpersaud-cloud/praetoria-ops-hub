@@ -7,13 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Search, ChevronRight, Cloud, Camera, User, AlertTriangle, Receipt } from 'lucide-react';
+import { Plus, Search, ChevronRight, Cloud, Camera, User, AlertTriangle, Receipt, XCircle, Archive } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { VISIT_STATUSES } from '@/lib/constants';
 import { format } from 'date-fns';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { BulkInvoiceDialog } from '@/components/BulkInvoiceDialog';
+import { BulkVisitActionsDialog } from '@/components/schedule/BulkVisitActionsDialog';
 
 export default function Visits() {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ export default function Visits() {
   const [bulkInvoiceOpen, setBulkInvoiceOpen] = useState(false);
   const [showHiddenCancelled, setShowHiddenCancelled] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [bulkCancelOpen, setBulkCancelOpen] = useState(false);
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
 
   // Auto-include hidden cancelled visits when the user explicitly filters by "Cancelled",
   // so cancellation history is never invisible from the primary Visits list.
@@ -76,6 +79,18 @@ export default function Visits() {
               <span className="hidden sm:inline">Invoice</span> ({selected.size})
             </Button>
           )}
+          {hasSelection && canManageVisits && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setBulkCancelOpen(true)} className="gap-1.5 text-destructive hover:text-destructive">
+                <XCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">Cancel</span> ({selected.size})
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setBulkArchiveOpen(true)} className="gap-1.5">
+                <Archive className="h-4 w-4" />
+                <span className="hidden sm:inline">Archive</span> ({selected.size})
+              </Button>
+            </>
+          )}
           {canManageVisits && (
             <Button size="sm" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Schedule </span>Visit
@@ -86,6 +101,20 @@ export default function Visits() {
 
       <CreateVisitDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <BulkInvoiceDialog open={bulkInvoiceOpen} onOpenChange={(v) => { setBulkInvoiceOpen(v); if (!v) setSelected(new Set()); }} selectedVisits={selectedVisits} />
+      <BulkVisitActionsDialog
+        action="cancel"
+        visits={selectedVisits}
+        open={bulkCancelOpen}
+        onOpenChange={setBulkCancelOpen}
+        onDone={() => setSelected(new Set())}
+      />
+      <BulkVisitActionsDialog
+        action="archive"
+        visits={selectedVisits}
+        open={bulkArchiveOpen}
+        onOpenChange={setBulkArchiveOpen}
+        onDone={() => setSelected(new Set())}
+      />
 
       <div className="flex flex-wrap gap-2 items-center pb-1">
         <div className="relative flex-1 min-w-[140px]">
