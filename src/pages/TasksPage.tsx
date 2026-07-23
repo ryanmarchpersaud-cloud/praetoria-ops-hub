@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Search, ClipboardCheck } from 'lucide-react';
-import { useOperationalTasks, TASK_STATUSES, useUpdateTask } from '@/hooks/useOperationalTasks';
-import { CreateTaskDialog } from '@/components/CreateTaskDialog';
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Plus, Search, ClipboardCheck, MoreHorizontal, Pencil } from 'lucide-react';
+import { useOperationalTasks, TASK_STATUSES, useUpdateTask, useAssignableUsers } from '@/hooks/useOperationalTasks';
+import { TaskFormDialog } from '@/components/tasks/TaskFormDialog';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -28,13 +32,55 @@ const statusColor: Record<string, string> = {
   Cancelled: 'bg-red-100 text-red-700',
 };
 
+function AssigneesCell({ task, directory }: { task: any; directory: Map<string, { label: string; assignee_type: string }> }) {
+  const links: { user_id: string }[] = task.operational_task_assignees || [];
+  const ids = links.length ? links.map(l => l.user_id) : (task.assigned_to ? [task.assigned_to] : []);
+  if (ids.length === 0) return <span className="text-xs text-muted-foreground">Unassigned</span>;
+
+  const labelFor = (uid: string) => directory.get(uid)?.label || 'Unknown';
+  const first = labelFor(ids[0]);
+  const firstName = first.split(' ')[0];
+  const extra = ids.length - 1;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className="text-xs text-left hover:underline focus:outline-none focus:ring-1 focus:ring-primary rounded px-1 -mx-1">
+          <span className="font-medium">{firstName}</span>
+          {extra > 0 && <span className="text-muted-foreground"> +{extra} more</span>}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-2">
+        <p className="text-[10px] uppercase tracking-wide text-muted-foreground px-1 pb-1">Assigned ({ids.length})</p>
+        <ul className="space-y-1">
+          {ids.map(uid => {
+            const info = directory.get(uid);
+            return (
+              <li key={uid} className="text-xs px-1 py-0.5">
+                <span className="font-medium">{info?.label || 'Unknown'}</span>
+                {info?.assignee_type && (
+                  <span className="ml-1 text-[10px] text-muted-foreground capitalize">· {info.assignee_type}</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
-  const [createOpen, setCreateOpen] = useState(false);
-  const { data: tasks = [], isLoading } = useOperationalTasks({ status: statusFilter || undefined });
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<any | null>(null);
+  const { data: tasks = [], isLoading } = useOperationalTasks({ status: statusFilter && statusFilter !== 'all' ? statusFilter : undefined });
+  const { data: directoryList = [] } = useAssignableUsers();
   const updateTask = useUpdateTask();
   const { toast } = useToast();
+
+  const directory = new Map(directoryList.map(d => [d.user_id, { label: d.label, assignee_type: d.assignee_type }]));
 
   const filtered = tasks.filter((t: any) => {
     if (!search) return true;
@@ -53,6 +99,9 @@ export default function TasksPage() {
     }
   };
 
+  const openCreate = () => { setEditingTask(null); setFormOpen(true); };
+  const openEdit = (t: any) => { setEditingTask(t); setFormOpen(true); };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -63,7 +112,7 @@ export default function TasksPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Lightweight tasks for errands, pickups, inspections & more</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> New Task</Button>
+        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> New Task</Button>
       </div>
 
       <div className="flex items-center gap-3">
@@ -87,12 +136,12 @@ export default function TasksPage() {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Assignees</TableHead>
                 <TableHead>Priority</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Assignee Type</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Receipt</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="w-40">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -113,21 +162,37 @@ export default function TasksPage() {
                     </TableCell>
                     <TableCell className="text-xs">{t.task_category}</TableCell>
                     <TableCell>
+                      <AssigneesCell task={t} directory={directory} />
+                    </TableCell>
+                    <TableCell>
                       <Badge variant="secondary" className={cn('text-[10px] capitalize', priorityColor[t.priority])}>{t.priority}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={cn('text-[10px]', statusColor[t.status])}>{t.status}</Badge>
                     </TableCell>
-                    <TableCell className="text-xs capitalize">{t.assignee_type}</TableCell>
                     <TableCell className="text-xs">{t.due_date ? format(new Date(t.due_date), 'MMM d, yyyy') : '—'}</TableCell>
                     <TableCell className="text-xs">{t.receipt_required ? '✓ Required' : '—'}</TableCell>
                     <TableCell>
-                      <Select value={t.status} onValueChange={(v) => handleStatusChange(t.id, v)}>
-                        <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {TASK_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center gap-1">
+                        <Select value={t.status} onValueChange={(v) => handleStatusChange(t.id, v)}>
+                          <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {TASK_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => openEdit(t)}>
+                              <Pencil className="h-3.5 w-3.5 mr-2" /> Edit Task
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -137,7 +202,11 @@ export default function TasksPage() {
         </CardContent>
       </Card>
 
-      <CreateTaskDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <TaskFormDialog
+        open={formOpen}
+        onOpenChange={(v) => { setFormOpen(v); if (!v) setEditingTask(null); }}
+        task={editingTask}
+      />
     </div>
   );
 }
