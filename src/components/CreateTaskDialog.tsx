@@ -34,11 +34,14 @@ const INITIAL = {
   assignee_type: 'worker' as 'worker' | 'subcontractor',
   assigned_to: '',
   customer_id: '',
+  customer_name_text: '',
   property_id: '',
+  property_name_text: '',
   address: '',
   city: '',
   province: '',
   postal_code: '',
+
   priority: 'medium' as string,
   due_date: '',
   due_time: '',
@@ -92,12 +95,15 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssigneeType, defa
         task_description: form.task_description || null,
         assignee_type: form.assignee_type,
         assigned_to: form.assigned_to || null,
-        customer_id: form.customer_id || null,
-        property_id: form.property_id || null,
+        customer_id: form.customer_id && form.customer_id !== 'none' ? form.customer_id : null,
+        customer_name_text: form.customer_name_text.trim() || null,
+        property_id: form.property_id && form.property_id !== 'none' ? form.property_id : null,
+        property_name_text: form.property_name_text.trim() || null,
         address: form.address || null,
         city: form.city || null,
         province: form.province || null,
         postal_code: form.postal_code || null,
+
         priority: (form.priority || 'medium') as any,
         status: form.assigned_to ? 'Assigned' as any : 'New' as any,
         due_date: form.due_date || null,
@@ -198,7 +204,7 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssigneeType, defa
             <div>
               <Label>Customer (optional)</Label>
               <Select value={form.customer_id} onValueChange={v => set('customer_id', v)}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select from list" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   {customers.map(c => (
@@ -206,13 +212,19 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssigneeType, defa
                   ))}
                 </SelectContent>
               </Select>
+              <Input
+                className="mt-2"
+                placeholder="Or type customer name manually"
+                value={form.customer_name_text}
+                onChange={e => set('customer_name_text', e.target.value)}
+              />
             </div>
 
             {/* Property (optional) */}
             <div>
               <Label>Property (optional)</Label>
               <Select value={form.property_id} onValueChange={v => set('property_id', v)}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select from list" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   {(properties || []).map((p: any) => (
@@ -220,7 +232,14 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssigneeType, defa
                   ))}
                 </SelectContent>
               </Select>
+              <Input
+                className="mt-2"
+                placeholder="Or type property name manually"
+                value={form.property_name_text}
+                onChange={e => set('property_name_text', e.target.value)}
+              />
             </div>
+
 
             {/* Address */}
             <div>

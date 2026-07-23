@@ -4619,6 +4619,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_id: string | null
+          customer_name_text: string | null
           due_date: string | null
           due_time: string | null
           follow_up_required: boolean
@@ -4630,6 +4631,7 @@ export type Database = {
           postal_code: string | null
           priority: Database["public"]["Enums"]["task_priority"]
           property_id: string | null
+          property_name_text: string | null
           province: string | null
           receipt_required: boolean
           receipt_urls: string[] | null
@@ -4652,6 +4654,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          customer_name_text?: string | null
           due_date?: string | null
           due_time?: string | null
           follow_up_required?: boolean
@@ -4663,6 +4666,7 @@ export type Database = {
           postal_code?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           property_id?: string | null
+          property_name_text?: string | null
           province?: string | null
           receipt_required?: boolean
           receipt_urls?: string[] | null
@@ -4685,6 +4689,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          customer_name_text?: string | null
           due_date?: string | null
           due_time?: string | null
           follow_up_required?: boolean
@@ -4696,6 +4701,7 @@ export type Database = {
           postal_code?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           property_id?: string | null
+          property_name_text?: string | null
           province?: string | null
           receipt_required?: boolean
           receipt_urls?: string[] | null
@@ -14690,6 +14696,7 @@ export type Database = {
         | "pm_new_document"
         | "pm_task_assigned"
         | "pm_showing_assigned"
+        | "task_assigned"
       payment_method_type: "manual" | "card-on-file" | "auto-pay"
       photo_tag: "Before" | "After" | "Progress" | "Issue"
       pm_charge_status:
@@ -15121,6 +15128,7 @@ export const Constants = {
         "pm_new_document",
         "pm_task_assigned",
         "pm_showing_assigned",
+        "task_assigned",
       ],
       payment_method_type: ["manual", "card-on-file", "auto-pay"],
       photo_tag: ["Before", "After", "Progress", "Issue"],
