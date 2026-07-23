@@ -4606,6 +4606,44 @@ export type Database = {
           },
         ]
       }
+      operational_task_assignees: {
+        Row: {
+          assignee_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notified_at: string | null
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          assignee_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notified_at?: string | null
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          assignee_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notified_at?: string | null
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_task_assignees_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "operational_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operational_tasks: {
         Row: {
           address: string | null
