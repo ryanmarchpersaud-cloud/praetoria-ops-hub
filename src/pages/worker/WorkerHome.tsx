@@ -13,6 +13,7 @@ import { AvatarUpload } from '@/components/AvatarUpload';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { DailyRouteMap, type RouteStop } from '@/components/DailyRouteMap';
 import { TodayVisitCarousel } from '@/components/worker/TodayVisitCarousel';
+import { MyTasksSection } from '@/components/tasks/MyTasksSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
