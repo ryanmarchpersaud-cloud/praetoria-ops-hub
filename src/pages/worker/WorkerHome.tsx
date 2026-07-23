@@ -300,6 +300,10 @@ export default function WorkerHome() {
       {/* Today's Visits / Quick Book */}
       <TodayVisitCarousel visits={todayVisits as any} workerInitials={initials} />
 
+      {/* My Tasks (overdue, today, upcoming) */}
+      <MyTasksSection tasksHref="/worker/tasks" />
+
+
       {/* Empty state when no visits today */}
       {todayVisits.length === 0 && (
         <Card>
