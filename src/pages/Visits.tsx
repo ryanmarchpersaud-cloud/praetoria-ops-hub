@@ -25,6 +25,8 @@ export default function Visits() {
   const [bulkInvoiceOpen, setBulkInvoiceOpen] = useState(false);
   const [showHiddenCancelled, setShowHiddenCancelled] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [bulkCancelOpen, setBulkCancelOpen] = useState(false);
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
 
   // Auto-include hidden cancelled visits when the user explicitly filters by "Cancelled",
   // so cancellation history is never invisible from the primary Visits list.
