@@ -202,7 +202,7 @@ export function useAssignableUsers() {
     queryKey: ['assignable_users'],
     queryFn: async () => {
       const [{ data: workers, error: wErr }, { data: subs, error: sErr }] = await Promise.all([
-        supabase.from('worker_profiles').select('user_id, full_name, email').order('full_name'),
+        supabase.from('worker_profiles').select('user_id, full_name, work_email, employment_status').order('full_name'),
         supabase.from('subcontractors').select('user_id, contact_name, company_name').order('contact_name'),
       ]);
       if (wErr) throw wErr;
@@ -210,7 +210,7 @@ export function useAssignableUsers() {
       const list: { user_id: string; label: string; sublabel?: string; assignee_type: 'worker' | 'subcontractor' }[] = [];
       (workers ?? []).forEach((w: any) => {
         if (!w.user_id) return;
-        list.push({ user_id: w.user_id, label: w.full_name || w.email || 'Worker', sublabel: 'Worker', assignee_type: 'worker' });
+        list.push({ user_id: w.user_id, label: w.full_name || w.work_email || 'Worker', sublabel: 'Worker', assignee_type: 'worker' });
       });
       (subs ?? []).forEach((s: any) => {
         if (!s.user_id) return;
