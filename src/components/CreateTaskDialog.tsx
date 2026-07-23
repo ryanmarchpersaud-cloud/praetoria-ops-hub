@@ -204,7 +204,7 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssigneeType, defa
             <div>
               <Label>Customer (optional)</Label>
               <Select value={form.customer_id} onValueChange={v => set('customer_id', v)}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select from list" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   {customers.map(c => (
@@ -212,13 +212,19 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssigneeType, defa
                   ))}
                 </SelectContent>
               </Select>
+              <Input
+                className="mt-2"
+                placeholder="Or type customer name manually"
+                value={form.customer_name_text}
+                onChange={e => set('customer_name_text', e.target.value)}
+              />
             </div>
 
             {/* Property (optional) */}
             <div>
               <Label>Property (optional)</Label>
               <Select value={form.property_id} onValueChange={v => set('property_id', v)}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select from list" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   {(properties || []).map((p: any) => (
@@ -226,7 +232,14 @@ export function CreateTaskDialog({ open, onOpenChange, defaultAssigneeType, defa
                   ))}
                 </SelectContent>
               </Select>
+              <Input
+                className="mt-2"
+                placeholder="Or type property name manually"
+                value={form.property_name_text}
+                onChange={e => set('property_name_text', e.target.value)}
+              />
             </div>
+
 
             {/* Address */}
             <div>
