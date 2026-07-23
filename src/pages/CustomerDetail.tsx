@@ -420,6 +420,30 @@ export default function CustomerDetail() {
             </Button>
           </>
         )}
+        {(() => {
+          const currentStatus = (form?.customer_status || customer.customer_status || 'Active') as string;
+          return currentStatus === 'Paused' ? (
+            <Button
+              variant="outline"
+              className="h-11 gap-2 text-emerald-700 border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800"
+              onClick={() => setUnpauseOpen(true)}
+              disabled={!!form?.is_protected}
+              title={form?.is_protected ? 'Protected customer — change status manually.' : 'Reactivate and reinstate cancelled future visits'}
+            >
+              <PlayCircle className="h-4 w-4" /> Reactivate
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="h-11 gap-2 text-amber-700 border-amber-300 hover:bg-amber-50 hover:text-amber-800"
+              onClick={() => setPauseOpen(true)}
+              disabled={!!form?.is_protected || currentStatus === 'Lost'}
+              title={form?.is_protected ? 'Protected customer — change status manually.' : 'Pause customer and cancel upcoming visits'}
+            >
+              <PauseCircle className="h-4 w-4" /> Pause Customer
+            </Button>
+          );
+        })()}
         {canHardDelete && (
           <Button
             variant="outline"
