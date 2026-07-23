@@ -7,13 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Search, ChevronRight, Cloud, Camera, User, AlertTriangle, Receipt } from 'lucide-react';
+import { Plus, Search, ChevronRight, Cloud, Camera, User, AlertTriangle, Receipt, XCircle, Archive } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { VISIT_STATUSES } from '@/lib/constants';
 import { format } from 'date-fns';
 import CreateVisitDialog from '@/components/CreateVisitDialog';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { BulkInvoiceDialog } from '@/components/BulkInvoiceDialog';
+import { BulkVisitActionsDialog } from '@/components/schedule/BulkVisitActionsDialog';
 
 export default function Visits() {
   const navigate = useNavigate();
