@@ -336,10 +336,11 @@ export function TaskRequirementsPanel({ task, onChanged }: Props) {
 
 function PhotoTile({ path, onRemove }: { path: string; onRemove: () => void }) {
   const [url, setUrl] = useState<string | null>(null);
-  useState(() => {
-    signedUrl(path).then(setUrl);
-    return undefined as any;
-  });
+  useEffect(() => {
+    let alive = true;
+    signedUrl(path).then((u) => { if (alive) setUrl(u); });
+    return () => { alive = false; };
+  }, [path]);
   return (
     <div className="relative aspect-square rounded overflow-hidden border bg-muted">
       {url ? (
