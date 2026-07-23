@@ -456,6 +456,22 @@ export default function CustomerDetail() {
           </Button>
         )}
       </div>
+      <PauseCustomerDialog
+        mode="pause"
+        customerId={customer.id}
+        customerName={`${customer.first_name ?? ''} ${customer.last_name ?? ''}`.trim() || customer.company_name || 'this customer'}
+        open={pauseOpen}
+        onOpenChange={setPauseOpen}
+        onDone={() => setForm((f: any) => ({ ...f, customer_status: 'Paused' }))}
+      />
+      <PauseCustomerDialog
+        mode="unpause"
+        customerId={customer.id}
+        customerName={`${customer.first_name ?? ''} ${customer.last_name ?? ''}`.trim() || customer.company_name || 'this customer'}
+        open={unpauseOpen}
+        onOpenChange={setUnpauseOpen}
+        onDone={() => setForm((f: any) => ({ ...f, customer_status: 'Active', pause_reason: null }))}
+      />
       {impersonateLink && (
         <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary flex items-center justify-between gap-2">
           <span className="truncate">A new tab opened with the customer's portal view. The customer was <strong>not</strong> notified.</span>
