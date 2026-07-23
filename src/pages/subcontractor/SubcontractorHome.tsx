@@ -35,6 +35,7 @@ const QUICK_BOOK_ITEMS: { label: string; icon: any; action: QuickBookAction; col
   { label: 'New Task', icon: ClipboardCheck, action: 'task', color: 'text-teal-600' },
 ];
 import { TodayWorkOverviewDialog } from '@/components/TodayWorkOverviewDialog';
+import { MyTasksSection } from '@/components/tasks/MyTasksSection';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -293,6 +294,9 @@ export default function SubcontractorHome() {
       <CreateRequestDialog open={requestOpen} onOpenChange={setRequestOpen} />
       <SubcontractorQuickBookDialogs activeDialog={quickBookDialog} onClose={() => setQuickBookDialog(null)} />
       <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} defaultAssigneeType="subcontractor" />
+
+      {/* My Tasks (overdue, today, upcoming) */}
+      <MyTasksSection tasksHref="/subcontractor/tasks" />
 
       {todayAssignments.length > 0 && (
         <DailyRouteMap

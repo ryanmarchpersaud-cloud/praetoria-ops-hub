@@ -13,6 +13,7 @@ import { AvatarUpload } from '@/components/AvatarUpload';
 import { DirectionsButton } from '@/components/DirectionsButton';
 import { DailyRouteMap, type RouteStop } from '@/components/DailyRouteMap';
 import { TodayVisitCarousel } from '@/components/worker/TodayVisitCarousel';
+import { MyTasksSection } from '@/components/tasks/MyTasksSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Bell, LogIn, LogOut as LogOutIcon, MapPin, Clock, CheckCircle,
@@ -298,6 +299,10 @@ export default function WorkerHome() {
 
       {/* Today's Visits / Quick Book */}
       <TodayVisitCarousel visits={todayVisits as any} workerInitials={initials} />
+
+      {/* My Tasks (overdue, today, upcoming) */}
+      <MyTasksSection tasksHref="/worker/tasks" />
+
 
       {/* Empty state when no visits today */}
       {todayVisits.length === 0 && (

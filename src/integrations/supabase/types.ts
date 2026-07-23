@@ -4660,6 +4660,8 @@ export type Database = {
           customer_name_text: string | null
           due_date: string | null
           due_time: string | null
+          follow_up_completed: boolean
+          follow_up_notes: string | null
           follow_up_required: boolean
           id: string
           job_id: string | null
@@ -4671,8 +4673,11 @@ export type Database = {
           property_id: string | null
           property_name_text: string | null
           province: string | null
+          receipt_amount: number | null
+          receipt_notes: string | null
           receipt_required: boolean
           receipt_urls: string[] | null
+          receipt_vendor: string | null
           status: Database["public"]["Enums"]["task_status"]
           task_category: Database["public"]["Enums"]["task_category"]
           task_description: string | null
@@ -4695,6 +4700,8 @@ export type Database = {
           customer_name_text?: string | null
           due_date?: string | null
           due_time?: string | null
+          follow_up_completed?: boolean
+          follow_up_notes?: string | null
           follow_up_required?: boolean
           id?: string
           job_id?: string | null
@@ -4706,8 +4713,11 @@ export type Database = {
           property_id?: string | null
           property_name_text?: string | null
           province?: string | null
+          receipt_amount?: number | null
+          receipt_notes?: string | null
           receipt_required?: boolean
           receipt_urls?: string[] | null
+          receipt_vendor?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           task_category?: Database["public"]["Enums"]["task_category"]
           task_description?: string | null
@@ -4730,6 +4740,8 @@ export type Database = {
           customer_name_text?: string | null
           due_date?: string | null
           due_time?: string | null
+          follow_up_completed?: boolean
+          follow_up_notes?: string | null
           follow_up_required?: boolean
           id?: string
           job_id?: string | null
@@ -4741,8 +4753,11 @@ export type Database = {
           property_id?: string | null
           property_name_text?: string | null
           province?: string | null
+          receipt_amount?: number | null
+          receipt_notes?: string | null
           receipt_required?: boolean
           receipt_urls?: string[] | null
+          receipt_vendor?: string | null
           status?: Database["public"]["Enums"]["task_status"]
           task_category?: Database["public"]["Enums"]["task_category"]
           task_description?: string | null
