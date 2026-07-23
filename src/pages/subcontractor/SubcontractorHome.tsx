@@ -295,6 +295,9 @@ export default function SubcontractorHome() {
       <SubcontractorQuickBookDialogs activeDialog={quickBookDialog} onClose={() => setQuickBookDialog(null)} />
       <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} defaultAssigneeType="subcontractor" />
 
+      {/* My Tasks (overdue, today, upcoming) */}
+      <MyTasksSection tasksHref="/subcontractor/tasks" />
+
       {todayAssignments.length > 0 && (
         <DailyRouteMap
           stops={todayAssignments.map((a: any): RouteStop => ({
