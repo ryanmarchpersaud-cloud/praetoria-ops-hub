@@ -79,6 +79,18 @@ export default function Visits() {
               <span className="hidden sm:inline">Invoice</span> ({selected.size})
             </Button>
           )}
+          {hasSelection && canManageVisits && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setBulkCancelOpen(true)} className="gap-1.5 text-destructive hover:text-destructive">
+                <XCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">Cancel</span> ({selected.size})
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setBulkArchiveOpen(true)} className="gap-1.5">
+                <Archive className="h-4 w-4" />
+                <span className="hidden sm:inline">Archive</span> ({selected.size})
+              </Button>
+            </>
+          )}
           {canManageVisits && (
             <Button size="sm" onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-1" /><span className="hidden sm:inline">Schedule </span>Visit
@@ -89,6 +101,20 @@ export default function Visits() {
 
       <CreateVisitDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <BulkInvoiceDialog open={bulkInvoiceOpen} onOpenChange={(v) => { setBulkInvoiceOpen(v); if (!v) setSelected(new Set()); }} selectedVisits={selectedVisits} />
+      <BulkVisitActionsDialog
+        action="cancel"
+        visits={selectedVisits}
+        open={bulkCancelOpen}
+        onOpenChange={setBulkCancelOpen}
+        onDone={() => setSelected(new Set())}
+      />
+      <BulkVisitActionsDialog
+        action="archive"
+        visits={selectedVisits}
+        open={bulkArchiveOpen}
+        onOpenChange={setBulkArchiveOpen}
+        onDone={() => setSelected(new Set())}
+      />
 
       <div className="flex flex-wrap gap-2 items-center pb-1">
         <div className="relative flex-1 min-w-[140px]">
