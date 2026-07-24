@@ -39,8 +39,6 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const customer_id: string | undefined = body.customer_id;
-    const body = await req.json().catch(() => ({}));
-    const customer_id: string | undefined = body.customer_id;
     const requestedRedirect: string = body.redirect_to || 'https://praetoriagroup.ca/portal';
     // Allowlist of valid post-magic-link redirect origins. Because
     // generateLink runs under the service role it bypasses Supabase's
