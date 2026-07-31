@@ -669,21 +669,7 @@ export default function QuotePrint() {
           const sub = (t: string) => (
             <p className="text-[10px] uppercase tracking-wider font-bold text-[#1a1a2e] mt-3 mb-1 print:text-xs">{t}</p>
           );
-          const InitialLine = ({ label }: { label: string }) => (
-            <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-              <span className="shrink-0">{label}</span>
-              <span className="flex-1 border-b border-[#9ca3af]" />
-              <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-            </div>
-          );
-          const Box = ({ children }: { children: React.ReactNode }) => (
-            <span className="inline-block w-3 h-3 border border-[#9ca3af] align-middle mr-2" />
-          ) && (({ children }: { children: React.ReactNode }) => (
-            <span className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 border border-[#9ca3af] shrink-0" />
-              <span>{children}</span>
-            </span>
-          ));
+
           return (
             <>
               {/* Emergency & On-Demand Call-Outs */}
