@@ -52,24 +52,22 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
       email: source.email,
       phone: source.phone,
     } : null,
-    lineItems: lineItems
-      .filter((item) => !String(item.item_name || '').toUpperCase().startsWith('FINISH OPTION'))
-      .map((item, idx) => ({
-        index: idx + 1,
-        name: item.item_name,
-        description: item.description || '',
-        quantity: Number(item.quantity),
-        unitPrice: Number(item.unit_price),
-        lineTotal: Number(item.line_total),
-      })),
-    finishOptions: lineItems
-      .filter((item) => String(item.item_name || '').toUpperCase().startsWith('FINISH OPTION'))
-      .map((item) => ({
-        name: String(item.item_name).replace(/^FINISH OPTION[:\s-]*/i, '').trim(),
-        description: item.description || '',
-        price: Number(item.unit_price),
-        selected: Number(item.line_total) > 0,
-      })),
+    lineItems: lineItems.map((item, idx) => ({
+      index: idx + 1,
+      name: item.item_name,
+      description: item.description || '',
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unit_price),
+      lineTotal: Number(item.line_total),
+    })),
+    finishOptions: Array.isArray(quote.finish_options)
+      ? (quote.finish_options as any[]).map((o) => ({
+          name: String(o.name || ''),
+          description: String(o.description || ''),
+          price: Number(o.price || 0),
+          selected: Boolean(o.selected),
+        }))
+      : [],
     finishOptionsNote: quote.finish_options_note || '',
   };
 }
