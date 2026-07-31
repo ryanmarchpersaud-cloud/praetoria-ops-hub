@@ -602,12 +602,25 @@ export default function QuoteDetail() {
       </div>
 
       {/* ── Save Bar ── */}
+      {isLockedStatus && canManageQuotes && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-300/60 bg-amber-50 px-3 py-2 dark:bg-amber-950/20">
+          <p className="text-xs text-muted-foreground">
+            {editUnlocked
+              ? 'Editing unlocked — changes to this sent/approved quote will be saved.'
+              : 'This quote is Sent/Approved, so fields are locked. Unlock to make corrections.'}
+          </p>
+          <Button size="sm" variant="outline" className="h-8" onClick={() => setEditUnlocked(v => !v)}>
+            {editUnlocked ? 'Lock editing' : 'Unlock editing'}
+          </Button>
+        </div>
+      )}
       <div className="flex gap-2">
         {canManageQuotes && (
           <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
             <Save className="h-4 w-4 mr-2" /> Save Quote
           </Button>
         )}
+
         {form.approval_status === 'Approved' && !isConverted && canManageQuotes && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleConvertToJob}>
             <Briefcase className="h-4 w-4" />
