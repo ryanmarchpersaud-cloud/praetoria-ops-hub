@@ -473,7 +473,8 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     ${employeeId ? `<div class="sub">Employee ID: ${esc(employeeId)}</div>` : ''}
     ${employeeAddress ? `<div class="sub" style="margin-top:4px;">${esc(employeeAddress)}</div>` : ''}
   </div>
-  <div class="meta-box">
+  <div class="meta-box right">
+
     <div class="lbl">Pay Period</div>
     <div class="val">${format(new Date(stub.pay_period_start), 'MMM d')}${safeDash}${format(new Date(stub.pay_period_end), 'MMM d, yyyy')}</div>
     <div class="sub" style="margin-top:4px;"><strong>Pay Date:</strong> ${format(new Date(stub.pay_date), 'MMMM d, yyyy')}</div>
