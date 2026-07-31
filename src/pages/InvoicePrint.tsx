@@ -76,6 +76,19 @@ export default function InvoicePrint() {
     staleTime: 10 * 60 * 1000,
   });
 
+  const quoteId = (invoice as any)?.quote_id as string | undefined;
+  const { data: quote } = useQuery({
+    queryKey: ['invoice_print_quote', quoteId],
+    queryFn: async () => {
+      if (!quoteId) return null;
+      const { data } = await supabase.from('quotes').select('quote_number').eq('id', quoteId).maybeSingle();
+      return data;
+    },
+    enabled: !!quoteId,
+  });
+
+
+
   if (isLoading) return <div className="p-8 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="p-8 text-muted-foreground">Invoice not found</div>;
 
