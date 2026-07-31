@@ -28,6 +28,7 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     internalNotes: quote.internal_notes,
     customerNotes: quote.customer_notes || '',
     workmanshipWarranty: quote.workmanship_warranty || '',
+    projectNotes: quote.project_notes || '',
     termsConditions: quote.terms_conditions || '',
     subtotal: Number(quote.subtotal || 0),
     tax: Number(quote.tax || 0),
