@@ -661,19 +661,8 @@ export default function QuotePrint() {
           </div>
         )}
 
-        {exportData.workmanshipWarranty && (
-          <div
-            className="mb-6 print:mb-8 rounded-lg p-4 border"
-            style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}
-          >
-            <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#15803d' }}>
-              Workmanship Warranty
-            </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap print:text-base" style={{ color: '#14532d' }}>
-              {exportData.workmanshipWarranty}
-            </p>
-          </div>
-        )}
+
+
 
         {/* ── Payment Options ── */}
         <div
