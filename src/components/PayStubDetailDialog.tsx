@@ -513,12 +513,16 @@ ${employerHtml}
   <div class="ytd-box"><div class="lbl">YTD Net</div><div class="val" style="color:#16a34a;">$${fmt(ytdNet)}</div></div>
 </div>
 
-${stub.notes ? `<p style="margin-top:18px;font-size:12px;color:#64748b;"><strong>Notes:</strong> ${esc(stub.notes)}</p>` : ''}
+${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding-top:12px;font-size:12px;"><strong>Notes</strong><div style="white-space:pre-wrap;margin-top:4px;">${esc(stub.notes)}</div></div>` : ''}
+
+<div class="thanks">
+  Thank you for your hard work and dedication. At Praetoria Group, we strive to be fair to our workers and our customers, while building a sustainable company that we can all be proud of. We truly appreciate your service.
+</div>
 
 <div class="footer">
-  This is an electronically generated pay stub from ${esc(companyName)}.<br/>
-  For payroll inquiries, contact ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')} or call ${esc(company?.phone || '(306) 737-6269')}.
+  Praetoria Group • ${esc(company?.physical_address || '2282 Unit B, Toronto Street, Regina, Saskatchewan')} • ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')} • Generated ${format(new Date(), 'MMM d, yyyy h:mm a')}
 </div>
+
 </body></html>`;
   };
 
