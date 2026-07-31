@@ -713,49 +713,34 @@ export default function QuotePrint() {
                 {heading('Customer-Facing Service Notes')}
                 <div className="text-xs leading-relaxed text-[#374151] print:text-sm">
                   {sub('Service Locations')}
-                  <p>The approved scope covers both buildings at 193 and 197 Lockwood Road, including:</p>
-                  <ul className="list-disc list-inside space-y-0.5 mt-1">
-                    <li>Parking lots and driveways</li>
-                    <li>One continuous public or municipal sidewalk</li>
-                    <li>Private sidewalks and walkways</li>
-                    <li>Six entrance and walkway routes in total—three per building</li>
-                    <li>Front and rear entrances</li>
-                    <li>Garbage collection areas</li>
-                    <li>Emergency exits included in the accepted scope</li>
-                    <li>Designated on-site snow-storage areas</li>
-                  </ul>
+                  <p>The approved scope, service areas and property locations are those listed in the Scope of Work and pricing sections of this quotation. Only the areas identified there are included in the service.</p>
 
                   {sub('Parking-Area Snow Clearing')}
                   <ul className="list-disc list-inside space-y-0.5">
-                    <li>Parking-lot and driveway snow clearing is billed at $150.00 per hour, per equipment unit, including the operator.</li>
-                    <li>Every equipment unit used is billed separately. Equipment may include a John Deere tractor, Bobcat or an appropriately equipped Ford or Dodge/Ram plow truck.</li>
+                    <li>Parking-lot and driveway snow clearing is billed at the hourly equipment rate shown in the pricing table of this quotation, per equipment unit, including the operator.</li>
+                    <li>Every equipment unit used is billed separately. Equipment may include a tractor, skid-steer/loader or an appropriately equipped plow truck.</li>
                     <li>This rate covers clearing and pushing snow to the approved on-site storage area. It does not include off-site snow hauling.</li>
                   </ul>
 
                   {sub('Pedestrian-Area Snow Clearing')}
                   <ul className="list-disc list-inside space-y-0.5">
-                    <li>Public sidewalks, private walkways, entrances, rear entrances, emergency exits and garbage areas are billed separately at $85.00 per hour.</li>
+                    <li>Sidewalks, private walkways, entrances, rear entrances, emergency exits and garbage areas are billed separately at the pedestrian rate shown in the pricing table of this quotation.</li>
                     <li>This work may be completed using walk-behind snowblowers, compact sidewalk equipment or manual tools, depending on site and weather conditions.</li>
                   </ul>
 
                   {sub('Off-Site Snow Hauling')}
                   <ul className="list-disc list-inside space-y-0.5">
-                    <li>Snow hauling is billed separately at $450.00 per truck or trailer load.</li>
+                    <li>Snow hauling is billed separately at the per-load rate shown in the pricing table of this quotation, when quoted.</li>
                     <li>Snow will not be hauled off-site without customer authorization unless immediate action is reasonably required to address an urgent access or safety concern and the customer's authorized representative cannot be reached.</li>
                     <li>Third-party dumping or disposal charges, if applicable, must be disclosed and approved before hauling whenever reasonably possible.</li>
                   </ul>
 
-                  {sub('Pedestrian Ice Control')}
+                  {sub('Ice Control')}
                   <ul className="list-disc list-inside space-y-0.5">
-                    <li>Sanding or de-icing of public sidewalks, private sidewalks, walkways, entrances, rear entrances, garbage areas and emergency exits is billed at $150.00 per application.</li>
+                    <li>Sanding or de-icing of pedestrian areas and of parking/vehicle areas is billed per application at the rates shown in the pricing table of this quotation.</li>
                     <li>Salt, sand and other de-icing materials are charged separately according to the actual quantity used.</li>
                   </ul>
 
-                  {sub('Parking-Area Ice Control')}
-                  <ul className="list-disc list-inside space-y-0.5">
-                    <li>Sanding or de-icing of parking lots and vehicle areas is billed at $375.00 per application.</li>
-                    <li>Salt, sand and other materials are charged separately according to the actual quantity used.</li>
-                  </ul>
 
                   {sub('Definition of an Application')}
                   <ul className="list-disc list-inside space-y-0.5">
