@@ -271,7 +271,7 @@ export default function InvoicePrint() {
               {lineItems.map((item: any, idx: number) => {
                 const isTrade = /trade settlement/i.test(`${item.item_name ?? ''} ${item.description ?? ''}`);
                 return (
-                <tr key={item.id} className={`border-b border-[#f3f4f6] ${isTrade ? 'bg-[#fffbeb]' : ''}`}>
+                <tr key={item.id} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }} className={`border-b border-[#f3f4f6] ${isTrade ? 'bg-[#fffbeb]' : ''}`}>
                   <td className="py-3 pr-2 text-[#9ca3af]">{idx + 1}</td>
                   <td className="py-3 pr-2">
                     <div className="flex items-center gap-2 flex-wrap">
