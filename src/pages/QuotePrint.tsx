@@ -468,7 +468,9 @@ export default function QuotePrint() {
 
         {/* ── Customer Finish Options (alternatives — not added together) ── */}
         {exportData.finishOptions.length > 0 && (() => {
-          const sharedWork = exportData.lineItems.reduce((s, i) => s + i.lineTotal, 0);
+          const selectedOpt = exportData.finishOptions.find((o) => o.selected);
+          const sharedWork =
+            exportData.lineItems.reduce((s, i) => s + i.lineTotal, 0) - (selectedOpt?.price || 0);
           const gst = exportData.gstRate ?? 0.05;
           const pst = exportData.pstRate ?? 0;
           return (
