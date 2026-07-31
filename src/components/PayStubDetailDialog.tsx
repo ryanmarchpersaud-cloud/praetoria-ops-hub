@@ -598,26 +598,24 @@ ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding
         <ScrollArea className="max-h-[90vh]">
           <div className="p-6 space-y-5">
             {/* ── Brand Header ── */}
-            <div className="rounded-xl p-5 flex items-center gap-5" style={{ background: '#0f172a' }}>
-              <img src={WHITE_LOGO_URL} alt="Praetoria Group" className="h-16" />
+            <div className="rounded-xl p-5 flex items-center gap-5" style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)' }}>
+              <img src={WHITE_LOGO_URL} alt="Praetoria Group" className="h-24 w-24 object-contain flex-shrink-0" />
               <div>
-                <h2 className="text-xl font-extrabold text-white tracking-tight">{companyName}</h2>
-                <p className="text-[11px] text-white/50 tracking-widest uppercase mt-0.5">Residential & Commercial Property Services</p>
-                {company?.physical_address && <p className="text-[11px] text-white/45 mt-1">{company.physical_address}</p>}
-                <p className="text-[11px] text-white/45">
-                  Tel: {company?.phone || '(306) 737-6269'} | {company?.support_email || company?.email || 'support@praetoriagroup.ca'}
+                <h2 className="text-xl font-extrabold text-white tracking-tight">Praetoria Operations Group Inc.</h2>
+                <p className="text-[11px] text-white/90 mt-1">Head Office: {company?.physical_address || '2282 Unit B, Toronto Street, Regina, Saskatchewan'}</p>
+                <p className="text-[11px] text-white/90">
+                  Email: {company?.support_email || company?.email || 'support@praetoriagroup.ca'} • Web: praetoriagroup.ca
                 </p>
+                <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold text-sm px-3 py-1 rounded">Employee Pay Stub</span>
               </div>
             </div>
 
-            {/* ── Document Title + References ── */}
-            <div className="flex items-baseline justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xl font-extrabold tracking-tight" style={{ color: primaryColor }}>Employee Pay Stub</h3>
-                {isFinalized && (
-                  <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Finalized</span>
-                )}
-              </div>
+            {/* ── Document References ── */}
+            <div className="flex items-baseline justify-end flex-wrap gap-2">
+              {isFinalized && (
+                <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Finalized</span>
+              )}
+
               <div className="flex gap-2">
                 {runNumber && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">{runNumber}</span>}
                 {employeeId && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">EMP #{employeeId}</span>}
