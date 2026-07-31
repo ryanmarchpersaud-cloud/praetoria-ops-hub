@@ -418,54 +418,52 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 <style>
   @page { size: letter; margin: 0.5in 0.6in; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a2e; max-width: 750px; margin: 0 auto; padding: 32px; }
-  .brand-bar { background: #0f172a; color: white; padding: 22px 28px; border-radius: 10px; display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
-  .brand-bar img { height: 64px; }
-  .brand-bar h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
-  .brand-bar .tagline { font-size: 11px; opacity: 0.6; margin-top: 2px; letter-spacing: 1px; text-transform: uppercase; }
-  .brand-bar .contact { font-size: 11px; opacity: 0.55; margin-top: 4px; }
-  .doc-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-  .doc-title { font-size: 20px; font-weight: 800; color: ${primaryColor}; }
-  .ref-badge { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 3px 10px; border-radius: 4px; font-weight: 600; }
-  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0 24px; }
-  .meta-box { background: #f8fafc; padding: 12px 16px; border-radius: 8px; border-left: 4px solid ${primaryColor}; }
-  .meta-box .lbl { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.8px; font-weight: 700; }
-  .meta-box .val { font-size: 14px; font-weight: 700; margin-top: 3px; }
-  .meta-box .sub { font-size: 11px; color: #64748b; margin-top: 1px; }
-  .section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: ${primaryColor}; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 2px solid ${primaryColor}; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #000; max-width: 800px; margin: 0 auto; padding: 32px; }
+  .brand-bar { background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); color: #fff; padding: 26px 32px; border-radius: 10px; display: flex; align-items: center; gap: 26px; margin-bottom: 26px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .brand-bar img { height: 120px; width: 120px; object-fit: contain; flex-shrink: 0; }
+  .brand-bar h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+  .brand-bar .contact { font-size: 12px; color: rgba(255,255,255,0.95); margin-top: 5px; }
+  .doc-chip { display: inline-block; margin-top: 14px; background: #fff; color: #0F172A; font-size: 15px; font-weight: 800; padding: 6px 16px; border-radius: 6px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .doc-header { display: flex; justify-content: flex-end; align-items: baseline; margin-bottom: 6px; gap: 6px; }
+  .ref-badge { font-size: 12px; color: #334155; background: #f1f5f9; padding: 3px 10px; border-radius: 4px; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0 24px; }
+  .meta-box .lbl { font-size: 10px; text-transform: uppercase; color: #4b5563; letter-spacing: 0.8px; font-weight: 700; }
+  .meta-box .val { font-size: 17px; font-weight: 800; margin-top: 3px; }
+  .meta-box .sub { font-size: 12px; color: #374151; margin-top: 1px; }
+  .meta-box.right { text-align: right; }
+  .section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #0F172A; margin: 22px 0 8px; }
   table { width: 100%; border-collapse: collapse; }
-  th { background: #f1f5f9; padding: 7px 12px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: #475569; font-weight: 700; text-align: left; border-bottom: 2px solid #cbd5e1; }
+  th { background: #0F172A; color: #fff; padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   th:last-child { text-align: right; }
   th:nth-child(2), th:nth-child(3) { text-align: center; }
-  .total-row td { font-weight: 700; font-size: 14px; padding: 9px 12px; border-top: 2px solid ${primaryColor}; background: #f8fafc; }
-  .net-box { background: #f0fdf4; border: 2px solid #bbf7d0; border-radius: 10px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
-  .net-box .label { font-size: 18px; font-weight: 800; color: #1a1a2e; }
-  .net-box .amount { font-size: 26px; font-weight: 900; color: #16a34a; }
+  .total-row td { font-weight: 800; font-size: 14px; padding: 9px 12px; border-top: 2px solid #000; }
+  .net-box { border-top: 2px solid #000; padding: 14px 4px 0; display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .net-box .label { font-size: 18px; font-weight: 900; }
+  .net-box .amount { font-size: 24px; font-weight: 900; }
   .ytd-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 12px; }
-  .ytd-box { background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; }
-  .ytd-box .lbl { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.7px; font-weight: 700; }
+  .ytd-box { background: #F1F5F9; padding: 12px 16px; border-radius: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ytd-box .lbl { font-size: 10px; text-transform: uppercase; color: #4b5563; letter-spacing: 0.7px; font-weight: 700; }
   .ytd-box .val { font-size: 16px; font-weight: 800; margin-top: 3px; }
-  .finalized-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
-  .footer { margin-top: 36px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 14px; line-height: 1.6; }
-  @media print { body { padding: 0; } .brand-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .net-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  .finalized-badge { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 4px; margin-left: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .thanks { border-radius: 8px; padding: 16px; margin-top: 32px; font-size: 13px; font-style: italic; text-align: center; background: #F1F5F9; color: #0F172A; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .footer { border-radius: 8px; margin-top: 16px; text-align: center; font-size: 11px; color: #fff; background: #0F172A; padding: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @media print { body { padding: 0; } tr { page-break-inside: avoid; } }
 </style></head><body>
 <div class="brand-bar">
   <img src="${WHITE_LOGO_URL}" alt="Praetoria Group" />
   <div>
-    <h1>${esc(companyName)}</h1>
-    <div class="tagline">Residential & Commercial Property Services</div>
-    ${company?.physical_address ? `<div class="contact">${esc(company.physical_address)}</div>` : ''}
-    <div class="contact">Tel: ${esc(company?.phone || '(306) 737-6269')} | ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')}</div>
+    <h1>Praetoria Operations Group Inc.</h1>
+    <div class="contact">Head Office: ${esc(company?.physical_address || '2282 Unit B, Toronto Street, Regina, Saskatchewan')}</div>
+    <div class="contact">Email: ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')} • Web: praetoriagroup.ca</div>
+    <div class="doc-chip">Employee Pay Stub${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
   </div>
 </div>
 
 <div class="doc-header">
-  <div class="doc-title">Employee Pay Stub${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
-  <div>
-    ${runNumber ? `<span class="ref-badge">${esc(runNumber)}</span>` : ''}
-    ${employeeId ? `<span class="ref-badge" style="margin-left:6px;">EMP #${esc(employeeId)}</span>` : ''}
-  </div>
+  ${runNumber ? `<span class="ref-badge">${esc(runNumber)}</span>` : ''}
+  ${employeeId ? `<span class="ref-badge">EMP #${esc(employeeId)}</span>` : ''}
 </div>
+
 
 <div class="meta-grid">
   <div class="meta-box">
