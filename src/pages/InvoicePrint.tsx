@@ -232,9 +232,10 @@ export default function InvoicePrint() {
           {quote?.quote_number && (
             <div>
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">Approved Quotation</p>
-              <p className="text-sm font-bold print:text-base">{quote.quote_number}{quote.title ? ` — ${quote.title}` : ''}</p>
+              <p className="text-sm font-bold print:text-base">{quote.quote_number}</p>
             </div>
           )}
+
         </div>
 
 
