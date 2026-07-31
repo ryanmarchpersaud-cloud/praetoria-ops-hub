@@ -250,6 +250,22 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 
   const totalDeductions = deductionLines.reduce((s, d) => s + d.amount, 0) || n(stub.deductions);
 
+  // ── Service-style stub ──
+  // Simple work pay stubs (no statutory deductions, no employer contributions)
+  // use the same standard Praetoria pay-stub layout as subcontractor stubs:
+  // Date / Service / Hours / Rate / Total + Grand Total Payable.
+  // Full payroll stubs (with deductions) keep the statutory format.
+  const serviceStyle = totalDeductions === 0 && employerLines.length === 0;
+  const serviceLabel = (() => {
+    const fromNotes = stub.notes?.split('—')[0]?.split('.')[0]?.trim();
+    if (fromNotes && fromNotes.length > 0 && fromNotes.length < 60) return fromNotes;
+    return earnings[0]?.label || 'Work Performed';
+  })();
+  const serviceDate = format(new Date(stub.pay_period_start), 'MMM d, yyyy');
+  const serviceLines = earnings.length > 0
+    ? earnings.map(e => ({ date: serviceDate, label: earnings.length === 1 ? serviceLabel : `${serviceLabel} — ${e.label}`, hours: e.hours, rate: e.rate, amount: e.amount }))
+    : [{ date: serviceDate, label: serviceLabel, hours: undefined as number | undefined, rate: undefined as number | undefined, amount: n(stub.gross_pay) }];
+
   const handleSend = async () => {
     setSending(true);
     try {
