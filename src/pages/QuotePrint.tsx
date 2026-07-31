@@ -594,8 +594,14 @@ export default function QuotePrint() {
                 ${formatCurrency(total)}
               </span>
             </div>
+            {exportData.finishOptions.some((o) => o.selected) && (
+              <p className="text-[11px] text-[#6b7280] print:text-xs pt-1 text-right">
+                Totals reflect the selected finish option: {exportData.finishOptions.find((o) => o.selected)?.name}.
+              </p>
+            )}
           </div>
         </div>
+
 
         {/* ── Recurring Service Pricing Options ── */}
         {exportData.recurringPricing && (() => {
