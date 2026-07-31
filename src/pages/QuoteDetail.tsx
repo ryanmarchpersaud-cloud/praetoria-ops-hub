@@ -108,6 +108,7 @@ export default function QuoteDetail() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [editUnlocked, setEditUnlocked] = useState(false);
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   // Fetch linked job if converted
@@ -508,7 +509,10 @@ export default function QuoteDetail() {
   const lead = (quote as any).leads;
   const customer = (quote as any).customers;
   const clientInfo = lead || customer;
-  const isSentOrApproved = ['Sent', 'Approved'].includes(form.approval_status);
+  const isLockedStatus = ['Sent', 'Approved'].includes(form.approval_status);
+  // Admin/ops can force-unlock a sent or approved quote to make corrections
+  // (e.g. fixing tax rates) without having to reset the status first.
+  const isSentOrApproved = isLockedStatus && !editUnlocked;
   const validItems = items.filter(i => i.item_name);
 
   const handleDeleteQuote = async () => {
@@ -598,12 +602,25 @@ export default function QuoteDetail() {
       </div>
 
       {/* ── Save Bar ── */}
+      {isLockedStatus && canManageQuotes && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-300/60 bg-amber-50 px-3 py-2 dark:bg-amber-950/20">
+          <p className="text-xs text-muted-foreground">
+            {editUnlocked
+              ? 'Editing unlocked — changes to this sent/approved quote will be saved.'
+              : 'This quote is Sent/Approved, so fields are locked. Unlock to make corrections.'}
+          </p>
+          <Button size="sm" variant="outline" className="h-8" onClick={() => setEditUnlocked(v => !v)}>
+            {editUnlocked ? 'Lock editing' : 'Unlock editing'}
+          </Button>
+        </div>
+      )}
       <div className="flex gap-2">
         {canManageQuotes && (
           <Button onClick={handleSave} className="flex-1 h-11" disabled={updateQuote.isPending}>
             <Save className="h-4 w-4 mr-2" /> Save Quote
           </Button>
         )}
+
         {form.approval_status === 'Approved' && !isConverted && canManageQuotes && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleConvertToJob}>
             <Briefcase className="h-4 w-4" />
