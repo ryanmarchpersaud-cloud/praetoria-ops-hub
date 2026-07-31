@@ -617,6 +617,40 @@ export default function QuotePrint() {
           </ul>
         </div>
 
+        {/* ── Emergency & On-Demand Call-Outs (snow quotes) ── */}
+        {String(exportData.serviceCategory || '').toLowerCase().includes('snow') && (
+          <div
+            className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid"
+            style={{ backgroundColor: '#fff7ed', borderColor: '#fed7aa' }}
+          >
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#c2410c' }}>
+              Emergency and On-Demand Call-Outs
+            </p>
+            <div className="text-xs leading-relaxed space-y-2 print:text-sm" style={{ color: '#7c2d12' }}>
+              <p>
+                Customers who are not enrolled in a seasonal winter-maintenance contract may request snow-clearing services on an emergency, month-to-month or one-time call-out basis.
+              </p>
+              <p>
+                The customer must select a snow-accumulation trigger in the approved quotation or service agreement—for example, 5 cm, 7 cm or 10 cm. Service will not be automatically dispatched until the selected accumulation has been reached and the customer has confirmed and authorized the call-out.
+              </p>
+              <p>
+                The target response time for an authorized emergency or on-demand call-out is approximately four to six hours, beginning when the service request is received and confirmed. Response times may be affected by continuing snowfall, road conditions, property access, crew availability and equipment availability.
+              </p>
+              <p>
+                Active seasonal winter-contract customers receive first service priority during major or widespread snowfall events. Recurring or month-to-month customers will be serviced next, followed by one-time and emergency call-out customers, based on availability and the order in which requests are confirmed.
+              </p>
+              <p>
+                Emergency and on-demand pricing may differ from the regular seasonal-contract rates. The price will be confirmed before dispatch and may vary according to the snowfall accumulation, requested response time, time of day, labour requirements, equipment required, site conditions, ice buildup and whether snow hauling is required. A minimum call-out charge or emergency-service premium may apply only when shown and approved in the quotation.
+              </p>
+              <p className="italic">
+                The four-to-six-hour response target applies only to emergency and on-demand call-outs. It does not replace the separate two-hour response commitment provided to qualifying seasonal winter-contract customers.
+              </p>
+            </div>
+          </div>
+        )}
+
+
+
         {/* ── Terms & Conditions ── */}
         <div className="border-t border-[#e5e7eb] pt-6 print:pt-8 space-y-5">
           <div>
