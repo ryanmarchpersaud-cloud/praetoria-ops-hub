@@ -52,14 +52,25 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
       email: source.email,
       phone: source.phone,
     } : null,
-    lineItems: lineItems.map((item, idx) => ({
-      index: idx + 1,
-      name: item.item_name,
-      description: item.description || '',
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unit_price),
-      lineTotal: Number(item.line_total),
-    })),
+    lineItems: lineItems
+      .filter((item) => !String(item.item_name || '').toUpperCase().startsWith('FINISH OPTION'))
+      .map((item, idx) => ({
+        index: idx + 1,
+        name: item.item_name,
+        description: item.description || '',
+        quantity: Number(item.quantity),
+        unitPrice: Number(item.unit_price),
+        lineTotal: Number(item.line_total),
+      })),
+    finishOptions: lineItems
+      .filter((item) => String(item.item_name || '').toUpperCase().startsWith('FINISH OPTION'))
+      .map((item) => ({
+        name: String(item.item_name).replace(/^FINISH OPTION[:\s-]*/i, '').trim(),
+        description: item.description || '',
+        price: Number(item.unit_price),
+        selected: Number(item.line_total) > 0,
+      })),
+    finishOptionsNote: quote.finish_options_note || '',
   };
 }
 
