@@ -482,22 +482,22 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     <h1>Praetoria Operations Group Inc.</h1>
     <div class="contact">Head Office: ${esc(company?.physical_address || '2282 Unit B, Toronto Street, Regina, Saskatchewan')}</div>
     <div class="contact">Email: ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')} • Web: praetoriagroup.ca</div>
-    <div class="doc-chip">Employee Pay Stub${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
+    <div class="doc-chip">${serviceStyle ? 'Pay Stub' : 'Employee Pay Stub'}${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
   </div>
 </div>
 
-<div class="doc-header">
+${serviceStyle ? '' : `<div class="doc-header">
   ${runNumber ? `<span class="ref-badge">${esc(runNumber)}</span>` : ''}
   ${employeeId ? `<span class="ref-badge">EMP #${esc(employeeId)}</span>` : ''}
-</div>
+</div>`}
 
 
 <div class="meta-grid">
   <div class="meta-box">
-    <div class="lbl">Employee</div>
+    <div class="lbl">${serviceStyle ? 'Worker' : 'Employee'}</div>
     <div class="val">${esc(displayName)}</div>
     ${displayRole ? `<div class="sub">${esc(displayRole)}</div>` : ''}
-    ${employeeId ? `<div class="sub">Employee ID: ${esc(employeeId)}</div>` : ''}
+    ${!serviceStyle && employeeId ? `<div class="sub">Employee ID: ${esc(employeeId)}</div>` : ''}
     ${employeeAddress ? `<div class="sub" style="margin-top:4px;">${esc(employeeAddress)}</div>` : ''}
   </div>
   <div class="meta-box right">
@@ -508,6 +508,16 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   </div>
 </div>
 
+${serviceStyle ? `
+<div class="section-title">Pay Stub Detail</div>
+<table>
+  <thead><tr><th style="text-align:left;">Date</th><th style="text-align:left;">Service / Work Description</th><th style="text-align:center;">Hours</th><th style="text-align:center;">Rate</th><th style="text-align:right;">Total</th></tr></thead>
+  <tbody>
+    ${serviceRowsHtml}
+    <tr class="total-row"><td colspan="4">Grand Total Payable</td><td style="text-align:right;">$${fmt(stub.net_pay)}</td></tr>
+  </tbody>
+</table>
+` : `
 <div class="section-title">Earnings</div>
 <table>
   <thead><tr><th>Description</th><th>Hours</th><th>Rate</th><th>Amount</th></tr></thead>
@@ -539,6 +549,7 @@ ${employerHtml}
   <div class="ytd-box"><div class="lbl">YTD Deductions</div><div class="val" style="color:#dc2626;">$${fmt(ytdDeductions)}</div></div>
   <div class="ytd-box"><div class="lbl">YTD Net</div><div class="val" style="color:#16a34a;">$${fmt(ytdNet)}</div></div>
 </div>
+`}
 
 ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding-top:12px;font-size:12px;"><strong>Notes</strong><div style="white-space:pre-wrap;margin-top:4px;">${esc(stub.notes)}</div></div>` : ''}
 
