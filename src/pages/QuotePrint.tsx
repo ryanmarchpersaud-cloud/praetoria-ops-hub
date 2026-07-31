@@ -751,6 +751,66 @@ export default function QuotePrint() {
             )}
           </div>
 
+          {exportData.workmanshipWarranty && (
+            <div
+              className="rounded-lg p-4 border print:break-inside-avoid"
+              style={{ backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }}
+            >
+              <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#15803d' }}>
+                Workmanship Warranty
+              </p>
+              <p className="text-xs leading-relaxed whitespace-pre-wrap print:text-sm" style={{ color: '#14532d' }}>
+                {exportData.workmanshipWarranty}
+              </p>
+            </div>
+          )}
+
+          {exportData.projectNotes && (
+            <div
+              className="rounded-lg p-4 border print:break-inside-avoid"
+              style={{ backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }}
+            >
+              <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
+                Customer-Facing Project Notes
+              </p>
+              <p className="text-xs text-[#374151] leading-relaxed whitespace-pre-wrap print:text-sm">
+                {exportData.projectNotes}
+              </p>
+            </div>
+          )}
+
+          {exportData.finishOptions.length > 0 && (
+            <div className="rounded-lg p-4 border print:break-inside-avoid" style={{ borderColor: '#e5e7eb' }}>
+              <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-3 print:text-xs">
+                Finish Selection &amp; Customer Acknowledgment
+              </p>
+              <div className="space-y-4">
+                {exportData.finishOptions.map((opt, i) => (
+                  <div key={i} className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
+                    <span className="inline-block w-3.5 h-3.5 border border-[#9ca3af] shrink-0 mb-0.5" />
+                    <span className="shrink-0">{opt.name}</span>
+                    <span className="flex-1 border-b border-[#9ca3af]" />
+                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
+                  </div>
+                ))}
+                <p className="text-[11px] text-[#6b7280] print:text-xs">
+                  Select one finish only. The options are alternatives and will not be added together.
+                </p>
+                <div className="pt-2">
+                  <p className="text-xs text-[#374151] print:text-sm mb-4">
+                    I confirm that I have reviewed the workmanship warranty, assumptions and exclusions, and the customer-facing project notes.
+                  </p>
+                  <div className="flex items-end gap-3">
+                    <span className="flex-1 border-b border-[#9ca3af]" />
+                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Signature &amp; Date</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+
           {/* ── Acceptance Block ── */}
           <div className="grid grid-cols-2 gap-8 pt-4 print:pt-6">
             <div>
