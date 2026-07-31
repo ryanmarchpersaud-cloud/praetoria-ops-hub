@@ -661,7 +661,201 @@ export default function QuotePrint() {
           </div>
         )}
 
+        {/* ── Snow-specific sections (emergency call-outs, guarantee, service notes) ── */}
+        {String(exportData.serviceCategory || '').toLowerCase().includes('snow') && (() => {
+          const heading = (t: string) => (
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: theme.accent }}>{t}</p>
+          );
+          const sub = (t: string) => (
+            <p className="text-[10px] uppercase tracking-wider font-bold text-[#1a1a2e] mt-3 mb-1 print:text-xs">{t}</p>
+          );
 
+          return (
+            <>
+              {/* Emergency & On-Demand Call-Outs */}
+              <div
+                className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid"
+                style={{ backgroundColor: '#fff7ed', borderColor: '#fed7aa' }}
+              >
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#c2410c' }}>
+                  Emergency and On-Demand Call-Outs
+                </p>
+                <div className="text-xs leading-relaxed space-y-2 print:text-sm" style={{ color: '#7c2d12' }}>
+                  <p>Customers who are not enrolled in a seasonal winter-maintenance contract may request snow-clearing services on an emergency, month-to-month or one-time call-out basis.</p>
+                  <p>The customer must select a snow-accumulation trigger in the approved quotation or service agreement—for example, 5 cm, 7 cm or 10 cm. Service will not be automatically dispatched until the selected accumulation has been reached and the customer has confirmed and authorized the call-out.</p>
+                  <p>The target response time for an authorized emergency or on-demand call-out is approximately four to six hours, beginning when the service request is received and confirmed. Response times may be affected by continuing snowfall, road conditions, property access, crew availability and equipment availability.</p>
+                  <p>Active seasonal winter-contract customers receive first service priority during major or widespread snowfall events. Recurring or month-to-month customers will be serviced next, followed by one-time and emergency call-out customers, based on availability and the order in which requests are confirmed.</p>
+                  <p>Emergency and on-demand pricing may differ from the regular seasonal-contract rates. The price will be confirmed before dispatch and may vary according to the snowfall accumulation, requested response time, time of day, labour requirements, equipment required, site conditions, ice buildup and whether snow hauling is required. A minimum call-out charge or emergency-service premium may apply only when shown and approved in the quotation.</p>
+                  <p className="italic">The four-to-six-hour response target applies only to emergency and on-demand call-outs. It does not replace the separate two-hour response commitment provided to qualifying seasonal winter-contract customers.</p>
+                </div>
+              </div>
+
+              {/* Snow and Ice Service Quality Guarantee */}
+              <div
+                className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid"
+                style={{ backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }}
+              >
+                <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#0369a1' }}>
+                  Snow and Ice Service Quality Guarantee
+                </p>
+                <div className="text-xs leading-relaxed space-y-2 print:text-sm" style={{ color: '#0c4a6e' }}>
+                  <p>Praetoria Group warrants that snow clearing, snow hauling, sanding and de-icing services will be performed with reasonable care and according to the approved scope, selected service trigger and authorized service level.</p>
+                  <p>If an area included in the approved scope was missed or was not serviced as authorized, the customer should notify Praetoria Group as soon as reasonably possible, preferably within 24 hours of service. Praetoria Group will inspect the concern and, when a service deficiency is confirmed and conditions permit, return to correct the affected area without an additional labour charge.</p>
+                  <p>This guarantee applies only to the specific snow or ice service performed. It does not guarantee that a surface will remain continuously bare, dry or completely free from snow and ice after service.</p>
+                  <p>The guarantee does not cover new snow accumulation, continuing precipitation, drifting, blowing snow, freezing rain, refreezing, meltwater, roof runoff, drainage issues, snow deposited by passing vehicles or snow moved by tenants, customers, municipal equipment or other contractors.</p>
+                  <p>The effectiveness and duration of salt, sand and other ice-control materials depend on temperature, precipitation, traffic, surface conditions and the type and quantity of material authorized. Ice-control applications reduce hazards but cannot eliminate every possibility of slipping or refreezing.</p>
+                  <p>Any property-damage concern should be reported promptly with the location, date, description and photographs when reasonably available. This wording does not remove any rights or remedies that cannot legally be excluded.</p>
+                </div>
+              </div>
+
+              {/* Customer-Facing Service Notes */}
+              <div className="mb-6 print:mb-8 rounded-lg p-4 border" style={{ backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }}>
+                {heading('Customer-Facing Service Notes')}
+                <div className="text-xs leading-relaxed text-[#374151] print:text-sm">
+                  {sub('Service Locations')}
+                  <p>The approved scope covers both buildings at 193 and 197 Lockwood Road, including:</p>
+                  <ul className="list-disc list-inside space-y-0.5 mt-1">
+                    <li>Parking lots and driveways</li>
+                    <li>One continuous public or municipal sidewalk</li>
+                    <li>Private sidewalks and walkways</li>
+                    <li>Six entrance and walkway routes in total—three per building</li>
+                    <li>Front and rear entrances</li>
+                    <li>Garbage collection areas</li>
+                    <li>Emergency exits included in the accepted scope</li>
+                    <li>Designated on-site snow-storage areas</li>
+                  </ul>
+
+                  {sub('Parking-Area Snow Clearing')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>Parking-lot and driveway snow clearing is billed at $150.00 per hour, per equipment unit, including the operator.</li>
+                    <li>Every equipment unit used is billed separately. Equipment may include a John Deere tractor, Bobcat or an appropriately equipped Ford or Dodge/Ram plow truck.</li>
+                    <li>This rate covers clearing and pushing snow to the approved on-site storage area. It does not include off-site snow hauling.</li>
+                  </ul>
+
+                  {sub('Pedestrian-Area Snow Clearing')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>Public sidewalks, private walkways, entrances, rear entrances, emergency exits and garbage areas are billed separately at $85.00 per hour.</li>
+                    <li>This work may be completed using walk-behind snowblowers, compact sidewalk equipment or manual tools, depending on site and weather conditions.</li>
+                  </ul>
+
+                  {sub('Off-Site Snow Hauling')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>Snow hauling is billed separately at $450.00 per truck or trailer load.</li>
+                    <li>Snow will not be hauled off-site without customer authorization unless immediate action is reasonably required to address an urgent access or safety concern and the customer's authorized representative cannot be reached.</li>
+                    <li>Third-party dumping or disposal charges, if applicable, must be disclosed and approved before hauling whenever reasonably possible.</li>
+                  </ul>
+
+                  {sub('Pedestrian Ice Control')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>Sanding or de-icing of public sidewalks, private sidewalks, walkways, entrances, rear entrances, garbage areas and emergency exits is billed at $150.00 per application.</li>
+                    <li>Salt, sand and other de-icing materials are charged separately according to the actual quantity used.</li>
+                  </ul>
+
+                  {sub('Parking-Area Ice Control')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>Sanding or de-icing of parking lots and vehicle areas is billed at $375.00 per application.</li>
+                    <li>Salt, sand and other materials are charged separately according to the actual quantity used.</li>
+                  </ul>
+
+                  {sub('Definition of an Application')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>One application means one complete treatment of the areas included in the approved scope during one service visit.</li>
+                    <li>Additional applications required because of continuing snowfall, freezing rain, refreezing, drifting or changing conditions are separate billable applications when authorized under the service agreement.</li>
+                  </ul>
+
+                  {sub('Snowfall Trigger')}
+                  <p>The customer must select one service trigger:</p>
+                  <div className="mt-1 space-y-1">
+                    {['Service after every measurable snowfall', '5 cm accumulation', '7 cm accumulation', '10 cm accumulation'].map((t) => (
+                      <div key={t} className="flex items-center gap-2">
+                        <span className="inline-block w-3 h-3 border border-[#9ca3af] shrink-0" />
+                        <span>{t}</span>
+                      </div>
+                    ))}
+                    <div className="flex items-end gap-2">
+                      <span className="inline-block w-3 h-3 border border-[#9ca3af] shrink-0 mb-0.5" />
+                      <span className="shrink-0">Other agreed trigger:</span>
+                      <span className="flex-1 border-b border-[#9ca3af]" />
+                    </div>
+                  </div>
+                  <p className="mt-1">The selected trigger must be written into the accepted quotation. Snowfall below the selected trigger is not automatically serviced unless the customer requests and authorizes a call-out.</p>
+
+                  {sub('Response Priority and Timing')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>Qualifying seasonal winter-contract customers receive first priority during widespread snowfall events.</li>
+                    <li>The seasonal-service target is within two hours following the agreed snowfall event or service trigger, subject to continuing weather, road safety, site access and equipment availability.</li>
+                    <li>Emergency and one-time call-out customers have a target response time of approximately four to six hours beginning when the request is received and confirmed.</li>
+                    <li>Response times are operational targets and may be affected by severe or continuing weather, road closures, unsafe travel, blocked access, equipment failure or other conditions outside Praetoria Group's reasonable control.</li>
+                  </ul>
+
+                  {sub('Site Access and Obstructions')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>The customer is responsible for keeping service areas reasonably accessible and identifying speed bumps, low curbs, parking blocks, drains, utility covers, electrical cords, private equipment and other objects that may be concealed by snow.</li>
+                    <li>Vehicles or other obstructions may result in areas being left temporarily uncleared. A return visit requested after obstructions are removed may be billed separately.</li>
+                  </ul>
+
+                  {sub('Snow-Storage Areas')}
+                  <p>The customer must approve the areas where snow will be pushed and stored. Relocating existing snow piles or hauling snow away is not included in the regular clearing rate unless specifically authorized.</p>
+
+                  {sub('Ice-Control Materials')}
+                  <ul className="list-disc list-inside space-y-0.5">
+                    <li>The customer acknowledges that salt, sand and de-icing products may be tracked indoors and may affect vegetation, metal, concrete or other surfaces. Praetoria Group will use reasonable application quantities based on the conditions and authorized service.</li>
+                    <li>Spring sweeping or removal of accumulated sand is not included unless separately quoted.</li>
+                  </ul>
+
+                  {sub('Customer Monitoring')}
+                  <p>Because winter conditions can change rapidly, the customer or property manager remains responsible for monitoring the property between visits and promptly reporting refreezing, drifting, blocked access or other changing conditions requiring additional service.</p>
+
+                  {sub('Documentation')}
+                  <p>Praetoria Group may record service dates, arrival and departure times, equipment used, applications completed, materials consumed and available photographs. These records may be used to support service verification and invoicing.</p>
+                </div>
+              </div>
+
+              {/* Customer Selections & Initials */}
+              <div className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid" style={{ borderColor: '#e5e7eb' }}>
+                {heading('Customer Selections and Initials')}
+                <div className="space-y-3 mt-2">
+                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
+                    <span className="shrink-0">Selected snowfall trigger:</span>
+                    <span className="flex-1 border-b border-[#9ca3af]" />
+                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
+                  </div>
+                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
+                    <span className="shrink-0">Approved snow-storage location:</span>
+                    <span className="flex-1 border-b border-[#9ca3af]" />
+                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs print:text-sm text-[#374151] flex-wrap">
+                    <span>Service type:</span>
+                    <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 border border-[#9ca3af]" />Seasonal contract</span>
+                    <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 border border-[#9ca3af]" />On-demand / call-out</span>
+                    <span className="flex-1 border-b border-[#9ca3af] min-w-[60px]" />
+                    <span className="text-[10px] text-[#9ca3af] print:text-xs">Customer Initial</span>
+                  </div>
+                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
+                    <span className="shrink-0">Authorization for ice-control applications (sanding / de-icing):</span>
+                    <span className="flex-1 border-b border-[#9ca3af]" />
+                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
+                  </div>
+                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
+                    <span className="shrink-0">Authorization required before off-site snow hauling:</span>
+                    <span className="flex-1 border-b border-[#9ca3af]" />
+                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
+                  </div>
+                  <div className="pt-2">
+                    <p className="text-xs text-[#374151] print:text-sm mb-4">
+                      I confirm that I have reviewed the Snow and Ice Service Quality Guarantee, the customer-facing service notes and the rates shown in this quotation.
+                    </p>
+                    <div className="flex items-end gap-3">
+                      <span className="flex-1 border-b border-[#9ca3af]" />
+                      <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Signature &amp; Date</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          );
+        })()}
 
 
         {/* ── Payment Options ── */}
@@ -696,37 +890,6 @@ export default function QuotePrint() {
           </ul>
         </div>
 
-        {/* ── Emergency & On-Demand Call-Outs (snow quotes) ── */}
-        {String(exportData.serviceCategory || '').toLowerCase().includes('snow') && (
-          <div
-            className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid"
-            style={{ backgroundColor: '#fff7ed', borderColor: '#fed7aa' }}
-          >
-            <p className="text-[10px] uppercase tracking-widest font-semibold mb-2 print:text-xs" style={{ color: '#c2410c' }}>
-              Emergency and On-Demand Call-Outs
-            </p>
-            <div className="text-xs leading-relaxed space-y-2 print:text-sm" style={{ color: '#7c2d12' }}>
-              <p>
-                Customers who are not enrolled in a seasonal winter-maintenance contract may request snow-clearing services on an emergency, month-to-month or one-time call-out basis.
-              </p>
-              <p>
-                The customer must select a snow-accumulation trigger in the approved quotation or service agreement—for example, 5 cm, 7 cm or 10 cm. Service will not be automatically dispatched until the selected accumulation has been reached and the customer has confirmed and authorized the call-out.
-              </p>
-              <p>
-                The target response time for an authorized emergency or on-demand call-out is approximately four to six hours, beginning when the service request is received and confirmed. Response times may be affected by continuing snowfall, road conditions, property access, crew availability and equipment availability.
-              </p>
-              <p>
-                Active seasonal winter-contract customers receive first service priority during major or widespread snowfall events. Recurring or month-to-month customers will be serviced next, followed by one-time and emergency call-out customers, based on availability and the order in which requests are confirmed.
-              </p>
-              <p>
-                Emergency and on-demand pricing may differ from the regular seasonal-contract rates. The price will be confirmed before dispatch and may vary according to the snowfall accumulation, requested response time, time of day, labour requirements, equipment required, site conditions, ice buildup and whether snow hauling is required. A minimum call-out charge or emergency-service premium may apply only when shown and approved in the quotation.
-              </p>
-              <p className="italic">
-                The four-to-six-hour response target applies only to emergency and on-demand call-outs. It does not replace the separate two-hour response commitment provided to qualifying seasonal winter-contract customers.
-              </p>
-            </div>
-          </div>
-        )}
 
 
 
