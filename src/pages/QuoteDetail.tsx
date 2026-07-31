@@ -508,7 +508,10 @@ export default function QuoteDetail() {
   const lead = (quote as any).leads;
   const customer = (quote as any).customers;
   const clientInfo = lead || customer;
-  const isSentOrApproved = ['Sent', 'Approved'].includes(form.approval_status);
+  const isLockedStatus = ['Sent', 'Approved'].includes(form.approval_status);
+  // Admin/ops can force-unlock a sent or approved quote to make corrections
+  // (e.g. fixing tax rates) without having to reset the status first.
+  const isSentOrApproved = isLockedStatus && !editUnlocked;
   const validItems = items.filter(i => i.item_name);
 
   const handleDeleteQuote = async () => {
