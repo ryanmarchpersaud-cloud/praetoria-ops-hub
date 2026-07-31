@@ -10953,6 +10953,7 @@ export type Database = {
           price_monthly: number | null
           price_per_cut: number | null
           price_weekly: number | null
+          project_notes: string | null
           property_id: string | null
           pst_rate: number | null
           quote_date: string | null
@@ -10997,6 +10998,7 @@ export type Database = {
           price_monthly?: number | null
           price_per_cut?: number | null
           price_weekly?: number | null
+          project_notes?: string | null
           property_id?: string | null
           pst_rate?: number | null
           quote_date?: string | null
@@ -11041,6 +11043,7 @@ export type Database = {
           price_monthly?: number | null
           price_per_cut?: number | null
           price_weekly?: number | null
+          project_notes?: string | null
           property_id?: string | null
           pst_rate?: number | null
           quote_date?: string | null
