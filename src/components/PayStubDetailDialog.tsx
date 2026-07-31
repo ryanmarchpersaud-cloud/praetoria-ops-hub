@@ -644,7 +644,7 @@ ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding
                 <p className="text-[11px] text-white/90">
                   Email: {company?.support_email || company?.email || 'support@praetoriagroup.ca'} • Web: praetoriagroup.ca
                 </p>
-                <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold text-sm px-3 py-1 rounded">Employee Pay Stub</span>
+                <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold text-sm px-3 py-1 rounded">{serviceStyle ? 'Pay Stub' : 'Employee Pay Stub'}</span>
               </div>
             </div>
 
