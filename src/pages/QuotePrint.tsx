@@ -468,6 +468,78 @@ export default function QuotePrint() {
           </table>
         </div>
 
+        {/* ── Customer Finish Options (alternatives — not added together) ── */}
+        {exportData.finishOptions.length > 0 && (() => {
+          const sharedWork = exportData.lineItems.reduce((s, i) => s + i.lineTotal, 0);
+          const gst = exportData.gstRate ?? 0.05;
+          const pst = exportData.pstRate ?? 0;
+          return (
+            <div
+              className="mb-8 print:mb-10 rounded-lg border-2 overflow-hidden break-inside-avoid"
+              style={{ borderColor: theme.accent, breakInside: 'avoid', pageBreakInside: 'avoid' }}
+            >
+              <div className="px-4 py-2.5" style={{ backgroundColor: theme.tint }}>
+                <p className="text-[10px] uppercase tracking-widest font-bold print:text-xs" style={{ color: theme.accent }}>
+                  Customer Finish Options — Select One
+                </p>
+                <p className="text-[11px] text-[#6b7280] print:text-sm mt-0.5">
+                  These options are alternatives. Only one finish is selected and the two option prices are never combined or added together.
+                </p>
+              </div>
+              <table className="w-full text-sm print:text-base">
+                <thead>
+                  <tr className="border-t" style={{ borderColor: '#e5e7eb' }}>
+                    <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-10">Select</th>
+                    <th className="text-left px-2 py-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs">Finish Option</th>
+                    <th className="text-right px-2 py-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-28">Finish Price</th>
+                    <th className="text-right px-2 py-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-28">Subtotal</th>
+                    <th className="text-right px-4 py-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-28">Total (CAD)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {exportData.finishOptions.map((opt, i) => {
+                    const optSubtotal = sharedWork + opt.price;
+                    const optTotal = optSubtotal * (1 + gst + pst);
+                    return (
+                      <tr key={i} className="border-t align-top break-inside-avoid" style={{ borderColor: '#e5e7eb' }}>
+                        <td className="px-4 py-3">
+                          <span
+                            className="inline-flex items-center justify-center w-4 h-4 border rounded-[2px] text-[10px] font-bold"
+                            style={{ borderColor: theme.accent, color: theme.accent }}
+                          >
+                            {opt.selected ? '✓' : ''}
+                          </span>
+                        </td>
+                        <td className="px-2 py-3">
+                          <p className="font-semibold text-[#1a1a2e]">{opt.name}</p>
+                          {opt.description && (
+                            <p className="text-[11px] text-[#6b7280] print:text-sm mt-0.5">{opt.description}</p>
+                          )}
+                        </td>
+                        <td className="px-2 py-3 text-right" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          ${formatCurrency(opt.price)}
+                        </td>
+                        <td className="px-2 py-3 text-right" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          ${formatCurrency(optSubtotal)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                          ${formatCurrency(optTotal)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div className="px-4 py-2.5 border-t text-[11px] text-[#6b7280] print:text-sm" style={{ borderColor: '#e5e7eb' }}>
+                Shared project work (items above): ${formatCurrency(sharedWork)} before tax. Each option total shown includes the shared project work plus the selected finish, plus {(gst * 100).toFixed(0)}% GST.
+                {exportData.finishOptionsNote ? ` ${exportData.finishOptionsNote}` : ''}
+              </div>
+            </div>
+          );
+        })()}
+
+
+
         {/* ── Totals ── */}
         <div className="flex justify-end mb-10 print:mb-12">
           <div className="w-64 md:w-72 print:w-72 space-y-2">
