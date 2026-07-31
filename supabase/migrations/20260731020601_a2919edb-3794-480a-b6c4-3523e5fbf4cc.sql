@@ -1,0 +1,2 @@
+ALTER TABLE public.quotes ADD COLUMN IF NOT EXISTS finish_options jsonb;
+COMMENT ON COLUMN public.quotes.finish_options IS 'Alternative customer-selectable finish options: [{name, description, price, selected}] - displayed outside the calculated line-item table.';

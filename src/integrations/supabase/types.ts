@@ -10942,6 +10942,7 @@ export type Database = {
           email_delivery_status: string | null
           email_ready: boolean
           email_sent_at: string | null
+          finish_options: Json | null
           follow_up_due_at: string | null
           follow_up_email_due_at: string | null
           gst_rate: number | null
@@ -10985,6 +10986,7 @@ export type Database = {
           email_delivery_status?: string | null
           email_ready?: boolean
           email_sent_at?: string | null
+          finish_options?: Json | null
           follow_up_due_at?: string | null
           follow_up_email_due_at?: string | null
           gst_rate?: number | null
@@ -11028,6 +11030,7 @@ export type Database = {
           email_delivery_status?: string | null
           email_ready?: boolean
           email_sent_at?: string | null
+          finish_options?: Json | null
           follow_up_due_at?: string | null
           follow_up_email_due_at?: string | null
           gst_rate?: number | null
