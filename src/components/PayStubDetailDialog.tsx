@@ -12,7 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { iosLog } from '@/lib/iosDebug';
 import { logAuditEvent } from '@/lib/auditLog';
 
-const WHITE_LOGO_URL = 'https://czltgypfgegjmcsczpms.supabase.co/storage/v1/object/public/attachments/praetoria-logo-white.png';
+const WHITE_LOGO_PATH = '/praetoria-logo-white.png';
+const WHITE_LOGO_URL = typeof window !== 'undefined' ? `${window.location.origin}${WHITE_LOGO_PATH}` : WHITE_LOGO_PATH;
 
 interface PayStub {
   id: string;
