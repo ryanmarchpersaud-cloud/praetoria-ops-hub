@@ -76,6 +76,19 @@ export default function InvoicePrint() {
     staleTime: 10 * 60 * 1000,
   });
 
+  const quoteId = (invoice as any)?.quote_id as string | undefined;
+  const { data: quote } = useQuery({
+    queryKey: ['invoice_print_quote', quoteId],
+    queryFn: async () => {
+      if (!quoteId) return null;
+      const { data } = await supabase.from('quotes').select('quote_number').eq('id', quoteId).maybeSingle();
+      return data;
+    },
+    enabled: !!quoteId,
+  });
+
+
+
   if (isLoading) return <div className="p-8 text-muted-foreground">Loading...</div>;
   if (!invoice) return <div className="p-8 text-muted-foreground">Invoice not found</div>;
 
@@ -229,7 +242,15 @@ export default function InvoicePrint() {
               <p className="text-sm font-bold print:text-base">{job.job_number} — {job.job_title}</p>
             </div>
           )}
+          {quote?.quote_number && (
+            <div>
+              <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">Approved Quotation</p>
+              <p className="text-sm font-bold print:text-base">{quote.quote_number}</p>
+            </div>
+          )}
+
         </div>
+
 
         {/* Line Items Table */}
         <div className="mb-8 print:mb-10">
@@ -250,7 +271,7 @@ export default function InvoicePrint() {
               {lineItems.map((item: any, idx: number) => {
                 const isTrade = /trade settlement/i.test(`${item.item_name ?? ''} ${item.description ?? ''}`);
                 return (
-                <tr key={item.id} className={`border-b border-[#f3f4f6] ${isTrade ? 'bg-[#fffbeb]' : ''}`}>
+                <tr key={item.id} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }} className={`border-b border-[#f3f4f6] ${isTrade ? 'bg-[#fffbeb]' : ''}`}>
                   <td className="py-3 pr-2 text-[#9ca3af]">{idx + 1}</td>
                   <td className="py-3 pr-2">
                     <div className="flex items-center gap-2 flex-wrap">
