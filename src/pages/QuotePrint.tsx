@@ -384,7 +384,7 @@ export default function QuotePrint() {
             Line Items
           </p>
           <table className="w-full text-sm print:text-base border-collapse">
-            <thead>
+            <thead className="print:table-header-group">
               <tr className="border-b-2 border-[#d1d5db]">
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-8">
                   #
@@ -408,7 +408,11 @@ export default function QuotePrint() {
             </thead>
             <tbody>
               {exportData.lineItems.map((item) => (
-                <tr key={item.index} className="border-b border-[#f3f4f6]">
+                <tr
+                  key={item.index}
+                  className="border-b border-[#f3f4f6] break-inside-avoid"
+                  style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+                >
                   <td className="py-3 pr-2 text-[#9ca3af]">{item.index}</td>
                   <td className="py-3 pr-2">
                     <p className="font-medium">{item.name}</p>
