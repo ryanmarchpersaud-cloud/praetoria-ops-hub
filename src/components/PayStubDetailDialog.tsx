@@ -250,6 +250,22 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
 
   const totalDeductions = deductionLines.reduce((s, d) => s + d.amount, 0) || n(stub.deductions);
 
+  // ── Service-style stub ──
+  // Simple work pay stubs (no statutory deductions, no employer contributions)
+  // use the same standard Praetoria pay-stub layout as subcontractor stubs:
+  // Date / Service / Hours / Rate / Total + Grand Total Payable.
+  // Full payroll stubs (with deductions) keep the statutory format.
+  const serviceStyle = totalDeductions === 0 && employerLines.length === 0;
+  const serviceLabel = (() => {
+    const fromNotes = stub.notes?.split('—')[0]?.split('.')[0]?.trim();
+    if (fromNotes && fromNotes.length > 0 && fromNotes.length < 60) return fromNotes;
+    return earnings[0]?.label || 'Work Performed';
+  })();
+  const serviceDate = format(new Date(stub.pay_period_start), 'MMM d, yyyy');
+  const serviceLines = earnings.length > 0
+    ? earnings.map(e => ({ date: serviceDate, label: earnings.length === 1 ? serviceLabel : `${serviceLabel} — ${e.label}`, hours: e.hours, rate: e.rate, amount: e.amount }))
+    : [{ date: serviceDate, label: serviceLabel, hours: undefined as number | undefined, rate: undefined as number | undefined, amount: n(stub.gross_pay) }];
+
   const handleSend = async () => {
     setSending(true);
     try {
@@ -384,6 +400,17 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
         .replace(/'/g, '&#39;');
     };
 
+    const cell = (extra = '') => `padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;${extra}`;
+
+    const serviceRowsHtml = serviceLines.map(l => `
+        <tr>
+          <td style="${cell()}">${esc(l.date)}</td>
+          <td style="${cell()}">${esc(l.label)}</td>
+          <td style="${cell('text-align:center;')}">${l.hours != null ? l.hours.toFixed(1) : '—'}</td>
+          <td style="${cell('text-align:center;')}">${l.rate != null ? '$' + l.rate.toFixed(2) : '—'}</td>
+          <td style="${cell('text-align:right;font-weight:600;')}">$${l.amount.toFixed(2)}</td>
+        </tr>`).join('');
+
     const earningsHtml = earnings.length > 0
       ? earnings.map(e => `
         <tr>
@@ -455,22 +482,22 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
     <h1>Praetoria Operations Group Inc.</h1>
     <div class="contact">Head Office: ${esc(company?.physical_address || '2282 Unit B, Toronto Street, Regina, Saskatchewan')}</div>
     <div class="contact">Email: ${esc(company?.support_email || company?.email || 'support@praetoriagroup.ca')} • Web: praetoriagroup.ca</div>
-    <div class="doc-chip">Employee Pay Stub${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
+    <div class="doc-chip">${serviceStyle ? 'Pay Stub' : 'Employee Pay Stub'}${isFinalized ? '<span class="finalized-badge">Finalized</span>' : ''}</div>
   </div>
 </div>
 
-<div class="doc-header">
+${serviceStyle ? '' : `<div class="doc-header">
   ${runNumber ? `<span class="ref-badge">${esc(runNumber)}</span>` : ''}
   ${employeeId ? `<span class="ref-badge">EMP #${esc(employeeId)}</span>` : ''}
-</div>
+</div>`}
 
 
 <div class="meta-grid">
   <div class="meta-box">
-    <div class="lbl">Employee</div>
+    <div class="lbl">${serviceStyle ? 'Worker' : 'Employee'}</div>
     <div class="val">${esc(displayName)}</div>
     ${displayRole ? `<div class="sub">${esc(displayRole)}</div>` : ''}
-    ${employeeId ? `<div class="sub">Employee ID: ${esc(employeeId)}</div>` : ''}
+    ${!serviceStyle && employeeId ? `<div class="sub">Employee ID: ${esc(employeeId)}</div>` : ''}
     ${employeeAddress ? `<div class="sub" style="margin-top:4px;">${esc(employeeAddress)}</div>` : ''}
   </div>
   <div class="meta-box right">
@@ -481,6 +508,16 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
   </div>
 </div>
 
+${serviceStyle ? `
+<div class="section-title">Pay Stub Detail</div>
+<table>
+  <thead><tr><th style="text-align:left;">Date</th><th style="text-align:left;">Service / Work Description</th><th style="text-align:center;">Hours</th><th style="text-align:center;">Rate</th><th style="text-align:right;">Total</th></tr></thead>
+  <tbody>
+    ${serviceRowsHtml}
+    <tr class="total-row"><td colspan="4">Grand Total Payable</td><td style="text-align:right;">$${fmt(stub.net_pay)}</td></tr>
+  </tbody>
+</table>
+` : `
 <div class="section-title">Earnings</div>
 <table>
   <thead><tr><th>Description</th><th>Hours</th><th>Rate</th><th>Amount</th></tr></thead>
@@ -512,6 +549,7 @@ ${employerHtml}
   <div class="ytd-box"><div class="lbl">YTD Deductions</div><div class="val" style="color:#dc2626;">$${fmt(ytdDeductions)}</div></div>
   <div class="ytd-box"><div class="lbl">YTD Net</div><div class="val" style="color:#16a34a;">$${fmt(ytdNet)}</div></div>
 </div>
+`}
 
 ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding-top:12px;font-size:12px;"><strong>Notes</strong><div style="white-space:pre-wrap;margin-top:4px;">${esc(stub.notes)}</div></div>` : ''}
 
@@ -606,29 +644,31 @@ ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding
                 <p className="text-[11px] text-white/90">
                   Email: {company?.support_email || company?.email || 'support@praetoriagroup.ca'} • Web: praetoriagroup.ca
                 </p>
-                <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold text-sm px-3 py-1 rounded">Employee Pay Stub</span>
+                <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold text-sm px-3 py-1 rounded">{serviceStyle ? 'Pay Stub' : 'Employee Pay Stub'}</span>
               </div>
             </div>
 
             {/* ── Document References ── */}
-            <div className="flex items-baseline justify-end flex-wrap gap-2">
-              {isFinalized && (
-                <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Finalized</span>
-              )}
+            {!serviceStyle && (
+              <div className="flex items-baseline justify-end flex-wrap gap-2">
+                {isFinalized && (
+                  <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Finalized</span>
+                )}
 
-              <div className="flex gap-2">
-                {runNumber && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">{runNumber}</span>}
-                {employeeId && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">EMP #{employeeId}</span>}
+                <div className="flex gap-2">
+                  {runNumber && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">{runNumber}</span>}
+                  {employeeId && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">EMP #{employeeId}</span>}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* ── Meta Grid (2 columns: Employee + Pay Period) ── */}
+            {/* ── Meta Grid (2 columns: Worker + Pay Period) ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <MetaBox
-                label="Employee"
+                label={serviceStyle ? 'Worker' : 'Employee'}
                 value={displayName}
                 sub={displayRole}
-                sub2={employeeId ? `Employee ID: ${employeeId}` : undefined}
+                sub2={!serviceStyle && employeeId ? `Employee ID: ${employeeId}` : undefined}
                 sub3={employeeAddress || undefined}
                 color={primaryColor}
               />
@@ -640,6 +680,41 @@ ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding
               />
             </div>
 
+            {serviceStyle ? (
+              /* ── Standard service-style pay stub table ── */
+              <div>
+                <SectionTitle label="Pay Stub Detail" color={primaryColor} />
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/60">
+                        <Th align="left">Date</Th>
+                        <Th align="left">Service / Work Description</Th>
+                        <Th align="center">Hours</Th>
+                        <Th align="center">Rate</Th>
+                        <Th align="right">Total</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {serviceLines.map((l, i) => (
+                        <tr key={i} className="border-t border-border/50">
+                          <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{l.date}</td>
+                          <td className="px-3 py-2 text-foreground">{l.label}</td>
+                          <td className="px-3 py-2 text-center text-muted-foreground">{l.hours != null ? l.hours.toFixed(1) : '—'}</td>
+                          <td className="px-3 py-2 text-center text-muted-foreground">{l.rate != null ? `$${l.rate.toFixed(2)}` : '—'}</td>
+                          <td className="px-3 py-2 text-right font-semibold">${l.amount.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      <tr className="border-t-2 font-bold bg-muted/30" style={{ borderColor: primaryColor }}>
+                        <td className="px-3 py-2.5" colSpan={4}>Grand Total Payable</td>
+                        <td className="px-3 py-2.5 text-right">${fmt(stub.net_pay)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <>
             {/* ── Earnings Section ── */}
             <div>
               <SectionTitle label="Earnings" color={primaryColor} />
@@ -752,6 +827,8 @@ ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding
                 <YtdBox label="YTD Net" value={`$${fmt(ytdNet)}`} className="text-emerald-600" />
               </div>
             </div>
+              </>
+            )}
 
             {stub.notes && (
               <p className="text-xs text-muted-foreground border-t pt-3"><strong>Notes:</strong> {stub.notes}</p>
