@@ -649,24 +649,26 @@ ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding
             </div>
 
             {/* ── Document References ── */}
-            <div className="flex items-baseline justify-end flex-wrap gap-2">
-              {isFinalized && (
-                <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Finalized</span>
-              )}
+            {!serviceStyle && (
+              <div className="flex items-baseline justify-end flex-wrap gap-2">
+                {isFinalized && (
+                  <span className="text-[10px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Finalized</span>
+                )}
 
-              <div className="flex gap-2">
-                {runNumber && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">{runNumber}</span>}
-                {employeeId && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">EMP #{employeeId}</span>}
+                <div className="flex gap-2">
+                  {runNumber && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">{runNumber}</span>}
+                  {employeeId && <span className="text-xs font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded">EMP #{employeeId}</span>}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* ── Meta Grid (2 columns: Employee + Pay Period) ── */}
+            {/* ── Meta Grid (2 columns: Worker + Pay Period) ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <MetaBox
-                label="Employee"
+                label={serviceStyle ? 'Worker' : 'Employee'}
                 value={displayName}
                 sub={displayRole}
-                sub2={employeeId ? `Employee ID: ${employeeId}` : undefined}
+                sub2={!serviceStyle && employeeId ? `Employee ID: ${employeeId}` : undefined}
                 sub3={employeeAddress || undefined}
                 color={primaryColor}
               />
@@ -678,6 +680,41 @@ ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding
               />
             </div>
 
+            {serviceStyle ? (
+              /* ── Standard service-style pay stub table ── */
+              <div>
+                <SectionTitle label="Pay Stub Detail" color={primaryColor} />
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/60">
+                        <Th align="left">Date</Th>
+                        <Th align="left">Service / Work Description</Th>
+                        <Th align="center">Hours</Th>
+                        <Th align="center">Rate</Th>
+                        <Th align="right">Total</Th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {serviceLines.map((l, i) => (
+                        <tr key={i} className="border-t border-border/50">
+                          <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{l.date}</td>
+                          <td className="px-3 py-2 text-foreground">{l.label}</td>
+                          <td className="px-3 py-2 text-center text-muted-foreground">{l.hours != null ? l.hours.toFixed(1) : '—'}</td>
+                          <td className="px-3 py-2 text-center text-muted-foreground">{l.rate != null ? `$${l.rate.toFixed(2)}` : '—'}</td>
+                          <td className="px-3 py-2 text-right font-semibold">${l.amount.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                      <tr className="border-t-2 font-bold bg-muted/30" style={{ borderColor: primaryColor }}>
+                        <td className="px-3 py-2.5" colSpan={4}>Grand Total Payable</td>
+                        <td className="px-3 py-2.5 text-right">${fmt(stub.net_pay)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <>
             {/* ── Earnings Section ── */}
             <div>
               <SectionTitle label="Earnings" color={primaryColor} />
@@ -790,6 +827,8 @@ ${stub.notes ? `<div style="border-top:1px solid #e5e7eb;margin-top:18px;padding
                 <YtdBox label="YTD Net" value={`$${fmt(ytdNet)}`} className="text-emerald-600" />
               </div>
             </div>
+              </>
+            )}
 
             {stub.notes && (
               <p className="text-xs text-muted-foreground border-t pt-3"><strong>Notes:</strong> {stub.notes}</p>
