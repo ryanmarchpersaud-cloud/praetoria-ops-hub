@@ -400,6 +400,17 @@ export default function PayStubDetailDialog({ stub, open, onOpenChange, employee
         .replace(/'/g, '&#39;');
     };
 
+    const cell = (extra = '') => `padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;${extra}`;
+
+    const serviceRowsHtml = serviceLines.map(l => `
+        <tr>
+          <td style="${cell()}">${esc(l.date)}</td>
+          <td style="${cell()}">${esc(l.label)}</td>
+          <td style="${cell('text-align:center;')}">${l.hours != null ? l.hours.toFixed(1) : '—'}</td>
+          <td style="${cell('text-align:center;')}">${l.rate != null ? '$' + l.rate.toFixed(2) : '—'}</td>
+          <td style="${cell('text-align:right;font-weight:600;')}">$${l.amount.toFixed(2)}</td>
+        </tr>`).join('');
+
     const earningsHtml = earnings.length > 0
       ? earnings.map(e => `
         <tr>
