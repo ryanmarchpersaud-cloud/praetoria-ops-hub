@@ -229,7 +229,14 @@ export default function InvoicePrint() {
               <p className="text-sm font-bold print:text-base">{job.job_number} — {job.job_title}</p>
             </div>
           )}
+          {quote?.quote_number && (
+            <div>
+              <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">Approved Quotation</p>
+              <p className="text-sm font-bold print:text-base">{quote.quote_number}{quote.title ? ` — ${quote.title}` : ''}</p>
+            </div>
+          )}
         </div>
+
 
         {/* Line Items Table */}
         <div className="mb-8 print:mb-10">
