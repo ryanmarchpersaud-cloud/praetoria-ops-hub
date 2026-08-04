@@ -373,7 +373,7 @@ function EntryDialog({
 
   if (!action) return null;
 
-  const title = TYPE_LABEL[action === 'payment' ? 'payment' : action] ?? 'Ledger entry';
+  const title = `${entry ? 'Edit ' : ''}${TYPE_LABEL[action === 'payment' ? 'payment' : action] ?? 'Ledger entry'}`;
 
   const submit = () => {
     const amt = Number(amount);
