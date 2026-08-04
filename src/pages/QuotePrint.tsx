@@ -827,47 +827,54 @@ export default function QuotePrint() {
               </div>
 
               {/* Customer Selections & Initials */}
-              <div className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid" style={{ borderColor: '#e5e7eb' }}>
-                {heading('Customer Selections and Initials')}
-                <div className="space-y-3 mt-2">
-                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-                    <span className="shrink-0">Selected snowfall trigger:</span>
-                    <span className="flex-1 border-b border-[#9ca3af]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-                  </div>
-                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-                    <span className="shrink-0">Approved snow-storage location:</span>
-                    <span className="flex-1 border-b border-[#9ca3af]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs print:text-sm text-[#374151] flex-wrap">
-                    <span>Service type:</span>
-                    <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 border border-[#9ca3af]" />Seasonal contract</span>
-                    <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 border border-[#9ca3af]" />On-demand / call-out</span>
-                    <span className="flex-1 border-b border-[#9ca3af] min-w-[60px]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs">Customer Initial</span>
-                  </div>
-                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-                    <span className="shrink-0">Authorization for ice-control applications (sanding / de-icing):</span>
-                    <span className="flex-1 border-b border-[#9ca3af]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-                  </div>
-                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-                    <span className="shrink-0">Authorization required before off-site snow hauling:</span>
-                    <span className="flex-1 border-b border-[#9ca3af]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-                  </div>
-                  <div className="pt-2">
-                    <p className="text-xs text-[#374151] print:text-sm mb-4">
-                      I confirm that I have reviewed the Snow and Ice Service Quality Guarantee, the customer-facing service notes and the rates shown in this quotation.
+              {(() => {
+                const scopeText = String(exportData.scopeOfWork || '');
+                const locs = Array.from(
+                  scopeText.matchAll(/SERVICE LOCATION\s*(\d)\s*\n([^\n]+)/gi)
+                ).map((m) => `Service Location ${m[1]} — ${m[2].trim()}`);
+                const targets = locs.length > 1 ? locs : ['This Property'];
+                const rows = [
+                  'Selected snowfall trigger (every snowfall / 5 cm / 7 cm / 10 cm / other):',
+                  'Approved on-site snow-storage location:',
+                  'Service type (seasonal contract or on-demand call-out):',
+                  'Authorization for ice-control applications (sanding / de-icing):',
+                  'Authorization required before off-site snow hauling:',
+                ];
+                return (
+                  <div className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid" style={{ borderColor: '#e5e7eb' }}>
+                    {heading('Customer Selections and Initials')}
+                    <p className="text-[11px] text-[#6b7280] print:text-xs mb-2">
+                      Complete one set of selections for each property. Each property is serviced, recorded and invoiced separately.
                     </p>
-                    <div className="flex items-end gap-3">
-                      <span className="flex-1 border-b border-[#9ca3af]" />
-                      <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Signature &amp; Date</span>
+                    <div className="space-y-4">
+                      {targets.map((t) => (
+                        <div key={t} className="break-inside-avoid" style={{ breakInside: 'avoid' }}>
+                          <p className="text-xs font-bold text-[#1a1a2e] print:text-sm mb-1.5">{t}</p>
+                          <div className="space-y-2.5">
+                            {rows.map((r) => (
+                              <div key={r} className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
+                                <span className="shrink-0">{r}</span>
+                                <span className="flex-1 border-b border-[#9ca3af]" />
+                                <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="pt-1">
+                        <p className="text-xs text-[#374151] print:text-sm mb-4">
+                          I confirm that I have reviewed the Snow and Ice Service Quality Guarantee, the customer-facing service notes and the rates shown in this quotation.
+                        </p>
+                        <div className="flex items-end gap-3">
+                          <span className="flex-1 border-b border-[#9ca3af]" />
+                          <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Signature &amp; Date</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
+
             </>
           );
         })()}
