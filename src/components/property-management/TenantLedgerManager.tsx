@@ -305,10 +305,11 @@ export default function TenantLedgerManager({
 /* ------------------------------------------------------------------ */
 
 function EntryDialog({
-  action, onClose, onSubmit, busy,
+  action, entry, onClose, onSubmit, busy,
   defaultRentAmount, defaultRentDueDay, outstandingCharges,
 }: {
   action: QuickAction | null;
+  entry?: PmLedgerEntry | null;
   onClose: () => void;
   onSubmit: (p: Partial<PmLedgerEntry>, file?: File | null) => void | Promise<void>;
   busy: boolean;
@@ -337,8 +338,23 @@ function EntryDialog({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptTenantVisible, setReceiptTenantVisible] = useState(false);
 
-  // Prefill when opened
+  // Prefill when opened (new entry defaults, or existing entry values when editing)
   const reset = () => {
+    if (entry) {
+      setAmount(String(entry.amount ?? ''));
+      setEntryDate(entry.entry_date ?? todayISO());
+      setDueDate(entry.due_date ?? '');
+      setPeriodStart(entry.period_start ?? ''); setPeriodEnd(entry.period_end ?? '');
+      setDescription(entry.description ?? ''); setReference(entry.reference ?? '');
+      setTenantNote(entry.tenant_note ?? ''); setAdminNote(entry.admin_note ?? '');
+      setTenantVisible(!!entry.tenant_visible);
+      setPaymentMethod(entry.payment_method ?? 'e_transfer');
+      setRelatedChargeId(entry.related_charge_id ?? '');
+      setReceiptFile(null);
+      setReceiptTenantVisible(!!entry.receipt_tenant_visible);
+      setStatus(entry.status ?? 'posted');
+      return;
+    }
     setAmount(isRent && defaultRentAmount ? String(defaultRentAmount) : '');
     setEntryDate(todayISO());
     setDueDate(isRent ? computeNextDueDate(defaultRentDueDay) : '');
@@ -351,8 +367,9 @@ function EntryDialog({
     setStatus(isCharge ? 'unpaid' : isPayment ? 'recorded' : 'posted');
   };
 
-  // Re-init form when action changes
-  useMemoInit(action, reset);
+  // Re-init form when action / edited entry changes
+  useMemoInit(`${action ?? ''}:${entry?.id ?? 'new'}`, reset);
+
 
   if (!action) return null;
 
