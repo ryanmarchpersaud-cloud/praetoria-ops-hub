@@ -873,6 +873,7 @@ function AppRoutes() {
         <Route path="/tenant/maintenance/:id" element={<Suspense fallback={<RouteLoading />}><TenantMaintenanceDetail /></Suspense>} />
         <Route path="/tenant/account" element={<Suspense fallback={<RouteLoading />}><TenantAccount /></Suspense>} />
         <Route path="/tenant/payments" element={<Suspense fallback={<RouteLoading />}><TenantPayments /></Suspense>} />
+        <Route path="/tenant/receipts/:id/print" element={<Suspense fallback={<RouteLoading />}><RentReceiptPrint /></Suspense>} />
         <Route path="/tenant/documents" element={<Suspense fallback={<RouteLoading />}><TenantDocuments /></Suspense>} />
         <Route path="/tenant/notices" element={<Suspense fallback={<RouteLoading />}><TenantNotices /></Suspense>} />
         <Route path="/tenant/profile" element={<Suspense fallback={<RouteLoading />}><TenantProfile /></Suspense>} />
