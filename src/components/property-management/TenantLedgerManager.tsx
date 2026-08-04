@@ -268,6 +268,9 @@ export default function TenantLedgerManager({
                               title="Waive"><Ban className="h-3 w-3" /></Button>
                           </>
                         )}
+                      <Button size="sm" variant="ghost" className="h-7 px-2"
+                        onClick={() => { setEditEntry(e); setDialogAction((e.type === 'payment' ? 'payment' : e.type) as QuickAction); }}
+                        title="Edit entry"><Pencil className="h-3 w-3" /></Button>
                       <Button size="sm" variant="ghost" className="h-7 px-2 text-rose-600"
                         onClick={async () => {
                           if (!confirm('Delete this ledger entry? This cannot be undone.')) return;
@@ -286,13 +289,15 @@ export default function TenantLedgerManager({
 
       <EntryDialog
         action={dialogAction}
-        onClose={() => setDialogAction(null)}
+        entry={editEntry}
+        onClose={closeDialog}
         onSubmit={handleSaveEntry}
         busy={busy}
         defaultRentAmount={defaultRentAmount}
         defaultRentDueDay={defaultRentDueDay}
         outstandingCharges={outstandingCharges}
       />
+
     </Card>
   );
 }
