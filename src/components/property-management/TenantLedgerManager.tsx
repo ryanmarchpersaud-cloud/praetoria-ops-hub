@@ -445,6 +445,21 @@ function EntryDialog({
             </div>
           )}
 
+          {isCharge && (
+            <div>
+              <Label>Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['unpaid', 'partially_paid', 'paid', 'waived', 'cancelled'].map(s => (
+                    <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+
           {isPayment && (
             <>
               <div className="grid grid-cols-2 gap-3">
