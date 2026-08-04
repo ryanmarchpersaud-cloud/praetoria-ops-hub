@@ -792,21 +792,8 @@ export default function QuotePrint() {
                   </ul>
 
                   {sub('Snowfall Trigger')}
-                  <p>The customer must select one service trigger:</p>
-                  <div className="mt-1 space-y-1">
-                    {['Service after every measurable snowfall', '5 cm accumulation', '7 cm accumulation', '10 cm accumulation'].map((t) => (
-                      <div key={t} className="flex items-center gap-2">
-                        <span className="inline-block w-3 h-3 border border-[#9ca3af] shrink-0" />
-                        <span>{t}</span>
-                      </div>
-                    ))}
-                    <div className="flex items-end gap-2">
-                      <span className="inline-block w-3 h-3 border border-[#9ca3af] shrink-0 mb-0.5" />
-                      <span className="shrink-0">Other agreed trigger:</span>
-                      <span className="flex-1 border-b border-[#9ca3af]" />
-                    </div>
-                  </div>
-                  <p className="mt-1">The selected trigger must be written into the accepted quotation. Snowfall below the selected trigger is not automatically serviced unless the customer requests and authorizes a call-out.</p>
+                  <p>The customer must select one service trigger in the Customer Selections section below. The selected trigger must be written into the accepted quotation. Snowfall below the selected trigger is not automatically serviced unless the customer requests and authorizes a call-out.</p>
+
 
                   {sub('Response Priority and Timing')}
                   <ul className="list-disc list-inside space-y-0.5">
