@@ -140,12 +140,23 @@ export default function TenantPayments() {
                       {e.tenant_note && (
                         <p className="text-[11px] text-emerald-800 mt-0.5">{e.tenant_note}</p>
                       )}
+                      {isCredit && !isVoid && (
+                        <a
+                          href={`/tenant/receipts/${e.id}/print`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] text-emerald-700 underline mt-0.5 inline-block"
+                        >
+                          Download receipt (PDF)
+                        </a>
+                      )}
                     </div>
                     <p
                       className={`font-semibold ${isVoid ? 'text-muted-foreground line-through' : isCredit ? 'text-emerald-700' : 'text-slate-900'}`}
                     >
                       {isCredit ? '-' : '+'}${Number(e.amount).toFixed(2)}
                     </p>
+
                   </div>
                 );
               })}
