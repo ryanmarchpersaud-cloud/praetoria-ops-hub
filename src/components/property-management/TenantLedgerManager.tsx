@@ -189,6 +189,10 @@ export default function TenantLedgerManager({
             onClick={() => setDialogAction('rent_charge')}>
             <Plus className="h-4 w-4 mr-1" /> Add Rent Charge
           </Button>
+          <Button size="sm" variant="outline" className="border-emerald-300 text-emerald-800"
+            onClick={() => setMonthlyOpen(true)}>
+            <CalendarClock className="h-4 w-4 mr-1" /> Generate Monthly Rent
+          </Button>
           <Button size="sm" variant="outline"
             onClick={() => setDialogAction('payment')}>
             <Receipt className="h-4 w-4 mr-1" /> Record Payment
