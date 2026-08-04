@@ -563,8 +563,27 @@ export default function QuotePrint() {
 
 
 
-        {/* ── Totals ── */}
+        {/* ── Unit-Rate Statement (replaces totals for unit-rate quotations) ── */}
+        {exportData.unitRateQuote ? (
+          <div
+            className="mb-8 print:mb-10 rounded-lg border-2 p-4 print:break-inside-avoid"
+            style={{ borderColor: theme.accent, backgroundColor: theme.tint }}
+          >
+            <p className="text-sm font-extrabold uppercase tracking-wide print:text-base" style={{ color: theme.accent }}>
+              Unit-Rate Quotation — No Fixed Contract Total
+            </p>
+            <p className="text-xs text-[#374151] leading-relaxed mt-1.5 print:text-sm">
+              The final invoice will be based on the actual authorized services performed, equipment units used,
+              hours worked, snow loads hauled, ice-control applications completed and materials consumed.
+            </p>
+            <p className="text-[11px] text-[#6b7280] leading-relaxed mt-1.5 print:text-xs">
+              The unit rates above are not added together and do not form a quotation total. GST is calculated on the
+              actual invoice for the services performed.
+            </p>
+          </div>
+        ) : (
         <div className="flex justify-end mb-10 print:mb-12">
+
           <div className="w-64 md:w-72 print:w-72 space-y-2">
             <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
               <span>Subtotal</span>
