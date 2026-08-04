@@ -1,0 +1,1 @@
+ALTER TABLE public.pm_tenant_ledger DROP CONSTRAINT IF EXISTS pm_tenant_ledger_type_check;
