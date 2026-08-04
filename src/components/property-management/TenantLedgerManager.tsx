@@ -11,7 +11,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  DollarSign, Plus, Trash2, Check, Ban, Upload, FileText, Receipt,
+  DollarSign, Plus, Trash2, Check, Ban, Upload, FileText, Receipt, Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
