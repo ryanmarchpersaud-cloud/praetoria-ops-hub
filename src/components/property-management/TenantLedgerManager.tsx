@@ -11,7 +11,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  DollarSign, Plus, Trash2, Check, Ban, Upload, FileText, Receipt,
+  DollarSign, Plus, Trash2, Check, Ban, Upload, FileText, Receipt, Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,6 +91,7 @@ export default function TenantLedgerManager({
   const del = useDeletePmLedgerEntry();
 
   const [dialogAction, setDialogAction] = useState<QuickAction | null>(null);
+  const [editEntry, setEditEntry] = useState<PmLedgerEntry | null>(null);
   const [busy, setBusy] = useState(false);
 
   const outstandingCharges = useMemo(
@@ -100,6 +101,8 @@ export default function TenantLedgerManager({
     ),
     [entries],
   );
+
+  const closeDialog = () => { setDialogAction(null); setEditEntry(null); };
 
   const handleSaveEntry = async (payload: Partial<PmLedgerEntry>, file?: File | null) => {
     setBusy(true);
@@ -113,23 +116,32 @@ export default function TenantLedgerManager({
         if (error) throw error;
         receipt_path = path;
       }
-      await create.mutateAsync({
-        tenant_id: tenantId,
-        lease_id: leaseId ?? null,
-        property_id: propertyId ?? null,
-        unit_id: unitId ?? null,
-        entry_date: (payload.entry_date as string) || todayISO(),
-        ...payload,
-        ...(receipt_path ? { receipt_path } : {}),
-      });
-      toast.success('Ledger entry saved');
-      setDialogAction(null);
+      if (editEntry) {
+        await update.mutateAsync({
+          id: editEntry.id,
+          patch: { ...payload, ...(receipt_path ? { receipt_path } : {}) },
+        });
+        toast.success('Ledger entry updated');
+      } else {
+        await create.mutateAsync({
+          tenant_id: tenantId,
+          lease_id: leaseId ?? null,
+          property_id: propertyId ?? null,
+          unit_id: unitId ?? null,
+          entry_date: (payload.entry_date as string) || todayISO(),
+          ...payload,
+          ...(receipt_path ? { receipt_path } : {}),
+        });
+        toast.success('Ledger entry saved');
+      }
+      closeDialog();
     } catch (e: any) {
       toast.error(e?.message ?? 'Failed to save entry');
     } finally {
       setBusy(false);
     }
   };
+
 
   const markStatus = async (entry: PmLedgerEntry, status: string) => {
     try {
@@ -256,6 +268,9 @@ export default function TenantLedgerManager({
                               title="Waive"><Ban className="h-3 w-3" /></Button>
                           </>
                         )}
+                      <Button size="sm" variant="ghost" className="h-7 px-2"
+                        onClick={() => { setEditEntry(e); setDialogAction((e.type === 'payment' ? 'payment' : e.type) as QuickAction); }}
+                        title="Edit entry"><Pencil className="h-3 w-3" /></Button>
                       <Button size="sm" variant="ghost" className="h-7 px-2 text-rose-600"
                         onClick={async () => {
                           if (!confirm('Delete this ledger entry? This cannot be undone.')) return;
@@ -274,13 +289,15 @@ export default function TenantLedgerManager({
 
       <EntryDialog
         action={dialogAction}
-        onClose={() => setDialogAction(null)}
+        entry={editEntry}
+        onClose={closeDialog}
         onSubmit={handleSaveEntry}
         busy={busy}
         defaultRentAmount={defaultRentAmount}
         defaultRentDueDay={defaultRentDueDay}
         outstandingCharges={outstandingCharges}
       />
+
     </Card>
   );
 }
@@ -288,10 +305,11 @@ export default function TenantLedgerManager({
 /* ------------------------------------------------------------------ */
 
 function EntryDialog({
-  action, onClose, onSubmit, busy,
+  action, entry, onClose, onSubmit, busy,
   defaultRentAmount, defaultRentDueDay, outstandingCharges,
 }: {
   action: QuickAction | null;
+  entry?: PmLedgerEntry | null;
   onClose: () => void;
   onSubmit: (p: Partial<PmLedgerEntry>, file?: File | null) => void | Promise<void>;
   busy: boolean;
@@ -320,8 +338,23 @@ function EntryDialog({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptTenantVisible, setReceiptTenantVisible] = useState(false);
 
-  // Prefill when opened
+  // Prefill when opened (new entry defaults, or existing entry values when editing)
   const reset = () => {
+    if (entry) {
+      setAmount(String(entry.amount ?? ''));
+      setEntryDate(entry.entry_date ?? todayISO());
+      setDueDate(entry.due_date ?? '');
+      setPeriodStart(entry.period_start ?? ''); setPeriodEnd(entry.period_end ?? '');
+      setDescription(entry.description ?? ''); setReference(entry.reference ?? '');
+      setTenantNote(entry.tenant_note ?? ''); setAdminNote(entry.admin_note ?? '');
+      setTenantVisible(!!entry.tenant_visible);
+      setPaymentMethod(entry.payment_method ?? 'e_transfer');
+      setRelatedChargeId(entry.related_charge_id ?? '');
+      setReceiptFile(null);
+      setReceiptTenantVisible(!!entry.receipt_tenant_visible);
+      setStatus(entry.status ?? 'posted');
+      return;
+    }
     setAmount(isRent && defaultRentAmount ? String(defaultRentAmount) : '');
     setEntryDate(todayISO());
     setDueDate(isRent ? computeNextDueDate(defaultRentDueDay) : '');
@@ -334,12 +367,13 @@ function EntryDialog({
     setStatus(isCharge ? 'unpaid' : isPayment ? 'recorded' : 'posted');
   };
 
-  // Re-init form when action changes
-  useMemoInit(action, reset);
+  // Re-init form when action / edited entry changes
+  useMemoInit(`${action ?? ''}:${entry?.id ?? 'new'}`, reset);
+
 
   if (!action) return null;
 
-  const title = TYPE_LABEL[action === 'payment' ? 'payment' : action] ?? 'Ledger entry';
+  const title = `${entry ? 'Edit ' : ''}${TYPE_LABEL[action === 'payment' ? 'payment' : action] ?? 'Ledger entry'}`;
 
   const submit = () => {
     const amt = Number(amount);
@@ -410,6 +444,21 @@ function EntryDialog({
               <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
           )}
+
+          {isCharge && (
+            <div>
+              <Label>Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['unpaid', 'partially_paid', 'paid', 'waived', 'cancelled'].map(s => (
+                    <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
 
           {isPayment && (
             <>
@@ -502,8 +551,9 @@ function EntryDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
           <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={submit} disabled={busy}>
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? 'Saving…' : entry ? 'Update entry' : 'Save'}
           </Button>
+
         </DialogFooter>
       </DialogContent>
     </Dialog>

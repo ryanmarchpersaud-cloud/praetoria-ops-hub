@@ -152,12 +152,14 @@ export default function RentReceiptPrint() {
           <img src="/praetoria-logo-white.png" alt="Praetoria Group" className="h-16 w-auto shrink-0" />
           <div className="text-center sm:text-left">
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Praetoria Group</h1>
+            <p className="text-sm font-semibold text-white/90 tracking-wide uppercase">Property Management</p>
             <p className="text-sm text-white/95 mt-2">Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
             <p className="text-sm text-white/95">Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
             <h2 className="text-lg font-bold mt-4 inline-block bg-white text-[#0F172A] px-4 py-1.5 rounded">
               Rent / Payment Receipt
             </h2>
           </div>
+
         </div>
 
         {isVoid && (
@@ -237,13 +239,38 @@ export default function RentReceiptPrint() {
               <span>{fmt(entry.amount)}</span>
             </div>
             {balanceAfter !== null && (
-              <div className="flex justify-between px-3 py-2 text-sm">
-                <span className="text-gray-700">Account balance after this payment</span>
-                <span className="font-semibold">{fmt(balanceAfter)}</span>
-              </div>
+              <>
+                <div className="flex justify-between px-3 py-2 text-sm">
+                  <span className="text-gray-700">Account balance after this payment</span>
+                  <span className="font-semibold">{fmt(balanceAfter)}</span>
+                </div>
+                <div className="px-3 py-2 border-t border-gray-200 text-sm font-semibold">
+                  {balanceAfter <= 0
+                    ? (balanceAfter < 0
+                      ? `Paid in full — credit on account ${fmt(Math.abs(balanceAfter))}`
+                      : 'Paid in full — no balance owing')
+                    : `Balance still owing: ${fmt(balanceAfter)}`}
+                </div>
+              </>
             )}
           </div>
         </div>
+
+        <div className="grid sm:grid-cols-2 gap-6 mb-6 text-xs">
+          <div>
+            <p className="text-gray-600 uppercase">Received by</p>
+            <div className="border-b border-gray-400 h-8" />
+            <p className="mt-1">Praetoria Group — Property Management</p>
+          </div>
+          <div>
+            <p className="text-gray-600 uppercase">Date issued</p>
+            <div className="border-b border-gray-400 h-8" />
+            <p className="mt-1">{format(new Date(), 'MMMM d, yyyy')}</p>
+          </div>
+        </div>
+
+
+
 
         <div className="border-t border-gray-300 pt-4 text-xs text-gray-700 space-y-1">
           <p className="font-semibold text-black">Thank you for your payment.</p>
