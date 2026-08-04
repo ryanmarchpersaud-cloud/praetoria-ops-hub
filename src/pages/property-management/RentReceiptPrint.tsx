@@ -239,13 +239,21 @@ export default function RentReceiptPrint() {
               <span>{fmt(entry.amount)}</span>
             </div>
             {balanceAfter !== null && (
-              <div className="flex justify-between px-3 py-2 text-sm">
-                <span className="text-gray-700">Account balance after this payment</span>
-                <span className="font-semibold">{fmt(balanceAfter)}</span>
-              </div>
+              <>
+                <div className="flex justify-between px-3 py-2 text-sm">
+                  <span className="text-gray-700">Account balance after this payment</span>
+                  <span className="font-semibold">{fmt(balanceAfter)}</span>
+                </div>
+                <div className="px-3 py-2 border-t border-gray-200 text-sm font-semibold">
+                  {balanceAfter <= 0
+                    ? (balanceAfter < 0
+                      ? `Paid in full — credit on account ${fmt(Math.abs(balanceAfter))}`
+                      : 'Paid in full — no balance owing')
+                    : `Balance still owing: ${fmt(balanceAfter)}`}
+                </div>
+              </>
             )}
-          </div>
-        </div>
+
 
         <div className="border-t border-gray-300 pt-4 text-xs text-gray-700 space-y-1">
           <p className="font-semibold text-black">Thank you for your payment.</p>
