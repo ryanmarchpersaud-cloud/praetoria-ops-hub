@@ -439,8 +439,9 @@ export default function QuotePrint() {
               {exportData.lineItems.map((item) => (
                 <tr
                   key={item.index}
-                  className="border-b border-[#f3f4f6] break-inside-avoid"
-                  style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+                  className={`border-b border-[#f3f4f6] ${exportData.unitRateQuote ? '' : 'break-inside-avoid'}`}
+                  style={exportData.unitRateQuote ? undefined : { breakInside: 'avoid', pageBreakInside: 'avoid' }}
+
                 >
                   <td className="py-3 pr-2 text-[#9ca3af] align-top">{item.index}</td>
                   <td className="py-3 pr-2 align-top">
