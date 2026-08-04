@@ -94,6 +94,8 @@ export default function TenantLedgerManager({
   const [dialogAction, setDialogAction] = useState<QuickAction | null>(null);
   const [editEntry, setEditEntry] = useState<PmLedgerEntry | null>(null);
   const [busy, setBusy] = useState(false);
+  const [monthlyOpen, setMonthlyOpen] = useState(false);
+
 
   const outstandingCharges = useMemo(
     () => entries.filter(e =>
