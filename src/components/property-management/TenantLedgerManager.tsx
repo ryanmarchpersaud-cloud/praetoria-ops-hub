@@ -551,8 +551,9 @@ function EntryDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={busy}>Cancel</Button>
           <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={submit} disabled={busy}>
-            {busy ? 'Saving…' : 'Save'}
+            {busy ? 'Saving…' : entry ? 'Update entry' : 'Save'}
           </Button>
+
         </DialogFooter>
       </DialogContent>
     </Dialog>
