@@ -10970,6 +10970,7 @@ export type Database = {
           tax_rate: number
           terms_conditions: string | null
           total: number | null
+          unit_rate_quote: boolean
           updated_at: string
           workmanship_warranty: string | null
         }
@@ -11015,6 +11016,7 @@ export type Database = {
           tax_rate?: number
           terms_conditions?: string | null
           total?: number | null
+          unit_rate_quote?: boolean
           updated_at?: string
           workmanship_warranty?: string | null
         }
@@ -11060,6 +11062,7 @@ export type Database = {
           tax_rate?: number
           terms_conditions?: string | null
           total?: number | null
+          unit_rate_quote?: boolean
           updated_at?: string
           workmanship_warranty?: string | null
         }
