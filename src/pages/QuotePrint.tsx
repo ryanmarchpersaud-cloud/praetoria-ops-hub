@@ -237,7 +237,7 @@ export default function QuotePrint() {
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 print:block"
-          style={{ opacity: 0.1 }}
+          style={{ opacity: 0.05 }}
         >
           {[
             { top: '12%', left: '8%', size: 110 },
