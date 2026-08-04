@@ -30,10 +30,12 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     workmanshipWarranty: quote.workmanship_warranty || '',
     projectNotes: quote.project_notes || '',
     termsConditions: quote.terms_conditions || '',
+    unitRateQuote: Boolean(quote.unit_rate_quote),
     subtotal: Number(quote.subtotal || 0),
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
     taxRate: Number(quote.tax_rate || 0.11),
+
     gstRate: quote.gst_rate != null ? Number(quote.gst_rate) : null,
     pstRate: quote.pst_rate != null ? Number(quote.pst_rate) : null,
     recurringPricing: quote.recurring_pricing_enabled ? {
