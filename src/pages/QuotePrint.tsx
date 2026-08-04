@@ -30,10 +30,12 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     workmanshipWarranty: quote.workmanship_warranty || '',
     projectNotes: quote.project_notes || '',
     termsConditions: quote.terms_conditions || '',
+    unitRateQuote: Boolean(quote.unit_rate_quote),
     subtotal: Number(quote.subtotal || 0),
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
     taxRate: Number(quote.tax_rate || 0.11),
+
     gstRate: quote.gst_rate != null ? Number(quote.gst_rate) : null,
     pstRate: quote.pst_rate != null ? Number(quote.pst_rate) : null,
     recurringPricing: quote.recurring_pricing_enabled ? {
@@ -235,7 +237,7 @@ export default function QuotePrint() {
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 print:block"
-          style={{ opacity: 0.1 }}
+          style={{ opacity: 0.05 }}
         >
           {[
             { top: '12%', left: '8%', size: 110 },
@@ -388,12 +390,20 @@ export default function QuotePrint() {
           );
         })()}
 
-        {/* ── Line Items Table ── */}
+        {/* ── Line Items / Unit Rate Table ── */}
         <div className="mb-8 print:mb-10">
           <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-3 print:text-xs">
-            Line Items
+            {exportData.unitRateQuote ? 'Unit-Rate Pricing Schedule' : 'Line Items'}
           </p>
           <table className="w-full text-sm print:text-base border-collapse">
+            {exportData.unitRateQuote && (
+              <colgroup>
+                <col style={{ width: '4%' }} />
+                <col style={{ width: '30%' }} />
+                <col style={{ width: '51%' }} />
+                <col style={{ width: '15%' }} />
+              </colgroup>
+            )}
             <thead className="print:table-header-group">
               <tr className="border-b-2 border-[#d1d5db]">
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-8">
@@ -402,29 +412,39 @@ export default function QuotePrint() {
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs">
                   Item
                 </th>
+
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs hidden md:table-cell print:table-cell">
                   Description
                 </th>
-                <th className="text-center py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-16">
-                  Qty
-                </th>
-                <th className="text-right py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">
-                  Unit Price
-                </th>
-                <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">
-                  Total
-                </th>
+                {exportData.unitRateQuote ? (
+                  <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-32">
+                    Unit Rate (CAD)
+                  </th>
+                ) : (
+                  <>
+                    <th className="text-center py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-16">
+                      Qty
+                    </th>
+                    <th className="text-right py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">
+                      Unit Price
+                    </th>
+                    <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">
+                      Total
+                    </th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
               {exportData.lineItems.map((item) => (
                 <tr
                   key={item.index}
-                  className="border-b border-[#f3f4f6] break-inside-avoid"
-                  style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+                  className={`border-b border-[#f3f4f6] ${exportData.unitRateQuote ? '' : 'break-inside-avoid'}`}
+                  style={exportData.unitRateQuote ? undefined : { breakInside: 'avoid', pageBreakInside: 'avoid' }}
+
                 >
-                  <td className="py-3 pr-2 text-[#9ca3af]">{item.index}</td>
-                  <td className="py-3 pr-2">
+                  <td className="py-3 pr-2 text-[#9ca3af] align-top">{item.index}</td>
+                  <td className="py-3 pr-2 align-top">
                     <p className="font-medium">{item.name}</p>
                     {/* Mobile: show description inline */}
                     {item.description && (
@@ -433,27 +453,38 @@ export default function QuotePrint() {
                       </p>
                     )}
                   </td>
-                  <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell">
+                  <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell align-top">
                     {item.description}
                   </td>
-                  <td
-                    className="py-3 px-2 text-center"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                  >
-                    {item.quantity}
-                  </td>
-                  <td
-                    className="py-3 px-2 text-right"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                  >
-                    ${formatCurrency(item.unitPrice)}
-                  </td>
-                  <td
-                    className="py-3 pl-2 text-right font-medium"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                  >
-                    ${formatCurrency(item.lineTotal)}
-                  </td>
+                  {exportData.unitRateQuote ? (
+                    <td
+                      className="py-3 pl-2 text-right font-semibold align-top whitespace-nowrap"
+                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    >
+                      {item.unitPrice > 0 ? `$${formatCurrency(item.unitPrice)}` : 'Variable'}
+                    </td>
+                  ) : (
+                    <>
+                      <td
+                        className="py-3 px-2 text-center"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        {item.quantity}
+                      </td>
+                      <td
+                        className="py-3 px-2 text-right"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        ${formatCurrency(item.unitPrice)}
+                      </td>
+                      <td
+                        className="py-3 pl-2 text-right font-medium"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        ${formatCurrency(item.lineTotal)}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
               {exportData.lineItems.length === 0 && (
@@ -466,6 +497,7 @@ export default function QuotePrint() {
             </tbody>
           </table>
         </div>
+
 
         {/* ── Customer Finish Options (alternatives — not added together) ── */}
         {exportData.finishOptions.length > 0 && (() => {
@@ -541,8 +573,27 @@ export default function QuotePrint() {
 
 
 
-        {/* ── Totals ── */}
+        {/* ── Unit-Rate Statement (replaces totals for unit-rate quotations) ── */}
+        {exportData.unitRateQuote ? (
+          <div
+            className="mb-8 print:mb-10 rounded-lg border-2 p-4 print:break-inside-avoid"
+            style={{ borderColor: theme.accent, backgroundColor: theme.tint }}
+          >
+            <p className="text-sm font-extrabold uppercase tracking-wide print:text-base" style={{ color: theme.accent }}>
+              Unit-Rate Quotation — No Fixed Contract Total
+            </p>
+            <p className="text-xs text-[#374151] leading-relaxed mt-1.5 print:text-sm">
+              The final invoice will be based on the actual authorized services performed, equipment units used,
+              hours worked, snow loads hauled, ice-control applications completed and materials consumed.
+            </p>
+            <p className="text-[11px] text-[#6b7280] leading-relaxed mt-1.5 print:text-xs">
+              The unit rates above are not added together and do not form a quotation total. GST is calculated on the
+              actual invoice for the services performed.
+            </p>
+          </div>
+        ) : (
         <div className="flex justify-end mb-10 print:mb-12">
+
           <div className="w-64 md:w-72 print:w-72 space-y-2">
             <div className="flex justify-between text-sm text-[#6b7280] print:text-base">
               <span>Subtotal</span>
@@ -602,6 +653,8 @@ export default function QuotePrint() {
             )}
           </div>
         </div>
+        )}
+
 
 
         {/* ── Recurring Service Pricing Options ── */}
@@ -749,21 +802,8 @@ export default function QuotePrint() {
                   </ul>
 
                   {sub('Snowfall Trigger')}
-                  <p>The customer must select one service trigger:</p>
-                  <div className="mt-1 space-y-1">
-                    {['Service after every measurable snowfall', '5 cm accumulation', '7 cm accumulation', '10 cm accumulation'].map((t) => (
-                      <div key={t} className="flex items-center gap-2">
-                        <span className="inline-block w-3 h-3 border border-[#9ca3af] shrink-0" />
-                        <span>{t}</span>
-                      </div>
-                    ))}
-                    <div className="flex items-end gap-2">
-                      <span className="inline-block w-3 h-3 border border-[#9ca3af] shrink-0 mb-0.5" />
-                      <span className="shrink-0">Other agreed trigger:</span>
-                      <span className="flex-1 border-b border-[#9ca3af]" />
-                    </div>
-                  </div>
-                  <p className="mt-1">The selected trigger must be written into the accepted quotation. Snowfall below the selected trigger is not automatically serviced unless the customer requests and authorizes a call-out.</p>
+                  <p>The customer must select one service trigger in the Customer Selections section below. The selected trigger must be written into the accepted quotation. Snowfall below the selected trigger is not automatically serviced unless the customer requests and authorizes a call-out.</p>
+
 
                   {sub('Response Priority and Timing')}
                   <ul className="list-disc list-inside space-y-0.5">
@@ -797,47 +837,54 @@ export default function QuotePrint() {
               </div>
 
               {/* Customer Selections & Initials */}
-              <div className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid" style={{ borderColor: '#e5e7eb' }}>
-                {heading('Customer Selections and Initials')}
-                <div className="space-y-3 mt-2">
-                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-                    <span className="shrink-0">Selected snowfall trigger:</span>
-                    <span className="flex-1 border-b border-[#9ca3af]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-                  </div>
-                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-                    <span className="shrink-0">Approved snow-storage location:</span>
-                    <span className="flex-1 border-b border-[#9ca3af]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs print:text-sm text-[#374151] flex-wrap">
-                    <span>Service type:</span>
-                    <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 border border-[#9ca3af]" />Seasonal contract</span>
-                    <span className="flex items-center gap-2"><span className="inline-block w-3 h-3 border border-[#9ca3af]" />On-demand / call-out</span>
-                    <span className="flex-1 border-b border-[#9ca3af] min-w-[60px]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs">Customer Initial</span>
-                  </div>
-                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-                    <span className="shrink-0">Authorization for ice-control applications (sanding / de-icing):</span>
-                    <span className="flex-1 border-b border-[#9ca3af]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-                  </div>
-                  <div className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
-                    <span className="shrink-0">Authorization required before off-site snow hauling:</span>
-                    <span className="flex-1 border-b border-[#9ca3af]" />
-                    <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
-                  </div>
-                  <div className="pt-2">
-                    <p className="text-xs text-[#374151] print:text-sm mb-4">
-                      I confirm that I have reviewed the Snow and Ice Service Quality Guarantee, the customer-facing service notes and the rates shown in this quotation.
+              {(() => {
+                const scopeText = String(exportData.scopeOfWork || '');
+                const locs = Array.from(
+                  scopeText.matchAll(/SERVICE LOCATION\s*(\d)\s*\n([^\n]+)/gi)
+                ).map((m) => `Service Location ${m[1]} — ${m[2].trim()}`);
+                const targets = locs.length > 1 ? locs : ['This Property'];
+                const rows = [
+                  'Selected snowfall trigger (every snowfall / 5 cm / 7 cm / 10 cm / other):',
+                  'Approved on-site snow-storage location:',
+                  'Service type (seasonal contract or on-demand call-out):',
+                  'Authorization for ice-control applications (sanding / de-icing):',
+                  'Authorization required before off-site snow hauling:',
+                ];
+                return (
+                  <div className="mb-6 print:mb-8 rounded-lg p-4 border print:break-inside-avoid" style={{ borderColor: '#e5e7eb' }}>
+                    {heading('Customer Selections and Initials')}
+                    <p className="text-[11px] text-[#6b7280] print:text-xs mb-2">
+                      Complete one set of selections for each property. Each property is serviced, recorded and invoiced separately.
                     </p>
-                    <div className="flex items-end gap-3">
-                      <span className="flex-1 border-b border-[#9ca3af]" />
-                      <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Signature &amp; Date</span>
+                    <div className="space-y-4">
+                      {targets.map((t) => (
+                        <div key={t} className="break-inside-avoid" style={{ breakInside: 'avoid' }}>
+                          <p className="text-xs font-bold text-[#1a1a2e] print:text-sm mb-1.5">{t}</p>
+                          <div className="space-y-2.5">
+                            {rows.map((r) => (
+                              <div key={r} className="flex items-end gap-3 text-xs print:text-sm text-[#374151]">
+                                <span className="shrink-0">{r}</span>
+                                <span className="flex-1 border-b border-[#9ca3af]" />
+                                <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Initial</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="pt-1">
+                        <p className="text-xs text-[#374151] print:text-sm mb-4">
+                          I confirm that I have reviewed the Snow and Ice Service Quality Guarantee, the customer-facing service notes and the rates shown in this quotation.
+                        </p>
+                        <div className="flex items-end gap-3">
+                          <span className="flex-1 border-b border-[#9ca3af]" />
+                          <span className="text-[10px] text-[#9ca3af] print:text-xs shrink-0">Customer Signature &amp; Date</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
+
             </>
           );
         })()}
