@@ -390,10 +390,10 @@ export default function QuotePrint() {
           );
         })()}
 
-        {/* ── Line Items Table ── */}
+        {/* ── Line Items / Unit Rate Table ── */}
         <div className="mb-8 print:mb-10">
           <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-3 print:text-xs">
-            Line Items
+            {exportData.unitRateQuote ? 'Unit-Rate Pricing Schedule' : 'Line Items'}
           </p>
           <table className="w-full text-sm print:text-base border-collapse">
             <thead className="print:table-header-group">
@@ -407,15 +407,23 @@ export default function QuotePrint() {
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs hidden md:table-cell print:table-cell">
                   Description
                 </th>
-                <th className="text-center py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-16">
-                  Qty
-                </th>
-                <th className="text-right py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">
-                  Unit Price
-                </th>
-                <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">
-                  Total
-                </th>
+                {exportData.unitRateQuote ? (
+                  <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-32">
+                    Unit Rate (CAD)
+                  </th>
+                ) : (
+                  <>
+                    <th className="text-center py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-16">
+                      Qty
+                    </th>
+                    <th className="text-right py-2.5 px-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">
+                      Unit Price
+                    </th>
+                    <th className="text-right py-2.5 pl-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-24">
+                      Total
+                    </th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -425,8 +433,8 @@ export default function QuotePrint() {
                   className="border-b border-[#f3f4f6] break-inside-avoid"
                   style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
                 >
-                  <td className="py-3 pr-2 text-[#9ca3af]">{item.index}</td>
-                  <td className="py-3 pr-2">
+                  <td className="py-3 pr-2 text-[#9ca3af] align-top">{item.index}</td>
+                  <td className="py-3 pr-2 align-top">
                     <p className="font-medium">{item.name}</p>
                     {/* Mobile: show description inline */}
                     {item.description && (
@@ -435,27 +443,38 @@ export default function QuotePrint() {
                       </p>
                     )}
                   </td>
-                  <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell">
+                  <td className="py-3 pr-2 text-[#6b7280] hidden md:table-cell print:table-cell align-top">
                     {item.description}
                   </td>
-                  <td
-                    className="py-3 px-2 text-center"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                  >
-                    {item.quantity}
-                  </td>
-                  <td
-                    className="py-3 px-2 text-right"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                  >
-                    ${formatCurrency(item.unitPrice)}
-                  </td>
-                  <td
-                    className="py-3 pl-2 text-right font-medium"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                  >
-                    ${formatCurrency(item.lineTotal)}
-                  </td>
+                  {exportData.unitRateQuote ? (
+                    <td
+                      className="py-3 pl-2 text-right font-semibold align-top whitespace-nowrap"
+                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    >
+                      {item.unitPrice > 0 ? `$${formatCurrency(item.unitPrice)}` : 'Variable'}
+                    </td>
+                  ) : (
+                    <>
+                      <td
+                        className="py-3 px-2 text-center"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        {item.quantity}
+                      </td>
+                      <td
+                        className="py-3 px-2 text-right"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        ${formatCurrency(item.unitPrice)}
+                      </td>
+                      <td
+                        className="py-3 pl-2 text-right font-medium"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        ${formatCurrency(item.lineTotal)}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
               {exportData.lineItems.length === 0 && (
@@ -468,6 +487,7 @@ export default function QuotePrint() {
             </tbody>
           </table>
         </div>
+
 
         {/* ── Customer Finish Options (alternatives — not added together) ── */}
         {exportData.finishOptions.length > 0 && (() => {
