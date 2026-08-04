@@ -215,8 +215,18 @@ export default function TenantLedgerManager({
                       {e.receipt_path && (
                         <button className="text-xs text-emerald-700 underline inline-flex items-center gap-1"
                           onClick={() => openReceipt(e.receipt_path!)}>
-                          <FileText className="h-3 w-3" /> Receipt
+                          <FileText className="h-3 w-3" /> Attached file
                         </button>
+                      )}
+                      {['payment', 'deposit', 'deposit_refund', 'credit', 'adjustment_credit', 'other_credit'].includes(e.type) && (
+                        <a
+                          href={`/property-management/receipts/${e.id}/print`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-emerald-700 underline inline-flex items-center gap-1"
+                        >
+                          <Receipt className="h-3 w-3" /> Receipt PDF
+                        </a>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
