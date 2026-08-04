@@ -305,6 +305,20 @@ export default function TenantLedgerManager({
         outstandingCharges={outstandingCharges}
       />
 
+      <GenerateMonthlyRentDialog
+        open={monthlyOpen}
+        onClose={() => setMonthlyOpen(false)}
+        tenantId={tenantId}
+        leaseId={leaseId}
+        propertyId={propertyId}
+        unitId={unitId}
+        defaultRentAmount={defaultRentAmount}
+        defaultRentDueDay={defaultRentDueDay}
+        existingEntries={entries}
+      />
+
+
+
     </Card>
   );
 }
