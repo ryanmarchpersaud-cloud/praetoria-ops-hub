@@ -253,6 +253,23 @@ export default function RentReceiptPrint() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-6 mb-6 text-xs">
+          <div>
+            <p className="text-gray-600 uppercase">Received by</p>
+            <div className="border-b border-gray-400 h-8" />
+            <p className="mt-1">Praetoria Group — Property Management</p>
+          </div>
+          <div>
+            <p className="text-gray-600 uppercase">Date issued</p>
+            <div className="border-b border-gray-400 h-8" />
+            <p className="mt-1">{format(new Date(), 'MMMM d, yyyy')}</p>
+          </div>
+        </div>
+
+
 
 
         <div className="border-t border-gray-300 pt-4 text-xs text-gray-700 space-y-1">
