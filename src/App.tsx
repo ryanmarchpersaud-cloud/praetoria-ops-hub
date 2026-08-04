@@ -259,6 +259,7 @@ const PMOwnerStatementsList = lazy(() => import("./pages/property-management/PMO
 const PMOwnerStatementDetail = lazy(() => import("./pages/property-management/PMOwnerStatementDetail"));
 const OwnerStatements = lazy(() => import("./pages/owner/OwnerStatements"));
 const OwnerStatementPrint = lazy(() => import("./pages/property-management/OwnerStatementPrint"));
+const RentReceiptPrint = lazy(() => import("./pages/property-management/RentReceiptPrint"));
 const PMStaffHome = lazy(() => import("./pages/pm-staff/PMStaffHome"));
 const PMStaffVacancies = lazy(() => import("./pages/pm-staff/Vacancies"));
 const PMStaffProspects = lazy(() => import("./pages/pm-staff/Prospects"));
@@ -761,6 +762,7 @@ function AppRoutes() {
         <Route path="/property-management/owner-statements" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-statements/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMOwnerStatementDetail /></Suspense></ModuleGuard>} />
         <Route path="/property-management/owner-statements/:id/print" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><OwnerStatementPrint /></Suspense></ModuleGuard>} />
+        <Route path="/property-management/receipts/:id/print" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><RentReceiptPrint /></Suspense></ModuleGuard>} />
         <Route path="/property-management/documents" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMDocumentsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/inspections" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMInspectionsList /></Suspense></ModuleGuard>} />
         <Route path="/property-management/inspections/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PMInspectionDetail /></Suspense></ModuleGuard>} />
@@ -871,6 +873,7 @@ function AppRoutes() {
         <Route path="/tenant/maintenance/:id" element={<Suspense fallback={<RouteLoading />}><TenantMaintenanceDetail /></Suspense>} />
         <Route path="/tenant/account" element={<Suspense fallback={<RouteLoading />}><TenantAccount /></Suspense>} />
         <Route path="/tenant/payments" element={<Suspense fallback={<RouteLoading />}><TenantPayments /></Suspense>} />
+        <Route path="/tenant/receipts/:id/print" element={<Suspense fallback={<RouteLoading />}><RentReceiptPrint /></Suspense>} />
         <Route path="/tenant/documents" element={<Suspense fallback={<RouteLoading />}><TenantDocuments /></Suspense>} />
         <Route path="/tenant/notices" element={<Suspense fallback={<RouteLoading />}><TenantNotices /></Suspense>} />
         <Route path="/tenant/profile" element={<Suspense fallback={<RouteLoading />}><TenantProfile /></Suspense>} />
