@@ -11,8 +11,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  DollarSign, Plus, Trash2, Check, Ban, Upload, FileText, Receipt, Pencil,
+  DollarSign, Plus, Trash2, Check, Ban, Upload, FileText, Receipt, Pencil, CalendarClock,
 } from 'lucide-react';
+import GenerateMonthlyRentDialog from './GenerateMonthlyRentDialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -93,6 +94,8 @@ export default function TenantLedgerManager({
   const [dialogAction, setDialogAction] = useState<QuickAction | null>(null);
   const [editEntry, setEditEntry] = useState<PmLedgerEntry | null>(null);
   const [busy, setBusy] = useState(false);
+  const [monthlyOpen, setMonthlyOpen] = useState(false);
+
 
   const outstandingCharges = useMemo(
     () => entries.filter(e =>
@@ -185,6 +188,10 @@ export default function TenantLedgerManager({
           <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700"
             onClick={() => setDialogAction('rent_charge')}>
             <Plus className="h-4 w-4 mr-1" /> Add Rent Charge
+          </Button>
+          <Button size="sm" variant="outline" className="border-emerald-300 text-emerald-800"
+            onClick={() => setMonthlyOpen(true)}>
+            <CalendarClock className="h-4 w-4 mr-1" /> Generate Monthly Rent
           </Button>
           <Button size="sm" variant="outline"
             onClick={() => setDialogAction('payment')}>
@@ -297,6 +304,20 @@ export default function TenantLedgerManager({
         defaultRentDueDay={defaultRentDueDay}
         outstandingCharges={outstandingCharges}
       />
+
+      <GenerateMonthlyRentDialog
+        open={monthlyOpen}
+        onClose={() => setMonthlyOpen(false)}
+        tenantId={tenantId}
+        leaseId={leaseId}
+        propertyId={propertyId}
+        unitId={unitId}
+        defaultRentAmount={defaultRentAmount}
+        defaultRentDueDay={defaultRentDueDay}
+        existingEntries={entries}
+      />
+
+
 
     </Card>
   );
