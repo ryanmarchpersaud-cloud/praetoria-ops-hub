@@ -91,6 +91,7 @@ export default function TenantLedgerManager({
   const del = useDeletePmLedgerEntry();
 
   const [dialogAction, setDialogAction] = useState<QuickAction | null>(null);
+  const [editEntry, setEditEntry] = useState<PmLedgerEntry | null>(null);
   const [busy, setBusy] = useState(false);
 
   const outstandingCharges = useMemo(
@@ -100,6 +101,8 @@ export default function TenantLedgerManager({
     ),
     [entries],
   );
+
+  const closeDialog = () => { setDialogAction(null); setEditEntry(null); };
 
   const handleSaveEntry = async (payload: Partial<PmLedgerEntry>, file?: File | null) => {
     setBusy(true);
@@ -113,23 +116,32 @@ export default function TenantLedgerManager({
         if (error) throw error;
         receipt_path = path;
       }
-      await create.mutateAsync({
-        tenant_id: tenantId,
-        lease_id: leaseId ?? null,
-        property_id: propertyId ?? null,
-        unit_id: unitId ?? null,
-        entry_date: (payload.entry_date as string) || todayISO(),
-        ...payload,
-        ...(receipt_path ? { receipt_path } : {}),
-      });
-      toast.success('Ledger entry saved');
-      setDialogAction(null);
+      if (editEntry) {
+        await update.mutateAsync({
+          id: editEntry.id,
+          patch: { ...payload, ...(receipt_path ? { receipt_path } : {}) },
+        });
+        toast.success('Ledger entry updated');
+      } else {
+        await create.mutateAsync({
+          tenant_id: tenantId,
+          lease_id: leaseId ?? null,
+          property_id: propertyId ?? null,
+          unit_id: unitId ?? null,
+          entry_date: (payload.entry_date as string) || todayISO(),
+          ...payload,
+          ...(receipt_path ? { receipt_path } : {}),
+        });
+        toast.success('Ledger entry saved');
+      }
+      closeDialog();
     } catch (e: any) {
       toast.error(e?.message ?? 'Failed to save entry');
     } finally {
       setBusy(false);
     }
   };
+
 
   const markStatus = async (entry: PmLedgerEntry, status: string) => {
     try {
