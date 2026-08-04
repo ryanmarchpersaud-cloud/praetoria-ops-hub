@@ -396,6 +396,14 @@ export default function QuotePrint() {
             {exportData.unitRateQuote ? 'Unit-Rate Pricing Schedule' : 'Line Items'}
           </p>
           <table className="w-full text-sm print:text-base border-collapse">
+            {exportData.unitRateQuote && (
+              <colgroup>
+                <col style={{ width: '4%' }} />
+                <col style={{ width: '30%' }} />
+                <col style={{ width: '51%' }} />
+                <col style={{ width: '15%' }} />
+              </colgroup>
+            )}
             <thead className="print:table-header-group">
               <tr className="border-b-2 border-[#d1d5db]">
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs w-8">
@@ -404,6 +412,7 @@ export default function QuotePrint() {
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs">
                   Item
                 </th>
+
                 <th className="text-left py-2.5 pr-2 text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] print:text-xs hidden md:table-cell print:table-cell">
                   Description
                 </th>
