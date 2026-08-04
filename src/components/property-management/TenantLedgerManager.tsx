@@ -11,8 +11,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  DollarSign, Plus, Trash2, Check, Ban, Upload, FileText, Receipt, Pencil,
+  DollarSign, Plus, Trash2, Check, Ban, Upload, FileText, Receipt, Pencil, CalendarClock,
 } from 'lucide-react';
+import GenerateMonthlyRentDialog from './GenerateMonthlyRentDialog';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import {
