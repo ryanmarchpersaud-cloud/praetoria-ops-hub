@@ -151,7 +151,7 @@ export default function RentReceiptPrint() {
         >
           <img src="/praetoria-logo-white.png" alt="Praetoria Group" className="h-16 w-auto shrink-0" />
           <div className="text-center sm:text-left">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Praetoria Group</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Praetoria Group</h1>
             <p className="text-sm font-semibold text-white/90 tracking-wide uppercase">Property Management</p>
             <p className="text-sm text-white/95 mt-2">Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
             <p className="text-sm text-white/95">Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
