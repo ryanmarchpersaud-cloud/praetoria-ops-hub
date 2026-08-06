@@ -72,16 +72,24 @@ export default function Schedule() {
     return map;
   }, [visits]);
 
+  const jobIdsWithVisits = useMemo(
+    () => new Set((visits as any[]).map(v => v.job_id).filter(Boolean)),
+    [visits]
+  );
+
   const jobsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
     (jobs as any[]).forEach(j => {
+      // Avoid duplicates: a job that already has visits is represented by its visits
+      if (jobIdsWithVisits.has(j.id)) return;
       if (j.scheduled_date) {
         if (!map[j.scheduled_date]) map[j.scheduled_date] = [];
         map[j.scheduled_date].push(j);
       }
     });
     return map;
-  }, [jobs]);
+  }, [jobs, jobIdsWithVisits]);
+
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
