@@ -632,10 +632,10 @@ export default function QuoteDetail() {
             <Briefcase className="h-3.5 w-3.5" /> Converted
           </Badge>
         )}
-        {form.approval_status === 'Approved' && canManageQuotes && (
+        {form.approval_status !== 'Archived' && canManageQuotes && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setInvoiceOpen(true)}>
             <Receipt className="h-4 w-4" />
-            <span className="hidden sm:inline">Invoice</span>
+            <span className="hidden sm:inline">Create Invoice</span>
           </Button>
         )}
         <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => navigate(`/quotes/${id}/print`)}>
