@@ -509,7 +509,9 @@ function LineItemDialog({
       const jt = (parseFloat(junkHours) || 0) * (parseFloat(junkRate) || 0);
       return dt + jt;
     }
-    return (parseFloat(hours) || 0) * (parseFloat(hourlyRate) || 0);
+    const hourly = (parseFloat(hours) || 0) * (parseFloat(hourlyRate) || 0);
+    if (hourly > 0) return hourly;
+    return parseFloat(flatAmount) || 0;
   })();
 
   const splitSum = (parseFloat(drywallHours) || 0) + (parseFloat(junkHours) || 0);
