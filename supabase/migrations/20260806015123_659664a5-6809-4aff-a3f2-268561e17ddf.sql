@@ -1,0 +1,2 @@
+UPDATE public.quotes SET converted_job_id = (SELECT id FROM public.jobs WHERE job_number='PJ-10058'), converted_at = now() WHERE quote_number='PQ-00115';
+UPDATE public.invoices SET job_id = (SELECT id FROM public.jobs WHERE job_number='PJ-10058') WHERE invoice_number='INV-00128';
