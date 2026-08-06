@@ -594,7 +594,23 @@ function LineItemDialog({
                 <Input type="number" step="0.01" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
               </div>
             )}
+            {!isMixed && (
+              <div className="col-span-2">
+                <Label>Flat Amount ($) — use when there are no hours</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={flatAmount}
+                  onChange={(e) => setFlatAmount(e.target.value)}
+                  placeholder="e.g. 75.00"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  If hours × rate is empty, this amount is used as the line total.
+                </p>
+              </div>
+            )}
           </div>
+
 
           <div className="flex items-center gap-2">
             <input type="checkbox" id="mixed" checked={isMixed} onChange={(e) => setIsMixed(e.target.checked)} />
