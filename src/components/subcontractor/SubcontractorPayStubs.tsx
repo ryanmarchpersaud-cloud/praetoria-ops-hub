@@ -488,6 +488,9 @@ function LineItemDialog({
   const [endTime, setEndTime] = useState(item?.end_time || '');
   const [hours, setHours] = useState<string>(item?.hours?.toString() || '');
   const [hourlyRate, setHourlyRate] = useState<string>(item?.hourly_rate?.toString() || '');
+  const [flatAmount, setFlatAmount] = useState<string>(
+    item && !item.hours && Number(item.line_total) > 0 ? Number(item.line_total).toString() : ''
+  );
   const [notes, setNotes] = useState(item?.notes || '');
   const [isConfirmed, setIsConfirmed] = useState<boolean>(item?.is_confirmed || false);
   const [isMixed, setIsMixed] = useState<boolean>(item?.is_mixed || false);
@@ -506,7 +509,9 @@ function LineItemDialog({
       const jt = (parseFloat(junkHours) || 0) * (parseFloat(junkRate) || 0);
       return dt + jt;
     }
-    return (parseFloat(hours) || 0) * (parseFloat(hourlyRate) || 0);
+    const hourly = (parseFloat(hours) || 0) * (parseFloat(hourlyRate) || 0);
+    if (hourly > 0) return hourly;
+    return parseFloat(flatAmount) || 0;
   })();
 
   const splitSum = (parseFloat(drywallHours) || 0) + (parseFloat(junkHours) || 0);
@@ -589,7 +594,23 @@ function LineItemDialog({
                 <Input type="number" step="0.01" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} />
               </div>
             )}
+            {!isMixed && (
+              <div className="col-span-2">
+                <Label>Flat Amount ($) — use when there are no hours</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={flatAmount}
+                  onChange={(e) => setFlatAmount(e.target.value)}
+                  placeholder="e.g. 75.00"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  If hours × rate is empty, this amount is used as the line total.
+                </p>
+              </div>
+            )}
           </div>
+
 
           <div className="flex items-center gap-2">
             <input type="checkbox" id="mixed" checked={isMixed} onChange={(e) => setIsMixed(e.target.checked)} />
