@@ -15,7 +15,7 @@ export function useVisits(filters?: {
     queryFn: async () => {
       let query = supabase
         .from('visits')
-        .select('*, jobs(id, job_title, job_number), properties(id, property_name), customers(first_name, last_name, company_name), visit_photos(id)')
+        .select('*, jobs(id, job_title, job_number), properties(id, property_name, address_line_1, city), customers(first_name, last_name, company_name), visit_photos(id)')
         .order('service_date', { ascending: false });
       if (filters?.visit_status) query = query.eq('visit_status', filters.visit_status as any);
       if (filters?.visit_type) query = query.eq('visit_type', filters.visit_type as any);
