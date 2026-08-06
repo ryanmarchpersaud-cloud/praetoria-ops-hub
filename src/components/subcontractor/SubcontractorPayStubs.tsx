@@ -488,6 +488,9 @@ function LineItemDialog({
   const [endTime, setEndTime] = useState(item?.end_time || '');
   const [hours, setHours] = useState<string>(item?.hours?.toString() || '');
   const [hourlyRate, setHourlyRate] = useState<string>(item?.hourly_rate?.toString() || '');
+  const [flatAmount, setFlatAmount] = useState<string>(
+    item && !item.hours && Number(item.line_total) > 0 ? Number(item.line_total).toString() : ''
+  );
   const [notes, setNotes] = useState(item?.notes || '');
   const [isConfirmed, setIsConfirmed] = useState<boolean>(item?.is_confirmed || false);
   const [isMixed, setIsMixed] = useState<boolean>(item?.is_mixed || false);
