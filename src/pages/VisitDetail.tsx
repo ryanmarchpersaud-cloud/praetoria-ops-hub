@@ -91,7 +91,13 @@ export default function VisitDetail() {
         customer_visible_notes: form.customer_visible_notes, weather_notes: form.weather_notes,
         snow_depth: form.snow_depth, service_summary: form.service_summary,
         arrival_time: form.arrival_time || null, completion_time: form.completion_time || null,
-      });
+        equipment_used: (form.equipment_used_text || '')
+          .split(',').map((s: string) => s.trim()).filter(Boolean),
+        labour_hours: form.labour_hours === '' || form.labour_hours == null ? null : Number(form.labour_hours),
+        equipment_hours: form.equipment_hours === '' || form.equipment_hours == null ? null : Number(form.equipment_hours),
+        snowfall_cm: form.snowfall_cm === '' || form.snowfall_cm == null ? null : Number(form.snowfall_cm),
+        snowfall_trigger: form.snowfall_trigger || null,
+      } as any);
       if (arrivalChanged || completionChanged) {
         try {
           const { data: ures } = await supabase.auth.getUser();
