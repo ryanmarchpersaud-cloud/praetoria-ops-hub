@@ -53,7 +53,12 @@ export default function VisitDetail() {
     },
     enabled: !!id,
   });
-  useEffect(() => { if (visit) setForm(visit); }, [visit]);
+  useEffect(() => {
+    if (visit) {
+      const v = visit as any;
+      setForm({ ...v, equipment_used_text: Array.isArray(v.equipment_used) ? v.equipment_used.join(', ') : '' });
+    }
+  }, [visit]);
 
   if (isLoading) return <div className="p-8 text-muted-foreground text-sm">Loading...</div>;
   if (!visit) return <div className="p-8 text-muted-foreground text-sm">Visit not found</div>;
