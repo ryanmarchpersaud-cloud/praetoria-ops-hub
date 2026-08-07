@@ -203,6 +203,68 @@ export default function PortalDashboard() {
         />
       </div>
 
+      {/* Live conditions & trigger */}
+      {latestSnow && (
+        <Card className="border-blue-200/60 bg-blue-50/50 dark:bg-blue-900/10">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-1.5">
+              <Snowflake className="h-4 w-4 text-blue-600" /> Snowfall & Service Trigger
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Recorded Snowfall</p>
+              <p className="font-semibold text-sm">
+                {latestSnow.snowfall_cm != null ? `${latestSnow.snowfall_cm} cm` : latestSnow.snow_depth || '—'}
+              </p>
+              <p className="text-[10px] text-muted-foreground">{format(parseLocalDate(latestSnow.service_date), 'MMM d, yyyy')}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Your Service Trigger</p>
+              <p className="font-semibold text-sm">{latestSnow.snowfall_trigger || 'Every snowfall'}</p>
+              {latestSnow.weather_notes && <p className="text-[10px] text-muted-foreground">{latestSnow.weather_notes}</p>}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Live work order progress */}
+      {liveVisits.length > 0 && (
+        <DashSection title="Service In Progress" icon={Clock} onSeeAll={() => navigate('/portal/visits')}>
+          <div className="space-y-3">
+            {liveVisits.map((v: any) => {
+              const steps = ['Scheduled', 'En Route', 'In Progress', 'Completed'];
+              const idx = v.visit_status === 'En Route' ? 1 : 2;
+              return (
+                <div key={v.id} className="rounded-lg border p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-mono font-medium">{v.visit_number}</span>
+                    <StatusBadge status={v.visit_status} />
+                  </div>
+                  {v.properties?.property_name && (
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {v.properties.property_name}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-1">
+                    {steps.map((s, i) => (
+                      <div key={s} className="flex-1 min-w-0">
+                        <div className={`h-1.5 rounded-full ${i <= idx ? 'bg-primary' : 'bg-muted'}`} />
+                        <p className={`text-[9px] mt-1 truncate ${i <= idx ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{s}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+                    <span>Arrived: {v.arrival_time ? format(new Date(v.arrival_time), 'h:mm a') : '—'}</span>
+                    {v.equipment_used?.length ? <span>Equipment: {v.equipment_used.join(', ')}</span> : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DashSection>
+      )}
+
       {/* Upcoming visits */}
       {upcomingVisits.length > 0 && (
         <DashSection title="Upcoming Service" icon={CalendarCheck} onSeeAll={() => navigate('/portal/visits')}>
