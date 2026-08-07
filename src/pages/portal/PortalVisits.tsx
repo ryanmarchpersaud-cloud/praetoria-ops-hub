@@ -37,9 +37,65 @@ type Visit = {
   customer_visible_notes: string | null;
   weather_notes: string | null;
   snow_depth: string | null;
+  snowfall_cm: number | null;
+  snowfall_trigger: string | null;
+  equipment_used: string[] | null;
+  labour_hours: number | null;
+  equipment_hours: number | null;
+  arrival_time: string | null;
+  completion_time: string | null;
+  scheduled_start_time: string | null;
   properties: { id: string; property_name: string } | null;
   visit_photos: { id: string; file_url: string; photo_tag: string; caption: string | null }[];
 };
+
+const PROGRESS_STEPS = ['Scheduled', 'En Route', 'In Progress', 'Completed'];
+
+function progressIndex(status: string) {
+  if (status === 'Planned' || status === 'Scheduled' || status === 'Rescheduled') return 0;
+  if (status === 'En Route') return 1;
+  if (status === 'In Progress') return 2;
+  if (status === 'Completed') return 3;
+  return -1;
+}
+
+function fmtTime(ts: string | null) {
+  if (!ts) return null;
+  return new Date(ts).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' });
+}
+
+function durationLabel(a: string | null, b: string | null) {
+  if (!a || !b) return null;
+  const mins = Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000);
+  if (mins <= 0) return null;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h ? `${h}h ${m}m` : `${m}m`;
+}
+
+function WorkOrderProgress({ status }: { status: string }) {
+  const idx = progressIndex(status);
+  if (idx < 0) return null;
+  return (
+    <div className="flex items-center gap-1">
+      {PROGRESS_STEPS.map((step, i) => (
+        <div key={step} className="flex-1 min-w-0">
+          <div className={cn('h-1.5 rounded-full', i <= idx ? 'bg-primary' : 'bg-muted')} />
+          <p className={cn('text-[9px] mt-1 truncate', i <= idx ? 'text-foreground font-medium' : 'text-muted-foreground')}>{step}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3 py-1 border-b border-border/50 last:border-0">
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-xs text-foreground text-right">{value}</span>
+    </div>
+  );
+}
 
 /** Parse YYYY-MM-DD as local date to avoid UTC->local day shifts. */
 function parseLocalDate(s: string): Date {
