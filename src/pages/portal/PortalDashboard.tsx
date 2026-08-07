@@ -34,7 +34,7 @@ export default function PortalDashboard() {
       if (!customer) return [];
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, service_date, visit_status, visit_type, properties(property_name)')
+        .select('id, visit_number, service_date, visit_status, visit_type, arrival_time, completion_time, snowfall_cm, snowfall_trigger, equipment_used, properties(property_name)')
         .eq('customer_id', customer.id)
         .in('visit_status', ['Planned', 'Scheduled', 'En Route', 'In Progress'] as any)
         .order('service_date', { ascending: true })
@@ -43,7 +43,28 @@ export default function PortalDashboard() {
       return data;
     },
     enabled: !!customer,
+    refetchInterval: 60_000,
   });
+
+  const liveVisits = (upcomingVisits as any[]).filter(v => ['En Route', 'In Progress'].includes(v.visit_status));
+
+  // Latest recorded snowfall / trigger for this customer
+  const { data: latestSnow } = useQuery({
+    queryKey: ['portal_dash_snow', customer?.id],
+    queryFn: async () => {
+      if (!customer) return null;
+      const { data } = await supabase
+        .from('visits')
+        .select('service_date, snowfall_cm, snow_depth, snowfall_trigger, weather_notes')
+        .eq('customer_id', customer.id)
+        .not('snowfall_cm', 'is', null)
+        .order('service_date', { ascending: false })
+        .limit(1);
+      return (data?.[0] as any) || null;
+    },
+    enabled: !!customer,
+  });
+
 
   // Recent completed
   const { data: recentCompleted = [] } = useQuery({
