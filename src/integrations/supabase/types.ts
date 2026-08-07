@@ -13125,11 +13125,14 @@ export type Database = {
           crew_notes: string | null
           customer_id: string | null
           customer_visible_notes: string | null
+          equipment_hours: number | null
+          equipment_used: string[] | null
           estimated_duration_minutes: number | null
           hidden_from_schedule: boolean
           id: string
           is_recurring: boolean | null
           job_id: string | null
+          labour_hours: number | null
           priority: string | null
           property_id: string | null
           quote_id: string | null
@@ -13150,6 +13153,8 @@ export type Database = {
           service_summary: string | null
           site_instructions: string | null
           snow_depth: string | null
+          snowfall_cm: number | null
+          snowfall_trigger: string | null
           status_before_cancellation: string | null
           updated_at: string
           visit_number: string
@@ -13172,11 +13177,14 @@ export type Database = {
           crew_notes?: string | null
           customer_id?: string | null
           customer_visible_notes?: string | null
+          equipment_hours?: number | null
+          equipment_used?: string[] | null
           estimated_duration_minutes?: number | null
           hidden_from_schedule?: boolean
           id?: string
           is_recurring?: boolean | null
           job_id?: string | null
+          labour_hours?: number | null
           priority?: string | null
           property_id?: string | null
           quote_id?: string | null
@@ -13197,6 +13205,8 @@ export type Database = {
           service_summary?: string | null
           site_instructions?: string | null
           snow_depth?: string | null
+          snowfall_cm?: number | null
+          snowfall_trigger?: string | null
           status_before_cancellation?: string | null
           updated_at?: string
           visit_number: string
@@ -13219,11 +13229,14 @@ export type Database = {
           crew_notes?: string | null
           customer_id?: string | null
           customer_visible_notes?: string | null
+          equipment_hours?: number | null
+          equipment_used?: string[] | null
           estimated_duration_minutes?: number | null
           hidden_from_schedule?: boolean
           id?: string
           is_recurring?: boolean | null
           job_id?: string | null
+          labour_hours?: number | null
           priority?: string | null
           property_id?: string | null
           quote_id?: string | null
@@ -13244,6 +13257,8 @@ export type Database = {
           service_summary?: string | null
           site_instructions?: string | null
           snow_depth?: string | null
+          snowfall_cm?: number | null
+          snowfall_trigger?: string | null
           status_before_cancellation?: string | null
           updated_at?: string
           visit_number?: string
@@ -14113,11 +14128,14 @@ export type Database = {
           crew_notes: string | null
           customer_id: string | null
           customer_visible_notes: string | null
+          equipment_hours: number | null
+          equipment_used: string[] | null
           estimated_duration_minutes: number | null
           hidden_from_schedule: boolean
           id: string
           is_recurring: boolean | null
           job_id: string | null
+          labour_hours: number | null
           priority: string | null
           property_id: string | null
           quote_id: string | null
@@ -14138,6 +14156,8 @@ export type Database = {
           service_summary: string | null
           site_instructions: string | null
           snow_depth: string | null
+          snowfall_cm: number | null
+          snowfall_trigger: string | null
           status_before_cancellation: string | null
           updated_at: string
           visit_number: string

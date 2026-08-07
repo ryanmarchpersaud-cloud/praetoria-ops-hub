@@ -37,9 +37,65 @@ type Visit = {
   customer_visible_notes: string | null;
   weather_notes: string | null;
   snow_depth: string | null;
+  snowfall_cm: number | null;
+  snowfall_trigger: string | null;
+  equipment_used: string[] | null;
+  labour_hours: number | null;
+  equipment_hours: number | null;
+  arrival_time: string | null;
+  completion_time: string | null;
+  scheduled_start_time: string | null;
   properties: { id: string; property_name: string } | null;
   visit_photos: { id: string; file_url: string; photo_tag: string; caption: string | null }[];
 };
+
+const PROGRESS_STEPS = ['Scheduled', 'En Route', 'In Progress', 'Completed'];
+
+function progressIndex(status: string) {
+  if (status === 'Planned' || status === 'Scheduled' || status === 'Rescheduled') return 0;
+  if (status === 'En Route') return 1;
+  if (status === 'In Progress') return 2;
+  if (status === 'Completed') return 3;
+  return -1;
+}
+
+function fmtTime(ts: string | null) {
+  if (!ts) return null;
+  return new Date(ts).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' });
+}
+
+function durationLabel(a: string | null, b: string | null) {
+  if (!a || !b) return null;
+  const mins = Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000);
+  if (mins <= 0) return null;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h ? `${h}h ${m}m` : `${m}m`;
+}
+
+function WorkOrderProgress({ status }: { status: string }) {
+  const idx = progressIndex(status);
+  if (idx < 0) return null;
+  return (
+    <div className="flex items-center gap-1">
+      {PROGRESS_STEPS.map((step, i) => (
+        <div key={step} className="flex-1 min-w-0">
+          <div className={cn('h-1.5 rounded-full', i <= idx ? 'bg-primary' : 'bg-muted')} />
+          <p className={cn('text-[9px] mt-1 truncate', i <= idx ? 'text-foreground font-medium' : 'text-muted-foreground')}>{step}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3 py-1 border-b border-border/50 last:border-0">
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-xs text-foreground text-right">{value}</span>
+    </div>
+  );
+}
 
 /** Parse YYYY-MM-DD as local date to avoid UTC->local day shifts. */
 function parseLocalDate(s: string): Date {
@@ -78,7 +134,7 @@ export default function PortalVisits() {
       if (!customer) return [];
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, service_date, visit_status, visit_type, service_summary, customer_visible_notes, weather_notes, snow_depth, properties(id, property_name), visit_photos(id, file_url, photo_tag, caption)')
+        .select('id, visit_number, service_date, visit_status, visit_type, service_summary, customer_visible_notes, weather_notes, snow_depth, snowfall_cm, snowfall_trigger, equipment_used, labour_hours, equipment_hours, arrival_time, completion_time, scheduled_start_time, properties(id, property_name), visit_photos(id, file_url, photo_tag, caption)')
         .eq('customer_id', customer.id)
         .in('visit_status', VISIBLE_STATUSES as any)
         .order('service_date', { ascending: false });
@@ -275,7 +331,34 @@ export default function PortalVisits() {
 
                             {/* Expanded content */}
                             {isExpanded && (
-                              <div className="pt-2 space-y-2 border-t border-border">
+                              <div className="pt-2 space-y-3 border-t border-border">
+                                {/* Work order progress */}
+                                <div>
+                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Work Order Progress</p>
+                                  <WorkOrderProgress status={visit.visit_status} />
+                                </div>
+
+                                {/* Service record */}
+                                <div>
+                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Service Record</p>
+                                  <div className="rounded-md border px-2 py-1 bg-muted/30">
+                                    <DetailRow label="Scheduled" value={`${parseLocalDate(visit.service_date).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' })}${visit.scheduled_start_time ? ` · ${visit.scheduled_start_time.slice(0, 5)}` : ''}`} />
+                                    <DetailRow label="Arrival" value={fmtTime(visit.arrival_time) || '—'} />
+                                    <DetailRow label="Completion" value={fmtTime(visit.completion_time) || '—'} />
+                                    <DetailRow label="On-Site Time" value={durationLabel(visit.arrival_time, visit.completion_time) || '—'} />
+                                    {visit.labour_hours != null && <DetailRow label="Labour Time" value={`${visit.labour_hours} hr`} />}
+                                    {visit.equipment_hours != null && <DetailRow label="Equipment Time" value={`${visit.equipment_hours} hr`} />}
+                                    {visit.equipment_used?.length ? (
+                                      <DetailRow label="Equipment Used" value={visit.equipment_used.join(', ')} />
+                                    ) : null}
+                                    {(visit.snowfall_cm != null || visit.snow_depth) && (
+                                      <DetailRow label="Snowfall" value={visit.snowfall_cm != null ? `${visit.snowfall_cm} cm` : visit.snow_depth} />
+                                    )}
+                                    {visit.snowfall_trigger && <DetailRow label="Service Trigger" value={visit.snowfall_trigger} />}
+                                    {visit.weather_notes && <DetailRow label="Conditions" value={visit.weather_notes} />}
+                                  </div>
+                                </div>
+
                                 {visit.service_summary && (
                                   <div>
                                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Summary</p>
@@ -289,26 +372,33 @@ export default function PortalVisits() {
                                   </div>
                                 )}
 
-                                {/* Photos */}
-                                {hasPhotos && (
-                                  <div>
-                                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Photos</p>
-                                    <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-                                      {photos.map((photo, idx) => (
-                                        <button
-                                          key={photo.id}
-                                          onClick={() => openLightbox(photos, idx)}
-                                          className="relative shrink-0 w-16 h-16 rounded-md overflow-hidden border hover:ring-2 hover:ring-primary/50 transition-all"
-                                        >
-                                          <SignedVisitPhotoImg fileUrl={photo.file_url} alt={photo.caption || ''} className="w-full h-full object-cover" loading="lazy" />
-                                          <span className={cn('absolute bottom-0 inset-x-0 text-[7px] font-medium text-center py-0.5', TAG_COLORS[photo.photo_tag] || 'bg-muted text-muted-foreground')}>
-                                            {photo.photo_tag}
-                                          </span>
-                                        </button>
-                                      ))}
+
+
+                                {/* Photos grouped Before / After / Progress / Issue */}
+                                {hasPhotos && ['Before', 'After', 'Progress', 'Issue'].map(tag => {
+                                  const group = photos.filter(p => p.photo_tag === tag);
+                                  if (!group.length) return null;
+                                  return (
+                                    <div key={tag}>
+                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">{tag} Photos ({group.length})</p>
+                                      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                                        {group.map(photo => (
+                                          <button
+                                            key={photo.id}
+                                            onClick={() => openLightbox(photos, photos.indexOf(photo))}
+                                            className="relative shrink-0 w-16 h-16 rounded-md overflow-hidden border hover:ring-2 hover:ring-primary/50 transition-all"
+                                          >
+                                            <SignedVisitPhotoImg fileUrl={photo.file_url} alt={photo.caption || `${tag} photo`} className="w-full h-full object-cover" loading="lazy" />
+                                            <span className={cn('absolute bottom-0 inset-x-0 text-[7px] font-medium text-center py-0.5', TAG_COLORS[photo.photo_tag] || 'bg-muted text-muted-foreground')}>
+                                              {photo.photo_tag}
+                                            </span>
+                                          </button>
+                                        ))}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  );
+                                })}
+
 
                                 {!visit.service_summary && !visit.customer_visible_notes && !hasPhotos && (
                                   <p className="text-xs text-muted-foreground italic">No additional details available.</p>

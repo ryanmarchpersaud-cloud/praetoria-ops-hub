@@ -53,7 +53,12 @@ export default function VisitDetail() {
     },
     enabled: !!id,
   });
-  useEffect(() => { if (visit) setForm(visit); }, [visit]);
+  useEffect(() => {
+    if (visit) {
+      const v = visit as any;
+      setForm({ ...v, equipment_used_text: Array.isArray(v.equipment_used) ? v.equipment_used.join(', ') : '' });
+    }
+  }, [visit]);
 
   if (isLoading) return <div className="p-8 text-muted-foreground text-sm">Loading...</div>;
   if (!visit) return <div className="p-8 text-muted-foreground text-sm">Visit not found</div>;
@@ -91,7 +96,13 @@ export default function VisitDetail() {
         customer_visible_notes: form.customer_visible_notes, weather_notes: form.weather_notes,
         snow_depth: form.snow_depth, service_summary: form.service_summary,
         arrival_time: form.arrival_time || null, completion_time: form.completion_time || null,
-      });
+        equipment_used: (form.equipment_used_text || '')
+          .split(',').map((s: string) => s.trim()).filter(Boolean),
+        labour_hours: form.labour_hours === '' || form.labour_hours == null ? null : Number(form.labour_hours),
+        equipment_hours: form.equipment_hours === '' || form.equipment_hours == null ? null : Number(form.equipment_hours),
+        snowfall_cm: form.snowfall_cm === '' || form.snowfall_cm == null ? null : Number(form.snowfall_cm),
+        snowfall_trigger: form.snowfall_trigger || null,
+      } as any);
       if (arrivalChanged || completionChanged) {
         try {
           const { data: ures } = await supabase.auth.getUser();
@@ -380,6 +391,44 @@ export default function VisitDetail() {
                   <Input value={form.snow_depth || ''} onChange={e => set('snow_depth', e.target.value)} placeholder="e.g. 15cm" />
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Snowfall Recorded (cm)</Label>
+                  <Input type="number" step="0.1" value={form.snowfall_cm ?? ''} onChange={e => set('snowfall_cm', e.target.value)} placeholder="e.g. 7.5" />
+                </div>
+                <div>
+                  <Label className="text-xs">Service Trigger</Label>
+                  <Input value={form.snowfall_trigger || ''} onChange={e => set('snowfall_trigger', e.target.value)} placeholder="e.g. 5 cm trigger" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Equipment & recorded time (customer-visible service record) */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-1.5"><Cloud className="h-4 w-4" /> Equipment & Recorded Time</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label className="text-xs">Equipment Used (comma separated)</Label>
+                <Input
+                  value={form.equipment_used_text ?? ''}
+                  onChange={e => set('equipment_used_text', e.target.value)}
+                  placeholder="e.g. Plow Truck, Skid-Steer, Sander"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Labour Hours</Label>
+                  <Input type="number" step="0.25" value={form.labour_hours ?? ''} onChange={e => set('labour_hours', e.target.value)} placeholder="e.g. 3" />
+                </div>
+                <div>
+                  <Label className="text-xs">Equipment Hours</Label>
+                  <Input type="number" step="0.25" value={form.equipment_hours ?? ''} onChange={e => set('equipment_hours', e.target.value)} placeholder="e.g. 2.5" />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">These details appear in the customer portal service record.</p>
             </CardContent>
           </Card>
 
