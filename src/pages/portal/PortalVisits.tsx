@@ -134,7 +134,7 @@ export default function PortalVisits() {
       if (!customer) return [];
       const { data, error } = await supabase
         .from('visits')
-        .select('id, visit_number, service_date, visit_status, visit_type, service_summary, customer_visible_notes, weather_notes, snow_depth, properties(id, property_name), visit_photos(id, file_url, photo_tag, caption)')
+        .select('id, visit_number, service_date, visit_status, visit_type, service_summary, customer_visible_notes, weather_notes, snow_depth, snowfall_cm, snowfall_trigger, equipment_used, labour_hours, equipment_hours, arrival_time, completion_time, scheduled_start_time, properties(id, property_name), visit_photos(id, file_url, photo_tag, caption)')
         .eq('customer_id', customer.id)
         .in('visit_status', VISIBLE_STATUSES as any)
         .order('service_date', { ascending: false });
