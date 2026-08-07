@@ -374,26 +374,31 @@ export default function PortalVisits() {
 
 
 
-                                {/* Photos */}
-                                {hasPhotos && (
-                                  <div>
-                                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Photos</p>
-                                    <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-                                      {photos.map((photo, idx) => (
-                                        <button
-                                          key={photo.id}
-                                          onClick={() => openLightbox(photos, idx)}
-                                          className="relative shrink-0 w-16 h-16 rounded-md overflow-hidden border hover:ring-2 hover:ring-primary/50 transition-all"
-                                        >
-                                          <SignedVisitPhotoImg fileUrl={photo.file_url} alt={photo.caption || ''} className="w-full h-full object-cover" loading="lazy" />
-                                          <span className={cn('absolute bottom-0 inset-x-0 text-[7px] font-medium text-center py-0.5', TAG_COLORS[photo.photo_tag] || 'bg-muted text-muted-foreground')}>
-                                            {photo.photo_tag}
-                                          </span>
-                                        </button>
-                                      ))}
+                                {/* Photos grouped Before / After / Progress / Issue */}
+                                {hasPhotos && ['Before', 'After', 'Progress', 'Issue'].map(tag => {
+                                  const group = photos.filter(p => p.photo_tag === tag);
+                                  if (!group.length) return null;
+                                  return (
+                                    <div key={tag}>
+                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">{tag} Photos ({group.length})</p>
+                                      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                                        {group.map(photo => (
+                                          <button
+                                            key={photo.id}
+                                            onClick={() => openLightbox(photos, photos.indexOf(photo))}
+                                            className="relative shrink-0 w-16 h-16 rounded-md overflow-hidden border hover:ring-2 hover:ring-primary/50 transition-all"
+                                          >
+                                            <SignedVisitPhotoImg fileUrl={photo.file_url} alt={photo.caption || `${tag} photo`} className="w-full h-full object-cover" loading="lazy" />
+                                            <span className={cn('absolute bottom-0 inset-x-0 text-[7px] font-medium text-center py-0.5', TAG_COLORS[photo.photo_tag] || 'bg-muted text-muted-foreground')}>
+                                              {photo.photo_tag}
+                                            </span>
+                                          </button>
+                                        ))}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  );
+                                })}
+
 
                                 {!visit.service_summary && !visit.customer_visible_notes && !hasPhotos && (
                                   <p className="text-xs text-muted-foreground italic">No additional details available.</p>
