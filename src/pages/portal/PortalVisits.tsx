@@ -331,7 +331,34 @@ export default function PortalVisits() {
 
                             {/* Expanded content */}
                             {isExpanded && (
-                              <div className="pt-2 space-y-2 border-t border-border">
+                              <div className="pt-2 space-y-3 border-t border-border">
+                                {/* Work order progress */}
+                                <div>
+                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Work Order Progress</p>
+                                  <WorkOrderProgress status={visit.visit_status} />
+                                </div>
+
+                                {/* Service record */}
+                                <div>
+                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Service Record</p>
+                                  <div className="rounded-md border px-2 py-1 bg-muted/30">
+                                    <DetailRow label="Scheduled" value={`${parseLocalDate(visit.service_date).toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' })}${visit.scheduled_start_time ? ` · ${visit.scheduled_start_time.slice(0, 5)}` : ''}`} />
+                                    <DetailRow label="Arrival" value={fmtTime(visit.arrival_time) || '—'} />
+                                    <DetailRow label="Completion" value={fmtTime(visit.completion_time) || '—'} />
+                                    <DetailRow label="On-Site Time" value={durationLabel(visit.arrival_time, visit.completion_time) || '—'} />
+                                    {visit.labour_hours != null && <DetailRow label="Labour Time" value={`${visit.labour_hours} hr`} />}
+                                    {visit.equipment_hours != null && <DetailRow label="Equipment Time" value={`${visit.equipment_hours} hr`} />}
+                                    {visit.equipment_used?.length ? (
+                                      <DetailRow label="Equipment Used" value={visit.equipment_used.join(', ')} />
+                                    ) : null}
+                                    {(visit.snowfall_cm != null || visit.snow_depth) && (
+                                      <DetailRow label="Snowfall" value={visit.snowfall_cm != null ? `${visit.snowfall_cm} cm` : visit.snow_depth} />
+                                    )}
+                                    {visit.snowfall_trigger && <DetailRow label="Service Trigger" value={visit.snowfall_trigger} />}
+                                    {visit.weather_notes && <DetailRow label="Conditions" value={visit.weather_notes} />}
+                                  </div>
+                                </div>
+
                                 {visit.service_summary && (
                                   <div>
                                     <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Summary</p>
@@ -344,6 +371,8 @@ export default function PortalVisits() {
                                     <p className="text-xs text-foreground italic">{visit.customer_visible_notes}</p>
                                   </div>
                                 )}
+
+
 
                                 {/* Photos */}
                                 {hasPhotos && (
