@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
 
 // Current app version — bump this each time you publish a new TWA/Play Store build
-export const APP_VERSION = '1.0.0';
+// Android: versionName 1.0.5 / versionCode 13
+export const APP_VERSION = '1.0.5';
 
 function compareVersions(a: string, b: string): number {
   const pa = a.split('.').map(Number);
