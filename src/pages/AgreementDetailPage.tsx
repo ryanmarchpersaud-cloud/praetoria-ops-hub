@@ -235,10 +235,6 @@ export default function AgreementDetailPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Document Preview */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* PDF Attachment */}
       {!agreement.recipient_email && agreement.status !== 'signed' && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <span>No recipient email is set on this agreement, so it can't be emailed yet.</span>
