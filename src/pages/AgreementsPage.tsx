@@ -290,13 +290,22 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
             {/* Mode Toggle */}
             <div>
               <Label>Agreement Source</Label>
-              <Tabs value={agreementMode} onValueChange={(v) => setAgreementMode(v as 'template' | 'pdf')}>
-                <TabsList className="grid w-full grid-cols-2">
+              <Tabs value={agreementMode} onValueChange={(v) => setAgreementMode(v as typeof agreementMode)}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="commercial_snow"><Snowflake className="h-4 w-4 mr-1" /> Snow Agreement</TabsTrigger>
                   <TabsTrigger value="template"><FileText className="h-4 w-4 mr-1" /> Use Template</TabsTrigger>
                   <TabsTrigger value="pdf"><Upload className="h-4 w-4 mr-1" /> Upload PDF</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
+
+            {agreementMode === 'commercial_snow' && (
+              <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+                Uses the master <strong>Commercial Snow Removal &amp; Ice Management Service Agreement</strong> with guided
+                e-signature fields. Site details, rates and dates can be filled in by you or by the customer while signing.
+              </div>
+            )}
+
 
             {/* Template selector (only in template mode) */}
             {agreementMode === 'template' && (
