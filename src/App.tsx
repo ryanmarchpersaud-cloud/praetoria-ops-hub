@@ -63,6 +63,7 @@ import EmployeeDetail from "./pages/EmployeeDetail";
 import Subcontractors from "./pages/Subcontractors";
 import SubcontractorDetail from "./pages/SubcontractorDetail";
 import SubcontractorPayStubPrint from "./pages/SubcontractorPayStubPrint";
+import SnowContractPrint from "./pages/SnowContractPrint";
 import AdminSubcontractorInvoiceDetail from "./pages/AdminSubcontractorInvoiceDetail";
 import AdminSubcontractorInvoicesPage from "./pages/AdminSubcontractorInvoicesPage";
 import EmailDirectoryPage from "./pages/EmailDirectoryPage";
@@ -797,6 +798,9 @@ function AppRoutes() {
           print preview is clean and shows only the pay stub. */}
       <Route path="/admin/subcontractor-pay-stub/:id/print" element={<AuthedRoute><SubcontractorPayStubPrint /></AuthedRoute>} />
       <Route path="/subcontractor/pay-stubs/:id/print" element={<AuthedRoute><SubcontractorPayStubPrint /></AuthedRoute>} />
+
+      {/* Snow removal service contract — printable letterhead document */}
+      <Route path="/contracts/snow-removal/print" element={<AuthedRoute><SnowContractPrint /></AuthedRoute>} />
 
       {/* ───────────────────────── Worker layout group ─────────────────────── */}
       <Route element={<WorkerRoute />}>
