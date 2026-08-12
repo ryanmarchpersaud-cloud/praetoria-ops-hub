@@ -8,26 +8,24 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Send, Download, RefreshCw, Eye, FileSignature, Clock, CheckCircle, XCircle, Copy, FileText, Pencil, Save } from 'lucide-react';
+import { ArrowLeft, Send, Download, RefreshCw, Eye, FileSignature, Clock, CheckCircle, XCircle, Copy, FileText, Pencil, Save, PenLine, Ban, CopyPlus, FilePlus2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
-import { useAgreement, useAgreementSignatures, useAgreementAuditLog, useSendAgreement, useUpdateAgreement } from '@/hooks/useAgreements';
+import { useAgreement, useAgreementSignatures, useAgreementAuditLog, useSendAgreement, useUpdateAgreement, useCountersignAgreement, useVoidAgreement, useCloneAgreement } from '@/hooks/useAgreements';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground',
-  sent: 'bg-blue-100 text-blue-700',
-  viewed: 'bg-amber-100 text-amber-700',
-  signed: 'bg-emerald-100 text-emerald-700',
-  declined: 'bg-destructive/10 text-destructive',
-  expired: 'bg-muted text-muted-foreground',
-  cancelled: 'bg-muted text-muted-foreground',
-};
+import { AgreementDocument } from '@/components/agreements/AgreementDocument';
+import { SignatureModal, serializeSignature, SignatureValue } from '@/components/agreements/SignatureModal';
+import { AgreementField, AgreementFieldValues } from '@/lib/agreementFields';
+import { agreementStatusMeta, canRemind } from '@/lib/agreementStatus';
+import { openAgreementPrintWindow } from '@/lib/agreementPrint';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 
 const statusIcon: Record<string, any> = {
-  draft: Clock, sent: Send, viewed: Eye, signed: CheckCircle, declined: XCircle, expired: Clock, cancelled: XCircle,
+  draft: Clock, sent: Send, viewed: Eye, signed: CheckCircle, fully_executed: CheckCircle,
+  customer_signed: CheckCircle, awaiting_praetoria: PenLine, declined: XCircle, expired: Clock,
+  cancelled: XCircle, voided: Ban, superseded: FileText,
 };
 
 export default function AgreementDetailPage() {
