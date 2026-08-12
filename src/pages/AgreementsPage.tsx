@@ -12,26 +12,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, FileSignature, Send, Eye, Search, Filter, Upload, FileText } from 'lucide-react';
+import { Plus, FileSignature, Send, Eye, Search, Filter, Upload, FileText, Snowflake } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgreements, useAgreementTemplates, useCreateAgreement, useSendAgreement } from '@/hooks/useAgreements';
+import { buildCommercialSnowAgreementHtml, COMMERCIAL_SNOW_FIELD_SCHEMA } from '@/lib/agreementTemplates/commercialSnow';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useEmployees } from '@/hooks/useEmployees';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const statusColors: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground',
-  sent: 'bg-blue-100 text-blue-700',
-  viewed: 'bg-amber-100 text-amber-700',
-  signed: 'bg-emerald-100 text-emerald-700',
-  declined: 'bg-destructive/10 text-destructive',
-  expired: 'bg-muted text-muted-foreground',
-  cancelled: 'bg-muted text-muted-foreground',
-};
+import { agreementStatusMeta, ADMIN_STATUS_FILTERS } from '@/lib/agreementStatus';
 
 const categoryLabels: Record<string, string> = {
   snow: 'Snow & Ice',
@@ -54,15 +47,19 @@ export default function AgreementsPage() {
   const [showCreate, setShowCreate] = useState(false);
 
   const { data: agreements = [], isLoading } = useAgreements({ status: statusFilter, recipientType: typeFilter });
-  const filtered = agreements.filter(a =>
-    !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.recipient_name.toLowerCase().includes(search.toLowerCase())
+  const q = search.trim().toLowerCase();
+  const filtered = agreements.filter((a: any) =>
+    !q ||
+    [a.title, a.recipient_name, a.recipient_email, a.agreement_number, a.category, a.internal_reference, a.document_type]
+      .some((v) => String(v || '').toLowerCase().includes(q))
   );
 
   const counts = {
     all: agreements.length,
-    draft: agreements.filter(a => a.status === 'draft').length,
-    sent: agreements.filter(a => a.status === 'sent').length,
-    signed: agreements.filter(a => a.status === 'signed').length,
+    draft: agreements.filter(a => ['draft', 'ready_to_send'].includes(a.status)).length,
+    sent: agreements.filter(a => ['sent', 'delivered', 'viewed', 'signing_in_progress'].includes(a.status)).length,
+    awaiting: agreements.filter(a => ['customer_signed', 'awaiting_praetoria'].includes(a.status)).length,
+    signed: agreements.filter(a => ['fully_executed', 'signed'].includes(a.status)).length,
   };
 
   return (
@@ -80,12 +77,13 @@ export default function AgreementsPage() {
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Total', value: counts.all },
           { label: 'Drafts', value: counts.draft },
-          { label: 'Awaiting Signature', value: counts.sent },
-          { label: 'Signed', value: counts.signed },
+          { label: 'Awaiting Customer', value: counts.sent },
+          { label: 'Awaiting Praetoria', value: counts.awaiting },
+          { label: 'Fully Executed', value: counts.signed },
         ].map(k => (
           <Card key={k.label}>
             <CardContent className="p-4 text-center">
@@ -100,18 +98,12 @@ export default function AgreementsPage() {
       <div className="flex gap-2 flex-wrap items-center">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Search agreements..." value={search} onChange={e => setSearch(e.target.value)} />
+          <Input className="pl-9" placeholder="Search by customer, company, agreement #, email…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="w-[190px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="viewed">Viewed</SelectItem>
-            <SelectItem value="signed">Signed</SelectItem>
-            <SelectItem value="declined">Declined</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
+            {ADMIN_STATUS_FILTERS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -142,13 +134,16 @@ export default function AgreementsPage() {
             <TableBody>
               {filtered.map(a => (
                 <TableRow key={a.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/agreements/${a.id}`)}>
-                  <TableCell className="font-medium">{a.title}</TableCell>
+                  <TableCell className="font-medium">
+                    <div>{a.title}</div>
+                    <div className="text-xs text-muted-foreground">{(a as any).agreement_number}</div>
+                  </TableCell>
                   <TableCell>
                     <div className="text-sm">{a.recipient_name}</div>
                     <div className="text-xs text-muted-foreground">{a.recipient_type}</div>
                   </TableCell>
                   <TableCell className="text-sm">{categoryLabels[a.category] || a.category}</TableCell>
-                  <TableCell><Badge className={statusColors[a.status] || ''}>{a.status}</Badge></TableCell>
+                  <TableCell><Badge className={agreementStatusMeta(a.status).className}>{agreementStatusMeta(a.status).label}</Badge></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{format(new Date(a.created_at), 'MMM d, yyyy')}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/agreements/${a.id}`); }}>
@@ -188,7 +183,7 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
   const [mergeData, setMergeData] = useState<Record<string, string>>({});
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [agreementMode, setAgreementMode] = useState<'template' | 'pdf'>('template');
+  const [agreementMode, setAgreementMode] = useState<'template' | 'pdf' | 'commercial_snow'>('commercial_snow');
 
   const selectedTemplate = templates.find(t => t.id === templateId);
   const mergeFields: string[] = selectedTemplate?.merge_fields ? (selectedTemplate.merge_fields as string[]) : [];
@@ -250,10 +245,14 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
     }
     setUploading(false);
 
-    const body = agreementMode === 'template' ? renderBody() : `<p>Please review the attached PDF agreement document.</p>`;
+    const isSnow = agreementMode === 'commercial_snow';
+    const body = isSnow
+      ? buildCommercialSnowAgreementHtml({ customer_legal_name: recipientName, ...mergeData })
+      : agreementMode === 'template' ? renderBody() : `<p>Please review the attached PDF agreement document.</p>`;
     const payload: any = {
       template_id: agreementMode === 'template' ? templateId : null,
-      category: agreementMode === 'template' ? (selectedTemplate?.category || 'general') : 'general',
+      category: isSnow ? 'customer' : agreementMode === 'template' ? (selectedTemplate?.category || 'general') : 'general',
+      ...(isSnow && { document_type: 'commercial_snow', field_schema: COMMERCIAL_SNOW_FIELD_SCHEMA, field_values: {} }),
       title,
       recipient_type: recipientType,
       recipient_name: recipientName,
@@ -296,13 +295,22 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
             {/* Mode Toggle */}
             <div>
               <Label>Agreement Source</Label>
-              <Tabs value={agreementMode} onValueChange={(v) => setAgreementMode(v as 'template' | 'pdf')}>
-                <TabsList className="grid w-full grid-cols-2">
+              <Tabs value={agreementMode} onValueChange={(v) => setAgreementMode(v as typeof agreementMode)}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="commercial_snow"><Snowflake className="h-4 w-4 mr-1" /> Snow Agreement</TabsTrigger>
                   <TabsTrigger value="template"><FileText className="h-4 w-4 mr-1" /> Use Template</TabsTrigger>
                   <TabsTrigger value="pdf"><Upload className="h-4 w-4 mr-1" /> Upload PDF</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
+
+            {agreementMode === 'commercial_snow' && (
+              <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+                Uses the master <strong>Commercial Snow Removal &amp; Ice Management Service Agreement</strong> with guided
+                e-signature fields. Site details, rates and dates can be filled in by you or by the customer while signing.
+              </div>
+            )}
+
 
             {/* Template selector (only in template mode) */}
             {agreementMode === 'template' && (

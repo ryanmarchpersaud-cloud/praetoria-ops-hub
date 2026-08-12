@@ -7,10 +7,10 @@ import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyAgreements } from '@/hooks/useAgreements';
 
-const statusColors: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground', sent: 'bg-blue-100 text-blue-700', viewed: 'bg-amber-100 text-amber-700',
-  signed: 'bg-emerald-100 text-emerald-700', declined: 'bg-destructive/10 text-destructive',
-};
+import { agreementStatusMeta } from '@/lib/agreementStatus';
+
+const NEEDS_SIGNATURE = ['sent', 'delivered', 'viewed', 'signing_in_progress'];
+const COMPLETED = ['fully_executed', 'signed', 'awaiting_praetoria', 'customer_signed'];
 
 export default function WorkerAgreementsPage() {
   const { user } = useAuth();
@@ -32,14 +32,14 @@ export default function WorkerAgreementsPage() {
                   <TableRow key={a.id}>
                     <TableCell className="font-medium text-sm">{a.title}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{format(new Date(a.created_at), 'MMM d, yyyy')}</TableCell>
-                    <TableCell><Badge className={statusColors[a.status] || ''}>{a.status}</Badge></TableCell>
+                    <TableCell><Badge className={agreementStatusMeta(a.status).className}>{agreementStatusMeta(a.status).label}</Badge></TableCell>
                     <TableCell className="text-right">
-                      {(a.status === 'sent' || a.status === 'viewed') && (
+                      {NEEDS_SIGNATURE.includes(a.status) && (
                         <Button size="sm" variant="default" onClick={() => window.open(`/sign/${a.signing_token}`, '_blank')}>
-                          <FileSignature className="h-3.5 w-3.5 mr-1" /> Sign
+                          <FileSignature className="h-3.5 w-3.5 mr-1" /> Review &amp; Sign
                         </Button>
                       )}
-                      {a.status === 'signed' && (
+                      {COMPLETED.includes(a.status) && (
                         <Button size="sm" variant="outline" onClick={() => window.open(`/sign/${a.signing_token}`, '_blank')}>
                           <Eye className="h-3.5 w-3.5 mr-1" /> View
                         </Button>

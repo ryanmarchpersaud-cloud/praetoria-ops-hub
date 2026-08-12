@@ -8,26 +8,24 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Send, Download, RefreshCw, Eye, FileSignature, Clock, CheckCircle, XCircle, Copy, FileText, Pencil, Save } from 'lucide-react';
+import { ArrowLeft, Send, Download, RefreshCw, Eye, FileSignature, Clock, CheckCircle, XCircle, Copy, FileText, Pencil, Save, PenLine, Ban, CopyPlus, FilePlus2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
-import { useAgreement, useAgreementSignatures, useAgreementAuditLog, useSendAgreement, useUpdateAgreement } from '@/hooks/useAgreements';
+import { useAgreement, useAgreementSignatures, useAgreementAuditLog, useSendAgreement, useUpdateAgreement, useCountersignAgreement, useVoidAgreement, useCloneAgreement } from '@/hooks/useAgreements';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DOMPurify from 'dompurify';
-
-const statusColors: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground',
-  sent: 'bg-blue-100 text-blue-700',
-  viewed: 'bg-amber-100 text-amber-700',
-  signed: 'bg-emerald-100 text-emerald-700',
-  declined: 'bg-destructive/10 text-destructive',
-  expired: 'bg-muted text-muted-foreground',
-  cancelled: 'bg-muted text-muted-foreground',
-};
+import { AgreementDocument } from '@/components/agreements/AgreementDocument';
+import { SignatureModal, serializeSignature, SignatureValue } from '@/components/agreements/SignatureModal';
+import { AgreementField, AgreementFieldValues } from '@/lib/agreementFields';
+import { agreementStatusMeta, canRemind } from '@/lib/agreementStatus';
+import { openAgreementPrintWindow } from '@/lib/agreementPrint';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 
 const statusIcon: Record<string, any> = {
-  draft: Clock, sent: Send, viewed: Eye, signed: CheckCircle, declined: XCircle, expired: Clock, cancelled: XCircle,
+  draft: Clock, sent: Send, viewed: Eye, signed: CheckCircle, fully_executed: CheckCircle,
+  customer_signed: CheckCircle, awaiting_praetoria: PenLine, declined: XCircle, expired: Clock,
+  cancelled: XCircle, voided: Ban, superseded: FileText,
 };
 
 export default function AgreementDetailPage() {
@@ -39,12 +37,21 @@ export default function AgreementDetailPage() {
   const { data: auditLog = [] } = useAgreementAuditLog(id);
   const sendAgreement = useSendAgreement();
   const updateAgreement = useUpdateAgreement();
+  const countersign = useCountersignAgreement();
+  const voidAgreement = useVoidAgreement();
+  const cloneAgreement = useCloneAgreement();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editBody, setEditBody] = useState('');
   const [editRecipientName, setEditRecipientName] = useState('');
   const [editRecipientEmail, setEditRecipientEmail] = useState('');
+  const [countersignOpen, setCountersignOpen] = useState(false);
+  const [sigModalOpen, setSigModalOpen] = useState(false);
+  const [repName, setRepName] = useState('Ryan Steven Persaud');
+  const [repTitle, setRepTitle] = useState('Authorized Representative');
+  const [repSignature, setRepSignature] = useState<string>('');
+
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
   if (!agreement) return <div className="p-8 text-center text-muted-foreground">Agreement not found</div>;
@@ -73,6 +80,45 @@ export default function AgreementDetailPage() {
 
   const signingUrl = `${window.location.origin}/sign/${agreement.signing_token}`;
   const StatusIcon = statusIcon[agreement.status] || Clock;
+  const statusMeta = agreementStatusMeta(agreement.status);
+  const isAwaitingPraetoria = ['awaiting_praetoria', 'customer_signed'].includes(agreement.status);
+  const isLocked = ['fully_executed', 'signed', 'voided', 'cancelled', 'superseded'].includes(agreement.status);
+  const fieldSchema = (Array.isArray((agreement as any).field_schema) ? (agreement as any).field_schema : []) as AgreementField[];
+  const fieldValues = (((agreement as any).field_values || {}) as AgreementFieldValues);
+
+  const handleVoid = () => {
+    const reason = window.prompt('Reason for voiding this agreement?') || '';
+    if (!reason.trim()) return;
+    voidAgreement.mutate({ id: agreement.id, reason: reason.trim() });
+  };
+
+  const handleCountersign = () => {
+    if (!repName.trim() || !repTitle.trim()) { toast.error('Enter the authorized representative name and title'); return; }
+    if (!repSignature) { toast.error('Adopt a signature first'); return; }
+    countersign.mutate(
+      { agreementId: agreement.id, signerName: repName.trim(), signerTitle: repTitle.trim(), signatureData: repSignature },
+      {
+        onSuccess: async () => {
+          setCountersignOpen(false);
+          const merged = { ...fieldValues, praetoria_signature: repSignature };
+          await supabase.from('agreements').update({ field_values: merged as never }).eq('id', agreement.id);
+          if (agreement.recipient_email) {
+            supabase.functions.invoke('send-email', {
+              body: {
+                action: 'agreement_completed',
+                to: agreement.recipient_email,
+                recipient_name: agreement.recipient_name,
+                agreement_title: agreement.title,
+                agreement_id: agreement.id,
+                agreement_number: (agreement as any).agreement_number,
+              },
+            }).catch(() => undefined);
+          }
+        },
+      },
+    );
+  };
+
 
   const handleSend = () => {
     if (!agreement.recipient_email) {
@@ -117,6 +163,13 @@ export default function AgreementDetailPage() {
         pdfWindow?.close();
         toast.error('Could not load attached PDF');
       }
+      return;
+    }
+    if (fieldSchema.length) {
+      openAgreementPrintWindow(agreement as any, {
+        logoUrl: `${window.location.origin}/praetoria-logo-white.png`,
+        audit: auditLog as any,
+      });
       return;
     }
     const w = window.open('', '_blank');
@@ -201,27 +254,32 @@ export default function AgreementDetailPage() {
             {agreement.internal_reference && ` • Ref: ${agreement.internal_reference}`}
           </p>
         </div>
-        <Badge className={`${statusColors[agreement.status]} text-sm px-3 py-1`}>
+        <Badge className={`${statusMeta.className} text-sm px-3 py-1`}>
           <StatusIcon className="h-3.5 w-3.5 mr-1" />
-          {agreement.status.charAt(0).toUpperCase() + agreement.status.slice(1)}
+          {statusMeta.label}
         </Badge>
       </div>
 
       {/* Action Bar */}
       <div className="flex gap-2 flex-wrap">
-        {agreement.status === 'draft' && (
+        {['draft', 'ready_to_send'].includes(agreement.status) && (
           <Button onClick={handleSend} disabled={sendAgreement.isPending}>
             <Send className="h-4 w-4 mr-1" /> Send for Signature
           </Button>
         )}
-        {agreement.status !== 'signed' && (
+        {isAwaitingPraetoria && (
+          <Button onClick={() => setCountersignOpen(true)}>
+            <PenLine className="h-4 w-4 mr-1" /> Review &amp; Sign
+          </Button>
+        )}
+        {!isLocked && (
           <Button variant="outline" onClick={startEdit}>
             <Pencil className="h-4 w-4 mr-1" /> {isEditing ? 'Editing…' : 'Edit Agreement'}
           </Button>
         )}
-        {(agreement.status === 'sent' || agreement.status === 'viewed') && (
+        {canRemind(agreement.status) && (
           <Button variant="outline" onClick={handleResend}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Resend Reminder
+            <RefreshCw className="h-4 w-4 mr-1" /> Send Reminder
           </Button>
         )}
         <Button variant="outline" onClick={handleCopyLink}>
@@ -230,8 +288,19 @@ export default function AgreementDetailPage() {
         <Button variant="outline" onClick={handlePrint}>
           <Download className="h-4 w-4 mr-1" /> Print / PDF
         </Button>
-        {agreement.status !== 'signed' && agreement.status !== 'cancelled' && (
-          <Button variant="destructive" size="sm" onClick={handleCancel}>Cancel</Button>
+        <Button variant="outline" onClick={() => cloneAgreement.mutate({ id: agreement.id, mode: 'duplicate', userId: user?.id }, { onSuccess: (a: any) => navigate(`/agreements/${a.id}`) })}>
+          <CopyPlus className="h-4 w-4 mr-1" /> Duplicate
+        </Button>
+        <Button variant="outline" onClick={() => cloneAgreement.mutate({ id: agreement.id, mode: 'amendment', userId: user?.id }, { onSuccess: (a: any) => navigate(`/agreements/${a.id}`) })}>
+          <FilePlus2 className="h-4 w-4 mr-1" /> Create Amendment
+        </Button>
+        <Button variant="outline" onClick={() => cloneAgreement.mutate({ id: agreement.id, mode: 'renewal', userId: user?.id }, { onSuccess: (a: any) => navigate(`/agreements/${a.id}`) })}>
+          <RefreshCw className="h-4 w-4 mr-1" /> Create Renewal
+        </Button>
+        {!isLocked && (
+          <Button variant="destructive" size="sm" onClick={handleVoid}>
+            <Ban className="h-4 w-4 mr-1" /> Void
+          </Button>
         )}
       </div>
 
@@ -297,7 +366,17 @@ export default function AgreementDetailPage() {
                       <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold px-3 py-1.5 rounded text-sm">{agreement.title}</span>
                     </div>
                   </div>
-                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                  {fieldSchema.length ? (
+                    <AgreementDocument
+                      bodyHtml={agreement.body_html || ''}
+                      schema={fieldSchema}
+                      values={fieldValues}
+                      showRequiredHints={false}
+                      signedDates={{ customer: (agreement as any).customer_signed_at, praetoria: (agreement as any).countersigned_at }}
+                    />
+                  ) : (
+                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                  )}
                   <div
                     className="rounded-lg mt-8 p-3 text-[11px] text-center text-white"
                     style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
@@ -385,6 +464,62 @@ export default function AgreementDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Praetoria countersignature */}
+      <Dialog open={countersignOpen} onOpenChange={setCountersignOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Praetoria Authorized Signature</DialogTitle>
+            <DialogDescription>
+              Sign on behalf of Praetoria. Only an authorized representative should complete this step.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Full Name</Label>
+              <Input value={repName} onChange={(e) => setRepName(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Position / Title</Label>
+              <Input value={repTitle} onChange={(e) => setRepTitle(e.target.value)} />
+            </div>
+            <div className="rounded-lg border-2 border-dashed p-4 min-h-[90px] flex items-center justify-center bg-muted/30">
+              {repSignature ? (
+                <img
+                  src={JSON.parse(repSignature).type === 'typed' ? undefined : JSON.parse(repSignature).value}
+                  alt=""
+                  className={JSON.parse(repSignature).type === 'typed' ? 'hidden' : 'max-h-20'}
+                />
+              ) : null}
+              {repSignature && JSON.parse(repSignature).type === 'typed' && (
+                <span className="text-3xl" style={{ fontFamily: '"Segoe Script", "Brush Script MT", cursive' }}>
+                  {JSON.parse(repSignature).value}
+                </span>
+              )}
+              {!repSignature && (
+                <Button variant="secondary" onClick={() => setSigModalOpen(true)}>
+                  <PenLine className="h-4 w-4 mr-2" /> Click to Sign
+                </Button>
+              )}
+            </div>
+            {repSignature && (
+              <Button variant="ghost" size="sm" onClick={() => setSigModalOpen(true)}>Change signature</Button>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setCountersignOpen(false)}>Cancel</Button>
+            <Button onClick={handleCountersign} disabled={countersign.isPending}>Agree &amp; Sign</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <SignatureModal
+        open={sigModalOpen}
+        onOpenChange={setSigModalOpen}
+        defaultName={repName}
+        title="Adopt Praetoria Signature"
+        onAdopt={(sig: SignatureValue) => setRepSignature(serializeSignature(sig))}
+      />
     </div>
   );
 }
