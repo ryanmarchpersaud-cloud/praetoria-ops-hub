@@ -208,27 +208,32 @@ export default function AgreementDetailPage() {
             {agreement.internal_reference && ` • Ref: ${agreement.internal_reference}`}
           </p>
         </div>
-        <Badge className={`${statusColors[agreement.status]} text-sm px-3 py-1`}>
+        <Badge className={`${statusMeta.className} text-sm px-3 py-1`}>
           <StatusIcon className="h-3.5 w-3.5 mr-1" />
-          {agreement.status.charAt(0).toUpperCase() + agreement.status.slice(1)}
+          {statusMeta.label}
         </Badge>
       </div>
 
       {/* Action Bar */}
       <div className="flex gap-2 flex-wrap">
-        {agreement.status === 'draft' && (
+        {['draft', 'ready_to_send'].includes(agreement.status) && (
           <Button onClick={handleSend} disabled={sendAgreement.isPending}>
             <Send className="h-4 w-4 mr-1" /> Send for Signature
           </Button>
         )}
-        {agreement.status !== 'signed' && (
+        {isAwaitingPraetoria && (
+          <Button onClick={() => setCountersignOpen(true)}>
+            <PenLine className="h-4 w-4 mr-1" /> Review &amp; Sign
+          </Button>
+        )}
+        {!isLocked && (
           <Button variant="outline" onClick={startEdit}>
             <Pencil className="h-4 w-4 mr-1" /> {isEditing ? 'Editing…' : 'Edit Agreement'}
           </Button>
         )}
-        {(agreement.status === 'sent' || agreement.status === 'viewed') && (
+        {canRemind(agreement.status) && (
           <Button variant="outline" onClick={handleResend}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Resend Reminder
+            <RefreshCw className="h-4 w-4 mr-1" /> Send Reminder
           </Button>
         )}
         <Button variant="outline" onClick={handleCopyLink}>
@@ -237,8 +242,19 @@ export default function AgreementDetailPage() {
         <Button variant="outline" onClick={handlePrint}>
           <Download className="h-4 w-4 mr-1" /> Print / PDF
         </Button>
-        {agreement.status !== 'signed' && agreement.status !== 'cancelled' && (
-          <Button variant="destructive" size="sm" onClick={handleCancel}>Cancel</Button>
+        <Button variant="outline" onClick={() => cloneAgreement.mutate({ id: agreement.id, mode: 'duplicate', userId: user?.id }, { onSuccess: (a: any) => navigate(`/agreements/${a.id}`) })}>
+          <CopyPlus className="h-4 w-4 mr-1" /> Duplicate
+        </Button>
+        <Button variant="outline" onClick={() => cloneAgreement.mutate({ id: agreement.id, mode: 'amendment', userId: user?.id }, { onSuccess: (a: any) => navigate(`/agreements/${a.id}`) })}>
+          <FilePlus2 className="h-4 w-4 mr-1" /> Create Amendment
+        </Button>
+        <Button variant="outline" onClick={() => cloneAgreement.mutate({ id: agreement.id, mode: 'renewal', userId: user?.id }, { onSuccess: (a: any) => navigate(`/agreements/${a.id}`) })}>
+          <RefreshCw className="h-4 w-4 mr-1" /> Create Renewal
+        </Button>
+        {!isLocked && (
+          <Button variant="destructive" size="sm" onClick={handleVoid}>
+            <Ban className="h-4 w-4 mr-1" /> Void
+          </Button>
         )}
       </div>
 
