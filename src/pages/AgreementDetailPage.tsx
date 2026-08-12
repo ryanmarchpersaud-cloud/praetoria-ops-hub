@@ -359,7 +359,17 @@ export default function AgreementDetailPage() {
                       <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold px-3 py-1.5 rounded text-sm">{agreement.title}</span>
                     </div>
                   </div>
-                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                  {fieldSchema.length ? (
+                    <AgreementDocument
+                      bodyHtml={agreement.body_html || ''}
+                      schema={fieldSchema}
+                      values={fieldValues}
+                      showRequiredHints={false}
+                      signedDates={{ customer: (agreement as any).customer_signed_at, praetoria: (agreement as any).countersigned_at }}
+                    />
+                  ) : (
+                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                  )}
                   <div
                     className="rounded-lg mt-8 p-3 text-[11px] text-center text-white"
                     style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
