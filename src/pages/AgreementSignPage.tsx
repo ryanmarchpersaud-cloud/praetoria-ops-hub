@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAgreementByToken } from '@/hooks/useAgreements';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import DOMPurify from 'dompurify';
+
 import { AgreementDocument } from '@/components/agreements/AgreementDocument';
 import { SignatureModal, serializeSignature, SignatureValue } from '@/components/agreements/SignatureModal';
 import { AgreementField, AgreementFieldValues, completionState } from '@/lib/agreementFields';

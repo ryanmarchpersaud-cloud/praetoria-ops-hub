@@ -100,6 +100,105 @@ export function useMyAgreements(userId: string | undefined, recipientType?: stri
   });
 }
 
+export function useCountersignAgreement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (p: { agreementId: string; signerName: string; signerTitle: string; signatureData: string }) => {
+      const { error } = await supabase.rpc('countersign_agreement' as never, {
+        _agreement_id: p.agreementId,
+        _signer_name: p.signerName,
+        _signer_title: p.signerTitle,
+        _signature_data: p.signatureData,
+        _signature_type: 'electronic',
+        _user_agent: navigator.userAgent,
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agreements'] });
+      qc.invalidateQueries({ queryKey: ['agreement'] });
+      qc.invalidateQueries({ queryKey: ['agreement_signatures'] });
+      qc.invalidateQueries({ queryKey: ['agreement_audit_log'] });
+      toast.success('Agreement fully executed');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+export function useVoidAgreement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const { error } = await supabase.rpc('void_agreement' as never, { _agreement_id: id, _reason: reason } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agreements'] });
+      qc.invalidateQueries({ queryKey: ['agreement'] });
+      toast.success('Agreement voided');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
+/** Duplicate / amend / renew — always preserves the original agreement. */
+export function useCloneAgreement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, mode, userId }: { id: string; mode: 'duplicate' | 'amendment' | 'renewal'; userId?: string }) => {
+      const { data: src, error: srcErr } = await supabase.from('agreements').select('*').eq('id', id).single();
+      if (srcErr) throw srcErr;
+
+      const prefix = mode === 'amendment' ? 'Amendment — ' : mode === 'renewal' ? 'Renewal — ' : 'Copy of ';
+      const payload: any = {
+        title: `${prefix}${src.title}`,
+        body_html: src.body_html,
+        category: src.category,
+        document_type: (src as any).document_type,
+        field_schema: (src as any).field_schema,
+        field_values: mode === 'duplicate' ? {} : (src as any).field_values,
+        merge_data: src.merge_data,
+        recipient_type: src.recipient_type,
+        recipient_name: src.recipient_name,
+        recipient_email: src.recipient_email,
+        recipient_user_id: src.recipient_user_id,
+        customer_id: src.customer_id,
+        property_id: src.property_id,
+        quote_id: src.quote_id,
+        job_id: src.job_id,
+        template_id: src.template_id,
+        status: 'draft',
+        version: mode === 'duplicate' ? 1 : (src.version || 1) + 1,
+        parent_agreement_id: mode === 'duplicate' ? null : src.id,
+        relationship_type: mode === 'duplicate' ? null : mode,
+        created_by: userId ?? null,
+      };
+
+      const { data: created, error } = await supabase.from('agreements').insert(payload).select().single();
+      if (error) throw error;
+
+      await supabase.from('agreement_audit_log').insert({
+        agreement_id: created.id,
+        action: mode === 'duplicate' ? 'created' : `${mode}_created`,
+        performed_by: userId ?? null,
+        metadata: { source_agreement: (src as any).agreement_number },
+      });
+
+      if (mode === 'amendment' && src.status === 'fully_executed') {
+        await supabase.from('agreements').update({ status: 'superseded', superseded_by: created.id }).eq('id', src.id);
+        await supabase.from('agreement_audit_log').insert({
+          agreement_id: src.id, action: 'superseded', performed_by: userId ?? null,
+          metadata: { superseded_by: (created as any).agreement_number },
+        });
+      }
+
+      return created;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreements'] }); toast.success('Created'); },
+    onError: (e: any) => toast.error(e.message),
+  });
+}
+
 export function useCreateAgreement() {
   const qc = useQueryClient();
   return useMutation({
