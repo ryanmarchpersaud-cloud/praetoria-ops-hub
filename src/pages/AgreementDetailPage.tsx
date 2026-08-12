@@ -157,6 +157,11 @@ export default function AgreementDetailPage() {
             <Send className="h-4 w-4 mr-1" /> Send for Signature
           </Button>
         )}
+        {agreement.status !== 'signed' && (
+          <Button variant="outline" onClick={startEdit}>
+            <Pencil className="h-4 w-4 mr-1" /> {isEditing ? 'Editing…' : 'Edit Agreement'}
+          </Button>
+        )}
         {(agreement.status === 'sent' || agreement.status === 'viewed') && (
           <Button variant="outline" onClick={handleResend}>
             <RefreshCw className="h-4 w-4 mr-1" /> Resend Reminder
@@ -180,9 +185,42 @@ export default function AgreementDetailPage() {
           <AgreementPdfViewer attachmentUrl={agreement.attachment_url} />
 
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Agreement Document</CardTitle></CardHeader>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm">Agreement Document</CardTitle>
+              {isEditing && (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                  <Button size="sm" onClick={handleSaveEdit} disabled={updateAgreement.isPending}>
+                    <Save className="h-4 w-4 mr-1" /> Save
+                  </Button>
+                </div>
+              )}
+            </CardHeader>
             <CardContent>
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+              {isEditing ? (
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Title</Label>
+                    <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Recipient Name</Label>
+                      <Input value={editRecipientName} onChange={e => setEditRecipientName(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Recipient Email</Label>
+                      <Input type="email" value={editRecipientEmail} onChange={e => setEditRecipientEmail(e.target.value)} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Document Body (HTML)</Label>
+                    <Textarea className="font-mono text-xs min-h-[420px]" value={editBody} onChange={e => setEditBody(e.target.value)} />
+                  </div>
+                </div>
+              ) : (
+                <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+              )}
             </CardContent>
           </Card>
 
