@@ -40,8 +40,36 @@ export default function AgreementDetailPage() {
   const sendAgreement = useSendAgreement();
   const updateAgreement = useUpdateAgreement();
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editBody, setEditBody] = useState('');
+  const [editRecipientName, setEditRecipientName] = useState('');
+  const [editRecipientEmail, setEditRecipientEmail] = useState('');
+
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
   if (!agreement) return <div className="p-8 text-center text-muted-foreground">Agreement not found</div>;
+
+  const startEdit = () => {
+    setEditTitle(agreement.title || '');
+    setEditBody(agreement.body_html || '');
+    setEditRecipientName(agreement.recipient_name || '');
+    setEditRecipientEmail(agreement.recipient_email || '');
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editTitle.trim() || !editRecipientName.trim()) { toast.error('Title and recipient name are required'); return; }
+    updateAgreement.mutate(
+      {
+        id: agreement.id,
+        title: editTitle.trim(),
+        body_html: editBody,
+        recipient_name: editRecipientName.trim(),
+        recipient_email: editRecipientEmail.trim() || null,
+      },
+      { onSuccess: () => { toast.success('Agreement updated'); setIsEditing(false); } }
+    );
+  };
 
   const signingUrl = `${window.location.origin}/sign/${agreement.signing_token}`;
   const StatusIcon = statusIcon[agreement.status] || Clock;
