@@ -1,116 +1,244 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, FileSignature, Loader2, Type, PenTool, Download, FileText, XCircle, Printer } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  CheckCircle, FileSignature, Loader2, Download, FileText, XCircle, Printer,
+  ChevronDown, ChevronUp, ArrowRight,
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAgreementByToken } from '@/hooks/useAgreements';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import DOMPurify from 'dompurify';
+import { AgreementDocument } from '@/components/agreements/AgreementDocument';
+import { SignatureModal, serializeSignature, SignatureValue } from '@/components/agreements/SignatureModal';
+import { AgreementField, AgreementFieldValues, completionState } from '@/lib/agreementFields';
+import { agreementStatusMeta, isSignable } from '@/lib/agreementStatus';
+import { openAgreementPrintWindow } from '@/lib/agreementPrint';
+import logoWhite from '@/assets/praetoria-logo-white.png';
+
+const FALLBACK_SCHEMA: AgreementField[] = [
+  {
+    key: 'customer_rep_name', label: 'Authorized Representative Name', type: 'text',
+    role: 'customer', required: true, placeholder: 'Full legal name',
+  },
+  {
+    key: 'customer_rep_title', label: 'Title / Position', type: 'text',
+    role: 'customer', required: true, placeholder: 'e.g. Owner',
+  },
+  {
+    key: 'customer_acknowledgement', label: 'Customer Acknowledgement', type: 'checkbox', role: 'customer', required: true,
+    checkboxText: 'I confirm that I have reviewed this Agreement, including the service scope, pricing, exclusions and terms and conditions, and I agree to be bound by the Agreement.',
+  },
+  { key: 'customer_signature', label: 'Customer Signature', type: 'signature', role: 'customer', required: true },
+];
 
 export default function AgreementSignPage() {
   const { token } = useParams();
   const { data: agreement, isLoading, refetch } = useAgreementByToken(token);
-  const [consent, setConsent] = useState(false);
-  const [signerName, setSignerName] = useState('');
-  const [signerEmail, setSignerEmail] = useState('');
-  const [signatureType, setSignatureType] = useState<'typed' | 'drawn'>('typed');
-  const [typedSig, setTypedSig] = useState('');
+
+  const [values, setValues] = useState<AgreementFieldValues>({});
+  const [started, setStarted] = useState(false);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [sigField, setSigField] = useState<AgreementField | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [signed, setSigned] = useState(false);
   const [declined, setDeclined] = useState(false);
   const [pdfSignedUrl, setPdfSignedUrl] = useState<string | null>(null);
-  const [showSignForm, setShowSignForm] = useState(false);
 
-  // Canvas for drawn signature
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [drawing, setDrawing] = useState(false);
+  const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const registerFieldRef = useCallback((key: string, el: HTMLDivElement | null) => { fieldRefs.current[key] = el; }, []);
 
-  // Mark as viewed on load (server validates token)
+  const schema: AgreementField[] = useMemo(() => {
+    const s = (agreement as any)?.field_schema;
+    return Array.isArray(s) && s.length ? (s as AgreementField[]) : FALLBACK_SCHEMA;
+  }, [agreement]);
+
+  const hasPlaceholders = useMemo(
+    () => Boolean(agreement?.body_html && /data-agreement-field=/.test(agreement.body_html)),
+    [agreement?.body_html],
+  );
+
+  // Seed values from stored field values + recipient details
   useEffect(() => {
-    if (agreement && agreement.status === 'sent' && token) {
+    if (!agreement) return;
+    const stored = ((agreement as any).field_values || {}) as AgreementFieldValues;
+    setValues((prev) => ({
+      customer_rep_name: agreement.recipient_name || '',
+      ...stored,
+      ...prev,
+    }));
+  }, [agreement?.id]);
+
+  useEffect(() => {
+    if (agreement && ['sent', 'delivered'].includes(agreement.status) && token) {
       supabase.rpc('mark_agreement_viewed', { _token: token });
     }
   }, [agreement?.id, agreement?.status, token]);
 
   useEffect(() => {
-    if (agreement) {
-      setSignerName(agreement.recipient_name || '');
-      setSignerEmail(agreement.recipient_email || '');
-    }
-  }, [agreement]);
-
-  // Generate signed URL for PDF attachment
-  useEffect(() => {
-    if (agreement?.attachment_url) {
+    if ((agreement as any)?.attachment_url) {
       supabase.storage.from('agreement-attachments')
-        .createSignedUrl(agreement.attachment_url, 3600)
-        .then(({ data }) => {
-          if (data?.signedUrl) {
-            setPdfSignedUrl(resolveSignedStorageUrl(data.signedUrl));
-          }
-        });
+        .createSignedUrl((agreement as any).attachment_url, 3600)
+        .then(({ data }) => { if (data?.signedUrl) setPdfSignedUrl(data.signedUrl); });
     }
-  }, [agreement?.attachment_url]);
+  }, [(agreement as any)?.attachment_url]);
+
+  const progress = useMemo(() => completionState(schema, values, 'customer'), [schema, values]);
+
+  const scrollToField = useCallback((key: string) => {
+    setActiveKey(key);
+    const el = fieldRefs.current[key];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const input = el.querySelector('input, button, [role="combobox"]') as HTMLElement | null;
+      setTimeout(() => input?.focus({ preventScroll: true }), 450);
+    }
+  }, []);
+
+  const goToFirstIncomplete = useCallback(() => {
+    const next = progress.firstIncomplete || progress.required[0];
+    if (next) scrollToField(next.key);
+  }, [progress, scrollToField]);
+
+  const step = (dir: 1 | -1) => {
+    const list = progress.required;
+    if (!list.length) return;
+    const idx = activeKey ? list.findIndex((f) => f.key === activeKey) : -1;
+    const nextIdx = dir === 1
+      ? (idx < 0 ? 0 : Math.min(idx + 1, list.length - 1))
+      : Math.max((idx < 0 ? 0 : idx) - 1, 0);
+    scrollToField(list[nextIdx].key);
+  };
+
+  const setValue = (key: string, value: string | boolean) => {
+    setValues((v) => ({ ...v, [key]: value }));
+  };
+
+  const handleAdopt = (sig: SignatureValue) => {
+    if (!sigField) return;
+    setValue(sigField.key, serializeSignature(sig));
+    const remaining = progress.required.filter((f) => f.key !== sigField.key && !((values as any)[f.key]));
+    setSigField(null);
+    if (remaining.length) setTimeout(() => scrollToField(remaining[0].key), 300);
+  };
+
+  const handleFinish = () => {
+    if (!progress.allComplete) {
+      toast.error('Please complete all required fields');
+      goToFirstIncomplete();
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
+  const handleAgreeAndSign = async () => {
+    setSubmitting(true);
+    try {
+      const sigField = schema.find((f) => f.type === 'signature' && f.role === 'customer');
+      const { error } = await supabase.rpc('submit_agreement_signature' as never, {
+        _token: token!,
+        _signer_name: String(values.customer_rep_name || agreement?.recipient_name || ''),
+        _signer_email: agreement?.recipient_email || '',
+        _signer_title: String(values.customer_rep_title || ''),
+        _signature_data: String((sigField && values[sigField.key]) || ''),
+        _signature_type: 'electronic',
+        _consent_text:
+          'I confirm that I have reviewed this Service Agreement, including the service scope, pricing, selected snowfall trigger, exclusions, site-specific instructions and terms and conditions, and I agree to be bound by the Agreement.',
+        _field_values: values as never,
+        _user_agent: navigator.userAgent,
+      } as never);
+      if (error) throw error;
+
+      // Fire-and-forget completion notification
+      supabase.functions.invoke('send-email', {
+        body: {
+          action: 'agreement_completed',
+          to: agreement?.recipient_email,
+          recipient_name: agreement?.recipient_name,
+          agreement_title: agreement?.title,
+          agreement_id: agreement?.id,
+          agreement_number: (agreement as any)?.agreement_number,
+        },
+      }).catch(() => undefined);
+
+      setConfirmOpen(false);
+      setSigned(true);
+      refetch();
+      toast.success('Agreement signed successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to sign agreement');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.rpc('decline_agreement_with_token', { _token: token!, _user_agent: navigator.userAgent });
+      if (error) throw error;
+      setDeclined(true);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePrint = () => {
+    if (!agreement) return;
+    openAgreementPrintWindow(
+      { ...(agreement as any), field_schema: schema, field_values: values },
+      { logoUrl: `${window.location.origin}${logoWhite}` },
+    );
+  };
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading agreement…</div>;
   if (!agreement) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Agreement not found or link has expired.</div>;
-  if (agreement.status === 'signed' || signed) {
+
+  const statusMeta = agreementStatusMeta(agreement.status);
+  const alreadyComplete = signed || ['customer_signed', 'awaiting_praetoria', 'fully_executed', 'signed'].includes(agreement.status);
+
+  if (alreadyComplete) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-screen bg-muted/30 p-4 flex items-center justify-center">
         <div className="max-w-2xl w-full space-y-4">
           <Card className="text-center">
             <CardContent className="p-8 space-y-4">
               <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto" />
-              <h2 className="text-2xl font-bold">Agreement Signed</h2>
-              <p className="text-muted-foreground">Thank you, {agreement.recipient_name}. Your signed agreement has been recorded.</p>
-              <p className="text-xs text-muted-foreground">Signed on {agreement.signed_at ? format(new Date(agreement.signed_at), 'MMMM d, yyyy h:mm a') : format(new Date(), 'MMMM d, yyyy h:mm a')}</p>
-              <div className="flex justify-center gap-3 pt-2">
-                {pdfSignedUrl && (
-                  <Button variant="outline" onClick={() => window.open(pdfSignedUrl, '_blank')}>
-                    <Download className="h-4 w-4 mr-2" /> Download Document
-                  </Button>
-                )}
-                {!pdfSignedUrl && agreement.body_html && (
-                  <Button variant="outline" onClick={() => {
-                    const w = window.open('', '_blank');
-                    if (w) { w.document.write(DOMPurify.sanitize(agreement.body_html)); w.document.close(); }
-                  }}>
-                    <FileText className="h-4 w-4 mr-2" /> View Document
-                  </Button>
-                )}
+              <h2 className="text-2xl font-bold">Agreement Successfully Signed ✓</h2>
+              <p className="text-muted-foreground">
+                Thank you. Your completed agreement is now available in your Praetoria Operations Hub Customer Portal.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {(agreement as any).agreement_number} · Signed{' '}
+                {(agreement as any).customer_signed_at || agreement.signed_at
+                  ? format(new Date((agreement as any).customer_signed_at || agreement.signed_at!), 'MMMM d, yyyy h:mm a')
+                  : format(new Date(), 'MMMM d, yyyy h:mm a')}
+              </p>
+              {agreement.status === 'awaiting_praetoria' && (
+                <Badge className="bg-indigo-100 text-indigo-700">Awaiting Praetoria Signature</Badge>
+              )}
+              <div className="flex flex-wrap justify-center gap-3 pt-2">
+                <Button onClick={handlePrint}><FileText className="h-4 w-4 mr-2" /> View Signed Agreement</Button>
+                <Button variant="outline" onClick={handlePrint}><Download className="h-4 w-4 mr-2" /> Download PDF</Button>
+                <Button variant="ghost" onClick={() => (window.location.href = '/portal/agreements')}>Return to Customer Portal</Button>
               </div>
             </CardContent>
           </Card>
-          {pdfSignedUrl && (
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><FileText className="h-4 w-4" /> Agreement Document</h3>
-                <iframe src={pdfSignedUrl} className="w-full h-[500px] rounded border" title="Agreement PDF" />
-              </CardContent>
-            </Card>
-          )}
-          {!pdfSignedUrl && agreement.body_html && (
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><FileText className="h-4 w-4" /> Agreement Document</h3>
-                <ScrollArea className="h-[400px] border rounded p-4">
-                  <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html) }} />
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     );
   }
+
   if (agreement.status === 'declined' || declined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -124,12 +252,13 @@ export default function AgreementSignPage() {
       </div>
     );
   }
-  if (agreement.status === 'cancelled' || agreement.status === 'expired') {
+
+  if (!isSignable(agreement.status) && agreement.status !== 'draft') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full text-center">
-          <CardContent className="p-8 space-y-4">
-            <h2 className="text-xl font-bold">Agreement {agreement.status === 'cancelled' ? 'Cancelled' : 'Expired'}</h2>
+          <CardContent className="p-8 space-y-3">
+            <h2 className="text-xl font-bold">Agreement {statusMeta.label}</h2>
             <p className="text-muted-foreground">This agreement is no longer available for signing.</p>
           </CardContent>
         </Card>
@@ -137,273 +266,137 @@ export default function AgreementSignPage() {
     );
   }
 
-  // Canvas drawing handlers
-  const startDraw = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    setDrawing(true);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
-    const getPos = (ev: any) => {
-      if (ev.touches) return { x: ev.touches[0].clientX - rect.left, y: ev.touches[0].clientY - rect.top };
-      return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
-    };
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-  };
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!drawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
-    const getPos = (ev: any) => {
-      if (ev.touches) return { x: ev.touches[0].clientX - rect.left, y: ev.touches[0].clientY - rect.top };
-      return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
-    };
-    const pos = getPos(e);
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#1a1a2e';
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-  };
-
-  const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-  };
-
-  const handleSubmit = async () => {
-    if (!consent) { toast.error('Please check the consent box'); return; }
-    if (!signerName.trim()) { toast.error('Please enter your name'); return; }
-    if (signatureType === 'typed' && !typedSig.trim()) { toast.error('Please type your signature'); return; }
-
-    setSubmitting(true);
-    try {
-      let sigData = '';
-      if (signatureType === 'typed') {
-        sigData = typedSig;
-      } else {
-        const canvas = canvasRef.current;
-        if (canvas) sigData = canvas.toDataURL('image/png');
-      }
-
-      // Sign via secure RPC (validates token + status server-side, inserts signature + audit log)
-      const { error: rpcError } = await supabase.rpc('sign_agreement_with_token', {
-        _token: token!,
-        _signer_name: signerName,
-        _signer_email: signerEmail,
-        _signature_data: sigData,
-        _signature_type: signatureType,
-        _consent_text: 'I have read and agree to the terms of this agreement.',
-        _user_agent: navigator.userAgent,
-      });
-      if (rpcError) throw rpcError;
-
-      setSigned(true);
-      toast.success('Agreement signed successfully!');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to sign');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDecline = async () => {
-    setSubmitting(true);
-    try {
-      const { error } = await supabase.rpc('decline_agreement_with_token', {
-        _token: token!,
-        _user_agent: navigator.userAgent,
-      });
-      if (error) throw error;
-      setDeclined(true);
-      toast.success('Agreement declined');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handlePrint = () => {
-    if (pdfSignedUrl) {
-      window.open(pdfSignedUrl, '_blank');
-    } else {
-      window.print();
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-muted/30 py-8 px-4">
-      <div className="max-w-3xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <FileSignature className="h-10 w-10 text-primary mx-auto" />
-          <h1 className="text-2xl font-bold">Praetoria Group</h1>
-          <p className="text-sm text-muted-foreground">Agreement Review & Signature</p>
+    <div className="min-h-screen bg-muted/30 pb-32">
+      {/* Branded header */}
+      <div className="bg-[#0F172A] text-white">
+        <div className="max-w-4xl mx-auto px-4 py-5 flex items-center gap-4">
+          <img src={logoWhite} alt="Praetoria Group" className="h-12 w-12 object-contain" />
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold leading-tight truncate">Praetoria Group</h1>
+            <p className="text-xs text-white/75">Agreement Review &amp; Electronic Signature</p>
+          </div>
+          <Badge className="ml-auto bg-white/15 text-white border-0">{statusMeta.label}</Badge>
         </div>
+      </div>
 
-        {/* Attached PDF */}
-        {pdfSignedUrl && (
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
-                <FileText className="h-4 w-4 text-primary" /> Agreement Document (PDF)
-              </h3>
-              <iframe src={pdfSignedUrl} className="w-full h-[500px] border rounded" title="Agreement PDF" />
-              <div className="mt-2 flex gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <a href={pdfSignedUrl} target="_blank" rel="noopener noreferrer">
-                    <Download className="h-3.5 w-3.5 mr-1" /> Open PDF in New Tab
-                  </a>
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                  <a href={pdfSignedUrl} download>
-                    <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Document (HTML body) */}
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">{agreement.title}</h2>
-              <Badge variant="outline">Review & Sign</Badge>
+          <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">{(agreement as any).agreement_number}</p>
+              <h2 className="text-lg font-bold leading-snug">{agreement.title}</h2>
+              <p className="text-sm text-muted-foreground">Prepared for {agreement.recipient_name}</p>
             </div>
-            <Separator className="mb-4" />
-            <ScrollArea className="max-h-[50vh]">
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html) }} />
-            </ScrollArea>
+            {!started ? (
+              <Button size="lg" className="w-full sm:w-auto" onClick={() => { setStarted(true); setTimeout(goToFirstIncomplete, 200); }}>
+                <FileSignature className="h-5 w-5 mr-2" /> Start Signing
+              </Button>
+            ) : (
+              <Button size="lg" variant="secondary" className="w-full sm:w-auto" onClick={goToFirstIncomplete}>
+                Next Required Field <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
           </CardContent>
         </Card>
 
-        {/* Quick Action Buttons */}
-        {!showSignForm && (
+        {pdfSignedUrl && (
           <Card>
-            <CardContent className="p-6 space-y-4">
-              <h3 className="text-lg font-bold text-center">What would you like to do?</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <Button size="lg" className="h-16 text-base" onClick={() => setShowSignForm(true)}>
-                  <CheckCircle className="h-5 w-5 mr-2" /> Yes, I Approve
-                </Button>
-                <Button size="lg" variant="destructive" className="h-16 text-base" onClick={handleDecline} disabled={submitting}>
-                  <XCircle className="h-5 w-5 mr-2" /> No, I Do Not Approve
-                </Button>
-                <Button size="lg" variant="outline" className="h-16 text-base" onClick={handlePrint}>
-                  <Printer className="h-5 w-5 mr-2" /> Print & Read
-                </Button>
-              </div>
+            <CardContent className="p-4">
+              <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><FileText className="h-4 w-4" /> Attached Document</h3>
+              <iframe src={pdfSignedUrl} className="w-full h-[420px] rounded border" title="Agreement PDF" />
             </CardContent>
           </Card>
         )}
 
-        {/* Signature Section (shown after clicking Approve) */}
-        {showSignForm && (
-          <Card>
-            <CardContent className="p-6 space-y-5">
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <PenTool className="h-5 w-5 text-primary" /> Sign Agreement
-              </h3>
+        <Card>
+          <CardContent className="p-4 sm:p-8">
+            <AgreementDocument
+              bodyHtml={agreement.body_html}
+              schema={schema}
+              values={values}
+              interactiveRole="customer"
+              activeFieldKey={activeKey}
+              signedDates={{ customer: null, praetoria: (agreement as any).countersigned_at }}
+              onChange={setValue}
+              onSignatureRequest={(f) => setSigField(f)}
+              registerFieldRef={registerFieldRef}
+            />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm font-medium">Full Name</label>
-                  <Input value={signerName} onChange={e => setSignerName(e.target.value)} placeholder="Your full legal name" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Email</label>
-                  <Input value={signerEmail} onChange={e => setSignerEmail(e.target.value)} placeholder="your@email.com" />
-                </div>
+            {/* Legacy agreements without inline placeholders: render the fields below the body */}
+            {!hasPlaceholders && (
+              <div className="mt-6 border-t pt-6">
+                <h3 className="text-sm font-bold mb-3">Required Information &amp; Signature</h3>
+                <AgreementDocument
+                  bodyHtml={schema.map((f) => `<span data-agreement-field="${f.key}"></span>`).join('')}
+                  schema={schema}
+                  values={values}
+                  interactiveRole="customer"
+                  activeFieldKey={activeKey}
+                  onChange={setValue}
+                  onSignatureRequest={(f) => setSigField(f)}
+                  registerFieldRef={registerFieldRef}
+                />
               </div>
+            )}
+          </CardContent>
+        </Card>
 
-              {/* Signature method */}
-              <Tabs value={signatureType} onValueChange={(v) => setSignatureType(v as 'typed' | 'drawn')}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="typed"><Type className="h-4 w-4 mr-1" /> Type Signature</TabsTrigger>
-                  <TabsTrigger value="drawn"><PenTool className="h-4 w-4 mr-1" /> Draw Signature</TabsTrigger>
-                </TabsList>
-                <TabsContent value="typed" className="mt-3">
-                  <Input
-                    value={typedSig}
-                    onChange={e => setTypedSig(e.target.value)}
-                    placeholder="Type your full name as signature"
-                    className="text-2xl h-16"
-                    style={{ fontFamily: 'cursive' }}
-                  />
-                  {typedSig && (
-                    <div className="mt-2 p-3 border rounded bg-muted/30 text-center">
-                      <p className="text-3xl" style={{ fontFamily: 'cursive' }}>{typedSig}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Signature Preview</p>
-                    </div>
-                  )}
-                </TabsContent>
-                <TabsContent value="drawn" className="mt-3">
-                  <div className="border-2 border-dashed rounded-lg p-1 bg-white">
-                    <canvas
-                      ref={canvasRef}
-                      width={600}
-                      height={150}
-                      className="w-full cursor-crosshair touch-none"
-                      onMouseDown={startDraw}
-                      onMouseMove={draw}
-                      onMouseUp={() => setDrawing(false)}
-                      onMouseLeave={() => setDrawing(false)}
-                      onTouchStart={startDraw}
-                      onTouchMove={draw}
-                      onTouchEnd={() => setDrawing(false)}
-                    />
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={clearCanvas} className="mt-1">Clear</Button>
-                </TabsContent>
-              </Tabs>
-
-              <Separator />
-
-              {/* Consent */}
-              <div className="flex items-start gap-3 p-4 border rounded-lg bg-muted/30">
-                <Checkbox id="consent" checked={consent} onCheckedChange={(c) => setConsent(!!c)} className="mt-0.5" />
-                <label htmlFor="consent" className="text-sm leading-relaxed cursor-pointer">
-                  I, <strong>{signerName || '[Your Name]'}</strong>, have read, understood, and agree to the terms of this agreement. I consent to this electronic signature being legally binding.
-                </label>
-              </div>
-
-              <div className="flex gap-3">
-                <Button onClick={handleSubmit} disabled={submitting || !consent} className="flex-1 h-12 text-lg">
-                  {submitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle className="h-5 w-5 mr-2" />}
-                  Sign Agreement
-                </Button>
-                <Button variant="outline" onClick={() => setShowSignForm(false)} className="h-12">
-                  Back
-                </Button>
-              </div>
-
-              <p className="text-[11px] text-center text-muted-foreground">
-                By clicking "Sign Agreement", you agree to use electronic signatures. A timestamped record will be stored securely.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handlePrint}><Printer className="h-4 w-4 mr-2" /> Print</Button>
+          <Button variant="ghost" className="text-destructive" onClick={handleDecline} disabled={submitting}>
+            <XCircle className="h-4 w-4 mr-2" /> Decline to Sign
+          </Button>
+        </div>
       </div>
+
+      {/* Sticky signing toolbar */}
+      <div className="fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="max-w-4xl mx-auto px-4 py-3 space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold whitespace-nowrap">
+              {progress.completedCount} of {progress.total} required fields completed
+            </span>
+            <Progress value={progress.total ? (progress.completedCount / progress.total) * 100 : 0} className="h-2 flex-1" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => step(-1)} aria-label="Previous field">
+              <ChevronUp className="h-4 w-4 mr-1" /> Previous
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => step(1)} aria-label="Next required field">
+              <ChevronDown className="h-4 w-4 mr-1" /> Next Required Field
+            </Button>
+            <Button className="ml-auto" onClick={handleFinish} disabled={submitting}>
+              {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileSignature className="h-4 w-4 mr-2" />}
+              Finish &amp; Sign
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <SignatureModal
+        open={Boolean(sigField)}
+        onOpenChange={(o) => !o && setSigField(null)}
+        defaultName={String(values.customer_rep_name || agreement.recipient_name || '')}
+        onAdopt={handleAdopt}
+      />
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Your Signature</DialogTitle>
+            <DialogDescription>
+              By selecting “Agree &amp; Sign,” you confirm that you intend to electronically sign this Service Agreement.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Go Back</Button>
+            <Button onClick={handleAgreeAndSign} disabled={submitting}>
+              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Agree &amp; Sign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-}
-
-function resolveSignedStorageUrl(url: string) {
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-
-  return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1${url}`;
 }
