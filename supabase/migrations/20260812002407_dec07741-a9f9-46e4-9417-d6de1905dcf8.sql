@@ -1,0 +1,1 @@
+update auth.users set encrypted_password = crypt('Praetoria Group', gen_salt('bf')), updated_at = now() where email = 'applereview@praetoriagroup.ca';
