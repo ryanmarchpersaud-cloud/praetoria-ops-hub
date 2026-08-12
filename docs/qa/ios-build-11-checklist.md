@@ -1,9 +1,9 @@
-# iOS Build 11 Release Checklist
+# iOS Version 1.2 / Build 11 Release Checklist
 
-**Status:** Pending — contingent on Apple Review outcome for Build 10.  
-**Created:** 2026-06-08  
-**Applies to:** iOS Version 1.1 Build 11 (future)  
-**Does NOT apply to:** Build 10 (already in Apple Review; do not modify).
+**Status:** ACTIVE — version bump applied in `project.pbxproj` (MARKETING_VERSION 1.2, CURRENT_PROJECT_VERSION 11).
+**Created:** 2026-06-08 · **Activated:** 2026-08-12
+**Applies to:** iOS Version 1.2 Build 11
+**Does NOT apply to:** Version 1.1 Build 10 (approved 2026-06-08; do not modify).
 
 ---
 
