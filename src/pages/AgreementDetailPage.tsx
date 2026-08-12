@@ -80,6 +80,45 @@ export default function AgreementDetailPage() {
 
   const signingUrl = `${window.location.origin}/sign/${agreement.signing_token}`;
   const StatusIcon = statusIcon[agreement.status] || Clock;
+  const statusMeta = agreementStatusMeta(agreement.status);
+  const isAwaitingPraetoria = ['awaiting_praetoria', 'customer_signed'].includes(agreement.status);
+  const isLocked = ['fully_executed', 'signed', 'voided', 'cancelled', 'superseded'].includes(agreement.status);
+  const fieldSchema = (Array.isArray((agreement as any).field_schema) ? (agreement as any).field_schema : []) as AgreementField[];
+  const fieldValues = (((agreement as any).field_values || {}) as AgreementFieldValues);
+
+  const handleVoid = () => {
+    const reason = window.prompt('Reason for voiding this agreement?') || '';
+    if (!reason.trim()) return;
+    voidAgreement.mutate({ id: agreement.id, reason: reason.trim() });
+  };
+
+  const handleCountersign = () => {
+    if (!repName.trim() || !repTitle.trim()) { toast.error('Enter the authorized representative name and title'); return; }
+    if (!repSignature) { toast.error('Adopt a signature first'); return; }
+    countersign.mutate(
+      { agreementId: agreement.id, signerName: repName.trim(), signerTitle: repTitle.trim(), signatureData: repSignature },
+      {
+        onSuccess: async () => {
+          setCountersignOpen(false);
+          const merged = { ...fieldValues, praetoria_signature: repSignature };
+          await supabase.from('agreements').update({ field_values: merged as never }).eq('id', agreement.id);
+          if (agreement.recipient_email) {
+            supabase.functions.invoke('send-email', {
+              body: {
+                action: 'agreement_completed',
+                to: agreement.recipient_email,
+                recipient_name: agreement.recipient_name,
+                agreement_title: agreement.title,
+                agreement_id: agreement.id,
+                agreement_number: (agreement as any).agreement_number,
+              },
+            }).catch(() => undefined);
+          }
+        },
+      },
+    );
+  };
+
 
   const handleSend = () => {
     if (!agreement.recipient_email) {
