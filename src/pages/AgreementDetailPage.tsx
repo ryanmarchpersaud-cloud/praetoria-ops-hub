@@ -37,12 +37,21 @@ export default function AgreementDetailPage() {
   const { data: auditLog = [] } = useAgreementAuditLog(id);
   const sendAgreement = useSendAgreement();
   const updateAgreement = useUpdateAgreement();
+  const countersign = useCountersignAgreement();
+  const voidAgreement = useVoidAgreement();
+  const cloneAgreement = useCloneAgreement();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editBody, setEditBody] = useState('');
   const [editRecipientName, setEditRecipientName] = useState('');
   const [editRecipientEmail, setEditRecipientEmail] = useState('');
+  const [countersignOpen, setCountersignOpen] = useState(false);
+  const [sigModalOpen, setSigModalOpen] = useState(false);
+  const [repName, setRepName] = useState('Ryan Steven Persaud');
+  const [repTitle, setRepTitle] = useState('Authorized Representative');
+  const [repSignature, setRepSignature] = useState<string>('');
+
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
   if (!agreement) return <div className="p-8 text-center text-muted-foreground">Agreement not found</div>;
