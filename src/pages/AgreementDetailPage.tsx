@@ -275,7 +275,7 @@ export default function AgreementDetailPage() {
                     </div>
                     <div>
                       <Label className="text-xs">Recipient Email</Label>
-                      <Input type="email" value={editRecipientEmail} onChange={e => setEditRecipientEmail(e.target.value)} />
+                      <Input id="agreement-recipient-email" type="email" placeholder="name@company.com" value={editRecipientEmail} onChange={e => setEditRecipientEmail(e.target.value)} />
                     </div>
                   </div>
                   <div>
@@ -284,7 +284,27 @@ export default function AgreementDetailPage() {
                   </div>
                 </div>
               ) : (
-                <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                <div>
+                  <div
+                    className="rounded-lg p-5 mb-6 flex flex-col sm:flex-row items-center gap-5 text-white"
+                    style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+                  >
+                    <img src="/praetoria-logo-white.png" alt="Praetoria Group" className="h-24 w-24 sm:h-28 sm:w-28 object-contain flex-shrink-0" />
+                    <div className="flex-1 text-center sm:text-left">
+                      <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Praetoria Operations Group Inc.</h2>
+                      <p className="text-xs sm:text-sm text-white/95 mt-1">Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
+                      <p className="text-xs sm:text-sm text-white/95">Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
+                      <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold px-3 py-1.5 rounded text-sm">{agreement.title}</span>
+                    </div>
+                  </div>
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                  <div
+                    className="rounded-lg mt-8 p-3 text-[11px] text-center text-white"
+                    style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+                  >
+                    Praetoria Group • 2282 Unit B, Toronto Street, Regina, Saskatchewan • support@praetoriagroup.ca
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
