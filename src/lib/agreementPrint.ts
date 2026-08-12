@@ -88,39 +88,43 @@ export function buildAgreementPrintHtml(
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>${escapeHtml(agreement.agreement_number || '')} ${escapeHtml(agreement.title)}</title>
 <style>
-  @page { size: letter; margin: 18mm 14mm 20mm; }
+  @page { size: letter; margin: 14mm 14mm 16mm; }
   * { box-sizing: border-box; }
-  body { font-family: Georgia, 'Times New Roman', serif; color: #16202e; font-size: 11pt; line-height: 1.5; margin: 0; }
-  .sheet { max-width: 8.5in; margin: 0 auto; padding: 0 0 40px; }
-  .letterhead { background: #0F172A; color: #fff; padding: 20px 24px; display: flex; align-items: center; gap: 16px; }
-  .letterhead img { height: 54px; }
-  .letterhead h1 { font-size: 16pt; margin: 0; letter-spacing: .04em; text-transform: uppercase; font-family: Arial, sans-serif; }
-  .letterhead p { margin: 2px 0 0; font-size: 9pt; opacity: .85; font-family: Arial, sans-serif; }
-  .doc-bar { display: flex; justify-content: space-between; gap: 12px; background: #f1f5f9; padding: 10px 24px; font-size: 9.5pt; font-family: Arial, sans-serif; border-bottom: 2px solid #0F172A; }
-  .content { padding: 24px; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #16202e; font-size: 11pt; line-height: 1.45; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sheet { max-width: 8.5in; margin: 0 auto; padding: 0 0 24px; }
+  .letterhead { background: linear-gradient(135deg,#0F172A 0%,#1E3A8A 100%); color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 20px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .letterhead img { height: 84px; width: 84px; object-fit: contain; flex-shrink: 0; }
+  .letterhead h1 { font-size: 17pt; margin: 0; letter-spacing: .04em; text-transform: uppercase; font-family: Arial, sans-serif; color: #fff; }
+  .letterhead p { margin: 3px 0 0; font-size: 9pt; opacity: .92; font-family: Arial, sans-serif; }
+  .doc-bar { display: flex; justify-content: space-between; gap: 12px; background: #f1f5f9; padding: 8px 24px; font-size: 9.5pt; font-family: Arial, sans-serif; border-bottom: 2px solid #0F172A; }
+  .content { padding: 18px 24px; }
   h1 { font-size: 15pt; }
-  h2 { font-size: 12pt; margin: 20px 0 6px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; font-family: Arial, sans-serif; }
-  h3 { font-size: 10.5pt; margin: 12px 0 4px; font-family: Arial, sans-serif; }
-  p, li { font-size: 10.5pt; }
-  table.agreement-table, table.agreement-meta { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 10pt; }
-  table.agreement-table th, table.agreement-table td, table.agreement-meta th, table.agreement-meta td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; vertical-align: top; }
+  h2 { font-size: 12pt; margin: 16px 0 5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; font-family: Arial, sans-serif; break-after: avoid; page-break-after: avoid; }
+  h3 { font-size: 10.5pt; margin: 10px 0 4px; font-family: Arial, sans-serif; break-after: avoid; page-break-after: avoid; }
+  p, li { font-size: 10.5pt; margin: 5px 0; orphans: 3; widows: 3; }
+  table.agreement-table, table.agreement-meta { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 10pt; }
+  table.agreement-table th, table.agreement-table td, table.agreement-meta th, table.agreement-meta td { border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left; vertical-align: top; }
   table.agreement-table th, table.agreement-meta th { background: #f1f5f9; font-family: Arial, sans-serif; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
   .legal-review { display: none; }
   .print-field { font-weight: 700; border-bottom: 1px solid #94a3b8; padding: 0 6px; }
   .print-ack { border: 1px solid #cbd5e1; padding: 8px; background: #f8fafc; }
-  .print-sig-block { margin: 10px 0 18px; }
+  .print-sig-block { margin: 10px 0 16px; break-inside: avoid; page-break-inside: avoid; }
   .sig-typed { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: 22pt; }
   .sig-img { max-height: 70px; }
   .sig-empty { color: #94a3b8; font-style: italic; }
   .sig-rule { border-bottom: 1px solid #0F172A; width: 320px; margin-top: 4px; }
   .sig-date { font-size: 9pt; color: #475569; margin-top: 3px; font-family: Arial, sans-serif; }
-  .agreement-section { page-break-inside: avoid; }
-  .schedule { page-break-before: always; }
-  .certificate { page-break-before: always; }
+  /* Allow long sections to flow across pages — avoiding breaks caused large blank pages. */
+  .agreement-section { break-inside: auto; page-break-inside: auto; margin-bottom: 4px; }
+  .signature-block { break-inside: avoid; page-break-inside: avoid; }
+  .schedule { break-before: auto; page-break-before: auto; }
+  .certificate { break-before: page; page-break-before: always; }
   .certificate table { width: 100%; border-collapse: collapse; font-size: 9.5pt; font-family: Arial, sans-serif; }
   .certificate td { border-bottom: 1px solid #e2e8f0; padding: 5px 6px; }
-  footer.doc-footer { background: #0F172A; color: #fff; padding: 12px 24px; font-size: 8.5pt; font-family: Arial, sans-serif; display: flex; justify-content: space-between; }
+  footer.doc-footer { background: #0F172A; color: #fff; padding: 12px 24px; font-size: 8.5pt; font-family: Arial, sans-serif; display: flex; justify-content: space-between; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @media print { .no-print { display: none !important; } }
+
 </style></head>
 <body>
 <div class="sheet">
