@@ -129,12 +129,15 @@ export function buildAgreementPrintHtml(
 <body>
 <div class="sheet">
   <div class="letterhead">
-    ${opts.logoUrl ? `<img src="${opts.logoUrl}" alt="Praetoria" />` : ''}
+    ${opts.logoUrl ? `<img src="${opts.logoUrl}" alt="Praetoria Group" onerror="this.style.display='none'" />` : ''}
     <div>
-      <h1>Praetoria Group</h1>
-      <p>${escapeHtml(opts.companyLine || 'Snow &amp; Ice · Landscaping · Property Care — Regina, Saskatchewan')}</p>
+      <h1>Praetoria Operations Group Inc.</h1>
+      <p>${escapeHtml(opts.companyLine || 'Snow & Ice · Landscaping · Property Care')}</p>
+      <p>Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
+      <p>support@praetoriagroup.ca · praetoriagroup.ca</p>
     </div>
   </div>
+
   <div class="doc-bar">
     <span><strong>Agreement:</strong> ${escapeHtml(agreement.agreement_number || '—')}</span>
     <span><strong>Version:</strong> ${agreement.version ?? 1}</span>
