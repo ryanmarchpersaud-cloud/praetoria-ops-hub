@@ -145,17 +145,37 @@ export default function AgreementDetailPage() {
           </div>`;
         }).join('')
       : '';
+    const logoUrl = `${window.location.origin}/praetoria-logo-white.png`;
+    const generated = esc(format(new Date(), 'MMM d, yyyy h:mm a'));
+    const letterhead = `<div class="letterhead">
+      <img src="${logoUrl}" alt="Praetoria Group" />
+      <div>
+        <h1>Praetoria Operations Group Inc.</h1>
+        <p>Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
+        <p>Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
+        <span class="doc-chip">${safeTitle}</span>
+      </div>
+    </div>`;
+    const footer = `<div class="doc-footer">Praetoria Group • 2282 Unit B, Toronto Street, Regina, Saskatchewan • support@praetoriagroup.ca • Generated ${generated}</div>`;
     w.document.write(`<!DOCTYPE html><html><head><title>${safeTitle}</title>
-      <style>body{font-family:-apple-system,sans-serif;max-width:750px;margin:0 auto;padding:32px;color:#1a1a2e;}h1,h2{color:#0f172a;}
+      <style>body{font-family:-apple-system,sans-serif;max-width:800px;margin:0 auto;padding:32px;color:#1a1a2e;}h1,h2{color:#0f172a;}
+      .letterhead{display:flex;align-items:center;gap:24px;background:linear-gradient(135deg,#0F172A 0%,#1E3A8A 100%);color:#fff;border-radius:8px;padding:24px;margin-bottom:24px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+      .letterhead img{height:110px;width:110px;object-fit:contain;flex-shrink:0;}
+      .letterhead h1{color:#fff;font-size:26px;margin:0 0 8px;}
+      .letterhead p{margin:2px 0;font-size:13px;color:rgba(255,255,255,.95);}
+      .doc-chip{display:inline-block;margin-top:12px;background:#fff;color:#0F172A;font-weight:700;padding:6px 14px;border-radius:6px;font-size:14px;}
+      .doc-footer{margin-top:32px;background:#0F172A;color:#fff;border-radius:8px;padding:12px;text-align:center;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
       .sig-box{margin-top:32px;border:2px solid #e2e8f0;border-radius:8px;padding:16px;}
       .sig-box p{margin:4px 0;font-size:13px;}
       @media print{body{padding:0;}}</style></head><body>
+      ${letterhead}
       ${safeBody}
       ${safeSignatures}
+      ${footer}
       </body></html>`);
     w.document.close();
     w.focus();
-    setTimeout(() => w.print(), 500);
+    setTimeout(() => w.print(), 800);
   };
 
   return (
