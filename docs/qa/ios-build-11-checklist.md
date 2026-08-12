@@ -1,18 +1,17 @@
-# iOS Build 11 Release Checklist
+# iOS Version 1.2 / Build 11 Release Checklist
 
-**Status:** Pending — contingent on Apple Review outcome for Build 10.  
-**Created:** 2026-06-08  
-**Applies to:** iOS Version 1.1 Build 11 (future)  
-**Does NOT apply to:** Build 10 (already in Apple Review; do not modify).
+**Status:** ACTIVE — version bump applied in `project.pbxproj` (MARKETING_VERSION 1.2, CURRENT_PROJECT_VERSION 11).
+**Created:** 2026-06-08 · **Activated:** 2026-08-12
+**Applies to:** iOS Version 1.2 Build 11
+**Does NOT apply to:** Version 1.1 Build 10 (approved 2026-06-08; do not modify).
 
 ---
 
 ## Context
 
-Build 10 is currently in Apple Review. The following items are reserved for a **future** Build 11 release, triggered by either:
+Version 1.1 Build 10 was **approved on 2026-06-08**. Version 1.2 Build 11 is the next release and carries all post-Build-10 work: XSS sanitization fixes, visit pause/resume timer, property management module, customer portal service records, task requirements, and reinstate/archive flows.
 
-1. **Apple rejection of Build 10** → Build 11 addresses Apple's feedback + the items below.
-2. **Apple approval of Build 10** → Build 11 may be prepared later as a security/maintenance update.
+Release gate: the Mac release machine must run `npm install`, `npm run build`, then `npx cap sync ios` before archiving, so `ios/App/App/public` contains the latest web bundle.
 
 ---
 
@@ -28,14 +27,14 @@ These fixes were merged after Build 10 was archived. They must be present in the
 | 1.2 | **Incident print XSS sanitization** | `src/components/incident/IncidentPrintButton.tsx` | HTML entity encoding (`esc`) on all dynamic fields (`report.description`, `report.location`, `report.people_involved`, etc.) in the print template. |
 | 1.3 | **Pay Stub print XSS sanitization** | `src/components/PayStubDetailDialog.tsx` | HTML entity encoding (`esc`) inside `buildPrintHtml()` applied to `displayName`, `displayRole`, `employeeAddress`, `companyName`, `runNumber`, `employeeId`, `stub.notes`, `company.physical_address`, `company.phone`, `company.support_email`/`email`, and earnings/deduction/employer-contribution labels. Same defensive pattern as 1.1 and 1.2. Merged after Build 10. |
 
-### 2. Apple Review Feedback (conditional)
+### 2. Apple Review Metadata
 
 | # | Item | Status |
 |---|------|--------|
-| 2.1 | If Apple rejects Build 10, capture exact rejection reason(s) and ticket number | Pending |
-| 2.2 | Map each rejection reason to required code/config changes | Pending |
-| 2.3 | Verify fixes compile and pass local smoke tests | Pending |
-| 2.4 | Update `Info.plist` or entitlements if required by Apple | Pending |
+| 2.1 | Reviewer account: `applereview@praetoriagroup.ca` / `Praetoria Group` (active, confirmed, no MFA, admin role) | Confirmed 2026-08-12 |
+| 2.2 | App Store Connect: create Version `1.2` and attach Build `11` | Pending |
+| 2.3 | "What's New" notes for 1.2 (pause/resume timer, property management, customer portal service records, task requirements) | Pending |
+| 2.4 | `Info.plist` usage strings unchanged and still accurate (camera, photos, mic, location) | Confirmed |
 
 ### 3. Customer Invoice / Receipt / PDF / Billing / Quote Visibility
 
@@ -82,18 +81,18 @@ These fixes were merged after Build 10 was archived. They must be present in the
 
 ---
 
-## Archive & Upload Steps (for Build 11 only)
+## Archive & Upload Steps (Version 1.2 / Build 11)
 
-1. `git pull` latest `main` (must include the two XSS fixes).
+1. `git pull` latest `main` (must include the XSS fixes and the 1.2/11 version bump).
 2. `npm install` to ensure lockfile alignment.
 3. `npm run build` → verify `dist/` contains updated assets.
 4. `npx cap sync ios` → copies `dist/` into `ios/App/App/public`.
 5. Open `ios/App/App.xcodeproj` in Xcode on a Mac.
-6. Bump **Build** number (e.g., 10 → 11). Do **not** change Version unless required.
-7. Select **Any iOS Device (arm64)** as destination.
+6. Confirm **Version = 1.2** and **Build = 11** (already set in `project.pbxproj`; no manual edit needed).
+7. Select **Any iOS Device (arm64)** as destination. Signing stays Automatic on team `9J63Y7CH34`.
 8. **Product → Archive**.
 9. In Organizer, validate and **Distribute App → App Store Connect → Upload**.
-10. In App Store Connect, verify the new build appears under the correct version.
+10. In App Store Connect, create/select version **1.2** and attach build **11**.
 
 ---
 
