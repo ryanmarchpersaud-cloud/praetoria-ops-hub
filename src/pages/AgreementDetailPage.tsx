@@ -165,6 +165,13 @@ export default function AgreementDetailPage() {
       }
       return;
     }
+    if (fieldSchema.length) {
+      openAgreementPrintWindow(agreement as any, {
+        logoUrl: `${window.location.origin}/praetoria-logo-white.png`,
+        audit: auditLog as any,
+      });
+      return;
+    }
     const w = window.open('', '_blank');
     if (!w) return;
     const esc = (v: unknown) =>
