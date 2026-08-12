@@ -32,14 +32,14 @@ export default function WorkerAgreementsPage() {
                   <TableRow key={a.id}>
                     <TableCell className="font-medium text-sm">{a.title}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{format(new Date(a.created_at), 'MMM d, yyyy')}</TableCell>
-                    <TableCell><Badge className={statusColors[a.status] || ''}>{a.status}</Badge></TableCell>
+                    <TableCell><Badge className={agreementStatusMeta(a.status).className}>{agreementStatusMeta(a.status).label}</Badge></TableCell>
                     <TableCell className="text-right">
-                      {(a.status === 'sent' || a.status === 'viewed') && (
+                      {NEEDS_SIGNATURE.includes(a.status) && (
                         <Button size="sm" variant="default" onClick={() => window.open(`/sign/${a.signing_token}`, '_blank')}>
-                          <FileSignature className="h-3.5 w-3.5 mr-1" /> Sign
+                          <FileSignature className="h-3.5 w-3.5 mr-1" /> Review &amp; Sign
                         </Button>
                       )}
-                      {a.status === 'signed' && (
+                      {COMPLETED.includes(a.status) && (
                         <Button size="sm" variant="outline" onClick={() => window.open(`/sign/${a.signing_token}`, '_blank')}>
                           <Eye className="h-3.5 w-3.5 mr-1" /> View
                         </Button>
