@@ -75,7 +75,13 @@ export default function AgreementDetailPage() {
   const StatusIcon = statusIcon[agreement.status] || Clock;
 
   const handleSend = () => {
-    if (!agreement.recipient_email) { toast.error('No recipient email set'); return; }
+    if (!agreement.recipient_email) {
+      toast.error('No recipient email set — add it below, then Save and send again');
+      startEdit();
+      setTimeout(() => document.getElementById('agreement-recipient-email')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+      setTimeout(() => (document.getElementById('agreement-recipient-email') as HTMLInputElement | null)?.focus(), 400);
+      return;
+    }
     sendAgreement.mutate({ id: agreement.id, sentBy: user?.id! });
   };
 
