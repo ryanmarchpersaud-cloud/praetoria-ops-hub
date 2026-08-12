@@ -132,13 +132,16 @@ export default function AgreementsPage() {
             <TableBody>
               {filtered.map(a => (
                 <TableRow key={a.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/agreements/${a.id}`)}>
-                  <TableCell className="font-medium">{a.title}</TableCell>
+                  <TableCell className="font-medium">
+                    <div>{a.title}</div>
+                    <div className="text-xs text-muted-foreground">{(a as any).agreement_number}</div>
+                  </TableCell>
                   <TableCell>
                     <div className="text-sm">{a.recipient_name}</div>
                     <div className="text-xs text-muted-foreground">{a.recipient_type}</div>
                   </TableCell>
                   <TableCell className="text-sm">{categoryLabels[a.category] || a.category}</TableCell>
-                  <TableCell><Badge className={statusColors[a.status] || ''}>{a.status}</Badge></TableCell>
+                  <TableCell><Badge className={agreementStatusMeta(a.status).className}>{agreementStatusMeta(a.status).label}</Badge></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{format(new Date(a.created_at), 'MMM d, yyyy')}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/agreements/${a.id}`); }}>
