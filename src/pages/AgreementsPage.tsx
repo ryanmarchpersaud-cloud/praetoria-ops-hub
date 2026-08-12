@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, FileSignature, Send, Eye, Search, Filter, Upload, FileText } from 'lucide-react';
+import { Plus, FileSignature, Send, Eye, Search, Filter, Upload, FileText, Snowflake } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
