@@ -146,6 +146,7 @@ export type Database = {
         Row: {
           agreement_id: string
           consent_text: string | null
+          field_values: Json | null
           id: string
           ip_address: string | null
           signature_data: string | null
@@ -153,11 +154,14 @@ export type Database = {
           signed_at: string
           signer_email: string | null
           signer_name: string
+          signer_role: string
+          signer_title: string | null
           user_agent: string | null
         }
         Insert: {
           agreement_id: string
           consent_text?: string | null
+          field_values?: Json | null
           id?: string
           ip_address?: string | null
           signature_data?: string | null
@@ -165,11 +169,14 @@ export type Database = {
           signed_at?: string
           signer_email?: string | null
           signer_name: string
+          signer_role?: string
+          signer_title?: string | null
           user_agent?: string | null
         }
         Update: {
           agreement_id?: string
           consent_text?: string | null
+          field_values?: Json | null
           id?: string
           ip_address?: string | null
           signature_data?: string | null
@@ -177,6 +184,8 @@ export type Database = {
           signed_at?: string
           signer_email?: string | null
           signer_name?: string
+          signer_role?: string
+          signer_title?: string | null
           user_agent?: string | null
         }
         Relationships: [
@@ -233,26 +242,43 @@ export type Database = {
       }
       agreements: {
         Row: {
+          agreement_number: string | null
           attachment_url: string | null
           body_html: string
           category: string
+          countersigned_at: string | null
+          countersigned_by: string | null
           created_at: string
           created_by: string | null
           customer_id: string | null
+          customer_signed_at: string | null
           declined_at: string | null
+          delivered_at: string | null
+          document_type: string
           employee_user_id: string | null
+          executed_at: string | null
           expires_at: string | null
+          field_schema: Json
+          field_values: Json
+          fields_locked: boolean
           id: string
           internal_reference: string | null
           job_id: string | null
+          last_reminder_at: string | null
           merge_data: Json | null
           notes: string | null
+          parent_agreement_id: string | null
           property_id: string | null
           quote_id: string | null
           recipient_email: string | null
           recipient_name: string
           recipient_type: string
           recipient_user_id: string | null
+          relationship_type: string | null
+          reminder_count: number
+          requires_countersignature: boolean
+          season_end: string | null
+          season_start: string | null
           sent_at: string | null
           sent_by: string | null
           signed_at: string | null
@@ -265,28 +291,48 @@ export type Database = {
           updated_at: string
           version: number
           viewed_at: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         Insert: {
+          agreement_number?: string | null
           attachment_url?: string | null
           body_html?: string
           category?: string
+          countersigned_at?: string | null
+          countersigned_by?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          customer_signed_at?: string | null
           declined_at?: string | null
+          delivered_at?: string | null
+          document_type?: string
           employee_user_id?: string | null
+          executed_at?: string | null
           expires_at?: string | null
+          field_schema?: Json
+          field_values?: Json
+          fields_locked?: boolean
           id?: string
           internal_reference?: string | null
           job_id?: string | null
+          last_reminder_at?: string | null
           merge_data?: Json | null
           notes?: string | null
+          parent_agreement_id?: string | null
           property_id?: string | null
           quote_id?: string | null
           recipient_email?: string | null
           recipient_name: string
           recipient_type?: string
           recipient_user_id?: string | null
+          relationship_type?: string | null
+          reminder_count?: number
+          requires_countersignature?: boolean
+          season_end?: string | null
+          season_start?: string | null
           sent_at?: string | null
           sent_by?: string | null
           signed_at?: string | null
@@ -299,28 +345,48 @@ export type Database = {
           updated_at?: string
           version?: number
           viewed_at?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Update: {
+          agreement_number?: string | null
           attachment_url?: string | null
           body_html?: string
           category?: string
+          countersigned_at?: string | null
+          countersigned_by?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          customer_signed_at?: string | null
           declined_at?: string | null
+          delivered_at?: string | null
+          document_type?: string
           employee_user_id?: string | null
+          executed_at?: string | null
           expires_at?: string | null
+          field_schema?: Json
+          field_values?: Json
+          fields_locked?: boolean
           id?: string
           internal_reference?: string | null
           job_id?: string | null
+          last_reminder_at?: string | null
           merge_data?: Json | null
           notes?: string | null
+          parent_agreement_id?: string | null
           property_id?: string | null
           quote_id?: string | null
           recipient_email?: string | null
           recipient_name?: string
           recipient_type?: string
           recipient_user_id?: string | null
+          relationship_type?: string | null
+          reminder_count?: number
+          requires_countersignature?: boolean
+          season_end?: string | null
+          season_start?: string | null
           sent_at?: string | null
           sent_by?: string | null
           signed_at?: string | null
@@ -333,6 +399,9 @@ export type Database = {
           updated_at?: string
           version?: number
           viewed_at?: string | null
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
         }
         Relationships: [
           {
@@ -347,6 +416,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreements_parent_agreement_id_fkey"
+            columns: ["parent_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
             referencedColumns: ["id"]
           },
           {
@@ -14172,6 +14248,76 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      countersign_agreement: {
+        Args: {
+          _agreement_id: string
+          _signature_data: string
+          _signature_type: string
+          _signer_name: string
+          _signer_title: string
+          _user_agent: string
+        }
+        Returns: {
+          agreement_number: string | null
+          attachment_url: string | null
+          body_html: string
+          category: string
+          countersigned_at: string | null
+          countersigned_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          customer_signed_at: string | null
+          declined_at: string | null
+          delivered_at: string | null
+          document_type: string
+          employee_user_id: string | null
+          executed_at: string | null
+          expires_at: string | null
+          field_schema: Json
+          field_values: Json
+          fields_locked: boolean
+          id: string
+          internal_reference: string | null
+          job_id: string | null
+          last_reminder_at: string | null
+          merge_data: Json | null
+          notes: string | null
+          parent_agreement_id: string | null
+          property_id: string | null
+          quote_id: string | null
+          recipient_email: string | null
+          recipient_name: string
+          recipient_type: string
+          recipient_user_id: string | null
+          relationship_type: string | null
+          reminder_count: number
+          requires_countersignature: boolean
+          season_end: string | null
+          season_start: string | null
+          sent_at: string | null
+          sent_by: string | null
+          signed_at: string | null
+          signing_token: string | null
+          status: string
+          subcontractor_user_id: string | null
+          superseded_by: string | null
+          template_id: string | null
+          title: string
+          updated_at: string
+          version: number
+          viewed_at: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "agreements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_pm_notification: {
         Args: {
           p_action_url?: string
@@ -14212,31 +14358,49 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      generate_agreement_number: { Args: never; Returns: string }
       generate_pm_credit_number: { Args: never; Returns: string }
       generate_pm_receipt_number: { Args: never; Returns: string }
       get_agreement_by_token: {
         Args: { _token: string }
         Returns: {
+          agreement_number: string | null
           attachment_url: string | null
           body_html: string
           category: string
+          countersigned_at: string | null
+          countersigned_by: string | null
           created_at: string
           created_by: string | null
           customer_id: string | null
+          customer_signed_at: string | null
           declined_at: string | null
+          delivered_at: string | null
+          document_type: string
           employee_user_id: string | null
+          executed_at: string | null
           expires_at: string | null
+          field_schema: Json
+          field_values: Json
+          fields_locked: boolean
           id: string
           internal_reference: string | null
           job_id: string | null
+          last_reminder_at: string | null
           merge_data: Json | null
           notes: string | null
+          parent_agreement_id: string | null
           property_id: string | null
           quote_id: string | null
           recipient_email: string | null
           recipient_name: string
           recipient_type: string
           recipient_user_id: string | null
+          relationship_type: string | null
+          reminder_count: number
+          requires_countersignature: boolean
+          season_end: string | null
+          season_start: string | null
           sent_at: string | null
           sent_by: string | null
           signed_at: string | null
@@ -14249,6 +14413,9 @@ export type Database = {
           updated_at: string
           version: number
           viewed_at: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         SetofOptions: {
           from: "*"
@@ -14569,26 +14736,43 @@ export type Database = {
           _user_agent: string
         }
         Returns: {
+          agreement_number: string | null
           attachment_url: string | null
           body_html: string
           category: string
+          countersigned_at: string | null
+          countersigned_by: string | null
           created_at: string
           created_by: string | null
           customer_id: string | null
+          customer_signed_at: string | null
           declined_at: string | null
+          delivered_at: string | null
+          document_type: string
           employee_user_id: string | null
+          executed_at: string | null
           expires_at: string | null
+          field_schema: Json
+          field_values: Json
+          fields_locked: boolean
           id: string
           internal_reference: string | null
           job_id: string | null
+          last_reminder_at: string | null
           merge_data: Json | null
           notes: string | null
+          parent_agreement_id: string | null
           property_id: string | null
           quote_id: string | null
           recipient_email: string | null
           recipient_name: string
           recipient_type: string
           recipient_user_id: string | null
+          relationship_type: string | null
+          reminder_count: number
+          requires_countersignature: boolean
+          season_end: string | null
+          season_start: string | null
           sent_at: string | null
           sent_by: string | null
           signed_at: string | null
@@ -14601,6 +14785,82 @@ export type Database = {
           updated_at: string
           version: number
           viewed_at: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "agreements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_agreement_signature: {
+        Args: {
+          _consent_text: string
+          _field_values: Json
+          _signature_data: string
+          _signature_type: string
+          _signer_email: string
+          _signer_name: string
+          _signer_title: string
+          _token: string
+          _user_agent: string
+        }
+        Returns: {
+          agreement_number: string | null
+          attachment_url: string | null
+          body_html: string
+          category: string
+          countersigned_at: string | null
+          countersigned_by: string | null
+          created_at: string
+          created_by: string | null
+          customer_id: string | null
+          customer_signed_at: string | null
+          declined_at: string | null
+          delivered_at: string | null
+          document_type: string
+          employee_user_id: string | null
+          executed_at: string | null
+          expires_at: string | null
+          field_schema: Json
+          field_values: Json
+          fields_locked: boolean
+          id: string
+          internal_reference: string | null
+          job_id: string | null
+          last_reminder_at: string | null
+          merge_data: Json | null
+          notes: string | null
+          parent_agreement_id: string | null
+          property_id: string | null
+          quote_id: string | null
+          recipient_email: string | null
+          recipient_name: string
+          recipient_type: string
+          recipient_user_id: string | null
+          relationship_type: string | null
+          reminder_count: number
+          requires_countersignature: boolean
+          season_end: string | null
+          season_start: string | null
+          sent_at: string | null
+          sent_by: string | null
+          signed_at: string | null
+          signing_token: string | null
+          status: string
+          subcontractor_user_id: string | null
+          superseded_by: string | null
+          template_id: string | null
+          title: string
+          updated_at: string
+          version: number
+          viewed_at: string | null
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
         }
         SetofOptions: {
           from: "*"
@@ -14666,6 +14926,10 @@ export type Database = {
           p_mailing_address?: string
           p_phone?: string
         }
+        Returns: undefined
+      }
+      void_agreement: {
+        Args: { _agreement_id: string; _reason: string }
         Returns: undefined
       }
       write_audit_log: {
