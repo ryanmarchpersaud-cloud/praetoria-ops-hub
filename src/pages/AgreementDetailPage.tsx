@@ -239,7 +239,19 @@ export default function AgreementDetailPage() {
         {/* Document Preview */}
         <div className="lg:col-span-2 space-y-4">
           {/* PDF Attachment */}
+      {!agreement.recipient_email && agreement.status !== 'signed' && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span>No recipient email is set on this agreement, so it can't be emailed yet.</span>
+          <Button size="sm" variant="outline" onClick={handleSend}>Set recipient email</Button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Document Preview */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* PDF Attachment */}
           <AgreementPdfViewer attachmentUrl={agreement.attachment_url} />
+
 
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
