@@ -27,14 +27,14 @@ These fixes were merged after Build 10 was archived. They must be present in the
 | 1.2 | **Incident print XSS sanitization** | `src/components/incident/IncidentPrintButton.tsx` | HTML entity encoding (`esc`) on all dynamic fields (`report.description`, `report.location`, `report.people_involved`, etc.) in the print template. |
 | 1.3 | **Pay Stub print XSS sanitization** | `src/components/PayStubDetailDialog.tsx` | HTML entity encoding (`esc`) inside `buildPrintHtml()` applied to `displayName`, `displayRole`, `employeeAddress`, `companyName`, `runNumber`, `employeeId`, `stub.notes`, `company.physical_address`, `company.phone`, `company.support_email`/`email`, and earnings/deduction/employer-contribution labels. Same defensive pattern as 1.1 and 1.2. Merged after Build 10. |
 
-### 2. Apple Review Feedback (conditional)
+### 2. Apple Review Metadata
 
 | # | Item | Status |
 |---|------|--------|
-| 2.1 | If Apple rejects Build 10, capture exact rejection reason(s) and ticket number | Pending |
-| 2.2 | Map each rejection reason to required code/config changes | Pending |
-| 2.3 | Verify fixes compile and pass local smoke tests | Pending |
-| 2.4 | Update `Info.plist` or entitlements if required by Apple | Pending |
+| 2.1 | Reviewer account: `applereview@praetoriagroup.ca` / `Praetoria Group` (active, confirmed, no MFA, admin role) | Confirmed 2026-08-12 |
+| 2.2 | App Store Connect: create Version `1.2` and attach Build `11` | Pending |
+| 2.3 | "What's New" notes for 1.2 (pause/resume timer, property management, customer portal service records, task requirements) | Pending |
+| 2.4 | `Info.plist` usage strings unchanged and still accurate (camera, photos, mic, location) | Confirmed |
 
 ### 3. Customer Invoice / Receipt / PDF / Billing / Quote Visibility
 
