@@ -76,12 +76,13 @@ export default function AgreementsPage() {
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Total', value: counts.all },
           { label: 'Drafts', value: counts.draft },
-          { label: 'Awaiting Signature', value: counts.sent },
-          { label: 'Signed', value: counts.signed },
+          { label: 'Awaiting Customer', value: counts.sent },
+          { label: 'Awaiting Praetoria', value: counts.awaiting },
+          { label: 'Fully Executed', value: counts.signed },
         ].map(k => (
           <Card key={k.label}>
             <CardContent className="p-4 text-center">
