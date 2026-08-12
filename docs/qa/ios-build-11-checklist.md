@@ -81,18 +81,18 @@ These fixes were merged after Build 10 was archived. They must be present in the
 
 ---
 
-## Archive & Upload Steps (for Build 11 only)
+## Archive & Upload Steps (Version 1.2 / Build 11)
 
-1. `git pull` latest `main` (must include the two XSS fixes).
+1. `git pull` latest `main` (must include the XSS fixes and the 1.2/11 version bump).
 2. `npm install` to ensure lockfile alignment.
 3. `npm run build` → verify `dist/` contains updated assets.
 4. `npx cap sync ios` → copies `dist/` into `ios/App/App/public`.
 5. Open `ios/App/App.xcodeproj` in Xcode on a Mac.
-6. Bump **Build** number (e.g., 10 → 11). Do **not** change Version unless required.
-7. Select **Any iOS Device (arm64)** as destination.
+6. Confirm **Version = 1.2** and **Build = 11** (already set in `project.pbxproj`; no manual edit needed).
+7. Select **Any iOS Device (arm64)** as destination. Signing stays Automatic on team `9J63Y7CH34`.
 8. **Product → Archive**.
 9. In Organizer, validate and **Distribute App → App Store Connect → Upload**.
-10. In App Store Connect, verify the new build appears under the correct version.
+10. In App Store Connect, create/select version **1.2** and attach build **11**.
 
 ---
 
