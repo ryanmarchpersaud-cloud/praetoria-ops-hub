@@ -75,7 +75,13 @@ export default function AgreementDetailPage() {
   const StatusIcon = statusIcon[agreement.status] || Clock;
 
   const handleSend = () => {
-    if (!agreement.recipient_email) { toast.error('No recipient email set'); return; }
+    if (!agreement.recipient_email) {
+      toast.error('No recipient email set — add it below, then Save and send again');
+      startEdit();
+      setTimeout(() => document.getElementById('agreement-recipient-email')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+      setTimeout(() => (document.getElementById('agreement-recipient-email') as HTMLInputElement | null)?.focus(), 400);
+      return;
+    }
     sendAgreement.mutate({ id: agreement.id, sentBy: user?.id! });
   };
 
@@ -145,17 +151,37 @@ export default function AgreementDetailPage() {
           </div>`;
         }).join('')
       : '';
+    const logoUrl = `${window.location.origin}/praetoria-logo-white.png`;
+    const generated = esc(format(new Date(), 'MMM d, yyyy h:mm a'));
+    const letterhead = `<div class="letterhead">
+      <img src="${logoUrl}" alt="Praetoria Group" />
+      <div>
+        <h1>Praetoria Operations Group Inc.</h1>
+        <p>Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
+        <p>Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
+        <span class="doc-chip">${safeTitle}</span>
+      </div>
+    </div>`;
+    const footer = `<div class="doc-footer">Praetoria Group • 2282 Unit B, Toronto Street, Regina, Saskatchewan • support@praetoriagroup.ca • Generated ${generated}</div>`;
     w.document.write(`<!DOCTYPE html><html><head><title>${safeTitle}</title>
-      <style>body{font-family:-apple-system,sans-serif;max-width:750px;margin:0 auto;padding:32px;color:#1a1a2e;}h1,h2{color:#0f172a;}
+      <style>body{font-family:-apple-system,sans-serif;max-width:800px;margin:0 auto;padding:32px;color:#1a1a2e;}h1,h2{color:#0f172a;}
+      .letterhead{display:flex;align-items:center;gap:24px;background:linear-gradient(135deg,#0F172A 0%,#1E3A8A 100%);color:#fff;border-radius:8px;padding:24px;margin-bottom:24px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+      .letterhead img{height:110px;width:110px;object-fit:contain;flex-shrink:0;}
+      .letterhead h1{color:#fff;font-size:26px;margin:0 0 8px;}
+      .letterhead p{margin:2px 0;font-size:13px;color:rgba(255,255,255,.95);}
+      .doc-chip{display:inline-block;margin-top:12px;background:#fff;color:#0F172A;font-weight:700;padding:6px 14px;border-radius:6px;font-size:14px;}
+      .doc-footer{margin-top:32px;background:#0F172A;color:#fff;border-radius:8px;padding:12px;text-align:center;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
       .sig-box{margin-top:32px;border:2px solid #e2e8f0;border-radius:8px;padding:16px;}
       .sig-box p{margin:4px 0;font-size:13px;}
       @media print{body{padding:0;}}</style></head><body>
+      ${letterhead}
       ${safeBody}
       ${safeSignatures}
+      ${footer}
       </body></html>`);
     w.document.close();
     w.focus();
-    setTimeout(() => w.print(), 500);
+    setTimeout(() => w.print(), 800);
   };
 
   return (
@@ -209,11 +235,19 @@ export default function AgreementDetailPage() {
         )}
       </div>
 
+      {!agreement.recipient_email && agreement.status !== 'signed' && (
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span>No recipient email is set on this agreement, so it can't be emailed yet.</span>
+          <Button size="sm" variant="outline" onClick={handleSend}>Set recipient email</Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Document Preview */}
         <div className="lg:col-span-2 space-y-4">
           {/* PDF Attachment */}
           <AgreementPdfViewer attachmentUrl={agreement.attachment_url} />
+
 
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -241,7 +275,7 @@ export default function AgreementDetailPage() {
                     </div>
                     <div>
                       <Label className="text-xs">Recipient Email</Label>
-                      <Input type="email" value={editRecipientEmail} onChange={e => setEditRecipientEmail(e.target.value)} />
+                      <Input id="agreement-recipient-email" type="email" placeholder="name@company.com" value={editRecipientEmail} onChange={e => setEditRecipientEmail(e.target.value)} />
                     </div>
                   </div>
                   <div>
@@ -250,7 +284,27 @@ export default function AgreementDetailPage() {
                   </div>
                 </div>
               ) : (
-                <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                <div>
+                  <div
+                    className="rounded-lg p-5 mb-6 flex flex-col sm:flex-row items-center gap-5 text-white"
+                    style={{ background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%)', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+                  >
+                    <img src="/praetoria-logo-white.png" alt="Praetoria Group" className="h-24 w-24 sm:h-28 sm:w-28 object-contain flex-shrink-0" />
+                    <div className="flex-1 text-center sm:text-left">
+                      <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Praetoria Operations Group Inc.</h2>
+                      <p className="text-xs sm:text-sm text-white/95 mt-1">Head Office: 2282 Unit B, Toronto Street, Regina, Saskatchewan</p>
+                      <p className="text-xs sm:text-sm text-white/95">Email: support@praetoriagroup.ca • Web: praetoriagroup.ca</p>
+                      <span className="inline-block mt-3 bg-white text-[#0F172A] font-bold px-3 py-1.5 rounded text-sm">{agreement.title}</span>
+                    </div>
+                  </div>
+                  <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                  <div
+                    className="rounded-lg mt-8 p-3 text-[11px] text-center text-white"
+                    style={{ background: '#0F172A', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+                  >
+                    Praetoria Group • 2282 Unit B, Toronto Street, Regina, Saskatchewan • support@praetoriagroup.ca
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
