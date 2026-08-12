@@ -46,15 +46,19 @@ export default function AgreementsPage() {
   const [showCreate, setShowCreate] = useState(false);
 
   const { data: agreements = [], isLoading } = useAgreements({ status: statusFilter, recipientType: typeFilter });
-  const filtered = agreements.filter(a =>
-    !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.recipient_name.toLowerCase().includes(search.toLowerCase())
+  const q = search.trim().toLowerCase();
+  const filtered = agreements.filter((a: any) =>
+    !q ||
+    [a.title, a.recipient_name, a.recipient_email, a.agreement_number, a.category, a.internal_reference, a.document_type]
+      .some((v) => String(v || '').toLowerCase().includes(q))
   );
 
   const counts = {
     all: agreements.length,
-    draft: agreements.filter(a => a.status === 'draft').length,
-    sent: agreements.filter(a => a.status === 'sent').length,
-    signed: agreements.filter(a => a.status === 'signed').length,
+    draft: agreements.filter(a => ['draft', 'ready_to_send'].includes(a.status)).length,
+    sent: agreements.filter(a => ['sent', 'delivered', 'viewed', 'signing_in_progress'].includes(a.status)).length,
+    awaiting: agreements.filter(a => ['customer_signed', 'awaiting_praetoria'].includes(a.status)).length,
+    signed: agreements.filter(a => ['fully_executed', 'signed'].includes(a.status)).length,
   };
 
   return (
