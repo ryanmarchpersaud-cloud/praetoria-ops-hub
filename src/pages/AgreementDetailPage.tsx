@@ -464,6 +464,62 @@ export default function AgreementDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* Praetoria countersignature */}
+      <Dialog open={countersignOpen} onOpenChange={setCountersignOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Praetoria Authorized Signature</DialogTitle>
+            <DialogDescription>
+              Sign on behalf of Praetoria. Only an authorized representative should complete this step.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Full Name</Label>
+              <Input value={repName} onChange={(e) => setRepName(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Position / Title</Label>
+              <Input value={repTitle} onChange={(e) => setRepTitle(e.target.value)} />
+            </div>
+            <div className="rounded-lg border-2 border-dashed p-4 min-h-[90px] flex items-center justify-center bg-muted/30">
+              {repSignature ? (
+                <img
+                  src={JSON.parse(repSignature).type === 'typed' ? undefined : JSON.parse(repSignature).value}
+                  alt=""
+                  className={JSON.parse(repSignature).type === 'typed' ? 'hidden' : 'max-h-20'}
+                />
+              ) : null}
+              {repSignature && JSON.parse(repSignature).type === 'typed' && (
+                <span className="text-3xl" style={{ fontFamily: '"Segoe Script", "Brush Script MT", cursive' }}>
+                  {JSON.parse(repSignature).value}
+                </span>
+              )}
+              {!repSignature && (
+                <Button variant="secondary" onClick={() => setSigModalOpen(true)}>
+                  <PenLine className="h-4 w-4 mr-2" /> Click to Sign
+                </Button>
+              )}
+            </div>
+            {repSignature && (
+              <Button variant="ghost" size="sm" onClick={() => setSigModalOpen(true)}>Change signature</Button>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setCountersignOpen(false)}>Cancel</Button>
+            <Button onClick={handleCountersign} disabled={countersign.isPending}>Agree &amp; Sign</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <SignatureModal
+        open={sigModalOpen}
+        onOpenChange={setSigModalOpen}
+        defaultName={repName}
+        title="Adopt Praetoria Signature"
+        onAdopt={(sig: SignatureValue) => setRepSignature(serializeSignature(sig))}
+      />
     </div>
   );
 }
