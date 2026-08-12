@@ -9,10 +9,9 @@
 
 ## Context
 
-Build 10 is currently in Apple Review. The following items are reserved for a **future** Build 11 release, triggered by either:
+Version 1.1 Build 10 was **approved on 2026-06-08**. Version 1.2 Build 11 is the next release and carries all post-Build-10 work: XSS sanitization fixes, visit pause/resume timer, property management module, customer portal service records, task requirements, and reinstate/archive flows.
 
-1. **Apple rejection of Build 10** → Build 11 addresses Apple's feedback + the items below.
-2. **Apple approval of Build 10** → Build 11 may be prepared later as a security/maintenance update.
+Release gate: the Mac release machine must run `npm install`, `npm run build`, then `npx cap sync ios` before archiving, so `ios/App/App/public` contains the latest web bundle.
 
 ---
 
