@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAgreements, useAgreementTemplates, useCreateAgreement, useSendAgreement } from '@/hooks/useAgreements';
+import { buildCommercialSnowAgreementHtml, COMMERCIAL_SNOW_FIELD_SCHEMA } from '@/lib/agreementTemplates/commercialSnow';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useEmployees } from '@/hooks/useEmployees';
 import { supabase } from '@/integrations/supabase/client';
@@ -182,7 +183,7 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
   const [mergeData, setMergeData] = useState<Record<string, string>>({});
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [agreementMode, setAgreementMode] = useState<'template' | 'pdf'>('template');
+  const [agreementMode, setAgreementMode] = useState<'template' | 'pdf' | 'commercial_snow'>('commercial_snow');
 
   const selectedTemplate = templates.find(t => t.id === templateId);
   const mergeFields: string[] = selectedTemplate?.merge_fields ? (selectedTemplate.merge_fields as string[]) : [];
@@ -244,10 +245,14 @@ function CreateAgreementDialog({ open, onOpenChange, userId }: { open: boolean; 
     }
     setUploading(false);
 
-    const body = agreementMode === 'template' ? renderBody() : `<p>Please review the attached PDF agreement document.</p>`;
+    const isSnow = agreementMode === 'commercial_snow';
+    const body = isSnow
+      ? buildCommercialSnowAgreementHtml({ customer_legal_name: recipientName, ...mergeData })
+      : agreementMode === 'template' ? renderBody() : `<p>Please review the attached PDF agreement document.</p>`;
     const payload: any = {
       template_id: agreementMode === 'template' ? templateId : null,
-      category: agreementMode === 'template' ? (selectedTemplate?.category || 'general') : 'general',
+      category: isSnow ? 'customer' : agreementMode === 'template' ? (selectedTemplate?.category || 'general') : 'general',
+      ...(isSnow && { document_type: 'commercial_snow', field_schema: COMMERCIAL_SNOW_FIELD_SCHEMA, field_values: {} }),
       title,
       recipient_type: recipientType,
       recipient_name: recipientName,
