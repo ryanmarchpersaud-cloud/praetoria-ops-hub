@@ -116,23 +116,23 @@ export function CustomerDocumentsCard({ customerId }: Props) {
         .from('attachments')
         .createSignedUrl(doc.file_path, 60 * 10);
       if (error) throw error;
-      const response = await fetch(data.signedUrl);
-      if (!response.ok) throw new Error(`File request failed (${response.status})`);
-      const source = await response.blob();
-      const blob = new Blob([source], { type: doc.mime_type || source.type || 'application/pdf' });
-      const objectUrl = URL.createObjectURL(blob);
-      if (win) {
-        const safeTitle = String(doc.title || doc.file_name || 'Document').replace(/[&<>"']/g, '');
-        win.document.open();
-        win.document.write(`<!doctype html><html><head><title>${safeTitle}</title><style>html,body,iframe{width:100%;height:100%;margin:0;border:0}body{overflow:hidden}</style></head><body><iframe src="${objectUrl}" title="${safeTitle}"></iframe></body></html>`);
-        win.document.close();
-      } else window.location.assign(objectUrl);
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      if (win && !win.closed) {
+        win.location.replace(data.signedUrl);
+      } else {
+        const a = document.createElement('a');
+        a.href = data.signedUrl;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
     } catch (err: any) {
       win?.close();
       toast({ title: 'Cannot open file', description: err.message, variant: 'destructive' });
     }
   };
+
 
   const deleteMut = useMutation({
     mutationFn: async (doc: any) => {
