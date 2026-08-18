@@ -12,10 +12,12 @@ import { useToast } from '@/hooks/use-toast';
 import { FolderOpen, Upload, Download, Trash2, FileText, Plus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
-const CATEGORIES = ['Contract', 'Price List', 'Access', 'Insurance', 'Site Map', 'Photo', 'Other'] as const;
+const CATEGORIES = ['Contract', 'Signed Documents', 'Price List', 'Access', 'Insurance', 'Site Map', 'Photo', 'Staff Reference', 'Other'] as const;
 
 const categoryColor: Record<string, string> = {
   Contract: 'bg-blue-100 text-blue-700 border-blue-200',
+  'Signed Documents': 'bg-teal-100 text-teal-700 border-teal-200',
+  'Staff Reference': 'bg-slate-200 text-slate-700 border-slate-300',
   'Price List': 'bg-indigo-100 text-indigo-700 border-indigo-200',
   Access: 'bg-purple-100 text-purple-700 border-purple-200',
   Insurance: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -37,6 +39,7 @@ export function CustomerDocumentsCard({ customerId }: Props) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<string>('Contract');
   const [notes, setNotes] = useState('');
+  const [staffOnly, setStaffOnly] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: docs = [], isLoading } = useQuery({
@@ -86,6 +89,7 @@ export function CustomerDocumentsCard({ customerId }: Props) {
         uploaded_by: userData.user?.id,
         title: title.trim(),
         category,
+        staff_only: staffOnly,
         notes: notes.trim() || null,
         file_path: path,
         file_name: file.name,
@@ -160,6 +164,16 @@ export function CustomerDocumentsCard({ customerId }: Props) {
                   <Badge variant="outline" className={`text-[9px] py-0 px-1.5 ${categoryColor[d.category] || categoryColor.Other}`}>
                     {d.category}
                   </Badge>
+                  {d.document_stage && (
+                    <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-amber-100 text-amber-800 border-amber-200">
+                      {d.document_stage}
+                    </Badge>
+                  )}
+                  {d.staff_only && (
+                    <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-slate-200 text-slate-700 border-slate-300">
+                      Staff only — hidden from portal
+                    </Badge>
+                  )}
                 </div>
                 {d.notes && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{d.notes}</p>}
                 <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -214,6 +228,13 @@ export function CustomerDocumentsCard({ customerId }: Props) {
               <Label className="text-xs">Notes (optional)</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Any context the team should know..." />
             </div>
+            <label className="flex items-start gap-2 text-xs">
+              <input type="checkbox" className="mt-0.5" checked={staffOnly} onChange={(e) => setStaffOnly(e.target.checked)} />
+              <span>
+                Staff reference only — never shown in the customer portal. Use this for internal reference material such as
+                another customer's historical agreement.
+              </span>
+            </label>
             <div>
               <Label className="text-xs">File *</Label>
               <Input ref={fileRef} type="file" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt" />
