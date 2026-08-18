@@ -29,7 +29,7 @@ export default function PortalQuotes() {
       if (!customer) return [];
       const { data, error } = await supabase
         .from('quotes')
-        .select('id, quote_number, service_category, approval_status, total, subtotal, tax, unit_rate_quote, created_at, scope_of_work, quote_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
+        .select('id, quote_number, service_category, approval_status, total, subtotal, tax, unit_rate_quote, is_pricing_sheet, created_at, scope_of_work, quote_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
         .eq('customer_id', customer.id)
         .in('approval_status', ['Sent', 'Needs review', 'Approved', 'Declined'] as any)
         .order('created_at', { ascending: false });
@@ -113,7 +113,7 @@ export default function PortalQuotes() {
           {quotes.map((q: any) => {
             const isExpanded = expandedId === q.id;
             const lineItems = (q.quote_line_items || []).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
-            const canAct = actionable(q.approval_status);
+            const canAct = actionable(q.approval_status) && !q.is_pricing_sheet;
 
             return (
               <Card key={q.id} className={cn('transition-shadow', canAct && 'border-amber-300/50 dark:border-amber-700/30')}>
@@ -121,18 +121,23 @@ export default function PortalQuotes() {
                   {/* Header */}
                   <button onClick={() => setExpandedId(isExpanded ? null : q.id)} className="w-full text-left">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <FileText className="h-4 w-4 text-primary shrink-0" />
                         <span className="font-medium text-sm font-mono">{q.quote_number}</span>
+                        {q.is_pricing_sheet && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wide rounded px-1.5 py-0.5 bg-primary/10 text-primary">Pricing Sheet</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <StatusBadge status={q.approval_status} />
+                        {!q.is_pricing_sheet && <StatusBadge status={q.approval_status} />}
                         {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                       <span>{q.service_category}</span>
-                      {q.unit_rate_quote ? (
+                      {q.is_pricing_sheet ? (
+                        <span className="font-semibold text-foreground text-xs">Rate sheet</span>
+                      ) : q.unit_rate_quote ? (
                         <span className="font-semibold text-foreground text-xs">Unit-rate pricing</span>
                       ) : (
                         <span className="font-semibold text-foreground text-sm">${Number(q.total || 0).toFixed(2)}</span>

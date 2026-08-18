@@ -31,6 +31,7 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     projectNotes: quote.project_notes || '',
     termsConditions: quote.terms_conditions || '',
     unitRateQuote: Boolean(quote.unit_rate_quote),
+    isPricingSheet: Boolean(quote.is_pricing_sheet),
     subtotal: Number(quote.subtotal || 0),
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
@@ -338,10 +339,10 @@ export default function QuotePrint() {
           </div>
           <div className="text-right">
             <h2
-              className="text-4xl md:text-5xl print:text-6xl font-extrabold tracking-tight leading-none"
+              className={`${exportData.isPricingSheet ? 'text-3xl md:text-4xl print:text-5xl' : 'text-4xl md:text-5xl print:text-6xl'} font-extrabold tracking-tight leading-none`}
               style={{ color: theme.accent, fontFamily: "'DM Sans', sans-serif" }}
             >
-              QUOTATION
+              {exportData.isPricingSheet ? 'PRICING SHEET' : 'QUOTATION'}
             </h2>
             <p
               className="mt-2 text-lg font-bold print:text-xl text-[#1a1a2e]"

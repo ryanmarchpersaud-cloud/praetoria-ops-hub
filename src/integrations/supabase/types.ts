@@ -11024,6 +11024,7 @@ export type Database = {
           gst_rate: number | null
           id: string
           internal_notes: string | null
+          is_pricing_sheet: boolean
           lead_id: string | null
           price_biweekly: number | null
           price_monthly: number | null
@@ -11070,6 +11071,7 @@ export type Database = {
           gst_rate?: number | null
           id?: string
           internal_notes?: string | null
+          is_pricing_sheet?: boolean
           lead_id?: string | null
           price_biweekly?: number | null
           price_monthly?: number | null
@@ -11116,6 +11118,7 @@ export type Database = {
           gst_rate?: number | null
           id?: string
           internal_notes?: string | null
+          is_pricing_sheet?: boolean
           lead_id?: string | null
           price_biweekly?: number | null
           price_monthly?: number | null
