@@ -306,6 +306,12 @@ export default function AgreementSignPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+        {isProvisional && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900">
+            {PROVISIONAL_BANNER} — acknowledging this document does not activate service.
+          </div>
+        )}
+
         <Card>
           <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="min-w-0 flex-1">
