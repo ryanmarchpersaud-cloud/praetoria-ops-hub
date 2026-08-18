@@ -1,108 +1,88 @@
+# Residential Snow Removal — Combined Quotation & Service Agreement
 
-# Phase 11 — Property Management Inspection Reports Foundation
+Build a single document record that serves as both quotation and service agreement, with strict provisional-vs-final separation, guided customer selections, a pre-signature review screen, and activation gating.
 
-Additive only. No changes to mobile packaging, Stripe, invoices, Finance, HR, payroll, service jobs, tenant ledger, owner statements, property expenses, worker/sub/customer portals, or unrelated systems.
+## 1. PQ-00112 (Terry Leach) — provisional handling
 
-## 1. Database (single migration)
+- Attach the already-uploaded `Snow.pdf` to PQ-00112 as a signed document, reclassified as
+  "Signed Provisional Estimate Acknowledgement — Final Price and Service Availability Pending".
+  The stored PDF is never modified or replaced.
+- PQ-00112 keeps a persistent banner in admin and portal views:
+  "PROVISIONAL ESTIMATE ONLY — NOT A CONFIRMED PRICE OR SERVICE COMMITMENT".
+- No status change to Active/Contracted/Ready for Dispatch. No invoicing, billing, dispatch or scheduling is enabled from it.
+- The $250–$350 range stays an estimate range; the $0 total is never used as a contract price.
+- The 2025 Joel Herback agreement is used only as an internal drafting reference. It is not uploaded to Terry's account or any customer account, and stays out of the customer portal entirely.
 
-### Enums
-- `pm_inspection_type`: `move_in | move_out | routine | maintenance | safety | exterior | interior | seasonal | complaint_followup | other`
-- `pm_inspection_status`: `draft | scheduled | in_progress | completed | reviewed | archived | cancelled`
-- `pm_inspection_condition`: `excellent | good | fair | poor | damaged | needs_cleaning | not_applicable`
+## 2. Combined document model
 
-### `public.pm_inspections`
-Fields: `title`, `inspection_type`, `status` (default `draft`), `inspected_at`, `scheduled_for`, `completed_at`, `reviewed_at`, links: `property_id`, `unit_id`, `tenant_id`, `owner_id`, `lease_id`, `move_in_id`, `move_out_id`, `maintenance_request_id`, `work_order_id`, `document_id`, `created_by`, `assigned_to` (auth.users), `summary`, `admin_notes`, `tenant_visible_notes`, `owner_visible_notes`, `tenant_visible` bool, `owner_visible` bool.
+One record, one ID, shown in both Customer Portal → Quotations and Customer Portal → Services → Documents → Agreements, so price and terms can never diverge.
 
-### `public.pm_inspection_items`
-`inspection_id`, `area`, `item_label`, `condition` (enum), `notes`, `issue_found` bool, `repair_needed` bool, `cleaning_needed` bool, `tenant_visible` bool, `owner_visible` bool, `sort_order`, `photo_count` (int).
+Statuses:
+Draft — Internal Review · Provisional Estimate — Customer Acknowledgement Only · Final Quotation — Awaiting Customer Acceptance · Accepted — Activation Requirements Pending · Active Service Agreement · Suspended · Cancelled · Expired
 
-### `public.pm_inspection_photos`
-`inspection_id`, `item_id` (nullable), `uploaded_by`, `file_path`, `file_name`, `file_size`, `mime_type`, `caption`, `tenant_visible` bool, `owner_visible` bool.
+Rules:
+- Acknowledging a provisional estimate never activates service.
+- Approving a final price creates a new version that must be reviewed and signed again. A provisional signature never carries forward.
+- Signed versions are immutable; every version, signature, timestamp and audit entry is retained.
 
-### `public.pm_inspection_activity`
-`inspection_id`, `actor_id`, `action` (text), `detail` (jsonb), `visibility` (`internal_only|tenant_visible|owner_visible|tenant_and_owner_visible`).
+## 3. Residential template sections
 
-Standard `created_at`/`updated_at` + trigger, GRANTs to `authenticated`/`service_role`, indexes on FKs and status.
+All 25 required sections, including: customer/property info, quotation + agreement numbers, version/status, exact season dates, package, approved areas, snowfall trigger, visit frequency and included-visit limit, response target, pricing and taxes, additional labour/visits/workers, out-of-town travel and mobilization, de-icer authorization, heavy-snow and continuous-storm terms, city berms/windrows, snow placement and hauling, access and obstruction duties, documentation and photos, payment and non-payment suspension, cancellation and renewal, quality guarantee, liability and damage reporting, electronic communications and signatures, activation requirements, and customer selections/initials/signatures.
 
-### RLS
-- **Ops staff / property_manager**: full manage on all four tables (via `is_ops_staff`).
-- **Leasing agent** (via `has_role(auth.uid(),'leasing_agent')`): SELECT / limited UPDATE on inspections + items + photos + activity only when `assigned_to = auth.uid()`; may INSERT items/photos/activity for their own inspection.
-- **Tenant**: SELECT on inspection when `tenant_visible = true AND status IN ('completed','reviewed') AND tenant matches (tenant_id via pm_tenants.user_id or lease chain)`. Items + photos: SELECT only when parent inspection is tenant-visible AND item/photo `tenant_visible = true`. Activity: SELECT only when `visibility IN ('tenant_visible','tenant_and_owner_visible')` and parent inspection tenant-visible.
-- **Owner**: mirror rules using owner match (owner_id via pm_property_owners.user_id, pm_owner_properties, primary_owner_id).
-- **Workers / subcontractors / customers / anon**: no policy → no access.
+Every fee, response target and policy has exactly one value. Any value Ryan has not approved renders as **TBD** and blocks final publication.
 
-## 2. Storage
+Corrections applied from the 2025 reference: "December" spelling, April 30 (never April 31), no "[X]" placeholders, no stray drafting sentence, no unlimited-vs-12-visit contradiction, de-icer treated one way only, one response target, one late fee, one interest rate, one suspension rule, and no reuse of $175/$875 pricing. Insurance/WCB coverage statements are omitted unless verified values are supplied.
 
-Create private bucket `pm-inspection-photos`. RLS on `storage.objects`:
-- Ops staff: full manage.
-- Leasing agent: SELECT/INSERT/UPDATE when photo row's inspection is assigned to them.
-- Tenant: SELECT via EXISTS on `pm_inspection_photos` where photo `tenant_visible` AND parent inspection tenant-visible AND tenant-match.
-- Owner: mirror.
-- All downloads via signed URLs (no `getPublicUrl`).
+## 4. Customer selections (required, hard-blocking)
 
-## 3. Hooks
+Real checkboxes/dropdowns/text — initials or signature can never substitute for an answer:
+- Snowfall trigger: every measurable snowfall / 1 cm / 5 cm / 7 cm / 10 cm / other written amount
+- 3 or 4 visits per week (nothing pre-selected for PQ-00112)
+- Approved driveway, walkway, step and sidewalk areas
+- Approved on-site snow-storage location
+- De-icing authorized or declined
+- Off-site hauling requires authorization: yes/no
+- City windrow return visits: included or additional
+- Photo-documentation consent
+- Payment method
 
-`src/hooks/pm/usePmInspections.ts`:
-- `usePmInspections(filters)` — list + filter (property/unit/tenant/type/status/assigned/date)
-- `usePmInspection(id)` — full record + items + photos + activity
-- `useCreatePmInspection`, `useUpdatePmInspection`, `useAssignInspection`, `useCompleteInspection`, `useReviewInspection`, `useArchiveInspection`
-- Items: `useUpsertInspectionItem`, `useDeleteInspectionItem`
-- Photos: `useUploadInspectionPhoto` (writes to `pm-inspection-photos`), `useDeleteInspectionPhoto`, `signInspectionPhoto`
-- Activity: `useLogInspectionActivity` + hook to fetch
+Final acceptance is blocked while any required selection is blank.
 
-## 4. Admin route `/property-management/inspections`
+## 5. Visit and labour rules
 
-`PMInspectionsList.tsx` — filters (property, unit, tenant, type, status, assigned staff, date range) + create button.
+- 3 visits/week: up to 12 visits per 28-day cycle. 4 visits/week: up to 16 per 28-day cycle.
+- Additional labour: $50 per worker-hour minimum, one-hour minimum per worker, each worker billed separately.
+- Additional time and visits displayed before acceptance.
 
-`PMInspectionDetail.tsx` (`/property-management/inspections/:id`) — header (type/status/dates/assignee), links pickers (property/unit/tenant/lease/move-in/move-out/maintenance/work-order/document), summary, tenant_visible_notes, owner_visible_notes, admin_notes, items editor (add row per area with condition + issue/repair/cleaning flags + tenant/owner visibility), photo grid with upload + per-photo tenant/owner visibility toggles, activity timeline, actions: Assign / Start / Submit / Complete / Review / Archive.
+## 6. Out-of-town properties (White City, Balgonie, etc.)
 
-Sidebar link under Property Management: "Inspections" (ClipboardCheck icon).
+Separate travel/mobilization field, never folded into the $50 worker-hour rate. Regina response times are not promised; response target stays TBD until Ryan approves the route, and is expressly subject to continuing snowfall, highway conditions, closures, crew availability and safe travel.
 
-## 5. PM staff route `/pm-staff/inspections`
+## 7. Pricing block
 
-`pages/pm-staff/Inspections.tsx` — mobile-friendly list of inspections `assigned_to = auth.uid()` (filter status). Detail page `pages/pm-staff/InspectionDetail.tsx` (`/pm-staff/inspections/:id`) — read-only header, checklist edit, photo upload, notes, buttons: Start / Submit for review. No admin notes visible.
+Monthly/28-day price, number of billing periods, seasonal subtotal, GST, PST treatment, total price, additional visit rate, additional worker-hour rate, travel/mobilization, heavy-snow charge, de-icer application and material charges, emergency call-out, hauling/disposal. Provisional documents show ranges labelled as estimates and TBD for unresolved charges; $0 is never displayed as a selling price.
 
-Add "Inspections" tile in PMStaffHome (safe — additive) linking to `/pm-staff/inspections`.
+## 8. Review, signing and delivery
 
-## 6. Tenant portal
+Pre-signature review screen shows customer/property, exact final price and tax, billing frequency, service period, snowfall trigger, included areas, visit limit, response target, additional charges, cancellation terms and required authorizations, with options to correct or decline.
+After signing: immediate PDF download plus emailed copy, with version, timestamp and audit history preserved.
 
-Add hook `useTenantInspections` (relies on RLS). Add `pages/tenant/TenantInspections.tsx` route `/tenant/inspections` — lists tenant-visible completed inspections with type/date/summary + tenant-visible checklist items + tenant-visible photos (signed URLs). Add link card on TenantHome (safe placeholder if list empty). Bottom-nav untouched (spec says don't overcrowd).
+## 9. Activation gating
 
-## 7. Owner portal
+Active Service Agreement requires all of: signed final combined document, Ryan-approved final pricing, initial payment, property inspection, existing-condition photos, recorded snow-storage location, selected snowfall trigger, approved service areas, and assignment to an approved route. A checklist tracks each item; until complete the document displays:
+"ACTIVATION PENDING — SERVICE NOT YET SCHEDULED".
 
-Add hook `useOwnerInspections`. Add `pages/owner/OwnerInspections.tsx` route `/owner/inspections` — same shape for owner-visible. Owner bottom-nav untouched.
+## 10. Storage
 
-## 8. Integration entry points
-
-Add "Inspections" section (list + "Create inspection" button) to:
-- PMPropertyDetail (filter by property)
-- PMTenantDetail (filter by tenant)
-- PMLeaseDetail (filter by lease)
-- PMMaintenanceRequestDetail (filter by maintenance_request_id)
-- PMWorkOrderDetail (filter by work_order_id)
-
-Deferred (no detail pages exist): unit / move-in / move-out.
-
-## 9. Deferred (per spec)
-
-E-signature, damage charges, auto deposit deductions, auto tenant ledger changes, auto expenses, auto work orders from findings, SMS/email automation, public links, AI detection, OCR, full PDF report generation, per-thread doc hub push (link column exists; UI in future phase).
-
-## 10. QA
-
-1. Admin creates a move-in inspection for a test unit/tenant.
-2. Admin assigns to `junk@praetoriagroup.ca` (leasing agent).
-3. Leasing agent signs in → `/pm-staff/inspections` shows only that record; other inspections don't appear.
-4. Leasing agent opens, starts, updates checklist, uploads photo, submits.
-5. Admin reviews and completes; toggles selected notes/photos tenant-visible; toggles others owner-visible; marks inspection tenant-visible / owner-visible.
-6. Test tenant → sees only that inspection's tenant-visible summary, notes, items, photos.
-7. Test owner → sees only owner-visible pieces for their property.
-8. Other tenant/owner sees nothing. Worker/sub/customer/anon see nothing at DB and storage levels.
-9. Photo URLs are signed (`createSignedUrl`); grep confirms no `getPublicUrl` for the bucket.
-10. Confirm no other systems changed.
+- `Snow.pdf` under PQ-00112 → Signed Documents → Provisional Estimate
+- New provisional combined document under Quotations
+- Final signed combined document under Quotations and Services → Documents → Agreements
+- 2025 Joel Herback agreement in a restricted staff-only reference area
+- No wages, markup, profit worksheets or other customers' documents anywhere in the customer portal
 
 ## Technical notes
 
-- Migration order: enums → tables → GRANTs → ENABLE RLS → POLICIES → triggers. Storage bucket via `supabase--storage_create_bucket`; storage.objects policies via migration.
-- Use existing `is_ops_staff` and `has_role(uuid, app_role)` helpers.
-- `assigned_to` references `auth.users` (uuid, no FK per platform rules).
-- Reuse `update_updated_at_column` trigger fn.
+- Extend the existing `agreements` table (already has version, status, field_schema/field_values, quote_id, customer_id, signing_token, audit timestamps) with combined-document status values, an activation-requirements checklist, and a Ryan-approval flag; keep the existing versioning via `superseded_by`/`parent_agreement_id`.
+- New template `src/lib/agreementTemplates/residentialSnow.ts` alongside `commercialSnow.ts`, rendered through the existing branded `agreementPrint.ts` letterhead.
+- Reuse `AgreementSignPage` / `SignatureModal`, adding the selections form and the pre-signature review step.
+- Portal surfacing: `PortalQuotes.tsx` and `PortalAgreementsPage.tsx` both read the same record; RLS keeps staff-reference documents out of the portal.
