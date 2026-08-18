@@ -29,7 +29,7 @@ export default function PortalQuotes() {
       if (!customer) return [];
       const { data, error } = await supabase
         .from('quotes')
-        .select('id, quote_number, service_category, approval_status, total, subtotal, tax, created_at, scope_of_work, quote_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
+        .select('id, quote_number, service_category, approval_status, total, subtotal, tax, unit_rate_quote, created_at, scope_of_work, quote_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
         .eq('customer_id', customer.id)
         .in('approval_status', ['Sent', 'Needs review', 'Approved', 'Declined'] as any)
         .order('created_at', { ascending: false });
@@ -132,7 +132,11 @@ export default function PortalQuotes() {
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                       <span>{q.service_category}</span>
-                      <span className="font-semibold text-foreground text-sm">${Number(q.total || 0).toFixed(2)}</span>
+                      {q.unit_rate_quote ? (
+                        <span className="font-semibold text-foreground text-xs">Unit-rate pricing</span>
+                      ) : (
+                        <span className="font-semibold text-foreground text-sm">${Number(q.total || 0).toFixed(2)}</span>
+                      )}
                     </div>
                   </button>
 
@@ -149,15 +153,23 @@ export default function PortalQuotes() {
                       {/* Line items */}
                       {lineItems.length > 0 && (
                         <div>
-                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Line Items</p>
+                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                            {q.unit_rate_quote ? 'Unit-Rate Pricing Schedule' : 'Line Items'}
+                          </p>
                           <div className="border border-border rounded-md overflow-hidden">
                             <table className="w-full text-xs">
                               <thead className="bg-muted/50">
                                 <tr>
                                   <th className="text-left px-3 py-1.5 font-medium">Item</th>
-                                  <th className="text-right px-3 py-1.5 font-medium w-16">Qty</th>
-                                  <th className="text-right px-3 py-1.5 font-medium w-20">Price</th>
-                                  <th className="text-right px-3 py-1.5 font-medium w-20">Total</th>
+                                  {q.unit_rate_quote ? (
+                                    <th className="text-right px-3 py-1.5 font-medium w-24">Rate</th>
+                                  ) : (
+                                    <>
+                                      <th className="text-right px-3 py-1.5 font-medium w-16">Qty</th>
+                                      <th className="text-right px-3 py-1.5 font-medium w-20">Price</th>
+                                      <th className="text-right px-3 py-1.5 font-medium w-20">Total</th>
+                                    </>
+                                  )}
                                 </tr>
                               </thead>
                               <tbody>
@@ -167,19 +179,35 @@ export default function PortalQuotes() {
                                       <p className="font-medium">{li.item_name}</p>
                                       {li.description && <p className="text-muted-foreground mt-0.5">{li.description}</p>}
                                     </td>
-                                    <td className="text-right px-3 py-2">{li.quantity}</td>
-                                    <td className="text-right px-3 py-2">${Number(li.unit_price || 0).toFixed(2)}</td>
-                                    <td className="text-right px-3 py-2 font-medium">${Number(li.line_total || 0).toFixed(2)}</td>
+                                    {q.unit_rate_quote ? (
+                                      <td className="text-right px-3 py-2 font-medium whitespace-nowrap">
+                                        {Number(li.unit_price) > 0 ? `$${Number(li.unit_price).toFixed(2)}` : 'Variable'}
+                                      </td>
+                                    ) : (
+                                      <>
+                                        <td className="text-right px-3 py-2">{li.quantity}</td>
+                                        <td className="text-right px-3 py-2">${Number(li.unit_price || 0).toFixed(2)}</td>
+                                        <td className="text-right px-3 py-2 font-medium">${Number(li.line_total || 0).toFixed(2)}</td>
+                                      </>
+                                    )}
                                   </tr>
                                 ))}
                               </tbody>
                             </table>
                           </div>
-                          <div className="flex flex-col items-end gap-0.5 mt-2 text-xs">
-                            <span className="text-muted-foreground">Subtotal: ${Number(q.subtotal || 0).toFixed(2)}</span>
-                            <span className="text-muted-foreground">Tax: ${Number(q.tax || 0).toFixed(2)}</span>
-                            <span className="font-semibold text-sm">Total: ${Number(q.total || 0).toFixed(2)}</span>
-                          </div>
+                          {q.unit_rate_quote ? (
+                            <p className="text-[11px] text-muted-foreground mt-2">
+                              Unit-rate pricing — no fixed total. Invoices are based on the actual services, hours,
+                              loads, applications and materials used. Snow clearing, hauling and ice-control services
+                              are subject to 5% GST (no PST); separately sold materials are subject to GST and PST.
+                            </p>
+                          ) : (
+                            <div className="flex flex-col items-end gap-0.5 mt-2 text-xs">
+                              <span className="text-muted-foreground">Subtotal: ${Number(q.subtotal || 0).toFixed(2)}</span>
+                              <span className="text-muted-foreground">Tax: ${Number(q.tax || 0).toFixed(2)}</span>
+                              <span className="font-semibold text-sm">Total: ${Number(q.total || 0).toFixed(2)}</span>
+                            </div>
+                          )}
                         </div>
                       )}
 
