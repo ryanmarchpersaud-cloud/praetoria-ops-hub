@@ -132,7 +132,11 @@ export default function PortalQuotes() {
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                       <span>{q.service_category}</span>
-                      <span className="font-semibold text-foreground text-sm">${Number(q.total || 0).toFixed(2)}</span>
+                      {q.unit_rate_quote ? (
+                        <span className="font-semibold text-foreground text-xs">Unit-rate pricing</span>
+                      ) : (
+                        <span className="font-semibold text-foreground text-sm">${Number(q.total || 0).toFixed(2)}</span>
+                      )}
                     </div>
                   </button>
 
