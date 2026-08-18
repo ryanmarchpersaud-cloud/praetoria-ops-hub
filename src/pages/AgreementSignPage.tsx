@@ -381,22 +381,37 @@ export default function AgreementSignPage() {
         onAdopt={handleAdopt}
       />
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirm Your Signature</DialogTitle>
-            <DialogDescription>
-              By selecting “Agree &amp; Sign,” you confirm that you intend to electronically sign this Service Agreement.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Go Back</Button>
-            <Button onClick={handleAgreeAndSign} disabled={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Agree &amp; Sign
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isCombined ? (
+        <PreSignReviewDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          agreement={agreement}
+          values={values}
+          provisional={isProvisional}
+          submitting={submitting}
+          missingSelections={missingSelections}
+          onConfirm={handleAgreeAndSign}
+          onDecline={handleDecline}
+        />
+      ) : (
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirm Your Signature</DialogTitle>
+              <DialogDescription>
+                By selecting “Agree &amp; Sign,” you confirm that you intend to electronically sign this Service Agreement.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button variant="outline" onClick={() => setConfirmOpen(false)}>Go Back</Button>
+              <Button onClick={handleAgreeAndSign} disabled={submitting}>
+                {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Agree &amp; Sign
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
     </div>
   );
 }
