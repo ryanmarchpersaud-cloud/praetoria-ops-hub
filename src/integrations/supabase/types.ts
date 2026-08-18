@@ -14399,15 +14399,6 @@ export type Database = {
         Args: { _token: string; _user_agent: string }
         Returns: undefined
       }
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
-      email_queue_dispatch: { Args: never; Returns: undefined }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
-      }
       generate_agreement_number: { Args: never; Returns: string }
       generate_pm_credit_number: { Args: never; Returns: string }
       generate_pm_receipt_number: { Args: never; Returns: string }
@@ -14582,15 +14573,6 @@ export type Database = {
           customer_id: string
           match_field: string
         }[]
-      }
-      move_to_dlq: {
-        Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
-        }
-        Returns: number
       }
       owner_mark_approval_viewed: {
         Args: { _approval_id: string }
@@ -14773,14 +14755,6 @@ export type Database = {
           p_source: string
         }
         Returns: Json
-      }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
       }
       sign_agreement_with_token: {
         Args: {
