@@ -111,21 +111,30 @@ export function CustomerDocumentsCard({ customerId }: Props) {
 
   const handleDownload = async (doc: any) => {
     const win = window.open('about:blank', '_blank');
+    if (win && !win.closed) {
+      win.document.title = 'Opening document…';
+      win.document.body.textContent = 'Opening document…';
+    }
     try {
       const { data, error } = await supabase.storage
         .from('attachments')
-        .createSignedUrl(doc.file_path, 60 * 10);
+        .download(doc.file_path);
       if (error) throw error;
+
+      const file = new Blob([data], { type: doc.mime_type || data.type || 'application/octet-stream' });
+      const localUrl = URL.createObjectURL(file);
       if (win && !win.closed) {
-        win.location.replace(data.signedUrl);
+        win.location.replace(localUrl);
+        window.setTimeout(() => URL.revokeObjectURL(localUrl), 60 * 60 * 1000);
       } else {
         const a = document.createElement('a');
-        a.href = data.signedUrl;
+        a.href = localUrl;
         a.target = '_blank';
         a.rel = 'noopener';
         document.body.appendChild(a);
         a.click();
         a.remove();
+        window.setTimeout(() => URL.revokeObjectURL(localUrl), 60 * 60 * 1000);
       }
     } catch (err: any) {
       win?.close();
