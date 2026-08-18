@@ -111,14 +111,17 @@ export function CustomerDocumentsCard({ customerId }: Props) {
 
   const handleDownload = async (doc: any) => {
     // Open the tab synchronously so the browser popup blocker never swallows it.
-    const win = window.open('', '_blank', 'noopener,noreferrer');
+    // Do not pass `noopener` here: browsers intentionally return null for that
+    // feature, which leaves the new tab on about:blank and prevents redirecting it.
+    const win = window.open('about:blank', '_blank');
+    if (win) win.opener = null;
     try {
       const { data, error } = await supabase.storage
         .from('attachments')
         .createSignedUrl(doc.file_path, 60 * 10);
       if (error) throw error;
       if (win) {
-        win.location.href = data.signedUrl;
+        win.location.replace(data.signedUrl);
       } else {
         const a = document.createElement('a');
         a.href = data.signedUrl;

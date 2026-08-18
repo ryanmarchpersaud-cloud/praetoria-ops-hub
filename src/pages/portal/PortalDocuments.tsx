@@ -41,13 +41,16 @@ export default function PortalDocuments() {
   });
 
   const openDoc = async (doc: any) => {
-    const win = window.open('', '_blank', 'noopener,noreferrer');
+    // Keep a usable WindowProxy so the synchronously opened tab can be
+    // redirected after the private file URL is generated.
+    const win = window.open('about:blank', '_blank');
+    if (win) win.opener = null;
     try {
       const { data, error } = await supabase.storage
         .from('attachments')
         .createSignedUrl(doc.file_path, 60 * 10);
       if (error) throw error;
-      if (win) win.location.href = data.signedUrl;
+      if (win) win.location.replace(data.signedUrl);
       else {
         const a = document.createElement('a');
         a.href = data.signedUrl; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.click();
