@@ -110,15 +110,22 @@ export function CustomerDocumentsCard({ customerId }: Props) {
   };
 
   const handleDownload = async (doc: any) => {
+    const win = window.open('about:blank', '_blank');
     try {
       const { data, error } = await supabase.storage
         .from('attachments')
         .createSignedUrl(doc.file_path, 60 * 10);
       if (error) throw error;
-      // A delayed cross-origin redirect in a pre-opened tab is blocked by some
-      // browsers and leaves about:blank visible. A same-tab handoff is reliable.
-      window.location.assign(data.signedUrl);
+      const response = await fetch(data.signedUrl);
+      if (!response.ok) throw new Error(`File request failed (${response.status})`);
+      const source = await response.blob();
+      const blob = new Blob([source], { type: doc.mime_type || source.type || 'application/pdf' });
+      const objectUrl = URL.createObjectURL(blob);
+      if (win) win.location.href = objectUrl;
+      else window.location.assign(objectUrl);
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     } catch (err: any) {
+      win?.close();
       toast({ title: 'Cannot open file', description: err.message, variant: 'destructive' });
     }
   };
