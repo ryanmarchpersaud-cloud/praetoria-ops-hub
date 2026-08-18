@@ -21,6 +21,8 @@ import { AgreementField, AgreementFieldValues } from '@/lib/agreementFields';
 import { agreementStatusMeta, canRemind } from '@/lib/agreementStatus';
 import { openAgreementPrintWindow } from '@/lib/agreementPrint';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { CombinedDocumentPanel } from '@/components/agreements/CombinedDocumentPanel';
+
 
 const statusIcon: Record<string, any> = {
   draft: Clock, sent: Send, viewed: Eye, signed: CheckCircle, fully_executed: CheckCircle,
@@ -311,9 +313,14 @@ export default function AgreementDetailPage() {
         </div>
       )}
 
+      {(agreement as any).is_combined_document && (
+        <CombinedDocumentPanel agreement={agreement} userId={user?.id} />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Document Preview */}
         <div className="lg:col-span-2 space-y-4">
+
           {/* PDF Attachment */}
           <AgreementPdfViewer attachmentUrl={agreement.attachment_url} />
 
