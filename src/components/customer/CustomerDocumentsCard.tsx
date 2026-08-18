@@ -165,19 +165,26 @@ export function CustomerDocumentsCard({ customerId }: Props) {
           <p className="text-xs text-muted-foreground py-4 text-center">No documents yet. Upload contracts, insurance, access notes, site maps, etc.</p>
         ) : (
           docs.map((d: any) => (
-            <div key={d.id} className="flex items-start gap-2 p-2 rounded-md border bg-card hover:bg-accent/30 transition">
+            <div
+              key={d.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleDownload(d)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDownload(d); } }}
+              className="flex items-start gap-2 p-2 rounded-md border bg-card hover:bg-accent/30 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <FileText className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <button onClick={() => handleDownload(d)} className="text-sm font-medium text-primary hover:underline truncate text-left">
+                  <span className="text-sm font-medium text-primary hover:underline truncate text-left">
                     {d.title}
-                  </button>
+                  </span>
                   <Badge variant="outline" className={`text-[9px] py-0 px-1.5 ${categoryColor[d.category] || categoryColor.Other}`}>
-                    {d.category}
+                    Category: {d.category}
                   </Badge>
                   {d.document_stage && (
                     <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-amber-100 text-amber-800 border-amber-200">
-                      {d.document_stage}
+                      Stage: {d.document_stage}
                     </Badge>
                   )}
                   {d.staff_only && (
