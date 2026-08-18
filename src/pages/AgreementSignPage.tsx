@@ -24,7 +24,7 @@ import { openAgreementPrintWindow } from '@/lib/agreementPrint';
 import { PreSignReviewDialog } from '@/components/agreements/PreSignReviewDialog';
 import { REQUIRED_SELECTION_KEYS } from '@/lib/agreementTemplates/residentialSnow';
 import { PROVISIONAL_BANNER } from '@/lib/combinedDocument';
-import { resolveAgreementBody } from '@/lib/agreementBody';
+import { resolveAgreementBody, resolveAgreementSchema } from '@/lib/agreementBody';
 
 import logoWhite from '@/assets/praetoria-logo-white.png';
 
@@ -62,8 +62,8 @@ export default function AgreementSignPage() {
   const registerFieldRef = useCallback((key: string, el: HTMLDivElement | null) => { fieldRefs.current[key] = el; }, []);
 
   const schema: AgreementField[] = useMemo(() => {
-    const s = (agreement as any)?.field_schema;
-    return Array.isArray(s) && s.length ? (s as AgreementField[]) : FALLBACK_SCHEMA;
+    const resolved = resolveAgreementSchema(agreement);
+    return (resolved as AgreementField[] | null) || FALLBACK_SCHEMA;
   }, [agreement]);
 
   const bodyHtml = useMemo(() => resolveAgreementBody(agreement), [agreement]);

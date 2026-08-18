@@ -1,4 +1,4 @@
-import { buildResidentialSnowBody } from '@/lib/agreementTemplates/residentialSnow';
+import { buildResidentialSnowBody, RESIDENTIAL_SNOW_FIELD_SCHEMA } from '@/lib/agreementTemplates/residentialSnow';
 import { combinedStatusMeta } from '@/lib/combinedDocument';
 
 /**
@@ -17,4 +17,13 @@ export function resolveAgreementBody(agreement: any): string {
     return buildResidentialSnowBody(merge, { provisional: agreement.doc_status === 'provisional_estimate' });
   }
   return agreement.body_html || '';
+}
+
+/** Combined documents always use the master residential field schema. */
+export function resolveAgreementSchema(agreement: any) {
+  if (agreement?.document_type === 'residential_snow_combined' || agreement?.is_combined_document) {
+    return RESIDENTIAL_SNOW_FIELD_SCHEMA;
+  }
+  const s = agreement?.field_schema;
+  return Array.isArray(s) && s.length ? s : null;
 }

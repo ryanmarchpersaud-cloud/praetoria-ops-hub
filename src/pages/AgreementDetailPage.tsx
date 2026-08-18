@@ -22,7 +22,7 @@ import { agreementStatusMeta, canRemind } from '@/lib/agreementStatus';
 import { openAgreementPrintWindow } from '@/lib/agreementPrint';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { CombinedDocumentPanel } from '@/components/agreements/CombinedDocumentPanel';
-import { resolveAgreementBody } from '@/lib/agreementBody';
+import { resolveAgreementBody, resolveAgreementSchema } from '@/lib/agreementBody';
 
 
 const statusIcon: Record<string, any> = {
@@ -86,7 +86,7 @@ export default function AgreementDetailPage() {
   const statusMeta = agreementStatusMeta(agreement.status);
   const isAwaitingPraetoria = ['awaiting_praetoria', 'customer_signed'].includes(agreement.status);
   const isLocked = ['fully_executed', 'signed', 'voided', 'cancelled', 'superseded'].includes(agreement.status);
-  const fieldSchema = (Array.isArray((agreement as any).field_schema) ? (agreement as any).field_schema : []) as AgreementField[];
+  const fieldSchema = ((resolveAgreementSchema(agreement) || []) as AgreementField[]);
   const fieldValues = (((agreement as any).field_values || {}) as AgreementFieldValues);
 
   const handleVoid = () => {
