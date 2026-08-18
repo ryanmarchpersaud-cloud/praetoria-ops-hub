@@ -113,7 +113,7 @@ export default function PortalQuotes() {
           {quotes.map((q: any) => {
             const isExpanded = expandedId === q.id;
             const lineItems = (q.quote_line_items || []).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
-            const canAct = actionable(q.approval_status);
+            const canAct = actionable(q.approval_status) && !q.is_pricing_sheet;
 
             return (
               <Card key={q.id} className={cn('transition-shadow', canAct && 'border-amber-300/50 dark:border-amber-700/30')}>
