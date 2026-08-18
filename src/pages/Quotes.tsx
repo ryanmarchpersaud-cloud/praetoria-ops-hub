@@ -321,7 +321,12 @@ export default function Quotes() {
                   const isOverdue = q.follow_up_due_at && new Date(q.follow_up_due_at) <= new Date() && q.approval_status === 'Sent';
                   return (
                     <TableRow key={q.id} className={`cursor-pointer hover:bg-muted/50 ${isOverdue ? 'bg-destructive/5' : ''}`} onClick={() => navigate(`/quotes/${q.id}`)}>
-                      <TableCell><Link to={`/quotes/${q.id}`} className="font-medium mono text-sm hover:text-primary">{q.quote_number}</Link></TableCell>
+                      <TableCell>
+                        <Link to={`/quotes/${q.id}`} className="font-medium mono text-sm hover:text-primary">{q.quote_number}</Link>
+                        {q.is_pricing_sheet && (
+                          <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide rounded px-1.5 py-0.5 bg-primary/10 text-primary">Pricing Sheet</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm">
                         {(() => {
                           const c = q.customers || q.leads;
