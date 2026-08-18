@@ -31,7 +31,7 @@ export default function PortalQuotes() {
       if (!customer) return [];
       const { data, error } = await supabase
         .from('quotes')
-        .select('id, quote_number, service_category, approval_status, total, subtotal, tax, unit_rate_quote, is_pricing_sheet, created_at, scope_of_work, quote_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
+        .select('id, quote_number, service_category, approval_status, total, subtotal, tax, unit_rate_quote, is_pricing_sheet, is_provisional_estimate, created_at, scope_of_work, quote_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
         .eq('customer_id', customer.id)
         .in('approval_status', ['Sent', 'Needs review', 'Approved', 'Declined'] as any)
         .order('created_at', { ascending: false });
@@ -117,11 +117,16 @@ export default function PortalQuotes() {
           {quotes.map((q: any) => {
             const isExpanded = expandedId === q.id;
             const lineItems = (q.quote_line_items || []).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
-            const canAct = actionable(q.approval_status) && !q.is_pricing_sheet;
+            const canAct = actionable(q.approval_status) && !q.is_pricing_sheet && !q.is_provisional_estimate;
 
             return (
               <Card key={q.id} className={cn('transition-shadow', canAct && 'border-amber-300/50 dark:border-amber-700/30')}>
                 <CardContent className="pt-4 space-y-3">
+                  {q.is_provisional_estimate && (
+                    <p className="rounded border border-amber-300 bg-amber-50 p-2 text-[11px] font-semibold text-amber-900">
+                      PROVISIONAL ESTIMATE ONLY — NOT A CONFIRMED PRICE OR SERVICE COMMITMENT
+                    </p>
+                  )}
                   {/* Header */}
                   <button onClick={() => setExpandedId(isExpanded ? null : q.id)} className="w-full text-left">
                     <div className="flex items-center justify-between gap-2">
