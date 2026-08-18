@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { FileText, Check, X, MessageSquare, ChevronDown, ChevronUp, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { PortalCombinedDocuments } from '@/components/agreements/PortalCombinedDocuments';
+
 
 export default function PortalQuotes() {
   const { user } = useAuth();
@@ -100,6 +102,8 @@ export default function PortalQuotes() {
   return (
     <div className="space-y-4 animate-fade-in">
       <h1 className="text-xl font-bold">My Quotes</h1>
+      <PortalCombinedDocuments customerId={customer?.id} />
+
       {isLoading ? (
         <div className="space-y-3">{[1, 2].map(i => <div key={i} className="h-24 rounded-lg bg-muted animate-pulse" />)}</div>
       ) : quotes.length === 0 ? (
