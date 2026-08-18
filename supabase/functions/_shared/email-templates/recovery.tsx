@@ -16,11 +16,13 @@ import {
 interface RecoveryEmailProps {
   siteName: string
   confirmationUrl: string
+  token?: string
 }
 
 export const RecoveryEmail = ({
   siteName,
   confirmationUrl,
+  token,
 }: RecoveryEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
@@ -29,9 +31,10 @@ export const RecoveryEmail = ({
       <Container style={container}>
         <Heading style={h1}>Reset your password</Heading>
         <Text style={text}>
-          We received a request to reset your password for {siteName}. Click
-          the button below to choose a new password.
+          We received a request to reset your password for {siteName}. Open the
+          reset page and enter the 6-digit code below to choose a new password.
         </Text>
+        {token ? <Text style={codeStyle}>{token}</Text> : null}
         <Button style={button} href={confirmationUrl}>
           Reset Password
         </Button>
@@ -67,5 +70,13 @@ const button = {
   borderRadius: '8px',
   padding: '12px 20px',
   textDecoration: 'none',
+}
+const codeStyle = {
+  fontFamily: 'Courier, monospace',
+  fontSize: '26px',
+  fontWeight: 'bold' as const,
+  letterSpacing: '4px',
+  color: '#0F172A',
+  margin: '0 0 25px',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
