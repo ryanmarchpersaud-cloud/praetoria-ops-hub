@@ -29,7 +29,7 @@ export default function PortalQuotes() {
       if (!customer) return [];
       const { data, error } = await supabase
         .from('quotes')
-        .select('id, quote_number, service_category, approval_status, total, subtotal, tax, unit_rate_quote, created_at, scope_of_work, quote_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
+        .select('id, quote_number, service_category, approval_status, total, subtotal, tax, unit_rate_quote, is_pricing_sheet, created_at, scope_of_work, quote_line_items(id, item_name, description, quantity, unit_price, line_total, sort_order)')
         .eq('customer_id', customer.id)
         .in('approval_status', ['Sent', 'Needs review', 'Approved', 'Declined'] as any)
         .order('created_at', { ascending: false });
