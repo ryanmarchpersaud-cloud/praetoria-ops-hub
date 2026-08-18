@@ -21,7 +21,7 @@ interface CheckResult {
 
 const INITIAL_CHECKS: CheckResult[] = [
   { id: 'hook', label: 'Auth email hook reachable', status: 'idle' },
-  { id: 'queue', label: 'Email queue function deployed', status: 'idle' },
+  { id: 'queue', label: 'Email delivery service', status: 'idle' },
   { id: 'log', label: 'Recent recovery emails (last 24h)', status: 'idle' },
   { id: 'trigger', label: 'Trigger live password reset', status: 'idle' },
   { id: 'delivery', label: 'Delivery confirmed in send log', status: 'idle' },
