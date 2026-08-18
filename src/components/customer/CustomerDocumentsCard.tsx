@@ -40,6 +40,7 @@ export function CustomerDocumentsCard({ customerId }: Props) {
   const [category, setCategory] = useState<string>('Contract');
   const [notes, setNotes] = useState('');
   const [staffOnly, setStaffOnly] = useState(false);
+  const [viewer, setViewer] = useState<{ title: string; url: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: docs = [], isLoading } = useQuery({
@@ -110,11 +111,6 @@ export function CustomerDocumentsCard({ customerId }: Props) {
   };
 
   const handleDownload = async (doc: any) => {
-    const win = window.open('about:blank', '_blank');
-    if (win && !win.closed) {
-      win.document.title = 'Opening document…';
-      win.document.body.textContent = 'Opening document…';
-    }
     try {
       const { data, error } = await supabase.storage
         .from('attachments')
@@ -123,21 +119,11 @@ export function CustomerDocumentsCard({ customerId }: Props) {
 
       const file = new Blob([data], { type: doc.mime_type || data.type || 'application/octet-stream' });
       const localUrl = URL.createObjectURL(file);
-      if (win && !win.closed) {
-        win.location.replace(localUrl);
-        window.setTimeout(() => URL.revokeObjectURL(localUrl), 60 * 60 * 1000);
-      } else {
-        const a = document.createElement('a');
-        a.href = localUrl;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.setTimeout(() => URL.revokeObjectURL(localUrl), 60 * 60 * 1000);
-      }
+      setViewer((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return { title: doc.title || doc.file_name || 'Document', url: localUrl };
+      });
     } catch (err: any) {
-      win?.close();
       toast({ title: 'Cannot open file', description: err.message, variant: 'destructive' });
     }
   };
@@ -276,6 +262,23 @@ export function CustomerDocumentsCard({ customerId }: Props) {
               {uploading ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading…</> : <><Upload className="h-4 w-4 mr-1" /> Upload</>}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!viewer}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            if (viewer) URL.revokeObjectURL(viewer.url);
+            setViewer(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="px-4 pt-4">
+            <DialogTitle className="text-base">{viewer?.title}</DialogTitle>
+          </DialogHeader>
+          {viewer && <iframe src={viewer.url} title={viewer.title} className="w-full flex-1 border-0" />}
         </DialogContent>
       </Dialog>
     </Card>
