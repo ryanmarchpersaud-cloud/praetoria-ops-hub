@@ -134,7 +134,27 @@ export default function AgreementSignPage() {
     if (remaining.length) setTimeout(() => scrollToField(remaining[0].key), 300);
   };
 
+  const isCombined = Boolean((agreement as any)?.is_combined_document);
+  const isProvisional = (agreement as any)?.doc_status === 'provisional_estimate';
+
+  /** Required selections must be answered outright — a signature never substitutes. */
+  const missingSelections = useMemo(() => {
+    if (!isCombined) return [];
+    return REQUIRED_SELECTION_KEYS.filter((k) => {
+      const v = values[k];
+      if (k === 'snowfall_trigger' && v === 'Other written amount (state below)') {
+        return !String(values.snowfall_trigger_other || '').trim();
+      }
+      return !(typeof v === 'string' ? v.trim() : v);
+    });
+  }, [isCombined, values]);
+
   const handleFinish = () => {
+    if (missingSelections.length) {
+      toast.error('Every required selection must be answered before you can accept');
+      scrollToField(missingSelections[0]);
+      return;
+    }
     if (!progress.allComplete) {
       toast.error('Please complete all required fields');
       goToFirstIncomplete();
@@ -142,6 +162,7 @@ export default function AgreementSignPage() {
     }
     setConfirmOpen(true);
   };
+
 
   const handleAgreeAndSign = async () => {
     setSubmitting(true);
