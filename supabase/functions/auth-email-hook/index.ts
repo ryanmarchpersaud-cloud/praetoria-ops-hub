@@ -21,6 +21,16 @@ const ROOT_DOMAIN = "praetoriagroup.ca"
 const FROM_DOMAIN = "praetoriagroup.ca"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
+// Password reset uses a manually entered 6-digit code. The link carries no
+// token/token_hash so email security scanners cannot consume it by prefetch.
+function buildRecoveryUrl(data: Record<string, any>): string {
+  const resetUrl = `${SITE_URL}/reset-password`
+  const params = new URLSearchParams({ mode: 'code' })
+  if (data.email) params.set('email', data.email)
+  return `${resetUrl}?${params.toString()}`
+}
+
+
 // Template mapping for preview mode
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   signup: SignupEmail,
