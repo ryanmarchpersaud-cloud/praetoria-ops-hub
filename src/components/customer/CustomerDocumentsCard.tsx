@@ -12,16 +12,18 @@ import { useToast } from '@/hooks/use-toast';
 import { FolderOpen, Upload, Download, Trash2, FileText, Plus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
-const CATEGORIES = ['Contract', 'Access', 'Insurance', 'Site Map', 'Photo', 'Other'] as const;
+const CATEGORIES = ['Contract', 'Price List', 'Access', 'Insurance', 'Site Map', 'Photo', 'Other'] as const;
 
 const categoryColor: Record<string, string> = {
   Contract: 'bg-blue-100 text-blue-700 border-blue-200',
+  'Price List': 'bg-indigo-100 text-indigo-700 border-indigo-200',
   Access: 'bg-purple-100 text-purple-700 border-purple-200',
   Insurance: 'bg-amber-100 text-amber-700 border-amber-200',
   'Site Map': 'bg-emerald-100 text-emerald-700 border-emerald-200',
   Photo: 'bg-pink-100 text-pink-700 border-pink-200',
   Other: 'bg-gray-100 text-gray-700 border-gray-200',
 };
+
 
 interface Props {
   customerId: string;

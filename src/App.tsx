@@ -88,6 +88,7 @@ import PortalRecurringServices from "./pages/portal/PortalRecurringServices";
 import PortalReferrals from "./pages/portal/PortalReferrals";
 import PortalHelpPage from "./pages/portal/PortalHelpPage";
 import PortalSnowHistory from "./pages/portal/PortalSnowHistory";
+import PortalDocuments from "./pages/portal/PortalDocuments";
 const PortalAgreementsPage = lazy(() => import("./pages/portal/PortalAgreementsPage"));
 const SnowLogArchivePage = lazy(() => import("./pages/SnowLogArchivePage"));
 const LabourPriceListPage = lazy(() => import("./pages/LabourPriceListPage"));
@@ -789,6 +790,7 @@ function AppRoutes() {
         <Route path="/portal/referrals" element={<PortalReferrals />} />
         <Route path="/portal/help" element={<PortalHelpPage />} />
         <Route path="/portal/snow-history" element={<PortalSnowHistory />} />
+        <Route path="/portal/documents" element={<PortalDocuments />} />
       </Route>
 
       {/* Customer-facing invoice PDF view — RLS restricts to own invoices only */}
