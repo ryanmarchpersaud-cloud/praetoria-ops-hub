@@ -169,7 +169,7 @@ export default function AgreementDetailPage() {
       return;
     }
     if (fieldSchema.length) {
-      openAgreementPrintWindow(agreement as any, {
+      openAgreementPrintWindow({ ...(agreement as any), body_html: resolveAgreementBody(agreement) } as any, {
         logoUrl: `${window.location.origin}/praetoria-logo-white.png`,
         audit: auditLog as any,
       });
