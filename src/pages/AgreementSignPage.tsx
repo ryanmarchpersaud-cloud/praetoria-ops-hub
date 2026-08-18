@@ -21,6 +21,11 @@ import { SignatureModal, serializeSignature, SignatureValue } from '@/components
 import { AgreementField, AgreementFieldValues, completionState } from '@/lib/agreementFields';
 import { agreementStatusMeta, isSignable } from '@/lib/agreementStatus';
 import { openAgreementPrintWindow } from '@/lib/agreementPrint';
+import { PreSignReviewDialog } from '@/components/agreements/PreSignReviewDialog';
+import { REQUIRED_SELECTION_KEYS } from '@/lib/agreementTemplates/residentialSnow';
+import { PROVISIONAL_BANNER } from '@/lib/combinedDocument';
+import { resolveAgreementBody, resolveAgreementSchema } from '@/lib/agreementBody';
+
 import logoWhite from '@/assets/praetoria-logo-white.png';
 
 const FALLBACK_SCHEMA: AgreementField[] = [
@@ -57,13 +62,15 @@ export default function AgreementSignPage() {
   const registerFieldRef = useCallback((key: string, el: HTMLDivElement | null) => { fieldRefs.current[key] = el; }, []);
 
   const schema: AgreementField[] = useMemo(() => {
-    const s = (agreement as any)?.field_schema;
-    return Array.isArray(s) && s.length ? (s as AgreementField[]) : FALLBACK_SCHEMA;
+    const resolved = resolveAgreementSchema(agreement);
+    return (resolved as AgreementField[] | null) || FALLBACK_SCHEMA;
   }, [agreement]);
 
+  const bodyHtml = useMemo(() => resolveAgreementBody(agreement), [agreement]);
+
   const hasPlaceholders = useMemo(
-    () => Boolean(agreement?.body_html && /data-agreement-field=/.test(agreement.body_html)),
-    [agreement?.body_html],
+    () => Boolean(bodyHtml && /data-agreement-field=/.test(bodyHtml)),
+    [bodyHtml],
   );
 
   // Seed values from stored field values + recipient details
@@ -130,7 +137,27 @@ export default function AgreementSignPage() {
     if (remaining.length) setTimeout(() => scrollToField(remaining[0].key), 300);
   };
 
+  const isCombined = Boolean((agreement as any)?.is_combined_document);
+  const isProvisional = (agreement as any)?.doc_status === 'provisional_estimate';
+
+  /** Required selections must be answered outright — a signature never substitutes. */
+  const missingSelections = useMemo(() => {
+    if (!isCombined) return [];
+    return REQUIRED_SELECTION_KEYS.filter((k) => {
+      const v = values[k];
+      if (k === 'snowfall_trigger' && v === 'Other written amount (state below)') {
+        return !String(values.snowfall_trigger_other || '').trim();
+      }
+      return !(typeof v === 'string' ? v.trim() : v);
+    });
+  }, [isCombined, values]);
+
   const handleFinish = () => {
+    if (missingSelections.length) {
+      toast.error('Every required selection must be answered before you can accept');
+      scrollToField(missingSelections[0]);
+      return;
+    }
     if (!progress.allComplete) {
       toast.error('Please complete all required fields');
       goToFirstIncomplete();
@@ -138,6 +165,7 @@ export default function AgreementSignPage() {
     }
     setConfirmOpen(true);
   };
+
 
   const handleAgreeAndSign = async () => {
     setSubmitting(true);
@@ -196,7 +224,7 @@ export default function AgreementSignPage() {
   const handlePrint = () => {
     if (!agreement) return;
     openAgreementPrintWindow(
-      { ...(agreement as any), field_schema: schema, field_values: values },
+      { ...(agreement as any), body_html: bodyHtml, field_schema: schema, field_values: values },
       { logoUrl: `${window.location.origin}${logoWhite}` },
     );
   };
@@ -281,6 +309,12 @@ export default function AgreementSignPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
+        {isProvisional && (
+          <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900">
+            {PROVISIONAL_BANNER} — acknowledging this document does not activate service.
+          </div>
+        )}
+
         <Card>
           <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="min-w-0 flex-1">
@@ -312,7 +346,7 @@ export default function AgreementSignPage() {
         <Card>
           <CardContent className="p-4 sm:p-8">
             <AgreementDocument
-              bodyHtml={agreement.body_html}
+              bodyHtml={bodyHtml}
               schema={schema}
               values={values}
               interactiveRole="customer"
@@ -381,22 +415,37 @@ export default function AgreementSignPage() {
         onAdopt={handleAdopt}
       />
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirm Your Signature</DialogTitle>
-            <DialogDescription>
-              By selecting “Agree &amp; Sign,” you confirm that you intend to electronically sign this Service Agreement.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Go Back</Button>
-            <Button onClick={handleAgreeAndSign} disabled={submitting}>
-              {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Agree &amp; Sign
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isCombined ? (
+        <PreSignReviewDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          agreement={agreement}
+          values={values}
+          provisional={isProvisional}
+          submitting={submitting}
+          missingSelections={missingSelections}
+          onConfirm={handleAgreeAndSign}
+          onDecline={handleDecline}
+        />
+      ) : (
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirm Your Signature</DialogTitle>
+              <DialogDescription>
+                By selecting “Agree &amp; Sign,” you confirm that you intend to electronically sign this Service Agreement.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button variant="outline" onClick={() => setConfirmOpen(false)}>Go Back</Button>
+              <Button onClick={handleAgreeAndSign} disabled={submitting}>
+                {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Agree &amp; Sign
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
     </div>
   );
 }

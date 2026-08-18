@@ -6,6 +6,8 @@ import { FileSignature, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyAgreements } from '@/hooks/useAgreements';
+import { useCustomerProfile } from '@/hooks/useUserRole';
+import { PortalCombinedDocuments } from '@/components/agreements/PortalCombinedDocuments';
 
 import { agreementStatusMeta } from '@/lib/agreementStatus';
 
@@ -14,11 +16,14 @@ const COMPLETED = ['fully_executed', 'signed', 'awaiting_praetoria', 'customer_s
 
 export default function PortalAgreementsPage() {
   const { user } = useAuth();
+  const { data: customer } = useCustomerProfile();
   const { data: agreements = [], isLoading } = useMyAgreements(user?.id, 'customer');
 
   return (
     <div className="p-4 space-y-4">
       <h1 className="text-xl font-bold flex items-center gap-2"><FileSignature className="h-5 w-5 text-primary" /> My Agreements</h1>
+      <PortalCombinedDocuments customerId={customer?.id} />
+
       <Card>
         <CardHeader className="pb-2"><CardTitle className="text-sm">Service Agreements ({agreements.length})</CardTitle></CardHeader>
         <CardContent className="p-0">

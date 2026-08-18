@@ -25,6 +25,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 import { agreementStatusMeta, ADMIN_STATUS_FILTERS } from '@/lib/agreementStatus';
+import { CreateResidentialCombinedDialog } from '@/components/agreements/CreateResidentialCombinedDialog';
+
 
 const categoryLabels: Record<string, string> = {
   snow: 'Snow & Ice',
@@ -45,6 +47,8 @@ export default function AgreementsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [showCombined, setShowCombined] = useState(false);
+
 
   const { data: agreements = [], isLoading } = useAgreements({ status: statusFilter, recipientType: typeFilter });
   const q = search.trim().toLowerCase();
@@ -71,9 +75,15 @@ export default function AgreementsPage() {
           </h1>
           <p className="text-sm text-muted-foreground">Create, send, and manage agreements & e-signatures</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1" /> New Agreement
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => setShowCombined(true)}>
+            <Snowflake className="h-4 w-4 mr-1" /> Residential Snow Combined Document
+          </Button>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-1" /> New Agreement
+          </Button>
+        </div>
+
       </div>
 
       {/* KPI */}
@@ -161,6 +171,8 @@ export default function AgreementsPage() {
       )}
 
       <CreateAgreementDialog open={showCreate} onOpenChange={setShowCreate} userId={user?.id} />
+      <CreateResidentialCombinedDialog open={showCombined} onOpenChange={setShowCombined} userId={user?.id} />
+
     </div>
   );
 }

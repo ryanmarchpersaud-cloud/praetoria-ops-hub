@@ -21,6 +21,9 @@ import { AgreementField, AgreementFieldValues } from '@/lib/agreementFields';
 import { agreementStatusMeta, canRemind } from '@/lib/agreementStatus';
 import { openAgreementPrintWindow } from '@/lib/agreementPrint';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { CombinedDocumentPanel } from '@/components/agreements/CombinedDocumentPanel';
+import { resolveAgreementBody, resolveAgreementSchema } from '@/lib/agreementBody';
+
 
 const statusIcon: Record<string, any> = {
   draft: Clock, sent: Send, viewed: Eye, signed: CheckCircle, fully_executed: CheckCircle,
@@ -58,7 +61,7 @@ export default function AgreementDetailPage() {
 
   const startEdit = () => {
     setEditTitle(agreement.title || '');
-    setEditBody(agreement.body_html || '');
+    setEditBody(resolveAgreementBody(agreement));
     setEditRecipientName(agreement.recipient_name || '');
     setEditRecipientEmail(agreement.recipient_email || '');
     setIsEditing(true);
@@ -83,7 +86,7 @@ export default function AgreementDetailPage() {
   const statusMeta = agreementStatusMeta(agreement.status);
   const isAwaitingPraetoria = ['awaiting_praetoria', 'customer_signed'].includes(agreement.status);
   const isLocked = ['fully_executed', 'signed', 'voided', 'cancelled', 'superseded'].includes(agreement.status);
-  const fieldSchema = (Array.isArray((agreement as any).field_schema) ? (agreement as any).field_schema : []) as AgreementField[];
+  const fieldSchema = ((resolveAgreementSchema(agreement) || []) as AgreementField[]);
   const fieldValues = (((agreement as any).field_values || {}) as AgreementFieldValues);
 
   const handleVoid = () => {
@@ -181,7 +184,7 @@ export default function AgreementDetailPage() {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
-    const safeBody = DOMPurify.sanitize(agreement.body_html || '');
+    const safeBody = DOMPurify.sanitize(resolveAgreementBody(agreement));
     const safeTitle = esc(agreement.title);
     const safeSignatures = signatures.length > 0
       ? signatures.map((s: any) => {
@@ -311,9 +314,14 @@ export default function AgreementDetailPage() {
         </div>
       )}
 
+      {(agreement as any).is_combined_document && (
+        <CombinedDocumentPanel agreement={agreement} userId={user?.id} />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Document Preview */}
         <div className="lg:col-span-2 space-y-4">
+
           {/* PDF Attachment */}
           <AgreementPdfViewer attachmentUrl={agreement.attachment_url} />
 
@@ -368,14 +376,14 @@ export default function AgreementDetailPage() {
                   </div>
                   {fieldSchema.length ? (
                     <AgreementDocument
-                      bodyHtml={agreement.body_html || ''}
+                      bodyHtml={resolveAgreementBody(agreement)}
                       schema={fieldSchema}
                       values={fieldValues}
                       showRequiredHints={false}
                       signedDates={{ customer: (agreement as any).customer_signed_at, praetoria: (agreement as any).countersigned_at }}
                     />
                   ) : (
-                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(agreement.body_html || '') }} />
+                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(resolveAgreementBody(agreement)) }} />
                   )}
                   <div
                     className="rounded-lg mt-8 p-3 text-[11px] text-center text-white"

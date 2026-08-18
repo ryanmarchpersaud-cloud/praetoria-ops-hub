@@ -32,6 +32,7 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     termsConditions: quote.terms_conditions || '',
     unitRateQuote: Boolean(quote.unit_rate_quote),
     isPricingSheet: Boolean(quote.is_pricing_sheet),
+    isProvisional: Boolean((quote as any).is_provisional_estimate),
     subtotal: Number(quote.subtotal || 0),
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
@@ -352,6 +353,12 @@ export default function QuotePrint() {
             </p>
           </div>
         </div>
+
+        {exportData.isProvisional && (
+          <div className="mb-6 rounded border-2 border-amber-500 bg-amber-50 px-4 py-3 text-center text-xs font-extrabold uppercase tracking-wide text-amber-900 print:mb-8">
+            Provisional estimate only — not a confirmed price or service commitment
+          </div>
+        )}
 
         {/* ── Service & Scope ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 print:mb-10 print:grid-cols-2">

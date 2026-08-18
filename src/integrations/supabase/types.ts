@@ -242,6 +242,7 @@ export type Database = {
       }
       agreements: {
         Row: {
+          activation_checklist: Json
           agreement_number: string | null
           attachment_url: string | null
           body_html: string
@@ -254,6 +255,7 @@ export type Database = {
           customer_signed_at: string | null
           declined_at: string | null
           delivered_at: string | null
+          doc_status: string | null
           document_type: string
           employee_user_id: string | null
           executed_at: string | null
@@ -261,14 +263,19 @@ export type Database = {
           field_schema: Json
           field_values: Json
           fields_locked: boolean
+          has_unresolved_values: boolean
           id: string
           internal_reference: string | null
+          is_combined_document: boolean
           job_id: string | null
           last_reminder_at: string | null
           merge_data: Json | null
           notes: string | null
           parent_agreement_id: string | null
+          pricing_approved_at: string | null
+          pricing_approved_by: string | null
           property_id: string | null
+          quotation_number: string | null
           quote_id: string | null
           recipient_email: string | null
           recipient_name: string
@@ -296,6 +303,7 @@ export type Database = {
           voided_by: string | null
         }
         Insert: {
+          activation_checklist?: Json
           agreement_number?: string | null
           attachment_url?: string | null
           body_html?: string
@@ -308,6 +316,7 @@ export type Database = {
           customer_signed_at?: string | null
           declined_at?: string | null
           delivered_at?: string | null
+          doc_status?: string | null
           document_type?: string
           employee_user_id?: string | null
           executed_at?: string | null
@@ -315,14 +324,19 @@ export type Database = {
           field_schema?: Json
           field_values?: Json
           fields_locked?: boolean
+          has_unresolved_values?: boolean
           id?: string
           internal_reference?: string | null
+          is_combined_document?: boolean
           job_id?: string | null
           last_reminder_at?: string | null
           merge_data?: Json | null
           notes?: string | null
           parent_agreement_id?: string | null
+          pricing_approved_at?: string | null
+          pricing_approved_by?: string | null
           property_id?: string | null
+          quotation_number?: string | null
           quote_id?: string | null
           recipient_email?: string | null
           recipient_name: string
@@ -350,6 +364,7 @@ export type Database = {
           voided_by?: string | null
         }
         Update: {
+          activation_checklist?: Json
           agreement_number?: string | null
           attachment_url?: string | null
           body_html?: string
@@ -362,6 +377,7 @@ export type Database = {
           customer_signed_at?: string | null
           declined_at?: string | null
           delivered_at?: string | null
+          doc_status?: string | null
           document_type?: string
           employee_user_id?: string | null
           executed_at?: string | null
@@ -369,14 +385,19 @@ export type Database = {
           field_schema?: Json
           field_values?: Json
           fields_locked?: boolean
+          has_unresolved_values?: boolean
           id?: string
           internal_reference?: string | null
+          is_combined_document?: boolean
           job_id?: string | null
           last_reminder_at?: string | null
           merge_data?: Json | null
           notes?: string | null
           parent_agreement_id?: string | null
+          pricing_approved_at?: string | null
+          pricing_approved_by?: string | null
           property_id?: string | null
+          quotation_number?: string | null
           quote_id?: string | null
           recipient_email?: string | null
           recipient_name?: string
@@ -1147,12 +1168,15 @@ export type Database = {
           category: string
           created_at: string
           customer_id: string
+          document_stage: string | null
           file_name: string | null
           file_path: string
           file_size: number | null
           id: string
           mime_type: string | null
           notes: string | null
+          quote_id: string | null
+          staff_only: boolean
           title: string
           updated_at: string
           uploaded_by: string | null
@@ -1161,12 +1185,15 @@ export type Database = {
           category?: string
           created_at?: string
           customer_id: string
+          document_stage?: string | null
           file_name?: string | null
           file_path: string
           file_size?: number | null
           id?: string
           mime_type?: string | null
           notes?: string | null
+          quote_id?: string | null
+          staff_only?: boolean
           title: string
           updated_at?: string
           uploaded_by?: string | null
@@ -1175,12 +1202,15 @@ export type Database = {
           category?: string
           created_at?: string
           customer_id?: string
+          document_stage?: string | null
           file_name?: string | null
           file_path?: string
           file_size?: number | null
           id?: string
           mime_type?: string | null
           notes?: string | null
+          quote_id?: string | null
+          staff_only?: boolean
           title?: string
           updated_at?: string
           uploaded_by?: string | null
@@ -1191,6 +1221,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_documents_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -11025,6 +11062,7 @@ export type Database = {
           id: string
           internal_notes: string | null
           is_pricing_sheet: boolean
+          is_provisional_estimate: boolean
           lead_id: string | null
           price_biweekly: number | null
           price_monthly: number | null
@@ -11072,6 +11110,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_pricing_sheet?: boolean
+          is_provisional_estimate?: boolean
           lead_id?: string | null
           price_biweekly?: number | null
           price_monthly?: number | null
@@ -11119,6 +11158,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_pricing_sheet?: boolean
+          is_provisional_estimate?: boolean
           lead_id?: string | null
           price_biweekly?: number | null
           price_monthly?: number | null
@@ -14261,6 +14301,7 @@ export type Database = {
           _user_agent: string
         }
         Returns: {
+          activation_checklist: Json
           agreement_number: string | null
           attachment_url: string | null
           body_html: string
@@ -14273,6 +14314,7 @@ export type Database = {
           customer_signed_at: string | null
           declined_at: string | null
           delivered_at: string | null
+          doc_status: string | null
           document_type: string
           employee_user_id: string | null
           executed_at: string | null
@@ -14280,14 +14322,19 @@ export type Database = {
           field_schema: Json
           field_values: Json
           fields_locked: boolean
+          has_unresolved_values: boolean
           id: string
           internal_reference: string | null
+          is_combined_document: boolean
           job_id: string | null
           last_reminder_at: string | null
           merge_data: Json | null
           notes: string | null
           parent_agreement_id: string | null
+          pricing_approved_at: string | null
+          pricing_approved_by: string | null
           property_id: string | null
+          quotation_number: string | null
           quote_id: string | null
           recipient_email: string | null
           recipient_name: string
@@ -14367,6 +14414,7 @@ export type Database = {
       get_agreement_by_token: {
         Args: { _token: string }
         Returns: {
+          activation_checklist: Json
           agreement_number: string | null
           attachment_url: string | null
           body_html: string
@@ -14379,6 +14427,7 @@ export type Database = {
           customer_signed_at: string | null
           declined_at: string | null
           delivered_at: string | null
+          doc_status: string | null
           document_type: string
           employee_user_id: string | null
           executed_at: string | null
@@ -14386,14 +14435,19 @@ export type Database = {
           field_schema: Json
           field_values: Json
           fields_locked: boolean
+          has_unresolved_values: boolean
           id: string
           internal_reference: string | null
+          is_combined_document: boolean
           job_id: string | null
           last_reminder_at: string | null
           merge_data: Json | null
           notes: string | null
           parent_agreement_id: string | null
+          pricing_approved_at: string | null
+          pricing_approved_by: string | null
           property_id: string | null
+          quotation_number: string | null
           quote_id: string | null
           recipient_email: string | null
           recipient_name: string
@@ -14739,6 +14793,7 @@ export type Database = {
           _user_agent: string
         }
         Returns: {
+          activation_checklist: Json
           agreement_number: string | null
           attachment_url: string | null
           body_html: string
@@ -14751,6 +14806,7 @@ export type Database = {
           customer_signed_at: string | null
           declined_at: string | null
           delivered_at: string | null
+          doc_status: string | null
           document_type: string
           employee_user_id: string | null
           executed_at: string | null
@@ -14758,14 +14814,19 @@ export type Database = {
           field_schema: Json
           field_values: Json
           fields_locked: boolean
+          has_unresolved_values: boolean
           id: string
           internal_reference: string | null
+          is_combined_document: boolean
           job_id: string | null
           last_reminder_at: string | null
           merge_data: Json | null
           notes: string | null
           parent_agreement_id: string | null
+          pricing_approved_at: string | null
+          pricing_approved_by: string | null
           property_id: string | null
+          quotation_number: string | null
           quote_id: string | null
           recipient_email: string | null
           recipient_name: string
@@ -14812,6 +14873,7 @@ export type Database = {
           _user_agent: string
         }
         Returns: {
+          activation_checklist: Json
           agreement_number: string | null
           attachment_url: string | null
           body_html: string
@@ -14824,6 +14886,7 @@ export type Database = {
           customer_signed_at: string | null
           declined_at: string | null
           delivered_at: string | null
+          doc_status: string | null
           document_type: string
           employee_user_id: string | null
           executed_at: string | null
@@ -14831,14 +14894,19 @@ export type Database = {
           field_schema: Json
           field_values: Json
           fields_locked: boolean
+          has_unresolved_values: boolean
           id: string
           internal_reference: string | null
+          is_combined_document: boolean
           job_id: string | null
           last_reminder_at: string | null
           merge_data: Json | null
           notes: string | null
           parent_agreement_id: string | null
+          pricing_approved_at: string | null
+          pricing_approved_by: string | null
           property_id: string | null
+          quotation_number: string | null
           quote_id: string | null
           recipient_email: string | null
           recipient_name: string
