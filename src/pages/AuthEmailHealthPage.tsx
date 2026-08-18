@@ -291,7 +291,7 @@ export default function AuthEmailHealthPage() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
             <p><strong className="text-foreground">Hook reachable</strong> — verifies the <code>auth-email-hook</code> edge function is deployed and accepting requests.</p>
-            <p><strong className="text-foreground">Queue deployed</strong> — confirms <code>process-email-queue</code> is live to dispatch queued emails.</p>
+            <p><strong className="text-foreground">Delivery service</strong> — auth emails are sent directly by the platform email service.</p>
             <p><strong className="text-foreground">Recent activity</strong> — scans <code>email_send_log</code> for recovery emails in the last 24 hours.</p>
             <p><strong className="text-foreground">Live trigger</strong> — sends a real password reset and watches for delivery confirmation.</p>
           </CardContent>
