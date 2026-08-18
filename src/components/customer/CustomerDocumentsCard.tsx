@@ -199,7 +199,7 @@ export function CustomerDocumentsCard({ customerId }: Props) {
                   {d.created_at ? format(new Date(d.created_at), 'MMM d, yyyy') : ''}
                 </p>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                 <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleDownload(d)} title="Open">
                   <Download className="h-3.5 w-3.5" />
                 </Button>
