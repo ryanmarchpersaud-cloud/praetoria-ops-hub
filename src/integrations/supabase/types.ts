@@ -11062,6 +11062,7 @@ export type Database = {
           id: string
           internal_notes: string | null
           is_pricing_sheet: boolean
+          is_provisional_estimate: boolean
           lead_id: string | null
           price_biweekly: number | null
           price_monthly: number | null
@@ -11109,6 +11110,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_pricing_sheet?: boolean
+          is_provisional_estimate?: boolean
           lead_id?: string | null
           price_biweekly?: number | null
           price_monthly?: number | null
@@ -11156,6 +11158,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_pricing_sheet?: boolean
+          is_provisional_estimate?: boolean
           lead_id?: string | null
           price_biweekly?: number | null
           price_monthly?: number | null
