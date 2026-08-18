@@ -29,7 +29,12 @@ export function PreSignReviewDialog({
   open, onOpenChange, agreement, values, provisional, submitting, onConfirm, onDecline, missingSelections,
 }: Props) {
   const m = (agreement?.merge_data || {}) as Record<string, string>;
-  const val = (k: string) => (isTbd(m[k]) ? TBD : m[k]);
+  const fallbacks: Record<string, string> = {
+    agreement_number: agreement?.agreement_number || '',
+    quotation_number: agreement?.quotation_number || '',
+    document_version: String(agreement?.version || 1),
+  };
+  const val = (k: string) => (isTbd(m[k]) ? (fallbacks[k] || TBD) : m[k]);
   const sel = (k: string) => (values?.[k] ? String(values[k]) : '');
 
   const trigger = sel('snowfall_trigger') === 'Other written amount (state below)'
