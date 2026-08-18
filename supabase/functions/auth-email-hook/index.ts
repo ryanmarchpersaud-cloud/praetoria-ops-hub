@@ -160,9 +160,14 @@ const handler = createAuthEmailHandler({
       render: (data) =>
         React.createElement(RecoveryEmail, {
           siteName: SITE_NAME,
-          confirmationUrl: data.url,
+          // Never put a one-time token in the reset link: mail scanners
+          // prefetch links and consume it. The user enters the emailed
+          // 6-digit code manually on /reset-password?mode=code.
+          confirmationUrl: buildRecoveryUrl(data as Record<string, any>),
+          token: (data as Record<string, any>).token ?? '',
         }),
     },
+
     email_change: {
       subject: 'Confirm your new email',
       render: (data) =>
