@@ -31,6 +31,7 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     projectNotes: quote.project_notes || '',
     termsConditions: quote.terms_conditions || '',
     unitRateQuote: Boolean(quote.unit_rate_quote),
+    isPricingSheet: Boolean(quote.is_pricing_sheet),
     subtotal: Number(quote.subtotal || 0),
     tax: Number(quote.tax || 0),
     total: Number(quote.total || 0),
