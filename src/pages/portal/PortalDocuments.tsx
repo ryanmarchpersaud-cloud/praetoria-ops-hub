@@ -41,13 +41,19 @@ export default function PortalDocuments() {
   });
 
   const openDoc = async (doc: any) => {
+    const win = window.open('', '_blank', 'noopener,noreferrer');
     try {
       const { data, error } = await supabase.storage
         .from('attachments')
         .createSignedUrl(doc.file_path, 60 * 10);
       if (error) throw error;
-      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+      if (win) win.location.href = data.signedUrl;
+      else {
+        const a = document.createElement('a');
+        a.href = data.signedUrl; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.click();
+      }
     } catch (err: any) {
+      win?.close();
       toast({ title: 'Cannot open file', description: err.message, variant: 'destructive' });
     }
   };
