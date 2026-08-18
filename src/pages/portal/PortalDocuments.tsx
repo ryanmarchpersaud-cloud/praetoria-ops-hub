@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
@@ -7,6 +8,7 @@ import { PortalLayout } from '@/components/PortalLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Download, FolderOpen } from 'lucide-react';
 import { format } from 'date-fns';
@@ -24,6 +26,7 @@ const categoryColor: Record<string, string> = {
 export default function PortalDocuments() {
   const { toast } = useToast();
   const { data: customer } = useCustomerProfile();
+  const [viewer, setViewer] = useState<{ title: string; url: string } | null>(null);
 
   const { data: docs = [], isLoading } = useQuery({
     queryKey: ['portal_customer_documents', customer?.id],
@@ -41,25 +44,19 @@ export default function PortalDocuments() {
   });
 
   const openDoc = async (doc: any) => {
-    const win = window.open('about:blank', '_blank');
     try {
       const { data, error } = await supabase.storage
         .from('attachments')
-        .createSignedUrl(doc.file_path, 60 * 10);
+        .download(doc.file_path);
       if (error) throw error;
-      if (win && !win.closed) {
-        win.location.replace(data.signedUrl);
-      } else {
-        const a = document.createElement('a');
-        a.href = data.signedUrl;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
+
+      const file = new Blob([data], { type: doc.mime_type || data.type || 'application/octet-stream' });
+      const localUrl = URL.createObjectURL(file);
+      setViewer((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return { title: doc.title || doc.file_name || 'Document', url: localUrl };
+      });
     } catch (err: any) {
-      win?.close();
       toast({ title: 'Cannot open file', description: err.message, variant: 'destructive' });
     }
   };
@@ -122,6 +119,23 @@ export default function PortalDocuments() {
             ))}
           </div>
         )}
+
+        <Dialog
+          open={!!viewer}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              if (viewer) URL.revokeObjectURL(viewer.url);
+              setViewer(null);
+            }
+          }}
+        >
+          <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
+            <DialogHeader className="px-4 pt-4">
+              <DialogTitle className="text-base">{viewer?.title}</DialogTitle>
+            </DialogHeader>
+            {viewer && <iframe src={viewer.url} title={viewer.title} className="w-full flex-1 border-0" />}
+          </DialogContent>
+        </Dialog>
       </div>
     </PortalLayout>
   );

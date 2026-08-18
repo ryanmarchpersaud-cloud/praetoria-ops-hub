@@ -40,6 +40,7 @@ export function CustomerDocumentsCard({ customerId }: Props) {
   const [category, setCategory] = useState<string>('Contract');
   const [notes, setNotes] = useState('');
   const [staffOnly, setStaffOnly] = useState(false);
+  const [viewer, setViewer] = useState<{ title: string; url: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: docs = [], isLoading } = useQuery({
@@ -110,25 +111,19 @@ export function CustomerDocumentsCard({ customerId }: Props) {
   };
 
   const handleDownload = async (doc: any) => {
-    const win = window.open('about:blank', '_blank');
     try {
       const { data, error } = await supabase.storage
         .from('attachments')
-        .createSignedUrl(doc.file_path, 60 * 10);
+        .download(doc.file_path);
       if (error) throw error;
-      if (win && !win.closed) {
-        win.location.replace(data.signedUrl);
-      } else {
-        const a = document.createElement('a');
-        a.href = data.signedUrl;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
+
+      const file = new Blob([data], { type: doc.mime_type || data.type || 'application/octet-stream' });
+      const localUrl = URL.createObjectURL(file);
+      setViewer((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return { title: doc.title || doc.file_name || 'Document', url: localUrl };
+      });
     } catch (err: any) {
-      win?.close();
       toast({ title: 'Cannot open file', description: err.message, variant: 'destructive' });
     }
   };
@@ -267,6 +262,23 @@ export function CustomerDocumentsCard({ customerId }: Props) {
               {uploading ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Uploading…</> : <><Upload className="h-4 w-4 mr-1" /> Upload</>}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!viewer}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            if (viewer) URL.revokeObjectURL(viewer.url);
+            setViewer(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
+          <DialogHeader className="px-4 pt-4">
+            <DialogTitle className="text-base">{viewer?.title}</DialogTitle>
+          </DialogHeader>
+          {viewer && <iframe src={viewer.url} title={viewer.title} className="w-full flex-1 border-0" />}
         </DialogContent>
       </Dialog>
     </Card>
