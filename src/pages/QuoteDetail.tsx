@@ -578,6 +578,9 @@ export default function QuoteDetail() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg md:text-xl font-bold mono">{quote.quote_number}</h1>
+            {(quote as any).is_pricing_sheet && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide rounded px-1.5 py-0.5 bg-primary/10 text-primary">Pricing Sheet</span>
+            )}
             <StatusBadge status={form.approval_status || 'Draft'} />
           </div>
           {clientInfo && (
