@@ -52,8 +52,12 @@ export default function PortalDocuments() {
       const source = await response.blob();
       const blob = new Blob([source], { type: doc.mime_type || source.type || 'application/pdf' });
       const objectUrl = URL.createObjectURL(blob);
-      if (win) win.location.href = objectUrl;
-      else window.location.assign(objectUrl);
+      if (win) {
+        const safeTitle = String(doc.title || doc.file_name || 'Document').replace(/[&<>"']/g, '');
+        win.document.open();
+        win.document.write(`<!doctype html><html><head><title>${safeTitle}</title><style>html,body,iframe{width:100%;height:100%;margin:0;border:0}body{overflow:hidden}</style></head><body><iframe src="${objectUrl}" title="${safeTitle}"></iframe></body></html>`);
+        win.document.close();
+      } else window.location.assign(objectUrl);
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
     } catch (err: any) {
       win?.close();
