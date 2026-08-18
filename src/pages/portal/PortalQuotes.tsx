@@ -121,18 +121,23 @@ export default function PortalQuotes() {
                   {/* Header */}
                   <button onClick={() => setExpandedId(isExpanded ? null : q.id)} className="w-full text-left">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <FileText className="h-4 w-4 text-primary shrink-0" />
                         <span className="font-medium text-sm font-mono">{q.quote_number}</span>
+                        {q.is_pricing_sheet && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wide rounded px-1.5 py-0.5 bg-primary/10 text-primary">Pricing Sheet</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <StatusBadge status={q.approval_status} />
+                        {!q.is_pricing_sheet && <StatusBadge status={q.approval_status} />}
                         {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                       <span>{q.service_category}</span>
-                      {q.unit_rate_quote ? (
+                      {q.is_pricing_sheet ? (
+                        <span className="font-semibold text-foreground text-xs">Rate sheet</span>
+                      ) : q.unit_rate_quote ? (
                         <span className="font-semibold text-foreground text-xs">Unit-rate pricing</span>
                       ) : (
                         <span className="font-semibold text-foreground text-sm">${Number(q.total || 0).toFixed(2)}</span>
