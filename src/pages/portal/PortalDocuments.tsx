@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerProfile } from '@/hooks/useUserRole';
+import { PortalCombinedDocuments } from '@/components/agreements/PortalCombinedDocuments';
+
 import { PortalLayout } from '@/components/PortalLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,6 +63,10 @@ export default function PortalDocuments() {
             Price lists, contracts, insurance certificates, site maps and other documents shared with you.
           </p>
         </div>
+
+        <PortalCombinedDocuments customerId={customer?.id} />
+
+
 
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
