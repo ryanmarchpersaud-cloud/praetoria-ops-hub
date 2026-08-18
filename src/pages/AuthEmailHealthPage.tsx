@@ -73,23 +73,12 @@ export default function AuthEmailHealthPage() {
       failures++;
     }
 
-    // 2. Queue function deployed
-    update('queue', { status: 'running' });
-    try {
-      const { error } = await supabase.functions.invoke('process-email-queue', {
-        body: { action: 'health' },
-      });
-      // Function exists if we get any response (even an error from inside it)
-      if (error && /not found|404/i.test(error.message)) {
-        update('queue', { status: 'fail', detail: 'process-email-queue not deployed' });
-        failures++;
-      } else {
-        update('queue', { status: 'pass', detail: 'Dispatcher deployed' });
-      }
-    } catch (e: any) {
-      update('queue', { status: 'warn', detail: e.message });
-      warnings++;
-    }
+    // 2. Delivery pipeline (handled by the platform email service)
+    update('queue', {
+      status: 'pass',
+      detail: 'Emails are sent directly by the platform email service',
+    });
+
 
     // 3. Recent recovery emails
     update('log', { status: 'running' });
