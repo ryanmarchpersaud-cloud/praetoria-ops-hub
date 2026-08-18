@@ -13,8 +13,6 @@ project_id = "czltgypfgegjmcsczpms"
     verify_jwt = false
   [functions.n8n-webhook]
     verify_jwt = false
-  [functions.process-email-queue]
-    verify_jwt = true
   [functions.send-email]
     verify_jwt = false
   [functions.send-owner-invite]

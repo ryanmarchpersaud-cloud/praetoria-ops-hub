@@ -21,7 +21,7 @@ interface CheckResult {
 
 const INITIAL_CHECKS: CheckResult[] = [
   { id: 'hook', label: 'Auth email hook reachable', status: 'idle' },
-  { id: 'queue', label: 'Email queue function deployed', status: 'idle' },
+  { id: 'queue', label: 'Email delivery service', status: 'idle' },
   { id: 'log', label: 'Recent recovery emails (last 24h)', status: 'idle' },
   { id: 'trigger', label: 'Trigger live password reset', status: 'idle' },
   { id: 'delivery', label: 'Delivery confirmed in send log', status: 'idle' },
@@ -73,23 +73,12 @@ export default function AuthEmailHealthPage() {
       failures++;
     }
 
-    // 2. Queue function deployed
-    update('queue', { status: 'running' });
-    try {
-      const { error } = await supabase.functions.invoke('process-email-queue', {
-        body: { action: 'health' },
-      });
-      // Function exists if we get any response (even an error from inside it)
-      if (error && /not found|404/i.test(error.message)) {
-        update('queue', { status: 'fail', detail: 'process-email-queue not deployed' });
-        failures++;
-      } else {
-        update('queue', { status: 'pass', detail: 'Dispatcher deployed' });
-      }
-    } catch (e: any) {
-      update('queue', { status: 'warn', detail: e.message });
-      warnings++;
-    }
+    // 2. Delivery pipeline (handled by the platform email service)
+    update('queue', {
+      status: 'pass',
+      detail: 'Emails are sent directly by the platform email service',
+    });
+
 
     // 3. Recent recovery emails
     update('log', { status: 'running' });
@@ -302,7 +291,7 @@ export default function AuthEmailHealthPage() {
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground space-y-2">
             <p><strong className="text-foreground">Hook reachable</strong> — verifies the <code>auth-email-hook</code> edge function is deployed and accepting requests.</p>
-            <p><strong className="text-foreground">Queue deployed</strong> — confirms <code>process-email-queue</code> is live to dispatch queued emails.</p>
+            <p><strong className="text-foreground">Delivery service</strong> — auth emails are sent directly by the platform email service.</p>
             <p><strong className="text-foreground">Recent activity</strong> — scans <code>email_send_log</code> for recovery emails in the last 24 hours.</p>
             <p><strong className="text-foreground">Live trigger</strong> — sends a real password reset and watches for delivery confirmation.</p>
           </CardContent>

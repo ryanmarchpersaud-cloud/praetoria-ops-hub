@@ -1,8 +1,6 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
-import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
-import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
-import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createAuthEmailHandler } from 'npm:@lovable.dev/email-js@0.1.0'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
 import { InviteEmail } from '../_shared/email-templates/invite.tsx'
 import { MagicLinkEmail } from '../_shared/email-templates/magic-link.tsx'
@@ -16,16 +14,24 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+// Configuration
+const SITE_NAME = "praetoria-ops-hub"
+const SENDER_DOMAIN = "notify.praetoriagroup.ca"
+const ROOT_DOMAIN = "praetoriagroup.ca"
+const FROM_DOMAIN = "praetoriagroup.ca"
+const SITE_URL = `https://${ROOT_DOMAIN}`
+
+// Password reset uses a manually entered 6-digit code. The link carries no
+// token/token_hash so email security scanners cannot consume it by prefetch.
+function buildRecoveryUrl(data: Record<string, any>): string {
+  const resetUrl = `${SITE_URL}/reset-password`
+  const params = new URLSearchParams({ mode: 'code' })
+  if (data.email) params.set('email', data.email)
+  return `${resetUrl}?${params.toString()}`
 }
 
-// Template mapping
+
+// Template mapping for preview mode
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   signup: SignupEmail,
   invite: InviteEmail,
@@ -33,51 +39,6 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   recovery: RecoveryEmail,
   email_change: EmailChangeEmail,
   reauthentication: ReauthenticationEmail,
-}
-
-// Configuration
-const SITE_NAME = "praetoria-ops-hub"
-const SENDER_DOMAIN = "notify.praetoriagroup.ca"
-const ROOT_DOMAIN = "praetoriagroup.ca"
-const FROM_DOMAIN = "praetoriagroup.ca" // Domain shown in From address (may be root or sender subdomain)
-
-function buildRecoveryUrl(data: Record<string, any>) {
-  const resetUrl = `https://${ROOT_DOMAIN}/reset-password`
-
-  // Best recovery flow: do NOT put a one-time token in the link at all.
-  // Mail scanners/previews can safely open this URL because the user must
-  // manually enter the emailed code before the token is verified.
-  if (data.token) {
-    const params = new URLSearchParams({ mode: 'code' })
-    if (data.email) params.set('email', data.email)
-    return `${resetUrl}?${params.toString()}`
-  }
-
-  let tokenHash = data.token_hash
-
-  if (!tokenHash && typeof data.url === 'string') {
-    try {
-      const sourceUrl = new URL(data.url)
-      // Supabase's default /verify link often carries the hashed recovery token
-      // as `token`, not `token_hash`. If the hook payload omits token_hash,
-      // reuse that hashed token on our app page so the email never points at
-      // /verify, which consumes the token before the user reaches the form.
-      tokenHash =
-        sourceUrl.searchParams.get('token_hash') ||
-        sourceUrl.searchParams.get('token') ||
-        undefined
-    } catch {
-      // Keep the default reset URL if Supabase ever sends a non-URL value.
-    }
-  }
-
-  if (!tokenHash) return resetUrl
-
-  const params = new URLSearchParams({
-    token_hash: tokenHash,
-    type: 'recovery',
-  })
-  return `${resetUrl}?${params.toString()}`
 }
 
 // Sample data for preview mode ONLY (not used in actual email sending).
@@ -109,6 +70,7 @@ const SAMPLE_DATA: Record<string, object> = {
   },
   email_change: {
     siteName: SITE_NAME,
+    oldEmail: SAMPLE_EMAIL,
     email: SAMPLE_EMAIL,
     newEmail: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
@@ -168,194 +130,72 @@ async function handlePreview(req: Request): Promise<Response> {
   })
 }
 
-// Webhook handler - verifies signature and sends email
-async function handleWebhook(req: Request): Promise<Response> {
-  const apiKey = Deno.env.get('LOVABLE_API_KEY')
-
-  if (!apiKey) {
-    console.error('LOVABLE_API_KEY not configured')
-    return new Response(
-      JSON.stringify({ error: 'Server configuration error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  // Verify signature + timestamp, then parse payload.
-  let payload: any
-  let run_id = ''
-  try {
-    const verified = await verifyWebhookRequest({
-      req,
-      secret: apiKey,
-      parser: parseEmailWebhookPayload,
-    })
-    payload = verified.payload
-    run_id = payload.run_id
-  } catch (error) {
-    if (error instanceof WebhookError) {
-      switch (error.code) {
-        case 'invalid_signature':
-        case 'missing_timestamp':
-        case 'invalid_timestamp':
-        case 'stale_timestamp':
-          console.error('Invalid webhook signature', { error: error.message })
-          return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-            status: 401,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          })
-        case 'invalid_payload':
-        case 'invalid_json':
-          console.error('Invalid webhook payload', { error: error.message })
-          return new Response(
-            JSON.stringify({ error: 'Invalid webhook payload' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-      }
-    }
-
-    console.error('Webhook verification failed', { error })
-    return new Response(
-      JSON.stringify({ error: 'Invalid webhook payload' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  if (!run_id) {
-    console.error('Webhook payload missing run_id')
-    return new Response(
-      JSON.stringify({ error: 'Invalid webhook payload' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
-  if (payload.version !== '1') {
-    console.error('Unsupported payload version', { version: payload.version, run_id })
-    return new Response(
-      JSON.stringify({ error: `Unsupported payload version: ${payload.version}` }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    )
-  }
-
-  // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
-  // payload.type is the hook event type ("auth")
-  const emailType = payload.data.action_type
-  console.log('Received auth event', { emailType, email: payload.data.email, run_id })
-
-  const EmailTemplate = EMAIL_TEMPLATES[emailType]
-  if (!EmailTemplate) {
-    console.error('Unknown email type', { emailType, run_id })
-    return new Response(
-      JSON.stringify({ error: `Unknown email type: ${emailType}` }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
-
-  // Build template props from payload.data (HookData structure).
-  //
-  // For password recovery we deliberately bypass Supabase's default PKCE
-  // confirmation URL (payload.data.url). That URL relies on a code_verifier
-  // stored in the same browser storage that requested the reset, which fails
-  // whenever the user opens the email in a different browser or app (e.g.
-  // requests in the iOS/Android app, opens the link in Safari/Chrome) and
-  // also gets consumed by Gmail's link prefetch — producing the
-  // "invalid or already used" error. Instead we send the user to our own
-  // /reset-password page. Prefer the manual-code flow so email clients cannot
-  // consume the reset token by previewing the link. If a future payload omits
-  // the raw code, fall back to token_hash and verify it only on form submit.
-  let confirmationUrl = payload.data.url
-  if (emailType === 'recovery') {
-    confirmationUrl = buildRecoveryUrl(payload.data)
-  }
-
-  const safeRecoveryMetadata = emailType === 'recovery'
-    ? {
-        reset_link_path: (() => {
-          try { return new URL(confirmationUrl).pathname } catch { return 'invalid-url' }
-        })(),
-        reset_link_mode: payload.data.token ? 'manual_code' : 'token_hash_fallback',
-        has_manual_code: Boolean(payload.data.token),
-        has_token_hash: Boolean(payload.data.token_hash),
-      }
-    : undefined
-
-  const templateProps = {
-    siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
-    recipient: payload.data.email,
-    confirmationUrl,
-    token: payload.data.token,
-    email: payload.data.email,
-    newEmail: payload.data.new_email,
-  }
-
-  // Render React Email to HTML and plain text
-  const html = await renderAsync(React.createElement(EmailTemplate, templateProps))
-  const text = await renderAsync(React.createElement(EmailTemplate, templateProps), {
-    plainText: true,
-  })
-
-  // Enqueue email for async processing by the dispatcher (process-email-queue).
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
-
-  const messageId = crypto.randomUUID()
-
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: emailType,
-    recipient_email: payload.data.email,
-    status: 'pending',
-    metadata: safeRecoveryMetadata,
-  })
-
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'auth_emails',
-    payload: {
-      run_id,
-      message_id: messageId,
-      to: payload.data.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
-      html,
-      text,
-      purpose: 'transactional',
-      label: emailType,
-      queued_at: new Date().toISOString(),
+// The SDK handler owns verification, dispatch, and retry semantics; this file
+// owns only the email decisions: subjects, templates, and per-type props.
+const handler = createAuthEmailHandler({
+  apiKey: Deno.env.get('LOVABLE_API_KEY')!,
+  from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+  senderDomain: SENDER_DOMAIN,
+  sendUrl: Deno.env.get('LOVABLE_SEND_URL'),
+  emails: {
+    signup: {
+      subject: 'Confirm your email',
+      render: (data) =>
+        React.createElement(SignupEmail, {
+          siteName: SITE_NAME,
+          siteUrl: SITE_URL,
+          recipient: data.email,
+          confirmationUrl: data.url,
+        }),
     },
-  })
+    invite: {
+      subject: "You've been invited",
+      render: (data) =>
+        React.createElement(InviteEmail, {
+          siteName: SITE_NAME,
+          siteUrl: SITE_URL,
+          confirmationUrl: data.url,
+        }),
+    },
+    magiclink: {
+      subject: 'Your login link',
+      render: (data) =>
+        React.createElement(MagicLinkEmail, {
+          siteName: SITE_NAME,
+          confirmationUrl: data.url,
+        }),
+    },
+    recovery: {
+      subject: 'Reset your password',
+      render: (data) =>
+        React.createElement(RecoveryEmail, {
+          siteName: SITE_NAME,
+          // Never put a one-time token in the reset link: mail scanners
+          // prefetch links and consume it. The user enters the emailed
+          // 6-digit code manually on /reset-password?mode=code.
+          confirmationUrl: buildRecoveryUrl(data as Record<string, any>),
+          token: (data as Record<string, any>).token ?? '',
+        }),
+    },
 
-  if (enqueueError) {
-    console.error('Failed to enqueue auth email', { error: enqueueError, run_id, emailType })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: emailType,
-      recipient_email: payload.data.email,
-      status: 'failed',
-      error_message: 'Failed to enqueue email',
-    })
-    return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  console.log('Auth email enqueued', { emailType, email: payload.data.email, run_id })
-
-  return new Response(
-    JSON.stringify({ success: true, queued: true }),
-    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
+    email_change: {
+      subject: 'Confirm your new email',
+      render: (data) =>
+        React.createElement(EmailChangeEmail, {
+          siteName: SITE_NAME,
+          oldEmail: data.old_email ?? '',
+          email: data.email,
+          newEmail: data.new_email ?? '',
+          confirmationUrl: data.url,
+        }),
+    },
+    reauthentication: {
+      subject: 'Your verification code',
+      render: (data) =>
+        React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
+    },
+  },
+})
 
 Deno.serve(async (req) => {
   const url = new URL(req.url)
@@ -370,15 +210,5 @@ Deno.serve(async (req) => {
     return handlePreview(req)
   }
 
-  // Main webhook handler
-  try {
-    return await handleWebhook(req)
-  } catch (error) {
-    console.error('Webhook handler error:', error)
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
+  return handler(req)
 })
