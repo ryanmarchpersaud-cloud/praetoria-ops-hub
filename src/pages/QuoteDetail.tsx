@@ -604,6 +604,16 @@ export default function QuoteDetail() {
         </div>
       </div>
 
+      {(quote as any).is_provisional_estimate && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 dark:bg-amber-950/20">
+          PROVISIONAL ESTIMATE ONLY — NOT A CONFIRMED PRICE OR SERVICE COMMITMENT.
+          <span className="block font-normal mt-1">
+            Invoicing, job conversion, recurring billing and dispatch stay disabled until Ryan approves a final price and
+            the customer signs the final combined quotation &amp; service agreement.
+          </span>
+        </div>
+      )}
+
       {/* ── Save Bar ── */}
       {isLockedStatus && canManageQuotes && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-300/60 bg-amber-50 px-3 py-2 dark:bg-amber-950/20">
@@ -624,7 +634,7 @@ export default function QuoteDetail() {
           </Button>
         )}
 
-        {form.approval_status === 'Approved' && !isConverted && canManageQuotes && (
+        {form.approval_status === 'Approved' && !isConverted && canManageQuotes && !(quote as any).is_provisional_estimate && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={handleConvertToJob}>
             <Briefcase className="h-4 w-4" />
             <span className="hidden sm:inline">Convert to Job</span>
@@ -635,7 +645,7 @@ export default function QuoteDetail() {
             <Briefcase className="h-3.5 w-3.5" /> Converted
           </Badge>
         )}
-        {form.approval_status !== 'Archived' && canManageQuotes && (
+        {form.approval_status !== 'Archived' && canManageQuotes && !(quote as any).is_provisional_estimate && (
           <Button variant="outline" className="h-11 shrink-0 gap-1.5" onClick={() => setInvoiceOpen(true)}>
             <Receipt className="h-4 w-4" />
             <span className="hidden sm:inline">Create Invoice</span>
