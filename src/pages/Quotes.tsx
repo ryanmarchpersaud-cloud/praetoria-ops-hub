@@ -243,8 +243,11 @@ export default function Quotes() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium mono text-sm">{q.quote_number}</p>
+                        {q.is_pricing_sheet && (
+                          <span className="text-[10px] font-semibold uppercase tracking-wide rounded px-1.5 py-0.5 bg-primary/10 text-primary">Pricing Sheet</span>
+                        )}
                         <StatusBadge status={q.approval_status} showIcon={false} />
                       </div>
                       {(() => {
