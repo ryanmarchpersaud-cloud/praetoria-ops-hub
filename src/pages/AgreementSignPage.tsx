@@ -24,6 +24,7 @@ import { openAgreementPrintWindow } from '@/lib/agreementPrint';
 import { PreSignReviewDialog } from '@/components/agreements/PreSignReviewDialog';
 import { REQUIRED_SELECTION_KEYS } from '@/lib/agreementTemplates/residentialSnow';
 import { PROVISIONAL_BANNER } from '@/lib/combinedDocument';
+import { resolveAgreementBody } from '@/lib/agreementBody';
 
 import logoWhite from '@/assets/praetoria-logo-white.png';
 
@@ -65,9 +66,11 @@ export default function AgreementSignPage() {
     return Array.isArray(s) && s.length ? (s as AgreementField[]) : FALLBACK_SCHEMA;
   }, [agreement]);
 
+  const bodyHtml = useMemo(() => resolveAgreementBody(agreement), [agreement]);
+
   const hasPlaceholders = useMemo(
-    () => Boolean(agreement?.body_html && /data-agreement-field=/.test(agreement.body_html)),
-    [agreement?.body_html],
+    () => Boolean(bodyHtml && /data-agreement-field=/.test(bodyHtml)),
+    [bodyHtml],
   );
 
   // Seed values from stored field values + recipient details
@@ -221,7 +224,7 @@ export default function AgreementSignPage() {
   const handlePrint = () => {
     if (!agreement) return;
     openAgreementPrintWindow(
-      { ...(agreement as any), field_schema: schema, field_values: values },
+      { ...(agreement as any), body_html: bodyHtml, field_schema: schema, field_values: values },
       { logoUrl: `${window.location.origin}${logoWhite}` },
     );
   };
@@ -343,7 +346,7 @@ export default function AgreementSignPage() {
         <Card>
           <CardContent className="p-4 sm:p-8">
             <AgreementDocument
-              bodyHtml={agreement.body_html}
+              bodyHtml={bodyHtml}
               schema={schema}
               values={values}
               interactiveRole="customer"
