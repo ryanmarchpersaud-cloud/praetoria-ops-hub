@@ -399,10 +399,14 @@ export default function QuotePrint() {
         })()}
 
         {/* ── Line Items / Unit Rate Table ── */}
-        <div className="mb-8 print:mb-10">
+        <div
+          className={`mb-8 print:mb-10 ${exportData.unitRateQuote ? 'print:break-before-page' : ''}`}
+          style={exportData.unitRateQuote ? { breakBefore: 'page', pageBreakBefore: 'always' } : undefined}
+        >
           <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-3 print:text-xs">
             {exportData.unitRateQuote ? 'Unit-Rate Pricing Schedule' : 'Line Items'}
           </p>
+
           <table className="w-full text-sm print:text-base border-collapse">
             {exportData.unitRateQuote && (
               <colgroup>
