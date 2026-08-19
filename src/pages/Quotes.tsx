@@ -281,7 +281,7 @@ export default function Quotes() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-semibold text-sm mono">${Number(q.total).toLocaleString()}</span>
+                      <span className="font-semibold text-sm mono">{q.unit_rate_quote ? 'Unit rate' : `$${Number(q.total).toLocaleString()}`}</span>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
                     </div>
                   </div>
@@ -350,7 +350,7 @@ export default function Quotes() {
                         })()}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{q.service_category}</TableCell>
-                      <TableCell className="text-sm font-medium text-right mono">${Number(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-sm font-medium text-right mono">{q.unit_rate_quote ? 'Unit rate' : `$${Number(q.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</TableCell>
                       <TableCell><StatusBadge status={q.approval_status} /></TableCell>
                       <TableCell className="hidden lg:table-cell text-sm">
                         {q.follow_up_due_at ? (

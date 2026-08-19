@@ -599,9 +599,12 @@ export default function QuoteDetail() {
           )}
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xl md:text-2xl font-bold">${Number(form.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-          <p className="text-[10px] text-muted-foreground">Total</p>
+          <p className="text-xl md:text-2xl font-bold">
+            {form.unit_rate_quote ? 'Unit rate' : `$${Number(form.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+          </p>
+          <p className="text-[10px] text-muted-foreground">{form.unit_rate_quote ? 'No fixed total' : 'Total'}</p>
         </div>
+
       </div>
 
       {(quote as any).is_provisional_estimate && (
