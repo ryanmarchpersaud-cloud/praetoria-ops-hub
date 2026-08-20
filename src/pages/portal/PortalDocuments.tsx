@@ -129,11 +129,11 @@ export default function PortalDocuments() {
             }
           }}
         >
-          <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden">
+          <DialogContent className="max-w-5xl h-[90vh] p-0 overflow-hidden grid-rows-[auto_1fr]">
             <DialogHeader className="px-4 pt-4">
               <DialogTitle className="text-base">{viewer?.title}</DialogTitle>
             </DialogHeader>
-            {viewer && <iframe src={viewer.url} title={viewer.title} className="w-full flex-1 border-0" />}
+            {viewer && <iframe src={viewer.url} title={viewer.title} className="w-full h-full min-h-0 border-0" />}
           </DialogContent>
         </Dialog>
       </div>
