@@ -1,0 +1,1 @@
+UPDATE public.invoices SET property_id='437caa3a-12bb-4755-ac4e-0b681f844850' WHERE invoice_number='INV-00109';
