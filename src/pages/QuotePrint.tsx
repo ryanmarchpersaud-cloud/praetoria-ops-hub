@@ -325,8 +325,9 @@ export default function QuotePrint() {
             {exportData.client && (
               <>
                 <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
-                  Prepared For
+                  Prepared For — Client / Head Office
                 </p>
+
                 <p className="font-semibold text-sm print:text-base">{exportData.client.name}</p>
                 {exportData.client.company && (
                   <p className="text-sm text-[#374151] print:text-base">{exportData.client.company}</p>
