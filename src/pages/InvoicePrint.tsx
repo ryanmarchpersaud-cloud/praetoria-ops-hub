@@ -210,10 +210,10 @@ export default function InvoicePrint() {
         )}
 
 
-        {/* Bill To */}
+        {/* Bill To — Client / Head Office */}
         {customer && (
           <div className="mb-8 print:mb-10">
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">Bill To</p>
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">Bill To — Client / Head Office</p>
             <p className="font-bold text-base print:text-lg">{customer.first_name} {customer.last_name}</p>
             {customer.company_name && <p className="text-sm font-semibold text-[#374151] print:text-base">{customer.company_name}</p>}
             <div className="text-xs text-[#6b7280] mt-1 space-y-0.5 print:text-sm">
@@ -227,15 +227,27 @@ export default function InvoicePrint() {
           </div>
         )}
 
-        {/* Property & Job info */}
+        {/* Job Site / Service Location */}
+        {property && (
+          <div className="mb-8 print:mb-10 rounded-md border border-[#e5e7eb] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">
+              Job Site / Service Location
+            </p>
+            <p className="text-sm font-semibold print:text-base">{property.property_name}</p>
+            {property.address_line_1 && (
+              <p className="text-sm text-[#374151] print:text-base">{property.address_line_1}</p>
+            )}
+            {(property.city || property.province || (property as any).postal_code) && (
+              <p className="text-sm text-[#374151] print:text-base">
+                {[property.city, property.province, (property as any).postal_code].filter(Boolean).join(', ')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Job info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 print:mb-10 print:grid-cols-2">
-          {property && (
-            <div>
-              <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">Service Property</p>
-              <p className="text-sm font-bold print:text-base">{property.property_name}</p>
-              {property.address_line_1 && <p className="text-xs text-[#6b7280] print:text-sm">{property.address_line_1}</p>}
-            </div>
-          )}
+
           {job && (
             <div>
               <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">Job Reference</p>
