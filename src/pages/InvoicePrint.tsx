@@ -231,7 +231,8 @@ export default function InvoicePrint() {
         {property && (
           <div className="mb-8 print:mb-10 rounded-md border-l-4 border-[#3b5bdb] px-4 py-3" style={{ background: '#FEF08A', color: '#1a1a2e' }}>
 
-            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">
+            <p className="text-[10px] uppercase tracking-widest font-bold text-[#1a1a2e] mb-1 print:text-xs">
+
               Job Site / Service Location
             </p>
             <p className="text-sm font-semibold print:text-base">{property.property_name}</p>
