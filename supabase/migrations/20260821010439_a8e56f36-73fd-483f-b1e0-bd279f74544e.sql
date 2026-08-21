@@ -1,0 +1,3 @@
+UPDATE public.properties SET property_name = trim(property_name), address_line_1 = trim(address_line_1) WHERE id = 'e8d7df2d-1ad8-41b3-8b5e-8019de29a91f';
+UPDATE public.quotes SET property_id = 'e8d7df2d-1ad8-41b3-8b5e-8019de29a91f' WHERE id = 'ce73de55-7d6e-492c-8345-883aaa49aa7c';
+UPDATE public.invoices SET property_id = 'e8d7df2d-1ad8-41b3-8b5e-8019de29a91f' WHERE id = 'b9ef8b95-225b-449f-9dee-d1a8d56fb62e';
