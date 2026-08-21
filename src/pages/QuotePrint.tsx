@@ -50,13 +50,21 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     client: source ? {
       name: `${source.first_name} ${source.last_name}`,
       company: source.company_name,
-      address: quote.properties?.address_line_1 || source.address_line_1,
-      city: quote.properties?.city || source.city,
-      province: quote.properties?.province || source.province,
-      postalCode: quote.properties?.postal_code || source.postal_code,
+      address: source.address_line_1 || quote.properties?.address_line_1,
+      city: source.city || quote.properties?.city,
+      province: source.province || quote.properties?.province,
+      postalCode: source.postal_code || quote.properties?.postal_code,
       email: source.email,
       phone: source.phone,
     } : null,
+    jobSite: quote.properties ? {
+      name: quote.properties.property_name as string | null,
+      address: quote.properties.address_line_1 as string | null,
+      city: quote.properties.city as string | null,
+      province: quote.properties.province as string | null,
+      postalCode: quote.properties.postal_code as string | null,
+    } : null,
+
     lineItems: lineItems.map((item, idx) => ({
       index: idx + 1,
       name: item.item_name,
