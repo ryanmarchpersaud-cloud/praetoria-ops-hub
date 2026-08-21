@@ -50,13 +50,21 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     client: source ? {
       name: `${source.first_name} ${source.last_name}`,
       company: source.company_name,
-      address: quote.properties?.address_line_1 || source.address_line_1,
-      city: quote.properties?.city || source.city,
-      province: quote.properties?.province || source.province,
-      postalCode: quote.properties?.postal_code || source.postal_code,
+      address: source.address_line_1 || quote.properties?.address_line_1,
+      city: source.city || quote.properties?.city,
+      province: source.province || quote.properties?.province,
+      postalCode: source.postal_code || quote.properties?.postal_code,
       email: source.email,
       phone: source.phone,
     } : null,
+    jobSite: quote.properties ? {
+      name: quote.properties.property_name as string | null,
+      address: quote.properties.address_line_1 as string | null,
+      city: quote.properties.city as string | null,
+      province: quote.properties.province as string | null,
+      postalCode: quote.properties.postal_code as string | null,
+    } : null,
+
     lineItems: lineItems.map((item, idx) => ({
       index: idx + 1,
       name: item.item_name,
@@ -317,8 +325,9 @@ export default function QuotePrint() {
             {exportData.client && (
               <>
                 <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-2 print:text-xs">
-                  Prepared For
+                  Prepared For — Client / Head Office
                 </p>
+
                 <p className="font-semibold text-sm print:text-base">{exportData.client.name}</p>
                 {exportData.client.company && (
                   <p className="text-sm text-[#374151] print:text-base">{exportData.client.company}</p>
@@ -353,6 +362,26 @@ export default function QuotePrint() {
             </p>
           </div>
         </div>
+
+
+        {exportData.jobSite && exportData.jobSite.address && (
+          <div className="mb-8 print:mb-10 rounded-md border border-[#e5e7eb] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">
+              Job Site / Service Location
+            </p>
+            {exportData.jobSite.name && (
+              <p className="text-sm font-semibold print:text-base">{exportData.jobSite.name}</p>
+            )}
+            <p className="text-sm text-[#374151] print:text-base">{exportData.jobSite.address}</p>
+            <p className="text-sm text-[#374151] print:text-base">
+              {[exportData.jobSite.city, exportData.jobSite.province, exportData.jobSite.postalCode]
+                .filter(Boolean)
+                .join(', ')}
+            </p>
+          </div>
+        )}
+
+
 
         {exportData.isProvisional && (
           <div className="mb-6 rounded border-2 border-amber-500 bg-amber-50 px-4 py-3 text-center text-xs font-extrabold uppercase tracking-wide text-amber-900 print:mb-8">
