@@ -229,7 +229,8 @@ export default function InvoicePrint() {
 
         {/* Job Site / Service Location */}
         {property && (
-          <div className="mb-8 print:mb-10 rounded-md border border-[#e5e7eb] px-4 py-3">
+          <div className="mb-8 print:mb-10 rounded-md border-l-4 border-[#3b5bdb] px-4 py-3" style={{ background: '#FEF08A', color: '#1a1a2e' }}>
+
             <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">
               Job Site / Service Location
             </p>
