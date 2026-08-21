@@ -118,7 +118,7 @@ export default function CustomerDetail() {
     queryKey: ['customer_quotes', id],
     queryFn: async () => {
       if (!id) return [];
-      const { data, error } = await supabase.from('quotes').select('id, quote_number, approval_status, total, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(5);
+      const { data, error } = await supabase.from('quotes').select('id, quote_number, approval_status, total, created_at').eq('customer_id', id).order('created_at', { ascending: false }).limit(50);
       if (error) throw error;
       return data ?? [];
     },
