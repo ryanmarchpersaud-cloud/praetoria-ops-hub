@@ -360,7 +360,9 @@ export default function QuotePrint() {
             >
               {exportData.quoteNumber}
             </p>
+          </div>
         </div>
+
 
         {exportData.jobSite && exportData.jobSite.address && (
           <div className="mb-8 print:mb-10 rounded-md border border-[#e5e7eb] px-4 py-3">
