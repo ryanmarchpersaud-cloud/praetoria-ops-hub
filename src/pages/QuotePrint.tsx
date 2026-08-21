@@ -360,8 +360,26 @@ export default function QuotePrint() {
             >
               {exportData.quoteNumber}
             </p>
-          </div>
         </div>
+
+        {exportData.jobSite && exportData.jobSite.address && (
+          <div className="mb-8 print:mb-10 rounded-md border border-[#e5e7eb] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-[#6b7280] mb-1 print:text-xs">
+              Job Site / Service Location
+            </p>
+            {exportData.jobSite.name && (
+              <p className="text-sm font-semibold print:text-base">{exportData.jobSite.name}</p>
+            )}
+            <p className="text-sm text-[#374151] print:text-base">{exportData.jobSite.address}</p>
+            <p className="text-sm text-[#374151] print:text-base">
+              {[exportData.jobSite.city, exportData.jobSite.province, exportData.jobSite.postalCode]
+                .filter(Boolean)
+                .join(', ')}
+            </p>
+          </div>
+        )}
+
+
 
         {exportData.isProvisional && (
           <div className="mb-6 rounded border-2 border-amber-500 bg-amber-50 px-4 py-3 text-center text-xs font-extrabold uppercase tracking-wide text-amber-900 print:mb-8">
