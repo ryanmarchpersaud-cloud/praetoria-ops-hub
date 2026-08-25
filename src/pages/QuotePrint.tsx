@@ -349,10 +349,10 @@ export default function QuotePrint() {
           </div>
           <div className="text-right">
             <h2
-              className={`${exportData.isPricingSheet ? 'text-3xl md:text-4xl print:text-5xl' : 'text-4xl md:text-5xl print:text-6xl'} font-extrabold tracking-tight leading-none`}
+              className={`text-4xl md:text-5xl print:text-6xl font-extrabold tracking-tight leading-none`}
               style={{ color: theme.accent, fontFamily: "'DM Sans', sans-serif" }}
             >
-              {exportData.isPricingSheet ? 'PRICING SHEET' : 'QUOTATION'}
+              QUOTATION
             </h2>
             <p
               className="mt-2 text-lg font-bold print:text-xl text-[#1a1a2e]"
