@@ -113,30 +113,34 @@ export function PreSignReviewDialog({
               </div>
             )}
 
-            <Row label="Customer" value={val('customer_name')} />
-            <Row label="Property" value={`${val('service_address')}, ${val('service_city')}, ${val('service_province')}`} />
-            <Row label="Quotation / Agreement" value={`${val('quotation_number')} · ${val('agreement_number')} (v${val('document_version')})`} />
-            <Row label="Service period" value={`${val('season_start_date')} to ${val('season_end_date')}`} />
-            <Row
-              label="Price and tax"
-              value={provisional
-                ? `Estimated range ${val('estimate_range')} per month before tax — not a final price`
-                : `${val('total_price')} total (GST ${val('gst_amount')}; ${val('pst_treatment')})`}
-            />
-            <Row label="Billing frequency" value={val('billing_frequency')} />
-            <Row label="Snowfall trigger" value={trigger} />
-            <Row label="Included service areas" value={areas} />
-            <Row label="Visit plan and included-visit limit" value={sel('visit_plan')} />
-            <Row label="Response target" value={val('response_target')} />
-            <Row
-              label="Additional charges"
-              value={`Additional visit ${val('additional_visit_rate')} · Additional labour ${val('worker_hour_rate')} per worker-hour (1 hour minimum, each worker billed separately) · Travel/mobilization ${val('travel_mobilization')} · Heavy snow ${val('heavy_snow_charge')} · De-icer ${val('deicer_application_charge')} + materials ${val('deicer_material_charge')} · Emergency call-out ${val('emergency_callout_charge')} · Hauling ${val('hauling_charge')}`}
-            />
-            <Row label="Cancellation terms" value={val('cancellation_terms')} />
-            <Row
-              label="Your authorizations"
-              value={`Snow storage: ${sel('snow_storage_location')} · De-icing: ${sel('deicing_authorization')} · Hauling: ${sel('hauling_authorization')} · Windrow returns: ${sel('windrow_returns')} · Photos: ${sel('photo_consent')} · Payment: ${sel('payment_method')}`}
-            />
+            {isCommercial ? commercialBody : (
+              <>
+                <Row label="Customer" value={val('customer_name')} />
+                <Row label="Property" value={`${val('service_address')}, ${val('service_city')}, ${val('service_province')}`} />
+                <Row label="Quotation / Agreement" value={`${val('quotation_number')} · ${val('agreement_number')} (v${val('document_version')})`} />
+                <Row label="Service period" value={`${val('season_start_date')} to ${val('season_end_date')}`} />
+                <Row
+                  label="Price and tax"
+                  value={provisional
+                    ? `Estimated range ${val('estimate_range')} per month before tax — not a final price`
+                    : `${val('total_price')} total (GST ${val('gst_amount')}; ${val('pst_treatment')})`}
+                />
+                <Row label="Billing frequency" value={val('billing_frequency')} />
+                <Row label="Snowfall trigger" value={trigger} />
+                <Row label="Included service areas" value={areas} />
+                <Row label="Visit plan and included-visit limit" value={sel('visit_plan')} />
+                <Row label="Response target" value={val('response_target')} />
+                <Row
+                  label="Additional charges"
+                  value={`Additional visit ${val('additional_visit_rate')} · Additional labour ${val('worker_hour_rate')} per worker-hour (1 hour minimum, each worker billed separately) · Travel/mobilization ${val('travel_mobilization')} · Heavy snow ${val('heavy_snow_charge')} · De-icer ${val('deicer_application_charge')} + materials ${val('deicer_material_charge')} · Emergency call-out ${val('emergency_callout_charge')} · Hauling ${val('hauling_charge')}`}
+                />
+                <Row label="Cancellation terms" value={val('cancellation_terms')} />
+                <Row
+                  label="Your authorizations"
+                  value={`Snow storage: ${sel('snow_storage_location')} · De-icing: ${sel('deicing_authorization')} · Hauling: ${sel('hauling_authorization')} · Windrow returns: ${sel('windrow_returns')} · Photos: ${sel('photo_consent')} · Payment: ${sel('payment_method')}`}
+                />
+              </>
+            )}
           </div>
         </ScrollArea>
 
