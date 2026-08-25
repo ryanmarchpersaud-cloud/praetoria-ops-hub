@@ -120,6 +120,8 @@ export function buildAgreementPrintHtml(
   .signature-block { break-inside: avoid; page-break-inside: avoid; }
   .schedule { break-before: auto; page-break-before: auto; }
   .certificate { break-before: page; page-break-before: always; }
+  .sheet-break { break-before: page; page-break-before: always; }
+  .pricing-sheet .pricing-note { border: 1.5px solid #0F172A; padding: 8px 10px; margin: 12px 0; font-size: 10pt; }
   .certificate table { width: 100%; border-collapse: collapse; font-size: 9.5pt; font-family: Arial, sans-serif; }
   .certificate td { border-bottom: 1px solid #e2e8f0; padding: 5px 6px; }
   footer.doc-footer { background: #0F172A; color: #fff; padding: 12px 24px; font-size: 8.5pt; font-family: Arial, sans-serif; display: flex; justify-content: space-between; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
