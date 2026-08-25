@@ -142,14 +142,14 @@ export default function AgreementSignPage() {
   /** Required selections must be answered outright — a signature never substitutes. */
   const missingSelections = useMemo(() => {
     if (!isCombined) return [];
-    return REQUIRED_SELECTION_KEYS.filter((k) => {
+    return resolveRequiredSelectionKeys(agreement).filter((k) => {
       const v = values[k];
-      if (k === 'snowfall_trigger' && v === 'Other written amount (state below)') {
+      if (k === 'snowfall_trigger' && String(v || '').startsWith('Other written amount')) {
         return !String(values.snowfall_trigger_other || '').trim();
       }
       return !(typeof v === 'string' ? v.trim() : v);
     });
-  }, [isCombined, values]);
+  }, [isCombined, agreement, values]);
 
   const handleFinish = () => {
     if (missingSelections.length) {
