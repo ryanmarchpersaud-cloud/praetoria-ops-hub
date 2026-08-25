@@ -22,9 +22,8 @@ import { AgreementField, AgreementFieldValues, completionState } from '@/lib/agr
 import { agreementStatusMeta, isSignable } from '@/lib/agreementStatus';
 import { openAgreementPrintWindow } from '@/lib/agreementPrint';
 import { PreSignReviewDialog } from '@/components/agreements/PreSignReviewDialog';
-import { REQUIRED_SELECTION_KEYS } from '@/lib/agreementTemplates/residentialSnow';
 import { PROVISIONAL_BANNER } from '@/lib/combinedDocument';
-import { resolveAgreementBody, resolveAgreementSchema } from '@/lib/agreementBody';
+import { resolveAgreementBody, resolveAgreementSchema, resolveRequiredSelectionKeys } from '@/lib/agreementBody';
 
 import logoWhite from '@/assets/praetoria-logo-white.png';
 
