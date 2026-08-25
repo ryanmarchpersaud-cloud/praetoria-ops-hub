@@ -49,6 +49,8 @@ export default function AgreementsPage() {
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [showCombined, setShowCombined] = useState(false);
+  const [showCommercialCombined, setShowCommercialCombined] = useState(false);
+
 
 
   const { data: agreements = [], isLoading } = useAgreements({ status: statusFilter, recipientType: typeFilter });
@@ -77,6 +79,9 @@ export default function AgreementsPage() {
           <p className="text-sm text-muted-foreground">Create, send, and manage agreements & e-signatures</p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => setShowCommercialCombined(true)}>
+            <Snowflake className="h-4 w-4 mr-1" /> Commercial Snow Combined Document
+          </Button>
           <Button variant="outline" onClick={() => setShowCombined(true)}>
             <Snowflake className="h-4 w-4 mr-1" /> Residential Snow Combined Document
           </Button>
