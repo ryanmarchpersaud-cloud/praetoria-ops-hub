@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 
 import { agreementStatusMeta, ADMIN_STATUS_FILTERS } from '@/lib/agreementStatus';
 import { CreateResidentialCombinedDialog } from '@/components/agreements/CreateResidentialCombinedDialog';
+import { CreateCommercialSnowCombinedDialog } from '@/components/agreements/CreateCommercialSnowCombinedDialog';
 
 
 const categoryLabels: Record<string, string> = {
