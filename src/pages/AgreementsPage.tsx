@@ -178,6 +178,7 @@ export default function AgreementsPage() {
 
       <CreateAgreementDialog open={showCreate} onOpenChange={setShowCreate} userId={user?.id} />
       <CreateResidentialCombinedDialog open={showCombined} onOpenChange={setShowCombined} userId={user?.id} />
+      <CreateCommercialSnowCombinedDialog open={showCommercialCombined} onOpenChange={setShowCommercialCombined} userId={user?.id} />
 
     </div>
   );
