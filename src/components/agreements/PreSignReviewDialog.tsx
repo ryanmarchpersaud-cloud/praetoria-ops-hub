@@ -37,18 +37,56 @@ export function PreSignReviewDialog({
   const val = (k: string) => (isTbd(m[k]) ? (fallbacks[k] || TBD) : m[k]);
   const sel = (k: string) => (values?.[k] ? String(values[k]) : '');
 
-  const trigger = sel('snowfall_trigger') === 'Other written amount (state below)'
+  const trigger = sel('snowfall_trigger').startsWith('Other written amount')
     ? sel('snowfall_trigger_other')
     : sel('snowfall_trigger');
 
-  const areas = [
-    ['Driveway', sel('area_driveway')],
-    ['Walkways', sel('area_walkways')],
-    ['Steps / entrance', sel('area_steps')],
-    ['City sidewalk', sel('area_sidewalk')],
-  ].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(' · ');
+  const isCommercial = agreement?.document_type === 'commercial_snow_combined';
+
+  const areas = (isCommercial
+    ? [
+        ['Front / access area', sel('area_front')],
+        ['Main entrance', sel('area_entrance')],
+        ['Back / rear area', sel('area_back')],
+      ]
+    : [
+        ['Driveway', sel('area_driveway')],
+        ['Walkways', sel('area_walkways')],
+        ['Steps / entrance', sel('area_steps')],
+        ['City sidewalk', sel('area_sidewalk')],
+      ]
+  ).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(' · ');
 
   const blocked = missingSelections.length > 0;
+
+  const commercialBody = (
+    <>
+      <Row label="Customer" value={val('customer_name')} />
+      <Row label="Authorized representative" value={sel('customer_rep_name')} />
+      <Row label="Property" value={`${val('service_address')}, ${val('service_city')}, ${val('service_province')}`} />
+      <Row label="Quotation / Agreement" value={`${val('quotation_number')} · ${val('agreement_number')} (v${val('document_version')})`} />
+      <Row label="Contract period" value={`${val('season_start_date')} to ${val('season_end_date')}`} />
+      <Row label="Selected service option" value={sel('service_option')} />
+      <Row
+        label="Option 1 pricing"
+        value={`${val('option1_rate')}/hour per equipment unit · ${val('option1_minimum_hours')} minimum · ${val('option1_minimum_charge')} minimum visit charge`}
+      />
+      <Row
+        label="Option 2 pricing"
+        value={`${val('option2_monthly_rate')}/month · up to ${val('option2_included_visits')} qualifying visits per calendar month · visits beyond that billed under Option 1`}
+      />
+      <Row label="Options are alternatives" value="Option 1 and Option 2 are never added together — only the option you select applies." />
+      <Row label="Snowfall trigger" value={trigger} />
+      <Row label="Included service areas" value={areas} />
+      <Row label="Snow placement" value={sel('snow_placement')} />
+      <Row label="Hauling" value={sel('hauling_authorization')} />
+      <Row label="Site contact" value={sel('site_contact_name')} />
+      <Row label="Photos" value={sel('photo_consent')} />
+      <Row label="Payment" value={`${sel('payment_method')} · ${val('payment_terms')}`} />
+      <Row label="Tax treatment" value={val('pst_treatment')} />
+      <Row label="Cancellation terms" value={val('cancellation_terms')} />
+    </>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
