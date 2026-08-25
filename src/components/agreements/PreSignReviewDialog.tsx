@@ -65,18 +65,28 @@ export function PreSignReviewDialog({
       <Row label="Authorized representative" value={sel('customer_rep_name')} />
       <Row label="Property" value={`${val('service_address')}, ${val('service_city')}, ${val('service_province')}`} />
       <Row label="Quotation / Agreement" value={`${val('quotation_number')} · ${val('agreement_number')} (v${val('document_version')})`} />
-      <Row label="Contract period" value={`${val('season_start_date')} to ${val('season_end_date')}`} />
-      <Row label="Selected service option" value={sel('service_option')} />
+      <Row label="Selected service plan" value={sel('service_option')} />
+      {sel('service_option').startsWith('OPTION 2') && (
+        <Row label="Active service month(s)" value={sel('option2_months')} />
+      )}
       <Row
-        label="Option 1 pricing"
-        value={`${val('option1_rate')}/hour per equipment unit · ${val('option1_minimum_hours')} minimum · ${val('option1_minimum_charge')} minimum visit charge`}
+        label="Option 1 — Automatic Per-Visit"
+        value={`${val('option1_rate')}/hour per equipment unit · ${val('option1_minimum_hours')} minimum · ${val('option1_minimum_charge')} minimum visit charge · automatic dispatch`}
       />
       <Row
-        label="Option 2 pricing"
-        value={`${val('option2_monthly_rate')}/month · up to ${val('option2_included_visits')} qualifying visits per calendar month · visits beyond that billed under Option 1`}
+        label="Option 2 — Month-to-Month On-Call"
+        value={`${val('option2_hourly_rate')}/hour per equipment unit · ${val('option2_minimum_hours')} minimum · ${val('option2_minimum_charge')} minimum visit charge · you call when service is required`}
       />
-      <Row label="Options are alternatives" value="Option 1 and Option 2 are never added together — only the option you select applies." />
+      <Row
+        label="Option 3 — Full Season Automatic"
+        value={`${val('option3_monthly_rate')}/month × ${val('option3_months')} months · seasonal contract value ${val('option3_season_total')} · ${val('season_start_date')} to ${val('season_end_date')} · automatic dispatch`}
+      />
+      <Row label="Options are alternatives" value="Only the one option you select applies — the options are never added together." />
       <Row label="Snowfall trigger" value={trigger} />
+      <Row
+        label={`Heavy Snow Events (over ${val('heavy_snow_threshold')})`}
+        value={`Standard pricing applies through ${val('heavy_snow_threshold')} per event. Tier 1 (10.1–15 cm): ${val('heavy_snow_tier1')} · Tier 2 (15.1–20 cm): ${val('heavy_snow_tier2')} · Severe (over 20 cm): ${val('heavy_snow_tier3')}`}
+      />
       <Row label="Included service areas" value={areas} />
       <Row label="Snow placement" value={sel('snow_placement')} />
       <Row label="Hauling" value={sel('hauling_authorization')} />
@@ -87,6 +97,7 @@ export function PreSignReviewDialog({
       <Row label="Cancellation terms" value={val('cancellation_terms')} />
     </>
   );
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

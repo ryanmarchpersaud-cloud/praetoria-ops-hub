@@ -24,13 +24,24 @@ import { combinedStatusMeta } from '@/lib/combinedDocument';
  * selections → fast guided e-signature → customer portal linkage.
  */
 export const COMMERCIAL_SNOW_DEFAULTS = {
+  // Option 1 — automatic per-visit
   option1_rate: '$150.00',
   option1_minimum_hours: '2 hours',
   option1_minimum_charge: '$300.00',
-  option2_monthly_rate: '$1,440.00',
-  option2_included_visits: '12',
-  option2_event_range: 'Approximately 2–5 cm',
+  // Option 2 — flexible month-to-month on-call
+  option2_hourly_rate: '$225.00',
+  option2_minimum_hours: '3 hours',
+  option2_minimum_charge: '$675.00',
+  // Option 3 — full season automatic
+  option3_monthly_rate: '$1,200.00',
+  option3_months: '6',
+  option3_season_total: '$7,200.00',
   default_trigger: '2 cm accumulation or greater',
+  // Heavy snow — never invented; Admin must approve before the rates are shown
+  heavy_snow_threshold: '10 cm',
+  heavy_snow_tier1: 'TBD',
+  heavy_snow_tier2: 'TBD',
+  heavy_snow_tier3: 'TBD',
   pst_treatment:
     'Snow clearing and ice-control services are subject to 5% GST; no PST applies to the service. Separately sold materials are subject to GST and PST.',
   payment_terms: 'Net 15 days from the invoice date.',
@@ -43,6 +54,7 @@ export const COMMERCIAL_SNOW_DEFAULTS = {
   praetoria_authorized_representative: 'Ryan Steven Persaud',
   legal_company_name: 'Praetoria Group',
 };
+
 
 export function CreateCommercialSnowCombinedDialog({
   open, onOpenChange, userId,
@@ -59,9 +71,16 @@ export function CreateCommercialSnowCombinedDialog({
   const [seasonEnd, setSeasonEnd] = useState('2027-04-30');
   const [option1Rate, setOption1Rate] = useState(COMMERCIAL_SNOW_DEFAULTS.option1_rate);
   const [option1Min, setOption1Min] = useState(COMMERCIAL_SNOW_DEFAULTS.option1_minimum_charge);
-  const [option2Rate, setOption2Rate] = useState(COMMERCIAL_SNOW_DEFAULTS.option2_monthly_rate);
-  const [option2Visits, setOption2Visits] = useState(COMMERCIAL_SNOW_DEFAULTS.option2_included_visits);
+  const [option2Rate, setOption2Rate] = useState(COMMERCIAL_SNOW_DEFAULTS.option2_hourly_rate);
+  const [option2Min, setOption2Min] = useState(COMMERCIAL_SNOW_DEFAULTS.option2_minimum_charge);
+  const [option3Rate, setOption3Rate] = useState(COMMERCIAL_SNOW_DEFAULTS.option3_monthly_rate);
+  const [option3Months, setOption3Months] = useState(COMMERCIAL_SNOW_DEFAULTS.option3_months);
+  const [option3Total, setOption3Total] = useState(COMMERCIAL_SNOW_DEFAULTS.option3_season_total);
+  const [heavyTier1, setHeavyTier1] = useState(COMMERCIAL_SNOW_DEFAULTS.heavy_snow_tier1);
+  const [heavyTier2, setHeavyTier2] = useState(COMMERCIAL_SNOW_DEFAULTS.heavy_snow_tier2);
+  const [heavyTier3, setHeavyTier3] = useState(COMMERCIAL_SNOW_DEFAULTS.heavy_snow_tier3);
   const [trigger, setTrigger] = useState(COMMERCIAL_SNOW_DEFAULTS.default_trigger);
+
   const [mode, setMode] = useState<'draft_internal_review' | 'final_quotation'>('draft_internal_review');
   const [saving, setSaving] = useState(false);
 
@@ -144,9 +163,16 @@ export function CreateCommercialSnowCombinedDialog({
         season_end_date: seasonEnd,
         option1_rate: option1Rate,
         option1_minimum_charge: option1Min,
-        option2_monthly_rate: option2Rate,
-        option2_included_visits: option2Visits,
+        option2_hourly_rate: option2Rate,
+        option2_minimum_charge: option2Min,
+        option3_monthly_rate: option3Rate,
+        option3_months: option3Months,
+        option3_season_total: option3Total,
+        heavy_snow_tier1: heavyTier1,
+        heavy_snow_tier2: heavyTier2,
+        heavy_snow_tier3: heavyTier3,
         default_trigger: trigger,
+
       };
 
       const created = await createAgreement.mutateAsync({
@@ -244,9 +270,19 @@ export function CreateCommercialSnowCombinedDialog({
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Option 1 — Hourly Rate (per equipment unit)</Label><Input value={option1Rate} onChange={(e) => setOption1Rate(e.target.value)} /></div>
               <div><Label>Option 1 — Minimum Visit Charge</Label><Input value={option1Min} onChange={(e) => setOption1Min(e.target.value)} /></div>
-              <div><Label>Option 2 — Monthly Rate</Label><Input value={option2Rate} onChange={(e) => setOption2Rate(e.target.value)} /></div>
-              <div><Label>Option 2 — Included Visits / Month</Label><Input value={option2Visits} onChange={(e) => setOption2Visits(e.target.value)} /></div>
+              <div><Label>Option 2 — Hourly Rate (on-call)</Label><Input value={option2Rate} onChange={(e) => setOption2Rate(e.target.value)} /></div>
+              <div><Label>Option 2 — Minimum Visit Charge</Label><Input value={option2Min} onChange={(e) => setOption2Min(e.target.value)} /></div>
+              <div><Label>Option 3 — Monthly Rate</Label><Input value={option3Rate} onChange={(e) => setOption3Rate(e.target.value)} /></div>
+              <div><Label>Option 3 — Number of Months</Label><Input value={option3Months} onChange={(e) => setOption3Months(e.target.value)} /></div>
+              <div><Label>Option 3 — Seasonal Contract Value</Label><Input value={option3Total} onChange={(e) => setOption3Total(e.target.value)} /></div>
             </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div><Label>Heavy Snow Tier 1 (10.1–15 cm)</Label><Input value={heavyTier1} onChange={(e) => setHeavyTier1(e.target.value)} placeholder="TBD — Admin to set" /></div>
+              <div><Label>Heavy Snow Tier 2 (15.1–20 cm)</Label><Input value={heavyTier2} onChange={(e) => setHeavyTier2(e.target.value)} placeholder="TBD — Admin to set" /></div>
+              <div><Label>Severe Snow Tier (over 20 cm)</Label><Input value={heavyTier3} onChange={(e) => setHeavyTier3(e.target.value)} placeholder="TBD — Admin to set" /></div>
+            </div>
+
 
             <div><Label>Default Snowfall Trigger</Label><Input value={trigger} onChange={(e) => setTrigger(e.target.value)} /></div>
 
