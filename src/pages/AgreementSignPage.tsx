@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 
 import { AgreementDocument } from '@/components/agreements/AgreementDocument';
 import { SignatureModal, serializeSignature, SignatureValue } from '@/components/agreements/SignatureModal';
-import { AgreementField, AgreementFieldValues, completionState } from '@/lib/agreementFields';
+import { AgreementField, AgreementFieldValues, completionState, isFieldVisible } from '@/lib/agreementFields';
 import { agreementStatusMeta, isSignable } from '@/lib/agreementStatus';
 import { openAgreementPrintWindow } from '@/lib/agreementPrint';
 import { PreSignReviewDialog } from '@/components/agreements/PreSignReviewDialog';
@@ -143,13 +143,16 @@ export default function AgreementSignPage() {
   const missingSelections = useMemo(() => {
     if (!isCombined) return [];
     return resolveRequiredSelectionKeys(agreement).filter((k) => {
+      const field = schema.find((f) => f.key === k);
+      if (field && !isFieldVisible(field, values)) return false;
       const v = values[k];
       if (k === 'snowfall_trigger' && String(v || '').startsWith('Other written amount')) {
         return !String(values.snowfall_trigger_other || '').trim();
       }
       return !(typeof v === 'string' ? v.trim() : v);
     });
-  }, [isCombined, agreement, values]);
+  }, [isCombined, agreement, values, schema]);
+
 
   const handleFinish = () => {
     if (missingSelections.length) {

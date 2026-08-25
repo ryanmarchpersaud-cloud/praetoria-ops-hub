@@ -11,9 +11,13 @@ import {
   AgreementFieldRole,
   AgreementFieldValues,
   isFieldComplete,
+  isFieldVisible,
+  parseMulti,
+  serializeMulti,
   splitDocument,
 } from '@/lib/agreementFields';
 import { SignaturePreview, parseSignature } from './SignatureModal';
+
 
 interface Props {
   bodyHtml: string;
@@ -56,6 +60,8 @@ export function AgreementDocument({
         }
         const field = schemaMap[seg.content];
         if (!field) return null;
+        if (!isFieldVisible(field, values || {})) return null;
+
         return (
           <FieldControl
             key={`${seg.content}-${i}`}
@@ -125,6 +131,34 @@ function FieldControl({
           </Select>
         ) : <p className="font-semibold m-0">{(value as string) || '—'}</p>
       )}
+
+      {field.type === 'multiselect' && (
+        editable ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {(field.options || []).map((o) => {
+              const list = parseMulti(value);
+              const checked = list.includes(o);
+              return (
+                <label key={o} className="flex items-center gap-2 cursor-pointer text-sm">
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(c) =>
+                      onChange?.(
+                        field.key,
+                        serializeMulti(
+                          c === true ? [...list, o] : list.filter((x) => x !== o),
+                        ),
+                      )
+                    }
+                  />
+                  <span>{o}</span>
+                </label>
+              );
+            })}
+          </div>
+        ) : <p className="font-semibold m-0">{serializeMulti(parseMulti(value)) || '—'}</p>
+      )}
+
 
       {(field.type === 'text' || field.type === 'initials') && (
         editable ? (

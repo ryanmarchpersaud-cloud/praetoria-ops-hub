@@ -8,8 +8,15 @@
  * `field_values` stores what the signer entered.
  */
 
-export type AgreementFieldType = 'text' | 'select' | 'date' | 'checkbox' | 'initials' | 'signature';
+export type AgreementFieldType = 'text' | 'select' | 'multiselect' | 'date' | 'checkbox' | 'initials' | 'signature';
 export type AgreementFieldRole = 'customer' | 'praetoria';
+
+/** Conditional visibility: the field only shows when another field matches. */
+export interface AgreementFieldCondition {
+  key: string;
+  equalsAny?: string[];
+  startsWith?: string;
+}
 
 export interface AgreementField {
   key: string;
@@ -22,9 +29,33 @@ export interface AgreementField {
   helpText?: string;
   /** Text shown next to a checkbox / acknowledgement field. */
   checkboxText?: string;
+  /** Only render / require this field when the condition is satisfied. */
+  visibleWhen?: AgreementFieldCondition;
 }
 
 export type AgreementFieldValues = Record<string, string | boolean | null | undefined>;
+
+/** Multi-select values are stored as a comma-separated string. */
+export function parseMulti(value: unknown): string[] {
+  return String(value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export function serializeMulti(list: string[]): string {
+  return list.join(', ');
+}
+
+export function isFieldVisible(field: AgreementField, values: AgreementFieldValues): boolean {
+  const cond = field.visibleWhen;
+  if (!cond) return true;
+  const raw = String(values?.[cond.key] ?? '');
+  if (cond.startsWith) return raw.startsWith(cond.startsWith);
+  if (cond.equalsAny) return cond.equalsAny.includes(raw);
+  return Boolean(raw);
+}
+
 
 export const FIELD_PLACEHOLDER_RE = /<span[^>]*data-agreement-field="([a-z0-9_]+)"[^>]*>\s*<\/span>/gi;
 
@@ -55,16 +86,24 @@ export function fieldPlaceholder(key: string) {
 export function isFieldComplete(field: AgreementField, values: AgreementFieldValues): boolean {
   const v = values?.[field.key];
   if (field.type === 'checkbox') return v === true;
+  if (field.type === 'multiselect') return parseMulti(v).length > 0;
   return typeof v === 'string' ? v.trim().length > 0 : Boolean(v);
 }
 
-export function requiredFieldsFor(schema: AgreementField[], role: AgreementFieldRole): AgreementField[] {
-  return (schema || []).filter((f) => f.role === role && f.required !== false);
+export function requiredFieldsFor(
+  schema: AgreementField[],
+  role: AgreementFieldRole,
+  values?: AgreementFieldValues,
+): AgreementField[] {
+  return (schema || []).filter(
+    (f) => f.role === role && f.required !== false && (!values || isFieldVisible(f, values)),
+  );
 }
 
 export function completionState(schema: AgreementField[], values: AgreementFieldValues, role: AgreementFieldRole) {
-  const required = requiredFieldsFor(schema, role);
+  const required = requiredFieldsFor(schema, role, values);
   const completed = required.filter((f) => isFieldComplete(f, values));
+
   return {
     required,
     completedCount: completed.length,
