@@ -14,11 +14,17 @@ import {
   RESIDENTIAL_SEASONAL_FIELD_SCHEMA,
   RESIDENTIAL_SEASONAL_REQUIRED_SELECTION_KEYS,
 } from '@/lib/agreementTemplates/residentialSnowSeasonal';
+import {
+  buildJunkRemovalCombinedBody,
+  JUNK_REMOVAL_COMBINED_FIELD_SCHEMA,
+  JUNK_REMOVAL_REQUIRED_SELECTION_KEYS,
+} from '@/lib/agreementTemplates/junkRemovalCombined';
 import { combinedStatusMeta } from '@/lib/combinedDocument';
 
 export const COMMERCIAL_SNOW_COMBINED_TYPE = 'commercial_snow_combined';
 export const LANDSCAPING_COMBINED_TYPE = 'landscaping_combined';
 export const RESIDENTIAL_SNOW_SEASONAL_TYPE = 'residential_snow_seasonal';
+export const JUNK_REMOVAL_COMBINED_TYPE = 'junk_removal_combined';
 
 function isCommercialCombined(agreement: any) {
   return agreement?.document_type === COMMERCIAL_SNOW_COMBINED_TYPE;
@@ -31,6 +37,11 @@ function isLandscapingCombined(agreement: any) {
 function isResidentialSeasonal(agreement: any) {
   return agreement?.document_type === RESIDENTIAL_SNOW_SEASONAL_TYPE;
 }
+
+function isJunkRemovalCombined(agreement: any) {
+  return agreement?.document_type === JUNK_REMOVAL_COMBINED_TYPE;
+}
+
 
 function isResidentialCombined(agreement: any) {
   return (
