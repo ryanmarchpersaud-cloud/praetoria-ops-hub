@@ -171,8 +171,9 @@ export const RESIDENTIAL_SEASONAL_DEFAULTS = {
   heavy_snow_increment: '3 cm',
   heavy_snow_increment_charge: '$125.00',
   windrow_starting_charge: '$125.00',
+  deicing_charge: 'Starting at $65.00 per application',
   /** Never invented — Admin must approve before it is shown as a price. */
-  additional_visit_charge: 'TBD — Admin Review Required',
+  additional_visit_charge: 'Starting at $125.00 per additional visit',
   pst_treatment:
     'Snow clearing services are subject to 5% GST; no PST applies to the service. Separately sold materials are subject to GST and PST.',
   payment_terms: 'Billed monthly in accordance with current Praetoria billing settings.',
@@ -225,7 +226,7 @@ export function buildResidentialSeasonalSnowBody(d: ResidentialSeasonalMergeData
       <tr><th>Service Limit</th><td>Up to ${V(d.visits_per_week)} qualifying visits per week · maximum ${V(d.visits_per_month)} qualifying visits per month</td></tr>
       <tr><th>Heavy Snow</th><td>Over ${V(d.heavy_snow_threshold)}: +${V(d.heavy_snow_increment_charge)} for every additional ${V(d.heavy_snow_increment)}</td></tr>
       <tr><th>Municipal Plow Windrows</th><td>Not included — starting at ${V(d.windrow_starting_charge)}</td></tr>
-      <tr><th>De-Icing / Salt / Sand</th><td>Not included — snow clearing only</td></tr>
+      <tr><th>De-Icing / Salt / Sand</th><td>Not included — ${V(d.deicing_charge)}</td></tr>
     </tbody></table>`)}
 
   ${sec(3, 'Automatic Service — Cumulative 3 cm Trigger', `
@@ -281,7 +282,7 @@ export function buildResidentialSeasonalSnowBody(d: ResidentialSeasonalMergeData
     <h3>Services Not Included in the Monthly Rate</h3>
     <table class="agreement-table"><tbody>
       <tr><th>Municipal Plow Windrow / Berm Removal</th><td>Not included — starting at ${V(d.windrow_starting_charge)}; final price varies with windrow size, snow depth, compaction, ice buildup, equipment and labour required</td></tr>
-      <tr><th>De-Icing / Salt / Sand / Ice Melt / Sanding</th><td>Not included — separately quoted and authorized</td></tr>
+      <tr><th>De-Icing / Salt / Sand / Ice Melt / Sanding</th><td>Not included — ${V(d.deicing_charge)}, depending on material quantity and area treated; separately authorized</td></tr>
       <tr><th>Off-Site Snow Hauling</th><td>Not included — separately quoted and authorized</td></tr>
       <tr><th>Additional Visits Beyond ${V(d.visits_per_month)} per Month</th><td>${V(d.additional_visit_charge)} — separately authorized and priced under the approved quotation / service agreement</td></tr>
     </tbody></table>
@@ -333,7 +334,7 @@ export function buildResidentialSeasonalSnowBody(d: ResidentialSeasonalMergeData
     <div class="agreement-field-block">${fieldPlaceholder('windrow_service')}</div>`)}
 
   ${sec(13, 'De-Icing, Salt and Sand', `
-    <p><strong>Snow clearing only.</strong> Salt, sand, de-icer, ice melt, sanding and ice-control applications are not included in the monthly price and must be separately quoted and authorized.</p>
+    <p><strong>Snow clearing only.</strong> Salt, sand, de-icer, ice melt, sanding and ice-control applications are not included in the monthly price. When authorized, de-icing is billed separately at ${V(d.deicing_charge)}, depending on material quantity and area treated.</p>
     <div class="agreement-field-block">${fieldPlaceholder('deicing_request')}</div>`)}
 
   ${sec(14, 'Additional Visits', `
