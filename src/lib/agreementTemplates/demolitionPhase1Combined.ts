@@ -137,7 +137,7 @@ export const DEMOLITION_PHASE1_FIELD_SCHEMA: AgreementField[] = [
     role: 'customer',
     required: true,
     checkboxText:
-      'I have reviewed the quotation, the Phase 1 scope of work, the exclusions, the pricing and the Service Agreement, and I authorize Praetoria Group to perform the approved Phase 1 basement demolition and strip-out work.',
+      'I understand that the $4,380 quotation applies only to Phase 1 demolition and interior strip-out. I understand that framing, insulation, electrical, plumbing, reconstruction and hazardous-material remediation are not included unless separately quoted. I authorize Praetoria to stop at the inspection hold point after the approved finishes are removed so the exposed basement condition can be reviewed before Phase 2 is authorized.',
   },
   { key: 'customer_signature', label: 'Customer Signature', type: 'signature', role: 'customer', required: true },
   {
@@ -350,74 +350,117 @@ export function buildDemolitionPhase1Body(d: DemolitionPhase1MergeData): string 
     <p>At completion of Phase 1, the crew loads approved debris into the disposal bins, removes loose demolition debris from the approved work areas, sweeps / rough-cleans the stripped areas, operates approved air-filtration / drying equipment as scheduled, photographs the exposed wall and floor assemblies, and documents areas requiring Phase 2 assessment.</p>
     <p><strong>This is a demolition rough-clean, not final post-renovation cleaning.</strong></p>`)}
 
-  <!-- ══════════ SERVICE AGREEMENT ══════════ -->
+  <!-- ══════════ PHASE 1 BASEMENT DEMOLITION & INTERIOR STRIP-OUT SERVICE AGREEMENT ══════════ -->
+  <h1 class="agreement-part-title">Phase 1 Basement Demolition &amp; Interior Strip-Out Service Agreement</h1>
+
   ${sec(16, 'Parties', `
-    <p>This Basement Demolition Phase 1 Service Agreement is between ${V(d.legal_company_name)} ("Praetoria") and ${V(d.customer_name)} (the "Customer").</p>`)}
+    <p><strong>Service Provider:</strong> ${V(d.legal_company_name)} / applicable Praetoria operating division (the verified legal contracting entity recorded in Company Settings).</p>
+    <p><strong>Customer:</strong> ${V(d.customer_name)}</p>
+    <p><strong>Service Property:</strong> ${V(d.service_address)}, ${V(d.service_city)}, ${V(d.service_province)} ${V(d.service_postal_code)}</p>
+    <p><strong>Email:</strong> ${V(d.customer_email)}</p>`)}
 
-  ${sec(17, 'Service Property', `
-    <p>${V(d.service_address)}, ${V(d.service_city)}, ${V(d.service_province)} ${V(d.service_postal_code)}.</p>`)}
+  ${sec(17, 'Agreement Purpose', `
+    <p>This Agreement applies only to the approved Phase 1 basement demolition and interior strip-out described in the accepted quotation. Phase 1 is intended to remove approved damaged contents and interior finish materials so concealed conditions can be inspected. <strong>This is not an agreement for complete basement reconstruction.</strong></p>`)}
 
-  ${sec(18, 'Phase 1 Scope', `
-    <p>Interior basement demolition and strip-out only, as described in this document.</p>`)}
+  ${sec(18, 'Phase 1 Contract Price', `
+    <table class="agreement-table"><tbody>
+      <tr><th>Demolition Labour</th><td>${V(d.labour_total)}</td></tr>
+      <tr><th>Two Bin Allowance</th><td>${V(d.bin_total)}</td></tr>
+      <tr><th>PPE / Air Filtration / Drying Equipment</th><td>${V(d.ppe_equipment_total)}</td></tr>
+      <tr><th>PHASE 1 SUBTOTAL</th><td><strong>${V(d.phase1_subtotal)} before applicable taxes</strong></td></tr>
+    </tbody></table>
+    <p>Only the scope specifically stated in the quotation and this Agreement is included.</p>`)}
 
-  ${sec(19, 'Price', `
-    <p>${V(d.phase1_subtotal)} before applicable taxes.</p>`)}
+  ${sec(19, 'Labour Allowance', `
+    <p>Phase 1 includes ${V(d.crew_size)} workers at ${V(d.labour_rate)} per hour, for up to ${V(d.hours_per_day)} hours per day, for ${V(d.days)} days — a total labour allowance of ${V(d.total_crew_hours)} crew labour-hours, quoted at ${V(d.labour_total)}.</p>
+    <p>Additional labour beyond this allowance is not automatically included.</p>`)}
 
-  ${sec(20, 'Labour Allowance', `
-    <p>${V(d.crew_size)} workers, up to ${V(d.days)} days, up to ${V(d.hours_per_day)} hours per day (${V(d.total_crew_hours)} crew labour-hours).</p>`)}
+  ${sec(20, 'Phase 1 Demolition Scope', `
+    <p>Subject to site conditions and safe access, Praetoria may remove approved damaged or unwanted basement items including furniture, household contents, pictures, cabinets, shelving, interior doors, baseboards, trim, carpet, carpet underlay, damaged flooring materials included in the quotation, drywall, wall finishes and other approved non-structural interior finish materials.</p>`)}
 
-  ${sec(21, 'Bin Allowance', `
-    <p>${V(d.bin_count)} bins at the current ${V(d.bin_rate)} per bin allowance (${V(d.bin_total)}).</p>`)}
+  ${sec(21, 'Water-Damaged / Mold-Affected Materials', `
+    <p>Phase 1 may include removal of wet, damaged or visibly mold / mildew-affected finish materials when they can be safely and lawfully handled within the approved demolition scope. This does not mean Praetoria is certifying that mold has been professionally remediated. The quotation is not a certified mold-remediation contract.</p>`)}
 
-  ${sec(22, 'Supplier / Disposal Overages', `
-    <p>Actual third-party supplier and disposal overages may be additional and are documented before being added to the final invoice or approved as additional work.</p>`)}
+  ${sec(22, 'Materials and Work Not Included in Phase 1', `
+    <p>Unless separately approved, Phase 1 does not include structural demolition, structural framing removal, insulation removal, electrical-system modification, plumbing-system modification, furnace / HVAC work, foundation repair, structural repair, reconstruction, drywall replacement, new flooring, new framing, new insulation, painting or finish carpentry.</p>`)}
 
-  ${sec(23, 'PPE / Air Equipment', `
-    <p>${V(d.ppe_equipment_total)} allowance for approved PPE, containment consumables and air-filtration / drying equipment.</p>`)}
+  ${sec(23, 'Phase 1 Hold Point / Owner Inspection', `
+    <p>Once the approved wall finishes and surface materials have been removed, Praetoria will stop at an appropriate inspection point. Before additional concealed-material work proceeds:</p>
+    <ol>
+      <li>Exposed wall cavities are documented.</li>
+      <li>Exposed insulation is reviewed.</li>
+      <li>Exposed framing is reviewed.</li>
+      <li>Visible plumbing conditions are identified.</li>
+      <li>Visible electrical conditions are identified.</li>
+      <li>The Customer has an opportunity to inspect the exposed basement condition.</li>
+    </ol>
+    <p>Praetoria then determines what additional work may be required.</p>`)}
 
-  ${sec(24, 'Owner Inspection Hold Point', `
-    <p>An owner inspection of the exposed basement condition is required before any Phase 2 work is authorized.</p>`)}
+  ${sec(24, 'Phase 2 Is Not Included', `
+    <p>If concealed damage is discovered, Praetoria may prepare a <strong>Phase 2 — Additional Demolition / Framing / Insulation / Trades / Reconstruction</strong> quotation or change order. Possible Phase 2 work includes damaged insulation removal, framing removal or replacement, electrical work, plumbing work, additional demolition, additional disposal bins, additional PPE / containment, additional air-filtration / drying equipment and reconstruction.</p>
+    <p>The Customer is not automatically charged for Phase 2. Phase 2 requires separate approval.</p>`)}
 
-  ${sec(25, 'Framing and Insulation', `
-    <p>Not included in Phase 1 unless separately authorized.</p>`)}
+  ${sec(25, 'Electrical / Plumbing', `
+    <p>Praetoria demolition workers are not authorized by this Agreement to perform electrical or plumbing work that legally requires an appropriately qualified or licensed trade. If electrical or plumbing systems interfere with demolition or require modification, work may stop in that area until the required trade work is authorized. Any electrician or plumber costs are separate unless specifically included in a later quotation.</p>`)}
 
-  ${sec(26, 'Electrical', `
-    <p>Not included beyond work specifically authorized. Electrician work is quoted separately.</p>`)}
+  ${sec(26, 'Concealed Conditions', `
+    <p>Opening walls and finishes may reveal conditions that were not visible when the quotation was prepared, including hidden water damage, rot, mold growth, damaged framing, damaged insulation, electrical damage, plumbing damage, pest damage, structural defects or other concealed deterioration. These conditions are outside the fixed Phase 1 scope unless expressly included.</p>`)}
 
-  ${sec(27, 'Plumbing', `
-    <p>Not included beyond work specifically authorized. Plumber work is quoted separately.</p>`)}
+  ${sec(27, 'Suspected Asbestos / Hazardous Materials', `
+    <p>If demolition exposes material reasonably suspected to contain asbestos, hazardous chemicals, sewage contamination, significant biological contamination or other regulated hazardous material, Praetoria may immediately stop work in the affected area. Testing, specialized abatement, remediation and hazardous-material disposal are not included unless separately contracted.</p>`)}
 
-  ${sec(28, 'Hidden Conditions', `
-    <p>Additional concealed damage discovered during Phase 1 requires separate authorization and pricing.</p>`)}
+  ${sec(28, 'Air Filtration / Drying Equipment', `
+    <p>The quotation includes an allowance for PPE and air-filtration / drying equipment, which may include air scrubbers, HEPA filtration units, air movers, drying fans and other appropriate temporary air-moving equipment. The purpose is to assist with dust control, airborne particulate control, air circulation and drying following removal of wet finishes. <strong>Use of this equipment is not a guarantee that the property is mold-free, contaminant-free or fully dried.</strong></p>`)}
 
-  ${sec(29, 'Hazardous / Regulated Materials', `
-    <p>Hazardous, asbestos-containing, biological or otherwise regulated material is outside ordinary demolition scope and may require work stoppage and assessment.</p>`)}
+  ${sec(29, 'PPE', `
+    <p>Workers may use appropriate PPE based on conditions and the approved work, including respiratory protection where appropriate, gloves, protective clothing, eye protection, safety footwear and other demolition safety equipment. Praetoria may stop work if conditions require protection, containment or procedures outside the approved Phase 1 scope.</p>`)}
 
-  ${sec(30, 'Mold / Environmental Disclaimer', `
-    <p>Phase 1 demolition is not represented as certified mold, asbestos, hazardous-material or environmental remediation.</p>`)}
+  ${sec(30, 'Disposal Bins', `
+    <p>The quotation includes an allowance for ${V(d.bin_count)} construction / demolition bins, currently ${V(d.bin_total)} total. This is an allowance rather than a guarantee of the final third-party supplier cost unless Admin has confirmed the vendor price.</p>`)}
 
-  ${sec(31, 'Disposal', `
-    <p>Approved demolition waste is placed in the designated disposal bins and removed to an appropriate facility.</p>`)}
+  ${sec(31, 'Bin / Disposal Overages', `
+    <p>Additional charges may apply for actual third-party costs including delivery, pickup, weight overages, tipping / disposal charges, extra rental days, bin swaps, additional bins and restricted-material surcharges. Any additional material costs are documented on the final invoice or approved change order as applicable.</p>`)}
 
-  ${sec(32, 'Site Access', `
+  ${sec(32, 'Demolition Debris', `
+    <p>Praetoria places approved Phase 1 demolition debris into the designated disposal bins. Praetoria is not required to remove material excluded from the agreed demolition scope.</p>`)}
+
+  ${sec(33, 'Pre-Work Property Documentation', `
+    <p>Before demolition begins, Praetoria may document existing water damage, existing wall damage, flooring, doors, cabinets, basement contents, existing mold / mildew conditions, existing structural damage visible at the time and other pre-existing conditions. Photographs are stored with the project record where practical.</p>`)}
+
+  ${sec(34, 'Utilities / Safe Work Conditions', `
+    <p>The Customer must disclose known utility, electrical, plumbing or other hazards. Praetoria may require utilities affecting demolition to be shut off, isolated, disconnected or otherwise made safe before work proceeds in an affected area.</p>`)}
+
+  ${sec(35, 'Work Stoppage for Safety', `
+    <p>Praetoria may stop or suspend work where continuing would create an unreasonable risk because of hazardous material, structural instability, electrical hazard, plumbing hazard, severe contamination, unsafe air quality, unsafe access or other conditions outside the approved scope. A safety-related work stoppage is not authorization to perform additional work without customer approval.</p>`)}
+
+  ${sec(36, 'Permits / Third-Party Approvals', `
+    <p>Any permit, engineering review, hazardous-material assessment or third-party approval legally required for work outside the accepted Phase 1 scope is not included unless expressly stated in the quotation.</p>`)}
+
+  ${sec(37, 'Damage to Concealed Components', `
+    <p>Praetoria uses reasonable care during demolition. However, concealed components may exist behind finishes, including wiring, pipes, cables, fasteners, previous repairs and other hidden components. Praetoria stops and reports unexpected concealed conditions where reasonably possible. Final liability provisions follow Praetoria's legally reviewed master agreement.</p>`)}
+
+  ${sec(38, 'Rough Cleanup', `
+    <p>At the completion of Phase 1, Praetoria performs a demolition rough cleanup of the approved areas, which may include loading demolition debris, removing loose debris, sweeping exposed work areas, operating approved drying / filtration equipment and photographing the exposed conditions. <strong>This is not final post-renovation cleaning.</strong></p>`)}
+
+  ${sec(39, 'Service Documentation', `
+    <p>The Praetoria Operations Hub may record crew, labour hours, work dates, before photographs, progress photographs, after / hold-point photographs, bin usage, equipment, notes, change-order requirements and customer approvals.</p>`)}
+
+  ${sec(40, 'Site Access', `
     <p>The Customer provides reasonable and safe access to the approved work areas during the service window.</p>
     <div class="agreement-field-block">${fieldPlaceholder('site_access')}</div>
     <p>Primary site contact for service notifications: ${fieldPlaceholder('site_contact_name')}</p>`)}
 
-  ${sec(33, 'Utilities', `
-    <p>Utilities affecting the demolition must be made safe where required before the affected work proceeds.</p>`)}
-
-  ${sec(34, 'Photographs', `
+  ${sec(41, 'Photographs', `
     <p>Before, during and after photographs are permitted for project documentation and the Customer's records.</p>
     <div class="agreement-field-block">${fieldPlaceholder('photo_consent')}</div>`)}
 
-  ${sec(35, 'Praetoria Operations Hub Customer Portal', `
-    <p>${V(d.customer_name)} uses the existing secure Praetoria Operations Hub customer portal. Authorized users may view this quotation, the signed agreement, invoices and payment status, scheduled and completed work, before and after photographs, project records and service history, and may download PDFs. This Phase 1 demolition record is kept separate from the Customer's junk-removal quotation.</p>`)}
+  ${sec(42, 'Customer Portal', `
+    <p>${V(d.customer_name)} uses the existing secure Praetoria Operations Hub customer portal and may view the quotation, agreement, project status, photos, change orders, invoices and service / project records. This Phase 1 demolition record is kept separate from the Customer's junk-removal quotation.</p>`)}
 
-  ${sec(36, 'Changes / Change Orders', `
-    <p>Additional work, including all Phase 2 work, requires written or electronic approval through a change order or a separate quotation before it is performed.</p>`)}
+  ${sec(43, 'Change Orders', `
+    <p>Any material change in scope must be approved before additional work proceeds whenever reasonably practical. A change order may include additional labour, additional bins, additional demolition, framing, insulation, electrician, plumber, additional equipment, additional drying, additional disposal or reconstruction.</p>`)}
 
-  ${sec(37, 'Payment', `
+  ${sec(44, 'Payment', `
     <table class="agreement-table"><tbody>
       <tr><th>Payment Method</th><td>${fieldPlaceholder('payment_method')}</td></tr>
       <tr><th>Payment Terms</th><td>${V(d.payment_terms)}</td></tr>
@@ -426,22 +469,28 @@ export function buildDemolitionPhase1Body(d: DemolitionPhase1MergeData): string 
       <tr><th>Interest on Overdue Balances</th><td>${V(d.interest_rate)}</td></tr>
     </tbody></table>`)}
 
-  ${sec(38, 'Cancellation and Rescheduling', `
+  ${sec(45, 'Customer Delays / Inspection Delays', `
+    <p>If work reaches the Phase 1 hold point and the Customer or a required trade cannot inspect promptly, Praetoria is not required to keep labour, equipment or rented bins / equipment on standby without additional charges. Any resulting rental extensions or remobilization costs may require customer approval.</p>`)}
+
+  ${sec(46, 'Cancellation and Rescheduling', `
     <p>${V(d.cancellation_terms)}</p>`)}
 
-  ${sec(39, 'Damage Reporting', `
+  ${sec(47, 'Damage Reporting', `
     <p>${V(d.damage_reporting)}</p>`)}
 
-  ${sec(40, 'Insurance and WCB', `
+  ${sec(48, 'Insurance and WCB', `
     <p>${V(d.insurance_statement)}</p>`)}
 
-  ${sec(41, 'Governing Terms and Law', `
-    <p>The current Praetoria master service-agreement language applies where applicable. This Agreement is governed by the laws of the Province of Saskatchewan and the applicable laws of Canada.</p>`)}
+  ${sec(49, 'No Guarantee of Complete Remediation', `
+    <p>Phase 1 demolition is intended to remove approved damaged finish materials and expose concealed conditions. Praetoria does not warrant through this Agreement that Phase 1 alone will eliminate all mold, eliminate all odor, completely dry the structure, repair the source of water intrusion, correct structural damage or restore the basement for occupancy. Further assessment and work may be necessary.</p>`)}
 
-  ${sec(42, 'Electronic Communications and Signatures', `
-    <p>The Customer consents to receiving notices, quotations, agreements, invoices and receipts electronically. An electronic signature applied through the Praetoria Operations Hub has the same effect as a handwritten signature. Each signed version is retained with its timestamp, version number and audit history.</p>`)}
+  ${sec(50, 'Entire Phase 1 Agreement and Governing Law', `
+    <p>The accepted Phase 1 quotation, this Agreement and authorized written / electronic change orders constitute the complete agreement for Phase 1. Phase 2 work is not included unless separately accepted. The current Praetoria master service-agreement language applies where applicable. This Agreement is governed by the laws of the Province of Saskatchewan and the applicable laws of Canada.</p>`)}
 
-  ${sec(43, 'Customer Acceptance and Signatures', `
+  ${sec(51, 'Electronic Communications and Signatures', `
+    <p>This Agreement may be electronically executed through the Praetoria Operations Hub. An electronic signature applied through the Hub has the same effect as a handwritten signature. The executed document and signing record are retained with the Customer's project file, including timestamp, version number and audit history.</p>`)}
+
+  ${sec(52, 'Customer Acknowledgement, Acceptance and Signatures', `
     <p>The selections recorded in this document form part of this Agreement. A signature does not replace a required selection; a blank selection blocks acceptance.</p>
     <div class="agreement-field-block">${fieldPlaceholder('customer_acknowledgement')}</div>
     <div class="signature-block">
@@ -454,6 +503,7 @@ export function buildDemolitionPhase1Body(d: DemolitionPhase1MergeData): string 
       <p>${V(d.praetoria_authorized_representative)}</p>
       <p>Signature: ${fieldPlaceholder('praetoria_signature')}</p>
     </div>`)}
+
 
 </div>`;
 }
