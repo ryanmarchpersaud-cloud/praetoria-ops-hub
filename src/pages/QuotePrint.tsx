@@ -50,10 +50,12 @@ export function getQuoteDataForExport(quote: any, lineItems: any[]) {
     client: source ? {
       name: `${source.first_name} ${source.last_name}`,
       company: source.company_name,
-      address: source.address_line_1 || quote.properties?.address_line_1,
-      city: source.city || quote.properties?.city,
-      province: source.province || quote.properties?.province,
-      postalCode: source.postal_code || quote.properties?.postal_code,
+      // Head-office / billing address only — never fall back to the service
+      // property address (a client may be based in another province).
+      address: source.address_line_1,
+      city: source.city,
+      province: source.province,
+      postalCode: source.postal_code,
       email: source.email,
       phone: source.phone,
     } : null,
