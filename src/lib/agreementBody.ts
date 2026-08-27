@@ -4,12 +4,22 @@ import {
   COMMERCIAL_SNOW_COMBINED_FIELD_SCHEMA,
   COMMERCIAL_REQUIRED_SELECTION_KEYS,
 } from '@/lib/agreementTemplates/commercialSnowCombined';
+import {
+  buildLandscapingCombinedBody,
+  LANDSCAPING_COMBINED_FIELD_SCHEMA,
+  LANDSCAPING_REQUIRED_SELECTION_KEYS,
+} from '@/lib/agreementTemplates/landscapingCombined';
 import { combinedStatusMeta } from '@/lib/combinedDocument';
 
 export const COMMERCIAL_SNOW_COMBINED_TYPE = 'commercial_snow_combined';
+export const LANDSCAPING_COMBINED_TYPE = 'landscaping_combined';
 
 function isCommercialCombined(agreement: any) {
   return agreement?.document_type === COMMERCIAL_SNOW_COMBINED_TYPE;
+}
+
+function isLandscapingCombined(agreement: any) {
+  return agreement?.document_type === LANDSCAPING_COMBINED_TYPE;
 }
 
 function isResidentialCombined(agreement: any) {
