@@ -9,10 +9,16 @@ import {
   LANDSCAPING_COMBINED_FIELD_SCHEMA,
   LANDSCAPING_REQUIRED_SELECTION_KEYS,
 } from '@/lib/agreementTemplates/landscapingCombined';
+import {
+  buildResidentialSeasonalSnowBody,
+  RESIDENTIAL_SEASONAL_FIELD_SCHEMA,
+  RESIDENTIAL_SEASONAL_REQUIRED_SELECTION_KEYS,
+} from '@/lib/agreementTemplates/residentialSnowSeasonal';
 import { combinedStatusMeta } from '@/lib/combinedDocument';
 
 export const COMMERCIAL_SNOW_COMBINED_TYPE = 'commercial_snow_combined';
 export const LANDSCAPING_COMBINED_TYPE = 'landscaping_combined';
+export const RESIDENTIAL_SNOW_SEASONAL_TYPE = 'residential_snow_seasonal';
 
 function isCommercialCombined(agreement: any) {
   return agreement?.document_type === COMMERCIAL_SNOW_COMBINED_TYPE;
@@ -22,12 +28,20 @@ function isLandscapingCombined(agreement: any) {
   return agreement?.document_type === LANDSCAPING_COMBINED_TYPE;
 }
 
+function isResidentialSeasonal(agreement: any) {
+  return agreement?.document_type === RESIDENTIAL_SNOW_SEASONAL_TYPE;
+}
+
 function isResidentialCombined(agreement: any) {
   return (
     agreement?.document_type === 'residential_snow_combined' ||
-    (agreement?.is_combined_document && !isCommercialCombined(agreement) && !isLandscapingCombined(agreement))
+    (agreement?.is_combined_document &&
+      !isCommercialCombined(agreement) &&
+      !isLandscapingCombined(agreement) &&
+      !isResidentialSeasonal(agreement))
   );
 }
+
 
 /**
  * Combined quotation & service agreements are rendered from `merge_data` so the
@@ -36,7 +50,12 @@ function isResidentialCombined(agreement: any) {
  */
 export function resolveAgreementBody(agreement: any): string {
   if (!agreement) return '';
-  if (isCommercialCombined(agreement) || isLandscapingCombined(agreement) || isResidentialCombined(agreement)) {
+  if (
+    isCommercialCombined(agreement) ||
+    isLandscapingCombined(agreement) ||
+    isResidentialSeasonal(agreement) ||
+    isResidentialCombined(agreement)
+  ) {
     const merge = { ...((agreement.merge_data || {}) as Record<string, string>) };
     merge.document_version = String(agreement.version || 1);
     merge.document_status_label = combinedStatusMeta(agreement.doc_status).label;
@@ -45,6 +64,7 @@ export function resolveAgreementBody(agreement: any): string {
 
     if (isCommercialCombined(agreement)) return buildCommercialSnowCombinedBody(merge);
     if (isLandscapingCombined(agreement)) return buildLandscapingCombinedBody(merge);
+    if (isResidentialSeasonal(agreement)) return buildResidentialSeasonalSnowBody(merge);
     return buildResidentialSnowBody(merge, { provisional: agreement.doc_status === 'provisional_estimate' });
   }
   return agreement.body_html || '';
@@ -54,6 +74,7 @@ export function resolveAgreementBody(agreement: any): string {
 export function resolveAgreementSchema(agreement: any) {
   if (isCommercialCombined(agreement)) return COMMERCIAL_SNOW_COMBINED_FIELD_SCHEMA;
   if (isLandscapingCombined(agreement)) return LANDSCAPING_COMBINED_FIELD_SCHEMA;
+  if (isResidentialSeasonal(agreement)) return RESIDENTIAL_SEASONAL_FIELD_SCHEMA;
   if (isResidentialCombined(agreement)) return RESIDENTIAL_SNOW_FIELD_SCHEMA;
   const s = agreement?.field_schema;
   return Array.isArray(s) && s.length ? s : null;
@@ -63,7 +84,9 @@ export function resolveAgreementSchema(agreement: any) {
 export function resolveRequiredSelectionKeys(agreement: any): string[] {
   if (isCommercialCombined(agreement)) return COMMERCIAL_REQUIRED_SELECTION_KEYS;
   if (isLandscapingCombined(agreement)) return LANDSCAPING_REQUIRED_SELECTION_KEYS;
+  if (isResidentialSeasonal(agreement)) return RESIDENTIAL_SEASONAL_REQUIRED_SELECTION_KEYS;
   if (isResidentialCombined(agreement)) return REQUIRED_SELECTION_KEYS;
+
   return [];
 }
 
