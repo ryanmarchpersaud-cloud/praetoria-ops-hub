@@ -49,9 +49,11 @@ function isResidentialCombined(agreement: any) {
     (agreement?.is_combined_document &&
       !isCommercialCombined(agreement) &&
       !isLandscapingCombined(agreement) &&
+      !isJunkRemovalCombined(agreement) &&
       !isResidentialSeasonal(agreement))
   );
 }
+
 
 
 /**
