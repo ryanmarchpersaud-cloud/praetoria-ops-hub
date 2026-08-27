@@ -9,10 +9,16 @@ import {
   LANDSCAPING_COMBINED_FIELD_SCHEMA,
   LANDSCAPING_REQUIRED_SELECTION_KEYS,
 } from '@/lib/agreementTemplates/landscapingCombined';
+import {
+  buildResidentialSeasonalSnowBody,
+  RESIDENTIAL_SEASONAL_FIELD_SCHEMA,
+  RESIDENTIAL_SEASONAL_REQUIRED_SELECTION_KEYS,
+} from '@/lib/agreementTemplates/residentialSnowSeasonal';
 import { combinedStatusMeta } from '@/lib/combinedDocument';
 
 export const COMMERCIAL_SNOW_COMBINED_TYPE = 'commercial_snow_combined';
 export const LANDSCAPING_COMBINED_TYPE = 'landscaping_combined';
+export const RESIDENTIAL_SNOW_SEASONAL_TYPE = 'residential_snow_seasonal';
 
 function isCommercialCombined(agreement: any) {
   return agreement?.document_type === COMMERCIAL_SNOW_COMBINED_TYPE;
@@ -22,12 +28,20 @@ function isLandscapingCombined(agreement: any) {
   return agreement?.document_type === LANDSCAPING_COMBINED_TYPE;
 }
 
+function isResidentialSeasonal(agreement: any) {
+  return agreement?.document_type === RESIDENTIAL_SNOW_SEASONAL_TYPE;
+}
+
 function isResidentialCombined(agreement: any) {
   return (
     agreement?.document_type === 'residential_snow_combined' ||
-    (agreement?.is_combined_document && !isCommercialCombined(agreement) && !isLandscapingCombined(agreement))
+    (agreement?.is_combined_document &&
+      !isCommercialCombined(agreement) &&
+      !isLandscapingCombined(agreement) &&
+      !isResidentialSeasonal(agreement))
   );
 }
+
 
 /**
  * Combined quotation & service agreements are rendered from `merge_data` so the
