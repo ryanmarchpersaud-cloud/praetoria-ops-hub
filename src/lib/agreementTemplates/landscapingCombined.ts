@@ -41,7 +41,6 @@ export const LANDSCAPING_COMBINED_FIELD_SCHEMA: AgreementField[] = [
     type: 'checkbox',
     role: 'customer',
     required: true,
-    visibleWhen: { key: 'accepted_line_items', startsWith: '' },
     checkboxText:
       'I understand the paving slabs are described as approximately 600 mm × 600 mm (approximately 24" × 24" / 2 ft × 2 ft) and that the final paver/slab product and exact dimensions are confirmed with Praetoria before installation.',
   },
