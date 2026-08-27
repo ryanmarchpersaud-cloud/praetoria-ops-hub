@@ -137,7 +137,7 @@ export const DEMOLITION_PHASE1_FIELD_SCHEMA: AgreementField[] = [
     role: 'customer',
     required: true,
     checkboxText:
-      'I have reviewed the quotation, the Phase 1 scope of work, the exclusions, the pricing and the Service Agreement, and I authorize Praetoria Group to perform the approved Phase 1 basement demolition and strip-out work.',
+      'I understand that the $4,380 quotation applies only to Phase 1 demolition and interior strip-out. I understand that framing, insulation, electrical, plumbing, reconstruction and hazardous-material remediation are not included unless separately quoted. I authorize Praetoria to stop at the inspection hold point after the approved finishes are removed so the exposed basement condition can be reviewed before Phase 2 is authorized.',
   },
   { key: 'customer_signature', label: 'Customer Signature', type: 'signature', role: 'customer', required: true },
   {
