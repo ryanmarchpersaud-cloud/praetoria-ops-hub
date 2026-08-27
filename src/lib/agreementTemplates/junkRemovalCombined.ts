@@ -128,7 +128,7 @@ export const JUNK_REMOVAL_COMBINED_FIELD_SCHEMA: AgreementField[] = [
     role: 'customer',
     required: true,
     checkboxText:
-      'I have reviewed the quotation, the scope of work, the exclusions, the pricing and the Service Agreement, and I authorize Praetoria Group to perform the approved junk-removal and interior-cleanout work.',
+      'I confirm that I have reviewed the Junk Removal quotation and Service Agreement, that I have authority to dispose of the approved items, that the contaminated basement is excluded, and that actual landfill/disposal charges will be added to the final invoice.',
   },
   { key: 'customer_signature', label: 'Customer Signature', type: 'signature', role: 'customer', required: true },
   {
@@ -254,60 +254,149 @@ export function buildJunkRemovalCombinedBody(d: JunkRemovalMergeData): string {
   </div>
 
   <!-- ══════════ SERVICE AGREEMENT ══════════ -->
-  ${sec(8, 'Parties', `
-    <p>This Junk Removal Service Agreement is between ${V(d.legal_company_name)} ("Praetoria") and ${V(d.customer_name)} (the "Customer").</p>`)}
+  <!-- ══════════ JUNK REMOVAL & HAULING SERVICE AGREEMENT ══════════ -->
+  <h1>Junk Removal &amp; Hauling Service Agreement</h1>
+  <p>This Junk Removal &amp; Hauling Service Agreement ("Agreement") is between <strong>${V(d.legal_company_name)}</strong> ("Praetoria" / the "Service Provider") and <strong>${V(d.customer_name)}</strong> (the "Customer"), for the Service Property at <strong>${V(d.service_address)}, ${V(d.service_city)}, ${V(d.service_province)} ${V(d.service_postal_code)}</strong>. Customer email: ${V(d.customer_email)}.</p>
 
-  ${sec(9, 'Service Property', `
-    <p>${V(d.service_address)}, ${V(d.service_city)}, ${V(d.service_province)} ${V(d.service_postal_code)}.</p>`)}
+  ${sec(8, 'Purpose of Agreement', `
+    <p>This Agreement governs the junk-removal and interior cleanout services described in the accepted quotation.</p>
+    <p>Only the items, areas and services specifically included in the accepted quotation are covered.</p>`)}
 
-  ${sec(10, 'Approved Scope', `
-    <p>Only accessible upstairs / main-floor areas and other specifically approved non-contaminated areas are included. Work not listed in the approved scope is not part of this Agreement.</p>
-    <div class="agreement-field-block">${fieldPlaceholder('scope_acknowledgement')}</div>`)}
+  ${sec(9, 'Approved Service Areas', `
+    <p>The current quotation applies to approved accessible areas of the residence outside the contaminated basement. The approved scope may include:</p>
+    <ul>
+      <li>Main-floor household contents</li>
+      <li>Upper-floor contents</li>
+      <li>Furniture</li>
+      <li>Damaged furniture</li>
+      <li>Appliances</li>
+      <li>Household garbage</li>
+      <li>Loose debris</li>
+      <li>Other customer-authorized items designated for disposal</li>
+    </ul>
+    <p>The basement is specifically excluded from this junk-removal Agreement unless later authorized under a separate written quotation or change order.</p>
+    <div class="agreement-field-block">${fieldPlaceholder('scope_acknowledgement')}</div>
+    <div class="agreement-field-block">${fieldPlaceholder('removal_areas')}</div>`)}
 
-  ${sec(11, 'Basement Exclusion', `
-    <p>No basement entry and no contaminated-area work of any kind is included or authorized under this Agreement.</p>`)}
-
-  ${sec(12, 'Customer Authorization', `
-    <p>The Customer confirms that the items presented for removal may be discarded.</p>
+  ${sec(10, 'Customer Authorization to Dispose of Property', `
+    <p>The Customer confirms that:</p>
+    <ul>
+      <li>The Customer owns the items being removed or has lawful authority to authorize their disposal.</li>
+      <li>Items identified or placed within the approved removal areas may be treated as authorized for disposal.</li>
+      <li>The Customer is responsible for identifying any item that must remain at the property before work begins.</li>
+    </ul>
+    <p>Praetoria is not responsible for the accidental disposal of an item that the Customer specifically designated, placed or left within an approved disposal pile or removal area, subject to applicable law and the final approved company terms.</p>
     <div class="agreement-field-block">${fieldPlaceholder('disposal_authorization')}</div>`)}
 
-  ${sec(13, 'Personal Property', `
-    <p>Praetoria is not responsible for items mistakenly included for disposal where the Customer has identified or left them within the approved removal pile or area, subject to the final approved company terms. Items the Customer wishes to keep must be clearly tagged or removed from the approved areas before the crew arrives.</p>`)}
+  ${sec(11, 'Items Not to Be Removed Without Specific Authorization', `
+    <p>The Customer must clearly identify items that are:</p>
+    <ul>
+      <li>To remain at the property</li>
+      <li>Personal keepsakes</li>
+      <li>Important documents</li>
+      <li>Financial records</li>
+      <li>Jewelry</li>
+      <li>Electronics to be retained</li>
+      <li>Collectibles</li>
+      <li>Medication</li>
+      <li>Keys</li>
+      <li>Identification</li>
+      <li>Other valuable or sensitive property</li>
+    </ul>
+    <p>Praetoria workers should not be expected to determine the personal or financial value of household contents.</p>`)}
 
-  ${sec(14, 'Hazardous and Contaminated Materials', `
-    <p>Hazardous, biological, chemical, asbestos-containing, contaminated or otherwise regulated material is not included unless separately assessed and authorized. Where such material is discovered, work in that area stops and the condition is reported for separate assessment.</p>`)}
+  ${sec(12, 'Hazardous, Regulated or Contaminated Materials', `
+    <p>Unless specifically quoted and legally permitted, the service does not include removal or handling of:</p>
+    <ul>
+      <li>Asbestos-containing material</li>
+      <li>Biohazardous waste</li>
+      <li>Medical waste</li>
+      <li>Chemicals</li>
+      <li>Fuels</li>
+      <li>Solvents</li>
+      <li>Paints or unknown liquids</li>
+      <li>Explosives</li>
+      <li>Propane cylinders</li>
+      <li>Contaminated building materials</li>
+      <li>Sewage-contaminated materials</li>
+      <li>Mold-remediation waste requiring specialized handling</li>
+      <li>Other regulated or hazardous material</li>
+    </ul>
+    <p>If suspected hazardous or regulated material is discovered, Praetoria may stop work in the affected area until the condition is assessed and an approved handling/disposal plan is established.</p>`)}
 
-  ${sec(15, 'Labour', `
-    <p>The quotation includes ${V(d.labour_hours)} labour hours at ${V(d.labour_rate)} per hour (${V(d.labour_total)}).</p>`)}
+  ${sec(13, 'Basement Exclusion', `
+    <p>The basement has been identified as damaged and contaminated.</p>
+    <p class="highlight-block"><strong>This Junk Removal Agreement does not authorize: basement entry; basement debris removal; basement demolition; mold remediation; wet-building-material removal; drywall demolition; carpet demolition; framing removal; insulation removal; electrical work; plumbing work; renovation or reconstruction.</strong></p>
+    <p>Those services must be covered by a separate quotation and service agreement.</p>
+    <div class="agreement-field-block">${fieldPlaceholder('basement_exclusion_acknowledgement')}</div>`)}
 
-  ${sec(16, 'Additional Labour', `
-    <p>Additional labour requires Customer authorization when the scope materially exceeds the quotation, whenever reasonably practical.</p>`)}
+  ${sec(14, 'Labour Allowance', `
+    <p>The accepted quotation includes the labour allowance stated on the quotation.</p>
+    <p>Current quoted allowance: <strong>${V(d.labour_hours)} labour hours at ${V(d.labour_rate)}/hour</strong>.</p>
+    <p>Quoted labour: <strong>${V(d.labour_total)}</strong>.</p>
+    <p>If the actual approved scope materially exceeds the quoted labour allowance, additional labour requires customer authorization whenever reasonably practical.</p>`)}
 
-  ${sec(17, 'Disposal Trips', `
-    <p>Approximately ${V(d.estimated_trips)} disposal trips are anticipated for the quoted scope.</p>`)}
+  ${sec(15, 'Transportation / Hauling / Administration', `
+    <p>The accepted quotation includes <strong>${V(d.transport_admin_total)}</strong> for the quoted transportation, hauling and administrative component.</p>
+    <p>This amount does not represent landfill tipping charges.</p>`)}
 
-  ${sec(18, 'Landfill Fees', `
-    <p>Actual landfill and disposal charges incurred for the loads removed from the property are added to the final invoice. No landfill amount is quoted before the loads are weighed and accepted at the disposal facility.</p>`)}
+  ${sec(16, 'Estimated Disposal Trips', `
+    <p>The current quotation estimates approximately <strong>${V(d.estimated_trips)} landfill/disposal trips</strong>. This is an estimate based on the contents visible or described before work.</p>
+    <p>If materially more volume is present and additional trips are necessary, additional charges may apply after customer authorization where reasonably practical.</p>`)}
 
-  ${sec(19, 'Additional Loads', `
-    <p>Additional loads beyond the expected scope may require additional authorization and pricing.</p>`)}
+  ${sec(17, 'Landfill / Disposal Fees', `
+    <p>Landfill and tipping charges are not included in the base quoted amount unless expressly stated otherwise.</p>
+    <p>Actual landfill/disposal charges incurred for the customer's material will be added to the final invoice.</p>
+    <p>Where available, Praetoria may retain scale tickets, disposal receipts, load records and other disposal documentation with the project/service record.</p>
+    <div class="agreement-field-block">${fieldPlaceholder('landfill_fee_acknowledgement')}</div>`)}
 
-  ${sec(20, 'Access', `
-    <p>The Customer must provide reasonable and safe access to the approved removal areas during the service window.</p>
+  ${sec(18, 'Final Invoice', `
+    <p>The final invoice may include:</p>
+    <ul>
+      <li>Quoted labour</li>
+      <li>Transportation/hauling/administration</li>
+      <li>Actual landfill/tipping charges</li>
+      <li>Customer-authorized additional labour</li>
+      <li>Customer-authorized additional trips</li>
+      <li>Other approved additional services</li>
+      <li>Applicable taxes</li>
+    </ul>`)}
+
+  ${sec(19, 'Customer Access Responsibilities', `
+    <p>The Customer must provide safe and reasonable access to the approved removal areas.</p>
+    <p>Praetoria may delay or stop work if: access is blocked; animals are not secured; utilities or structural conditions create an unsafe environment; hazardous materials are present; an area is contaminated beyond the approved scope; or workers cannot safely remove an item.</p>
     <div class="agreement-field-block">${fieldPlaceholder('site_access')}</div>
     <p>Primary site contact for service notifications: ${fieldPlaceholder('site_contact_name')}</p>`)}
 
-  ${sec(21, 'Photographs', `
-    <p>Operational before and after photographs are taken for service verification, documentation and the Customer's records.</p>
+  ${sec(20, 'Large / Heavy Items', `
+    <p>Praetoria may use appropriate manual handling techniques, dollies, carts, lifting equipment or additional workers for heavy items.</p>
+    <p>Items requiring materially different equipment or labour than reasonably anticipated may require additional authorization.</p>`)}
+
+  ${sec(21, 'Property Protection', `
+    <p>Praetoria will use reasonable care while moving approved contents from the property.</p>
+    <p>The Customer should identify fragile flooring, weak stairs, damaged railings, existing wall damage, tight access areas and other known hazards before removal begins.</p>`)}
+
+  ${sec(22, 'Pre-Existing Conditions', `
+    <p>Praetoria may photograph existing conditions before starting work.</p>
+    <p>Praetoria is not responsible for pre-existing scratches, cracks, water damage, structural defects, broken finishes, loose railings, damaged floors or other existing property damage, except to the extent responsibility cannot lawfully be excluded. ${V(d.damage_reporting)}</p>`)}
+
+  ${sec(23, 'Service Photographs', `
+    <p>The Customer authorizes Praetoria to take photographs reasonably necessary for before-condition documentation, service verification, disposal documentation, damage documentation, quality control, customer portal records and invoice support.</p>
+    <p>Operational photographs do not automatically authorize unrelated marketing use.</p>
     <div class="agreement-field-block">${fieldPlaceholder('photo_consent')}</div>`)}
 
-  ${sec(22, 'Damage and Existing Conditions', `
-    <p>Existing property conditions are documented with photographs where appropriate before work begins. Praetoria is not responsible for pre-existing damage or for concealed conditions that were not disclosed. ${V(d.damage_reporting)}</p>`)}
+  ${sec(24, 'Customer Portal', `
+    <p>The quotation, agreement, invoices, available photographs and project records may be stored in the Customer's Praetoria Operations Hub portal.</p>`)}
 
-  ${sec(23, 'Praetoria Operations Hub Customer Portal', `
-    <p>${V(d.customer_name)} receives access to a secure Praetoria Operations Hub customer portal. Authorized users may view this quotation, the signed agreement, invoices and payment status, scheduled and completed work, before and after photographs, project records and service history, and may download PDFs.</p>`)}
+  ${sec(25, 'Change of Scope', `
+    <p>Work outside the accepted quotation requires additional authorization.</p>
+    <p>A change may be recorded through a written change order, electronic approval, Praetoria Operations Hub approval, or other documented customer authorization.</p>`)}
 
-  ${sec(24, 'Payment', `
+  ${sec(26, 'Cancellation / Rescheduling', `
+    <p>${V(d.cancellation_terms)}</p>`)}
+
+  ${sec(27, 'Payment', `
+    <p>Use the payment terms shown on the accepted quotation and current Praetoria billing settings. All properly authorized services and disposal charges remain payable.</p>
     <table class="agreement-table"><tbody>
       <tr><th>Payment Method</th><td>${fieldPlaceholder('payment_method')}</td></tr>
       <tr><th>Payment Terms</th><td>${V(d.payment_terms)}</td></tr>
@@ -315,19 +404,17 @@ export function buildJunkRemovalCombinedBody(d: JunkRemovalMergeData): string {
       <tr><th>Late Fee</th><td>${V(d.late_fee)}</td></tr>
       <tr><th>Interest on Overdue Balances</th><td>${V(d.interest_rate)}</td></tr>
     </tbody></table>
-    <p>The final invoice shows the quoted labour, the transportation / hauling / administration charge, the actual landfill / disposal charges, any separately approved additional work, and applicable taxes.</p>`)}
-
-  ${sec(25, 'Cancellation and Rescheduling', `
-    <p>${V(d.cancellation_terms)}</p>`)}
-
-  ${sec(26, 'Insurance and WCB', `
     <p>${V(d.insurance_statement)}</p>`)}
 
-  ${sec(27, 'Governing Terms and Law', `
-    <p>The current Praetoria master service-agreement language applies where applicable. This Agreement is governed by the laws of the Province of Saskatchewan and the applicable laws of Canada.</p>`)}
+  ${sec(28, 'Service Suspension', `
+    <p>Praetoria may suspend or stop work when: conditions are unsafe; hazardous materials are discovered; the requested work materially exceeds the approved scope; required access is unavailable; or customer authorization is required for additional work.</p>`)}
 
-  ${sec(28, 'Electronic Communications and Signatures', `
-    <p>The Customer consents to receiving notices, quotations, agreements, invoices and receipts electronically. An electronic signature applied through the Praetoria Operations Hub has the same effect as a handwritten signature. Each signed version is retained with its timestamp, version number and audit history.</p>`)}
+  ${sec(29, 'Entire Agreement', `
+    <p>The accepted quotation, this Service Agreement and approved written/electronic changes constitute the agreement for this junk-removal project.</p>
+    <p>No verbal statement changes the written scope unless documented and approved. This Agreement is governed by the laws of the Province of Saskatchewan and the applicable laws of Canada.</p>`)}
+
+  ${sec(30, 'Electronic Signatures', `
+    <p>The Customer and Praetoria may execute this Agreement electronically. Electronic acceptance is intended to evidence agreement to the same extent as a handwritten signature, subject to applicable law. Each signed version is retained with its timestamp, version number and audit history.</p>`)}
 
   ${sec(29, 'Customer Acceptance and Signatures', `
     <p>The selections recorded in this document form part of this Agreement. A signature does not replace a required selection; a blank selection blocks acceptance.</p>
