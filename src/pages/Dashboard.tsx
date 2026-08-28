@@ -25,6 +25,11 @@ import { CashFlowWaterfall } from '@/components/dashboard/CashFlowWaterfall';
 import { RecentWinsTicker } from '@/components/dashboard/RecentWinsTicker';
 import { MarketingIntelligence } from '@/components/dashboard/MarketingIntelligence';
 import { JobCostProfitTracker } from '@/components/dashboard/JobCostProfitTracker';
+import { NeedsAttentionStrip } from '@/components/dashboard/NeedsAttentionStrip';
+import { QuoteFollowUpNudges } from '@/components/dashboard/QuoteFollowUpNudges';
+import { FieldSnapshotPanel } from '@/components/dashboard/FieldSnapshotPanel';
+import { MonthComparisonPanel } from '@/components/dashboard/MonthComparisonPanel';
+import { MultiDayJobProgress } from '@/components/dashboard/MultiDayJobProgress';
 import { useUserRole } from '@/hooks/useUserRole';
 import {
   useDashboardRequests,
