@@ -222,7 +222,12 @@ export function PreSignReviewDialog({
               </div>
             )}
 
-            {isCommercial ? commercialBody : (
+            {isCommercial ? commercialBody
+              : isLandscaping ? landscapingBody
+              : isJunkRemoval ? junkRemovalBody
+              : isDemolition ? demolitionBody
+              : isSeasonalSnow ? seasonalSnowBody
+              : (
               <>
                 <Row label="Customer" value={val('customer_name')} />
                 <Row label="Property" value={`${val('service_address')}, ${val('service_city')}, ${val('service_province')}`} />
