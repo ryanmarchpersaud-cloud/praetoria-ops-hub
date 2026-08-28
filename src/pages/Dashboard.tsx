@@ -94,6 +94,14 @@ export default function Dashboard() {
         <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">Praetoria Group — Command Center</p>
       </div>
 
+      {/* Needs Attention — actionable triage strip */}
+      <NeedsAttentionStrip
+        invoices={invoices}
+        quotes={dashQuotes}
+        jobs={jobs}
+        isLoading={loadInv || loadQuotes || loadJobs}
+      />
+
       {/* Premium hero — Health Score + Goal Rings */}
       <div className="grid lg:grid-cols-2 gap-4">
         <BusinessHealthScore
