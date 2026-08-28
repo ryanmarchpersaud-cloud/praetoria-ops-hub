@@ -30,11 +30,16 @@ export function FieldSnapshotPanel() {
           <Skeleton className="h-20 w-full" />
         ) : (
           <>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {stats.map(s => (
-                <div key={s.label} className="rounded-lg border border-border p-2 text-center">
+                <div
+                  key={s.label}
+                  className="rounded-lg border border-border px-1.5 py-2 flex flex-col items-center justify-center text-center min-w-0"
+                >
                   <p className={`text-xl font-extrabold tabular-nums leading-none ${s.className}`}>{s.value}</p>
-                  <p className="text-[10px] font-semibold text-muted-foreground mt-1 uppercase tracking-wide">{s.label}</p>
+                  <p className="w-full text-[9px] sm:text-[10px] font-semibold text-muted-foreground mt-1 uppercase tracking-tight leading-tight break-words hyphens-auto">
+                    {s.label}
+                  </p>
                 </div>
               ))}
             </div>

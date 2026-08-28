@@ -14,9 +14,9 @@ interface Props {
 type Tier = { label: string; min: number; className: string };
 
 const TIERS: Tier[] = [
-  { label: '14d+ — final nudge', min: 14, className: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300' },
-  { label: '7d+ — second nudge', min: 7, className: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' },
-  { label: '3d+ — first nudge', min: 3, className: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300' },
+  { label: '14d+ — final nudge', min: 14, className: 'bg-rose-100 text-rose-800 ring-1 ring-rose-400 dark:bg-rose-950/60 dark:text-rose-200 dark:ring-rose-700' },
+  { label: '7d+ — second nudge', min: 7, className: 'bg-amber-100 text-amber-900 ring-1 ring-amber-400 dark:bg-amber-950/60 dark:text-amber-200 dark:ring-amber-700' },
+  { label: '3d+ — first nudge', min: 3, className: 'bg-blue-100 text-blue-800 ring-1 ring-blue-400 dark:bg-blue-950/60 dark:text-blue-200 dark:ring-blue-700' },
 ];
 
 function tierFor(days: number): Tier | null {
@@ -81,7 +81,7 @@ export function QuoteFollowUpNudges({ quotes, isLoading }: Props) {
                     {clientName(q)} · ${Number(q.total || 0).toLocaleString()} · {q.days}d with no reply
                   </p>
                 </div>
-                <Badge variant="outline" className={cn('text-[10px] shrink-0 border-transparent', q.tier.className)}>
+                <Badge variant="outline" className={cn('text-[11px] md:text-xs font-bold px-2.5 py-1 shrink-0 border-transparent', q.tier.className)}>
                   {q.tier.label}
                 </Badge>
               </Link>
