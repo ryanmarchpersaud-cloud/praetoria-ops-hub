@@ -41,7 +41,12 @@ export function PreSignReviewDialog({
     ? sel('snowfall_trigger_other')
     : sel('snowfall_trigger');
 
-  const isCommercial = agreement?.document_type === 'commercial_snow_combined';
+  const docType = agreement?.document_type;
+  const isCommercial = docType === 'commercial_snow_combined';
+  const isLandscaping = docType === 'landscaping_combined';
+  const isJunkRemoval = docType === 'junk_removal_combined';
+  const isDemolition = docType === 'demolition_phase1_combined';
+  const isSeasonalSnow = docType === 'residential_snow_seasonal';
 
   const areas = (isCommercial
     ? [
@@ -98,6 +103,99 @@ export function PreSignReviewDialog({
     </>
   );
 
+  const commonHeader = (
+    <>
+      <Row label="Customer" value={val('customer_name')} />
+      <Row label="Authorized representative" value={sel('customer_rep_name')} />
+      <Row label="Property" value={`${val('service_address')}, ${val('service_city')}, ${val('service_province')} ${val('service_postal_code')}`} />
+      <Row label="Quotation / Agreement" value={`${val('quotation_number')} · ${val('agreement_number')} (v${val('document_version')})`} />
+    </>
+  );
+
+  const commonFooter = (
+    <>
+      <Row label="Site contact" value={sel('site_contact_name')} />
+      <Row label="Site access" value={sel('site_access')} />
+      <Row label="Photos" value={sel('photo_consent')} />
+      <Row label="Payment" value={`${sel('payment_method')} · ${val('payment_terms')}`} />
+      <Row label="Tax treatment" value={val('tax_treatment')} />
+      <Row label="Cancellation terms" value={val('cancellation_terms')} />
+    </>
+  );
+
+  const landscapingBody = (
+    <>
+      {commonHeader}
+      <Row label="Quotation" value={val('quotation_title')} />
+      <Row label="Accepted scope" value={sel('accepted_line_items')} />
+      <Row
+        label="Pricing"
+        value={`Line 1: ${val('line1_price')} · Line 2: ${val('line2_price')} · Total ${val('combined_total')} before tax`}
+      />
+      <Row label="Pavers" value={`${val('paver_quantity')} × ${val('paver_size')} — ${sel('paver_size_acknowledgement') === 'true' || sel('paver_size_acknowledgement') ? 'acknowledged' : TBD}`} />
+      <Row label="Weed control" value={sel('weed_control_authorization')} />
+      <Row label="Hidden conditions" value={sel('hidden_conditions_disclosure') ? 'Disclosure acknowledged' : TBD} />
+      {commonFooter}
+    </>
+  );
+
+  const junkRemovalBody = (
+    <>
+      {commonHeader}
+      <Row label="Quotation" value={val('quotation_title')} />
+      <Row label="Approved removal areas" value={sel('removal_areas')} />
+      <Row
+        label="Pricing"
+        value={`Labour ${val('labour_hours')} hrs × ${val('labour_rate')} = ${val('labour_total')} · Transportation & admin ${val('transport_admin_total')} · Estimated trips ${val('estimated_trips')} · Total ${val('base_total')} before tax`}
+      />
+      <Row label="Disposal authorization" value={sel('disposal_authorization')} />
+      <Row label="Landfill / disposal charges" value="Billed separately at actual cost — acknowledged" />
+      <Row label="Basement exclusion" value="Basement excluded from this scope — acknowledged" />
+      {commonFooter}
+    </>
+  );
+
+  const demolitionBody = (
+    <>
+      {commonHeader}
+      <Row label="Quotation" value={val('quotation_title')} />
+      <Row label="Approved demolition areas" value={sel('approved_demolition_areas')} />
+      <Row
+        label="Crew & schedule"
+        value={`${val('crew_size')}-person crew · ${val('days')} day(s) × ${val('hours_per_day')} hrs/day · ${val('total_crew_hours')} total crew-hours`}
+      />
+      <Row
+        label="Pricing"
+        value={`Labour ${val('labour_total')} · Bins ${val('bin_count')} × ${val('bin_rate')} = ${val('bin_total')} · PPE/equipment ${val('ppe_equipment_total')} · Phase 1 subtotal ${val('phase1_subtotal')} before tax`}
+      />
+      <Row label="Contents authorization" value={sel('contents_authorization')} />
+      <Row label="Hazard acknowledgement" value={sel('hazard_condition_acknowledgement') ? 'Hazardous-material conditions acknowledged' : TBD} />
+      <Row label="Phase 2 exclusion" value="Phase 2 work excluded — separate quotation required" />
+      {commonFooter}
+    </>
+  );
+
+  const seasonalSnowBody = (
+    <>
+      {commonHeader}
+      <Row label="Quotation" value={val('quotation_title')} />
+      <Row label="Service period" value={`${val('season_label')}: ${val('season_start_date')} to ${val('season_end_date')} (${val('season_months')})`} />
+      <Row
+        label="Price and tax"
+        value={`${val('monthly_price')} per month · Seasonal subtotal ${val('seasonal_subtotal')} · Total ${val('total_price')} (GST ${val('gst_amount')}; ${val('pst_treatment')})`}
+      />
+      <Row label="Visit plan" value={`Up to ${val('visits_per_week')} per week / ${val('visits_per_month')} per month · standard snowfall ${val('standard_range')} · cumulative trigger ${val('cumulative_trigger')}`} />
+      <Row
+        label="Additional charges"
+        value={`Additional visit ${val('additional_visit_charge')} · De-icing ${val('deicing_charge')} · Heavy snow over ${val('heavy_snow_threshold')}: +${val('heavy_snow_increment_charge')} per ${val('heavy_snow_increment')} · Windrow from ${val('windrow_starting_charge')}`}
+      />
+      <Row label="Suspension rule" value={val('suspension_rule')} />
+      <Row label="Payment" value={`${sel('payment_method')} · ${val('payment_terms')}`} />
+      <Row label="Photos" value={sel('photo_consent')} />
+      <Row label="Cancellation terms" value={val('cancellation_terms')} />
+    </>
+  );
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,7 +222,12 @@ export function PreSignReviewDialog({
               </div>
             )}
 
-            {isCommercial ? commercialBody : (
+            {isCommercial ? commercialBody
+              : isLandscaping ? landscapingBody
+              : isJunkRemoval ? junkRemovalBody
+              : isDemolition ? demolitionBody
+              : isSeasonalSnow ? seasonalSnowBody
+              : (
               <>
                 <Row label="Customer" value={val('customer_name')} />
                 <Row label="Property" value={`${val('service_address')}, ${val('service_city')}, ${val('service_province')}`} />
