@@ -41,7 +41,12 @@ export function PreSignReviewDialog({
     ? sel('snowfall_trigger_other')
     : sel('snowfall_trigger');
 
-  const isCommercial = agreement?.document_type === 'commercial_snow_combined';
+  const docType = agreement?.document_type;
+  const isCommercial = docType === 'commercial_snow_combined';
+  const isLandscaping = docType === 'landscaping_combined';
+  const isJunkRemoval = docType === 'junk_removal_combined';
+  const isDemolition = docType === 'demolition_phase1_combined';
+  const isSeasonalSnow = docType === 'residential_snow_seasonal';
 
   const areas = (isCommercial
     ? [
