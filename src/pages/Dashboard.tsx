@@ -25,6 +25,11 @@ import { CashFlowWaterfall } from '@/components/dashboard/CashFlowWaterfall';
 import { RecentWinsTicker } from '@/components/dashboard/RecentWinsTicker';
 import { MarketingIntelligence } from '@/components/dashboard/MarketingIntelligence';
 import { JobCostProfitTracker } from '@/components/dashboard/JobCostProfitTracker';
+import { NeedsAttentionStrip } from '@/components/dashboard/NeedsAttentionStrip';
+import { QuoteFollowUpNudges } from '@/components/dashboard/QuoteFollowUpNudges';
+import { FieldSnapshotPanel } from '@/components/dashboard/FieldSnapshotPanel';
+import { MonthComparisonPanel } from '@/components/dashboard/MonthComparisonPanel';
+import { MultiDayJobProgress } from '@/components/dashboard/MultiDayJobProgress';
 import { useUserRole } from '@/hooks/useUserRole';
 import {
   useDashboardRequests,
@@ -89,6 +94,14 @@ export default function Dashboard() {
         <p className="text-muted-foreground text-xs md:text-sm mt-1 font-medium">Praetoria Group — Command Center</p>
       </div>
 
+      {/* Needs Attention — actionable triage strip */}
+      <NeedsAttentionStrip
+        invoices={invoices}
+        quotes={dashQuotes}
+        jobs={jobs}
+        isLoading={loadInv || loadQuotes || loadJobs}
+      />
+
       {/* Premium hero — Health Score + Goal Rings */}
       <div className="grid lg:grid-cols-2 gap-4">
         <BusinessHealthScore
@@ -140,6 +153,16 @@ export default function Dashboard() {
           <ARAgingPanel invoices={invoices} isLoading={loadInv} />
         </div>
       </div>
+
+      {/* Field snapshot + follow-up nudges + month comparison */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <FieldSnapshotPanel />
+        <QuoteFollowUpNudges quotes={dashQuotes} isLoading={loadQuotes} />
+        <MonthComparisonPanel invoices={invoices} isLoading={loadInv} />
+      </div>
+
+      {/* Multi-day job progress */}
+      <MultiDayJobProgress />
 
       {/* Cash Flow waterfall */}
       <CashFlowWaterfall invoices={invoices} isLoading={loadInv} />
