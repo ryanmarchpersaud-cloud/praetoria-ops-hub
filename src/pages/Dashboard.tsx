@@ -154,6 +154,16 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Field snapshot + follow-up nudges + month comparison */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        <FieldSnapshotPanel />
+        <QuoteFollowUpNudges quotes={dashQuotes} isLoading={loadQuotes} />
+        <MonthComparisonPanel invoices={invoices} isLoading={loadInv} />
+      </div>
+
+      {/* Multi-day job progress */}
+      <MultiDayJobProgress />
+
       {/* Cash Flow waterfall */}
       <CashFlowWaterfall invoices={invoices} isLoading={loadInv} />
 
