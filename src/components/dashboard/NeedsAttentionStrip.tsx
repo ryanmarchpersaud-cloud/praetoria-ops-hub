@@ -18,8 +18,20 @@ const STALE_QUOTE_DAYS = 5;
 export function NeedsAttentionStrip({ invoices, quotes, jobs, isLoading }: Props) {
   const { data: missedVisits = [], isLoading: loadMissed } = useMissedVisitsYesterday();
 
-  const overdue = invoices.filter((i: any) => i.status === 'Overdue');
-  const overdueTotal = overdue.reduce((s: number, i: any) => s + Number(i.balance_due || 0), 0);
+  // Treat any unpaid invoice past its due date as overdue, even if the stored
+  // status is still "Sent"/"Viewed"/"Partially Paid".
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const overdue = invoices.filter((i: any) => {
+    if (['Paid', 'Voided', 'Draft'].includes(i.status)) return false;
+    if (i.status === 'Overdue') return true;
+    if (!i.due_date) return false;
+    return new Date(`${String(i.due_date).slice(0, 10)}T00:00:00`) < today;
+  });
+  const overdueTotal = overdue.reduce(
+    (s: number, i: any) => s + Number(i.balance_due ?? (Number(i.total || 0) - Number(i.amount_paid || 0))),
+    0
+  );
 
   const staleQuotes = quotes.filter(
     (q: any) =>
