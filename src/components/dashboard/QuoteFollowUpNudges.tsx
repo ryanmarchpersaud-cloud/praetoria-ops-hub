@@ -81,7 +81,7 @@ export function QuoteFollowUpNudges({ quotes, isLoading }: Props) {
                     {clientName(q)} · ${Number(q.total || 0).toLocaleString()} · {q.days}d with no reply
                   </p>
                 </div>
-                <Badge variant="outline" className={cn('text-[10px] shrink-0 border-transparent', q.tier.className)}>
+                <Badge variant="outline" className={cn('text-[11px] md:text-xs font-bold px-2.5 py-1 shrink-0 border-transparent', q.tier.className)}>
                   {q.tier.label}
                 </Badge>
               </Link>
