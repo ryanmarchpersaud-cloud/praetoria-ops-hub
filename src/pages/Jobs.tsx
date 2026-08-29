@@ -15,7 +15,8 @@ import { format } from 'date-fns';
 export default function Jobs() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [searchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
 
   const { data: jobs = [], isLoading } = useJobs({ status: statusFilter || undefined, search: search || undefined });
   const { canManageJobs } = useActionPermissions();
