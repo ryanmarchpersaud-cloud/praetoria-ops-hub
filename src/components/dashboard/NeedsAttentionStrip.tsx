@@ -40,7 +40,9 @@ export function NeedsAttentionStrip({ invoices, quotes, jobs, isLoading }: Props
       differenceInDays(new Date(), new Date(q.created_at)) >= STALE_QUOTE_DAYS
   );
 
-  const uninvoiced = jobs.filter((j: any) => j.status === 'Completed');
+  const uninvoiced = jobs.filter(
+    (j: any) => (j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced'
+  );
 
   const items = [
     {
