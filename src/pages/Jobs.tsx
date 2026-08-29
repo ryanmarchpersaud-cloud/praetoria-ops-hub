@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Search, ChevronRight, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { JOB_STATUSES } from '@/lib/constants';
 import { useActionPermissions } from '@/hooks/useActionPermissions';
 import { format } from 'date-fns';
@@ -15,7 +15,8 @@ import { format } from 'date-fns';
 export default function Jobs() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [searchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
 
   const { data: jobs = [], isLoading } = useJobs({ status: statusFilter || undefined, search: search || undefined });
   const { canManageJobs } = useActionPermissions();
