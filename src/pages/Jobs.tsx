@@ -15,11 +15,16 @@ import { format } from 'date-fns';
 export default function Jobs() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [searchParams] = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const readyToBill = searchParams.get('ready') === 'bill';
+  const [statusFilter, setStatusFilter] = useState(readyToBill ? '' : (searchParams.get('status') ?? ''));
 
-  const { data: jobs = [], isLoading } = useJobs({ status: statusFilter || undefined, search: search || undefined });
+  const { data: allJobs = [], isLoading } = useJobs({ status: statusFilter || undefined, search: search || undefined });
+  const jobs = readyToBill
+    ? allJobs.filter((j: any) => (j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced')
+    : allJobs;
   const { canManageJobs } = useActionPermissions();
+
 
   const priorityColor = (p: string) => {
     if (p === 'Urgent') return 'text-destructive font-semibold';
