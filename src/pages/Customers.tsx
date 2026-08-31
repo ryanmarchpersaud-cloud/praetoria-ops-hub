@@ -377,15 +377,25 @@ export default function Customers() {
               <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
             ) : (
               customers.map(c => (
-                <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/customers/${c.id}`)}>
+                <TableRow
+                  key={c.id}
+                  className={`cursor-pointer hover:bg-muted/50 ${recentIds[0] === c.id ? 'bg-primary/5' : ''}`}
+                  onClick={() => navigate(`/customers/${c.id}`)}
+                >
                   <TableCell className="font-medium">
-                    <Link to={`/customers/${c.id}`} className="hover:text-primary inline-flex items-center gap-1.5">
+                    <Link to={`/customers/${c.id}`} className="hover:text-primary inline-flex items-center gap-1.5 flex-wrap">
                       {(c as any).is_protected && (
                         <ShieldCheck className="h-4 w-4 text-primary shrink-0" aria-label="Protected real customer" />
                       )}
                       <span>{c.first_name} {c.last_name}</span>
+                      {recentIds.includes(c.id) && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-medium">
+                          {recentIds[0] === c.id ? 'Just viewed' : 'Recent'}
+                        </span>
+                      )}
                     </Link>
                   </TableCell>
+
                   <TableCell>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${STATUS_STYLES[(c as any).customer_status || 'Active'] || STATUS_STYLES.Active}`}>
                       {(c as any).customer_status || 'Active'}
