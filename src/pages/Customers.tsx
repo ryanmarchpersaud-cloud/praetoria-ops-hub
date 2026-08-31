@@ -15,6 +15,8 @@ import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload, Shiel
 import { Link, useNavigate } from 'react-router-dom';
 import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+import { getRecentCustomerIds } from '@/lib/recentlyViewed';
+
 
 const STATUS_STYLES: Record<string, string> = {
   Active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -50,9 +52,21 @@ export default function Customers() {
   const [portalAccess, setPortalAccess] = useState(false);
   const [isProtected, setIsProtected] = useState(false);
   const { data: allCustomers = [], isLoading } = useCustomers(search || undefined);
-  const customers = statusFilter === 'All'
+  const [recentIds] = useState<string[]>(() => getRecentCustomerIds());
+  const filtered = statusFilter === 'All'
     ? allCustomers
     : allCustomers.filter((c: any) => (c.customer_status || 'Active') === statusFilter);
+  // Keep the most recently opened customers pinned to the top of the list so it's
+  // obvious which record was just viewed.
+  const customers = useMemo(() => {
+    if (!recentIds.length) return filtered;
+    const rank = (id: string) => {
+      const i = recentIds.indexOf(id);
+      return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+    };
+    return [...filtered].sort((a: any, b: any) => rank(a.id) - rank(b.id));
+  }, [filtered, recentIds]);
+
   const createCustomer = useCreateCustomer();
   const { toast } = useToast();
 
@@ -363,15 +377,25 @@ export default function Customers() {
               <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No customers found</TableCell></TableRow>
             ) : (
               customers.map(c => (
-                <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/customers/${c.id}`)}>
+                <TableRow
+                  key={c.id}
+                  className={`cursor-pointer hover:bg-muted/50 ${recentIds[0] === c.id ? 'bg-primary/5' : ''}`}
+                  onClick={() => navigate(`/customers/${c.id}`)}
+                >
                   <TableCell className="font-medium">
-                    <Link to={`/customers/${c.id}`} className="hover:text-primary inline-flex items-center gap-1.5">
+                    <Link to={`/customers/${c.id}`} className="hover:text-primary inline-flex items-center gap-1.5 flex-wrap">
                       {(c as any).is_protected && (
                         <ShieldCheck className="h-4 w-4 text-primary shrink-0" aria-label="Protected real customer" />
                       )}
                       <span>{c.first_name} {c.last_name}</span>
+                      {recentIds.includes(c.id) && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-medium">
+                          {recentIds[0] === c.id ? 'Just viewed' : 'Recent'}
+                        </span>
+                      )}
                     </Link>
                   </TableCell>
+
                   <TableCell>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${STATUS_STYLES[(c as any).customer_status || 'Active'] || STATUS_STYLES.Active}`}>
                       {(c as any).customer_status || 'Active'}
