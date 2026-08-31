@@ -60,8 +60,23 @@ export default function Jobs() {
         </Select>
       </div>
 
+      {readyToBill && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="gap-2">
+            Ready to bill (Completed / Closed, not invoiced)
+          </Badge>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs"
+            onClick={() => setSearchParams({})}
+          >
+            Clear filter
+          </Button>
+        </div>
+      )}
 
-      {/* Mobile cards */}
+
       <div className="md:hidden space-y-2">
         {isLoading ? <p className="text-center text-muted-foreground py-8 text-sm">Loading...</p>
         : jobs.length === 0 ? <p className="text-center text-muted-foreground py-8 text-sm">No jobs found</p>
