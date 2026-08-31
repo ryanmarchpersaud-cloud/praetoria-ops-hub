@@ -69,7 +69,7 @@ export function NeedsAttentionStrip({ invoices, quotes, jobs, isLoading }: Props
       value: uninvoiced.length,
       sub: uninvoiced.length ? 'Ready to bill' : 'Nothing waiting',
       icon: Briefcase,
-      link: '/jobs?status=Completed',
+      link: '/jobs?ready=bill',
       tone: 'emerald' as const,
     },
     {
