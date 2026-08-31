@@ -15,11 +15,16 @@ import { format } from 'date-fns';
 export default function Jobs() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [searchParams] = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const readyToBill = searchParams.get('ready') === 'bill';
+  const [statusFilter, setStatusFilter] = useState(readyToBill ? '' : (searchParams.get('status') ?? ''));
 
-  const { data: jobs = [], isLoading } = useJobs({ status: statusFilter || undefined, search: search || undefined });
+  const { data: allJobs = [], isLoading } = useJobs({ status: statusFilter || undefined, search: search || undefined });
+  const jobs = readyToBill
+    ? allJobs.filter((j: any) => (j.status === 'Completed' || j.status === 'Closed') && j.billing_status !== 'invoiced')
+    : allJobs;
   const { canManageJobs } = useActionPermissions();
+
 
   const priorityColor = (p: string) => {
     if (p === 'Urgent') return 'text-destructive font-semibold';
@@ -55,8 +60,23 @@ export default function Jobs() {
         </Select>
       </div>
 
+      {readyToBill && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="gap-2">
+            Ready to bill (Completed / Closed, not invoiced)
+          </Badge>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs"
+            onClick={() => setSearchParams({})}
+          >
+            Clear filter
+          </Button>
+        </div>
+      )}
 
-      {/* Mobile cards */}
+
       <div className="md:hidden space-y-2">
         {isLoading ? <p className="text-center text-muted-foreground py-8 text-sm">Loading...</p>
         : jobs.length === 0 ? <p className="text-center text-muted-foreground py-8 text-sm">No jobs found</p>
