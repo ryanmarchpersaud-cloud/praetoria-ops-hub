@@ -31,6 +31,7 @@ import InvoiceLineItemEditor from '@/components/InvoiceLineItemEditor';
 import { callEdgeFunction } from '@/lib/edgeFunctionClient';
 import { AddToJobCostTrackerButton } from '@/components/dashboard/AddToJobCostTrackerButton';
 import { isChargeable } from '@/lib/billingProfile';
+import { DuplicateInvoiceDialog } from '@/components/finance/DuplicateInvoiceDialog';
 
 function getStatusAfterTotalChange(invoice: any, nextTotal: number) {
   if (['Draft', 'Voided', 'Refunded'].includes(invoice.status)) return invoice.status;
