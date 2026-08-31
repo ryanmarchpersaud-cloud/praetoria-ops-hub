@@ -50,9 +50,21 @@ export default function Customers() {
   const [portalAccess, setPortalAccess] = useState(false);
   const [isProtected, setIsProtected] = useState(false);
   const { data: allCustomers = [], isLoading } = useCustomers(search || undefined);
-  const customers = statusFilter === 'All'
+  const [recentIds] = useState<string[]>(() => getRecentCustomerIds());
+  const filtered = statusFilter === 'All'
     ? allCustomers
     : allCustomers.filter((c: any) => (c.customer_status || 'Active') === statusFilter);
+  // Keep the most recently opened customers pinned to the top of the list so it's
+  // obvious which record was just viewed.
+  const customers = useMemo(() => {
+    if (!recentIds.length) return filtered;
+    const rank = (id: string) => {
+      const i = recentIds.indexOf(id);
+      return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+    };
+    return [...filtered].sort((a: any, b: any) => rank(a.id) - rank(b.id));
+  }, [filtered, recentIds]);
+
   const createCustomer = useCreateCustomer();
   const { toast } = useToast();
 
