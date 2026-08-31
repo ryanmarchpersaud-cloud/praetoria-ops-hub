@@ -54,12 +54,13 @@ function TaxRow({ invoice, canEdit }: { invoice: any; canEdit: boolean }) {
   const effGst = gstRate != null ? gstRate : (pstRate == null ? combinedRate : 0);
   const effPst = pstRate != null ? pstRate : 0;
 
-  const gstAmount = invoice.gst_amount != null
-    ? Number(invoice.gst_amount)
-    : Math.round(subtotal * effGst * 100) / 100;
-  const pstAmount = invoice.pst_amount != null
-    ? Number(invoice.pst_amount)
-    : Math.round(subtotal * effPst * 100) / 100;
+  // Stored amounts can be stale (e.g. rate edited without recalculating), so fall
+  // back to the rate-derived amount whenever the stored value is missing or zero.
+  const storedGst = invoice.gst_amount == null ? null : Number(invoice.gst_amount);
+  const storedPst = invoice.pst_amount == null ? null : Number(invoice.pst_amount);
+  const gstAmount = storedGst ? storedGst : Math.round(subtotal * effGst * 100) / 100;
+  const pstAmount = storedPst ? storedPst : Math.round(subtotal * effPst * 100) / 100;
+
   const totalTax = Number(invoice.tax || 0);
 
   const [editing, setEditing] = useState(false);
@@ -82,9 +83,12 @@ function TaxRow({ invoice, canEdit }: { invoice: any; canEdit: boolean }) {
       id: invoice.id,
       gst_rate: nextGst,
       pst_rate: nextPst,
+      gst_amount: Math.round(subtotal * (nextGst || 0) * 100) / 100,
+      pst_amount: Math.round(subtotal * (nextPst || 0) * 100) / 100,
       tax_rate: effective,
       status: getStatusAfterTotalChange(invoice, nextTotal),
     } as any);
+
     toast.success('Tax updated');
     setEditing(false);
   };
