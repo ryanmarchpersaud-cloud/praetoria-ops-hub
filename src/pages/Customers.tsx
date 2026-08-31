@@ -15,6 +15,8 @@ import { Plus, Search, ChevronRight, Building2, User, ShieldCheck, Upload, Shiel
 import { Link, useNavigate } from 'react-router-dom';
 import { PROVINCES, CUSTOMER_TYPES, ACCOUNT_TYPES, BILLING_METHODS, COMMUNICATION_METHODS, LEAD_SOURCES, CUSTOMER_STATUSES } from '@/lib/constants';
 import { formatDistanceToNow } from 'date-fns';
+import { getRecentCustomerIds } from '@/lib/recentlyViewed';
+
 
 const STATUS_STYLES: Record<string, string> = {
   Active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
