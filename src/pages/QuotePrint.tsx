@@ -283,7 +283,12 @@ export default function QuotePrint() {
             <img
               src="/images/praetoria-logo-white.png"
               alt="Praetoria Group"
-              className="h-16 w-16 object-contain rounded-md bg-[#1a1a2e] p-1.5 print:h-20 print:w-20"
+              className="h-16 w-16 object-contain p-0.5 print:h-20 print:w-20"
+              style={{
+                filter: 'brightness(0) saturate(100%) invert(9%) sepia(24%) saturate(2360%) hue-rotate(203deg) brightness(95%) contrast(95%)',
+                WebkitPrintColorAdjust: 'exact',
+                printColorAdjust: 'exact',
+              }}
             />
             <div>
               <h1
