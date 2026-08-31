@@ -83,9 +83,12 @@ function TaxRow({ invoice, canEdit }: { invoice: any; canEdit: boolean }) {
       id: invoice.id,
       gst_rate: nextGst,
       pst_rate: nextPst,
+      gst_amount: Math.round(subtotal * (nextGst || 0) * 100) / 100,
+      pst_amount: Math.round(subtotal * (nextPst || 0) * 100) / 100,
       tax_rate: effective,
       status: getStatusAfterTotalChange(invoice, nextTotal),
     } as any);
+
     toast.success('Tax updated');
     setEditing(false);
   };
