@@ -604,6 +604,9 @@ export default function InvoiceDetail() {
           label="Link to Job Cost Tracker"
           size="sm"
         />
+        {canManageInvoices && (
+          <DuplicateInvoiceDialog invoice={invoice} lineItems={lineItems} />
+        )}
         {canEditInvoice && (
           <Button
             size="sm"
