@@ -40,6 +40,12 @@ export default function CustomerDetail() {
   const updateCustomer = useUpdateCustomer();
   const { toast } = useToast();
 
+  // Remember this customer so the Customers list can surface it at the top.
+  useEffect(() => {
+    if (id) recordRecentCustomer(id);
+  }, [id]);
+
+
   const [form, setForm] = useState<any>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
