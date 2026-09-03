@@ -105,6 +105,54 @@ export default function CommunicationsHubPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Mailbox configuration</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-xs text-muted-foreground">
+              Production mailboxes are created inactive and always start in <strong>future only</strong> mode.
+              Historical import requires a separate owner approval with an explicit date or message range, and the
+              proposed baseline and estimated message count are shown before anything is imported. Passwords are never
+              stored here — only the secret name reference.
+            </p>
+            {(mailboxes ?? []).map((m) => (
+              <div key={m.id} className="rounded-md border p-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{m.display_name || m.label}</span>
+                  <Badge variant={m.environment === 'production' ? 'destructive' : 'secondary'}>{m.environment}</Badge>
+                  <Badge variant="outline">{m.sync_start_mode === 'future_only' ? 'Future only' : 'Approved backfill'}</Badge>
+                  {m.emergency_paused && <Badge variant="destructive">Emergency paused</Badge>}
+                </div>
+                <div className="grid gap-x-6 gap-y-1 text-xs text-muted-foreground sm:grid-cols-2">
+                  <div>Address: {m.email_address}</div>
+                  <div>Division: {m.division ?? '—'}</div>
+                  <div>Assigned rep: {m.assigned_rep_user_id ?? 'Unassigned'}</div>
+                  <div>Secret reference: {m.credential_secret_prefix ?? '—'}</div>
+                  <div>Inbound: {m.inbound_enabled ? 'enabled' : 'disabled'}</div>
+                  <div>Outbound: {m.outbound_enabled ? 'enabled' : 'disabled'}</div>
+                  <div>IMAP: {m.imap_host}:{m.imap_port}</div>
+                  <div>SMTP: {m.smtp_host}:{m.smtp_port}</div>
+                  <div>Sent folder: {m.sent_folder}</div>
+                  <div>Baseline message id: {m.baseline_uid ?? 'not established'}</div>
+                  <div>
+                    Approved backfill range:{' '}
+                    {m.backfill_from_uid !== null && m.backfill_to_uid !== null
+                      ? `messages ${m.backfill_from_uid}–${m.backfill_to_uid}`
+                      : m.backfill_from_date && m.backfill_to_date
+                        ? `${fmt(m.backfill_from_date)} → ${fmt(m.backfill_to_date)}`
+                        : 'none'}
+                  </div>
+                  <div>
+                    Owner approval: {m.backfill_approved_at ? fmt(m.backfill_approved_at) : 'not approved'}
+                    {m.backfill_estimated_count !== null ? ` · est. ${m.backfill_estimated_count} messages` : ''}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
           <Card className="min-w-0">
             <CardHeader className="pb-2">
@@ -239,6 +287,7 @@ export default function CommunicationsHubPage() {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{fmt(o.sent_at ?? o.failed_at ?? o.created_at)}</span>
+                  <Badge variant="outline">Sent copy: {o.sent_copy_status?.replace(/_/g, ' ') ?? 'not attempted'}</Badge>
                   <Badge variant={statusVariant[o.status] ?? 'secondary'}>{o.status}</Badge>
                 </div>
               </div>

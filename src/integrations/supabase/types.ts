@@ -756,6 +756,63 @@ export type Database = {
         }
         Relationships: []
       }
+      comms_attachments: {
+        Row: {
+          blocked_reason: string | null
+          created_at: string
+          filename: string
+          id: string
+          message_id: string | null
+          mime_type: string | null
+          outbound_message_id: string | null
+          sanitized_filename: string
+          scan_status: string
+          size_bytes: number
+          storage_path: string | null
+        }
+        Insert: {
+          blocked_reason?: string | null
+          created_at?: string
+          filename: string
+          id?: string
+          message_id?: string | null
+          mime_type?: string | null
+          outbound_message_id?: string | null
+          sanitized_filename: string
+          scan_status?: string
+          size_bytes?: number
+          storage_path?: string | null
+        }
+        Update: {
+          blocked_reason?: string | null
+          created_at?: string
+          filename?: string
+          id?: string
+          message_id?: string | null
+          mime_type?: string | null
+          outbound_message_id?: string | null
+          sanitized_filename?: string
+          scan_status?: string
+          size_bytes?: number
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "comms_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comms_attachments_outbound_message_id_fkey"
+            columns: ["outbound_message_id"]
+            isOneToOne: false
+            referencedRelation: "comms_outbound_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comms_audit_log: {
         Row: {
           actor_user_id: string | null
@@ -797,44 +854,95 @@ export type Database = {
       comms_mailboxes: {
         Row: {
           assigned_rep_user_id: string | null
+          backfill_approved_at: string | null
+          backfill_approved_by: string | null
+          backfill_estimated_count: number | null
+          backfill_from_date: string | null
+          backfill_from_uid: number | null
+          backfill_to_date: string | null
+          backfill_to_uid: number | null
+          baseline_established_at: string | null
+          baseline_uid: number | null
           created_at: string
           credential_secret_prefix: string
+          display_name: string | null
           division: string | null
           email_address: string
+          emergency_paused: boolean
           environment: string
           id: string
           imap_host: string
           imap_port: number
+          inbound_enabled: boolean
           is_active: boolean
           label: string
+          outbound_enabled: boolean
+          sent_folder: string
+          smtp_host: string
+          smtp_port: number
+          sync_start_mode: string
           updated_at: string
         }
         Insert: {
           assigned_rep_user_id?: string | null
+          backfill_approved_at?: string | null
+          backfill_approved_by?: string | null
+          backfill_estimated_count?: number | null
+          backfill_from_date?: string | null
+          backfill_from_uid?: number | null
+          backfill_to_date?: string | null
+          backfill_to_uid?: number | null
+          baseline_established_at?: string | null
+          baseline_uid?: number | null
           created_at?: string
           credential_secret_prefix: string
+          display_name?: string | null
           division?: string | null
           email_address: string
+          emergency_paused?: boolean
           environment?: string
           id?: string
           imap_host?: string
           imap_port?: number
+          inbound_enabled?: boolean
           is_active?: boolean
           label: string
+          outbound_enabled?: boolean
+          sent_folder?: string
+          smtp_host?: string
+          smtp_port?: number
+          sync_start_mode?: string
           updated_at?: string
         }
         Update: {
           assigned_rep_user_id?: string | null
+          backfill_approved_at?: string | null
+          backfill_approved_by?: string | null
+          backfill_estimated_count?: number | null
+          backfill_from_date?: string | null
+          backfill_from_uid?: number | null
+          backfill_to_date?: string | null
+          backfill_to_uid?: number | null
+          baseline_established_at?: string | null
+          baseline_uid?: number | null
           created_at?: string
           credential_secret_prefix?: string
+          display_name?: string | null
           division?: string | null
           email_address?: string
+          emergency_paused?: boolean
           environment?: string
           id?: string
           imap_host?: string
           imap_port?: number
+          inbound_enabled?: boolean
           is_active?: boolean
           label?: string
+          outbound_enabled?: boolean
+          sent_folder?: string
+          smtp_host?: string
+          smtp_port?: number
+          sync_start_mode?: string
           updated_at?: string
         }
         Relationships: []
@@ -947,6 +1055,10 @@ export type Database = {
           requested_by: string
           requested_by_email: string | null
           sent_at: string | null
+          sent_copy_appended_at: string | null
+          sent_copy_attempts: number
+          sent_copy_last_error: string | null
+          sent_copy_status: string
           smtp_result: string | null
           status: string
           subject: string
@@ -970,6 +1082,10 @@ export type Database = {
           requested_by: string
           requested_by_email?: string | null
           sent_at?: string | null
+          sent_copy_appended_at?: string | null
+          sent_copy_attempts?: number
+          sent_copy_last_error?: string | null
+          sent_copy_status?: string
           smtp_result?: string | null
           status?: string
           subject: string
@@ -993,6 +1109,10 @@ export type Database = {
           requested_by?: string
           requested_by_email?: string | null
           sent_at?: string | null
+          sent_copy_appended_at?: string | null
+          sent_copy_attempts?: number
+          sent_copy_last_error?: string | null
+          sent_copy_status?: string
           smtp_result?: string | null
           status?: string
           subject?: string
@@ -1018,6 +1138,9 @@ export type Database = {
       }
       comms_settings: {
         Row: {
+          ai_processing_enabled: boolean
+          attachments_enabled: boolean
+          html_render_enabled: boolean
           hub_enabled: boolean
           id: boolean
           max_messages_per_run: number
@@ -1025,10 +1148,15 @@ export type Database = {
           outbound_enabled: boolean
           poll_interval_seconds: number
           polling_enabled: boolean
+          remote_images_enabled: boolean
+          sent_copy_enabled: boolean
           staging_recipient_allowlist: string[]
           updated_at: string
         }
         Insert: {
+          ai_processing_enabled?: boolean
+          attachments_enabled?: boolean
+          html_render_enabled?: boolean
           hub_enabled?: boolean
           id?: boolean
           max_messages_per_run?: number
@@ -1036,10 +1164,15 @@ export type Database = {
           outbound_enabled?: boolean
           poll_interval_seconds?: number
           polling_enabled?: boolean
+          remote_images_enabled?: boolean
+          sent_copy_enabled?: boolean
           staging_recipient_allowlist?: string[]
           updated_at?: string
         }
         Update: {
+          ai_processing_enabled?: boolean
+          attachments_enabled?: boolean
+          html_render_enabled?: boolean
           hub_enabled?: boolean
           id?: boolean
           max_messages_per_run?: number
@@ -1047,6 +1180,8 @@ export type Database = {
           outbound_enabled?: boolean
           poll_interval_seconds?: number
           polling_enabled?: boolean
+          remote_images_enabled?: boolean
+          sent_copy_enabled?: boolean
           staging_recipient_allowlist?: string[]
           updated_at?: string
         }

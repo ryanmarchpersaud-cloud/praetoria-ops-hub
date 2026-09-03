@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.comms_guard_mailbox_sync_mode() FROM PUBLIC, anon, authenticated;
