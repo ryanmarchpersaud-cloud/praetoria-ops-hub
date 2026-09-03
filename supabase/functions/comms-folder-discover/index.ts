@@ -13,7 +13,7 @@ import {
   imapQuote,
   readUntil,
   withDeadline,
-} from "../comms-imap-poll/core.ts";
+} from "../_shared/comms/imapNet.ts";
 import {
   buildListCommand,
   discoverSentFolder,
