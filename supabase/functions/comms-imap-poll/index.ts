@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
 
     const batch = await processUidBatch(uids, lastUid, async (uid) => {
       const res = await cmd(
-        `UID FETCH ${uid} (BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID)] BODY.PEEK[TEXT]<0.4000>)`,
+        `UID FETCH ${uid} (BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID IN-REPLY-TO REFERENCES)] BODY.PEEK[TEXT]<0.4000>)`,
       );
       const headerBlock = readLiteral(res, "HEADER.FIELDS");
       const rawBody = readLiteral(res, "TEXT");
@@ -183,12 +183,35 @@ Deno.serve(async (req) => {
       const dateRaw = headerValue(headerBlock, "Date");
       const sentAt = dateRaw ? new Date(dateRaw) : null;
 
+      const inReplyTo = headerValue(headerBlock, "In-Reply-To");
+      const references = headerValue(headerBlock, "References");
+
+      // Thread association: match In-Reply-To / References against our sent Message-IDs.
+      let replyToOutboundId: string | null = null;
+      const candidates = [
+        ...(inReplyTo?.match(/<[^>]+>/g) ?? []),
+        ...(references?.match(/<[^>]+>/g) ?? []),
+      ];
+      if (candidates.length > 0) {
+        const { data: parent } = await supabase
+          .from("comms_outbound_messages")
+          .select("id")
+          .in("message_id_header", candidates)
+          .order("sent_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        replyToOutboundId = parent?.id ?? null;
+      }
+
       const { error } = await supabase.from("comms_messages").insert({
         mailbox_id: mailbox!.id,
         folder: "INBOX",
         imap_uid: uid,
         uid_validity: uidValidity,
         message_id_header: headerValue(headerBlock, "Message-ID"),
+        in_reply_to_header: inReplyTo,
+        references_header: references,
+        reply_to_outbound_id: replyToOutboundId,
         direction: "inbound",
         from_address: from.address,
         from_name: from.name,
@@ -201,6 +224,7 @@ Deno.serve(async (req) => {
         division: mailbox!.division,
         assigned_rep_user_id: mailbox!.assigned_rep_user_id,
       });
+
 
       if (!error) await audit("message_imported", `uid ${uid}`);
       else if ((error as { code?: string }).code === "23505") await audit("message_duplicate", `uid ${uid}`);
