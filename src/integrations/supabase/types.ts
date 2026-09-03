@@ -756,6 +756,237 @@ export type Database = {
         }
         Relationships: []
       }
+      comms_audit_log: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          detail: string | null
+          event: string
+          id: string
+          mailbox_id: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: string | null
+          event: string
+          id?: string
+          mailbox_id?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          detail?: string | null
+          event?: string
+          id?: string
+          mailbox_id?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_audit_log_mailbox_id_fkey"
+            columns: ["mailbox_id"]
+            isOneToOne: false
+            referencedRelation: "comms_mailboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comms_mailboxes: {
+        Row: {
+          assigned_rep_user_id: string | null
+          created_at: string
+          credential_secret_prefix: string
+          division: string | null
+          email_address: string
+          environment: string
+          id: string
+          imap_host: string
+          imap_port: number
+          is_active: boolean
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_rep_user_id?: string | null
+          created_at?: string
+          credential_secret_prefix: string
+          division?: string | null
+          email_address: string
+          environment?: string
+          id?: string
+          imap_host?: string
+          imap_port?: number
+          is_active?: boolean
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_rep_user_id?: string | null
+          created_at?: string
+          credential_secret_prefix?: string
+          division?: string | null
+          email_address?: string
+          environment?: string
+          id?: string
+          imap_host?: string
+          imap_port?: number
+          is_active?: boolean
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      comms_messages: {
+        Row: {
+          assigned_rep_user_id: string | null
+          body_text: string | null
+          cc_addresses: string | null
+          customer_id: string | null
+          direction: string
+          division: string | null
+          folder: string
+          from_address: string | null
+          from_name: string | null
+          id: string
+          imap_uid: number
+          imported_at: string
+          mailbox_id: string
+          message_id_header: string | null
+          sent_at: string | null
+          snippet: string | null
+          subject: string | null
+          to_addresses: string | null
+          uid_validity: number | null
+        }
+        Insert: {
+          assigned_rep_user_id?: string | null
+          body_text?: string | null
+          cc_addresses?: string | null
+          customer_id?: string | null
+          direction?: string
+          division?: string | null
+          folder?: string
+          from_address?: string | null
+          from_name?: string | null
+          id?: string
+          imap_uid: number
+          imported_at?: string
+          mailbox_id: string
+          message_id_header?: string | null
+          sent_at?: string | null
+          snippet?: string | null
+          subject?: string | null
+          to_addresses?: string | null
+          uid_validity?: number | null
+        }
+        Update: {
+          assigned_rep_user_id?: string | null
+          body_text?: string | null
+          cc_addresses?: string | null
+          customer_id?: string | null
+          direction?: string
+          division?: string | null
+          folder?: string
+          from_address?: string | null
+          from_name?: string | null
+          id?: string
+          imap_uid?: number
+          imported_at?: string
+          mailbox_id?: string
+          message_id_header?: string | null
+          sent_at?: string | null
+          snippet?: string | null
+          subject?: string | null
+          to_addresses?: string | null
+          uid_validity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_messages_mailbox_id_fkey"
+            columns: ["mailbox_id"]
+            isOneToOne: false
+            referencedRelation: "comms_mailboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comms_settings: {
+        Row: {
+          hub_enabled: boolean
+          id: boolean
+          max_messages_per_run: number
+          poll_interval_seconds: number
+          polling_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          hub_enabled?: boolean
+          id?: boolean
+          max_messages_per_run?: number
+          poll_interval_seconds?: number
+          polling_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          hub_enabled?: boolean
+          id?: boolean
+          max_messages_per_run?: number
+          poll_interval_seconds?: number
+          polling_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      comms_sync_state: {
+        Row: {
+          folder: string
+          is_running: boolean
+          last_error: string | null
+          last_run_at: string | null
+          last_run_status: string | null
+          last_seen_uid: number
+          lock_expires_at: string | null
+          mailbox_id: string
+          uid_validity: number | null
+          updated_at: string
+        }
+        Insert: {
+          folder?: string
+          is_running?: boolean
+          last_error?: string | null
+          last_run_at?: string | null
+          last_run_status?: string | null
+          last_seen_uid?: number
+          lock_expires_at?: string | null
+          mailbox_id: string
+          uid_validity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          folder?: string
+          is_running?: boolean
+          last_error?: string | null
+          last_run_at?: string | null
+          last_run_status?: string | null
+          last_seen_uid?: number
+          lock_expires_at?: string | null
+          mailbox_id?: string
+          uid_validity?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_sync_state_mailbox_id_fkey"
+            columns: ["mailbox_id"]
+            isOneToOne: true
+            referencedRelation: "comms_mailboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           accent_color: string | null
@@ -14223,6 +14454,7 @@ export type Database = {
         }[]
       }
       can_submit_field_lead: { Args: { _user_id: string }; Returns: boolean }
+      comms_user_divisions: { Args: { _user_id: string }; Returns: string[] }
       complete_assigned_visit: {
         Args: {
           _crew_notes?: string
