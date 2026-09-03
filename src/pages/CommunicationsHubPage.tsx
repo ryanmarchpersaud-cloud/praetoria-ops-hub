@@ -148,13 +148,38 @@ export default function CommunicationsHubPage() {
 
           <Card className="min-w-0">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Message</CardTitle>
+              <CardTitle className="text-sm">Conversation</CardTitle>
             </CardHeader>
             <CardContent>
               {!selected ? (
                 <p className="text-sm text-muted-foreground">Select a message to read it.</p>
               ) : (
                 <div className="space-y-3">
+                  {(() => {
+                    const parent = (outbound ?? []).find((o) => o.id === selected.reply_to_outbound_id);
+                    if (!parent) return null;
+                    return (
+                      <div className="rounded-md border border-dashed p-3 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Sent by us</Badge>
+                          <span className="text-xs text-muted-foreground">{fmt(parent.sent_at ?? parent.created_at)}</span>
+                        </div>
+                        <div className="text-sm font-medium">{parent.subject}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {parent.from_address} → {parent.to_address}
+                        </div>
+                        {parent.body_text && (
+                          <pre className="whitespace-pre-wrap break-words text-xs bg-muted/40 rounded-md p-2 max-h-40 overflow-auto font-sans">
+                            {parent.body_text}
+                          </pre>
+                        )}
+                        <div className="text-[11px] text-muted-foreground break-all">
+                          Message-ID {parent.message_id_header || '—'}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h2 className="text-base font-semibold">{selected.subject || '(no subject)'}</h2>
