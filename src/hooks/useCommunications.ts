@@ -97,3 +97,31 @@ export function useCommsMessages(search?: string) {
     },
   });
 }
+
+export type OutboundMessage = {
+  id: string;
+  from_address: string;
+  to_address: string;
+  subject: string;
+  status: 'draft' | 'sending' | 'sent' | 'failed';
+  created_at: string;
+  sent_at: string | null;
+  failed_at: string | null;
+  error_text: string | null;
+};
+
+/** Phase 1B — staging outbound log (owner/admin only via RLS). */
+export function useCommsOutbound() {
+  return useQuery({
+    queryKey: ['comms-outbound'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('comms_outbound_messages' as never)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as unknown as OutboundMessage[];
+    },
+  });
+}
