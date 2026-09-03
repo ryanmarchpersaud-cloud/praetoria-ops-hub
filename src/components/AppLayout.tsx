@@ -3,7 +3,10 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { NotificationCenter } from './NotificationCenter';
 import { AnnouncementBanner } from './AnnouncementBanner';
-import { AICopilot } from './AICopilot';
+// Phase 1D.2 — the legacy lower-right AI Co-pilot has been removed from the UI.
+// Prae (top-header launcher below) is the only official user-facing assistant.
+// The old component is quarantined at src/legacy/AICopilot.quarantined.tsx and is
+// not imported or rendered anywhere.
 import PraeLauncher from './prae/PraeLauncher';
 import { useIncidentAlerts } from '@/hooks/useIncidentAlerts';
 
@@ -42,7 +45,6 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
-      <AICopilot />
     </SidebarProvider>
   );
 }

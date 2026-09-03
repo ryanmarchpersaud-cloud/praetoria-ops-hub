@@ -172,3 +172,14 @@ only removal path and requires explicit approval). As with Phase 1D, `GRANT ALL`
 `authenticated` must never be restored on any comms or Prae table.
 
 `prae_emergency_stop.stopped` ships as `true` and must stay `true` until execution is approved.
+
+## Phase 1D.2 — Single-assistant consolidation (rollback)
+
+UI: restore by moving `src/legacy/AICopilot.quarantined.tsx` back to
+`src/components/AICopilot.tsx` (strip the quarantine banner) and re-adding the import and
+`<AICopilot />` to `AppLayout.tsx`. Not recommended — Prae is the only official assistant.
+
+Endpoint: `chat-copilot` stays deployed but fail-closed. It is re-enabled only by setting the
+secret `LEGACY_COPILOT_ENABLED` to the exact string `true` (any other value, and the absence of
+the secret, keeps it disabled) and requires written approval. Removing the secret disables it
+again with no redeploy. The gate itself must never be removed or given a default-true fallback.
