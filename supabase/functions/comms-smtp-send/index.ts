@@ -226,26 +226,44 @@ Deno.serve(async (req) => {
       allowAppend,
     });
 
-    const status = result.status === "appended" || result.status === "skipped_duplicate"
+    const outcome = result.status === "appended" || result.status === "skipped_duplicate"
       ? result.status
       : appendOutcome(false, attempts).sent_copy_status;
 
+    // Phase 1D — a successful append is terminal; retries never downgrade it.
+    const resolved = resolveSentCopyStatus(
+      (record.sent_copy_status as SentCopyStatus | null) ?? null,
+      outcome,
+    );
+
     await admin.from("comms_outbound_messages").update({
-      sent_copy_status: status,
+      sent_copy_status: resolved.status,
+      sent_copy_last_retry_outcome: resolved.retryOutcome,
+      sent_copy_last_retry_at: new Date().toISOString(),
       sent_copy_attempts: attempts,
       sent_copy_last_error: result.error,
       sent_copy_appended_at: result.status === "appended" ? new Date().toISOString() : record.sent_copy_appended_at ?? null,
     }).eq("id", record.id as string);
 
-    await audit(`sent_copy_${status}`, `folder=${result.folder}`, {
+    await audit(`sent_copy_${resolved.retryOutcome}`, `folder=${result.folder}`, {
       outbound_id: record.id,
+      final_status: resolved.status,
+      retry_outcome: resolved.retryOutcome,
+      terminal_status_preserved: resolved.preserved,
       matches_before: result.matchesBefore,
       matches_after: result.matchesAfter,
       append_uid: result.appendUid,
       octets: result.octets,
     });
 
-    return { ...result, status, attempts, resend_email: false as const };
+    return {
+      ...result,
+      status: resolved.status,
+      retry_outcome: resolved.retryOutcome,
+      terminal_status_preserved: resolved.preserved,
+      attempts,
+      resend_email: false as const,
+    };
   };
 
 
