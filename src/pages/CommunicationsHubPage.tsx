@@ -133,7 +133,14 @@ export default function CommunicationsHubPage() {
                   <div>Outbound: {m.outbound_enabled ? 'enabled' : 'disabled'}</div>
                   <div>IMAP: {m.imap_host}:{m.imap_port}</div>
                   <div>SMTP: {m.smtp_host}:{m.smtp_port}</div>
-                  <div>Sent folder: {m.sent_folder}</div>
+                  <div>
+                    Sent folder:{' '}
+                    {m.sent_folder
+                      ? `${m.sent_folder} (verified via \\Sent)`
+                      : m.sent_folder_selection_required
+                        ? 'not verified — owner selection required'
+                        : 'not discovered'}
+                  </div>
                   <div>Baseline message id: {m.baseline_uid ?? 'not established'}</div>
                   <div>
                     Approved backfill range:{' '}
