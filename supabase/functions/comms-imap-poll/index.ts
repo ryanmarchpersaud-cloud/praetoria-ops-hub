@@ -169,10 +169,11 @@ Deno.serve(async (req) => {
       const res = await cmd(
         `UID FETCH ${uid} (BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID)] BODY.PEEK[TEXT]<0.4000>)`,
       );
-      const headerBlock = res.split("\r\n\r\n")[1] ?? "";
-      const bodyStart = res.indexOf("BODY[TEXT]");
-      let bodyText = bodyStart > -1 ? res.slice(res.indexOf("}", bodyStart) + 3) : "";
-      bodyText = bodyText.replace(/\r\n\)?\r\np\d+ OK[\s\S]*$/m, "").slice(0, 4000);
+      const headerBlock = readLiteral(res, "HEADER.FIELDS");
+      const rawBody = readLiteral(res, "TEXT");
+      const bodyText = extractPlainText(rawBody).slice(0, 4000);
+
+
 
       const from = parseFrom(headerValue(headerBlock, "From"));
       const dateRaw = headerValue(headerBlock, "Date");
