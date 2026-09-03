@@ -39,6 +39,7 @@ import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
+const PraeActivityPage = lazy(() => import("./pages/PraeActivityPage"));
 const CommunicationsHubPage = lazy(() => import("./pages/CommunicationsHubPage"));
 
 
