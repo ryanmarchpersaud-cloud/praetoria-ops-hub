@@ -75,7 +75,12 @@ export type CommsMessage = {
   body_text: string | null;
   division: string | null;
   direction: string;
+  message_id_header: string | null;
+  in_reply_to_header: string | null;
+  references_header: string | null;
+  reply_to_outbound_id: string | null;
 };
+
 
 export function useCommsMessages(search?: string) {
   return useQuery({
