@@ -98,7 +98,7 @@ export function CustomerCommunicationsCard({ customerId }: Props) {
           communications.slice(0, 8).map((c: any) => (
             <Link
               key={c.id}
-              to={`/activity?focus=${c.id}`}
+              to={c.link || `/activity?focus=${c.id}`}
               className="flex items-start gap-2 p-1.5 rounded-md hover:bg-muted/50 transition-colors group"
             >
               <MessageCircle className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
