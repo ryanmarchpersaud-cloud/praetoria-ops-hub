@@ -144,7 +144,7 @@ describe('sent-folder consistency', () => {
   });
 
   it('builds safe IMAP commands', () => {
-    expect(buildAppendCommand('Sent', 'Subject: x\r\n\r\nbody')).toBe('APPEND "Sent" (\\Seen) {21}');
+    expect(buildAppendCommand('Sent', 'Subject: x\r\n\r\nbody')).toBe('APPEND "Sent" (\\Seen) {18}');
     expect(buildDuplicateSearch('Sent', '<id@x>\r\nDELETE')).not.toContain('\r\n');
   });
 
