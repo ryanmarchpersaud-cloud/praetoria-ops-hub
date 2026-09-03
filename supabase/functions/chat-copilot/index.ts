@@ -129,6 +129,14 @@ serve(async (req) => {
     // Require authenticated ops/admin user
     const auth = await requireAuth(req);
     if (!auth.ok) return auth.response;
+
+    // Phase 1D.2 gate — checked immediately after authentication and BEFORE any
+    // service-role client, any operational query, any context building and any
+    // AI-gateway call. Defaults to disabled.
+    if (!isLegacyCopilotEnabled(Deno.env.get("LEGACY_COPILOT_ENABLED"))) {
+      return legacyDisabledResponse();
+    }
+
     const gate = await requireRole(auth, ["owner", "admin", "manager", "ops_manager", "accountant", "hr_admin"]);
     if (!gate.ok) return gate.response;
 
