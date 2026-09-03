@@ -23,6 +23,9 @@ import {
   validateRecipient,
   validateSubject,
 } from "./core.ts";
+import { appendDecision, appendOutcome, requireVerifiedSentFolder } from "../_shared/comms/sentFolder.ts";
+import { runSentCopy } from "../_shared/comms/sentCopyRunner.ts";
+
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -172,6 +175,81 @@ Deno.serve(async (req) => {
   const audit = (event: string, detail?: string, metadata?: Record<string, unknown>) =>
     admin.from("comms_audit_log").insert({ mailbox_id: mailbox.id, event, detail, metadata });
 
+
+  /**
+   * Append the canonical RFC822 message to the verified Sent folder.
+   * Never sends email; only ever runs after SMTP acceptance.
+   */
+  const performSentCopy = async (
+    record: Record<string, unknown>,
+    sentCopyEnabled: boolean,
+    allowAppend: boolean,
+  ) => {
+    let folder = null;
+    try {
+      folder = requireVerifiedSentFolder(mailbox);
+    } catch (_e) {
+      folder = null;
+    }
+    const decision = appendDecision({
+      sendState: String(record.status ?? "draft") as "draft" | "sending" | "sent" | "failed",
+      sentCopyEnabled,
+      messageIdHeader: (record.message_id_header as string | null) ?? null,
+      existsInSentFolder: false,
+      sentFolder: folder,
+      attempts: Number(record.sent_copy_attempts ?? 0),
+    });
+    if (decision.action === "skip") {
+      await admin.from("comms_outbound_messages")
+        .update({ sent_copy_status: decision.status, sent_copy_last_error: decision.reason })
+        .eq("id", record.id as string);
+      return { status: decision.status, reason: decision.reason, folder: folder?.name ?? null };
+    }
+
+    const rfc822 = record.rfc822_message as string | null;
+    if (!rfc822) {
+      await admin.from("comms_outbound_messages")
+        .update({ sent_copy_status: "sent_copy_pending", sent_copy_last_error: "canonical_message_unavailable" })
+        .eq("id", record.id as string);
+      return { status: "sent_copy_pending", reason: "canonical_message_unavailable", folder: folder!.name };
+    }
+
+    const attempts = Number(record.sent_copy_attempts ?? 0) + 1;
+    const result = await runSentCopy({
+      host: mailbox.imap_host,
+      port: mailbox.imap_port,
+      user: smtpUser,
+      pass: smtpPass,
+      folder: folder!,
+      messageId: record.message_id_header as string,
+      rfc822,
+      allowAppend,
+    });
+
+    const status = result.status === "appended" || result.status === "skipped_duplicate"
+      ? result.status
+      : appendOutcome(false, attempts).sent_copy_status;
+
+    await admin.from("comms_outbound_messages").update({
+      sent_copy_status: status,
+      sent_copy_attempts: attempts,
+      sent_copy_last_error: result.error,
+      sent_copy_appended_at: result.status === "appended" ? new Date().toISOString() : record.sent_copy_appended_at ?? null,
+    }).eq("id", record.id as string);
+
+    await audit(`sent_copy_${status}`, `folder=${result.folder}`, {
+      outbound_id: record.id,
+      matches_before: result.matchesBefore,
+      matches_after: result.matchesAfter,
+      append_uid: result.appendUid,
+      octets: result.octets,
+    });
+
+    return { ...result, status, attempts, resend_email: false as const };
+  };
+
+
+
   // ---------------------------------------------------------------- prepare
   if (action === "prepare") {
     const key = payload.idempotency_key;
@@ -300,12 +378,44 @@ Deno.serve(async (req) => {
       const safe = redactSmtp(transcript, [smtpPass, smtpUser]);
       const { data: sent } = await admin
         .from("comms_outbound_messages")
-        .update({ status: "sent", sent_at: new Date().toISOString(), smtp_result: safe, error_text: null })
+        .update({
+          status: "sent",
+          sent_at: new Date().toISOString(),
+          smtp_result: safe,
+          error_text: null,
+          rfc822_message: message,
+        })
         .eq("id", claimed.id)
         .select()
         .maybeSingle();
       await audit("outbound_sent", `to=${claimed.to_address}`, { outbound_id: claimed.id });
-      return json({ record: sent });
+
+      // ------------------------------------------------ Sent-folder copy
+      // Runs only AFTER SMTP acceptance. A failure here never resends the email.
+      const temporaryWindow = payload.enable_sent_copy_for_this_send === true;
+      let sentCopy: Awaited<ReturnType<typeof performSentCopy>> | null = null;
+      try {
+        if (temporaryWindow) {
+          await admin.from("comms_settings").update({ sent_copy_enabled: true }).eq("id", true);
+          await audit("sent_copy_window_opened", `outbound_id=${claimed.id}`);
+        }
+        const { data: liveSettings } = await admin
+          .from("comms_settings").select("sent_copy_enabled").eq("id", true).maybeSingle();
+        sentCopy = await performSentCopy(
+          { ...(sent ?? claimed), rfc822_message: message },
+          !!liveSettings?.sent_copy_enabled,
+          true,
+        );
+      } finally {
+        if (temporaryWindow) {
+          await admin.from("comms_settings").update({ sent_copy_enabled: false }).eq("id", true);
+          await audit("sent_copy_window_closed", `outbound_id=${claimed.id}`);
+        }
+      }
+
+      const { data: finalRecord } = await admin
+        .from("comms_outbound_messages").select("*").eq("id", claimed.id).maybeSingle();
+      return json({ record: finalRecord ?? sent, sent_copy: sentCopy });
     } catch (e) {
       const raw = e instanceof Error ? e.message : "SMTP failure";
       const safe = redactSmtp(raw, [smtpPass, smtpUser]);
@@ -317,5 +427,36 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ------------------------------------------------------- sent_copy_retry
+  // Append-only idempotency path. NEVER sends an email under any circumstance.
+  if (action === "sent_copy_retry") {
+    const id = payload.id;
+    if (typeof id !== "string") return json({ error: "Outbound id required" }, 400);
+    const { data: record } = await admin
+      .from("comms_outbound_messages").select("*").eq("id", id).maybeSingle();
+    if (!record) return json({ error: "Record not found" }, 404);
+
+    const temporaryWindow = payload.enable_sent_copy_for_this_send === true;
+    let outcome;
+    try {
+      if (temporaryWindow) {
+        await admin.from("comms_settings").update({ sent_copy_enabled: true }).eq("id", true);
+        await audit("sent_copy_window_opened", `retry outbound_id=${record.id}`);
+      }
+      const { data: liveSettings } = await admin
+        .from("comms_settings").select("sent_copy_enabled").eq("id", true).maybeSingle();
+      outcome = await performSentCopy(record, !!liveSettings?.sent_copy_enabled, true);
+    } finally {
+      if (temporaryWindow) {
+        await admin.from("comms_settings").update({ sent_copy_enabled: false }).eq("id", true);
+        await audit("sent_copy_window_closed", `retry outbound_id=${record.id}`);
+      }
+    }
+    const { data: finalRecord } = await admin
+      .from("comms_outbound_messages").select("*").eq("id", record.id).maybeSingle();
+    return json({ record: finalRecord, sent_copy: outcome, email_sent: false });
+  }
+
   return json({ error: "Unknown action" }, 400);
 });
+

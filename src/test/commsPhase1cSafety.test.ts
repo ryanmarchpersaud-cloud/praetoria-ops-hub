@@ -17,6 +17,9 @@ import {
   buildDuplicateSearch,
   appendRetryDelaySeconds,
   MAX_APPEND_ATTEMPTS,
+  parseSearchUids,
+  parseAppendUid,
+
 } from '../../supabase/functions/_shared/comms/sentFolder.ts';
 import {
   planInitialSync,
@@ -225,5 +228,28 @@ describe('initial synchronisation safeguards', () => {
     expect(proposal.requiresOwnerApproval).toBe(true);
     expect(proposal.approved).toBe(false);
     expect(proposal.willImport).toBe(false);
+  });
+});
+
+describe("Phase 1C sent-copy IMAP response parsing", () => {
+  it("parses UIDs from a SEARCH response", () => {
+    expect(parseSearchUids("* SEARCH 12 44 99\r\na1 OK SEARCH completed\r\n")).toEqual([12, 44, 99]);
+  });
+
+  it("returns no UIDs for an empty SEARCH result", () => {
+    expect(parseSearchUids("* SEARCH\r\na1 OK SEARCH completed\r\n")).toEqual([]);
+  });
+
+  it("de-duplicates repeated UIDs", () => {
+    expect(parseSearchUids("* SEARCH 7 7\r\na1 OK\r\n")).toEqual([7]);
+  });
+
+  it("parses APPENDUID from a tagged OK", () => {
+    expect(parseAppendUid("a3 OK [APPENDUID 1568901234 4711] APPEND completed\r\n"))
+      .toEqual({ uidValidity: 1568901234, uid: 4711 });
+  });
+
+  it("returns null when the server omits APPENDUID", () => {
+    expect(parseAppendUid("a3 OK APPEND completed\r\n")).toBeNull();
   });
 });

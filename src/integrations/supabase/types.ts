@@ -1069,6 +1069,7 @@ export type Database = {
           references_header: string | null
           requested_by: string
           requested_by_email: string | null
+          rfc822_message: string | null
           sent_at: string | null
           sent_copy_appended_at: string | null
           sent_copy_attempts: number
@@ -1096,6 +1097,7 @@ export type Database = {
           references_header?: string | null
           requested_by: string
           requested_by_email?: string | null
+          rfc822_message?: string | null
           sent_at?: string | null
           sent_copy_appended_at?: string | null
           sent_copy_attempts?: number
@@ -1123,6 +1125,7 @@ export type Database = {
           references_header?: string | null
           requested_by?: string
           requested_by_email?: string | null
+          rfc822_message?: string | null
           sent_at?: string | null
           sent_copy_appended_at?: string | null
           sent_copy_attempts?: number
