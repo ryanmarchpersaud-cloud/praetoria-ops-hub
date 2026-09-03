@@ -29,7 +29,43 @@ async function readUntil(conn: Deno.Conn, match: (b: string) => boolean, timeout
   return acc;
 }
 
+/** Extract an IMAP literal for a given BODY[...] section: `BODY[<section>...] {N}\r\n<N bytes>`. */
+function readLiteral(response: string, section: string): string {
+  const marker = response.indexOf(`BODY[${section}`);
+  if (marker === -1) return "";
+  const braceOpen = response.indexOf("{", marker);
+  const braceClose = response.indexOf("}", braceOpen);
+  if (braceOpen === -1 || braceClose === -1) return "";
+  const size = Number(response.slice(braceOpen + 1, braceClose));
+  const start = response.indexOf("\r\n", braceClose) + 2;
+  if (!Number.isFinite(size) || start < 2) return "";
+  return response.slice(start, start + size);
+}
+
+/** Pull the first text/plain part out of a MIME body; falls back to the raw text. */
+function extractPlainText(raw: string): string {
+  if (!raw) return "";
+  const boundary = raw.match(/boundary="?([^"\r\n;]+)"?/i)?.[1];
+  if (!boundary) return decodeQP(raw).trim();
+  const parts = raw.split(`--${boundary}`);
+  for (const part of parts) {
+    if (/Content-Type:\s*text\/plain/i.test(part)) {
+      const body = part.split("\r\n\r\n").slice(1).join("\r\n\r\n");
+      const decoded = /quoted-printable/i.test(part) ? decodeQP(body) : body;
+      if (decoded.trim()) return decoded.trim();
+    }
+  }
+  return decodeQP(raw).trim();
+}
+
+function decodeQP(s: string): string {
+  return s
+    .replace(/=\r\n/g, "")
+    .replace(/=([0-9A-Fa-f]{2})/g, (_m, h) => String.fromCharCode(parseInt(h, 16)));
+}
+
 function headerValue(block: string, name: string): string | null {
+
   const re = new RegExp(`^${name}:\\s*(.*(?:\\r\\n[ \\t].*)*)`, "im");
   const m = block.match(re);
   return m ? m[1].replace(/\r\n[ \t]+/g, " ").trim() : null;
