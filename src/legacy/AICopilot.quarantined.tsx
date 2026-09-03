@@ -1,3 +1,8 @@
+// QUARANTINED — Phase 1D.2 (Single-Assistant Consolidation).
+// This legacy Praetoria AI Co-pilot panel is NOT imported or rendered anywhere.
+// It is retained only for security review and controlled migration of useful
+// read-only capabilities into Prae. Do not re-import it. Its server endpoint
+// (chat-copilot) is disabled behind a fail-closed server-side feature gate.
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Bot, X, Send, Loader2, Volume2, VolumeX, Mic, MicOff, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
