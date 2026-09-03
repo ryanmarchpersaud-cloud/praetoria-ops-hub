@@ -81,12 +81,17 @@ describe('Communications Hub — write protection', () => {
   });
 
   it('cannot flip the global polling switch', async () => {
-    const { error } = await anon
+    const { data, error } = await anon
       .from('comms_settings' as never)
       .update({ polling_enabled: true } as never)
-      .eq('id', true);
-    expect(error).toBeTruthy();
+      .eq('id', true)
+      .select();
+    // Either rejected outright, or silently affected zero rows — never a change.
+    if (!error) {
+      expect(Array.isArray(data) ? data.length : 0).toBe(0);
+    }
   });
+
 
   it('cannot forge an audit record', async () => {
     const { error } = await anon
