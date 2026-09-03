@@ -180,3 +180,46 @@ export function checkpointDecision(error: unknown): { outcome: InsertOutcome; ad
   if (isUniqueViolation(error)) return { outcome: "duplicate", advance: true, halt: false };
   return { outcome: "failed", advance: false, halt: true };
 }
+
+export type UidBatchResult = {
+  lastUid: number;
+  imported: number;
+  duplicates: number;
+  scanned: number;
+  halted: boolean;
+  failedUid: number | null;
+};
+
+/**
+ * Walk UIDs in order, applying the checkpoint rule after each insert attempt.
+ * The checkpoint never passes a UID whose row was not stored (or already
+ * present), so a transient database failure leaves it eligible for retry.
+ */
+export async function processUidBatch(
+  uids: number[],
+  startUid: number,
+  handle: (uid: number) => Promise<{ error: unknown }>,
+): Promise<UidBatchResult> {
+  const result: UidBatchResult = {
+    lastUid: startUid,
+    imported: 0,
+    duplicates: 0,
+    scanned: 0,
+    halted: false,
+    failedUid: null,
+  };
+  for (const uid of uids) {
+    const { error } = await handle(uid);
+    result.scanned++;
+    const decision = checkpointDecision(error);
+    if (decision.outcome === "stored") result.imported++;
+    if (decision.outcome === "duplicate") result.duplicates++;
+    if (decision.advance) result.lastUid = Math.max(result.lastUid, uid);
+    if (decision.halt) {
+      result.halted = true;
+      result.failedUid = uid;
+      break;
+    }
+  }
+  return result;
+}
