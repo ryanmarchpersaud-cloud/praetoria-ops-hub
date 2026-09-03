@@ -23,7 +23,7 @@ import {
   validateRecipient,
   validateSubject,
 } from "./core.ts";
-import { appendDecision, appendOutcome, requireVerifiedSentFolder } from "../_shared/comms/sentFolder.ts";
+import { appendDecision, appendOutcome, requireVerifiedSentFolder, resolveSentCopyStatus, type SentCopyStatus } from "../_shared/comms/sentFolder.ts";
 import { runSentCopy } from "../_shared/comms/sentCopyRunner.ts";
 
 
