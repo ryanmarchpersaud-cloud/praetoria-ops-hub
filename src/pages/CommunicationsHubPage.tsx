@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Mail, Inbox, PauseCircle, PlayCircle, ShieldCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Mail, Inbox, PauseCircle, PlayCircle, ShieldCheck, Reply, AlertTriangle } from 'lucide-react';
+import ReplyComposerDialog from '@/components/communications/ReplyComposerDialog';
 import {
   useCommsMessages,
   useCommsMailboxes,
   useCommsSettings,
   useCommsSyncState,
+  useCommsOutbound,
   type CommsMessage,
 } from '@/hooks/useCommunications';
 
@@ -16,13 +19,25 @@ function fmt(d: string | null) {
   return new Date(d).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' });
 }
 
+const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  sent: 'default',
+  draft: 'secondary',
+  sending: 'outline',
+  failed: 'destructive',
+};
+
 export default function CommunicationsHubPage() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<CommsMessage | null>(null);
+  const [replyOpen, setReplyOpen] = useState(false);
   const { data: settings } = useCommsSettings();
   const { data: mailboxes } = useCommsMailboxes();
   const { data: syncState } = useCommsSyncState();
   const { data: messages, isLoading } = useCommsMessages(search || undefined);
+  const { data: outbound, refetch: refetchOutbound } = useCommsOutbound();
+  const stagingMailbox = (mailboxes ?? []).find((m) => m.environment === 'staging' && m.is_active);
+  const outboundEnabled = !!(settings as { outbound_enabled?: boolean } | null)?.outbound_enabled;
+
 
   if (settings && settings.hub_enabled === false) {
     return (
