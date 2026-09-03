@@ -239,7 +239,7 @@ export function useSendAgreement() {
       if (agreementError) throw agreementError;
 
       if (agreement.recipient_email) {
-        const appBaseUrl = window.location.origin;
+        const appBaseUrl = publicAppUrl();
         const signingUrl = `${appBaseUrl}/sign/${agreement.signing_token}`;
         const portalPath = AGREEMENT_PORTAL_PATHS[agreement.recipient_type] || '';
         const portalUrl = agreement.recipient_user_id && portalPath ? `${appBaseUrl}${portalPath}` : null;
