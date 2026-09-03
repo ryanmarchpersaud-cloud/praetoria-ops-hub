@@ -13,6 +13,9 @@ project_id = "czltgypfgegjmcsczpms"
     verify_jwt = false
   [functions.n8n-webhook]
     verify_jwt = false
+  [functions.phase1a-mail-auth-probe]
+    verify_jwt = false
+
   [functions.send-email]
     verify_jwt = false
   [functions.send-owner-invite]
