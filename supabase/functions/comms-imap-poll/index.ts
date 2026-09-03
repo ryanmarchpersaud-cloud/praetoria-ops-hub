@@ -171,12 +171,10 @@ Deno.serve(async (req) => {
       .sort((a, b) => a - b)
       .slice(0, maxMessages);
 
-    let scanned = 0;
-    for (const uid of uids) {
+    const batch = await processUidBatch(uids, lastUid, async (uid) => {
       const res = await cmd(
         `UID FETCH ${uid} (BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID)] BODY.PEEK[TEXT]<0.4000>)`,
       );
-      scanned++;
       const headerBlock = readLiteral(res, "HEADER.FIELDS");
       const rawBody = readLiteral(res, "TEXT");
       const bodyText = extractPlainText(rawBody).slice(0, 4000);
@@ -186,7 +184,7 @@ Deno.serve(async (req) => {
       const sentAt = dateRaw ? new Date(dateRaw) : null;
 
       const { error } = await supabase.from("comms_messages").insert({
-        mailbox_id: mailbox.id,
+        mailbox_id: mailbox!.id,
         folder: "INBOX",
         imap_uid: uid,
         uid_validity: uidValidity,
@@ -200,24 +198,22 @@ Deno.serve(async (req) => {
         sent_at: sentAt && !isNaN(sentAt.getTime()) ? sentAt.toISOString() : null,
         snippet: bodyText.replace(/\s+/g, " ").trim().slice(0, 200),
         body_text: bodyText,
-        division: mailbox.division,
-        assigned_rep_user_id: mailbox.assigned_rep_user_id,
+        division: mailbox!.division,
+        assigned_rep_user_id: mailbox!.assigned_rep_user_id,
       });
 
-      const decision = checkpointDecision(error);
-      if (decision.outcome === "stored") {
-        imported++;
-        await audit("message_imported", `uid ${uid}`);
-      } else if (decision.outcome === "duplicate") {
-        await audit("message_duplicate", `uid ${uid}`);
-      } else {
-        // Leave this UID eligible for retry on the next run and stop the batch.
-        await audit("message_import_error", (error as { message?: string })?.message, { uid });
-        halted = true;
-      }
-      if (decision.advance) lastUid = Math.max(lastUid, uid);
-      if (decision.halt) break;
-    }
+      if (!error) await audit("message_imported", `uid ${uid}`);
+      else if ((error as { code?: string }).code === "23505") await audit("message_duplicate", `uid ${uid}`);
+      else await audit("message_import_error", error.message, { uid });
+
+      return { error };
+    });
+
+    imported = batch.imported;
+    halted = batch.halted;
+    lastUid = batch.lastUid;
+    const scanned = batch.scanned;
+
 
     try {
       await cmd("LOGOUT", 5000, "logout");
