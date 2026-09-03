@@ -170,7 +170,80 @@ Deno.serve(async (req) => {
   if (!smtpUser || !smtpPass) return json({ error: "Staging mailbox secrets not configured" }, 500);
 
   const audit = (event: string, detail?: string, metadata?: Record<string, unknown>) =>
-    admin.from("comms_audit_log").insert({ mailbox_id: mailbox.id, event, detail, metadata });
+
+  /**
+   * Append the canonical RFC822 message to the verified Sent folder.
+   * Never sends email; only ever runs after SMTP acceptance.
+   */
+  const performSentCopy = async (
+    record: Record<string, unknown>,
+    sentCopyEnabled: boolean,
+    allowAppend: boolean,
+  ) => {
+    let folder = null;
+    try {
+      folder = requireVerifiedSentFolder(mailbox);
+    } catch (_e) {
+      folder = null;
+    }
+    const decision = appendDecision({
+      sendState: String(record.status ?? "draft") as "draft" | "sending" | "sent" | "failed",
+      sentCopyEnabled,
+      messageIdHeader: (record.message_id_header as string | null) ?? null,
+      existsInSentFolder: false,
+      sentFolder: folder,
+      attempts: Number(record.sent_copy_attempts ?? 0),
+    });
+    if (decision.action === "skip") {
+      await admin.from("comms_outbound_messages")
+        .update({ sent_copy_status: decision.status, sent_copy_last_error: decision.reason })
+        .eq("id", record.id as string);
+      return { status: decision.status, reason: decision.reason, folder: folder?.name ?? null };
+    }
+
+    const rfc822 = record.rfc822_message as string | null;
+    if (!rfc822) {
+      await admin.from("comms_outbound_messages")
+        .update({ sent_copy_status: "sent_copy_pending", sent_copy_last_error: "canonical_message_unavailable" })
+        .eq("id", record.id as string);
+      return { status: "sent_copy_pending", reason: "canonical_message_unavailable", folder: folder!.name };
+    }
+
+    const attempts = Number(record.sent_copy_attempts ?? 0) + 1;
+    const result = await runSentCopy({
+      host: mailbox.imap_host,
+      port: mailbox.imap_port,
+      user: smtpUser,
+      pass: smtpPass,
+      folder: folder!,
+      messageId: record.message_id_header as string,
+      rfc822,
+      allowAppend,
+    });
+
+    const status = result.status === "appended" || result.status === "skipped_duplicate"
+      ? result.status
+      : appendOutcome(false, attempts).sent_copy_status;
+
+    await admin.from("comms_outbound_messages").update({
+      sent_copy_status: status,
+      sent_copy_attempts: attempts,
+      sent_copy_last_error: result.error,
+      sent_copy_appended_at: result.status === "appended" ? new Date().toISOString() : record.sent_copy_appended_at ?? null,
+    }).eq("id", record.id as string);
+
+    await audit(`sent_copy_${status}`, `folder=${result.folder}`, {
+      outbound_id: record.id,
+      matches_before: result.matchesBefore,
+      matches_after: result.matchesAfter,
+      append_uid: result.appendUid,
+      octets: result.octets,
+    });
+
+    return { ...result, status, attempts, resend_email: false as const };
+  };
+
+
 
   // ---------------------------------------------------------------- prepare
   if (action === "prepare") {
