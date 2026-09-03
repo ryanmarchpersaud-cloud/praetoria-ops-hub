@@ -139,6 +139,9 @@ export type OutboundMessage = {
   sent_at: string | null;
   failed_at: string | null;
   error_text: string | null;
+  sent_copy_status: 'not_attempted' | 'sent_copy_pending' | 'appended' | 'skipped_duplicate' | 'failed';
+  sent_copy_attempts: number;
+  sent_copy_appended_at: string | null;
 };
 
 
