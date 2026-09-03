@@ -6,6 +6,7 @@
 //  * Synthetic demonstration content only (see praeDemoData.ts).
 //  * Every control that would act on real data is labelled "Not enabled yet".
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
