@@ -1,3 +1,5 @@
+import { isSafeMailboxName, quoteMailbox } from "./folderDiscovery.ts";
+
 // Phase 1C — Sent-folder consistency design (prepared, not executed).
 //
 // Invariant: the SMTP send and the IMAP APPEND are two independent steps.
@@ -7,11 +9,30 @@
 export type SendState = "draft" | "sending" | "sent" | "failed";
 export type SentCopyStatus = "not_attempted" | "sent_copy_pending" | "appended" | "skipped_duplicate" | "failed";
 
+export type VerifiedSentFolder = {
+  /** Exact folder name as reported by the server's LIST response. */
+  name: string;
+  source: "special_use";
+  verifiedAt: string;
+};
+
+/** Never fall back to "Sent": an unverified mailbox cannot append. */
+export function requireVerifiedSentFolder(
+  mailbox: { sent_folder?: string | null; sent_folder_source?: string | null; sent_folder_verified_at?: string | null },
+): VerifiedSentFolder {
+  if (!mailbox.sent_folder || mailbox.sent_folder_source !== "special_use" || !mailbox.sent_folder_verified_at) {
+    throw new Error("sent_folder_not_verified");
+  }
+  if (!isSafeMailboxName(mailbox.sent_folder)) throw new Error("sent_folder_unsafe");
+  return { name: mailbox.sent_folder, source: "special_use", verifiedAt: mailbox.sent_folder_verified_at };
+}
+
 export type AppendContext = {
   sendState: SendState;
   sentCopyEnabled: boolean;
   messageIdHeader: string | null;
   existsInSentFolder: boolean;
+  sentFolder: VerifiedSentFolder | null;
   attempts: number;
 };
 
@@ -25,6 +46,7 @@ export type AppendDecision =
 export function appendDecision(ctx: AppendContext): AppendDecision {
   if (ctx.sendState !== "sent") return { action: "skip", status: "not_attempted", reason: "smtp_not_accepted" };
   if (!ctx.sentCopyEnabled) return { action: "skip", status: "not_attempted", reason: "sent_copy_disabled" };
+  if (!ctx.sentFolder) return { action: "skip", status: "failed", reason: "sent_folder_not_verified" };
   if (!ctx.messageIdHeader) return { action: "skip", status: "failed", reason: "missing_message_id" };
   if (ctx.existsInSentFolder) return { action: "skip", status: "skipped_duplicate", reason: "duplicate_message_id" };
   if (ctx.attempts >= MAX_APPEND_ATTEMPTS) return { action: "skip", status: "failed", reason: "max_attempts_reached" };
@@ -50,18 +72,25 @@ export function appendOutcome(ok: boolean, attempts: number): {
   };
 }
 
-/** IMAP search used to deduplicate by Message-ID before appending. */
-export function buildDuplicateSearch(folder: string, messageId: string): string {
-  const safeFolder = folder.replace(/["\\]/g, "");
-  const safeId = messageId.replace(/["\\\r\n]/g, "");
-  return `UID SEARCH HEADER "Message-ID" "${safeId}" IN "${safeFolder}"`.replace(/ IN "[^"]*"$/, "");
+/** EXAMINE (read-only select) of the verified Sent folder before a duplicate search. */
+export function buildSentFolderExamine(folder: VerifiedSentFolder): string {
+  return `EXAMINE ${quoteMailbox(folder.name)}`;
 }
 
-/** IMAP APPEND command header line for a fully rendered RFC822 message. */
-export function buildAppendCommand(folder: string, rfc822: string, flags = "\\Seen"): string {
-  const safeFolder = folder.replace(/["\\\r\n]/g, "");
+/** IMAP search used to deduplicate by Message-ID inside the verified Sent folder. */
+export function buildDuplicateSearch(folder: VerifiedSentFolder, messageId: string): string {
+  const safeId = messageId.replace(/["\\\r\n]/g, "");
+  if (!safeId) throw new Error("invalid_message_id");
+  return `UID SEARCH HEADER "Message-ID" "${safeId}"`;
+}
+
+/**
+ * IMAP APPEND command header line for the exact RFC822 message that SMTP accepted.
+ * The body is transmitted verbatim after the continuation response.
+ */
+export function buildAppendCommand(folder: VerifiedSentFolder, rfc822: string, flags = "\\Seen"): string {
   const octets = new TextEncoder().encode(rfc822).length;
-  return `APPEND "${safeFolder}" (${flags}) {${octets}}`;
+  return `APPEND ${quoteMailbox(folder.name)} (${flags}) {${octets}}`;
 }
 
 /** Exponential retry schedule (seconds) for append-only retries. */
