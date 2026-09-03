@@ -1074,6 +1074,8 @@ export type Database = {
           sent_copy_appended_at: string | null
           sent_copy_attempts: number
           sent_copy_last_error: string | null
+          sent_copy_last_retry_at: string | null
+          sent_copy_last_retry_outcome: string | null
           sent_copy_status: string
           smtp_result: string | null
           status: string
@@ -1102,6 +1104,8 @@ export type Database = {
           sent_copy_appended_at?: string | null
           sent_copy_attempts?: number
           sent_copy_last_error?: string | null
+          sent_copy_last_retry_at?: string | null
+          sent_copy_last_retry_outcome?: string | null
           sent_copy_status?: string
           smtp_result?: string | null
           status?: string
@@ -1130,6 +1134,8 @@ export type Database = {
           sent_copy_appended_at?: string | null
           sent_copy_attempts?: number
           sent_copy_last_error?: string | null
+          sent_copy_last_retry_at?: string | null
+          sent_copy_last_retry_outcome?: string | null
           sent_copy_status?: string
           smtp_result?: string | null
           status?: string
