@@ -253,3 +253,65 @@ describe("Phase 1C sent-copy IMAP response parsing", () => {
     expect(parseAppendUid("a3 OK APPEND completed\r\n")).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------- Phase 1D
+import {
+  resolveSentCopyStatus,
+  isTerminalSentCopyStatus,
+} from '../../supabase/functions/_shared/comms/sentFolder.ts';
+import { PRAE_ACTIONS, PRAE_STATUS_LABEL } from '@/components/prae/praeDemoData';
+
+describe('Phase 1D — sent-copy status integrity', () => {
+  it('keeps appended as the final status when a retry finds a duplicate', () => {
+    const r = resolveSentCopyStatus('appended', 'skipped_duplicate');
+    expect(r.status).toBe('appended');
+    expect(r.retryOutcome).toBe('skipped_duplicate');
+    expect(r.preserved).toBe(true);
+  });
+
+  it('keeps appended even if a later attempt errors', () => {
+    expect(resolveSentCopyStatus('appended', 'sent_copy_pending').status).toBe('appended');
+    expect(resolveSentCopyStatus('appended', 'failed').status).toBe('appended');
+  });
+
+  it('records skipped_duplicate as the status when nothing was appended yet', () => {
+    const r = resolveSentCopyStatus('not_attempted', 'skipped_duplicate');
+    expect(r.status).toBe('skipped_duplicate');
+    expect(r.preserved).toBe(false);
+  });
+
+  it('treats only appended as terminal', () => {
+    expect(isTerminalSentCopyStatus('appended')).toBe(true);
+    expect(isTerminalSentCopyStatus('skipped_duplicate')).toBe(false);
+    expect(isTerminalSentCopyStatus(null)).toBe(false);
+  });
+});
+
+describe('Phase 1D — Prae interface shell', () => {
+  it('exposes the five action cards, all disabled', () => {
+    expect(PRAE_ACTIONS.map((a) => a.id)).toEqual([
+      'summarize_thread', 'draft_reply', 'find_customer', 'prepare_follow_up', 'review_required',
+    ]);
+    expect(PRAE_ACTIONS.every((a) => a.enabled === false)).toBe(true);
+  });
+
+  it('requires explicit approval for every acting card and shows the exact proposal', () => {
+    for (const id of ['draft_reply', 'prepare_follow_up', 'review_required']) {
+      const a = PRAE_ACTIONS.find((x) => x.id === id)!;
+      expect(a.demo.approvalRequired).toBe(true);
+      expect(a.demo.lines.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('uses synthetic demo content only', () => {
+    const blob = JSON.stringify(PRAE_ACTIONS);
+    expect(blob).not.toMatch(/praetoriagroup\.ca/);
+    expect(blob).toMatch(/example\.com/);
+  });
+
+  it('defines all six status indicators', () => {
+    expect(Object.values(PRAE_STATUS_LABEL)).toEqual([
+      'Idle', 'Listening', 'Thinking', 'Preparing Draft', 'Waiting for Approval', 'Complete',
+    ]);
+  });
+});

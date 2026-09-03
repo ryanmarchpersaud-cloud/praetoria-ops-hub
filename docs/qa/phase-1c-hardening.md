@@ -114,3 +114,23 @@ only sanitized plain text is displayed.
 - APPEND to `Sent Items` with `\Seen`, 652 octets of the canonical (non dot-stuffed) RFC822, `APPENDUID 1788469057 1`; post-append search = exactly 1 match.
 - Append-only retry → `skipped_duplicate`, no send, no second append.
 - `sent_copy_enabled` opened for the send and closed in a `finally` block; confirmed `false` afterwards.
+
+## Phase 1D — status integrity, MIME security, Prae interface shell (2026-09-03)
+
+### Sent-copy status integrity
+`resolveSentCopyStatus()` makes `appended` terminal. Retries write their result to
+`sent_copy_last_retry_outcome` / `sent_copy_last_retry_at` and to `comms_audit_log`,
+never to `sent_copy_status`. The `sent_copy_retry` action still has no reachable
+SMTP code path (no import of the SMTP client in that branch).
+
+### rfc822_message retention proposal (NOT ACTIVATED — needs separate approval)
+* Purpose: the canonical MIME body exists only so an append-only Sent-copy retry
+  can file the byte-identical message. It has no other use.
+* Proposed minimum retention: delete `rfc822_message` (set to NULL) as soon as
+  `sent_copy_status = 'appended'`, or at **7 days** after `sent_at` for any other
+  status — whichever comes first. Hard ceiling 30 days.
+* Proposed safe deletion: `UPDATE ... SET rfc822_message = NULL` (never row
+  deletion) executed by a service-role job, with one `comms_audit_log` entry per
+  purge recording only the outbound id, byte length and timestamp.
+* Existing Phase 1C test evidence is retained. No retention job, cron entry or
+  trigger has been created.

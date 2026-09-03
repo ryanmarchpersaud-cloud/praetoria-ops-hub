@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Mail, Inbox, PauseCircle, PlayCircle, ShieldCheck, Reply, AlertTriangle } from 'lucide-react';
 import ReplyComposerDialog from '@/components/communications/ReplyComposerDialog';
+import PraeLauncher from '@/components/prae/PraeLauncher';
 import {
   useCommsMessages,
   useCommsMailboxes,
@@ -57,6 +58,7 @@ export default function CommunicationsHubPage() {
             Communications Hub
           </h1>
           <div className="flex items-center gap-2">
+            <PraeLauncher context="Communications Hub" variant="outline" />
             <Badge variant="destructive" className="gap-1">
               <AlertTriangle className="h-3.5 w-3.5" /> Staging Mode
             </Badge>

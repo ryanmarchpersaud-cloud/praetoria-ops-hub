@@ -118,3 +118,26 @@ export function parseAppendUid(response: string): { uidValidity: number; uid: nu
   if (!m) return null;
   return { uidValidity: Number(m[1]), uid: Number(m[2]) };
 }
+
+/**
+ * Phase 1D — Sent-copy status integrity.
+ *
+ * A successfully filed Sent copy is TERMINAL: once `appended`, the stored
+ * `sent_copy_status` must never be downgraded by a later retry. A retry that
+ * finds the existing Message-ID is recorded as a retry/audit outcome instead.
+ */
+export const TERMINAL_SENT_COPY_STATUSES: readonly SentCopyStatus[] = ["appended"];
+
+export function isTerminalSentCopyStatus(status: SentCopyStatus | null | undefined): boolean {
+  return !!status && TERMINAL_SENT_COPY_STATUSES.includes(status);
+}
+
+export function resolveSentCopyStatus(
+  previous: SentCopyStatus | null | undefined,
+  outcome: SentCopyStatus,
+): { status: SentCopyStatus; retryOutcome: SentCopyStatus; preserved: boolean } {
+  if (isTerminalSentCopyStatus(previous)) {
+    return { status: previous as SentCopyStatus, retryOutcome: outcome, preserved: true };
+  }
+  return { status: outcome, retryOutcome: outcome, preserved: false };
+}

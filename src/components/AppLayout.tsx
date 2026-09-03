@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar';
 import { NotificationCenter } from './NotificationCenter';
 import { AnnouncementBanner } from './AnnouncementBanner';
 import { AICopilot } from './AICopilot';
+import PraeLauncher from './prae/PraeLauncher';
 import { useIncidentAlerts } from '@/hooks/useIncidentAlerts';
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -29,7 +30,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   <span className="hidden sm:inline">Praetoria Group — </span>Admin Portal
                 </span>
               </div>
-              <NotificationCenter />
+              <div className="flex items-center gap-1">
+                <PraeLauncher context="Admin Portal" />
+                <NotificationCenter />
+              </div>
             </div>
           </header>
           <AnnouncementBanner />

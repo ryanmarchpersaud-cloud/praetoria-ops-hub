@@ -145,7 +145,21 @@ export type OutboundMessage = {
   sent_copy_status: 'not_attempted' | 'sent_copy_pending' | 'appended' | 'skipped_duplicate' | 'failed';
   sent_copy_attempts: number;
   sent_copy_appended_at: string | null;
+  sent_copy_last_retry_outcome: string | null;
+  sent_copy_last_retry_at: string | null;
 };
+
+/**
+ * Phase 1D — explicit column list. `rfc822_message` and `smtp_result` are
+ * service-role only and are never requested from the browser.
+ */
+const OUTBOUND_COLUMNS = [
+  'id', 'mailbox_id', 'requested_by_email', 'from_address', 'to_address', 'subject',
+  'body_text', 'idempotency_key', 'message_id_header', 'status', 'error_text',
+  'created_at', 'approved_at', 'sent_at', 'failed_at',
+  'sent_copy_status', 'sent_copy_attempts', 'sent_copy_appended_at',
+  'sent_copy_last_error', 'sent_copy_last_retry_outcome', 'sent_copy_last_retry_at',
+].join(', ');
 
 
 /** Phase 1B — staging outbound log (owner/admin only via RLS). */
@@ -155,7 +169,7 @@ export function useCommsOutbound() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('comms_outbound_messages' as never)
-        .select('*')
+        .select(OUTBOUND_COLUMNS)
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw error;
