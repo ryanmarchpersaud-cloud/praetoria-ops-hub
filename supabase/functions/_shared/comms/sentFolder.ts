@@ -97,3 +97,24 @@ export function buildAppendCommand(folder: VerifiedSentFolder, rfc822: string, f
 export function appendRetryDelaySeconds(attempt: number): number {
   return Math.min(3600, 30 * Math.pow(2, Math.max(0, attempt - 1)));
 }
+
+/** Parse the UID list from an `* SEARCH ...` / `* ESEARCH ...` response. */
+export function parseSearchUids(response: string): number[] {
+  const uids: number[] = [];
+  for (const line of response.split(/\r?\n/)) {
+    const m = line.match(/^\*\s+SEARCH\b(.*)$/i);
+    if (!m) continue;
+    for (const tok of m[1].trim().split(/\s+/)) {
+      const n = Number(tok);
+      if (Number.isInteger(n) && n > 0) uids.push(n);
+    }
+  }
+  return [...new Set(uids)];
+}
+
+/** Parse `[APPENDUID <uidvalidity> <uid>]` from a tagged APPEND OK response. */
+export function parseAppendUid(response: string): { uidValidity: number; uid: number } | null {
+  const m = response.match(/\[APPENDUID\s+(\d+)\s+(\d+)\]/i);
+  if (!m) return null;
+  return { uidValidity: Number(m[1]), uid: Number(m[2]) };
+}
