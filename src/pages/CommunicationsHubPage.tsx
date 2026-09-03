@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -27,19 +26,16 @@ export default function CommunicationsHubPage() {
 
   if (settings && settings.hub_enabled === false) {
     return (
-      <AppLayout>
-        <Card>
+      <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
             The Communications Hub is currently disabled.
           </CardContent>
-        </Card>
-      </AppLayout>
+      </Card>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="space-y-4">
+    <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Mail className="h-5 w-5 text-primary" />
@@ -160,6 +156,5 @@ export default function CommunicationsHubPage() {
           </Card>
         </div>
       </div>
-    </AppLayout>
   );
 }
