@@ -201,6 +201,14 @@ export default function CommunicationsHubPage() {
                   <pre className="whitespace-pre-wrap break-words text-sm bg-muted/40 rounded-md p-3 max-h-[420px] overflow-auto font-sans">
                     {selected.body_text || selected.snippet || '(no text content imported)'}
                   </pre>
+                  {(selected.message_id_header || selected.in_reply_to_header) && (
+                    <div className="text-[11px] text-muted-foreground space-y-0.5 break-all">
+                      <div>Message-ID {selected.message_id_header || '—'}</div>
+                      <div>In-Reply-To {selected.in_reply_to_header || '—'}</div>
+                      <div>References {selected.references_header || '—'}</div>
+                    </div>
+                  )}
+
                   <p className="text-[11px] text-muted-foreground">
                     {outboundEnabled
                       ? 'Replies are plain text, staging-only and require your explicit confirmation before sending.'
