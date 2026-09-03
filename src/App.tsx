@@ -39,6 +39,8 @@ import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
+const CommunicationsHubPage = lazy(() => import("./pages/CommunicationsHubPage"));
+
 
 import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import AuthEmailHealthPage from "./pages/AuthEmailHealthPage";
