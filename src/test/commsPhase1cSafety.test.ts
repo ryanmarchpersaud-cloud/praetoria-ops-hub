@@ -21,8 +21,8 @@ import {
   parseAppendUid,
 
 } from '../../supabase/functions/_shared/comms/sentFolder.ts';
+import { OUTBOUND_FORBIDDEN_COLUMNS, OUTBOUND_SAFE_COLUMNS, toOutboundDto } from '../../supabase/functions/_shared/comms/outboundDto.ts';
 import {
-import { OUTBOUND_FORBIDDEN_COLUMNS, OUTBOUND_SAFE_COLUMNS, toOutboundDto } from "../../supabase/functions/_shared/comms/outboundDto";
   planInitialSync,
   defaultSyncConfig,
   establishBaseline,
