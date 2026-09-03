@@ -132,7 +132,7 @@ describe('prae approval — decisions', () => {
   it('an explicit edit invalidates a prior approval', async () => {
     const { approval, audit } = await pending();
     const out = invalidateOnEdit(approval, audit, NOW);
-    expect(asFail(out).approval.state).toBe('invalidated');
+    expect(out.approval.state).toBe('invalidated');
     expect(out.approval.nonceUsed).toBe(true);
   });
 });
