@@ -1,0 +1,1 @@
+ALTER TABLE public.comms_outbound_messages ADD COLUMN IF NOT EXISTS rfc822_message text;
