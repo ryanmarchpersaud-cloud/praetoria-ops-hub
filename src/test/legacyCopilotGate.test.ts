@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-const ROOT = process.cwd();
-const fn = readFileSync(join(ROOT, 'supabase/functions/chat-copilot/index.ts'), 'utf8');
-const layout = readFileSync(join(ROOT, 'src/components/AppLayout.tsx'), 'utf8');
+// @ts-expect-error vite raw import
+import fn from '../../supabase/functions/chat-copilot/index.ts?raw';
+// @ts-expect-error vite raw import
+import layout from '../components/AppLayout.tsx?raw';
 
 // Mirror of the server-side gate (fail-closed by construction).
 function isLegacyCopilotEnabled(raw: string | undefined | null): boolean {
