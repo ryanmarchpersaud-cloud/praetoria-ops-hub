@@ -78,3 +78,31 @@ One external deliverability test is prepared but not sent; the recipient will be
 No production mailbox credentials or connections, no automatic or scheduled polling (0 cron jobs),
 no additional email sent, no AI processing (`ai_processing_enabled = false`), no Twilio, Resend, n8n
 or DNS changes. AI retention and data-handling approval remains unresolved.
+
+## Phase 1C.1 — Sent-folder discovery (2026-09-03)
+
+Read-only IMAP LIST/SPECIAL-USE discovery on the staging mailbox.
+
+Redacted LIST response:
+
+```
+d3 LIST "" "*" RETURN (SPECIAL-USE)
+* LIST (\Drafts) "/" "Drafts"
+* LIST () "/" "INBOX"
+* LIST (\Sent) "/" "Sent Items"      <-- unique \Sent mailbox
+* LIST (\Junk) "/" "Spam"
+* LIST (\Trash) "/" "Trash"
+d3 OK LIST completed
+```
+
+Discovered Sent folder: `Sent Items` (source `special_use`, verified 2026-09-03T22:49:48Z).
+Stored on the mailbox row with the full folder snapshot. No folder was created,
+renamed, subscribed to or modified. No email sent, no APPEND issued.
+
+Sent-copy operations now require `requireVerifiedSentFolder()`; there is no
+fallback to a literal "Sent". Zero or multiple \Sent candidates set
+`sent_folder_selection_required = true` and block appends until an owner selects.
+
+Attachment handling remains disabled and is NOT production-ready: no operational
+malware-scanning service is connected. The custom HTML rendering path stays off;
+only sanitized plain text is displayed.
