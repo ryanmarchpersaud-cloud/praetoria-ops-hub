@@ -110,7 +110,8 @@ describe('attachment safety (feature disabled)', () => {
 });
 
 describe('sent-folder consistency', () => {
-  const base = { sendState: 'sent' as const, sentCopyEnabled: true, messageIdHeader: '<a@b>', existsInSentFolder: false, attempts: 0 };
+  const verified = { name: 'Sent Items', source: 'special_use' as const, verifiedAt: '2026-09-03T00:00:00Z' };
+  const base = { sendState: 'sent' as const, sentCopyEnabled: true, messageIdHeader: '<a@b>', existsInSentFolder: false, attempts: 0, sentFolder: verified };
 
   it('never appends before SMTP acceptance', () => {
     expect(appendDecision({ ...base, sendState: 'sending' })).toEqual({ action: 'skip', status: 'not_attempted', reason: 'smtp_not_accepted' });
@@ -143,9 +144,9 @@ describe('sent-folder consistency', () => {
     expect(appendDecision({ ...base, attempts: MAX_APPEND_ATTEMPTS }).action).toBe('skip');
   });
 
-  it('builds safe IMAP commands', () => {
-    expect(buildAppendCommand('Sent', 'Subject: x\r\n\r\nbody')).toBe('APPEND "Sent" (\\Seen) {18}');
-    expect(buildDuplicateSearch('Sent', '<id@x>\r\nDELETE')).not.toContain('\r\n');
+  it('builds safe IMAP commands against the verified folder', () => {
+    expect(buildAppendCommand(verified, 'Subject: x\r\n\r\nbody')).toBe('APPEND "Sent Items" (\\Seen) {18}');
+    expect(buildDuplicateSearch(verified, '<id@x>\r\nDELETE')).not.toContain('\r\n');
   });
 
   it('backs off between append retries', () => {
