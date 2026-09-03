@@ -22,6 +22,10 @@ import {
 
 const NOW = new Date('2026-09-03T12:00:00.000Z');
 
+type Failure = Extract<Awaited<ReturnType<typeof decideApproval>>, { ok: false }>;
+const asFail = (r: Awaited<ReturnType<typeof decideApproval>>) => r as Failure;
+const last = <T,>(a: readonly T[]) => a[a.length - 1];
+
 const emailAction: ProposedAction = {
   channel: 'email',
   from: 'staging@example.com',
@@ -67,7 +71,7 @@ describe('prae approval — decisions', () => {
     expect(r.approval.state).toBe('approved');
     expect(r.approval.nonceUsed).toBe(true);
     expect(r.approval.decidedByUserId).toBe('u-owner');
-    expect(r.audit.at(-1)?.event).toBe('approved');
+    expect(last(r.audit).event).toBe('approved');
   });
 
   it('rejects replay of a used approval', async () => {
@@ -84,8 +88,8 @@ describe('prae approval — decisions', () => {
     });
     expect(replay.ok).toBe(false);
     if (replay.ok) return;
-    expect(replay.reason).toBe('nonce_already_used');
-    expect(replay.audit.at(-1)?.event).toBe('replay_rejected');
+    expect(asFail(replay).reason).toBe('nonce_already_used');
+    expect(last(replay.audit).event).toBe('replay_rejected');
   });
 
   it('rejects a mismatched nonce', async () => {
@@ -95,7 +99,7 @@ describe('prae approval — decisions', () => {
       approver: owner, decision: 'approve', now: NOW, emergencyStop: false,
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe('nonce_mismatch');
+    if (!r.ok) expect(asFail(r).reason).toBe('nonce_mismatch');
   });
 
   it('rejects and expires a stale approval', async () => {
@@ -107,8 +111,8 @@ describe('prae approval — decisions', () => {
     });
     expect(r.ok).toBe(false);
     if (r.ok) return;
-    expect(r.reason).toBe('expired');
-    expect(r.approval.state).toBe('expired');
+    expect(asFail(r).reason).toBe('expired');
+    expect(asFail(r).approval.state).toBe('expired');
   });
 
   it('invalidates the approval when the content changed', async () => {
@@ -120,15 +124,15 @@ describe('prae approval — decisions', () => {
     });
     expect(r.ok).toBe(false);
     if (r.ok) return;
-    expect(r.reason).toBe('content_changed');
-    expect(r.approval.state).toBe('invalidated');
-    expect(r.audit.at(-1)?.event).toBe('invalidated_by_edit');
+    expect(asFail(r).reason).toBe('content_changed');
+    expect(asFail(r).approval.state).toBe('invalidated');
+    expect(last(r.audit).event).toBe('invalidated_by_edit');
   });
 
   it('an explicit edit invalidates a prior approval', async () => {
     const { approval, audit } = await pending();
     const out = invalidateOnEdit(approval, audit, NOW);
-    expect(out.approval.state).toBe('invalidated');
+    expect(asFail(out).approval.state).toBe('invalidated');
     expect(out.approval.nonceUsed).toBe(true);
   });
 });
@@ -144,7 +148,7 @@ describe('prae approval — role and division isolation', () => {
         decision: 'approve', now: NOW, emergencyStop: false,
       });
       expect(r.ok).toBe(false);
-      if (!r.ok) expect(r.reason).toBe('role_not_permitted');
+      if (!r.ok) expect(asFail(r).reason).toBe('role_not_permitted');
     },
   );
 
@@ -156,7 +160,7 @@ describe('prae approval — role and division isolation', () => {
       decision: 'approve', now: NOW, emergencyStop: false,
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe('division_not_permitted');
+    if (!r.ok) expect(asFail(r).reason).toBe('division_not_permitted');
   });
 
   it('permits only the documented approver roles', () => {
@@ -173,8 +177,8 @@ describe('prae approval — emergency stop and execution gate', () => {
     });
     expect(r.ok).toBe(false);
     if (r.ok) return;
-    expect(r.reason).toBe('emergency_stop_active');
-    expect(r.audit.at(-1)?.event).toBe('emergency_stop_rejected');
+    expect(asFail(r).reason).toBe('emergency_stop_active');
+    expect(last(r.audit).event).toBe('emergency_stop_rejected');
   });
 
   it('execution stays disabled even for an approved request', async () => {
