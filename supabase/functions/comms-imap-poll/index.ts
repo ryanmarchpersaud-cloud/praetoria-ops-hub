@@ -36,8 +36,7 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   // 0. Endpoint authorization — POST + scheduler secret. No browser path.
-  const configured = Deno.env.get("COMMS_SCHEDULER_SECRET_ROTATED") ??
-    Deno.env.get("COMMS_SCHEDULER_SECRET");
+  const configured = Deno.env.get("COMMS_SCHEDULER_SECRET");
   const gate = authorizeSchedulerRequest(
     req.method,
     req.headers.get("x-comms-scheduler-secret"),
