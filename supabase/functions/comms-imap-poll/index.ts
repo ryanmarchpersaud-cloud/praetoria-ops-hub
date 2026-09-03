@@ -42,21 +42,26 @@ function readLiteral(response: string, section: string): string {
   return response.slice(start, start + size);
 }
 
-/** Pull the first text/plain part out of a MIME body; falls back to the raw text. */
+/** Pull the first text/plain part out of a (possibly nested) MIME body. */
 function extractPlainText(raw: string): string {
   if (!raw) return "";
-  const boundary = raw.match(/boundary="?([^"\r\n;]+)"?/i)?.[1];
-  if (!boundary) return decodeQP(raw).trim();
-  const parts = raw.split(`--${boundary}`);
-  for (const part of parts) {
+  const boundaries = [...raw.matchAll(/boundary="?([^"\r\n;]+)"?/gi)].map((m) => m[1]);
+  if (boundaries.length === 0) return decodeQP(raw).trim();
+
+  const segments = boundaries
+    .reduce<string[]>((acc, b) => acc.flatMap((s) => s.split(`--${b}`)), [raw]);
+
+  for (const part of segments) {
     if (/Content-Type:\s*text\/plain/i.test(part)) {
       const body = part.split("\r\n\r\n").slice(1).join("\r\n\r\n");
       const decoded = /quoted-printable/i.test(part) ? decodeQP(body) : body;
-      if (decoded.trim()) return decoded.trim();
+      const cleaned = decoded.replace(/^--+\s*$/gm, "").trim();
+      if (cleaned) return cleaned;
     }
   }
   return decodeQP(raw).trim();
 }
+
 
 function decodeQP(s: string): string {
   return s
