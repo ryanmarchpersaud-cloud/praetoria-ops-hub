@@ -1,7 +1,8 @@
 // Phase 1C.1 — READ-ONLY IMAP folder discovery for the staging mailbox.
 //
 // Guarantees:
-//  * POST + dedicated COMMS_SCHEDULER_SECRET header. No CORS, no browser path.
+//  * POST only. Authorized either by the dedicated COMMS_SCHEDULER_SECRET
+//    header (server-to-server) or by an owner/admin session (manual run).
 //  * Issues CAPABILITY and LIST only. Never CREATE / RENAME / SUBSCRIBE /
 //    DELETE / APPEND / STORE, never selects a mailbox, never sends mail.
 //  * The Sent folder is taken from the server's \Sent SPECIAL-USE attribute.
@@ -20,6 +21,7 @@ import {
   parseListResponse,
   serverSupportsSpecialUse,
 } from "../_shared/comms/folderDiscovery.ts";
+import { corsHeaders, requireAuth, requireRole } from "../_shared/auth.ts";
 
 const enc = new TextEncoder();
 const CONNECT_TIMEOUT_MS = 10_000;
@@ -29,10 +31,13 @@ const COMMAND_TIMEOUT_MS = 20_000;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
   const configured = Deno.env.get("COMMS_SCHEDULER_SECRET_ROTATED") ??
     Deno.env.get("COMMS_SCHEDULER_SECRET");
   const gate = authorizeSchedulerRequest(
@@ -41,7 +46,13 @@ Deno.serve(async (req) => {
     configured,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
   );
-  if (!gate.ok) return json({ error: gate.error }, gate.status);
+  if (!gate.ok) {
+    // Fall back to an authenticated owner/admin session for manual runs.
+    const auth = await requireAuth(req);
+    if (!auth.ok) return json({ error: "Unauthorized" }, 401);
+    const roleGate = await requireRole(auth, ["admin", "owner"]);
+    if (!roleGate.ok) return json({ error: "Forbidden" }, 403);
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
