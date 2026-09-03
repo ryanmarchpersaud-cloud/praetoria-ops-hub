@@ -11144,6 +11144,119 @@ export type Database = {
         }
         Relationships: []
       }
+      prae_approval_audit: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          approval_id: string
+          created_at: string
+          detail: string | null
+          event: string
+          id: string
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          approval_id: string
+          created_at?: string
+          detail?: string | null
+          event: string
+          id?: string
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          approval_id?: string
+          created_at?: string
+          detail?: string | null
+          event?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prae_approval_audit_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "prae_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prae_approvals: {
+        Row: {
+          channel: string
+          content_hash: string
+          created_at: string
+          decided_at: string | null
+          decided_by_role: string | null
+          decided_by_user_id: string | null
+          division: string
+          expires_at: string
+          id: string
+          is_synthetic: boolean
+          nonce: string
+          nonce_used: boolean
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          content_hash: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by_role?: string | null
+          decided_by_user_id?: string | null
+          division: string
+          expires_at: string
+          id?: string
+          is_synthetic?: boolean
+          nonce: string
+          nonce_used?: boolean
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          content_hash?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by_role?: string | null
+          decided_by_user_id?: string | null
+          division?: string
+          expires_at?: string
+          id?: string
+          is_synthetic?: boolean
+          nonce?: string
+          nonce_used?: boolean
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prae_emergency_stop: {
+        Row: {
+          id: boolean
+          reason: string | null
+          stopped: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: boolean
+          reason?: string | null
+          stopped?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: boolean
+          reason?: string | null
+          stopped?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       products_services: {
         Row: {
           allow_customer_quantity: boolean

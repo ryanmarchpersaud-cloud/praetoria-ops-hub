@@ -156,3 +156,19 @@ service-role row.
    interface; it touches no grants, policies or data.
 4. Columns `sent_copy_last_retry_outcome` / `sent_copy_last_retry_at` may be
    dropped only together with the code that writes them.
+
+## Phase 1E — Prae activity, approval foundation (rollback)
+
+Frontend (`src/pages/PraeActivityPage.tsx`, `src/components/prae/praeActivityDemo.ts`,
+`src/components/prae/PraeApprovalDetail.tsx`, the `/prae` route, the panel link) is synthetic and
+can be deleted with no data impact.
+
+Server-side model `supabase/functions/_shared/prae/approvalModel.ts` is pure and imported by tests
+and UI only — no edge function calls it, nothing is deployed for it.
+
+Database rollback: `prae_approvals`, `prae_approval_audit`, `prae_emergency_stop` and
+`prae_audit_append_only()` may be dropped (audit rows are append-only; dropping the table is the
+only removal path and requires explicit approval). As with Phase 1D, `GRANT ALL` to `anon` or
+`authenticated` must never be restored on any comms or Prae table.
+
+`prae_emergency_stop.stopped` ships as `true` and must stay `true` until execution is approved.

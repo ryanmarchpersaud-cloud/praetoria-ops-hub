@@ -39,6 +39,7 @@ import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
+const PraeActivityPage = lazy(() => import("./pages/PraeActivityPage"));
 const CommunicationsHubPage = lazy(() => import("./pages/CommunicationsHubPage"));
 
 
@@ -656,6 +657,8 @@ function AppRoutes() {
         <Route path="/invoices/:id" element={<ModuleGuard module="opsOrFinance"><InvoiceDetail /></ModuleGuard>} />
 
         <Route path="/activity" element={<ModuleGuard module="ownerOnly"><ActivityPage /></ModuleGuard>} />
+        <Route path="/prae" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PraeActivityPage /></Suspense></ModuleGuard>} />
+
         <Route path="/communications" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><CommunicationsHubPage /></Suspense></ModuleGuard>} />
 
         <Route path="/tasks" element={<ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><TasksPage /></Suspense></ModuleGuard>} />

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.prae_audit_append_only() FROM PUBLIC, anon, authenticated;

@@ -6,6 +6,7 @@
 //  * Synthetic demonstration content only (see praeDemoData.ts).
 //  * Every control that would act on real data is labelled "Not enabled yet".
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -81,7 +82,15 @@ export default function PraePanel({
             Praetoria Business Brain — {context}. Interface preview using sample content. Prae is
             not connected to any AI service and sends nothing.
           </SheetDescription>
+          <Link
+            to="/prae"
+            onClick={() => onOpenChange(false)}
+            className="text-xs font-medium text-primary underline underline-offset-2"
+          >
+            Open Prae Activity &amp; Approvals
+          </Link>
         </SheetHeader>
+
 
         <div className="px-4 py-3 border-b border-border space-y-2">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
