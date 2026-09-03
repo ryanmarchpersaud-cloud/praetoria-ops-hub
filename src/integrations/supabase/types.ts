@@ -853,8 +853,11 @@ export type Database = {
           id: string
           imap_uid: number
           imported_at: string
+          in_reply_to_header: string | null
           mailbox_id: string
           message_id_header: string | null
+          references_header: string | null
+          reply_to_outbound_id: string | null
           sent_at: string | null
           snippet: string | null
           subject: string | null
@@ -874,8 +877,11 @@ export type Database = {
           id?: string
           imap_uid: number
           imported_at?: string
+          in_reply_to_header?: string | null
           mailbox_id: string
           message_id_header?: string | null
+          references_header?: string | null
+          reply_to_outbound_id?: string | null
           sent_at?: string | null
           snippet?: string | null
           subject?: string | null
@@ -895,8 +901,11 @@ export type Database = {
           id?: string
           imap_uid?: number
           imported_at?: string
+          in_reply_to_header?: string | null
           mailbox_id?: string
           message_id_header?: string | null
+          references_header?: string | null
+          reply_to_outbound_id?: string | null
           sent_at?: string | null
           snippet?: string | null
           subject?: string | null
@@ -909,6 +918,13 @@ export type Database = {
             columns: ["mailbox_id"]
             isOneToOne: false
             referencedRelation: "comms_mailboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comms_messages_reply_to_outbound_id_fkey"
+            columns: ["reply_to_outbound_id"]
+            isOneToOne: false
+            referencedRelation: "comms_outbound_messages"
             referencedColumns: ["id"]
           },
         ]
