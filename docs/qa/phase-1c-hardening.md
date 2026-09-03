@@ -106,3 +106,11 @@ fallback to a literal "Sent". Zero or multiple \Sent candidates set
 Attachment handling remains disabled and is NOT production-ready: no operational
 malware-scanning service is connected. The custom HTML rendering path stays off;
 only sanitized plain text is displayed.
+
+## Phase 1C.3 — controlled SMTP + Sent-copy staging test (2026-09-03)
+
+- Pre-send read-only discovery: exactly one `\Sent` mailbox — `* LIST (\Sent) "/" "Sent Items"`.
+- One email sent (IONOS SMTP 587/STARTTLS), Message-ID `<f0664fe1-...@praetoriagroup.ca>`, queue id `0Lg28r-1wVLLx0BAZ-00mJw6`.
+- APPEND to `Sent Items` with `\Seen`, 652 octets of the canonical (non dot-stuffed) RFC822, `APPENDUID 1788469057 1`; post-append search = exactly 1 match.
+- Append-only retry → `skipped_duplicate`, no send, no second append.
+- `sent_copy_enabled` opened for the send and closed in a `finally` block; confirmed `false` afterwards.
