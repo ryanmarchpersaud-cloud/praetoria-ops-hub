@@ -12,7 +12,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import {
   authorizeSchedulerRequest,
-  checkpointDecision,
+  processUidBatch,
   extractPlainText,
   headerValue,
   imapQuote,
