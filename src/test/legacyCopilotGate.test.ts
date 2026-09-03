@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-// @ts-expect-error vite raw import
 import fn from '../../supabase/functions/chat-copilot/index.ts?raw';
-// @ts-expect-error vite raw import
 import layout from '../components/AppLayout.tsx?raw';
 
 // Mirror of the server-side gate (fail-closed by construction).
