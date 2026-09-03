@@ -15,6 +15,9 @@ project_id = "czltgypfgegjmcsczpms"
     verify_jwt = false
   [functions.comms-imap-poll]
     verify_jwt = false
+  [functions.phase1a-ai-selftest]
+    verify_jwt = false
+
 
 
   [functions.send-email]
