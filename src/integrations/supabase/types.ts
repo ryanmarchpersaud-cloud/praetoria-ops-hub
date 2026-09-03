@@ -870,6 +870,7 @@ export type Database = {
           email_address: string
           emergency_paused: boolean
           environment: string
+          folder_list_snapshot: Json | null
           id: string
           imap_host: string
           imap_port: number
@@ -877,7 +878,11 @@ export type Database = {
           is_active: boolean
           label: string
           outbound_enabled: boolean
-          sent_folder: string
+          sent_folder: string | null
+          sent_folder_candidates: Json | null
+          sent_folder_selection_required: boolean
+          sent_folder_source: string | null
+          sent_folder_verified_at: string | null
           smtp_host: string
           smtp_port: number
           sync_start_mode: string
@@ -901,6 +906,7 @@ export type Database = {
           email_address: string
           emergency_paused?: boolean
           environment?: string
+          folder_list_snapshot?: Json | null
           id?: string
           imap_host?: string
           imap_port?: number
@@ -908,7 +914,11 @@ export type Database = {
           is_active?: boolean
           label: string
           outbound_enabled?: boolean
-          sent_folder?: string
+          sent_folder?: string | null
+          sent_folder_candidates?: Json | null
+          sent_folder_selection_required?: boolean
+          sent_folder_source?: string | null
+          sent_folder_verified_at?: string | null
           smtp_host?: string
           smtp_port?: number
           sync_start_mode?: string
@@ -932,6 +942,7 @@ export type Database = {
           email_address?: string
           emergency_paused?: boolean
           environment?: string
+          folder_list_snapshot?: Json | null
           id?: string
           imap_host?: string
           imap_port?: number
@@ -939,7 +950,11 @@ export type Database = {
           is_active?: boolean
           label?: string
           outbound_enabled?: boolean
-          sent_folder?: string
+          sent_folder?: string | null
+          sent_folder_candidates?: Json | null
+          sent_folder_selection_required?: boolean
+          sent_folder_source?: string | null
+          sent_folder_verified_at?: string | null
           smtp_host?: string
           smtp_port?: number
           sync_start_mode?: string
