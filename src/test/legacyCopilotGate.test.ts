@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import fn from '../../supabase/functions/chat-copilot/index.ts?raw';
+import gate from '../../supabase/functions/chat-copilot/legacyGate.ts?raw';
 import layout from '../components/AppLayout.tsx?raw';
 
 describe('Phase 1D.2 — legacy co-pilot gate is fail-closed', () => {
   it('returns a neutral 403 message with no operational detail', () => {
-    expect(fn).toContain('"Legacy AI Co-pilot disabled"');
-    expect(fn).toContain('status: 403');
+    expect(gate).toContain('"Legacy AI Co-pilot disabled"');
+    expect(gate).toContain('status: 403');
   });
 
   it('checks the gate after auth but before service-role client, queries and gateway', () => {
