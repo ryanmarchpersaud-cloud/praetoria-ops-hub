@@ -36,10 +36,12 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   // 0. Endpoint authorization — POST + scheduler secret. No browser path.
+  const configured = Deno.env.get("COMMS_SCHEDULER_SECRET_ROTATED") ??
+    Deno.env.get("COMMS_SCHEDULER_SECRET");
   const gate = authorizeSchedulerRequest(
     req.method,
     req.headers.get("x-comms-scheduler-secret"),
-    Deno.env.get("COMMS_SCHEDULER_SECRET"),
+    configured,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
   );
   if (!gate.ok) return json({ error: gate.error }, gate.status);
@@ -49,12 +51,43 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { /* no body */ }
+  const oneShot = body?.one_shot === true;
+
+  // One-shot mode may temporarily lift the global pause switch. The switch is
+  // ALWAYS forced back to false in the finally block, including on failure.
+  let mustRestorePause = false;
+  try {
+    return await runPoll(supabase, oneShot, () => { mustRestorePause = true; });
+  } finally {
+    if (mustRestorePause) {
+      try {
+        await supabase.from("comms_settings")
+          .update({ polling_enabled: false, updated_at: new Date().toISOString() })
+          .eq("id", true);
+      } catch { /* best effort — see cleanup verification below */ }
+    }
+  }
+});
+
+async function runPoll(
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+  oneShot: boolean,
+  markRestore: () => void,
+): Promise<Response> {
   // 1. Global pause switch
   const { data: settings } = await supabase.from("comms_settings").select("*").eq("id", true).maybeSingle();
   if (!settings?.polling_enabled) {
-    return json({ skipped: true, reason: "polling_disabled" });
+    if (!oneShot) return json({ skipped: true, reason: "polling_disabled" });
+    markRestore();
+    await supabase.from("comms_settings")
+      .update({ polling_enabled: true, updated_at: new Date().toISOString() })
+      .eq("id", true);
   }
-  const maxMessages = Math.min(settings.max_messages_per_run ?? 25, 100);
+  const maxMessages = Math.min(settings?.max_messages_per_run ?? 25, 100);
+
 
   const user = Deno.env.get("IONOS_STAGING_EMAIL_USER");
   const pass = Deno.env.get("IONOS_STAGING_EMAIL_PASSWORD");
