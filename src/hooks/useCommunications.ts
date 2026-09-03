@@ -32,14 +32,7 @@ export function useCommsMailboxes() {
         .select('*')
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return (data ?? []) as unknown as Array<{
-        id: string;
-        label: string;
-        email_address: string;
-        environment: string;
-        division: string | null;
-        is_active: boolean;
-      }>;
+      return (data ?? []) as unknown as CommsMailbox[];
     },
   });
 }
