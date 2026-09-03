@@ -291,4 +291,5 @@ async function runPoll(
   } finally {
     try { conn?.close(); } catch { /* already closed */ }
   }
-});
+}
+
