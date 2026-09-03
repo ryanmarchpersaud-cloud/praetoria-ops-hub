@@ -170,6 +170,8 @@ Deno.serve(async (req) => {
   if (!smtpUser || !smtpPass) return json({ error: "Staging mailbox secrets not configured" }, 500);
 
   const audit = (event: string, detail?: string, metadata?: Record<string, unknown>) =>
+    admin.from("comms_audit_log").insert({ mailbox_id: mailbox.id, event, detail, metadata });
+
 
   /**
    * Append the canonical RFC822 message to the verified Sent folder.
