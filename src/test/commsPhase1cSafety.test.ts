@@ -144,9 +144,9 @@ describe('sent-folder consistency', () => {
     expect(appendDecision({ ...base, attempts: MAX_APPEND_ATTEMPTS }).action).toBe('skip');
   });
 
-  it('builds safe IMAP commands', () => {
-    expect(buildAppendCommand('Sent', 'Subject: x\r\n\r\nbody')).toBe('APPEND "Sent" (\\Seen) {18}');
-    expect(buildDuplicateSearch('Sent', '<id@x>\r\nDELETE')).not.toContain('\r\n');
+  it('builds safe IMAP commands against the verified folder', () => {
+    expect(buildAppendCommand(verified, 'Subject: x\r\n\r\nbody')).toBe('APPEND "Sent Items" (\\Seen) {18}');
+    expect(buildDuplicateSearch(verified, '<id@x>\r\nDELETE')).not.toContain('\r\n');
   });
 
   it('backs off between append retries', () => {
