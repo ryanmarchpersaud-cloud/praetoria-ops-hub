@@ -300,12 +300,44 @@ Deno.serve(async (req) => {
       const safe = redactSmtp(transcript, [smtpPass, smtpUser]);
       const { data: sent } = await admin
         .from("comms_outbound_messages")
-        .update({ status: "sent", sent_at: new Date().toISOString(), smtp_result: safe, error_text: null })
+        .update({
+          status: "sent",
+          sent_at: new Date().toISOString(),
+          smtp_result: safe,
+          error_text: null,
+          rfc822_message: message,
+        })
         .eq("id", claimed.id)
         .select()
         .maybeSingle();
       await audit("outbound_sent", `to=${claimed.to_address}`, { outbound_id: claimed.id });
-      return json({ record: sent });
+
+      // ------------------------------------------------ Sent-folder copy
+      // Runs only AFTER SMTP acceptance. A failure here never resends the email.
+      const temporaryWindow = payload.enable_sent_copy_for_this_send === true;
+      let sentCopy: Awaited<ReturnType<typeof performSentCopy>> | null = null;
+      try {
+        if (temporaryWindow) {
+          await admin.from("comms_settings").update({ sent_copy_enabled: true }).eq("id", true);
+          await audit("sent_copy_window_opened", `outbound_id=${claimed.id}`);
+        }
+        const { data: liveSettings } = await admin
+          .from("comms_settings").select("sent_copy_enabled").eq("id", true).maybeSingle();
+        sentCopy = await performSentCopy(
+          { ...(sent ?? claimed), rfc822_message: message },
+          !!liveSettings?.sent_copy_enabled,
+          true,
+        );
+      } finally {
+        if (temporaryWindow) {
+          await admin.from("comms_settings").update({ sent_copy_enabled: false }).eq("id", true);
+          await audit("sent_copy_window_closed", `outbound_id=${claimed.id}`);
+        }
+      }
+
+      const { data: finalRecord } = await admin
+        .from("comms_outbound_messages").select("*").eq("id", claimed.id).maybeSingle();
+      return json({ record: finalRecord ?? sent, sent_copy: sentCopy });
     } catch (e) {
       const raw = e instanceof Error ? e.message : "SMTP failure";
       const safe = redactSmtp(raw, [smtpPass, smtpUser]);
@@ -317,5 +349,36 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ------------------------------------------------------- sent_copy_retry
+  // Append-only idempotency path. NEVER sends an email under any circumstance.
+  if (action === "sent_copy_retry") {
+    const id = payload.id;
+    if (typeof id !== "string") return json({ error: "Outbound id required" }, 400);
+    const { data: record } = await admin
+      .from("comms_outbound_messages").select("*").eq("id", id).maybeSingle();
+    if (!record) return json({ error: "Record not found" }, 404);
+
+    const temporaryWindow = payload.enable_sent_copy_for_this_send === true;
+    let outcome;
+    try {
+      if (temporaryWindow) {
+        await admin.from("comms_settings").update({ sent_copy_enabled: true }).eq("id", true);
+        await audit("sent_copy_window_opened", `retry outbound_id=${record.id}`);
+      }
+      const { data: liveSettings } = await admin
+        .from("comms_settings").select("sent_copy_enabled").eq("id", true).maybeSingle();
+      outcome = await performSentCopy(record, !!liveSettings?.sent_copy_enabled, true);
+    } finally {
+      if (temporaryWindow) {
+        await admin.from("comms_settings").update({ sent_copy_enabled: false }).eq("id", true);
+        await audit("sent_copy_window_closed", `retry outbound_id=${record.id}`);
+      }
+    }
+    const { data: finalRecord } = await admin
+      .from("comms_outbound_messages").select("*").eq("id", record.id).maybeSingle();
+    return json({ record: finalRecord, sent_copy: outcome, email_sent: false });
+  }
+
   return json({ error: "Unknown action" }, 400);
 });
+
