@@ -23,6 +23,37 @@ export function useCommsSettings() {
   });
 }
 
+/** Phase 1C — production-ready mailbox configuration shape (placeholders only). */
+export type CommsMailbox = {
+  id: string;
+  label: string;
+  display_name: string | null;
+  email_address: string;
+  environment: string;
+  division: string | null;
+  assigned_rep_user_id: string | null;
+  credential_secret_prefix: string | null;
+  imap_host: string;
+  imap_port: number;
+  smtp_host: string;
+  smtp_port: number;
+  sent_folder: string;
+  inbound_enabled: boolean;
+  outbound_enabled: boolean;
+  emergency_paused: boolean;
+  sync_start_mode: 'future_only' | 'approved_backfill';
+  baseline_uid: number | null;
+  baseline_established_at: string | null;
+  backfill_from_date: string | null;
+  backfill_to_date: string | null;
+  backfill_from_uid: number | null;
+  backfill_to_uid: number | null;
+  backfill_approved_by: string | null;
+  backfill_approved_at: string | null;
+  backfill_estimated_count: number | null;
+  is_active: boolean;
+};
+
 export function useCommsMailboxes() {
   return useQuery({
     queryKey: ['comms-mailboxes'],
