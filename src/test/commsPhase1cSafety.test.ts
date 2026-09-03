@@ -22,6 +22,7 @@ import {
 
 } from '../../supabase/functions/_shared/comms/sentFolder.ts';
 import {
+import { OUTBOUND_FORBIDDEN_COLUMNS, OUTBOUND_SAFE_COLUMNS, toOutboundDto } from "../../supabase/functions/_shared/comms/outboundDto";
   planInitialSync,
   defaultSyncConfig,
   establishBaseline,
@@ -313,5 +314,69 @@ describe('Phase 1D — Prae interface shell', () => {
     expect(Object.values(PRAE_STATUS_LABEL)).toEqual([
       'Idle', 'Listening', 'Thinking', 'Preparing Draft', 'Waiting for Approval', 'Complete',
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 1D.1 — outbound response DTO (allow list)
+// ---------------------------------------------------------------------------
+describe('Phase 1D.1 outbound response DTO', () => {
+  const MIME_MARKER = 'ZZZ_MIME_MARKER_MUST_NOT_LEAK_9f3a';
+  const SMTP_MARKER = 'ZZZ_SMTP_MARKER_MUST_NOT_LEAK_7c1b';
+  const FUTURE_MARKER = 'ZZZ_FUTURE_SECRET_MARKER_4d2e';
+
+  const serviceRoleRow = {
+    id: 'out-1',
+    mailbox_id: 'mb-1',
+    to_address: 'admin@example.com',
+    subject: 'staging check',
+    body_text: 'hello',
+    status: 'sent',
+    sent_copy_status: 'appended',
+    sent_copy_last_retry_outcome: 'skipped_duplicate',
+    rfc822_message: `Subject: x\r\n\r\n${MIME_MARKER}`,
+    smtp_result: `250 accepted ${SMTP_MARKER}`,
+    // a hypothetical future server-only column
+    smtp_credential_ref: FUTURE_MARKER,
+  };
+
+  const responsePaths = [
+    (r: Record<string, unknown>) => ({ record: toOutboundDto(r) }),
+    (r: Record<string, unknown>) => ({ record: toOutboundDto(r), duplicate: true }),
+    (r: Record<string, unknown>) => ({ record: toOutboundDto(r), sent_copy: { status: 'appended' } }),
+    (r: Record<string, unknown>) => ({ record: toOutboundDto(r), sent_copy: { status: 'sent_copy_pending' } }),
+    (r: Record<string, unknown>) => ({ record: toOutboundDto(r), sent_copy: { status: 'skipped_duplicate' }, email_sent: false }),
+  ];
+
+  it('never serializes the MIME or SMTP markers on any response path', () => {
+    for (const build of responsePaths) {
+      const body = JSON.stringify(build(serviceRoleRow));
+      expect(body).not.toContain(MIME_MARKER);
+      expect(body).not.toContain(SMTP_MARKER);
+      expect(body).not.toContain(FUTURE_MARKER);
+      expect(body).not.toContain('rfc822_message');
+      expect(body).not.toContain('smtp_result');
+    }
+  });
+
+  it('drops unknown/future columns by default (allow list, not blacklist)', () => {
+    const dto = toOutboundDto(serviceRoleRow)!;
+    expect(Object.keys(dto).every((k) => (OUTBOUND_SAFE_COLUMNS as readonly string[]).includes(k))).toBe(true);
+    expect('smtp_credential_ref' in dto).toBe(false);
+  });
+
+  it('forbidden columns are not present in the allow list', () => {
+    for (const forbidden of OUTBOUND_FORBIDDEN_COLUMNS) {
+      expect((OUTBOUND_SAFE_COLUMNS as readonly string[]).includes(forbidden)).toBe(false);
+    }
+  });
+
+  it('keeps the fields the hub needs and handles null records', () => {
+    const dto = toOutboundDto(serviceRoleRow)!;
+    expect(dto.status).toBe('sent');
+    expect(dto.sent_copy_status).toBe('appended');
+    expect(dto.sent_copy_last_retry_outcome).toBe('skipped_duplicate');
+    expect(toOutboundDto(null)).toBeNull();
+    expect(toOutboundDto(undefined)).toBeNull();
   });
 });
