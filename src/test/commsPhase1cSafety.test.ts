@@ -110,7 +110,8 @@ describe('attachment safety (feature disabled)', () => {
 });
 
 describe('sent-folder consistency', () => {
-  const base = { sendState: 'sent' as const, sentCopyEnabled: true, messageIdHeader: '<a@b>', existsInSentFolder: false, attempts: 0 };
+  const verified = { name: 'Sent Items', source: 'special_use' as const, verifiedAt: '2026-09-03T00:00:00Z' };
+  const base = { sendState: 'sent' as const, sentCopyEnabled: true, messageIdHeader: '<a@b>', existsInSentFolder: false, attempts: 0, sentFolder: verified };
 
   it('never appends before SMTP acceptance', () => {
     expect(appendDecision({ ...base, sendState: 'sending' })).toEqual({ action: 'skip', status: 'not_attempted', reason: 'smtp_not_accepted' });
