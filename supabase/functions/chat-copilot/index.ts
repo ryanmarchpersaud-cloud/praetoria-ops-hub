@@ -1,24 +1,10 @@
 // Phase 1D.2 — LEGACY endpoint, disabled by a fail-closed server-side gate.
 // Prae is the only official assistant. This function performs NO database work
-// and NO AI-gateway work unless LEGACY_COPILOT_ENABLED is explicitly "true".
+// and NO AI-gateway work unless LEGACY_CHAT_COPILOT_ENABLED is explicitly "true".
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { requireAuth, requireRole, corsHeaders } from "../_shared/auth.ts";
-
-/**
- * Fail-closed: anything other than the exact string "true" (missing secret,
- * empty, "1", "yes", "TRUE ") leaves the legacy co-pilot disabled.
- */
-export function isLegacyCopilotEnabled(raw: string | undefined | null): boolean {
-  return raw === "true";
-}
-
-function legacyDisabledResponse(): Response {
-  return new Response(
-    JSON.stringify({ error: "Legacy AI Co-pilot disabled" }),
-    { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-  );
-}
+import { legacyChatCopilotDisabledResponse } from "./legacyGate.ts";
 
 
 
@@ -133,9 +119,11 @@ serve(async (req) => {
     // Phase 1D.2 gate — checked immediately after authentication and BEFORE any
     // service-role client, any operational query, any context building and any
     // AI-gateway call. Defaults to disabled.
-    if (!isLegacyCopilotEnabled(Deno.env.get("LEGACY_COPILOT_ENABLED"))) {
-      return legacyDisabledResponse();
-    }
+    const disabledResponse = legacyChatCopilotDisabledResponse(
+      Deno.env.get("LEGACY_CHAT_COPILOT_ENABLED"),
+      corsHeaders,
+    );
+    if (disabledResponse) return disabledResponse;
 
     const gate = await requireRole(auth, ["owner", "admin", "manager", "ops_manager", "accountant", "hr_admin"]);
     if (!gate.ok) return gate.response;

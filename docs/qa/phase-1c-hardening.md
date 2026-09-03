@@ -180,6 +180,6 @@ UI: restore by moving `src/legacy/AICopilot.quarantined.tsx` back to
 `<AICopilot />` to `AppLayout.tsx`. Not recommended — Prae is the only official assistant.
 
 Endpoint: `chat-copilot` stays deployed but fail-closed. It is re-enabled only by setting the
-secret `LEGACY_COPILOT_ENABLED` to the exact string `true` (any other value, and the absence of
+secret `LEGACY_CHAT_COPILOT_ENABLED` to the exact string `true` (any other value, and the absence of
 the secret, keeps it disabled) and requires written approval. Removing the secret disables it
 again with no redeploy. The gate itself must never be removed or given a default-true fallback.
