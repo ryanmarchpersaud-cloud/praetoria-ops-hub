@@ -151,25 +151,72 @@ export default function CommunicationsHubPage() {
                 <p className="text-sm text-muted-foreground">Select a message to read it.</p>
               ) : (
                 <div className="space-y-3">
-                  <div>
-                    <h2 className="text-base font-semibold">{selected.subject || '(no subject)'}</h2>
-                    <p className="text-xs text-muted-foreground">
-                      From {selected.from_name ? `${selected.from_name} · ` : ''}
-                      {selected.from_address} — {fmt(selected.sent_at)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">To {selected.to_addresses || '—'}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-base font-semibold">{selected.subject || '(no subject)'}</h2>
+                      <p className="text-xs text-muted-foreground">
+                        From {selected.from_name ? `${selected.from_name} · ` : ''}
+                        {selected.from_address} — {fmt(selected.sent_at)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">To {selected.to_addresses || '—'}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="gap-1.5 shrink-0"
+                      disabled={!outboundEnabled || !stagingMailbox}
+                      onClick={() => setReplyOpen(true)}
+                    >
+                      <Reply className="h-4 w-4" /> Reply
+                    </Button>
                   </div>
                   <pre className="whitespace-pre-wrap break-words text-sm bg-muted/40 rounded-md p-3 max-h-[420px] overflow-auto font-sans">
                     {selected.body_text || selected.snippet || '(no text content imported)'}
                   </pre>
                   <p className="text-[11px] text-muted-foreground">
-                    Replying is not enabled in Phase 1A. This view is read-only.
+                    {outboundEnabled
+                      ? 'Replies are plain text, staging-only and require your explicit confirmation before sending.'
+                      : 'Outbound sending is currently disabled.'}
                   </p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Outbound staging log</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {(outbound ?? []).length === 0 && (
+              <p className="text-muted-foreground">No outbound messages yet.</p>
+            )}
+            {(outbound ?? []).map((o) => (
+              <div key={o.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{o.subject}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {o.from_address} → {o.to_address}
+                  </div>
+                  {o.error_text && <div className="text-xs text-destructive">{o.error_text}</div>}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{fmt(o.sent_at ?? o.failed_at ?? o.created_at)}</span>
+                  <Badge variant={statusVariant[o.status] ?? 'secondary'}>{o.status}</Badge>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <ReplyComposerDialog
+          open={replyOpen}
+          onOpenChange={setReplyOpen}
+          fromAddress={stagingMailbox?.email_address ?? '—'}
+          replyTo={selected}
+          onSent={() => void refetchOutbound()}
+        />
       </div>
   );
+
 }
