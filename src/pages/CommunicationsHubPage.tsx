@@ -287,6 +287,7 @@ export default function CommunicationsHubPage() {
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{fmt(o.sent_at ?? o.failed_at ?? o.created_at)}</span>
+                  <Badge variant="outline">Sent copy: {o.sent_copy_status?.replace(/_/g, ' ') ?? 'not attempted'}</Badge>
                   <Badge variant={statusVariant[o.status] ?? 'secondary'}>{o.status}</Badge>
                 </div>
               </div>
