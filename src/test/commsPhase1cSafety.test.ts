@@ -17,6 +17,9 @@ import {
   buildDuplicateSearch,
   appendRetryDelaySeconds,
   MAX_APPEND_ATTEMPTS,
+  parseSearchUids,
+  parseAppendUid,
+
 } from '../../supabase/functions/_shared/comms/sentFolder.ts';
 import {
   planInitialSync,
