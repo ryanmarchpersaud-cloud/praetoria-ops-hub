@@ -116,7 +116,7 @@ export function evaluateAttachmentSet(candidates: AttachmentCandidate[]) {
   const rejected: Array<{ candidate: AttachmentCandidate; reason: string }> = [];
   for (const c of candidates) {
     const decision = evaluateAttachment(c);
-    if (decision.allowed) accepted.push({ candidate: c, decision });
+    if (decision.allowed === true) accepted.push({ candidate: c, decision });
     else rejected.push({ candidate: c, reason: decision.reason });
   }
   return { accepted, rejected };
