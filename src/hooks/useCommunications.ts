@@ -108,12 +108,15 @@ export type OutboundMessage = {
   from_address: string;
   to_address: string;
   subject: string;
+  body_text: string | null;
+  message_id_header: string | null;
   status: 'draft' | 'sending' | 'sent' | 'failed';
   created_at: string;
   sent_at: string | null;
   failed_at: string | null;
   error_text: string | null;
 };
+
 
 /** Phase 1B — staging outbound log (owner/admin only via RLS). */
 export function useCommsOutbound() {
