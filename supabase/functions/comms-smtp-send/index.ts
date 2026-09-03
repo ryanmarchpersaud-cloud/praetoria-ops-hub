@@ -172,6 +172,16 @@ Deno.serve(async (req) => {
   const smtpPass = Deno.env.get("IONOS_STAGING_EMAIL_PASSWORD");
   if (!smtpUser || !smtpPass) return json({ error: "Staging mailbox secrets not configured" }, 500);
 
+  /**
+   * Phase 1D — the canonical MIME body is service-role-only. It must never be
+   * returned to a browser, logged, or included in an error payload.
+   */
+  const redactRecord = <T extends Record<string, unknown> | null | undefined>(rec: T): T => {
+    if (!rec) return rec;
+    const { rfc822_message: _omit, ...rest } = rec as Record<string, unknown>;
+    return rest as T;
+  };
+
   const audit = (event: string, detail?: string, metadata?: Record<string, unknown>) =>
     admin.from("comms_audit_log").insert({ mailbox_id: mailbox.id, event, detail, metadata });
 
@@ -201,7 +211,15 @@ Deno.serve(async (req) => {
     });
     if (decision.action === "skip") {
       await admin.from("comms_outbound_messages")
-        .update({ sent_copy_status: decision.status, sent_copy_last_error: decision.reason })
+        .update({
+          sent_copy_status: resolveSentCopyStatus(
+            (record.sent_copy_status as SentCopyStatus | null) ?? null,
+            decision.status,
+          ).status,
+          sent_copy_last_retry_outcome: decision.status,
+          sent_copy_last_retry_at: new Date().toISOString(),
+          sent_copy_last_error: decision.reason,
+        })
         .eq("id", record.id as string);
       return { status: decision.status, reason: decision.reason, folder: folder?.name ?? null };
     }
@@ -209,7 +227,15 @@ Deno.serve(async (req) => {
     const rfc822 = record.rfc822_message as string | null;
     if (!rfc822) {
       await admin.from("comms_outbound_messages")
-        .update({ sent_copy_status: "sent_copy_pending", sent_copy_last_error: "canonical_message_unavailable" })
+        .update({
+          sent_copy_status: resolveSentCopyStatus(
+            (record.sent_copy_status as SentCopyStatus | null) ?? null,
+            "sent_copy_pending",
+          ).status,
+          sent_copy_last_retry_outcome: "sent_copy_pending",
+          sent_copy_last_retry_at: new Date().toISOString(),
+          sent_copy_last_error: "canonical_message_unavailable",
+        })
         .eq("id", record.id as string);
       return { status: "sent_copy_pending", reason: "canonical_message_unavailable", folder: folder!.name };
     }
@@ -286,7 +312,7 @@ Deno.serve(async (req) => {
       .select("*")
       .eq("idempotency_key", key)
       .maybeSingle();
-    if (existing) return json({ record: existing, duplicate: true });
+    if (existing) return json({ record: redactRecord(existing), duplicate: true });
 
     let inReplyToId: string | null = null;
     let thread = { inReplyTo: null as string | null, references: null as string | null };
@@ -433,7 +459,7 @@ Deno.serve(async (req) => {
 
       const { data: finalRecord } = await admin
         .from("comms_outbound_messages").select("*").eq("id", claimed.id).maybeSingle();
-      return json({ record: finalRecord ?? sent, sent_copy: sentCopy });
+      return json({ record: redactRecord(finalRecord ?? sent), sent_copy: sentCopy });
     } catch (e) {
       const raw = e instanceof Error ? e.message : "SMTP failure";
       const safe = redactSmtp(raw, [smtpPass, smtpUser]);
@@ -472,7 +498,7 @@ Deno.serve(async (req) => {
     }
     const { data: finalRecord } = await admin
       .from("comms_outbound_messages").select("*").eq("id", record.id).maybeSingle();
-    return json({ record: finalRecord, sent_copy: outcome, email_sent: false });
+    return json({ record: redactRecord(finalRecord), sent_copy: outcome, email_sent: false });
   }
 
   return json({ error: "Unknown action" }, 400);
