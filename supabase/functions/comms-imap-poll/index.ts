@@ -1,101 +1,53 @@
-// Phase 1A — bounded, READ-ONLY IONOS IMAP poller (staging mailbox only).
+// Phase 1A.1 — bounded, READ-ONLY IONOS IMAP poller (staging mailbox only).
 //
 // Guarantees:
+//  * Server-to-server only: POST + dedicated COMMS_SCHEDULER_SECRET header.
+//    No CORS, no browser access, no OPTIONS pre-flight surface.
 //  * Global pause switch: comms_settings.polling_enabled must be true.
 //  * Overlap protection: a lock row with expiry in comms_sync_state.
 //  * Read-only: EXAMINE + BODY.PEEK only. Never sets flags, moves, appends or deletes.
+//  * UID checkpoint advances only on a stored row or PostgreSQL 23505.
+//  * Hard network deadlines on connect, auth and every command response.
 //  * Never sends mail. No AI. No production mailbox.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import {
+  authorizeSchedulerRequest,
+  processUidBatch,
+  extractPlainText,
+  headerValue,
+  imapQuote,
+  parseFrom,
+  readLiteral,
+  readUntil,
+  withDeadline,
+} from "./core.ts";
 
 const enc = new TextEncoder();
-const dec = new TextDecoder();
 const LOCK_SECONDS = 240;
+const CONNECT_TIMEOUT_MS = 10_000;
+const AUTH_TIMEOUT_MS = 15_000;
+const COMMAND_TIMEOUT_MS = 20_000;
 
-async function readUntil(conn: Deno.Conn, match: (b: string) => boolean, timeoutMs = 20000) {
-  const buf = new Uint8Array(65536);
-  let acc = "";
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const n = await conn.read(buf);
-    if (n === null) break;
-    acc += dec.decode(buf.subarray(0, n));
-    if (match(acc)) return acc;
-  }
-  return acc;
-}
-
-/** Extract an IMAP literal for a given BODY[...] section: `BODY[<section>...] {N}\r\n<N bytes>`. */
-function readLiteral(response: string, section: string): string {
-  const marker = response.indexOf(`BODY[${section}`);
-  if (marker === -1) return "";
-  const braceOpen = response.indexOf("{", marker);
-  const braceClose = response.indexOf("}", braceOpen);
-  if (braceOpen === -1 || braceClose === -1) return "";
-  const size = Number(response.slice(braceOpen + 1, braceClose));
-  const start = response.indexOf("\r\n", braceClose) + 2;
-  if (!Number.isFinite(size) || start < 2) return "";
-  return response.slice(start, start + size);
-}
-
-/** Pull the first text/plain part out of a (possibly nested) MIME body. */
-function extractPlainText(raw: string): string {
-  if (!raw) return "";
-  const boundaries = [...raw.matchAll(/boundary="?([^"\r\n;]+)"?/gi)].map((m) => m[1]);
-  if (boundaries.length === 0) return decodeQP(raw).trim();
-
-  const segments = boundaries
-    .reduce<string[]>((acc, b) => acc.flatMap((s) => s.split(`--${b}`)), [raw]);
-
-  for (const part of segments) {
-    if (/Content-Type:\s*text\/plain/i.test(part)) {
-      const body = part.split("\r\n\r\n").slice(1).join("\r\n\r\n");
-      const decoded = /quoted-printable/i.test(part) ? decodeQP(body) : body;
-      const cleaned = decoded.replace(/^--+\s*$/gm, "").trim();
-      if (cleaned) return cleaned;
-    }
-  }
-  return decodeQP(raw).trim();
-}
-
-
-function decodeQP(s: string): string {
-  return s
-    .replace(/=\r\n/g, "")
-    .replace(/=([0-9A-Fa-f]{2})/g, (_m, h) => String.fromCharCode(parseInt(h, 16)));
-}
-
-function headerValue(block: string, name: string): string | null {
-
-  const re = new RegExp(`^${name}:\\s*(.*(?:\\r\\n[ \\t].*)*)`, "im");
-  const m = block.match(re);
-  return m ? m[1].replace(/\r\n[ \t]+/g, " ").trim() : null;
-}
-
-function parseFrom(raw: string | null) {
-  if (!raw) return { name: null as string | null, address: null as string | null };
-  const m = raw.match(/^(.*?)<([^>]+)>\s*$/);
-  if (m) return { name: m[1].replace(/["']/g, "").trim() || null, address: m[2].trim().toLowerCase() };
-  return { name: null, address: raw.trim().toLowerCase() };
-}
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+  });
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // 0. Endpoint authorization — POST + scheduler secret. No browser path.
+  const gate = authorizeSchedulerRequest(
+    req.method,
+    req.headers.get("x-comms-scheduler-secret"),
+    Deno.env.get("COMMS_SCHEDULER_SECRET"),
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+  );
+  if (!gate.ok) return json({ error: gate.error }, gate.status);
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-
-  const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), {
-      status,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
 
   // 1. Global pause switch
   const { data: settings } = await supabase.from("comms_settings").select("*").eq("id", true).maybeSingle();
@@ -172,22 +124,35 @@ Deno.serve(async (req) => {
 
   let conn: Deno.TlsConn | null = null;
   let imported = 0;
+  let halted = false;
   try {
-    conn = await Deno.connectTls({ hostname: mailbox.imap_host, port: mailbox.imap_port });
-    await readUntil(conn, (b) => b.includes("\r\n"));
+    conn = await withDeadline(
+      Deno.connectTls({ hostname: mailbox.imap_host, port: mailbox.imap_port }),
+      CONNECT_TIMEOUT_MS,
+      "connect",
+    );
+    await readUntil(conn, (b) => b.includes("\r\n"), CONNECT_TIMEOUT_MS, "greeting");
 
     let tagN = 0;
-    const cmd = async (line: string) => {
+    const cmd = async (line: string, timeoutMs = COMMAND_TIMEOUT_MS, stage = "command") => {
       const tag = `p${++tagN}`;
-      await conn!.write(enc.encode(`${tag} ${line}\r\n`));
-      const res = await readUntil(conn!, (b) => new RegExp(`^${tag} (OK|NO|BAD)`, "m").test(b));
+      await withDeadline(conn!.write(enc.encode(`${tag} ${line}\r\n`)), timeoutMs, `${stage}-write`, () => {
+        try { conn?.close(); } catch { /* already closed */ }
+      });
+      const res = await readUntil(
+        conn!,
+        (b) => new RegExp(`^${tag} (OK|NO|BAD)`, "m").test(b),
+        timeoutMs,
+        stage,
+      );
       if (new RegExp(`^${tag} (NO|BAD)`, "m").test(res)) {
         throw new Error(res.split("\r\n").find((l) => l.startsWith(tag)) ?? "IMAP command failed");
       }
       return res;
     };
 
-    await cmd(`LOGIN "${user}" "${pass}"`);
+    // Credentials are quoted per RFC 3501 so quotes/backslashes are safe.
+    await cmd(`LOGIN ${imapQuote(user)} ${imapQuote(pass)}`, AUTH_TIMEOUT_MS, "auth");
     const examine = await cmd("EXAMINE INBOX"); // read-only select
 
     const uidValidity = Number(examine.match(/UIDVALIDITY (\d+)/)?.[1] ?? 0);
@@ -206,7 +171,7 @@ Deno.serve(async (req) => {
       .sort((a, b) => a - b)
       .slice(0, maxMessages);
 
-    for (const uid of uids) {
+    const batch = await processUidBatch(uids, lastUid, async (uid) => {
       const res = await cmd(
         `UID FETCH ${uid} (BODY.PEEK[HEADER.FIELDS (FROM TO CC SUBJECT DATE MESSAGE-ID)] BODY.PEEK[TEXT]<0.4000>)`,
       );
@@ -214,14 +179,12 @@ Deno.serve(async (req) => {
       const rawBody = readLiteral(res, "TEXT");
       const bodyText = extractPlainText(rawBody).slice(0, 4000);
 
-
-
       const from = parseFrom(headerValue(headerBlock, "From"));
       const dateRaw = headerValue(headerBlock, "Date");
       const sentAt = dateRaw ? new Date(dateRaw) : null;
 
       const { error } = await supabase.from("comms_messages").insert({
-        mailbox_id: mailbox.id,
+        mailbox_id: mailbox!.id,
         folder: "INBOX",
         imap_uid: uid,
         uid_validity: uidValidity,
@@ -235,28 +198,36 @@ Deno.serve(async (req) => {
         sent_at: sentAt && !isNaN(sentAt.getTime()) ? sentAt.toISOString() : null,
         snippet: bodyText.replace(/\s+/g, " ").trim().slice(0, 200),
         body_text: bodyText,
-        division: mailbox.division,
-        assigned_rep_user_id: mailbox.assigned_rep_user_id,
+        division: mailbox!.division,
+        assigned_rep_user_id: mailbox!.assigned_rep_user_id,
       });
 
-      if (!error) {
-        imported++;
-        await audit("message_imported", `uid ${uid}`);
-      } else if (!error.message.includes("duplicate")) {
-        await audit("message_import_error", error.message, { uid });
-      }
-      lastUid = Math.max(lastUid, uid);
-    }
+      if (!error) await audit("message_imported", `uid ${uid}`);
+      else if ((error as { code?: string }).code === "23505") await audit("message_duplicate", `uid ${uid}`);
+      else await audit("message_import_error", error.message, { uid });
+
+      return { error };
+    });
+
+    imported = batch.imported;
+    halted = batch.halted;
+    lastUid = batch.lastUid;
+    const scanned = batch.scanned;
+
 
     try {
-      await cmd("LOGOUT");
+      await cmd("LOGOUT", 5000, "logout");
     } catch { /* ignore */ }
 
-    await release("ok", undefined, { last_seen_uid: lastUid, uid_validity: uidValidity });
-    await audit("poll_finished", `${imported} imported`, { imported, scanned: uids.length });
-    return json({ ok: true, imported, scanned: uids.length, last_seen_uid: lastUid });
+    const status = halted ? "partial_error" : "ok";
+    await release(status, halted ? "insert_failed_uid_retained" : undefined, {
+      last_seen_uid: lastUid,
+      uid_validity: uidValidity,
+    });
+    await audit("poll_finished", `${imported} imported`, { imported, scanned, halted });
+    return json({ ok: !halted, imported, scanned, last_seen_uid: lastUid, halted });
   } catch (e) {
-    const msg = String(e).replace(pass, "<REDACTED>").replace(user, "<REDACTED>");
+    const msg = String(e).replaceAll(pass, "<REDACTED>").replaceAll(user, "<REDACTED>");
     await release("error", msg);
     await audit("poll_error", msg);
     return json({ error: msg }, 500);
