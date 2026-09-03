@@ -913,29 +913,125 @@ export type Database = {
           },
         ]
       }
+      comms_outbound_messages: {
+        Row: {
+          approved_at: string | null
+          body_text: string
+          created_at: string
+          error_text: string | null
+          failed_at: string | null
+          from_address: string
+          id: string
+          idempotency_key: string
+          in_reply_to_header: string | null
+          in_reply_to_id: string | null
+          mailbox_id: string
+          message_id_header: string | null
+          references_header: string | null
+          requested_by: string
+          requested_by_email: string | null
+          sent_at: string | null
+          smtp_result: string | null
+          status: string
+          subject: string
+          to_address: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          body_text: string
+          created_at?: string
+          error_text?: string | null
+          failed_at?: string | null
+          from_address: string
+          id?: string
+          idempotency_key: string
+          in_reply_to_header?: string | null
+          in_reply_to_id?: string | null
+          mailbox_id: string
+          message_id_header?: string | null
+          references_header?: string | null
+          requested_by: string
+          requested_by_email?: string | null
+          sent_at?: string | null
+          smtp_result?: string | null
+          status?: string
+          subject: string
+          to_address: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          body_text?: string
+          created_at?: string
+          error_text?: string | null
+          failed_at?: string | null
+          from_address?: string
+          id?: string
+          idempotency_key?: string
+          in_reply_to_header?: string | null
+          in_reply_to_id?: string | null
+          mailbox_id?: string
+          message_id_header?: string | null
+          references_header?: string | null
+          requested_by?: string
+          requested_by_email?: string | null
+          sent_at?: string | null
+          smtp_result?: string | null
+          status?: string
+          subject?: string
+          to_address?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_outbound_messages_in_reply_to_id_fkey"
+            columns: ["in_reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "comms_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comms_outbound_messages_mailbox_id_fkey"
+            columns: ["mailbox_id"]
+            isOneToOne: false
+            referencedRelation: "comms_mailboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comms_settings: {
         Row: {
           hub_enabled: boolean
           id: boolean
           max_messages_per_run: number
+          max_sends_per_hour: number
+          outbound_enabled: boolean
           poll_interval_seconds: number
           polling_enabled: boolean
+          staging_recipient_allowlist: string[]
           updated_at: string
         }
         Insert: {
           hub_enabled?: boolean
           id?: boolean
           max_messages_per_run?: number
+          max_sends_per_hour?: number
+          outbound_enabled?: boolean
           poll_interval_seconds?: number
           polling_enabled?: boolean
+          staging_recipient_allowlist?: string[]
           updated_at?: string
         }
         Update: {
           hub_enabled?: boolean
           id?: boolean
           max_messages_per_run?: number
+          max_sends_per_hour?: number
+          outbound_enabled?: boolean
           poll_interval_seconds?: number
           polling_enabled?: boolean
+          staging_recipient_allowlist?: string[]
           updated_at?: string
         }
         Relationships: []
