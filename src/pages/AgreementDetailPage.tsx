@@ -1,3 +1,4 @@
+import { publicSigningUrl } from '@/lib/appUrl';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,7 +82,7 @@ export default function AgreementDetailPage() {
     );
   };
 
-  const signingUrl = `${window.location.origin}/sign/${agreement.signing_token}`;
+  const signingUrl = publicSigningUrl(agreement.signing_token);
   const StatusIcon = statusIcon[agreement.status] || Clock;
   const statusMeta = agreementStatusMeta(agreement.status);
   const isAwaitingPraetoria = ['awaiting_praetoria', 'customer_signed'].includes(agreement.status);
