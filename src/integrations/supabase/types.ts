@@ -14454,7 +14454,7 @@ export type Database = {
         }[]
       }
       can_submit_field_lead: { Args: { _user_id: string }; Returns: boolean }
-      comms_user_divisions: { Args: { _user_id: string }; Returns: string[] }
+      comms_my_divisions: { Args: never; Returns: string[] }
       complete_assigned_visit: {
         Args: {
           _crew_notes?: string
