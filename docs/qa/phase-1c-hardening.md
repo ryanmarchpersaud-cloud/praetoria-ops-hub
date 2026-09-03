@@ -134,3 +134,25 @@ SMTP code path (no import of the SMTP client in that branch).
   purge recording only the outbound id, byte length and timestamp.
 * Existing Phase 1C test evidence is retained. No retention job, cron entry or
   trigger has been created.
+
+## Phase 1D.1 — outbound response security hotfix (2026-09-03)
+
+`redactRecord()` (blacklist) was replaced by `toOutboundDto()` in
+`supabase/functions/_shared/comms/outboundDto.ts`, an explicit allow list of 26
+safe columns. `rfc822_message`, `smtp_result` and any future/unknown column are
+dropped by construction. Applied to all six record-response paths: prepared
+draft, idempotency-key duplicate, already-sent duplicate, successful send,
+failed/pending Sent-copy, and Sent-copy retry. No path returns a raw
+service-role row.
+
+### Corrected rollback procedure (supersedes the Phase 1D entry)
+1. Code: revert the affected source files and redeploy `comms-smtp-send`.
+2. **Never** restore `GRANT ALL` on `public.comms_outbound_messages` to `anon`
+   or `authenticated`. The column-scoped `SELECT` grant for `authenticated`
+   (excluding `rfc822_message` and `smtp_result`) and `service_role`-only full
+   access are permanent and survive removal of the Prae interface or any later
+   Phase 1D rollback.
+3. Prae UI: deleting `src/components/prae/` and its two imports removes the
+   interface; it touches no grants, policies or data.
+4. Columns `sent_copy_last_retry_outcome` / `sent_copy_last_retry_at` may be
+   dropped only together with the code that writes them.
