@@ -10,6 +10,7 @@
 //  * Secrets are never returned, logged or stored.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, requireAuth, requireRole } from "../_shared/auth.ts";
+import { toOutboundDto } from "../_shared/comms/outboundDto.ts";
 import {
   buildMimeMessage,
   dotStuff,
@@ -172,16 +173,6 @@ Deno.serve(async (req) => {
   const smtpPass = Deno.env.get("IONOS_STAGING_EMAIL_PASSWORD");
   if (!smtpUser || !smtpPass) return json({ error: "Staging mailbox secrets not configured" }, 500);
 
-  /**
-   * Phase 1D — the canonical MIME body is service-role-only. It must never be
-   * returned to a browser, logged, or included in an error payload.
-   */
-  const redactRecord = <T extends Record<string, unknown> | null | undefined>(rec: T): T => {
-    if (!rec) return rec;
-    const { rfc822_message: _omit, ...rest } = rec as Record<string, unknown>;
-    return rest as T;
-  };
-
   const audit = (event: string, detail?: string, metadata?: Record<string, unknown>) =>
     admin.from("comms_audit_log").insert({ mailbox_id: mailbox.id, event, detail, metadata });
 
@@ -312,7 +303,7 @@ Deno.serve(async (req) => {
       .select("*")
       .eq("idempotency_key", key)
       .maybeSingle();
-    if (existing) return json({ record: redactRecord(existing), duplicate: true });
+    if (existing) return json({ record: toOutboundDto(existing), duplicate: true });
 
     let inReplyToId: string | null = null;
     let thread = { inReplyTo: null as string | null, references: null as string | null };
@@ -351,7 +342,7 @@ Deno.serve(async (req) => {
     if (error) return json({ error: error.message }, 500);
 
     await audit("outbound_draft_created", `to=${recipient.address}`, { outbound_id: record.id });
-    return json({ record });
+    return json({ record: toOutboundDto(record) });
   }
 
   // ------------------------------------------------------------------- send
@@ -366,7 +357,7 @@ Deno.serve(async (req) => {
       .eq("id", id)
       .maybeSingle();
     if (!record) return json({ error: "Draft not found" }, 404);
-    if (record.status === "sent") return json({ record, duplicate: true });
+    if (record.status === "sent") return json({ record: toOutboundDto(record), duplicate: true });
     if (record.status === "sending") return json({ error: "Send already in progress" }, 409);
 
     const sinceIso = new Date(Date.now() - 3600_000).toISOString();
@@ -459,7 +450,7 @@ Deno.serve(async (req) => {
 
       const { data: finalRecord } = await admin
         .from("comms_outbound_messages").select("*").eq("id", claimed.id).maybeSingle();
-      return json({ record: redactRecord(finalRecord ?? sent), sent_copy: sentCopy });
+      return json({ record: toOutboundDto(finalRecord ?? sent), sent_copy: sentCopy });
     } catch (e) {
       const raw = e instanceof Error ? e.message : "SMTP failure";
       const safe = redactSmtp(raw, [smtpPass, smtpUser]);
@@ -498,7 +489,7 @@ Deno.serve(async (req) => {
     }
     const { data: finalRecord } = await admin
       .from("comms_outbound_messages").select("*").eq("id", record.id).maybeSingle();
-    return json({ record: redactRecord(finalRecord), sent_copy: outcome, email_sent: false });
+    return json({ record: toOutboundDto(finalRecord), sent_copy: outcome, email_sent: false });
   }
 
   return json({ error: "Unknown action" }, 400);
