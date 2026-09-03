@@ -40,7 +40,7 @@ describe('Phase 1D.2 — legacy co-pilot gate is fail-closed', () => {
   });
 
   it('has exactly one gate check and no bypass fallback', () => {
-    expect(fn.match(/LEGACY_COPILOT_ENABLED/g)?.length).toBe(1);
+    expect(fn.match(/Deno\.env\.get\("LEGACY_COPILOT_ENABLED"\)/g)?.length).toBe(1);
     expect(fn).not.toMatch(/LEGACY_COPILOT_ENABLED[^)]*\)\s*(\?\?|\|\|)/);
   });
 });
