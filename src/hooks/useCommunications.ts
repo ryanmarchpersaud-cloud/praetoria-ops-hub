@@ -37,7 +37,10 @@ export type CommsMailbox = {
   imap_port: number;
   smtp_host: string;
   smtp_port: number;
-  sent_folder: string;
+  sent_folder: string | null;
+  sent_folder_source: string | null;
+  sent_folder_verified_at: string | null;
+  sent_folder_selection_required: boolean;
   inbound_enabled: boolean;
   outbound_enabled: boolean;
   emergency_paused: boolean;
