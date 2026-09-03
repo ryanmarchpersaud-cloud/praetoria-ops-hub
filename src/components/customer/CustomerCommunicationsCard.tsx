@@ -14,18 +14,21 @@ export function CustomerCommunicationsCard({ customerId }: Props) {
   const { data: communications = [], isLoading } = useQuery({
     queryKey: ['customer_comms_card', customerId],
     queryFn: async () => {
-      const [invIds, quoteIds, jobIds, reqIds] = await Promise.all([
+      const [invIds, quoteIds, jobIds, reqIds, agreementRows] = await Promise.all([
         supabase.from('invoices').select('id').eq('customer_id', customerId),
         supabase.from('quotes').select('id').eq('customer_id', customerId),
         supabase.from('jobs').select('id').eq('customer_id', customerId),
         supabase.from('service_requests').select('id').eq('customer_id', customerId),
+        supabase.from('agreements').select('id, title, agreement_number').eq('customer_id', customerId),
       ]);
+      const agreements = agreementRows.data || [];
       const ids = [
         customerId,
         ...(invIds.data || []).map((r: any) => r.id),
         ...(quoteIds.data || []).map((r: any) => r.id),
         ...(jobIds.data || []).map((r: any) => r.id),
         ...(reqIds.data || []).map((r: any) => r.id),
+        ...agreements.map((r: any) => r.id),
       ];
       const { data, error } = await supabase
         .from('activities')
@@ -34,10 +37,43 @@ export function CustomerCommunicationsCard({ customerId }: Props) {
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) console.error('customer_comms_card error', error);
-      return data || [];
+
+      let agreementEvents: any[] = [];
+      if (agreements.length > 0) {
+        const { data: auditRows } = await supabase
+          .from('agreement_audit_log')
+          .select('id, agreement_id, action, created_at')
+          .in('agreement_id', agreements.map((a: any) => a.id))
+          .in('action', ['sent', 'resent', 'reminder_sent', 'viewed', 'signed', 'declined'])
+          .order('created_at', { ascending: false })
+          .limit(50);
+        const labels: Record<string, string> = {
+          sent: 'Agreement sent',
+          resent: 'Agreement reminder sent',
+          reminder_sent: 'Agreement reminder sent',
+          viewed: 'Agreement viewed by customer',
+          signed: 'Agreement signed',
+          declined: 'Agreement declined',
+        };
+        agreementEvents = (auditRows || []).map((r: any) => {
+          const ag = agreements.find((a: any) => a.id === r.agreement_id);
+          const name = ag?.agreement_number || ag?.title || 'Agreement';
+          return {
+            id: r.id,
+            action_name: `${labels[r.action] || r.action} — ${name}`,
+            created_at: r.created_at,
+            link: `/agreements/${r.agreement_id}`,
+          };
+        });
+      }
+
+      return [...(data || []), ...agreementEvents].sort(
+        (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     },
     enabled: !!customerId,
   });
+
 
   return (
     <Card>
