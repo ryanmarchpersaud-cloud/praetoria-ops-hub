@@ -39,6 +39,8 @@ import JobDetail from "./pages/JobDetail";
 import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
+const CommunicationsHubPage = lazy(() => import("./pages/CommunicationsHubPage"));
+
 
 import SettingsIntegrationsPage from "./pages/SettingsIntegrationsPage";
 import AuthEmailHealthPage from "./pages/AuthEmailHealthPage";
@@ -654,6 +656,8 @@ function AppRoutes() {
         <Route path="/invoices/:id" element={<ModuleGuard module="opsOrFinance"><InvoiceDetail /></ModuleGuard>} />
 
         <Route path="/activity" element={<ModuleGuard module="ownerOnly"><ActivityPage /></ModuleGuard>} />
+        <Route path="/communications" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><CommunicationsHubPage /></Suspense></ModuleGuard>} />
+
         <Route path="/tasks" element={<ModuleGuard module="ops"><Suspense fallback={<RouteLoading />}><TasksPage /></Suspense></ModuleGuard>} />
 
         <Route path="/employees" element={<ModuleGuard module="hr"><Employees /></ModuleGuard>} />
