@@ -104,17 +104,17 @@ export function AppSidebar() {
 
   // Filter items by role-based access
   const visibleOpsItems = opsItems.filter(item => access[item.accessKey]);
-  // Communications Hub is owner/admin only (matches its ModuleGuard="ownerOnly" route)
+  // Communications is owner/admin only (matches its ModuleGuard="ownerOnly" route)
   if (moduleAccess.isOwnerOrAdmin) {
     const msgIdx = visibleOpsItems.findIndex(i => i.url === '/messaging');
     const commsItem = {
-      title: 'Communications Hub',
+      title: 'Communications',
       url: '/communications',
       icon: Mail,
       accessKey: 'messaging' as SidebarKey,
       area: 'admin' as AreaKey,
     };
-    visibleOpsItems.splice(msgIdx >= 0 ? msgIdx + 1 : visibleOpsItems.length, 0, commsItem);
+    visibleOpsItems.splice(msgIdx >= 0 ? msgIdx : visibleOpsItems.length, 0, commsItem);
   }
   // Only owner/admin can view-as other portals
   const visibleViewAs = access.dashboard ? viewAsItems : [];
