@@ -39,11 +39,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const configured = Deno.env.get("COMMS_SCHEDULER_SECRET");
   const gate = authorizeSchedulerRequest(
     req.method,
     req.headers.get("x-comms-scheduler-secret"),
-    configured,
+    [Deno.env.get("COMMS_SCHEDULER_SECRET"), Deno.env.get("COMMS_SCHEDULER_SECRET_CRON")],
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
   );
   if (!gate.ok) {
