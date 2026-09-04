@@ -5,7 +5,8 @@
 // carry credentials.
 const KEY = 'prae_return_to';
 
-const SAFE_PATH = /^\/[A-Za-z0-9\-._~/]*$/;
+// A single leading slash only — '//host' is a protocol-relative off-site URL.
+const SAFE_PATH = /^\/(?!\/)[A-Za-z0-9\-._~/]*$/;
 
 export function storeReturnTo(path: string) {
   try {
