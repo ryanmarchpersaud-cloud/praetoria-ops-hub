@@ -366,6 +366,17 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Sends an unauthenticated visitor to the login screen while remembering the
+ * application path they asked for (same-origin path only, no query, no token),
+ * so a phone alert link lands on the right approval after signing in.
+ */
+function LoginRedirect() {
+  const location = useLocation();
+  storeReturnTo(location.pathname);
+  return <Navigate to="/login" replace />;
+}
+
 function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
   const { canAccessAdminPortal, canAccessPMStaffPortal, isCustomer, isSubcontractor, isStaff, isTenant, isPropertyManager, isLeasingAgent, isActiveUser, isLoading } = useAuthorization();
