@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, memo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate, useNavigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useNavigate, useLocation, Outlet } from "react-router-dom";
+import { storeReturnTo, takeReturnTo } from "@/lib/praeReturnTo";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -40,6 +41,8 @@ import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
 const PraeActivityPage = lazy(() => import("./pages/PraeActivityPage"));
+const PraeApprovalInbox = lazy(() => import("./pages/PraeApprovalInbox"));
+const PraeApprovalDecision = lazy(() => import("./pages/PraeApprovalDecision"));
 const CommunicationsHubPage = lazy(() => import("./pages/CommunicationsHubPage"));
 
 
@@ -364,11 +367,22 @@ function ActiveGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Sends an unauthenticated visitor to the login screen while remembering the
+ * application path they asked for (same-origin path only, no query, no token),
+ * so a phone alert link lands on the right approval after signing in.
+ */
+function LoginRedirect() {
+  const location = useLocation();
+  storeReturnTo(location.pathname);
+  return <Navigate to="/login" replace />;
+}
+
 function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
   const { canAccessAdminPortal, canAccessPMStaffPortal, isCustomer, isSubcontractor, isStaff, isTenant, isPropertyManager, isLeasingAgent, isActiveUser, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <LoginRedirect />;
   if (!mustChangePasswordChecked) {
     return <AppLayout><RouteContentLoading /></AppLayout>;
   }
@@ -537,6 +551,8 @@ function LoginRoute() {
   if ((isPropertyManager || isLeasingAgent) && !canAccessAdminPortal) return <Navigate to="/pm-staff" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
+  const returnTo = takeReturnTo();
+  if (returnTo) return <Navigate to={returnTo} replace />;
   return <Navigate to="/" replace />;
 }
 
@@ -658,6 +674,8 @@ function AppRoutes() {
 
         <Route path="/activity" element={<ModuleGuard module="ownerOnly"><ActivityPage /></ModuleGuard>} />
         <Route path="/prae" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PraeActivityPage /></Suspense></ModuleGuard>} />
+        <Route path="/prae/approvals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PraeApprovalInbox /></Suspense></ModuleGuard>} />
+        <Route path="/prae/approvals/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PraeApprovalDecision /></Suspense></ModuleGuard>} />
 
         <Route path="/communications" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><CommunicationsHubPage /></Suspense></ModuleGuard>} />
 

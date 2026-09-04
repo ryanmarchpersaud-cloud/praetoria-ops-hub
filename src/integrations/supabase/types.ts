@@ -11196,6 +11196,7 @@ export type Database = {
       }
       prae_approvals: {
         Row: {
+          action_type: string
           channel: string
           content_binding: Json
           content_hash: string
@@ -11213,10 +11214,16 @@ export type Database = {
           is_synthetic: boolean
           nonce_digest: string
           nonce_used: boolean
+          notified_at: string | null
+          notify_message_sid: string | null
+          source_message_id: string | null
           state: string
           updated_at: string
+          urgent: boolean
+          viewed_at: string | null
         }
         Insert: {
+          action_type?: string
           channel: string
           content_binding: Json
           content_hash: string
@@ -11234,10 +11241,16 @@ export type Database = {
           is_synthetic?: boolean
           nonce_digest: string
           nonce_used?: boolean
+          notified_at?: string | null
+          notify_message_sid?: string | null
+          source_message_id?: string | null
           state?: string
           updated_at?: string
+          urgent?: boolean
+          viewed_at?: string | null
         }
         Update: {
+          action_type?: string
           channel?: string
           content_binding?: Json
           content_hash?: string
@@ -11255,8 +11268,52 @@ export type Database = {
           is_synthetic?: boolean
           nonce_digest?: string
           nonce_used?: boolean
+          notified_at?: string | null
+          notify_message_sid?: string | null
+          source_message_id?: string | null
           state?: string
           updated_at?: string
+          urgent?: boolean
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
+      prae_authorized_phones: {
+        Row: {
+          active: boolean
+          created_at: string
+          divisions: string[]
+          e164: string
+          id: string
+          label: string | null
+          opted_out_at: string | null
+          updated_at: string
+          user_id: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          divisions?: string[]
+          e164: string
+          id?: string
+          label?: string | null
+          opted_out_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          divisions?: string[]
+          e164?: string
+          id?: string
+          label?: string | null
+          opted_out_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -11283,6 +11340,53 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      prae_sms_log: {
+        Row: {
+          approval_id: string | null
+          created_at: string
+          detail: string | null
+          direction: string
+          e164: string
+          id: string
+          idempotency_key: string | null
+          kind: string
+          message_sid: string | null
+          status: string
+        }
+        Insert: {
+          approval_id?: string | null
+          created_at?: string
+          detail?: string | null
+          direction: string
+          e164: string
+          id?: string
+          idempotency_key?: string | null
+          kind: string
+          message_sid?: string | null
+          status?: string
+        }
+        Update: {
+          approval_id?: string | null
+          created_at?: string
+          detail?: string | null
+          direction?: string
+          e164?: string
+          id?: string
+          idempotency_key?: string | null
+          kind?: string
+          message_sid?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prae_sms_log_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "prae_approvals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products_services: {
         Row: {
@@ -15433,6 +15537,11 @@ export type Database = {
         Args: { _division: string; _user_id: string }
         Returns: boolean
       }
+      prae_engage_emergency_stop: {
+        Args: { _reason: string }
+        Returns: boolean
+      }
+      prae_issue_nonce: { Args: { _approval_id: string }; Returns: Json }
       prae_related_records: { Args: { _email: string }; Returns: Json }
       prae_sha256_hex: { Args: { _input: string }; Returns: string }
       sign_agreement_with_token: {
