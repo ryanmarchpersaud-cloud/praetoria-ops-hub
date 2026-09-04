@@ -289,6 +289,148 @@ Deno.serve(async (req) => {
     };
   };
 
+  // ------------------------------------------------------- execute_approval
+  // Sends EXACTLY the immutable content bound to a server-side approved Prae
+  // approval. The browser supplies only the approval id — never any content.
+  if (action === "execute_approval") {
+    if (settings.prae_execution_enabled !== true) {
+      return json({ error: "Prae execution is disabled" }, 403);
+    }
+    const approvalId = payload.approval_id;
+    if (typeof approvalId !== "string" || !approvalId) {
+      return json({ error: "approval_id required" }, 400);
+    }
+
+    const { data: claim, error: claimError } = await admin.rpc("prae_claim_execution", {
+      _approval_id: approvalId,
+    });
+    if (claimError) return json({ error: claimError.message }, 500);
+    if (!claim?.ok) return json({ error: "not_executable", reason: claim?.reason ?? "unknown" }, 409);
+
+    const fail = async (reason: string, status = 400) => {
+      await admin.rpc("prae_complete_execution", {
+        _approval_id: approvalId,
+        _status: "failed",
+        _receipt: { summary: reason },
+      });
+      return json({ error: reason }, status);
+    };
+
+    const binding = claim.content_binding as Record<string, unknown> | null;
+    if (!binding || binding.channel !== "email") return await fail("unsupported_channel");
+    const toList = Array.isArray(binding.to) ? binding.to : [];
+    if (toList.length !== 1) return await fail("exactly_one_recipient_required");
+
+    const recipient = validateRecipientForPolicy(toList[0], policy);
+    if (!recipient.ok) return await fail(recipient.error);
+    const subject = validateSubject(binding.subject);
+    if (!subject.ok) return await fail(subject.error);
+    const body = normalizeBody(binding.body);
+    if (!body.ok) return await fail(body.error);
+
+    const key = `prae-${approvalId}`;
+    const { data: existing } = await admin
+      .from("comms_outbound_messages").select("*").eq("idempotency_key", key).maybeSingle();
+    if (existing?.status === "sent") {
+      await admin.rpc("prae_complete_execution", {
+        _approval_id: approvalId,
+        _status: "complete",
+        _receipt: { summary: "already_sent", outbound_id: existing.id, content_hash: claim.content_hash },
+      });
+      return json({ record: toOutboundDto(existing), duplicate: true });
+    }
+
+    const messageId = existing?.message_id_header ?? newMessageId("praetoriagroup.ca", crypto.randomUUID());
+    let record = existing;
+    if (!record) {
+      const { data: created, error } = await admin.from("comms_outbound_messages").insert({
+        mailbox_id: mailbox.id,
+        requested_by: auth.userId,
+        requested_by_email: auth.email,
+        from_address: smtpUser,
+        to_address: recipient.address,
+        subject: subject.subject,
+        body_text: body.body,
+        idempotency_key: key,
+        message_id_header: messageId,
+        status: "sending",
+        approved_at: new Date().toISOString(),
+      }).select().single();
+      if (error) return await fail(error.message, 500);
+      record = created;
+    } else {
+      await admin.from("comms_outbound_messages")
+        .update({ status: "sending", approved_at: new Date().toISOString() })
+        .eq("id", record.id);
+    }
+
+    let message: string;
+    try {
+      message = buildMimeMessage({
+        fromAddress: smtpUser,
+        fromName: mailbox.display_name ?? mailbox.label ?? null,
+        to: recipient.address,
+        subject: subject.subject,
+        body: body.body,
+        messageId,
+        inReplyTo: null,
+        references: null,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Message build failed";
+      await admin.from("comms_outbound_messages")
+        .update({ status: "failed", failed_at: new Date().toISOString(), error_text: msg })
+        .eq("id", record.id);
+      return await fail(msg);
+    }
+
+    try {
+      const { transcript } = await sendViaIonos(smtpUser, smtpPass, smtpUser, recipient.address, message);
+      const safe = redactSmtp(transcript, [smtpPass, smtpUser]);
+      const { data: sent } = await admin.from("comms_outbound_messages").update({
+        status: "sent",
+        sent_at: new Date().toISOString(),
+        smtp_result: safe,
+        error_text: null,
+        rfc822_message: message,
+      }).eq("id", record.id).select().maybeSingle();
+      await audit("prae_approved_send", `to=${recipient.address}`, {
+        outbound_id: record.id, approval_id: approvalId, content_hash: claim.content_hash,
+      });
+
+      let sentCopy: Awaited<ReturnType<typeof performSentCopy>> | null = null;
+      try {
+        sentCopy = await performSentCopy(
+          { ...(sent ?? record), rfc822_message: message },
+          settings.sent_copy_enabled === true,
+          true,
+        );
+      } catch { /* sent-copy failure never resends */ }
+
+      await admin.rpc("prae_complete_execution", {
+        _approval_id: approvalId,
+        _status: "complete",
+        _receipt: {
+          summary: "sent",
+          outbound_id: record.id,
+          content_hash: claim.content_hash,
+          message_id: messageId,
+          sent_copy_status: (sentCopy as { status?: string } | null)?.status ?? null,
+        },
+      });
+      return json({ record: toOutboundDto(sent ?? record), sent_copy: sentCopy, approval_id: approvalId });
+    } catch (e) {
+      const raw = e instanceof Error ? e.message : "SMTP failure";
+      const safe = redactSmtp(raw, [smtpPass, smtpUser]);
+      await admin.from("comms_outbound_messages")
+        .update({ status: "failed", failed_at: new Date().toISOString(), error_text: safe, smtp_result: safe })
+        .eq("id", record.id);
+      await admin.rpc("prae_complete_execution", {
+        _approval_id: approvalId, _status: "failed", _receipt: { summary: "smtp_failure" },
+      });
+      return json({ error: "Send failed", detail: safe }, 502);
+    }
+  }
 
 
   // ---------------------------------------------------------------- prepare
