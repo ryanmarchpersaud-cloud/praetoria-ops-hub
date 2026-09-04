@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronRight, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PraeApprovalDetail from '@/components/prae/PraeApprovalDetail';
+import PraeLiveActivity from '@/components/prae/PraeLiveActivity';
 import {
   PRAE_ACTIVITY_DEMO,
   PRAE_ITEM_STATUS_LABEL,
@@ -97,11 +98,18 @@ export default function PraeActivityPage() {
         </p>
       </div>
 
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Live pilot activity
+        </h2>
+        <PraeLiveActivity />
+      </section>
+
       <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive flex gap-2">
         <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
         <span>
-          Demonstration data only. Prae is not connected to AI, email, SMS or any live record, and
-          no action on this screen can execute anything.
+          The tabs below are demonstration data. Prae AI processing and sending remain disabled;
+          nothing on this screen can execute anything.
         </span>
       </div>
 

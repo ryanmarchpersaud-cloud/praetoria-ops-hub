@@ -15433,6 +15433,7 @@ export type Database = {
         Args: { _division: string; _user_id: string }
         Returns: boolean
       }
+      prae_related_records: { Args: { _email: string }; Returns: Json }
       prae_sha256_hex: { Args: { _input: string }; Returns: string }
       sign_agreement_with_token: {
         Args: {
