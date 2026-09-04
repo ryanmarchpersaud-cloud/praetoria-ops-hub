@@ -22,6 +22,8 @@ import {
   type AuditEntry,
   type BoundStorageObject,
   type ProposedAction,
+  type ProposedEmail,
+  type ProposedSms,
 } from '../../supabase/functions/_shared/prae/approvalModel.ts';
 import {
   PRAE_ACTIVITY_DEMO,
@@ -44,7 +46,7 @@ const attachment: BoundStorageObject = {
   sha256: 'a'.repeat(64),
 };
 
-const emailAction: ProposedAction = {
+const emailAction: ProposedEmail = {
   channel: 'email',
   from: 'staging@example.com',
   to: ['sample.customer@example.com'],
@@ -54,7 +56,7 @@ const emailAction: ProposedAction = {
   attachments: [attachment],
 };
 
-const smsAction: ProposedAction = {
+const smsAction: ProposedSms = {
   channel: 'sms',
   fromNumber: '+15550100',
   toNumber: '+15550142',
@@ -124,7 +126,7 @@ describe('prae approval — content binding', () => {
   });
 
   it('binds every sms field including media identity', () => {
-    const withMedia: ProposedAction = { ...(smsAction as never), media: [attachment] } as ProposedAction;
+    const withMedia: ProposedSms = { ...smsAction, media: [attachment] };
     const c = canonicalizeAction(withMedia);
     for (const part of ['sms', '+15550100', '+15550142', 'Reply STOP', 'obj-1', 'v1',
       'application/pdf', '1024', 'a'.repeat(64)]) {
@@ -140,25 +142,25 @@ describe('prae approval — content binding', () => {
     ['from', { from: 'other@example.com' }],
   ])('a changed %s produces a different hash', async (_label, patch) => {
     const before = await hashAction(emailAction);
-    const after = await hashAction({ ...(emailAction as never), ...patch } as ProposedAction);
+    const after = await hashAction({ ...emailAction, ...patch } as ProposedEmail);
     expect(after).not.toBe(before);
   });
 
   it('detects an attachment swapped for a different file with the same name and size', async () => {
     const before = await hashAction(emailAction);
-    const swapped: ProposedAction = {
-      ...(emailAction as never),
+    const swapped: ProposedEmail = {
+      ...emailAction,
       attachments: [{ ...attachment, storageObjectVersion: 'v2', sha256: 'b'.repeat(64) }],
-    } as ProposedAction;
+    };
     expect(await hashAction(swapped)).not.toBe(before);
   });
 
   it('detects a media object swapped for a different file with the same name and size', async () => {
-    const original: ProposedAction = { ...(smsAction as never), media: [attachment] } as ProposedAction;
-    const swapped: ProposedAction = {
-      ...(smsAction as never),
+    const original: ProposedSms = { ...smsAction, media: [attachment] };
+    const swapped: ProposedSms = {
+      ...smsAction,
       media: [{ ...attachment, storageObjectVersion: 'v2', sha256: 'c'.repeat(64) }],
-    } as ProposedAction;
+    };
     expect(await hashAction(swapped)).not.toBe(await hashAction(original));
   });
 });
@@ -268,7 +270,7 @@ describe('prae approval — decisions', () => {
 
   it('invalidates the approval when the content changed', async () => {
     const { approval, audit, nonce } = await pending();
-    const edited: ProposedAction = { ...(emailAction as never), body: 'Demo body (edited)' } as ProposedAction;
+    const edited: ProposedEmail = { ...emailAction, body: 'Demo body (edited)' };
     const r = await decideApproval({
       approval, audit, action: edited, presentedNonce: nonce,
       approver: owner, decision: 'approve', now: NOW, emergencyStop: false,
@@ -281,10 +283,10 @@ describe('prae approval — decisions', () => {
 
   it('invalidates when an attachment is replaced with the same filename and size', async () => {
     const { approval, audit, nonce } = await pending();
-    const swapped: ProposedAction = {
-      ...(emailAction as never),
+    const swapped: ProposedEmail = {
+      ...emailAction,
       attachments: [{ ...attachment, storageObjectVersion: 'v2', sha256: 'd'.repeat(64) }],
-    } as ProposedAction;
+    };
     const r = await decideApproval({
       approval, audit, action: swapped, presentedNonce: nonce,
       approver: owner, decision: 'approve', now: NOW, emergencyStop: false,
