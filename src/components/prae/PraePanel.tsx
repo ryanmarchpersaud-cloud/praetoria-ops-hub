@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Mic, Send, ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
+import { Inbox, ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { useCommsSettings, useCommsMailboxes } from '@/hooks/useCommunications';
