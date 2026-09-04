@@ -59,9 +59,16 @@ export default function CommunicationsHubPage() {
           </h1>
           <div className="flex items-center gap-2">
             <PraeLauncher context="Communications Hub" variant="outline" />
-            <Badge variant="destructive" className="gap-1">
-              <AlertTriangle className="h-3.5 w-3.5" /> Staging Mode
-            </Badge>
+            {settings?.production_pilot_enabled ? (
+              <Badge variant="default" className="gap-1">
+                <ShieldCheck className="h-3.5 w-3.5" /> Production Pilot
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="gap-1">
+                <AlertTriangle className="h-3.5 w-3.5" /> Staging Mode
+              </Badge>
+            )}
+
             <Badge variant="outline" className="gap-1">
               <ShieldCheck className="h-3.5 w-3.5" /> Manual approval required
             </Badge>

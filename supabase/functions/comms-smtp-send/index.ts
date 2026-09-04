@@ -22,10 +22,12 @@ import {
   SmtpError,
   threadHeaders,
   validateRecipient,
+  validateRecipientForPolicy,
   validateSubject,
 } from "./core.ts";
 import { appendDecision, appendOutcome, requireVerifiedSentFolder, resolveSentCopyStatus, type SentCopyStatus } from "../_shared/comms/sentFolder.ts";
 import { runSentCopy } from "../_shared/comms/sentCopyRunner.ts";
+import { credentialEnvNames, recipientPolicy, selectTargetMailbox } from "../_shared/comms/mailboxTarget.ts";
 
 
 const enc = new TextEncoder();
@@ -159,22 +161,26 @@ Deno.serve(async (req) => {
   const action = String(payload.action ?? "prepare");
 
   const { data: settings } = await admin.from("comms_settings").select("*").eq("id", true).maybeSingle();
-  if (!settings?.outbound_enabled) return json({ error: "Staging sending is disabled" }, 403);
+  if (!settings?.outbound_enabled) return json({ error: "Sending is disabled" }, 403);
 
-  const { data: mailbox } = await admin
-    .from("comms_mailboxes")
-    .select("*")
-    .eq("environment", "staging")
-    .eq("is_active", true)
-    .maybeSingle();
-  if (!mailbox) return json({ error: "Staging mailbox is not registered" }, 400);
+  // Resolve the target mailbox: production pilot when enabled, staging otherwise.
+  const productionPilot = settings.production_pilot_enabled === true;
+  const { data: mailboxRows } = await admin.from("comms_mailboxes").select("*").eq("is_active", true);
+  const target = selectTargetMailbox(mailboxRows ?? [], productionPilot);
+  if (!target.ok) return json({ error: target.reason }, 400);
+  const mailbox = target.mailbox;
+  if (mailbox.outbound_enabled === false) return json({ error: "Mailbox sending is disabled" }, 403);
+  const policy = recipientPolicy(target.environment, settings);
 
-  const smtpUser = Deno.env.get("IONOS_STAGING_EMAIL_USER");
-  const smtpPass = Deno.env.get("IONOS_STAGING_EMAIL_PASSWORD");
-  if (!smtpUser || !smtpPass) return json({ error: "Staging mailbox secrets not configured" }, 500);
+  const envNames = credentialEnvNames(mailbox.credential_secret_prefix);
+  if (!envNames.ok) return json({ error: envNames.reason }, 500);
+  const smtpUser = Deno.env.get(envNames.userVar);
+  const smtpPass = Deno.env.get(envNames.passVar);
+  if (!smtpUser || !smtpPass) return json({ error: "Mailbox secrets not configured" }, 500);
 
   const audit = (event: string, detail?: string, metadata?: Record<string, unknown>) =>
     admin.from("comms_audit_log").insert({ mailbox_id: mailbox.id, event, detail, metadata });
+
 
 
   /**
@@ -283,6 +289,148 @@ Deno.serve(async (req) => {
     };
   };
 
+  // ------------------------------------------------------- execute_approval
+  // Sends EXACTLY the immutable content bound to a server-side approved Prae
+  // approval. The browser supplies only the approval id — never any content.
+  if (action === "execute_approval") {
+    if (settings.prae_execution_enabled !== true) {
+      return json({ error: "Prae execution is disabled" }, 403);
+    }
+    const approvalId = payload.approval_id;
+    if (typeof approvalId !== "string" || !approvalId) {
+      return json({ error: "approval_id required" }, 400);
+    }
+
+    const { data: claim, error: claimError } = await admin.rpc("prae_claim_execution", {
+      _approval_id: approvalId,
+    });
+    if (claimError) return json({ error: claimError.message }, 500);
+    if (!claim?.ok) return json({ error: "not_executable", reason: claim?.reason ?? "unknown" }, 409);
+
+    const fail = async (reason: string, status = 400) => {
+      await admin.rpc("prae_complete_execution", {
+        _approval_id: approvalId,
+        _status: "failed",
+        _receipt: { summary: reason },
+      });
+      return json({ error: reason }, status);
+    };
+
+    const binding = claim.content_binding as Record<string, unknown> | null;
+    if (!binding || binding.channel !== "email") return await fail("unsupported_channel");
+    const toList = Array.isArray(binding.to) ? binding.to : [];
+    if (toList.length !== 1) return await fail("exactly_one_recipient_required");
+
+    const recipient = validateRecipientForPolicy(toList[0], policy);
+    if (!recipient.ok) return await fail(recipient.error);
+    const subject = validateSubject(binding.subject);
+    if (!subject.ok) return await fail(subject.error);
+    const body = normalizeBody(binding.body);
+    if (!body.ok) return await fail(body.error);
+
+    const key = `prae-${approvalId}`;
+    const { data: existing } = await admin
+      .from("comms_outbound_messages").select("*").eq("idempotency_key", key).maybeSingle();
+    if (existing?.status === "sent") {
+      await admin.rpc("prae_complete_execution", {
+        _approval_id: approvalId,
+        _status: "complete",
+        _receipt: { summary: "already_sent", outbound_id: existing.id, content_hash: claim.content_hash },
+      });
+      return json({ record: toOutboundDto(existing), duplicate: true });
+    }
+
+    const messageId = existing?.message_id_header ?? newMessageId("praetoriagroup.ca", crypto.randomUUID());
+    let record = existing;
+    if (!record) {
+      const { data: created, error } = await admin.from("comms_outbound_messages").insert({
+        mailbox_id: mailbox.id,
+        requested_by: auth.userId,
+        requested_by_email: auth.email,
+        from_address: smtpUser,
+        to_address: recipient.address,
+        subject: subject.subject,
+        body_text: body.body,
+        idempotency_key: key,
+        message_id_header: messageId,
+        status: "sending",
+        approved_at: new Date().toISOString(),
+      }).select().single();
+      if (error) return await fail(error.message, 500);
+      record = created;
+    } else {
+      await admin.from("comms_outbound_messages")
+        .update({ status: "sending", approved_at: new Date().toISOString() })
+        .eq("id", record.id);
+    }
+
+    let message: string;
+    try {
+      message = buildMimeMessage({
+        fromAddress: smtpUser,
+        fromName: mailbox.display_name ?? mailbox.label ?? null,
+        to: recipient.address,
+        subject: subject.subject,
+        body: body.body,
+        messageId,
+        inReplyTo: null,
+        references: null,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Message build failed";
+      await admin.from("comms_outbound_messages")
+        .update({ status: "failed", failed_at: new Date().toISOString(), error_text: msg })
+        .eq("id", record.id);
+      return await fail(msg);
+    }
+
+    try {
+      const { transcript } = await sendViaIonos(smtpUser, smtpPass, smtpUser, recipient.address, message);
+      const safe = redactSmtp(transcript, [smtpPass, smtpUser]);
+      const { data: sent } = await admin.from("comms_outbound_messages").update({
+        status: "sent",
+        sent_at: new Date().toISOString(),
+        smtp_result: safe,
+        error_text: null,
+        rfc822_message: message,
+      }).eq("id", record.id).select().maybeSingle();
+      await audit("prae_approved_send", `to=${recipient.address}`, {
+        outbound_id: record.id, approval_id: approvalId, content_hash: claim.content_hash,
+      });
+
+      let sentCopy: Awaited<ReturnType<typeof performSentCopy>> | null = null;
+      try {
+        sentCopy = await performSentCopy(
+          { ...(sent ?? record), rfc822_message: message },
+          settings.sent_copy_enabled === true,
+          true,
+        );
+      } catch { /* sent-copy failure never resends */ }
+
+      await admin.rpc("prae_complete_execution", {
+        _approval_id: approvalId,
+        _status: "complete",
+        _receipt: {
+          summary: "sent",
+          outbound_id: record.id,
+          content_hash: claim.content_hash,
+          message_id: messageId,
+          sent_copy_status: (sentCopy as { status?: string } | null)?.status ?? null,
+        },
+      });
+      return json({ record: toOutboundDto(sent ?? record), sent_copy: sentCopy, approval_id: approvalId });
+    } catch (e) {
+      const raw = e instanceof Error ? e.message : "SMTP failure";
+      const safe = redactSmtp(raw, [smtpPass, smtpUser]);
+      await admin.from("comms_outbound_messages")
+        .update({ status: "failed", failed_at: new Date().toISOString(), error_text: safe, smtp_result: safe })
+        .eq("id", record.id);
+      await admin.rpc("prae_complete_execution", {
+        _approval_id: approvalId, _status: "failed", _receipt: { summary: "smtp_failure" },
+      });
+      return json({ error: "Send failed", detail: safe }, 502);
+    }
+  }
 
 
   // ---------------------------------------------------------------- prepare
@@ -290,7 +438,7 @@ Deno.serve(async (req) => {
     const key = payload.idempotency_key;
     if (!isValidIdempotencyKey(key)) return json({ error: "Invalid idempotency key" }, 400);
 
-    const recipient = validateRecipient(payload.to, settings.staging_recipient_allowlist ?? []);
+    const recipient = validateRecipientForPolicy(payload.to, policy);
     if (!recipient.ok) return json({ error: recipient.error }, 400);
     const subject = validateSubject(payload.subject);
     if (!subject.ok) return json({ error: subject.error }, 400);
@@ -380,7 +528,7 @@ Deno.serve(async (req) => {
     if (!claimed) return json({ error: "Send already in progress" }, 409);
 
     // Re-validate against the allow-list at send time.
-    const recheck = validateRecipient(claimed.to_address, settings.staging_recipient_allowlist ?? []);
+    const recheck = validateRecipientForPolicy(claimed.to_address, policy);
     if (!recheck.ok) {
       await admin.from("comms_outbound_messages")
         .update({ status: "failed", failed_at: new Date().toISOString(), error_text: recheck.error })

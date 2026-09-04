@@ -1172,6 +1172,10 @@ export type Database = {
           outbound_enabled: boolean
           poll_interval_seconds: number
           polling_enabled: boolean
+          prae_comms_enabled: boolean
+          prae_execution_enabled: boolean
+          production_pilot_enabled: boolean
+          production_recipient_allowlist: string[]
           remote_images_enabled: boolean
           sent_copy_enabled: boolean
           staging_recipient_allowlist: string[]
@@ -1188,6 +1192,10 @@ export type Database = {
           outbound_enabled?: boolean
           poll_interval_seconds?: number
           polling_enabled?: boolean
+          prae_comms_enabled?: boolean
+          prae_execution_enabled?: boolean
+          production_pilot_enabled?: boolean
+          production_recipient_allowlist?: string[]
           remote_images_enabled?: boolean
           sent_copy_enabled?: boolean
           staging_recipient_allowlist?: string[]
@@ -1204,6 +1212,10 @@ export type Database = {
           outbound_enabled?: boolean
           poll_interval_seconds?: number
           polling_enabled?: boolean
+          prae_comms_enabled?: boolean
+          prae_execution_enabled?: boolean
+          production_pilot_enabled?: boolean
+          production_recipient_allowlist?: string[]
           remote_images_enabled?: boolean
           sent_copy_enabled?: boolean
           staging_recipient_allowlist?: string[]
@@ -11193,6 +11205,9 @@ export type Database = {
           decided_by_role: string | null
           decided_by_user_id: string | null
           division: string
+          executed_at: string | null
+          execution_receipt: Json | null
+          execution_state: string
           expires_at: string
           id: string
           is_synthetic: boolean
@@ -11211,6 +11226,9 @@ export type Database = {
           decided_by_role?: string | null
           decided_by_user_id?: string | null
           division: string
+          executed_at?: string | null
+          execution_receipt?: Json | null
+          execution_state?: string
           expires_at: string
           id?: string
           is_synthetic?: boolean
@@ -11229,6 +11247,9 @@ export type Database = {
           decided_by_role?: string | null
           decided_by_user_id?: string | null
           division?: string
+          executed_at?: string | null
+          execution_receipt?: Json | null
+          execution_state?: string
           expires_at?: string
           id?: string
           is_synthetic?: boolean
@@ -15381,6 +15402,11 @@ export type Database = {
       prae_canonical_action: { Args: { _b: Json }; Returns: string }
       prae_canonical_emails: { Args: { _arr: Json }; Returns: string }
       prae_canonical_objects: { Args: { _arr: Json }; Returns: string }
+      prae_claim_execution: { Args: { _approval_id: string }; Returns: Json }
+      prae_complete_execution: {
+        Args: { _approval_id: string; _receipt: Json; _status: string }
+        Returns: Json
+      }
       prae_constant_time_eq: {
         Args: { _a: string; _b: string }
         Returns: boolean

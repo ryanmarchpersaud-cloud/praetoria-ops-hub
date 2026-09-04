@@ -25,23 +25,26 @@ export type AuthDecision = { ok: true } | { ok: false; status: number; error: st
 export function authorizeSchedulerRequest(
   method: string,
   headerSecret: string | null,
-  expectedSecret: string | undefined | null,
+  expectedSecret: string | undefined | null | readonly (string | undefined | null)[],
   serviceRoleKey?: string | null,
 ): AuthDecision {
   if (method.toUpperCase() !== "POST") {
     return { ok: false, status: 405, error: "Method not allowed" };
   }
-  if (!expectedSecret || expectedSecret.length < 24) {
+  const candidates = (Array.isArray(expectedSecret) ? expectedSecret : [expectedSecret])
+    .filter((s): s is string => typeof s === "string" && s.length >= 24);
+  if (candidates.length === 0) {
     return { ok: false, status: 500, error: "Scheduler secret not configured" };
   }
-  if (serviceRoleKey && expectedSecret === serviceRoleKey) {
+  if (serviceRoleKey && candidates.some((c) => c === serviceRoleKey)) {
     return { ok: false, status: 500, error: "Scheduler secret must not be the service-role key" };
   }
-  if (!headerSecret || !timingSafeEqual(headerSecret, expectedSecret)) {
+  if (!headerSecret || !candidates.some((c) => timingSafeEqual(headerSecret, c))) {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
   return { ok: true };
 }
+
 
 /** Constant-time-ish string comparison. */
 export function timingSafeEqual(a: string, b: string): boolean {

@@ -21,6 +21,7 @@ import {
   readUntil,
   withDeadline,
 } from "./core.ts";
+import { credentialEnvNames, selectTargetMailbox } from "../_shared/comms/mailboxTarget.ts";
 
 const enc = new TextEncoder();
 const LOCK_SECONDS = 240;
@@ -36,14 +37,14 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   // 0. Endpoint authorization — POST + scheduler secret. No browser path.
-  const configured = Deno.env.get("COMMS_SCHEDULER_SECRET");
   const gate = authorizeSchedulerRequest(
     req.method,
     req.headers.get("x-comms-scheduler-secret"),
-    configured,
+    [Deno.env.get("COMMS_SCHEDULER_SECRET"), Deno.env.get("COMMS_SCHEDULER_SECRET_CRON")],
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
   );
   if (!gate.ok) return json({ error: gate.error }, gate.status);
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -88,33 +89,28 @@ async function runPoll(
   const maxMessages = Math.min(settings?.max_messages_per_run ?? 25, 100);
 
 
-  const user = Deno.env.get("IONOS_STAGING_EMAIL_USER");
-  const pass = Deno.env.get("IONOS_STAGING_EMAIL_PASSWORD");
-  if (!user || !pass) return json({ error: "Staging mailbox secrets not configured" }, 500);
-
-  // 2. Resolve (or self-register) the single staging mailbox
-  let { data: mailbox } = await supabase
+  // 2. Resolve the target mailbox. Production pilot ON => the single active
+  //    production mailbox, never a staging fallback. OFF => staging only.
+  const productionPilot = settings?.production_pilot_enabled === true;
+  const { data: mailboxRows, error: mailboxError } = await supabase
     .from("comms_mailboxes")
     .select("*")
-    .eq("environment", "staging")
-    .eq("is_active", true)
-    .maybeSingle();
+    .eq("is_active", true);
+  if (mailboxError) return json({ error: mailboxError.message }, 500);
 
-  if (!mailbox) {
-    const { data: created, error } = await supabase
-      .from("comms_mailboxes")
-      .insert({
-        label: "IONOS Staging Mailbox",
-        email_address: user,
-        credential_secret_prefix: "IONOS_STAGING_EMAIL",
-        environment: "staging",
-        division: "staging",
-      })
-      .select()
-      .single();
-    if (error) return json({ error: error.message }, 500);
-    mailbox = created;
+  const target = selectTargetMailbox(mailboxRows ?? [], productionPilot);
+  if (!target.ok) return json({ skipped: true, reason: target.reason });
+  const mailbox = target.mailbox;
+  if (mailbox.inbound_enabled === false) {
+    return json({ skipped: true, reason: "inbound_disabled" });
   }
+
+  const envNames = credentialEnvNames(mailbox.credential_secret_prefix);
+  if (!envNames.ok) return json({ error: envNames.reason }, 500);
+  const user = Deno.env.get(envNames.userVar);
+  const pass = Deno.env.get(envNames.passVar);
+  if (!user || !pass) return json({ error: "Mailbox secrets not configured" }, 500);
+
 
   await supabase.from("comms_sync_state").upsert(
     { mailbox_id: mailbox.id, folder: "INBOX" },
@@ -188,10 +184,25 @@ async function runPoll(
     const examine = await cmd("EXAMINE INBOX"); // read-only select
 
     const uidValidity = Number(examine.match(/UIDVALIDITY (\d+)/)?.[1] ?? 0);
+    const uidNext = Number(examine.match(/UIDNEXT (\d+)/)?.[1] ?? 0);
     let lastUid = Number(locked.last_seen_uid ?? 0);
     if (locked.uid_validity && Number(locked.uid_validity) !== uidValidity) {
       lastUid = 0; // mailbox was recreated — restart cleanly
     }
+
+    // future_only baseline: on the very first run, checkpoint at the mailbox's
+    // current highest UID so no historical message is ever imported.
+    if (mailbox.sync_start_mode === "future_only" && !mailbox.baseline_uid && lastUid === 0) {
+      const baseline = uidNext > 0 ? uidNext - 1 : 0;
+      lastUid = baseline;
+      await supabase.from("comms_mailboxes")
+        .update({ baseline_uid: baseline, baseline_established_at: new Date().toISOString() })
+        .eq("id", mailbox.id);
+      await audit("baseline_established", `uid ${baseline}`, { baseline_uid: baseline, uid_validity: uidValidity });
+    } else if (mailbox.baseline_uid && lastUid < Number(mailbox.baseline_uid)) {
+      lastUid = Number(mailbox.baseline_uid);
+    }
+
 
     const search = await cmd(`UID SEARCH UID ${lastUid + 1}:*`);
     const uids = (search.match(/^\* SEARCH([\d ]*)/m)?.[1] ?? "")
