@@ -660,6 +660,8 @@ function AppRoutes() {
 
         <Route path="/activity" element={<ModuleGuard module="ownerOnly"><ActivityPage /></ModuleGuard>} />
         <Route path="/prae" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PraeActivityPage /></Suspense></ModuleGuard>} />
+        <Route path="/prae/approvals" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PraeApprovalInbox /></Suspense></ModuleGuard>} />
+        <Route path="/prae/approvals/:id" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><PraeApprovalDecision /></Suspense></ModuleGuard>} />
 
         <Route path="/communications" element={<ModuleGuard module="ownerOnly"><Suspense fallback={<RouteLoading />}><CommunicationsHubPage /></Suspense></ModuleGuard>} />
 
