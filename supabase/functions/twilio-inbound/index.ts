@@ -1,20 +1,47 @@
-// Phase 1G — inbound SMS commands. Read-only by design.
+// Same-number router for +1 651 899 2021.
+//
+// Order of operations, strictly:
+//   1. POST only, small body cap
+//   2. X-Twilio-Signature validated in constant time against the NEW url (mandatory)
+//   3. Prae handling ONLY when sender == verified owner number AND body is an exact
+//      supported command. Everything else is forwarded verbatim to the existing
+//      customer-messaging webhook with a signature recomputed for the OLD url.
 //
 // Nothing here can approve, send, edit or release the emergency stop.
-// The only state change an SMS can cause is engaging the stop (PAUSE) and
-// opt-out/opt-in for the sender's own number.
-//
-// Order of checks, all before any database read of Prae content:
-//   1. POST only, small body cap
-//   2. X-Twilio-Signature validated in constant time (mandatory)
-//   3. sender must be an authorised, active phone
-//   4. MessageSid replay protection + per-number sliding-window rate limit
+// Customer message bodies, media URLs and raw phone numbers are never stored or logged.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const APP_URL = "https://praetoriagroup.ca";
+const LEGACY_WEBHOOK_URL = "https://tdsrgyvrcgzbyhjqchzj.supabase.co/functions/v1/twilio-webhook";
 const MAX_BODY_BYTES = 8_192;
 const INBOUND_WINDOW_MS = 5 * 60_000;
 const INBOUND_WINDOW_MAX = 10;
+
+const OPT_OUT_WORDS = ["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"];
+const OPT_IN_WORDS = ["START", "UNSTOP"];
+const PRAE_COMMANDS = new Set([
+  "STATUS",
+  "WHAT NEEDS APPROVAL?",
+  "URGENT",
+  "PAUSE",
+  "HELP",
+  "APPROVE",
+  "YES",
+  ...OPT_OUT_WORDS,
+  ...OPT_IN_WORDS,
+]);
+
+function maskNumber(e164: string) {
+  return e164.length >= 9 ? `${e164.slice(0, 5)}•••${e164.slice(-4)}` : "•••";
+}
+
+function normalizeE164(raw: string) {
+  const digits = (raw ?? "").replace(/[^\d+]/g, "");
+  if (digits.startsWith("+")) return digits;
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  return digits ? `+${digits}` : "";
+}
 
 function twiml(message?: string, status = 200) {
   const body = message
@@ -46,6 +73,29 @@ async function twilioSignature(authToken: string, url: string, params: Record<st
   return btoa(String.fromCharCode(...new Uint8Array(sig)));
 }
 
+/** Forward the untouched Twilio form body to the legacy handler, re-signed for that URL. */
+async function forwardToLegacy(
+  authToken: string,
+  rawBody: string,
+  params: Record<string, string>,
+): Promise<Response> {
+  const signature = await twilioSignature(authToken, LEGACY_WEBHOOK_URL, params);
+  const upstream = await fetch(LEGACY_WEBHOOK_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-Twilio-Signature": signature,
+      "User-Agent": "TwilioProxy/1.1",
+    },
+    body: rawBody,
+  });
+  const text = await upstream.text();
+  const headers: Record<string, string> = {
+    "Content-Type": upstream.headers.get("Content-Type") ?? "text/xml",
+  };
+  return new Response(text, { status: upstream.status, headers });
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("method_not_allowed", { status: 405 });
 
@@ -69,17 +119,38 @@ Deno.serve(async (req) => {
     return new Response("forbidden", { status: 403 });
   }
 
+  const from = normalizeE164(params.From ?? "");
+  const sid = params.MessageSid ?? params.SmsMessageSid ?? "";
+  const command = (params.Body ?? "").trim().toUpperCase().replace(/\s+/g, " ");
+
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  const from = params.From ?? "";
-  const sid = params.MessageSid ?? params.SmsMessageSid ?? "";
-  const text = (params.Body ?? "").trim();
-  const upper = text.toUpperCase();
+  // Is the sender the verified owner number? Only that number can talk to Prae.
+  const { data: phone } = from
+    ? await admin
+        .from("prae_authorized_phones")
+        .select("id, e164, active, opted_out_at, verified_at, divisions")
+        .eq("e164", from)
+        .maybeSingle()
+    : { data: null as any };
 
-  // Replay protection — a repeated MessageSid is acknowledged and ignored.
+  const isOwner = !!phone && !!phone.verified_at;
+  const isCommand = PRAE_COMMANDS.has(command);
+
+  // Everything that is not an exact command from the verified owner number goes
+  // straight to the existing customer-messaging webhook. No body, media URL or
+  // phone number is stored here.
+  if (!isOwner || !isCommand) {
+    console.log(
+      `twilio-inbound: forwarded to legacy handler (owner=${isOwner}, command=${isCommand})`,
+    );
+    return await forwardToLegacy(authToken, raw, params);
+  }
+
+  // ---- Prae command path (owner only, routing metadata + masked number only) ----
   if (sid) {
     const { error: dupErr } = await admin.from("prae_sms_log").insert({
       direction: "inbound",
@@ -88,43 +159,33 @@ Deno.serve(async (req) => {
       kind: "command",
       status: "received",
     });
+    // Duplicate MessageSid → already processed, acknowledge and do nothing.
     if (dupErr) return twiml();
   }
 
-  const { data: phone } = await admin
-    .from("prae_authorized_phones")
-    .select("id, e164, active, opted_out_at, divisions")
-    .eq("e164", from)
-    .maybeSingle();
-
-  // Carrier opt-out words are honoured even for unknown numbers.
-  if (["STOP", "STOPALL", "UNSUBSCRIBE", "CANCEL", "END", "QUIT"].includes(upper)) {
-    if (phone) {
-      await admin
-        .from("prae_authorized_phones")
-        .update({ opted_out_at: new Date().toISOString(), active: false, updated_at: new Date().toISOString() })
-        .eq("id", phone.id);
-    }
+  if (OPT_OUT_WORDS.includes(command)) {
+    await admin
+      .from("prae_authorized_phones")
+      .update({ opted_out_at: new Date().toISOString(), active: false, updated_at: new Date().toISOString() })
+      .eq("id", phone.id);
     return twiml("Praetoria Ops: you will receive no further alerts. Reply START to re-enable.");
   }
-  if (["START", "UNSTOP", "YES TO ALERTS"].includes(upper)) {
-    if (phone) {
-      await admin
-        .from("prae_authorized_phones")
-        .update({ opted_out_at: null, active: true, updated_at: new Date().toISOString() })
-        .eq("id", phone.id);
-    }
+  if (OPT_IN_WORDS.includes(command)) {
+    await admin
+      .from("prae_authorized_phones")
+      .update({ opted_out_at: null, active: true, updated_at: new Date().toISOString() })
+      .eq("id", phone.id);
     return twiml("Praetoria Ops alerts re-enabled. Reply STOP to opt out.");
   }
-  if (upper === "HELP" || upper === "INFO") {
-    return twiml("Praetoria Ops alerts. Commands: STATUS, URGENT, WHAT NEEDS APPROVAL, PAUSE. Support: support@praetoriagroup.ca. Reply STOP to opt out.");
+  if (command === "HELP") {
+    return twiml("Praetoria Ops alerts. Commands: STATUS, URGENT, WHAT NEEDS APPROVAL?, PAUSE. Support: support@praetoriagroup.ca. Reply STOP to opt out.");
   }
 
-  if (!phone || !phone.active || phone.opted_out_at) {
-    return twiml("Praetoria Ops: number not recognised.");
+  if (!phone.active || phone.opted_out_at) {
+    return twiml("Praetoria Ops: alerts are paused for this number. Reply START to re-enable.");
   }
 
-  // Sliding-window rate limit.
+  // Sliding-window rate limit (masked number only in logs).
   const since = new Date(Date.now() - INBOUND_WINDOW_MS).toISOString();
   const { count } = await admin
     .from("prae_sms_log")
@@ -132,22 +193,24 @@ Deno.serve(async (req) => {
     .eq("e164", from)
     .eq("direction", "inbound")
     .gte("created_at", since);
-  if ((count ?? 0) > INBOUND_WINDOW_MAX) return twiml();
+  if ((count ?? 0) > INBOUND_WINDOW_MAX) {
+    console.log(`twilio-inbound: rate limited ${maskNumber(from)}`);
+    return twiml();
+  }
 
   const link = `${APP_URL}/prae/approvals`;
 
   // A reply can never approve anything.
-  if (/^(YES|Y|OK|OKAY|APPROVE|APPROVED|SEND|GO)\b/.test(upper)) {
+  if (command === "YES" || command === "APPROVE") {
     return twiml(`Praetoria Ops: replies cannot approve anything. Open ${link} and approve there.`);
   }
 
-  if (upper === "PAUSE") {
+  if (command === "PAUSE") {
     await admin.rpc("prae_engage_emergency_stop", { _reason: "PAUSE received by SMS" });
     return twiml("Praetoria Ops: emergency stop engaged. Nothing will send. Resume in the Ops Hub only.");
   }
 
-
-  if (upper === "STATUS") {
+  if (command === "STATUS") {
     const { count: pending } = await admin
       .from("prae_approvals")
       .select("id", { count: "exact", head: true })
@@ -159,7 +222,7 @@ Deno.serve(async (req) => {
     return twiml(`Praetoria Ops: ${pending ?? 0} pending approval(s), ${attention ?? 0} needing attention. ${link}`);
   }
 
-  if (upper === "URGENT") {
+  if (command === "URGENT") {
     const { count: urgent } = await admin
       .from("prae_approvals")
       .select("id", { count: "exact", head: true })
@@ -168,7 +231,7 @@ Deno.serve(async (req) => {
     return twiml(`Praetoria Ops: ${urgent ?? 0} urgent item(s). ${link}`);
   }
 
-  if (upper.replace(/[?.!]/g, "").trim() === "WHAT NEEDS APPROVAL") {
+  if (command === "WHAT NEEDS APPROVAL?") {
     const { data: rows } = await admin
       .from("prae_approvals")
       .select("division")
