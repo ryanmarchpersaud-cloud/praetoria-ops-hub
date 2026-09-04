@@ -40,3 +40,7 @@ project_id = "czltgypfgegjmcsczpms"
     verify_jwt = false
   [functions.weather]
     verify_jwt = false
+  [functions.prae-notify]
+    verify_jwt = true
+  [functions.twilio-inbound]
+    verify_jwt = false

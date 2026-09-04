@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, memo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate, useNavigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useNavigate, useLocation, Outlet } from "react-router-dom";
+import { storeReturnTo, takeReturnTo } from "@/lib/praeReturnTo";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -550,6 +551,8 @@ function LoginRoute() {
   if ((isPropertyManager || isLeasingAgent) && !canAccessAdminPortal) return <Navigate to="/pm-staff" replace />;
   if (isCustomer) return <Navigate to="/portal" replace />;
   if (isStaff && !canAccessAdminPortal) return <Navigate to="/worker" replace />;
+  const returnTo = takeReturnTo();
+  if (returnTo) return <Navigate to={returnTo} replace />;
   return <Navigate to="/" replace />;
 }
 
