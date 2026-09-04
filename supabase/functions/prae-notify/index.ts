@@ -50,14 +50,97 @@ Deno.serve(async (req) => {
   const { data: userData } = await asCaller.auth.getUser();
   if (!userData?.user) return json({ error: "not_authenticated" }, 401);
 
-  let body: { approval_id?: string; dry_run?: boolean };
+  let body: { approval_id?: string; dry_run?: boolean; connectivity_test?: boolean };
   try {
     body = await req.json();
   } catch {
     return json({ error: "invalid_body" }, 400);
   }
+
+  // Owner-authorised, content-free channel test. Sends one fixed sentence with
+  // no link, no customer data and no approval attached.
+  if (body.connectivity_test) {
+    const { data: isOwner } = await asCaller.rpc("is_admin_or_owner", {
+      _user_id: userData.user.id,
+    });
+    if (isOwner !== true) return json({ error: "role_not_permitted" }, 403);
+
+    const { data: phones } = await admin
+      .from("prae_authorized_phones")
+      .select("e164, active, opted_out_at, verified_at");
+    const targets = (phones ?? []).filter((p) =>
+      p.active && !p.opted_out_at && p.verified_at
+    );
+    if (targets.length !== 1) {
+      return json({ error: "expected_exactly_one_verified_phone", found: targets.length }, 400);
+    }
+    const target = targets[0];
+    const testText =
+      "Prae test: Mobile notifications are connected. " +
+      "No customer information is included and no action is required.";
+
+    const fromNumber = Deno.env.get("TWILIO_PHONE_NUMBER") ??
+      Deno.env.get("TWILIO_FROM_NUMBER");
+    const lovableKeyT = Deno.env.get("LOVABLE_API_KEY");
+    const twilioKeyT = Deno.env.get("TWILIO_API_KEY");
+
+    if (body.dry_run) {
+      return json({
+        dry_run: true,
+        connectivity_test: true,
+        to: maskNumber(target.e164),
+        from: fromNumber ? maskNumber(fromNumber) : null,
+        message: testText,
+        configured: !!(lovableKeyT && twilioKeyT && fromNumber),
+      });
+    }
+
+    if (!lovableKeyT || !twilioKeyT || !fromNumber) {
+      return json({ error: "sms_channel_not_configured" }, 503);
+    }
+
+    const key = `prae-connectivity-test-${target.e164}`;
+    const { error: claimErr } = await admin.from("prae_sms_log").insert({
+      direction: "outbound",
+      e164: target.e164,
+      idempotency_key: key,
+      kind: "connectivity_test",
+      status: "queued",
+    });
+    if (claimErr) return json({ skipped: "already_tested" });
+
+    const res = await fetch(`${GATEWAY_URL}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKeyT}`,
+        "X-Connection-Api-Key": twilioKeyT,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ To: target.e164, From: fromNumber, Body: testText }),
+    });
+    const payloadT = await res.text();
+    if (!res.ok) {
+      console.error(`Twilio test send failed [${res.status}]: ${payloadT}`);
+      await admin.from("prae_sms_log").update({ status: "failed", detail: `${res.status}` })
+        .eq("idempotency_key", key);
+      return json({ error: "provider_request_failed", status: res.status, details: payloadT }, res.status);
+    }
+    const parsed = JSON.parse(payloadT) as { sid?: string; status?: string };
+    await admin.from("prae_sms_log")
+      .update({ status: "sent", message_sid: parsed.sid ?? null })
+      .eq("idempotency_key", key);
+    return json({
+      connectivity_test: true,
+      to: maskNumber(target.e164),
+      from: maskNumber(fromNumber),
+      sid: parsed.sid ?? null,
+      provider_status: parsed.status ?? null,
+    });
+  }
+
   const approvalId = body.approval_id;
   if (!approvalId) return json({ error: "approval_id_required" }, 400);
+
 
   // Read under the caller's own RLS — a non-owner simply sees nothing.
   const { data: approval, error: readErr } = await asCaller
@@ -97,7 +180,7 @@ Deno.serve(async (req) => {
 
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
   const twilioKey = Deno.env.get("TWILIO_API_KEY");
-  const from = Deno.env.get("TWILIO_FROM_NUMBER");
+  const from = Deno.env.get("TWILIO_PHONE_NUMBER") ?? Deno.env.get("TWILIO_FROM_NUMBER");
   if (!lovableKey || !twilioKey || !from) {
     return json({ error: "sms_channel_not_configured" }, 503);
   }
