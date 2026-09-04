@@ -15533,6 +15533,8 @@ export type Database = {
         Args: { _approval_id: string; _decision: string; _nonce: string }
         Returns: Json
       }
+      prae_delete_approval: { Args: { _approval_id: string }; Returns: Json }
+      prae_delete_approvals: { Args: { _states: string[] }; Returns: Json }
       prae_division_allowed: {
         Args: { _division: string; _user_id: string }
         Returns: boolean
@@ -15543,6 +15545,7 @@ export type Database = {
       }
       prae_issue_nonce: { Args: { _approval_id: string }; Returns: Json }
       prae_related_records: { Args: { _email: string }; Returns: Json }
+      prae_reopen_approval: { Args: { _approval_id: string }; Returns: Json }
       prae_sha256_hex: { Args: { _input: string }; Returns: string }
       sign_agreement_with_token: {
         Args: {
