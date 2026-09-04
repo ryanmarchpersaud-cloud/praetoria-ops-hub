@@ -370,7 +370,7 @@ function AdminRoute({ children }: { children?: React.ReactNode }) {
   const { user, loading, mustChangePassword, mustChangePasswordChecked } = useAuth();
   const { canAccessAdminPortal, canAccessPMStaffPortal, isCustomer, isSubcontractor, isStaff, isTenant, isPropertyManager, isLeasingAgent, isActiveUser, isLoading } = useAuthorization();
   if (loading) return <RouteLoading />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <LoginRedirect />;
   if (!mustChangePasswordChecked) {
     return <AppLayout><RouteContentLoading /></AppLayout>;
   }
