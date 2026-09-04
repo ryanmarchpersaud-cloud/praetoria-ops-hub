@@ -453,7 +453,13 @@ export type DecisionRejection =
 export type DecisionInput = {
   approval: ApprovalRequest;
   audit: readonly AuditEntry[];
-  action: ProposedAction;
+  /**
+   * Optional client-presented view of the proposal. It is NEVER authoritative:
+   * the decision always recomputes the hash from `approval.contentBinding`.
+   * When supplied it is only used to detect that the caller is looking at
+   * something other than the bound content, which invalidates the approval.
+   */
+  action?: ProposedAction;
   presentedNonce: string;
   approver: Approver;
   decision: 'approve' | 'reject';
@@ -468,6 +474,11 @@ export type DecisionInput = {
  * The database mirror of this function (public.prae_decide_approval) applies
  * exactly the same conditions inside a single locked transaction, so two
  * simultaneous attempts can only ever yield one accepted decision.
+ *
+ * Phase 1E.2 ordering: identity/role is checked FIRST, before any approval
+ * state is read, before the emergency stop is consulted and before any audit
+ * entry is written. An unauthorized caller therefore learns nothing and leaves
+ * no audit trace.
  */
 export async function decideApproval(input: DecisionInput): Promise<DecisionResult> {
   const { approval, action, presentedNonce, approver, now } = input;
@@ -484,9 +495,11 @@ export async function decideApproval(input: DecisionInput): Promise<DecisionResu
     }),
   });
 
+  // 1. Authorization before ANY state access or audit write.
+  if (!APPROVER_ROLES.includes(approver.role as ApproverRole)) {
+    return { ok: false, reason: 'role_not_permitted', approval, audit: [...input.audit] };
+  }
   if (input.emergencyStop) return fail('emergency_stop_active', 'emergency_stop_rejected');
-  if (!APPROVER_ROLES.includes(approver.role as ApproverRole))
-    return fail('role_not_permitted', 'unauthorized_rejected');
   if (!approver.divisions.includes(approval.division))
     return fail('division_not_permitted', 'unauthorized_rejected');
   if (approval.nonceUsed) return fail('nonce_already_used', 'replay_rejected');
@@ -507,11 +520,18 @@ export async function decideApproval(input: DecisionInput): Promise<DecisionResu
       }),
     };
   }
-  const currentHash = await hashAction(action);
-  if (!constantTimeEqual(currentHash, approval.contentHash)) {
+  // 2. The hash is recomputed from the authoritative immutable stored binding.
+  const recomputed = await hashAction(approval.contentBinding);
+  const presented = action ? await hashAction(action) : recomputed;
+  if (
+    approval.contentHashVersion !== CONTENT_HASH_VERSION ||
+    !constantTimeEqual(recomputed, approval.contentHash) ||
+    !constantTimeEqual(presented, approval.contentHash)
+  ) {
     const invalidated = invalidateOnEdit(approval, input.audit, now);
     return { ok: false, reason: 'content_changed', ...invalidated };
   }
+
 
   const state: PraeApprovalState = input.decision === 'approve' ? 'approved' : 'rejected';
   return {
