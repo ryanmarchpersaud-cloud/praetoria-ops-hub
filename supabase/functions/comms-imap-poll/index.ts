@@ -21,6 +21,7 @@ import {
   readUntil,
   withDeadline,
 } from "./core.ts";
+import { credentialEnvNames, selectTargetMailbox } from "../_shared/comms/mailboxTarget.ts";
 
 const enc = new TextEncoder();
 const LOCK_SECONDS = 240;
@@ -36,14 +37,14 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   // 0. Endpoint authorization — POST + scheduler secret. No browser path.
-  const configured = Deno.env.get("COMMS_SCHEDULER_SECRET");
   const gate = authorizeSchedulerRequest(
     req.method,
     req.headers.get("x-comms-scheduler-secret"),
-    configured,
+    [Deno.env.get("COMMS_SCHEDULER_SECRET"), Deno.env.get("COMMS_SCHEDULER_SECRET_CRON")],
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
   );
   if (!gate.ok) return json({ error: gate.error }, gate.status);
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
