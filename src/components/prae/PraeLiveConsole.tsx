@@ -151,8 +151,8 @@ export default function PraeLiveConsole({
       subject,
       body,
     });
-    if (!built.ok) {
-      toast.error(built.error);
+    if (built.ok !== true) {
+      toast.error((built as { ok: false; error: string }).error);
       return;
     }
 
