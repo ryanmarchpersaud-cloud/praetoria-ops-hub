@@ -88,7 +88,7 @@ describe('strict binding validation', () => {
       sha256: 'a'.repeat(64),
     };
     expect(() => validateBinding({ ...base, attachments: [{ ...good, extra: 1 }] })).toThrow(
-      /unknown attachment field/,
+      /unknown field extra/,
     );
     const { sha256: _drop, ...missing } = good;
     expect(() => validateBinding({ ...base, attachments: [missing] })).toThrow(BindingError);
@@ -102,12 +102,21 @@ describe('strict binding validation', () => {
 });
 
 describe('server-authoritative binding', () => {
-  it('the caller cannot choose the stored content hash', async () => {
+  it('the caller cannot choose or smuggle in the stored content hash', async () => {
     const action = CANONICAL_FIXTURES[0].action;
+    // a caller-supplied hash is not part of the API surface at all
+    await expect(
+      createApproval({
+        id: 'ap-0',
+        action: { ...action, ...({ contentHash: 'f'.repeat(64) } as object) } as typeof action,
+        division: 'Snow & Ice',
+        now: NOW,
+      }),
+    ).rejects.toThrow(/unknown field contentHash/);
+    // and the stored hash is always the server-computed hash of the canonical form
     const { approval } = await createApproval({
       id: 'ap-1',
-      // a caller-supplied hash is not part of the API and is ignored entirely
-      action: { ...action, ...({ contentHash: 'f'.repeat(64) } as object) } as typeof action,
+      action,
       division: 'Snow & Ice',
       now: NOW,
     });
