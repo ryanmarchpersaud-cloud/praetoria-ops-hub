@@ -495,13 +495,17 @@ export async function decideApproval(input: DecisionInput): Promise<DecisionResu
     }),
   });
 
-  // 1. Authorization before ANY state access or audit write.
+  // 1. Authorization before ANY state access, emergency-stop read or audit write.
   if (!APPROVER_ROLES.includes(approver.role as ApproverRole)) {
     return { ok: false, reason: 'role_not_permitted', approval, audit: [...input.audit] };
   }
+  // 2. Division permission is still authorization: it precedes the emergency
+  //    stop so an out-of-division caller cannot mint emergency-stop audit rows.
+  if (!approver.divisions.includes(approval.division)) {
+    return { ok: false, reason: 'division_not_permitted', approval, audit: [...input.audit] };
+  }
   if (input.emergencyStop) return fail('emergency_stop_active', 'emergency_stop_rejected');
-  if (!approver.divisions.includes(approval.division))
-    return fail('division_not_permitted', 'unauthorized_rejected');
+
   if (approval.nonceUsed) return fail('nonce_already_used', 'replay_rejected');
   if (approval.state !== 'pending') return fail('not_pending', 'replay_rejected');
   if (!constantTimeEqual(await hashNonce(presentedNonce), approval.nonceDigest))
