@@ -44,6 +44,26 @@ export function validateRecipient(raw: unknown, allowlist: string[]): RecipientD
   return { ok: true, address };
 }
 
+/**
+ * Recipient validation under an environment policy.
+ * Staging always enforces its allow-list. Production enforces its allow-list
+ * only when one is configured; otherwise any single valid address is allowed.
+ */
+export function validateRecipientForPolicy(
+  raw: unknown,
+  policy: { enforceAllowlist: boolean; allowlist: string[] },
+): RecipientDecision {
+  if (policy.enforceAllowlist) return validateRecipient(raw, policy.allowlist);
+  if (typeof raw !== "string" || !raw.trim()) return { ok: false, error: "Recipient required" };
+  const address = raw.trim().toLowerCase();
+  if (address.includes(",") || address.includes(";")) {
+    return { ok: false, error: "Only one recipient is allowed" };
+  }
+  if (!isValidEmail(address)) return { ok: false, error: "Invalid recipient address" };
+  return { ok: true, address };
+}
+
+
 export type BodyDecision = { ok: true; body: string } | { ok: false; error: string };
 
 /** Plain text only, bounded, CRLF-normalised, dot-stuffed for SMTP DATA. */
