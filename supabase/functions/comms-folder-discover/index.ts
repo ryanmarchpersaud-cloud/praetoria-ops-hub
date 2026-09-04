@@ -7,14 +7,14 @@
 //    DELETE / APPEND / STORE, never selects a mailbox, never sends mail.
 //  * The Sent folder is taken from the server's \Sent SPECIAL-USE attribute.
 //    Zero or multiple candidates fail closed and require owner selection.
-//  * Staging environment only.
+//  * Targets the active pilot mailbox (production when the pilot is enabled).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import {
-  
   imapQuote,
   readUntil,
   withDeadline,
 } from "../_shared/comms/imapNet.ts";
+import { authorizeSchedulerRequest } from "../comms-imap-poll/core.ts";
 import {
   buildListCommand,
   discoverSentFolder,
