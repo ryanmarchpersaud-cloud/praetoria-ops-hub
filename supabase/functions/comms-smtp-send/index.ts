@@ -159,22 +159,26 @@ Deno.serve(async (req) => {
   const action = String(payload.action ?? "prepare");
 
   const { data: settings } = await admin.from("comms_settings").select("*").eq("id", true).maybeSingle();
-  if (!settings?.outbound_enabled) return json({ error: "Staging sending is disabled" }, 403);
+  if (!settings?.outbound_enabled) return json({ error: "Sending is disabled" }, 403);
 
-  const { data: mailbox } = await admin
-    .from("comms_mailboxes")
-    .select("*")
-    .eq("environment", "staging")
-    .eq("is_active", true)
-    .maybeSingle();
-  if (!mailbox) return json({ error: "Staging mailbox is not registered" }, 400);
+  // Resolve the target mailbox: production pilot when enabled, staging otherwise.
+  const productionPilot = settings.production_pilot_enabled === true;
+  const { data: mailboxRows } = await admin.from("comms_mailboxes").select("*").eq("is_active", true);
+  const target = selectTargetMailbox(mailboxRows ?? [], productionPilot);
+  if (!target.ok) return json({ error: target.reason }, 400);
+  const mailbox = target.mailbox;
+  if (mailbox.outbound_enabled === false) return json({ error: "Mailbox sending is disabled" }, 403);
+  const policy = recipientPolicy(target.environment, settings);
 
-  const smtpUser = Deno.env.get("IONOS_STAGING_EMAIL_USER");
-  const smtpPass = Deno.env.get("IONOS_STAGING_EMAIL_PASSWORD");
-  if (!smtpUser || !smtpPass) return json({ error: "Staging mailbox secrets not configured" }, 500);
+  const envNames = credentialEnvNames(mailbox.credential_secret_prefix);
+  if (!envNames.ok) return json({ error: envNames.reason }, 500);
+  const smtpUser = Deno.env.get(envNames.userVar);
+  const smtpPass = Deno.env.get(envNames.passVar);
+  if (!smtpUser || !smtpPass) return json({ error: "Mailbox secrets not configured" }, 500);
 
   const audit = (event: string, detail?: string, metadata?: Record<string, unknown>) =>
     admin.from("comms_audit_log").insert({ mailbox_id: mailbox.id, event, detail, metadata });
+
 
 
   /**
