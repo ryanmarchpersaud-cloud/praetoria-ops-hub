@@ -184,3 +184,59 @@ export function usePraeRelatedRecords(email: string | null | undefined) {
     },
   });
 }
+
+/** Single approval, caller-scoped. Used by the mobile deep-link screen. */
+export function usePraeApproval(approvalId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['prae-approval', approvalId],
+    enabled: !!approvalId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('prae_approvals' as never)
+        .select('*')
+        .eq('id', approvalId as string)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as unknown as PraeApprovalRow | null;
+    },
+  });
+}
+
+/**
+ * Mints a fresh single-use nonce for an approval the signed-in owner/admin is
+ * already viewing. The nonce is held in memory only — never in a URL, an SMS,
+ * storage or a log line.
+ */
+export function useIssuePraeNonce() {
+  return useMutation({
+    mutationFn: async (approvalId: string) => {
+      const { data, error } = await supabase.rpc('prae_issue_nonce' as never, {
+        _approval_id: approvalId as never,
+      } as never);
+      if (error) throw error;
+      return data as unknown as { ok: boolean; reason?: string; nonce?: string; expires_at?: string };
+    },
+  });
+}
+
+/** Content-free phone alert for one approval. `dryRun` previews without sending. */
+export function useNotifyPraeApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { approvalId: string; dryRun?: boolean }) => {
+      const { data, error } = await supabase.functions.invoke('prae-notify', {
+        body: { approval_id: args.approvalId, dry_run: args.dryRun ?? false },
+      });
+      if (error) throw error;
+      return data as {
+        approval_id?: string;
+        skipped?: string;
+        dry_run?: boolean;
+        recipients?: string[];
+        message?: string;
+        results?: Array<{ to: string; status: string; detail?: string }>;
+      };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['prae-approvals'] }),
+  });
+}
