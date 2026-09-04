@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
 
   const lovableKey = Deno.env.get("LOVABLE_API_KEY");
   const twilioKey = Deno.env.get("TWILIO_API_KEY");
-  const from = Deno.env.get("TWILIO_FROM_NUMBER");
+  const from = Deno.env.get("TWILIO_PHONE_NUMBER") ?? Deno.env.get("TWILIO_FROM_NUMBER");
   if (!lovableKey || !twilioKey || !from) {
     return json({ error: "sms_channel_not_configured" }, 503);
   }
