@@ -47,6 +47,36 @@ export function authorizeSchedulerRequest(
   return { ok: true };
 }
 
+/**
+ * Canonical scheduler authorization (post-rotation).
+ * The credential lives ONLY in Supabase Vault; it is never present in env vars,
+ * cron command text, code or logs. Verification happens server-side in Postgres
+ * via a service-role-only SECURITY DEFINER function that constant-time compares
+ * digests. No fallback/legacy secret is accepted.
+ */
+export async function authorizeSchedulerRequestViaVault(
+  method: string,
+  headerSecret: string | null,
+  supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> },
+): Promise<AuthDecision> {
+  if (method.toUpperCase() !== "POST") {
+    return { ok: false, status: 405, error: "Method not allowed" };
+  }
+  if (!headerSecret) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  const { data, error } = await supabase.rpc("comms_verify_scheduler_secret", {
+    _candidate: headerSecret,
+  });
+  if (error) {
+    return { ok: false, status: 500, error: "Scheduler credential verification failed" };
+  }
+  if (data !== true) {
+    return { ok: false, status: 401, error: "Unauthorized" };
+  }
+  return { ok: true };
+}
+
 /** Constant-time-ish string comparison. */
 export function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;

@@ -1,7 +1,7 @@
 // Phase 1C.1 — READ-ONLY IMAP folder discovery for the staging mailbox.
 //
 // Guarantees:
-//  * POST only. Authorized either by the dedicated COMMS_SCHEDULER_SECRET
+//  * POST only. Authorized either by the vault-held scheduler credential
 //    header (server-to-server) or by an owner/admin session (manual run).
 //  * Issues CAPABILITY and LIST only. Never CREATE / RENAME / SUBSCRIBE /
 //    DELETE / APPEND / STORE, never selects a mailbox, never sends mail.
@@ -10,7 +10,7 @@
 //  * Targets the active pilot mailbox (production when the pilot is enabled).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import {
-  authorizeSchedulerRequest,
+  authorizeSchedulerRequestViaVault,
   imapQuote,
   readUntil,
   withDeadline,
@@ -39,11 +39,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const gate = authorizeSchedulerRequest(
+  const supabaseAuthz = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+  const gate = await authorizeSchedulerRequestViaVault(
     req.method,
     req.headers.get("x-comms-scheduler-secret"),
-    Deno.env.get("COMMS_SCHEDULER_SECRET_CRON") ?? Deno.env.get("COMMS_SCHEDULER_SECRET"),
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+    supabaseAuthz,
   );
   if (!gate.ok) {
     // Fall back to an authenticated owner/admin session for manual runs.

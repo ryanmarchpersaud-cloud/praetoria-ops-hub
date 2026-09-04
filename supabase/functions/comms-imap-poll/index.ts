@@ -1,7 +1,7 @@
 // Phase 1A.1 — bounded, READ-ONLY IONOS IMAP poller (staging mailbox only).
 //
 // Guarantees:
-//  * Server-to-server only: POST + dedicated COMMS_SCHEDULER_SECRET header.
+//  * Server-to-server only: POST + scheduler credential held in Supabase Vault.
 //    No CORS, no browser access, no OPTIONS pre-flight surface.
 //  * Global pause switch: comms_settings.polling_enabled must be true.
 //  * Overlap protection: a lock row with expiry in comms_sync_state.
@@ -11,7 +11,6 @@
 //  * Never sends mail. No AI. No production mailbox.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import {
-  authorizeSchedulerRequest,
   processUidBatch,
   extractPlainText,
   headerValue,
@@ -22,6 +21,7 @@ import {
   withDeadline,
 } from "./core.ts";
 import { credentialEnvNames, selectTargetMailbox } from "../_shared/comms/mailboxTarget.ts";
+import { authorizeSchedulerRequestViaVault } from "../_shared/comms/imapNet.ts";
 
 const enc = new TextEncoder();
 const LOCK_SECONDS = 240;
@@ -37,19 +37,17 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req) => {
   // 0. Endpoint authorization — POST + scheduler secret. No browser path.
-  const gate = authorizeSchedulerRequest(
-    req.method,
-    req.headers.get("x-comms-scheduler-secret"),
-    [Deno.env.get("COMMS_SCHEDULER_SECRET"), Deno.env.get("COMMS_SCHEDULER_SECRET_CRON")],
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
-  );
-  if (!gate.ok) return json({ error: gate.error }, gate.status);
-
-
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  const gate = await authorizeSchedulerRequestViaVault(
+    req.method,
+    req.headers.get("x-comms-scheduler-secret"),
+    supabase,
+  );
+  if (!gate.ok) return json({ error: gate.error }, gate.status);
 
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* no body */ }
