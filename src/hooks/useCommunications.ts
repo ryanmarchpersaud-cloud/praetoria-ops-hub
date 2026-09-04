@@ -15,10 +15,17 @@ export function useCommsSettings() {
       return data as unknown as {
         polling_enabled: boolean;
         hub_enabled: boolean;
+        outbound_enabled: boolean;
         poll_interval_seconds: number;
         max_messages_per_run: number;
+        production_pilot_enabled: boolean;
+        prae_comms_enabled: boolean;
+        prae_execution_enabled: boolean;
+        ai_processing_enabled: boolean;
+        production_recipient_allowlist: string[] | null;
         updated_at: string;
       } | null;
+
     },
   });
 }
