@@ -184,10 +184,25 @@ async function runPoll(
     const examine = await cmd("EXAMINE INBOX"); // read-only select
 
     const uidValidity = Number(examine.match(/UIDVALIDITY (\d+)/)?.[1] ?? 0);
+    const uidNext = Number(examine.match(/UIDNEXT (\d+)/)?.[1] ?? 0);
     let lastUid = Number(locked.last_seen_uid ?? 0);
     if (locked.uid_validity && Number(locked.uid_validity) !== uidValidity) {
       lastUid = 0; // mailbox was recreated — restart cleanly
     }
+
+    // future_only baseline: on the very first run, checkpoint at the mailbox's
+    // current highest UID so no historical message is ever imported.
+    if (mailbox.sync_start_mode === "future_only" && !mailbox.baseline_uid && lastUid === 0) {
+      const baseline = uidNext > 0 ? uidNext - 1 : 0;
+      lastUid = baseline;
+      await supabase.from("comms_mailboxes")
+        .update({ baseline_uid: baseline, baseline_established_at: new Date().toISOString() })
+        .eq("id", mailbox.id);
+      await audit("baseline_established", `uid ${baseline}`, { baseline_uid: baseline, uid_validity: uidValidity });
+    } else if (mailbox.baseline_uid && lastUid < Number(mailbox.baseline_uid)) {
+      lastUid = Number(mailbox.baseline_uid);
+    }
+
 
     const search = await cmd(`UID SEARCH UID ${lastUid + 1}:*`);
     const uids = (search.match(/^\* SEARCH([\d ]*)/m)?.[1] ?? "")
