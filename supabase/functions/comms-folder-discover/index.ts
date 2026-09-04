@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
   const gate = authorizeSchedulerRequest(
     req.method,
     req.headers.get("x-comms-scheduler-secret"),
-    [Deno.env.get("COMMS_SCHEDULER_SECRET"), Deno.env.get("COMMS_SCHEDULER_SECRET_CRON")],
+    Deno.env.get("COMMS_SCHEDULER_SECRET_CRON") ?? Deno.env.get("COMMS_SCHEDULER_SECRET"),
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
   );
   if (!gate.ok) {
