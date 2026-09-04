@@ -156,3 +156,31 @@ export function useExecutePraeApproval() {
     },
   });
 }
+
+export type PraeRelatedRecords = {
+  email: string | null;
+  customers: Array<{ id: string; name: string | null; email: string | null; phone: string | null; customer_status: string | null }>;
+  properties: Array<{ id: string; property_name: string | null; address_line_1: string | null; city: string | null; status: string | null }>;
+  quotes: Array<{ id: string; quote_number: string | null; approval_status: string | null; sent_status: string | null; total: number | null }>;
+  invoices: Array<{ id: string; invoice_number: string | null; status: string | null; total: number | null; balance_due: number | null; due_date: string | null }>;
+  jobs: Array<{ id: string; job_number: string | null; job_title: string | null; status: string | null; scheduled_date: string | null }>;
+  visits: Array<{ id: string; visit_number: string | null; visit_status: string | null; service_date: string | null; scheduled_start_time: string | null }>;
+};
+
+/**
+ * Phase 1F — caller-scoped related-record lookup. Runs as the signed-in user
+ * (SECURITY INVOKER + owner/admin guard); the browser never uses a service key.
+ */
+export function usePraeRelatedRecords(email: string | null | undefined) {
+  return useQuery({
+    queryKey: ['prae-related', email],
+    enabled: !!email,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('prae_related_records' as never, {
+        _email: email as never,
+      } as never);
+      if (error) throw error;
+      return data as unknown as PraeRelatedRecords;
+    },
+  });
+}
