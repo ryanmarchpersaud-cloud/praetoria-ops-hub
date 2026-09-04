@@ -7,7 +7,7 @@
 //    DELETE / APPEND / STORE, never selects a mailbox, never sends mail.
 //  * The Sent folder is taken from the server's \Sent SPECIAL-USE attribute.
 //    Zero or multiple candidates fail closed and require owner selection.
-//  * Staging environment only.
+//  * Targets the active pilot mailbox (production when the pilot is enabled).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import {
   authorizeSchedulerRequest,
@@ -22,6 +22,7 @@ import {
   serverSupportsSpecialUse,
 } from "../_shared/comms/folderDiscovery.ts";
 import { corsHeaders, requireAuth, requireRole } from "../_shared/auth.ts";
+import { credentialEnvNames, selectTargetMailbox } from "../_shared/comms/mailboxTarget.ts";
 
 const enc = new TextEncoder();
 const CONNECT_TIMEOUT_MS = 10_000;
@@ -38,11 +39,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const configured = Deno.env.get("COMMS_SCHEDULER_SECRET");
   const gate = authorizeSchedulerRequest(
     req.method,
     req.headers.get("x-comms-scheduler-secret"),
-    configured,
+    Deno.env.get("COMMS_SCHEDULER_SECRET_CRON") ?? Deno.env.get("COMMS_SCHEDULER_SECRET"),
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
   );
   if (!gate.ok) {
@@ -58,17 +58,19 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  const user = Deno.env.get("IONOS_STAGING_EMAIL_USER");
-  const pass = Deno.env.get("IONOS_STAGING_EMAIL_PASSWORD");
-  if (!user || !pass) return json({ error: "Staging mailbox secrets not configured" }, 500);
+  const { data: settings } = await supabase
+    .from("comms_settings").select("production_pilot_enabled").eq("id", true).maybeSingle();
+  const { data: mailboxRows } = await supabase
+    .from("comms_mailboxes").select("*").eq("is_active", true);
+  const target = selectTargetMailbox(mailboxRows ?? [], settings?.production_pilot_enabled === true);
+  if (!target.ok) return json({ error: target.reason }, 404);
+  const mailbox = target.mailbox;
 
-  const { data: mailbox } = await supabase
-    .from("comms_mailboxes")
-    .select("*")
-    .eq("environment", "staging")
-    .eq("is_active", true)
-    .maybeSingle();
-  if (!mailbox) return json({ error: "No active staging mailbox" }, 404);
+  const envNames = credentialEnvNames(mailbox.credential_secret_prefix);
+  if (!envNames.ok) return json({ error: envNames.reason }, 500);
+  const user = Deno.env.get(envNames.userVar);
+  const pass = Deno.env.get(envNames.passVar);
+  if (!user || !pass) return json({ error: "Mailbox secrets not configured" }, 500);
 
   const audit = (event: string, detail?: string, metadata?: Record<string, unknown>) =>
     supabase.from("comms_audit_log").insert({ mailbox_id: mailbox.id, event, detail, metadata });
