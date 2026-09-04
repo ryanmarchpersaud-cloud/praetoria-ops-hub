@@ -394,6 +394,48 @@ export function invalidateOnEdit(
   };
 }
 
+/**
+ * Phase 1E.2: an edit NEVER rewrites the content attached to an existing
+ * pending or approved record. It invalidates the old approval and produces a
+ * brand-new approval with a new nonce and a new server-computed hash.
+ */
+export async function applyEdit(params: {
+  approval: ApprovalRequest;
+  audit: readonly AuditEntry[];
+  editedAction: ProposedAction;
+  newId: string;
+  division?: string;
+  now: Date;
+  ttlMinutes?: number;
+}): Promise<{
+  invalidated: ApprovalRequest;
+  replacement: ApprovalRequest;
+  nonce: string;
+  audit: AuditEntry[];
+}> {
+  const old = invalidateOnEdit(params.approval, params.audit, params.now);
+  const created = await createApproval({
+    id: params.newId,
+    action: params.editedAction,
+    division: params.division ?? params.approval.division,
+    now: params.now,
+    ttlMinutes: params.ttlMinutes,
+  });
+  return {
+    invalidated: old.approval,
+    replacement: created.approval,
+    nonce: created.nonce,
+    audit: appendAudit(old.audit, {
+      at: params.now.toISOString(),
+      event: 'created',
+      actorUserId: null,
+      actorRole: null,
+      detail: `replacement approval ${params.newId} created after edit`,
+    }),
+  };
+}
+
+
 export type DecisionResult =
   | { ok: true; approval: ApprovalRequest; audit: AuditEntry[] }
   | { ok: false; reason: DecisionRejection; approval: ApprovalRequest; audit: AuditEntry[] };
