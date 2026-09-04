@@ -124,7 +124,104 @@ export function appendAudit(history: readonly AuditEntry[], entry: AuditEntry): 
 // ---------------------------------------------------------------------------
 
 /** Version of the canonical serialisation format bound by the content hash. */
+/** Version of the canonical serialisation format bound by the content hash. */
 export const CONTENT_HASH_VERSION = 2;
+
+// ---------------------------------------------------------------------------
+// Strict binding validation (mirror of public.prae_canonical_action)
+// ---------------------------------------------------------------------------
+
+export class BindingError extends Error {
+  constructor(message: string) {
+    super(`invalid_binding: ${message}`);
+    this.name = 'BindingError';
+  }
+}
+
+const OBJECT_KEYS = [
+  'storageObjectId',
+  'storageObjectVersion',
+  'filename',
+  'mimeType',
+  'sizeBytes',
+  'sha256',
+] as const;
+
+function assertKeys(o: Record<string, unknown>, allowed: readonly string[]) {
+  for (const k of Object.keys(o)) {
+    if (!allowed.includes(k)) throw new BindingError(`unknown field ${k}`);
+  }
+}
+
+function validateObjects(v: unknown, label: string): BoundStorageObject[] {
+  if (!Array.isArray(v)) throw new BindingError(`${label} must be an array`);
+  return v.map((raw) => {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw))
+      throw new BindingError(`${label} entry must be an object`);
+    const o = raw as Record<string, unknown>;
+    assertKeys(o, OBJECT_KEYS);
+    if (Object.keys(o).length !== OBJECT_KEYS.length)
+      throw new BindingError(`${label} entry must have exactly ${OBJECT_KEYS.length} fields`);
+    for (const k of ['storageObjectId', 'storageObjectVersion', 'filename', 'mimeType', 'sha256'])
+      if (typeof o[k] !== 'string') throw new BindingError(`${label}.${k} must be a string`);
+    if (
+      typeof o.sizeBytes !== 'number' ||
+      !Number.isInteger(o.sizeBytes) ||
+      (o.sizeBytes as number) < 0
+    )
+      throw new BindingError(`${label}.sizeBytes must be a non-negative integer`);
+    if (!/^[0-9a-f]{64}$/.test(String(o.sha256).toLowerCase()))
+      throw new BindingError(`${label}.sha256 must be 64 hex characters`);
+    return o as unknown as BoundStorageObject;
+  });
+}
+
+function validateStrings(v: unknown, label: string): string[] {
+  if (!Array.isArray(v)) throw new BindingError(`${label} must be an array`);
+  return v.map((s) => {
+    if (typeof s !== 'string') throw new BindingError(`${label} entry must be a string`);
+    return s;
+  });
+}
+
+/**
+ * Validates an untrusted proposed content binding. Missing, unknown or
+ * malformed fields are rejected. Exactly mirrors the database validation so a
+ * binding accepted here is accepted there and hashes identically.
+ */
+export function validateBinding(input: unknown): ProposedAction {
+  if (typeof input !== 'object' || input === null || Array.isArray(input))
+    throw new BindingError('content_binding is required');
+  const b = input as Record<string, unknown>;
+  if (b.channel === 'email') {
+    assertKeys(b, ['channel', 'from', 'to', 'cc', 'subject', 'body', 'attachments']);
+    for (const k of ['from', 'subject', 'body'])
+      if (typeof b[k] !== 'string') throw new BindingError(`email.${k} must be a string`);
+    return {
+      channel: 'email',
+      from: b.from as string,
+      to: validateStrings(b.to, 'email.to'),
+      ...(b.cc === undefined ? {} : { cc: validateStrings(b.cc, 'email.cc') }),
+      subject: b.subject as string,
+      body: b.body as string,
+      attachments: validateObjects(b.attachments, 'email.attachments'),
+    };
+  }
+  if (b.channel === 'sms') {
+    assertKeys(b, ['channel', 'fromNumber', 'toNumber', 'body', 'media']);
+    for (const k of ['fromNumber', 'toNumber', 'body'])
+      if (typeof b[k] !== 'string') throw new BindingError(`sms.${k} must be a string`);
+    return {
+      channel: 'sms',
+      fromNumber: b.fromNumber as string,
+      toNumber: b.toNumber as string,
+      body: b.body as string,
+      media: validateObjects(b.media, 'sms.media'),
+    };
+  }
+  throw new BindingError('unknown channel');
+}
+
 
 function canonicalObject(o: BoundStorageObject) {
   return [
