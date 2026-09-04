@@ -10,7 +10,7 @@
 //  * Targets the active pilot mailbox (production when the pilot is enabled).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import {
-  authorizeSchedulerRequest,
+  authorizeSchedulerRequestViaVault,
   imapQuote,
   readUntil,
   withDeadline,
