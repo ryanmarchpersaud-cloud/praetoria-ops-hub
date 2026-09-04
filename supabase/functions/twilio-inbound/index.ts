@@ -22,10 +22,12 @@ const OPT_IN_WORDS = ["START", "UNSTOP"];
 const PRAE_COMMANDS = new Set([
   "STATUS",
   "WHAT NEEDS APPROVAL?",
+  "WHAT NEEDS APPROVAL",
   "URGENT",
   "PAUSE",
   "HELP",
   "APPROVE",
+  "APPROVED",
   "YES",
   ...OPT_OUT_WORDS,
   ...OPT_IN_WORDS,
