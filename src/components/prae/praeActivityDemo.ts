@@ -107,7 +107,16 @@ export const PRAE_ACTIVITY_DEMO: PraeActivityItem[] = [
         'Hello,\n\nThanks for checking in. Our crew is scheduled for the next route pass and ' +
         'will clear the windrow at the end of the driveway while they are on site.\n\n' +
         'Please confirm the gate code so we can access the rear lane.\n\nPraetoria Group',
-      attachments: [{ filename: 'demo-route-notice.pdf', sizeBytes: 84_213 }],
+      attachments: [
+        {
+          storageObjectId: 'demo-object-0001',
+          storageObjectVersion: 'v1',
+          filename: 'demo-route-notice.pdf',
+          mimeType: 'application/pdf',
+          sizeBytes: 84_213,
+          sha256: '0'.repeat(64),
+        },
+      ],
     },
   },
   {
