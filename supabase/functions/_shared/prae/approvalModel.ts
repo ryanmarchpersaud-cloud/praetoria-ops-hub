@@ -340,13 +340,17 @@ export async function createApproval(params: {
       `invalid_ttl: expected an integer between 1 and ${MAX_TTL_MINUTES} minutes`,
     );
   }
+  // Phase 1E.2: the binding is validated and the hash is computed here from the
+  // canonical form. A caller can never supply or choose the stored hash.
+  const binding = validateBinding(params.action);
   // The raw nonce lives only in this return value. It is never persisted,
   // logged, placed in a URL, or written to browser storage.
   const nonce = newNonce();
   const approval: ApprovalRequest = {
     id: params.id,
     nonceDigest: await hashNonce(nonce),
-    contentHash: await hashAction(params.action),
+    contentBinding: binding,
+    contentHash: await hashAction(binding),
     contentHashVersion: CONTENT_HASH_VERSION,
     state: 'pending',
     division: params.division,
@@ -354,6 +358,7 @@ export async function createApproval(params: {
     expiresAt: new Date(params.now.getTime() + ttl * 60_000).toISOString(),
     nonceUsed: false,
   };
+
   return {
     approval,
     nonce,
