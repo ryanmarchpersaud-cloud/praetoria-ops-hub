@@ -78,6 +78,12 @@ export type ApprovalRequest = {
   id: string;
   /** SHA-256 hex digest of the nonce. The raw nonce is never stored here. */
   nonceDigest: string;
+  /**
+   * Phase 1E.2: the authoritative immutable copy of the approved proposal.
+   * A future execution phase MUST use exactly this, never a rebuilt action
+   * derived from a mutable customer / job / message record.
+   */
+  contentBinding: ProposedAction;
   contentHash: string;
   contentHashVersion: number;
   state: PraeApprovalState;
@@ -90,6 +96,7 @@ export type ApprovalRequest = {
   decidedAt?: string;
   nonceUsed: boolean;
 };
+
 
 export type AuditEntry = {
   at: string;
@@ -117,7 +124,104 @@ export function appendAudit(history: readonly AuditEntry[], entry: AuditEntry): 
 // ---------------------------------------------------------------------------
 
 /** Version of the canonical serialisation format bound by the content hash. */
+/** Version of the canonical serialisation format bound by the content hash. */
 export const CONTENT_HASH_VERSION = 2;
+
+// ---------------------------------------------------------------------------
+// Strict binding validation (mirror of public.prae_canonical_action)
+// ---------------------------------------------------------------------------
+
+export class BindingError extends Error {
+  constructor(message: string) {
+    super(`invalid_binding: ${message}`);
+    this.name = 'BindingError';
+  }
+}
+
+const OBJECT_KEYS = [
+  'storageObjectId',
+  'storageObjectVersion',
+  'filename',
+  'mimeType',
+  'sizeBytes',
+  'sha256',
+] as const;
+
+function assertKeys(o: Record<string, unknown>, allowed: readonly string[]) {
+  for (const k of Object.keys(o)) {
+    if (!allowed.includes(k)) throw new BindingError(`unknown field ${k}`);
+  }
+}
+
+function validateObjects(v: unknown, label: string): BoundStorageObject[] {
+  if (!Array.isArray(v)) throw new BindingError(`${label} must be an array`);
+  return v.map((raw) => {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw))
+      throw new BindingError(`${label} entry must be an object`);
+    const o = raw as Record<string, unknown>;
+    assertKeys(o, OBJECT_KEYS);
+    if (Object.keys(o).length !== OBJECT_KEYS.length)
+      throw new BindingError(`${label} entry must have exactly ${OBJECT_KEYS.length} fields`);
+    for (const k of ['storageObjectId', 'storageObjectVersion', 'filename', 'mimeType', 'sha256'])
+      if (typeof o[k] !== 'string') throw new BindingError(`${label}.${k} must be a string`);
+    if (
+      typeof o.sizeBytes !== 'number' ||
+      !Number.isInteger(o.sizeBytes) ||
+      (o.sizeBytes as number) < 0
+    )
+      throw new BindingError(`${label}.sizeBytes must be a non-negative integer`);
+    if (!/^[0-9a-f]{64}$/.test(String(o.sha256).toLowerCase()))
+      throw new BindingError(`${label}.sha256 must be 64 hex characters`);
+    return o as unknown as BoundStorageObject;
+  });
+}
+
+function validateStrings(v: unknown, label: string): string[] {
+  if (!Array.isArray(v)) throw new BindingError(`${label} must be an array`);
+  return v.map((s) => {
+    if (typeof s !== 'string') throw new BindingError(`${label} entry must be a string`);
+    return s;
+  });
+}
+
+/**
+ * Validates an untrusted proposed content binding. Missing, unknown or
+ * malformed fields are rejected. Exactly mirrors the database validation so a
+ * binding accepted here is accepted there and hashes identically.
+ */
+export function validateBinding(input: unknown): ProposedAction {
+  if (typeof input !== 'object' || input === null || Array.isArray(input))
+    throw new BindingError('content_binding is required');
+  const b = input as Record<string, unknown>;
+  if (b.channel === 'email') {
+    assertKeys(b, ['channel', 'from', 'to', 'cc', 'subject', 'body', 'attachments']);
+    for (const k of ['from', 'subject', 'body'])
+      if (typeof b[k] !== 'string') throw new BindingError(`email.${k} must be a string`);
+    return {
+      channel: 'email',
+      from: b.from as string,
+      to: validateStrings(b.to, 'email.to'),
+      ...(b.cc === undefined ? {} : { cc: validateStrings(b.cc, 'email.cc') }),
+      subject: b.subject as string,
+      body: b.body as string,
+      attachments: validateObjects(b.attachments, 'email.attachments'),
+    };
+  }
+  if (b.channel === 'sms') {
+    assertKeys(b, ['channel', 'fromNumber', 'toNumber', 'body', 'media']);
+    for (const k of ['fromNumber', 'toNumber', 'body'])
+      if (typeof b[k] !== 'string') throw new BindingError(`sms.${k} must be a string`);
+    return {
+      channel: 'sms',
+      fromNumber: b.fromNumber as string,
+      toNumber: b.toNumber as string,
+      body: b.body as string,
+      media: validateObjects(b.media, 'sms.media'),
+    };
+  }
+  throw new BindingError('unknown channel');
+}
+
 
 function canonicalObject(o: BoundStorageObject) {
   return [
@@ -236,13 +340,17 @@ export async function createApproval(params: {
       `invalid_ttl: expected an integer between 1 and ${MAX_TTL_MINUTES} minutes`,
     );
   }
+  // Phase 1E.2: the binding is validated and the hash is computed here from the
+  // canonical form. A caller can never supply or choose the stored hash.
+  const binding = validateBinding(params.action);
   // The raw nonce lives only in this return value. It is never persisted,
   // logged, placed in a URL, or written to browser storage.
   const nonce = newNonce();
   const approval: ApprovalRequest = {
     id: params.id,
     nonceDigest: await hashNonce(nonce),
-    contentHash: await hashAction(params.action),
+    contentBinding: binding,
+    contentHash: await hashAction(binding),
     contentHashVersion: CONTENT_HASH_VERSION,
     state: 'pending',
     division: params.division,
@@ -250,6 +358,7 @@ export async function createApproval(params: {
     expiresAt: new Date(params.now.getTime() + ttl * 60_000).toISOString(),
     nonceUsed: false,
   };
+
   return {
     approval,
     nonce,
@@ -285,6 +394,48 @@ export function invalidateOnEdit(
   };
 }
 
+/**
+ * Phase 1E.2: an edit NEVER rewrites the content attached to an existing
+ * pending or approved record. It invalidates the old approval and produces a
+ * brand-new approval with a new nonce and a new server-computed hash.
+ */
+export async function applyEdit(params: {
+  approval: ApprovalRequest;
+  audit: readonly AuditEntry[];
+  editedAction: ProposedAction;
+  newId: string;
+  division?: string;
+  now: Date;
+  ttlMinutes?: number;
+}): Promise<{
+  invalidated: ApprovalRequest;
+  replacement: ApprovalRequest;
+  nonce: string;
+  audit: AuditEntry[];
+}> {
+  const old = invalidateOnEdit(params.approval, params.audit, params.now);
+  const created = await createApproval({
+    id: params.newId,
+    action: params.editedAction,
+    division: params.division ?? params.approval.division,
+    now: params.now,
+    ttlMinutes: params.ttlMinutes,
+  });
+  return {
+    invalidated: old.approval,
+    replacement: created.approval,
+    nonce: created.nonce,
+    audit: appendAudit(old.audit, {
+      at: params.now.toISOString(),
+      event: 'created',
+      actorUserId: null,
+      actorRole: null,
+      detail: `replacement approval ${params.newId} created after edit`,
+    }),
+  };
+}
+
+
 export type DecisionResult =
   | { ok: true; approval: ApprovalRequest; audit: AuditEntry[] }
   | { ok: false; reason: DecisionRejection; approval: ApprovalRequest; audit: AuditEntry[] };
@@ -302,7 +453,13 @@ export type DecisionRejection =
 export type DecisionInput = {
   approval: ApprovalRequest;
   audit: readonly AuditEntry[];
-  action: ProposedAction;
+  /**
+   * Optional client-presented view of the proposal. It is NEVER authoritative:
+   * the decision always recomputes the hash from `approval.contentBinding`.
+   * When supplied it is only used to detect that the caller is looking at
+   * something other than the bound content, which invalidates the approval.
+   */
+  action?: ProposedAction;
   presentedNonce: string;
   approver: Approver;
   decision: 'approve' | 'reject';
@@ -317,6 +474,11 @@ export type DecisionInput = {
  * The database mirror of this function (public.prae_decide_approval) applies
  * exactly the same conditions inside a single locked transaction, so two
  * simultaneous attempts can only ever yield one accepted decision.
+ *
+ * Phase 1E.2 ordering: identity/role is checked FIRST, before any approval
+ * state is read, before the emergency stop is consulted and before any audit
+ * entry is written. An unauthorized caller therefore learns nothing and leaves
+ * no audit trace.
  */
 export async function decideApproval(input: DecisionInput): Promise<DecisionResult> {
   const { approval, action, presentedNonce, approver, now } = input;
@@ -333,9 +495,11 @@ export async function decideApproval(input: DecisionInput): Promise<DecisionResu
     }),
   });
 
+  // 1. Authorization before ANY state access or audit write.
+  if (!APPROVER_ROLES.includes(approver.role as ApproverRole)) {
+    return { ok: false, reason: 'role_not_permitted', approval, audit: [...input.audit] };
+  }
   if (input.emergencyStop) return fail('emergency_stop_active', 'emergency_stop_rejected');
-  if (!APPROVER_ROLES.includes(approver.role as ApproverRole))
-    return fail('role_not_permitted', 'unauthorized_rejected');
   if (!approver.divisions.includes(approval.division))
     return fail('division_not_permitted', 'unauthorized_rejected');
   if (approval.nonceUsed) return fail('nonce_already_used', 'replay_rejected');
@@ -356,11 +520,18 @@ export async function decideApproval(input: DecisionInput): Promise<DecisionResu
       }),
     };
   }
-  const currentHash = await hashAction(action);
-  if (!constantTimeEqual(currentHash, approval.contentHash)) {
+  // 2. The hash is recomputed from the authoritative immutable stored binding.
+  const recomputed = await hashAction(approval.contentBinding);
+  const presented = action ? await hashAction(action) : recomputed;
+  if (
+    approval.contentHashVersion !== CONTENT_HASH_VERSION ||
+    !constantTimeEqual(recomputed, approval.contentHash) ||
+    !constantTimeEqual(presented, approval.contentHash)
+  ) {
     const invalidated = invalidateOnEdit(approval, input.audit, now);
     return { ok: false, reason: 'content_changed', ...invalidated };
   }
+
 
   const state: PraeApprovalState = input.decision === 'approve' ? 'approved' : 'rejected';
   return {

@@ -331,7 +331,8 @@ describe('prae approval — role and division isolation', () => {
     });
     expect(r.ok).toBe(false);
     expect(asFail(r).reason).toBe('role_not_permitted');
-    expect(last(r.audit).event).toBe('unauthorized_rejected');
+    // Phase 1E.2: authorization precedes any audit write — no entry is added.
+    expect(r.audit).toEqual(audit);
   });
 
   it('rejects a cross-division approval attempt', async () => {
