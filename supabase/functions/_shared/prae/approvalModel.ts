@@ -1,9 +1,19 @@
-// Phase 1E — Prae approval security foundation.
+// Phase 1E / 1E.1 — Prae approval security foundation.
 //
 // PURE MODEL ONLY. This module performs no I/O: no email, no SMS, no IMAP,
 // no AI, no network. It is not wired to any sending path in this phase.
 // It exists so approval security can be tested with synthetic data before any
 // execution path is ever built.
+//
+// Phase 1E.1 hardening:
+//  - the usable nonce is NEVER stored: only its SHA-256 digest is persisted,
+//    and the raw nonce is returned exactly once by createApproval();
+//  - digests are compared in constant time;
+//  - the content hash binds a versioned canonical form of the COMPLETE
+//    proposed action, including attachment/media storage identity, immutable
+//    version, MIME type, byte size and content digest;
+//  - approver roles are restricted to owner/admin;
+//  - TTL is validated (positive integer minutes, default 15, maximum 60).
 
 export type PraeApprovalState =
   | 'pending'
@@ -14,8 +24,12 @@ export type PraeApprovalState =
 
 export type PraeChannel = 'email' | 'sms';
 
-/** Roles allowed to approve at all. Everything else is rejected. */
-export const APPROVER_ROLES = ['owner', 'admin', 'manager', 'ops_manager'] as const;
+/**
+ * Roles allowed to approve at all. Phase 1E.1: owner and admin only.
+ * Manager / ops-manager / representative approval requires a separate written
+ * authorisation together with explicit division-scoped policies.
+ */
+export const APPROVER_ROLES = ['owner', 'admin'] as const;
 export type ApproverRole = (typeof APPROVER_ROLES)[number];
 
 export type Approver = {
@@ -25,6 +39,21 @@ export type Approver = {
   divisions: string[];
 };
 
+/**
+ * Attachment / media binding. Storage objects are referenced by immutable
+ * identity (object id + version) AND by content digest, so replacing a file
+ * with a different one that has the same filename and byte size still breaks
+ * the binding. Attachments remain synthetic and disabled in this phase.
+ */
+export type BoundStorageObject = {
+  storageObjectId: string;
+  storageObjectVersion: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  sha256: string;
+};
+
 export type ProposedEmail = {
   channel: 'email';
   from: string;
@@ -32,7 +61,7 @@ export type ProposedEmail = {
   cc?: string[];
   subject: string;
   body: string;
-  attachments: { filename: string; sizeBytes: number }[];
+  attachments: BoundStorageObject[];
 };
 
 export type ProposedSms = {
@@ -40,15 +69,17 @@ export type ProposedSms = {
   fromNumber: string;
   toNumber: string;
   body: string;
-  media: { url: string }[];
+  media: BoundStorageObject[];
 };
 
 export type ProposedAction = ProposedEmail | ProposedSms;
 
 export type ApprovalRequest = {
   id: string;
-  nonce: string;
+  /** SHA-256 hex digest of the nonce. The raw nonce is never stored here. */
+  nonceDigest: string;
   contentHash: string;
+  contentHashVersion: number;
   state: PraeApprovalState;
   division: string;
   expiresAt: string;
@@ -81,29 +112,54 @@ export function appendAudit(history: readonly AuditEntry[], entry: AuditEntry): 
   return [...history, entry];
 }
 
-/** Deterministic canonical serialisation of the exact proposed content. */
+// ---------------------------------------------------------------------------
+// Canonical content binding
+// ---------------------------------------------------------------------------
+
+/** Version of the canonical serialisation format bound by the content hash. */
+export const CONTENT_HASH_VERSION = 2;
+
+function canonicalObject(o: BoundStorageObject) {
+  return [
+    o.storageObjectId,
+    o.storageObjectVersion,
+    o.filename,
+    o.mimeType,
+    o.sizeBytes,
+    o.sha256.toLowerCase(),
+  ];
+}
+
+/**
+ * Deterministic canonical serialisation of the EXACT complete proposed action.
+ * Body text is bound verbatim (normalised only for line endings) so any edit
+ * changes the hash.
+ */
 export function canonicalizeAction(action: ProposedAction): string {
+  const normalizeBody = (b: string) => b.replace(/\r\n/g, '\n');
   if (action.channel === 'email') {
     return JSON.stringify([
+      'prae.v2',
       'email',
       action.from.trim().toLowerCase(),
       action.to.map((t) => t.trim().toLowerCase()),
       (action.cc ?? []).map((t) => t.trim().toLowerCase()),
       action.subject,
-      action.body,
-      action.attachments.map((a) => [a.filename, a.sizeBytes]),
+      normalizeBody(action.body),
+      action.attachments.map(canonicalObject),
     ]);
   }
   return JSON.stringify([
+    'prae.v2',
     'sms',
     action.fromNumber.trim(),
     action.toNumber.trim(),
-    action.body,
-    action.media.map((m) => m.url),
+    normalizeBody(action.body),
+    action.media.map(canonicalObject),
   ]);
 }
 
-async function sha256Hex(input: string): Promise<string> {
+export async function sha256Hex(input: string): Promise<string> {
   const bytes = new TextEncoder().encode(input);
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(digest))
@@ -116,11 +172,56 @@ export function hashAction(action: ProposedAction): Promise<string> {
   return sha256Hex(canonicalizeAction(action));
 }
 
+// ---------------------------------------------------------------------------
+// Nonce handling
+// ---------------------------------------------------------------------------
+
+/** Generates a 256-bit random nonce. Returned to the caller only once. */
 export function newNonce(): string {
-  return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
+export function hashNonce(nonce: string): Promise<string> {
+  return sha256Hex(nonce);
+}
+
+/**
+ * Constant-time comparison of two hex digests. No early exit: the full length
+ * is always traversed and the result is a XOR accumulation.
+ */
+export function constantTimeEqual(a: string, b: string): boolean {
+  const len = Math.max(a.length, b.length);
+  let acc = a.length ^ b.length;
+  for (let i = 0; i < len; i++) {
+    acc |= (a.charCodeAt(i) | 0) ^ (b.charCodeAt(i) | 0);
+  }
+  return acc === 0;
+}
+
+// ---------------------------------------------------------------------------
+// Lifetime
+// ---------------------------------------------------------------------------
+
 export const DEFAULT_TTL_MINUTES = 15;
+export const MAX_TTL_MINUTES = 60;
+
+/** Rejects non-integer, zero, negative, NaN and excessive TTL values. */
+export function isValidTtlMinutes(ttl: unknown): ttl is number {
+  return (
+    typeof ttl === 'number' &&
+    Number.isFinite(ttl) &&
+    Number.isInteger(ttl) &&
+    ttl >= 1 &&
+    ttl <= MAX_TTL_MINUTES
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle
+// ---------------------------------------------------------------------------
 
 export async function createApproval(params: {
   id: string;
@@ -128,12 +229,21 @@ export async function createApproval(params: {
   division: string;
   now: Date;
   ttlMinutes?: number;
-}): Promise<{ approval: ApprovalRequest; audit: AuditEntry[] }> {
+}): Promise<{ approval: ApprovalRequest; nonce: string; audit: AuditEntry[] }> {
   const ttl = params.ttlMinutes ?? DEFAULT_TTL_MINUTES;
+  if (!isValidTtlMinutes(ttl)) {
+    throw new RangeError(
+      `invalid_ttl: expected an integer between 1 and ${MAX_TTL_MINUTES} minutes`,
+    );
+  }
+  // The raw nonce lives only in this return value. It is never persisted,
+  // logged, placed in a URL, or written to browser storage.
+  const nonce = newNonce();
   const approval: ApprovalRequest = {
     id: params.id,
-    nonce: newNonce(),
+    nonceDigest: await hashNonce(nonce),
     contentHash: await hashAction(params.action),
+    contentHashVersion: CONTENT_HASH_VERSION,
     state: 'pending',
     division: params.division,
     createdAt: params.now.toISOString(),
@@ -142,6 +252,7 @@ export async function createApproval(params: {
   };
   return {
     approval,
+    nonce,
     audit: appendAudit([], {
       at: approval.createdAt,
       event: 'created',
@@ -202,6 +313,10 @@ export type DecisionInput = {
 /**
  * Validate and record a decision. Never executes anything — the caller of a
  * future phase would still need its own explicit send gate.
+ *
+ * The database mirror of this function (public.prae_decide_approval) applies
+ * exactly the same conditions inside a single locked transaction, so two
+ * simultaneous attempts can only ever yield one accepted decision.
  */
 export async function decideApproval(input: DecisionInput): Promise<DecisionResult> {
   const { approval, action, presentedNonce, approver, now } = input;
@@ -225,7 +340,8 @@ export async function decideApproval(input: DecisionInput): Promise<DecisionResu
     return fail('division_not_permitted', 'unauthorized_rejected');
   if (approval.nonceUsed) return fail('nonce_already_used', 'replay_rejected');
   if (approval.state !== 'pending') return fail('not_pending', 'replay_rejected');
-  if (presentedNonce !== approval.nonce) return fail('nonce_mismatch', 'replay_rejected');
+  if (!constantTimeEqual(await hashNonce(presentedNonce), approval.nonceDigest))
+    return fail('nonce_mismatch', 'replay_rejected');
   if (isExpired(approval, now)) {
     return {
       ok: false,
@@ -241,7 +357,7 @@ export async function decideApproval(input: DecisionInput): Promise<DecisionResu
     };
   }
   const currentHash = await hashAction(action);
-  if (currentHash !== approval.contentHash) {
+  if (!constantTimeEqual(currentHash, approval.contentHash)) {
     const invalidated = invalidateOnEdit(approval, input.audit, now);
     return { ok: false, reason: 'content_changed', ...invalidated };
   }
@@ -267,16 +383,66 @@ export async function decideApproval(input: DecisionInput): Promise<DecisionResu
   };
 }
 
-/** SMS segment estimate — display only. */
-export function smsSegments(body: string): { encoding: 'GSM-7' | 'UCS-2'; segments: number; chars: number } {
-  // eslint-disable-next-line no-control-regex
-  const nonGsm = /[^\u0000-\u007F]/.test(body);
-  const encoding = nonGsm ? 'UCS-2' : 'GSM-7';
-  const single = nonGsm ? 70 : 160;
-  const multi = nonGsm ? 67 : 153;
-  const chars = body.length;
-  const segments = chars === 0 ? 0 : chars <= single ? 1 : Math.ceil(chars / multi);
-  return { encoding, segments, chars };
+// ---------------------------------------------------------------------------
+// SMS segmentation
+// ---------------------------------------------------------------------------
+
+/** GSM 03.38 basic alphabet (each character costs 1 septet). */
+const GSM7_BASIC = new Set(
+  (
+    '@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?' +
+    '¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà'
+  ).split(''),
+);
+
+/** GSM 03.38 extension table (each character costs 2 septets). */
+const GSM7_EXTENDED = new Set(['\f', '^', '{', '}', '\\', '[', '~', ']', '|', '€']);
+
+export type SmsEstimate = {
+  encoding: 'GSM-7' | 'UCS-2';
+  segments: number;
+  /** Billable units: septets for GSM-7 (extension chars count 2), UTF-16 code units for UCS-2. */
+  units: number;
+  /** Visible characters (code points, so an emoji counts as 1). */
+  chars: number;
+};
+
+/**
+ * Accurate SMS segment calculation.
+ *  - GSM-7: 160 units single / 153 per part; extension characters cost 2 units
+ *    and are never split across parts.
+ *  - UCS-2: 70 units single / 67 per part; measured in UTF-16 code units, so a
+ *    non-BMP emoji (surrogate pair) costs 2 units and is never split.
+ */
+export function smsSegments(body: string): SmsEstimate {
+  const codePoints = Array.from(body);
+  const isGsm = codePoints.every((c) => GSM7_BASIC.has(c) || GSM7_EXTENDED.has(c));
+  const chars = codePoints.length;
+
+  if (chars === 0) return { encoding: isGsm ? 'GSM-7' : 'UCS-2', segments: 0, units: 0, chars: 0 };
+
+  const costs = isGsm
+    ? codePoints.map((c) => (GSM7_EXTENDED.has(c) ? 2 : 1))
+    : codePoints.map((c) => (c.codePointAt(0)! > 0xffff ? 2 : 1));
+  const units = costs.reduce((a, b) => a + b, 0);
+
+  const single = isGsm ? 160 : 70;
+  const multi = isGsm ? 153 : 67;
+  if (units <= single) {
+    return { encoding: isGsm ? 'GSM-7' : 'UCS-2', segments: 1, units, chars };
+  }
+
+  // Pack greedily; a 2-unit character never straddles a segment boundary.
+  let segments = 1;
+  let used = 0;
+  for (const cost of costs) {
+    if (used + cost > multi) {
+      segments += 1;
+      used = 0;
+    }
+    used += cost;
+  }
+  return { encoding: isGsm ? 'GSM-7' : 'UCS-2', segments, units, chars };
 }
 
 /**
