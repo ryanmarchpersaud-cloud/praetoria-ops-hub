@@ -40,6 +40,8 @@ import Visits from "./pages/Visits";
 import VisitDetail from "./pages/VisitDetail";
 import ActivityPage from "./pages/ActivityPage";
 const PraeActivityPage = lazy(() => import("./pages/PraeActivityPage"));
+const PraeApprovalInbox = lazy(() => import("./pages/PraeApprovalInbox"));
+const PraeApprovalDecision = lazy(() => import("./pages/PraeApprovalDecision"));
 const CommunicationsHubPage = lazy(() => import("./pages/CommunicationsHubPage"));
 
 
