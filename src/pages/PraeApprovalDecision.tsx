@@ -12,18 +12,24 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import {
   useDecidePraeApproval,
+  useDeletePraeApproval,
   useExecutePraeApproval,
   useIssuePraeNonce,
   usePraeApproval,
   usePraeAudit,
   usePraeRelatedRecords,
+  useReopenPraeApproval,
 } from '@/hooks/usePraeLive';
 import { assessPraeRisk, derivePraeLiveState, hasCriticalRisk, PRAE_LIVE_STATE_LABEL } from '@/lib/praeRisk';
-import { AlertTriangle, ArrowLeft, Check, Loader2, Pencil, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, Loader2, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 
 function when(iso: string | null | undefined) {
-  return iso ? new Date(iso).toLocaleString('en-CA') : '—';
+  if (!iso) return '—';
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return 'never';
+  return new Date(iso).toLocaleString('en-CA');
 }
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
