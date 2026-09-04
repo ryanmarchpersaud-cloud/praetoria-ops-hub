@@ -78,6 +78,12 @@ export type ApprovalRequest = {
   id: string;
   /** SHA-256 hex digest of the nonce. The raw nonce is never stored here. */
   nonceDigest: string;
+  /**
+   * Phase 1E.2: the authoritative immutable copy of the approved proposal.
+   * A future execution phase MUST use exactly this, never a rebuilt action
+   * derived from a mutable customer / job / message record.
+   */
+  contentBinding: ProposedAction;
   contentHash: string;
   contentHashVersion: number;
   state: PraeApprovalState;
@@ -90,6 +96,7 @@ export type ApprovalRequest = {
   decidedAt?: string;
   nonceUsed: boolean;
 };
+
 
 export type AuditEntry = {
   at: string;
