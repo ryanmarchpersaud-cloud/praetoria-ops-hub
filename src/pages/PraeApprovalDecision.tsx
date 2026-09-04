@@ -86,6 +86,38 @@ export default function PraeApprovalDecision() {
 
   const pending = row?.state === 'pending';
 
+  async function handleReopen() {
+    if (!row) return;
+    try {
+      const res = await reopen.mutateAsync(row.id);
+      if (!res?.ok) {
+        toast({ title: 'Could not reopen', description: res?.reason ?? 'unknown', variant: 'destructive' });
+        return;
+      }
+      toast({ title: 'Reopened', description: 'This item no longer expires.' });
+      await approval.refetch();
+      await audit.refetch();
+    } catch (error) {
+      toast({ title: 'Could not reopen', description: (error as Error).message, variant: 'destructive' });
+    }
+  }
+
+  async function handleDelete() {
+    if (!row) return;
+    try {
+      const res = await removeApproval.mutateAsync(row.id);
+      if (!res?.ok) {
+        toast({ title: 'Could not delete', description: res?.reason ?? 'unknown', variant: 'destructive' });
+        return;
+      }
+      toast({ title: 'Deleted' });
+      navigate('/prae/approvals');
+    } catch (error) {
+      toast({ title: 'Could not delete', description: (error as Error).message, variant: 'destructive' });
+    }
+  }
+
+
   async function withNonce(decision: 'approved' | 'rejected', label: 'approve' | 'reject' | 'edit') {
     if (!row) return;
     setBusy(label);
