@@ -22,10 +22,12 @@ const OPT_IN_WORDS = ["START", "UNSTOP"];
 const PRAE_COMMANDS = new Set([
   "STATUS",
   "WHAT NEEDS APPROVAL?",
+  "WHAT NEEDS APPROVAL",
   "URGENT",
   "PAUSE",
   "HELP",
   "APPROVE",
+  "APPROVED",
   "YES",
   ...OPT_OUT_WORDS,
   ...OPT_IN_WORDS,
@@ -201,7 +203,7 @@ Deno.serve(async (req) => {
   const link = `${APP_URL}/prae/approvals`;
 
   // A reply can never approve anything.
-  if (command === "YES" || command === "APPROVE") {
+  if (command === "YES" || command === "APPROVE" || command === "APPROVED") {
     return twiml(`Praetoria Ops: replies cannot approve anything. Open ${link} and approve there.`);
   }
 
@@ -231,7 +233,7 @@ Deno.serve(async (req) => {
     return twiml(`Praetoria Ops: ${urgent ?? 0} urgent item(s). ${link}`);
   }
 
-  if (command === "WHAT NEEDS APPROVAL?") {
+  if (command === "WHAT NEEDS APPROVAL?" || command === "WHAT NEEDS APPROVAL") {
     const { data: rows } = await admin
       .from("prae_approvals")
       .select("division")
