@@ -101,3 +101,63 @@ describe('prae decision RPC', () => {
     expect((data as { nonce?: string } | null)?.nonce).toBeUndefined();
   });
 });
+
+describe('phase 1e.2 — server-authoritative RPC surface', () => {
+  it('the caller-controlled content-hash create overload no longer exists', async () => {
+    const { data, error } = await anon.rpc('prae_create_approval' as never, {
+      _channel: 'email',
+      _division: 'Snow & Ice',
+      _content_hash: 'a'.repeat(64),
+      _content_binding: {},
+      _ttl_minutes: 15,
+      _is_synthetic: true,
+    } as never);
+    expect(error).toBeTruthy();
+    expect(data).toBeFalsy();
+  });
+
+  it('the caller-controlled content-hash decide overload no longer exists', async () => {
+    const { data, error } = await anon.rpc('prae_decide_approval' as never, {
+      _approval_id: ID,
+      _nonce: 'x',
+      _decision: 'approve',
+      _content_hash: 'a'.repeat(64),
+    } as never);
+    expect(error).toBeTruthy();
+    expect(data).toBeFalsy();
+  });
+
+  it('the new create signature is not usable anonymously', async () => {
+    const { data, error } = await anon.rpc('prae_create_approval' as never, {
+      _content_binding: { channel: 'email', from: 'a@b.ca', to: ['c@d.ca'], subject: 's', body: 'b', attachments: [] },
+      _division: 'Snow & Ice',
+    } as never);
+    if (error) { expect(error).toBeTruthy(); return; }
+    expect((data as { ok?: boolean } | null)?.ok).toBe(false);
+    expect((data as { nonce?: string } | null)?.nonce).toBeUndefined();
+  });
+
+  it('the new decide signature is not usable anonymously', async () => {
+    const { data, error } = await anon.rpc('prae_decide_approval' as never, {
+      _approval_id: ID,
+      _nonce: 'x',
+      _decision: 'approve',
+    } as never);
+    if (error) { expect(error).toBeTruthy(); return; }
+    expect((data as { ok?: boolean } | null)?.ok).toBe(false);
+  });
+
+  it.each([
+    ['prae_canonical_action', { _b: { channel: 'email' } }],
+    ['prae_content_hash', { _b: { channel: 'email' } }],
+    ['prae_canonical_objects', { _arr: [] }],
+    ['prae_canonical_emails', { _arr: [] }],
+    ['prae_sha256_hex', { _input: 'x' }],
+    ['prae_constant_time_eq', { _a: 'x', _b: 'y' }],
+    ['prae_division_allowed', { _user_id: ID, _division: 'Snow & Ice' }],
+  ])('internal helper %s is not callable from the browser', async (fn, args) => {
+    const { data, error } = await anon.rpc(fn as never, args as never);
+    expect(error).toBeTruthy();
+    expect(data).toBeFalsy();
+  });
+});
