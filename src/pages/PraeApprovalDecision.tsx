@@ -50,6 +50,9 @@ export default function PraeApprovalDecision() {
   const issueNonce = useIssuePraeNonce();
   const decide = useDecidePraeApproval();
   const execute = useExecutePraeApproval();
+  const reopen = useReopenPraeApproval();
+  const removeApproval = useDeletePraeApproval();
+
   const [busy, setBusy] = useState<'approve' | 'reject' | 'edit' | null>(null);
 
   const row = approval.data ?? null;
