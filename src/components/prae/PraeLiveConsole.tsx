@@ -91,10 +91,11 @@ export default function PraeLiveConsole({
       subject,
       body,
     });
-    if (!built.ok) {
-      toast.error(built.error);
+    if (!('binding' in built)) {
+      toast.error((built as { error: string }).error);
       return;
     }
+
     try {
       const res = await createApproval.mutateAsync({ binding: built.binding, division });
       setApprovalId(res.approval_id);
