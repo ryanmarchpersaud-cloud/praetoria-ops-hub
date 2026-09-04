@@ -18,6 +18,8 @@ import { Inbox, ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { useCommsSettings, useCommsMailboxes } from '@/hooks/useCommunications';
+import { usePraeApprovals } from '@/hooks/usePraeLive';
+
 import PraeLiveConsole from './PraeLiveConsole';
 import {
   PRAE_ACTIONS,
