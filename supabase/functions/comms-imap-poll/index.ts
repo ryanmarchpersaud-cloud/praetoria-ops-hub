@@ -89,33 +89,28 @@ async function runPoll(
   const maxMessages = Math.min(settings?.max_messages_per_run ?? 25, 100);
 
 
-  const user = Deno.env.get("IONOS_STAGING_EMAIL_USER");
-  const pass = Deno.env.get("IONOS_STAGING_EMAIL_PASSWORD");
-  if (!user || !pass) return json({ error: "Staging mailbox secrets not configured" }, 500);
-
-  // 2. Resolve (or self-register) the single staging mailbox
-  let { data: mailbox } = await supabase
+  // 2. Resolve the target mailbox. Production pilot ON => the single active
+  //    production mailbox, never a staging fallback. OFF => staging only.
+  const productionPilot = settings?.production_pilot_enabled === true;
+  const { data: mailboxRows, error: mailboxError } = await supabase
     .from("comms_mailboxes")
     .select("*")
-    .eq("environment", "staging")
-    .eq("is_active", true)
-    .maybeSingle();
+    .eq("is_active", true);
+  if (mailboxError) return json({ error: mailboxError.message }, 500);
 
-  if (!mailbox) {
-    const { data: created, error } = await supabase
-      .from("comms_mailboxes")
-      .insert({
-        label: "IONOS Staging Mailbox",
-        email_address: user,
-        credential_secret_prefix: "IONOS_STAGING_EMAIL",
-        environment: "staging",
-        division: "staging",
-      })
-      .select()
-      .single();
-    if (error) return json({ error: error.message }, 500);
-    mailbox = created;
+  const target = selectTargetMailbox(mailboxRows ?? [], productionPilot);
+  if (!target.ok) return json({ skipped: true, reason: target.reason });
+  const mailbox = target.mailbox;
+  if (mailbox.inbound_enabled === false) {
+    return json({ skipped: true, reason: "inbound_disabled" });
   }
+
+  const envNames = credentialEnvNames(mailbox.credential_secret_prefix);
+  if (!envNames.ok) return json({ error: envNames.reason }, 500);
+  const user = Deno.env.get(envNames.userVar);
+  const pass = Deno.env.get(envNames.passVar);
+  if (!user || !pass) return json({ error: "Mailbox secrets not configured" }, 500);
+
 
   await supabase.from("comms_sync_state").upsert(
     { mailbox_id: mailbox.id, folder: "INBOX" },
