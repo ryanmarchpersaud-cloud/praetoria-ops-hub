@@ -124,11 +124,14 @@ export function useDecidePraeApproval() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (args: { approvalId: string; nonce: string; decision: 'approved' | 'rejected' }) => {
+      // The server accepts the verbs 'approve' / 'reject'.
+      const verb = args.decision === 'approved' ? 'approve' : 'reject';
       const { data, error } = await supabase.rpc('prae_decide_approval' as never, {
         _approval_id: args.approvalId as never,
         _nonce: args.nonce as never,
-        _decision: args.decision as never,
+        _decision: verb as never,
       } as never);
+
       if (error) throw error;
       return data as unknown as { ok: boolean; reason?: string };
     },
