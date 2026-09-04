@@ -10,14 +10,14 @@ import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Mic, Send, ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
+import { Inbox, ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
 import { useCommsSettings, useCommsMailboxes } from '@/hooks/useCommunications';
+import { usePraeApprovals } from '@/hooks/usePraeLive';
+
 import PraeLiveConsole from './PraeLiveConsole';
 import {
   PRAE_ACTIONS,
@@ -57,13 +57,15 @@ export default function PraePanel({
 }) {
   const [status, setStatus] = useState<PraeStatus>('idle');
   const [selected, setSelected] = useState<PraeAction | null>(null);
-  const [draft, setDraft] = useState('');
   const { data: settings } = useCommsSettings();
   const { data: mailboxes } = useCommsMailboxes();
   const liveEnabled = settings?.prae_comms_enabled === true;
+  const { data: approvals } = usePraeApprovals(open);
+  const pendingCount = (approvals ?? []).filter((a) => a.state === 'pending').length;
   const pilotMailbox = (mailboxes ?? []).find(
     (m) => m.environment === 'production' && m.is_active,
   );
+
 
   // Demonstration only: shows the status indicators without contacting anything.
   const previewAction = (action: PraeAction) => {
@@ -195,44 +197,19 @@ export default function PraePanel({
         </ScrollArea>
 
         <div className="border-t border-border p-3 space-y-2">
-          <Textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Ask Prae… (preview only — nothing is transmitted)"
-            className="min-h-[72px] text-sm"
-            aria-label="Ask Prae"
-          />
-          <div className="flex items-center justify-between gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="outline"
-                      disabled
-                      aria-label={`Microphone — ${PRAE_DISABLED_LABEL}`}
-                    >
-                      <Mic className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Voice input — {PRAE_DISABLED_LABEL}. No microphone permission is requested and no
-                  audio is recorded.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <div className="flex items-center gap-2">
-              <DisabledBadge />
-              <Button type="button" size="sm" disabled className="gap-1">
-                <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                Send
-              </Button>
-            </div>
-          </div>
+          <Button asChild size="lg" className="w-full gap-2">
+            <Link to="/prae/approvals" onClick={() => onOpenChange(false)}>
+              <Inbox className="h-4 w-4" aria-hidden="true" />
+              {pendingCount > 0
+                ? `Review approvals (${pendingCount} waiting)`
+                : 'Review approvals'}
+            </Link>
+          </Button>
+          <p className="text-[11px] text-muted-foreground text-center">
+            Sending only happens on the approval screen, where you see the exact message first.
+          </p>
         </div>
+
       </SheetContent>
     </Sheet>
   );
