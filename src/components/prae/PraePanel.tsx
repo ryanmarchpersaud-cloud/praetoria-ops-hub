@@ -17,6 +17,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Mic, Send, ShieldAlert, Lock, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import praetoriaLogo from '@/assets/praetoria-logo-white.png';
+import { useCommsSettings, useCommsMailboxes } from '@/hooks/useCommunications';
+import PraeLiveConsole from './PraeLiveConsole';
 import {
   PRAE_ACTIONS,
   PRAE_DISABLED_LABEL,
@@ -56,6 +58,12 @@ export default function PraePanel({
   const [status, setStatus] = useState<PraeStatus>('idle');
   const [selected, setSelected] = useState<PraeAction | null>(null);
   const [draft, setDraft] = useState('');
+  const { data: settings } = useCommsSettings();
+  const { data: mailboxes } = useCommsMailboxes();
+  const liveEnabled = settings?.prae_comms_enabled === true;
+  const pilotMailbox = (mailboxes ?? []).find(
+    (m) => m.environment === 'production' && m.is_active,
+  );
 
   // Demonstration only: shows the status indicators without contacting anything.
   const previewAction = (action: PraeAction) => {
@@ -114,6 +122,15 @@ export default function PraePanel({
 
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-4">
+            {liveEnabled && pilotMailbox ? (
+              <PraeLiveConsole
+                fromAddress={pilotMailbox.email_address}
+                division={pilotMailbox.division ?? 'administration'}
+                executionEnabled={settings?.prae_execution_enabled === true}
+                aiEnabled={settings?.ai_processing_enabled === true}
+              />
+            ) : (
+            <>
             <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive flex gap-2">
               <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
               <span>
@@ -171,6 +188,8 @@ export default function PraePanel({
                   </Button>
                 </div>
               </div>
+            )}
+            </>
             )}
           </div>
         </ScrollArea>
