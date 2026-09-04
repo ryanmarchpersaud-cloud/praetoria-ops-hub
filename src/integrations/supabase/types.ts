@@ -11185,7 +11185,7 @@ export type Database = {
       prae_approvals: {
         Row: {
           channel: string
-          content_binding: Json | null
+          content_binding: Json
           content_hash: string
           content_hash_version: number
           created_at: string
@@ -11203,7 +11203,7 @@ export type Database = {
         }
         Insert: {
           channel: string
-          content_binding?: Json | null
+          content_binding: Json
           content_hash: string
           content_hash_version?: number
           created_at?: string
@@ -11221,7 +11221,7 @@ export type Database = {
         }
         Update: {
           channel?: string
-          content_binding?: Json | null
+          content_binding?: Json
           content_hash?: string
           content_hash_version?: number
           created_at?: string
@@ -15378,15 +15378,17 @@ export type Database = {
         }
         Returns: Json
       }
+      prae_canonical_action: { Args: { _b: Json }; Returns: string }
+      prae_canonical_emails: { Args: { _arr: Json }; Returns: string }
+      prae_canonical_objects: { Args: { _arr: Json }; Returns: string }
       prae_constant_time_eq: {
         Args: { _a: string; _b: string }
         Returns: boolean
       }
+      prae_content_hash: { Args: { _b: Json }; Returns: string }
       prae_create_approval: {
         Args: {
-          _channel: string
-          _content_binding?: Json
-          _content_hash: string
+          _content_binding: Json
           _division: string
           _is_synthetic?: boolean
           _ttl_minutes?: number
@@ -15394,12 +15396,7 @@ export type Database = {
         Returns: Json
       }
       prae_decide_approval: {
-        Args: {
-          _approval_id: string
-          _content_hash: string
-          _decision: string
-          _nonce: string
-        }
+        Args: { _approval_id: string; _decision: string; _nonce: string }
         Returns: Json
       }
       prae_division_allowed: {
