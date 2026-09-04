@@ -22,10 +22,12 @@ import {
   SmtpError,
   threadHeaders,
   validateRecipient,
+  validateRecipientForPolicy,
   validateSubject,
 } from "./core.ts";
 import { appendDecision, appendOutcome, requireVerifiedSentFolder, resolveSentCopyStatus, type SentCopyStatus } from "../_shared/comms/sentFolder.ts";
 import { runSentCopy } from "../_shared/comms/sentCopyRunner.ts";
+import { credentialEnvNames, recipientPolicy, selectTargetMailbox } from "../_shared/comms/mailboxTarget.ts";
 
 
 const enc = new TextEncoder();
@@ -294,7 +296,7 @@ Deno.serve(async (req) => {
     const key = payload.idempotency_key;
     if (!isValidIdempotencyKey(key)) return json({ error: "Invalid idempotency key" }, 400);
 
-    const recipient = validateRecipient(payload.to, settings.staging_recipient_allowlist ?? []);
+    const recipient = validateRecipientForPolicy(payload.to, policy);
     if (!recipient.ok) return json({ error: recipient.error }, 400);
     const subject = validateSubject(payload.subject);
     if (!subject.ok) return json({ error: subject.error }, 400);
@@ -384,7 +386,7 @@ Deno.serve(async (req) => {
     if (!claimed) return json({ error: "Send already in progress" }, 409);
 
     // Re-validate against the allow-list at send time.
-    const recheck = validateRecipient(claimed.to_address, settings.staging_recipient_allowlist ?? []);
+    const recheck = validateRecipientForPolicy(claimed.to_address, policy);
     if (!recheck.ok) {
       await admin.from("comms_outbound_messages")
         .update({ status: "failed", failed_at: new Date().toISOString(), error_text: recheck.error })
