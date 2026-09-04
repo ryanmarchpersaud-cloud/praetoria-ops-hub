@@ -12,18 +12,24 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import {
   useDecidePraeApproval,
+  useDeletePraeApproval,
   useExecutePraeApproval,
   useIssuePraeNonce,
   usePraeApproval,
   usePraeAudit,
   usePraeRelatedRecords,
+  useReopenPraeApproval,
 } from '@/hooks/usePraeLive';
 import { assessPraeRisk, derivePraeLiveState, hasCriticalRisk, PRAE_LIVE_STATE_LABEL } from '@/lib/praeRisk';
-import { AlertTriangle, ArrowLeft, Check, Loader2, Pencil, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Check, Loader2, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 
 function when(iso: string | null | undefined) {
-  return iso ? new Date(iso).toLocaleString('en-CA') : '—';
+  if (!iso) return '—';
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return 'never';
+  return new Date(iso).toLocaleString('en-CA');
 }
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -44,6 +50,9 @@ export default function PraeApprovalDecision() {
   const issueNonce = useIssuePraeNonce();
   const decide = useDecidePraeApproval();
   const execute = useExecutePraeApproval();
+  const reopen = useReopenPraeApproval();
+  const removeApproval = useDeletePraeApproval();
+
   const [busy, setBusy] = useState<'approve' | 'reject' | 'edit' | null>(null);
 
   const row = approval.data ?? null;
@@ -76,6 +85,38 @@ export default function PraeApprovalDecision() {
     : 'idle';
 
   const pending = row?.state === 'pending';
+
+  async function handleReopen() {
+    if (!row) return;
+    try {
+      const res = await reopen.mutateAsync(row.id);
+      if (!res?.ok) {
+        toast({ title: 'Could not reopen', description: res?.reason ?? 'unknown', variant: 'destructive' });
+        return;
+      }
+      toast({ title: 'Reopened', description: 'This item no longer expires.' });
+      await approval.refetch();
+      await audit.refetch();
+    } catch (error) {
+      toast({ title: 'Could not reopen', description: (error as Error).message, variant: 'destructive' });
+    }
+  }
+
+  async function handleDelete() {
+    if (!row) return;
+    try {
+      const res = await removeApproval.mutateAsync(row.id);
+      if (!res?.ok) {
+        toast({ title: 'Could not delete', description: res?.reason ?? 'unknown', variant: 'destructive' });
+        return;
+      }
+      toast({ title: 'Deleted' });
+      navigate('/prae/approvals');
+    } catch (error) {
+      toast({ title: 'Could not delete', description: (error as Error).message, variant: 'destructive' });
+    }
+  }
+
 
   async function withNonce(decision: 'approved' | 'rejected', label: 'approve' | 'reject' | 'edit') {
     if (!row) return;
@@ -170,7 +211,24 @@ export default function PraeApprovalDecision() {
         <Field label="Approval window">
           Created {when(row.created_at)} · expires {when(row.expires_at)}
         </Field>
+        <Separator className="my-2" />
+        <div className="flex flex-wrap gap-2">
+          {(row.state === 'expired' || (pending && Number.isFinite(new Date(row.expires_at).getTime()))) && (
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleReopen}>
+              <RotateCcw className="h-4 w-4" aria-hidden="true" /> Reopen (remove expiry)
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-destructive hover:text-destructive"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" /> Delete this item
+          </Button>
+        </div>
       </Card>
+
 
       <Card className="p-4">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">

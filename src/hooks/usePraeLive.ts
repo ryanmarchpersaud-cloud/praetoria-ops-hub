@@ -240,3 +240,54 @@ export function useNotifyPraeApproval() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['prae-approvals'] }),
   });
 }
+
+type PraeRpcResult = { ok: boolean; reason?: string; deleted?: number };
+
+/** Removes the expiry from an approval and puts it back in the pending queue. */
+export function useReopenPraeApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (approvalId: string) => {
+      const { data, error } = await supabase.rpc('prae_reopen_approval' as never, {
+        _approval_id: approvalId as never,
+      } as never);
+      if (error) throw error;
+      return data as unknown as PraeRpcResult;
+    },
+    onSuccess: (_d, id) => {
+      qc.invalidateQueries({ queryKey: ['prae-approvals'] });
+      qc.invalidateQueries({ queryKey: ['prae-approval', id] });
+    },
+  });
+}
+
+/** Permanently deletes one approval and its audit trail. */
+export function useDeletePraeApproval() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (approvalId: string) => {
+      const { data, error } = await supabase.rpc('prae_delete_approval' as never, {
+        _approval_id: approvalId as never,
+      } as never);
+      if (error) throw error;
+      return data as unknown as PraeRpcResult;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['prae-approvals'] }),
+  });
+}
+
+/** Bulk clear-out of approvals in the given states. */
+export function useDeletePraeApprovals() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (states: string[]) => {
+      const { data, error } = await supabase.rpc('prae_delete_approvals' as never, {
+        _states: states as never,
+      } as never);
+      if (error) throw error;
+      return data as unknown as PraeRpcResult;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['prae-approvals'] }),
+  });
+}
+
