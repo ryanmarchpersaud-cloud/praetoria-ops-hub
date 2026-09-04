@@ -146,8 +146,6 @@ Deno.serve(async (req) => {
     return twiml("Praetoria Ops: emergency stop engaged. Nothing will send. Resume in the Ops Hub only.");
   }
 
-  const divisionFilter = (q: ReturnType<typeof admin.from>) => q;
-  void divisionFilter;
 
   if (upper === "STATUS") {
     const { count: pending } = await admin
