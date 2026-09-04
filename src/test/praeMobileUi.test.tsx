@@ -2,9 +2,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import PraeActivityPage from '../pages/PraeActivityPage';
 import PraeApprovalDetail from '../components/prae/PraeApprovalDetail';
 import { PRAE_ACTIVITY_DEMO } from '../components/prae/praeActivityDemo';
+
+function Providers({ children }: { children: React.ReactNode }) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
 
 function setMobileViewport() {
   Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 390 });
@@ -17,9 +23,11 @@ beforeEach(() => setMobileViewport());
 describe('Prae activity area (mobile)', () => {
   it('renders all four sections', () => {
     render(
-      <MemoryRouter>
-        <PraeActivityPage />
-      </MemoryRouter>,
+      <Providers>
+        <MemoryRouter>
+          <PraeActivityPage />
+        </MemoryRouter>
+      </Providers>,
     );
     expect(screen.getByRole('tab', { name: 'Activity' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Needs Approval' })).toBeInTheDocument();
@@ -29,9 +37,11 @@ describe('Prae activity area (mobile)', () => {
 
   it('shows detection, preparation, status, time, division, rep and approval info', () => {
     render(
-      <MemoryRouter>
-        <PraeActivityPage />
-      </MemoryRouter>,
+      <Providers>
+        <MemoryRouter>
+          <PraeActivityPage />
+        </MemoryRouter>
+      </Providers>,
     );
     expect(screen.getAllByText(/Detected:/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Prepared:/).length).toBeGreaterThan(0);
@@ -44,9 +54,11 @@ describe('Prae activity area (mobile)', () => {
 
   it('opens the approval detail without navigating away', () => {
     render(
-      <MemoryRouter initialEntries={['/prae']}>
-        <PraeActivityPage />
-      </MemoryRouter>,
+      <Providers>
+        <MemoryRouter initialEntries={['/prae']}>
+          <PraeActivityPage />
+        </MemoryRouter>
+      </Providers>,
     );
     fireEvent.click(screen.getAllByRole('button', { name: /Detected:/ })[0]);
     expect(screen.getByText('Approval detail')).toBeInTheDocument();
