@@ -335,7 +335,7 @@ describe('prae approval — role and division isolation', () => {
     expect(r.audit).toEqual(audit);
   });
 
-  it('rejects a cross-division approval attempt', async () => {
+  it('rejects a cross-division approval attempt without writing audit', async () => {
     const { approval, audit, nonce } = await pending('Snow & Ice');
     const r = await decideApproval({
       approval, audit, action: emailAction, presentedNonce: nonce,
@@ -344,7 +344,20 @@ describe('prae approval — role and division isolation', () => {
     });
     expect(r.ok).toBe(false);
     expect(asFail(r).reason).toBe('division_not_permitted');
+    expect(r.audit).toEqual(audit);
   });
+
+  it('an out-of-division caller cannot mint an emergency-stop audit entry', async () => {
+    const { approval, audit, nonce } = await pending('Snow & Ice');
+    const r = await decideApproval({
+      approval, audit, action: emailAction, presentedNonce: nonce,
+      approver: { userId: 'u-a', role: 'admin', divisions: ['Junk Removal'] },
+      decision: 'approve', now: NOW, emergencyStop: true,
+    });
+    expect(asFail(r).reason).toBe('division_not_permitted');
+    expect(r.audit).toEqual(audit);
+  });
+
 });
 
 describe('prae approval — emergency stop and execution gate', () => {
