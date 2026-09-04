@@ -34,15 +34,16 @@ describe('Phase 1D.2 — legacy co-pilot gate reachability proof', () => {
     const gatewayIdx = fn.indexOf('ai.gateway.lovable.dev');
     const roleIdx = fn.indexOf('requireRole(auth');
 
-    expect(authIdx).toBeGreaterThan(-1, 'Auth check missing');
-    expect(gateIdx).toBeGreaterThan(authIdx, 'Gate check must happen after auth');
-    
+    expect(authIdx).toBeGreaterThan(-1); // Auth check missing
+    expect(gateIdx).toBeGreaterThan(authIdx); // Gate check must happen after auth
+
     // Proving the disabled path returns before sensitive work
     const returnIdx = fn.indexOf('if (disabledResponse) return disabledResponse;');
     expect(returnIdx).toBeGreaterThan(gateIdx);
-    
+
     for (const idx of [clientIdx, contextIdx, gatewayIdx, roleIdx]) {
-      expect(idx).toBeGreaterThan(returnIdx, `Sensitive operation at index ${idx} must happen after gate return at ${returnIdx}`);
+      // Every sensitive operation must appear after the gate's early return
+      expect(idx).toBeGreaterThan(returnIdx);
     }
   });
 

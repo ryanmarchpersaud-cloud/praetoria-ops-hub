@@ -11185,7 +11185,9 @@ export type Database = {
       prae_approvals: {
         Row: {
           channel: string
+          content_binding: Json | null
           content_hash: string
+          content_hash_version: number
           created_at: string
           decided_at: string | null
           decided_by_role: string | null
@@ -11194,14 +11196,16 @@ export type Database = {
           expires_at: string
           id: string
           is_synthetic: boolean
-          nonce: string
+          nonce_digest: string
           nonce_used: boolean
           state: string
           updated_at: string
         }
         Insert: {
           channel: string
+          content_binding?: Json | null
           content_hash: string
+          content_hash_version?: number
           created_at?: string
           decided_at?: string | null
           decided_by_role?: string | null
@@ -11210,14 +11214,16 @@ export type Database = {
           expires_at: string
           id?: string
           is_synthetic?: boolean
-          nonce: string
+          nonce_digest: string
           nonce_used?: boolean
           state?: string
           updated_at?: string
         }
         Update: {
           channel?: string
+          content_binding?: Json | null
           content_hash?: string
+          content_hash_version?: number
           created_at?: string
           decided_at?: string | null
           decided_by_role?: string | null
@@ -11226,7 +11232,7 @@ export type Database = {
           expires_at?: string
           id?: string
           is_synthetic?: boolean
-          nonce?: string
+          nonce_digest?: string
           nonce_used?: boolean
           state?: string
           updated_at?: string
@@ -15372,6 +15378,35 @@ export type Database = {
         }
         Returns: Json
       }
+      prae_constant_time_eq: {
+        Args: { _a: string; _b: string }
+        Returns: boolean
+      }
+      prae_create_approval: {
+        Args: {
+          _channel: string
+          _content_binding?: Json
+          _content_hash: string
+          _division: string
+          _is_synthetic?: boolean
+          _ttl_minutes?: number
+        }
+        Returns: Json
+      }
+      prae_decide_approval: {
+        Args: {
+          _approval_id: string
+          _content_hash: string
+          _decision: string
+          _nonce: string
+        }
+        Returns: Json
+      }
+      prae_division_allowed: {
+        Args: { _division: string; _user_id: string }
+        Returns: boolean
+      }
+      prae_sha256_hex: { Args: { _input: string }; Returns: string }
       sign_agreement_with_token: {
         Args: {
           _consent_text: string

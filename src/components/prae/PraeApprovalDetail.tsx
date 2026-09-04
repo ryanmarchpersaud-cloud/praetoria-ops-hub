@@ -56,7 +56,10 @@ export default function PraeApprovalDetail({ item }: { item: PraeActivityItem })
                 ? 'None'
                 : p.attachments.map((a) => (
                     <span key={a.filename} className="block">
-                      {a.filename} · {(a.sizeBytes / 1024).toFixed(0)} KB ·{' '}
+                      {a.filename} · {a.mimeType} · {(a.sizeBytes / 1024).toFixed(0)} KB ·{' '}
+                      <span className="font-mono text-[10px]">
+                        {a.storageObjectId}@{a.storageObjectVersion} · sha256 {a.sha256.slice(0, 12)}…
+                      </span>{' '}
                       <Badge variant="outline" className="text-[10px]">
                         {PRAE_DISABLED_LABEL}
                       </Badge>
@@ -78,7 +81,7 @@ export default function PraeApprovalDetail({ item }: { item: PraeActivityItem })
             <Row label="Segments">
               {(() => {
                 const s = smsSegments(p.body);
-                return `${s.segments} segment(s) · ${s.chars} characters · ${s.encoding}`;
+                return `${s.segments} segment(s) · ${s.chars} characters · ${s.units} ${s.encoding} units`;
               })()}
             </Row>
             <Row label="Opt-out">

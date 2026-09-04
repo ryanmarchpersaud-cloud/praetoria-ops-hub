@@ -29,6 +29,20 @@ export const PRAE_ITEM_STATUS_TONE: Record<PraeItemStatus, string> = {
 
 export type PraeApprovalUiState = 'pending' | 'approved' | 'rejected' | 'expired' | 'invalidated';
 
+/**
+ * Phase 1E.1 — attachments/media are bound by immutable storage identity AND
+ * content digest, so a replacement file with the same name and size still
+ * breaks the approval binding. Attachments remain synthetic and disabled.
+ */
+export type PraeBoundObject = {
+  storageObjectId: string;
+  storageObjectVersion: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  sha256: string;
+};
+
 export type PraeEmailProposal = {
   channel: 'email';
   from: string;
@@ -36,7 +50,7 @@ export type PraeEmailProposal = {
   cc?: string[];
   subject: string;
   body: string;
-  attachments: { filename: string; sizeBytes: number }[];
+  attachments: PraeBoundObject[];
 };
 
 export type PraeSmsProposal = {
@@ -44,7 +58,7 @@ export type PraeSmsProposal = {
   fromNumber: string;
   toNumber: string;
   body: string;
-  media: { filename: string }[];
+  media: PraeBoundObject[];
 };
 
 export type PraeActivityItem = {
@@ -93,7 +107,16 @@ export const PRAE_ACTIVITY_DEMO: PraeActivityItem[] = [
         'Hello,\n\nThanks for checking in. Our crew is scheduled for the next route pass and ' +
         'will clear the windrow at the end of the driveway while they are on site.\n\n' +
         'Please confirm the gate code so we can access the rear lane.\n\nPraetoria Group',
-      attachments: [{ filename: 'demo-route-notice.pdf', sizeBytes: 84_213 }],
+      attachments: [
+        {
+          storageObjectId: 'demo-object-0001',
+          storageObjectVersion: 'v1',
+          filename: 'demo-route-notice.pdf',
+          mimeType: 'application/pdf',
+          sizeBytes: 84_213,
+          sha256: '0'.repeat(64),
+        },
+      ],
     },
   },
   {
