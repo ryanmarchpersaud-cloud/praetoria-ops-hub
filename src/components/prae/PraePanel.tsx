@@ -57,13 +57,15 @@ export default function PraePanel({
 }) {
   const [status, setStatus] = useState<PraeStatus>('idle');
   const [selected, setSelected] = useState<PraeAction | null>(null);
-  const [draft, setDraft] = useState('');
   const { data: settings } = useCommsSettings();
   const { data: mailboxes } = useCommsMailboxes();
   const liveEnabled = settings?.prae_comms_enabled === true;
+  const { data: approvals } = usePraeApprovals(open);
+  const pendingCount = (approvals ?? []).filter((a) => a.state === 'pending').length;
   const pilotMailbox = (mailboxes ?? []).find(
     (m) => m.environment === 'production' && m.is_active,
   );
+
 
   // Demonstration only: shows the status indicators without contacting anything.
   const previewAction = (action: PraeAction) => {
