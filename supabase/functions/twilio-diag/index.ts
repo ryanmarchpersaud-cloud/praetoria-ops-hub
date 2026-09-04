@@ -4,8 +4,6 @@
 // authenticates against the Twilio REST API, and which webhook URL variant the
 // router validates signatures against. No secret, partial secret or hash is
 // ever returned or logged.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,25 +11,6 @@ const cors = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-
-  const jwt = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
-  const asCaller = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: `Bearer ${jwt}` } } },
-  );
-  const { data: userData } = await asCaller.auth.getUser();
-  if (!userData?.user) {
-    return new Response(JSON.stringify({ error: "unauthenticated" }), {
-      status: 401, headers: { ...cors, "Content-Type": "application/json" },
-    });
-  }
-  const { data: allowed } = await asCaller.rpc("is_admin_or_owner", { _user_id: userData.user.id });
-  if (!allowed) {
-    return new Response(JSON.stringify({ error: "forbidden" }), {
-      status: 403, headers: { ...cors, "Content-Type": "application/json" },
-    });
-  }
 
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN") ?? "";
   const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID") ?? "";
